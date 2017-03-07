@@ -398,9 +398,6 @@ class LearningProjection(Projection_Base):
         #    and formats self.variable to be compatible with that outputState's value (i.e., its learning_signal)
         super()._instantiate_sender(context=context)
 
-    def _instantiate_function(self, context=None):
-        super()._instantiate_function(context=context)
-
     def _instantiate_receiver(self, context=None):
         """Validate that receiver has been assigned and is compatiable with the output of function
 

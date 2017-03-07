@@ -582,33 +582,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
             pass
 
     def _instantiate_attributes_before_function(self, context=None):
+        """Instantiates MappingProjection from error_source (if specified) to the LearningMechanism
+        """
 
         super()._instantiate_attributes_before_function(context=context)
 
         if self.error_source:
             _instantiate_error_signal_projection(sender=self.error_source, receiver=self)
-
-
-    def _validate_error_signal(self, error_signal):
-        """Validate that error_signal (received from ObjectiveMechanism) is compatible with the error_matrix
-
-        Insure that length of error_signal equals the WT_MATRIX_RECEIVERS_DIM (width, number of cols) of the
-        error_matrix
-
-        """
-
-        # MOVE TO RL FUNCTION
-
-        if self.function.componentName is RL_FUNCTION:
-            # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must == 1
-            #     (since error signal is a scalar for RL)
-            if len(error_signal) != 1:
-                raise LearningMechanismError("Length of error_signal ({}) received by {} from {}"
-                                          " must be 1 since {} uses {} as its learning function".
-                                          format(len(error_signal),
-                                                 self.name,
-                                                 self.sender.owner.name,
-                                                 self.name, RL_FUNCTION))
 
     def _execute(self,
                 variable=None,

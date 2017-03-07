@@ -2660,11 +2660,12 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         self._check_args(variable=variable, params=params, context=context)
 
-        output = self.variable[LEARNING_ACTIVATION_OUTPUT]
-        error = self.variable[LEARNING_ERROR_OUTPUT]
+        input = self.activation_input
+        output = self.activation_output
+        error = self.error_signal
 
         # Assign error term to chosen item of output array
-        error_array = (np.where(output, self.learning_rate * error, 0))
+        error_array = (np.where(input, self.learning_rate * error, 0))
 
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
