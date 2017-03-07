@@ -449,6 +449,8 @@ def _instantiate_learning_components(learning_projection, context=None):
     #        Note:  the error_source for LearningMechanism is set in lc.error_signal_mech:
     #            if is_target, this comes from the primary outputState of objective_mechanism;
     #            otherwise, it comes from outputStates[ERROR_SIGNAL] of the LearningMechanism for lc.error_mech
+    # - Use of AUTO_ASSIGN_MATRIX for the MappingProjections is safe, as compatibility of senders and receivers
+    #    is checked in the instantiation of the learning_function
 
     learning_mechanism = LearningMechanism(variable=[activation_input,
                                                      activation_output,

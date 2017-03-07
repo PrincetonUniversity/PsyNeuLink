@@ -2613,27 +2613,22 @@ class Reinforcement(LearningFunction): # ---------------------------------------
             raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                 format(self.name, self.variable))
 
-        # FIX: GETS CALLED BY _check_args W/O KWINIT IN CONTEXT
+        self.activation_input = self.variable[LEARNING_ACTIVATION_INPUT]
+        self.activation_output = self.variable[LEARNING_ACTIVATION_OUTPUT]
+        self.error_signal = self.variable[LEARNING_ERROR_OUTPUT]
+
+        if len(self.error_signal) != 1:
+            raise ComponentError("Error term for {} (the third item of its variable arg) must be an array with a "
+                                 "single element for {}".
+                                format(self.name, self.error_signal))
+
+        # Allow initializion with zero but not during a run (i.e., when called from check_args())
         if not INITIALIZING in context:
-            if np.count_nonzero(self.variable[LEARNING_ACTIVATION_OUTPUT]) != 1:
+            if np.count_nonzero(self.activation_output) != 1:
                 raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
                                     "(if output mechanism being trained uses softmax,"
                                     " its output arg may need to be set to to PROB)".
                                     format(self.variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
-            if len(self.variable[LEARNING_ERROR_OUTPUT]) != 1:
-                raise ComponentError("Error term ({}) for {} must be an array with a single element or a scalar value "
-                                    "(variable of ComparatorMechanism mechanism may need to be specified as an array of length 1)".
-                                    format(self.name, self.variable[LEARNING_ERROR_OUTPUT]))
-
-            # The length of the error signal must == 1 (since error_signal is a scalar for RL)
-            if len(variable[ERROR_SOURCE]) != 1:
-                raise LearningMechanismError("Length of error_signal ({}) received by {} from {}"
-                                          " must be 1 since {} uses {} as its learning function".
-                                          format(len(error_signal),
-                                                 self.name,
-                                                 self.sender.owner.name,
-                                                 self.name, RL_FUNCTION))
-
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
