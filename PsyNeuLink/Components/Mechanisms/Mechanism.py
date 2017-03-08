@@ -1319,11 +1319,40 @@ class Mechanism_Base(Mechanism):
                                                  time_scale=time_scale,
                                                  context=context)
 
-                # # MODIFIED 3/3/17 OLD:
-                # return np.atleast_2d(return_value)
-                # MODIFIED 3/3/17 NEW:
-                converted_to_2d = np.atleast_2d(return_value)
+                # # # MODIFIED 3/3/17 OLD:
+                # # return np.atleast_2d(return_value)
+                # # MODIFIED 3/3/17 NEW:
+                # converted_to_2d = np.atleast_2d(return_value)
+                # MODIFIED 3/7/17 NEWER:
+                # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
+                #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
+                #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
+
+                if (isinstance(return_value, list) and
+                    (all(isinstance(item, np.ndarray) for item in return_value) and
+                        all(
+                                all(item.shape[i]==return_value[0].shape[0]
+                                    for i in range(len(item.shape)))
+                                for item in return_value))):
+
+                        return return_value
+
+                        # converted_to_2d = np.array(return_value[0])
+                        # for i in range(1, len(return_value)):
+                        #     converted_to_2d = np.concatenate((converted_to_2d,return_value[i]),axis=0, dtype=object)
+
+
+                        # converted_to_2d = [list(return_value[0])]
+                        # for i in range(1, len(return_value)):
+                        #     item = list(return_value[i])
+                        #     converted_to_2d.append(item)
+                        # # converted_to_2d = np.atleast_2d(converted_to_2d)
+                        # # return_value = converted_to_2d
+
+                else:
+                    converted_to_2d = np.atleast_2d(return_value)
                 # If return_value is a list of heterogenous elements, return as is
+                #     (satisfies requirement that return_value be an array of possibly multidimensional values)
                 if converted_to_2d.dtype == object:
                     return return_value
                 # Otherwise, return value converted to 2d np.array
@@ -1400,7 +1429,7 @@ class Mechanism_Base(Mechanism):
         # self.value = np.atleast_2d(self.value)
         # MODIFIED 3/3/17 NEW:
         converted_to_2d = np.atleast_2d(self.value)
-        # If self.value is a list of heterogeneous elements, leave as is;
+        # If self.value is a list of heterogenous elements, leave as is;
         # Otherwise, use converted value (which is a genuine 2d array)
         if converted_to_2d.dtype != object:
             self.value = converted_to_2d

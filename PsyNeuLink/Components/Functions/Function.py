@@ -2661,7 +2661,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         self._check_args(variable=variable, params=params, context=context)
 
         # input_thing = list(self.activation_input.squeeze())
-        activation_input = self.activation_input[0]
+        activation_input = self.activation_input
         output = self.activation_output
         error = float(self.error_signal.squeeze())
         error_assignment = np.full(activation_input.size, self.learning_rate * error)

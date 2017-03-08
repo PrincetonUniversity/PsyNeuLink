@@ -989,7 +989,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
         if isinstance(inputs, list):
             inputs = np.array(inputs)
 
-        # If inputs to process are heterogeneous, inputs.ndim should be 2:
+        # If inputs to process are heterogenous, inputs.ndim should be 2:
         if inputs.dtype is np.dtype('O') and inputs.ndim != 2:
             raise RunError("inputs arg in call to {}.run() must be a 2D np.array or comparable list".
                               format(object.name))
@@ -1037,16 +1037,16 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
 
         if is_target:   # No phase dimension, so one less than for stimulus inputs
             # If targets are homogeneous, inputs.ndim should be 4:
-            # If targets are heterogeneous:
+            # If targets are heterogenous:
             #   if states/mech are homogenous, inputs.ndim should be 3
             #   if states/mech are heterogenous, inputs.ndim should be 2
             expected_dim = 2 + input_homogenity + states_per_mech_heterog
         else: # Stimuli, which have phases, so one extra dimension
             # If inputs are homogeneous, inputs.ndim should be 5;
-            # If inputs are heterogeneous:
+            # If inputs are heterogenous:
             #   if states sizes are heterogenous, inputs.ndim should be 4
             #   if states/mech are heterogenous, inputs.ndim should be 3
-            #   if both are heterogenouse, inputs.ndim should be 3
+            #   if both are heterogenous, inputs.ndim should be 3
             if input_homogenity:
                 expected_dim = 5
             elif states_per_mech_heterog:
@@ -1181,7 +1181,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Unknown data type for inputs in {}".format(object.name))
 
             # Processed targets for a system should be 1 dim less than inputs (since don't include phase)
-            # If inputs to processes of system are heterogeneous, inputs.ndim should be 2:
+            # If inputs to processes of system are heterogenous, inputs.ndim should be 2:
             # If inputs to processes of system are homogeneous, inputs.ndim should be 3:
             expected_dim = 2 + process_structure
 
