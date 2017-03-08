@@ -576,7 +576,7 @@ def _instantiate_output_states(owner, context=None):
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?
     owner_value = owner.value
     converted_to_2d = np.atleast_2d(owner.value)
-    # If owner_value is a list of heterogeneous elements, use as is
+    # If owner_value is a list of heterogenous elements, use as is
     if converted_to_2d.dtype == object:
         owner_value = owner.value
     # Otherwise, use value converted to 2d np.array

@@ -701,9 +701,10 @@ class Component(object):
                         # and put its params in FUNCTION_PARAMS
                         params[FUNCTION] = function.__class__
                         params[FUNCTION_PARAMS] = function.user_params.copy()
-                        self.function_variable = function.variable
-                        # MODIFIED 3/7/17 NEW:
-                        continue
+                        # # MODIFIED 3/7/17 NEW:
+                        # self.function_variable = function.variable
+                        # # MODIFIED 3/7/17 NEWER:
+                        # continue
                         # MODIFIED 3/7/17 END
 
                     # It is a generic function
@@ -1755,12 +1756,25 @@ class Component(object):
                                 from PsyNeuLink.Components.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec[0]
 
+                # MODIFIED 3/7/17 OLD:
                 # Instantiate function from class specification
                 function_instance = function(variable_default=self.variable,
                                              params=function_param_specs,
                                              # FIX 10/29/16 WHY NOT?
                                              # owner=self,
                                              context=context)
+                # # MODIFIED 3/7/17 NEW:
+                # try:
+                #     func_variable = self.function_variable
+                # except AttributeError:
+                #     func_variable= self.variable
+                # # Instantiate function from class specification
+                # function_instance = function(variable_default=func_variable,
+                #                              params=function_param_specs,
+                #                              # FIX 10/29/16 WHY NOT?
+                #                              # owner=self,
+                #                              context=context)
+                # MODIFIED 3/7/17 END
                 self.paramsCurrent[FUNCTION] = function_instance.function
                 # MODIFIED 8/31/16 NEW:
                 # # FIX: ?? COMMENT OUT WHEN self.paramsCurrent[FUNCTION] NOW MAPS TO self.function
