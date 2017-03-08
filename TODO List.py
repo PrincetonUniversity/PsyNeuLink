@@ -1948,6 +1948,8 @@
 
 #region MECHANISM: -----------------------------------------------------------------------------------------------------------
 #
+# FIX: FORMATTING OF return_value IN Mechanism.execute (LINE 1322) AND OutputState._instantiate_output_states (LINE 573)
+#
 # FIX MonitorOutputStates ISSUES:
 #     FIX: GET RID OF MonitoredOutputStatesOption enum; just use keywords (also in documentation)
 #     IMPLEMENT: Replace monitored_output_states tuple format (outputState or mech, exp, weight) with

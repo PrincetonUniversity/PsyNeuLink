@@ -570,18 +570,43 @@ def _instantiate_output_states(owner, context=None):
     """
 
     constraint_value = []
+
     # # MODIFIED 3/3/17 OLD:
     # owner_value = np.atleast_2d(owner.value)
+
     # MODIFIED 3/3/17 NEW:
-    # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?
+    # # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?
+    # owner_value = owner.value
+    # converted_to_2d = np.atleast_2d(owner.value)
+    # # If owner_value is a list of heterogenous elements, use as is
+    # if converted_to_2d.dtype == object:
+    #     owner_value = owner.value
+    # # Otherwise, use value converted to 2d np.array
+    # else:
+    #     owner_value = converted_to_2d
+
+    # MODIFIED 3/7/17 NEWER
+    # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
     owner_value = owner.value
-    converted_to_2d = np.atleast_2d(owner.value)
-    # If owner_value is a list of heterogenous elements, use as is
-    if converted_to_2d.dtype == object:
-        owner_value = owner.value
-    # Otherwise, use value converted to 2d np.array
+    # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
+    #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
+    #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
+    if (isinstance(owner_value, list) and
+        (all(isinstance(item, np.ndarray) for item in owner_value) and
+            all(
+                    all(item.shape[i]==owner_value[0].shape[0]
+                        for i in range(len(item.shape)))
+                    for item in owner_value))):
+        pass
     else:
-        owner_value = converted_to_2d
+        converted_to_2d = np.atleast_2d(owner.value)
+        # If owner_value is a list of heterogenous elements, use as is
+        if converted_to_2d.dtype == object:
+            owner_value = owner.value
+        # Otherwise, use value converted to 2d np.array
+        else:
+            owner_value = converted_to_2d
+
     # MODIFIED 3/3/17 END
 
     # IMPLEMENTATION NOTE:

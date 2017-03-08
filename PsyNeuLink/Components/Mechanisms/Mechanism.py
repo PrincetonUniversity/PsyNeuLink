@@ -1327,7 +1327,6 @@ class Mechanism_Base(Mechanism):
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
                 #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
                 #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
-
                 if (isinstance(return_value, list) and
                     (all(isinstance(item, np.ndarray) for item in return_value) and
                         all(
@@ -1336,19 +1335,6 @@ class Mechanism_Base(Mechanism):
                                 for item in return_value))):
 
                         return return_value
-
-                        # converted_to_2d = np.array(return_value[0])
-                        # for i in range(1, len(return_value)):
-                        #     converted_to_2d = np.concatenate((converted_to_2d,return_value[i]),axis=0, dtype=object)
-
-
-                        # converted_to_2d = [list(return_value[0])]
-                        # for i in range(1, len(return_value)):
-                        #     item = list(return_value[i])
-                        #     converted_to_2d.append(item)
-                        # # converted_to_2d = np.atleast_2d(converted_to_2d)
-                        # # return_value = converted_to_2d
-
                 else:
                     converted_to_2d = np.atleast_2d(return_value)
                 # If return_value is a list of heterogenous elements, return as is
