@@ -278,6 +278,7 @@ def _is_learning_spec(spec):
     else:
         return _is_projection_spec(spec)
 
+
 # Used to index variable:
 ACTIVATION_INPUT_INDEX = 0
 ACTIVATION_OUTPUT_INDEX = 1
@@ -295,6 +296,8 @@ output_state_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
 
 ERROR_SOURCE = 'error_source'
 
+MECH_LEARNING_RATE = 'mech_learning_rate'
+
 DefaultTrainingMechanism = ObjectiveMechanism
 
 class LearningMechanismError(Exception):
@@ -311,7 +314,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  variable,                   \
                  error_source                \
                  function=BackPropagation    \
-                 learning_rate=None          \
+                 mech_learning_rate=None     \
                  params=None,                \
                  name=None,                  \
                  prefs=None)
@@ -380,9 +383,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         specifies the function used to compute the `learning_signal` (see `function <LearningMechanism.function>` for
         details).
 
-    learning_rate : float
-        specifies the learning_rate for this LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
-        for details).
+    mech_learning_rate : float
+        specifies the learning rate for this LearningMechanism (see `mech_learning_rate` for details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -456,11 +458,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         specifies function used to compute the `learning_signal`.  Must take the following arguments:
         `input` (list or 1d array), `output` (list or 1d array), `derivative` (function) and `error` (list or 1d array).
 
-    learning_rate : float : default 1.0
-        specifies the learning_rate for this LearningMechanism; it is superceded by the learning_rate for the
-        process or system if either of those is specified (see
-        ` process learning_rate <Process.Process_Base.learning_rate>` and
-        ` system learning_rate <System.System_Base.learning_rate>` for details).
+    mech_learning_rate : float : default 1.0
+        determines the learning rate for the LearningMechanism.  It is used to specify the `learning_rate` parameter
+        for the LearningMechanism's `learning function <LearningMechanism.function>`;  It is superceded by specification
+        of a learning_rate for the `process <Process.Process_Base.learning_rate>` or
+        `system <System.System_Base.learning_rate>` if either of those is specified.
 
     # objective_mechanism : Optional[ObjectiveMechanism or OutputState]
     #     the 'mechanism <Mechanism>` or its `outputState <OutputState>` that provides the `error_signal`
@@ -510,7 +512,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  variable:tc.any(list, np.ndarray),
                  error_source:tc.optional(Mechanism)=None,
                  function:is_function_type=BackPropagation,
-                 learning_rate:float=1.0,
+                 mech_learning_rate:float=1.0,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -519,7 +521,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(error_source=error_source,
                                                   function=function,
-                                                  learning_rate=learning_rate,
+                                                  mech_learning_rate=mech_learning_rate,
                                                   params=params)
 
         # # USE FOR IMPLEMENTATION OF deferred_init()
@@ -528,7 +530,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # self.init_args['context'] = self
         # self.init_args['name'] = name
         # delete self.init_args[ERROR_MATRIX]
-        # delete self.init_args[LEARNING_RATE]
+        # delete self.init_args[MECH_LEARNING_RATE]
 
         # # Flag for deferred initialization
         # self.value = DEFERRED_INITIALIZATION

@@ -1677,7 +1677,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     elif isinstance(constraint_value, ParamValueProjection):
         constraint_value = constraint_value.value
 
-    # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTOIN KEYWORD?  ZZZZZZZ
+    # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTION KEYWORD?
     # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
     if isinstance(constraint_value, str):
         constraint_value = get_param_value_for_keyword(owner, constraint_value)
