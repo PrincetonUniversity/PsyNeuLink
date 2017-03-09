@@ -428,14 +428,18 @@ class LearningProjection(Projection_Base):
         except TypeError:
             learning_signal_shape = 1
 
-        if receiver_weight_matrix_shape != learning_signal_shape:
-            raise ProjectionError("Shape ({}) of learing_signal matrix for {} from {}"
-                                  " must match shape of the weight matrix ({}) for the receiver {}".
-                                  format(learning_signal_shape,
-                                         self.name,
-                                         self.sender.name,
-                                         receiver_weight_matrix_shape,
-                                         self.receiver.owner.name))
+
+        # FIX: SHOULD TEST WHETHER IT CAN BE USED, NOT WHETHER IT IS THE SAME SHAPE
+        # # MODIFIED 3/8/17 OLD:
+        # if receiver_weight_matrix_shape != learning_signal_shape:
+        #     raise ProjectionError("Shape ({}) of learing_signal matrix for {} from {}"
+        #                           " must match shape of the weight matrix ({}) for the receiver {}".
+        #                           format(learning_signal_shape,
+        #                                  self.name,
+        #                                  self.sender.name,
+        #                                  receiver_weight_matrix_shape,
+        #                                  self.receiver.owner.name))
+        # MODIFIED 3/8/17 END
 
         learning_mechanism = self.sender.owner
         objective_mechanism = learning_mechanism.inputStates[ERROR_SIGNAL].receivesFromProjections[0].sender.owner
