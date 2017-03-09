@@ -322,13 +322,20 @@ def _instantiate_learning_components(learning_projection, context=None):
 
         # Force output activity and error arrays to be scalars
         error_output = error_signal  = np.array([0])
+        learning_rate = learning_projection.learning_function.learning_rate
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
         # learning_function = Reinforcement(variable=objective_mechanism.outputState.value,
-        learning_function = Reinforcement(variable_default=[[activation_input],[activation_output],[error_signal]],
+        # # MODIFIED 3/9/17 OLD:
+        # learning_function = Reinforcement(variable_default=[[activation_input],[activation_output],[error_signal]],
+        #                                   activation_function=lc.activation_mech_fct,
+        #                                   learning_rate=learning_rate)
+        # MODIFIED 3/9/17 NEW:
+        learning_function = Reinforcement(variable_default=[activation_input,activation_output,error_signal],
                                           activation_function=lc.activation_mech_fct,
                                           learning_rate=learning_rate)
+        # MODIFIED 3/9/17 END
 
     # BACKPROPAGATION LEARNING FUNCTION
     elif learning_function.componentName is BACKPROPAGATION_FUNCTION:
@@ -336,6 +343,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         # Get activation_mech values
         activation_input = np.zeros_like(lc.activation_mech_input.value)
         activation_output = np.zeros_like(lc.activation_mech_output.value)
+
         # Validate that the function for activation_mech has a derivative
         try:
             activation_derivative = lc.activation_mech_fct.derivative

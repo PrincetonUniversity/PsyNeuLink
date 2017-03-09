@@ -2,6 +2,18 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# HIGH LEVEL ISSUES:
+#   1) MANAGEMENT OF RETURN_VALUE FOR MECHANISMS (AS LIST VS. 2d NP.ARRAY)
+#   2) ASSIGNMENT AND NAMING OF FUNCTION_PARAMS FOR AN OBJECT;
+#      PROBLEMS:
+#        - CONFUSION AS TO OBJECT TO WHICH THEY BELONG (OBJECT ITSELF OR ITS FUNCTION_OBJECT)
+#        - NAMING CONFLICTS
+#      OPTIONS:
+#        - MAKE A SPECIAL CLASS, OR KEEP function_params DICT BUT DON'T ASSIGN AS PARAMS OF OBJECT?
+#        - RENAME ANY CONFLICTS WITH PREFIX "function_<param_name>" (E.G., function_learning_rate)
+#        - RENAME ALL FUNCTION_PARAMS WITH PREFIX "function_<param_name>"
+#        - DISALLOW CONFLICTING NAMES AND THROW EXCPETION WHEN THEY ARE DETECTED IN _instantiate_parameter_state()
+
 
 # COMPOSITION IMPLEMENTATION NOTE:
 #   add_projection_to and add_projection_from methods
