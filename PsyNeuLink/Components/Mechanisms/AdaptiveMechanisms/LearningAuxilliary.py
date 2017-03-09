@@ -318,10 +318,10 @@ def _instantiate_learning_components(learning_projection, context=None):
     if learning_function.componentName is RL_FUNCTION:
 
         activation_input = np.zeros_like(lc.activation_mech_input.value)
+        activation_output = np.zeros_like(lc.activation_mech_output.value)
 
         # Force output activity and error arrays to be scalars
-        activation_output = error_output = error_signal  = np.array([0])
-
+        error_output = error_signal  = np.array([0])
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
@@ -402,8 +402,12 @@ def _instantiate_learning_components(learning_projection, context=None):
         # Assign derivative of Linear to lc.error_derivative (as default, until TARGET projection is assigned);
         #    this will induce a simple subtraction of target-sample (i.e., implement a comparator)
 
-        sample_input = activation_output
-        target_input = error_output
+        # # MODIFIED 3/9/17 OLD:
+        # sample_input = activation_output
+        # target_input = error_output
+        # MODIFIED 3/9/17 NEW:
+        sample_input = target_input = error_output
+        # MODIFIED 3/9/17 END
         # Assign outputStates for TARGET ObjectiveMechanism (used for reporting)
         object_mech_params = {OUTPUT_STATES:
                                   [{NAME:TARGET_ERROR},
@@ -469,12 +473,12 @@ def _instantiate_learning_components(learning_projection, context=None):
     # Assign MappingProjection from activation_mech_input to LearningMechanism's ACTIVATION_INPUT inputState
     MappingProjection(sender=lc.activation_mech_input,
                       receiver=learning_mechanism.inputStates[ACTIVATION_INPUT],
-                      matrix=AUTO_ASSIGN_MATRIX)
+                      matrix=IDENTITY_MATRIX)
 
     # Assign MappingProjection from activation_mech_output to LearningMechanism's ACTIVATION_OUTPUT inputState
     MappingProjection(sender=lc.activation_mech_output,
                       receiver=learning_mechanism.inputStates[ACTIVATION_OUTPUT],
-                      matrix=AUTO_ASSIGN_MATRIX)
+                      matrix=IDENTITY_MATRIX)
 
     # Assign learning_mechanism as sender of learning_projection and return
     # Note: learning_projection still has to be assigned to the learning_mechanism's outputState;
