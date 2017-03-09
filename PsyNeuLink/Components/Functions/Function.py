@@ -2660,26 +2660,70 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         self._check_args(variable=variable, params=params, context=context)
 
-        # input_thing = list(self.activation_input.squeeze())
-        activation_input = self.activation_input
+    # # MODIFIED 3/9/17 OLD:
+    #     # input_thing = list(self.activation_input.squeeze())
+    #     activation_input = self.activation_input
+    #     output = self.activation_output
+    #     error = float(self.error_signal.squeeze())
+    #     error_assignment = np.full(activation_input.size, self.learning_rate * error)
+    #     null_assignment = np.zeros_like(activation_input)
+    #
+    #     # Assign error term to chosen item of output array
+    #     # error_array = np.atleast_1d(np.where(input, self.learning_rate * error, 0))
+    #     error_array = (np.where(input, error_assignment, null_assignment))
+    #
+    #     # Construct weight change matrix with error term in proper element
+    #
+    #     # MODIFIED 3/7/17 OLD:
+    #     weight_change_matrix = np.diag(error_array)
+    #     # # MODIFIED 3/7/17 NEW:
+    #     # weight_change_matrix = [error_array]
+    #     # MODIFIED 3/7/17 END
+    #
+    #     return [weight_change_matrix, error_array]
+
+    # MODIFIED 3/9/17 NEW:
+        # # FROM DEVEL:
+
         output = self.activation_output
-        error = float(self.error_signal.squeeze())
-        error_assignment = np.full(activation_input.size, self.learning_rate * error)
-        null_assignment = np.zeros_like(activation_input)
+        error = self.error_signal
+        learning_rate = self.learning_rate
 
         # Assign error term to chosen item of output array
-        # error_array = np.atleast_1d(np.where(input, self.learning_rate * error, 0))
-        error_array = (np.where(input, error_assignment, null_assignment))
+        error_array = (np.where(output, learning_rate * error, 0))
 
         # Construct weight change matrix with error term in proper element
-
-        # MODIFIED 3/7/17 OLD:
         weight_change_matrix = np.diag(error_array)
-        # # MODIFIED 3/7/17 NEW:
-        # weight_change_matrix = [error_array]
-        # MODIFIED 3/7/17 END
 
+        # return:
+        # - weight_change_matrix and error_array
         return [weight_change_matrix, error_array]
+
+
+        # # input_thing = list(self.activation_input.squeeze())
+        # activation_input = self.activation_input
+        # output = self.activation_output
+        # error = float(self.error_signal.squeeze())
+        # error_assignment = np.full(activation_input.size, self.learning_rate * error)
+        # null_assignment = np.zeros_like(activation_input)
+        #
+        # # Assign error term to chosen item of output array
+        # # error_array = np.atleast_1d(np.where(input, self.learning_rate * error, 0))
+        # error_array = (np.where(input, error_assignment, null_assignment))
+        #
+        # # Construct weight change matrix with error term in proper element
+        #
+        # # MODIFIED 3/7/17 OLD:
+        # weight_change_matrix = np.diag(error_array)
+        # # # MODIFIED 3/7/17 NEW:
+        # # weight_change_matrix = [error_array]
+        # # MODIFIED 3/7/17 END
+        #
+        # return [weight_change_matrix, error_array]
+
+    # MODIFIED 3/9/17 END
+
+
 
 
 # Argument names:
