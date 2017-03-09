@@ -665,7 +665,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # MODIFIED 3/5/17 END
 
 
-
 def validate_monitored_value(self, state_spec, context=None):
     """Validate specification for monitored_value arg
 
