@@ -2626,9 +2626,9 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         if not INITIALIZING in context:
             if np.count_nonzero(self.activation_output) != 1:
                 raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
-                                    "(if output mechanism being trained uses softmax,"
-                                    " its output arg may need to be set to to PROB)".
-                                    format(self.variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
+                                     "(if output mechanism being trained uses softmax,"
+                                     " its \'output\' arg may need to be set to to PROB)".
+                                     format(self.variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
