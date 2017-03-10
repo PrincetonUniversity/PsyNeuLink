@@ -25,53 +25,56 @@ class ScheduleVariable(object):
     # Helper class for Scheduler
     # Creates a ScheduleVariable which contains a component (typically a mechanism) to be scheduled
     # Initialization ---
-    # - self.own_constraints, self.unfilled_constraints, self.filled_constraints, self.dependent_constraints
-    # are first initialized as empty lists, then immediately adjusted based on own_constraints and dependent_constraints
-    # - add_own_constraint appends contents of own_constraints to self.own_constraints and self.unfilled_constraints
-    # - add_dependent_constraint appends contents of dependent_constraints to self.dependent_constraints
+    # - self.own_constraint_sets, self.unfilled_constraint_sets, self.filled_constraint_sets, self.dependent_constraint_sets
+    # are first initialized as empty lists, then immediately adjusted based on own_constraint_sets and dependent_constraints
+    # - add_own_constraint_set appends contents of own_constraint_sets to self.own_constraint_sets and self.unfilled_constraint_sets
+    # - add_dependent_constraint_set appends contents of dependent_constraints to self.dependent_constraints
     # Updates ---
-    # - evaluate_constraint appends to filled_constraints and removes from unfilled_constraints if constraint is
+    # - evaluate_constraint_set appends to filled_constraint_sets and removes from unfilled_constraint_sets if constraint is
     # satisfied. If component is terminal and constraint is satisfied, self.ran is set to True
-    # - new_time_step resets unfilled_constraints and filled_constraints
+    # - new_time_step resets unfilled_constraint_sets and filled_constraint_sets
     # - new_trial calls new_trial() method on component to reset mechanism for a new trial
     ########
-    def __init__(self, component, own_constraints = [], dependent_constraints = [], priority = None):
+    def __init__(self, component, own_constraint_sets = [], dependent_constraint_sets = [], priority = None):
         self.component = component
-        # Possible simplification - set default own_constraints = [] etc to avoid 'is not None' logic
-        self.own_constraints = []
-        self.unfilled_constraints = []
-        self.filled_constraints = []
-        for con_set in own_constraints:
+        # Possible simplification - set default own_constraint_sets = [] etc to avoid 'is not None' logic
+        self.own_constraint_sets = []
+        self.unfilled_constraint_sets = []
+        self.filled_constraint_sets = []
+        # own_constraint_sets is a list of constraint sets, which are lists of constraint objects
+        for con_set in own_constraint_sets:
             for con in con_set:
-                self.add_own_constraint(con)
-        self.dependent_constraints = []
-        for con_set in dependent_constraints:
+                self.add_own_constraint_set(con)
+        self.dependent_constraint_sets = []
+        for con_set in dependent_constraint_sets:
             for con in con_set:
-                self.add_dependent_constraint(con)
+                self.add_dependent_constraint_set(con)
         self.priority = priority
 
-    def add_own_constraint(self, constraint):
-        self.own_constraints.append(constraint)
-        self.unfilled_constraints.append(constraint)
+    def add_own_constraint_set(self, constraint):
+        self.own_constraint_sets.append(constraint)
+        self.unfilled_constraint_sets.append(constraint)
 
-    def add_dependent_constraint(self, constraint):
-        self.dependent_constraints.append(constraint)
+    def add_dependent_constraint_set(self, constraint):
+        self.dependent_constraint_sets.append(constraint)
 
-    def evaluate_constraint(self, constraint):
+    def evaluate_constraint_set(self, constraint_set):
         ######
-        # Takes in a constraint and checks whether it's been satisfied
+        # Takes in a constraint set and checks whether it's been satisfied
         ######
-        result = constraint.is_satisfied()
-        if result:
-            self.filled_constraints.append(constraint)
-            self.unfilled_constraints.remove(constraint)
+        for constraint in constraint_set:
+            result = constraint.is_satisfied()
+            if result:
+                self.filled_constraint_sets.append(constraint_set)
+                self.unfilled_constraint_sets.remove(constraint_set)
+                return result
         return result
 
     def new_time_step(self):
         self.component.new_time_step()
-        for con in self.filled_constraints:
-            self.unfilled_constraints.append(con)
-            self.filled_constraints.remove(con)
+        for con in self.filled_constraint_sets:
+            self.unfilled_constraint_sets.append(con)
+            self.filled_constraint_sets.remove(con)
 
     def new_trial(self):
         self.component.new_trial()
@@ -111,31 +114,48 @@ class Scheduler(object):
             self.var_dict[var[0]].priority = var[1]
             self.var_list.append(self.var_dict[var[0]])
 
-    def add_constraints(self, constraints):
+    def add_constraints(self, constraint_sets):
         #######
-        # Takes in a list of tuples of constraint parameters
+        # Takes in a list of lists of tuples of constraint parameters
         # Passes constraint parameters to Constraint to assemble Constraint objects
-        # Adds each Constraint object to its owner's and dependencies' ScheduleVariables
+        # Adds sets of Constraint objects to their owner's and dependencies' ScheduleVariables
         #######
-        for con in constraints:
-            # Turn con into a Constraint object
-            # Get owner[0], dependencies[1] and condition[2] out of each con
-            if isinstance(con[0], Scheduler):   # special case where the constraint is on the entire Scheduler
-                owner = con[0]
-            else:
-                owner = self.var_dict[con[0]]   # typical case where the constraint is on a ScheduleVariable
-            if con[1] in self.var_dict:
-                dependencies = (self.var_dict[con[1]],)
-            else:
-                dependencies = tuple((self.var_dict[mech] for mech in con[1]))
+        for con_set in constraint_sets:
 
-            con = Constraint(owner, dependencies, condition = con[2])
+            # create an empty list for storing the constraint objects that make up each constraint set
+            constraint_objects_in_set = []
+
+            for con in con_set:
+
+                # Turn con into a Constraint object
+                # Get owner[0], dependencies[1] and condition[2] out of each con
+                if isinstance(con[0], Scheduler):   # special case where the constraint is on the entire Scheduler
+                    owner = con[0]
+                else:
+                    owner = self.var_dict[con[0]]   # typical case where the constraint is on a ScheduleVariable
+
+                if con[1] in self.var_dict:
+                    dependencies = (self.var_dict[con[1]],)
+                else:
+                    dependencies = tuple((self.var_dict[mech] for mech in con[1]))
+
+                con = Constraint(owner, dependencies, condition = con[2])
+
+                constraint_objects_in_set.append(con)
+
+            for con in constraint_objects_in_set:
+                # Add constraint as a dependent constraint on dependencies
+                for var in con.dependencies:
+                    var.add_dependent_constraint_set(constraint_objects_in_set)
+
+                if isinstance(owner, ScheduleVariable):
+                    con.owner.add_own_constraint_set(constraint_objects_in_set)
+
+            # Add constraint to the owner's ScheduleVariable
             if isinstance(owner, ScheduleVariable):
-                con.owner.add_own_constraint(con)
-            # Add constraint to Scheduler?, owner, and dependencies
-            self.constraints.append(con)
-            for var in con.dependencies:
-                var.add_dependent_constraint(con)
+                owner.unfilled_constraint_sets.append(constraint_objects_in_set)
+            # Add constraint to Scheduler and to list of constraints in this set
+            self.constraints.append(constraint_objects_in_set)
 
     def set_clock(self, clock):
         #######
@@ -162,16 +182,16 @@ class Scheduler(object):
 
             change_list = []
 
-            for con in variable.dependent_constraints:
+            for con_set in variable.dependent_constraint_sets:
+                for con in con_set:
+                    if isinstance(con.owner, Scheduler):        # special case where the constraint is on the Scheduler
+                        if con.is_satisfied():                  # If the constraint is satisfied, end trial
+                            self.trial_terminated = True
 
-                if isinstance(con.owner, Scheduler):        # special case where the constraint is on the Scheduler
-                    if con.is_satisfied():                  # If the constraint is satisfied, end trial
-                        self.trial_terminated = True
-
-                elif con in con.owner.unfilled_constraints: # typical case where the constrain is on a ScheduleVariable
-                    if con.owner.evaluate_constraint(con):  # If the constraint is satisfied, pass owner to change list
-                        change_list.append(con.owner)
-                change_list.sort(key=lambda x:x.priority)   # sort change list according to priority
+                    elif con_set in con.owner.unfilled_constraint_sets: # typical case where the constraint is on a ScheduleVariable
+                        if con.owner.evaluate_constraint_set(con_set):  # If the constraint set is satisfied, pass owner to change list
+                            change_list.append(con.owner)
+                    change_list.sort(key=lambda x:x.priority)   # sort change list according to priority
             return change_list
 
         def update_firing_queue(firing_queue, change_list):
@@ -181,7 +201,7 @@ class Scheduler(object):
             ######
 
             for var in change_list:
-                if var.unfilled_constraints == []:
+                if len(var.filled_constraint_sets) == len(var.own_constraint_sets):
                     firing_queue.append(var)
             return firing_queue
 
@@ -226,55 +246,61 @@ def main():
 
     test_constraints_dict = {
                             # every_n
-                             "Test 1": [(A, (Clock,), every_n_calls(1)),
-                               (B, (A,), every_n_calls(2)),
-                               (C, (B,), every_n_calls(3)),
-                               (T, (C,), every_n_calls(4)),
-                               (sched, (T,), terminal())],
+                             "Test 1": [[(A, (Clock,), every_n_calls(1))],
+                               [(B, (A,), every_n_calls(2))],
+                               [(C, (B,), every_n_calls(3))],
+                               [(T, (C,), every_n_calls(4))],
+                               [(sched, (T,), terminal())]],
 
-                            # after_n where C begins after 2 runs of B; C is terminal
-                             "Test 2": [(A, (Clock,), every_n_calls(1)),
-                                        (B, (A,), every_n_calls(2)),
-                                        (C, (B,), after_n_calls(2)),
-                                        (sched, (C,), terminal())],
+                            "Test 1b": [[(A, (Clock,), every_n_calls(3))],
+                                       [(B, (A,), every_n_calls(1)),(B, (Clock,), every_n_calls(2))],
+                                       [(C, (B,), every_n_calls(3))],
+                                       [(T, (C,), every_n_calls(4))],
+                                       [(sched, (T,), terminal())]],
 
-                            # after_n where C begins after 2 runs of B; runs for 10 time steps
-                            "Test 3": [(A, (Clock,), every_n_calls(1)),
-                                       (B, (A,), every_n_calls(2)),
-                                       (C, (B,), after_n_calls(2)),
-                                       (sched, (Clock,), num_time_steps(10))],
-
-                            # after_n where C begins after 3 runs of B OR A; runs for 10 time steps
-                             "Test 4": [(A, (Clock,), every_n_calls(1)),
-                                        (B, (A,), every_n_calls(2)),
-                                        (C, (B,A), after_n_calls(3, op = "OR")),
-                                        (sched, (Clock,), num_time_steps(10))],
-
-                            # after_n where C begins after 2 runs of B AND A; runs for 10 time steps
-                            "Test 5": [(A, (Clock,), every_n_calls(1)),
-                                        (B, (A,), every_n_calls(2)),
-                                        (C, (B,A), after_n_calls(3)),
-                                        (sched, (Clock,), num_time_steps(10))],
-
-                            # first n where A depends on the clock
-                            "Test 6": [(A, (Clock,), first_n_calls(5)),
-                                       (B, (A,), after_n_calls(5)),
-                                       (C, (B,), after_n_calls(1)),
-                                       (sched, (Clock,), num_time_steps(10))],
-
-                            # terminal where trial ends when A OR B runs
-                            "Test 7": [(A, (Clock,), every_n_calls(1)),
-                                       (B, (A,), every_n_calls(2)),
-                                       (sched, (A,B), terminal(op="OR"))],
-
-                            # terminal where trial ends when A AND B have run
-                            "Test 8": [(A, (Clock,), every_n_calls(1)),
-                                       (B, (A,), every_n_calls(2)),
-                                       (sched, (A, B), terminal())],
+        # # after_n where C begins after 2 runs of B; C is terminal
+                            #  "Test 2": [(A, (Clock,), every_n_calls(1)),
+                            #             (B, (A,), every_n_calls(2)),
+                            #             (C, (B,), after_n_calls(2)),
+                            #             (sched, (C,), terminal())],
+                            #
+                            # # after_n where C begins after 2 runs of B; runs for 10 time steps
+                            # "Test 3": [(A, (Clock,), every_n_calls(1)),
+                            #            (B, (A,), every_n_calls(2)),
+                            #            (C, (B,), after_n_calls(2)),
+                            #            (sched, (Clock,), num_time_steps(10))],
+                            #
+                            # # after_n where C begins after 3 runs of B OR A; runs for 10 time steps
+                            #  "Test 4": [(A, (Clock,), every_n_calls(1)),
+                            #             (B, (A,), every_n_calls(2)),
+                            #             (C, (B,A), after_n_calls(3, op = "OR")),
+                            #             (sched, (Clock,), num_time_steps(10))],
+                            #
+                            # # after_n where C begins after 2 runs of B AND A; runs for 10 time steps
+                            # "Test 5": [(A, (Clock,), every_n_calls(1)),
+                            #             (B, (A,), every_n_calls(2)),
+                            #             (C, (B,A), after_n_calls(3)),
+                            #             (sched, (Clock,), num_time_steps(10))],
+                            #
+                            # # first n where A depends on the clock
+                            # "Test 6": [(A, (Clock,), first_n_calls(5)),
+                            #            (B, (A,), after_n_calls(5)),
+                            #            (C, (B,), after_n_calls(1)),
+                            #            (sched, (Clock,), num_time_steps(10))],
+                            #
+                            # # terminal where trial ends when A OR B runs
+                            # "Test 7": [(A, (Clock,), every_n_calls(1)),
+                            #            (B, (A,), every_n_calls(2)),
+                            #            (sched, (A,B), terminal(op="OR"))],
+                            #
+                            # # terminal where trial ends when A AND B have run
+                            # "Test 8": [(A, (Clock,), every_n_calls(1)),
+                            #            (B, (A,), every_n_calls(2)),
+                            #            (sched, (A, B), terminal())],
 
                               }
 
-    test = "Test 8"
+    test = "Test 1b"
     sched.add_constraints(test_constraints_dict[test])
 
     for var in sched.var_list:
