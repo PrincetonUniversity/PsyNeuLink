@@ -39,7 +39,7 @@ class ScheduleVariable(object):
         self.component = component
         # Possible simplification - set default own_constraint_sets = [] etc to avoid 'is not None' logic
         self.own_constraint_sets = []
-        self.unfilled_constraint_sets = []
+        # self.unfilled_constraint_sets = []
         self.filled_constraint_sets = []
         # own_constraint_sets is a list of constraint sets, which are lists of constraint objects
         for con_set in own_constraint_sets:
@@ -52,11 +52,13 @@ class ScheduleVariable(object):
         self.priority = priority
 
     def add_own_constraint_set(self, constraint):
-        self.own_constraint_sets.append(constraint)
-        self.unfilled_constraint_sets.append(constraint)
+        if constraint not in self.own_constraint_sets:
+            self.own_constraint_sets.append(constraint)
+        # self.unfilled_constraint_sets.append(constraint)
 
     def add_dependent_constraint_set(self, constraint):
-        self.dependent_constraint_sets.append(constraint)
+        if constraint not in self.dependent_constraint_sets:
+            self.dependent_constraint_sets.append(constraint)
 
     def evaluate_constraint_set(self, constraint_set):
         ######
@@ -66,15 +68,16 @@ class ScheduleVariable(object):
             result = constraint.is_satisfied()
             if result:
                 self.filled_constraint_sets.append(constraint_set)
-                self.unfilled_constraint_sets.remove(constraint_set)
+                # self.unfilled_constraint_sets.remove(constraint_set)
                 return result
         return result
 
     def new_time_step(self):
         self.component.new_time_step()
-        for con in self.filled_constraint_sets:
-            self.unfilled_constraint_sets.append(con)
-            self.filled_constraint_sets.remove(con)
+        self.filled_constraint_sets = []
+        # for con in self.filled_constraint_sets:
+            # self.unfilled_constraint_sets.append(con)
+            # self.filled_constraint_sets.remove(con)
 
     def new_trial(self):
         self.component.new_trial()
@@ -152,8 +155,8 @@ class Scheduler(object):
                     con.owner.add_own_constraint_set(constraint_objects_in_set)
 
             # Add constraint to the owner's ScheduleVariable
-            if isinstance(owner, ScheduleVariable):
-                owner.unfilled_constraint_sets.append(constraint_objects_in_set)
+            # if isinstance(owner, ScheduleVariable):
+            #     owner.unfilled_constraint_sets.append(constraint_objects_in_set)
             # Add constraint to Scheduler and to list of constraints in this set
             self.constraints.append(constraint_objects_in_set)
 
@@ -188,10 +191,11 @@ class Scheduler(object):
                         if con.is_satisfied():                  # If the constraint is satisfied, end trial
                             self.trial_terminated = True
 
-                    elif con_set in con.owner.unfilled_constraint_sets: # typical case where the constraint is on a ScheduleVariable
-                        if con.owner.evaluate_constraint_set(con_set):  # If the constraint set is satisfied, pass owner to change list
+                    elif con_set not in con.owner.filled_constraint_sets: # typical case where the constraint is on a ScheduleVariable
+                        if con.owner.evaluate_constraint_set(con_set) and con.owner not in change_list:  # If the constraint set is satisfied, pass owner to change list
                             change_list.append(con.owner)
                     change_list.sort(key=lambda x:x.priority)   # sort change list according to priority
+
             return change_list
 
         def update_firing_queue(firing_queue, change_list):
@@ -215,6 +219,7 @@ class Scheduler(object):
             print(var.component.name)
             change_list = update_dependent_vars(var)
             firing_queue = update_firing_queue(firing_queue, change_list)
+        print("===============================")
 
     def run_trial(self):
         ######
@@ -252,8 +257,8 @@ def main():
                                [(T, (C,), every_n_calls(4))],
                                [(sched, (T,), terminal())]],
 
-                            "Test 1b": [[(A, (Clock,), every_n_calls(3))],
-                                       [(B, (A,), every_n_calls(1)),(B, (Clock,), every_n_calls(2))],
+                            "Test 1b": [[(A, (Clock,), every_n_calls(1))],
+                                       [(B, (A,), every_n_calls(2)),(B, (Clock,), after_n_calls(2))],
                                        [(C, (B,), every_n_calls(3))],
                                        [(T, (C,), every_n_calls(4))],
                                        [(sched, (T,), terminal())]],
