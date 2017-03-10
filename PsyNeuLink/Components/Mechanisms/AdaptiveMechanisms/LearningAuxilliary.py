@@ -251,6 +251,9 @@ def _instantiate_learning_components(learning_projection, context=None):
     #    (i.e., the source of an error_signal for learning_projection)
     # IMPLEMENTATION NOTE: this uses the first projection found (starting with the primary outputState)
 
+    # FIX: CHECK THAT THE PROJECTION IS TO ANOTHER MECHANISM IN THE CURRENT PROCESS;
+    #      OTHERWISE, ALLOW OBJECTIVE_MECHANISM TO BE IMPLEMENTED
+
     for projection in lc.activation_mech_output.sendsToProjections:
 
         receiver_mech = projection.receiver.owner
@@ -261,7 +264,15 @@ def _instantiate_learning_components(learning_projection, context=None):
             # If it projects to a LearningMechanism:
             #    it must project to the ACTIVATION_OUTPUT inputState of that LearningMechanism;
             #    the LearningMechanism must be the sender of learning_projection.
-            if not (projection.receiver.name is ACTIVATION_OUTPUT and receiver_mech is learning_projection.sender.owner):
+            # FIX: CAN'T REFERENCE learning_projection.sender BELOW, AS THAT IS THE LEARNING_MECH BEING CREATED BELOW!
+            #      CHANGE CONDITIONAL TO BE THAT learning_projection DOESN'T ALREADY HAVE A SENDER??
+            # FIX: CHECK THAT THE PROJECTION IS TO ANOTHER MECHANISM IN THE CURRENT PROCESS;
+            #      OTHERWISE, ALLOW OBJECTIVE_MECHANISM TO BE IMPLEMENTED
+            # # MODIFIED 3/9/17 OLD:
+            # if not (projection.receiver.name is ACTIVATION_OUTPUT and receiver_mech is learning_projection.sender.owner):
+            # MODIFIED 3/9/17 NEW:
+            if not projection.receiver.name is ACTIVATION_OUTPUT:
+            # MODIFIED 3/9/17 END
                 if lc.activation_mech_projection.verbosePref:
                     warnings.warn("{} projects to a LearningMechanism ({}) that is not the sender of its "
                                   "LearningProjection ({})".
@@ -297,10 +308,15 @@ def _instantiate_learning_components(learning_projection, context=None):
             learning_projection.sender = error_signal_source
             return
 
+    # FIX: CHECK THAT THE PROJECTION IS TO ANOTHER MECHANISM IN THE CURRENT PROCESS;
+    #      OTHERWISE, ALLOW OBJECTIVE_MECHANISM TO BE IMPLEMENTED
+    #      BUT HOW CAN IT KNOW THIS, SINCE UNTIL THE METHOD IS PART OF A COMPOSITION, IT DOESN'T KNOW WHAT
+    #             COMPOSITION IS BEING CALLED.  -- LOOK AT LearningProjection_OLD TO SEE HOW IT WAS HANDLED THERE.
+
     # Next, determine whether an ObjectiveMechanism or LearningMechanism should be assigned as the sender
     # It SHOULD be an ObjectiveMechanism (i.e., TARGET) if either:
-    #     - it has either no outgoing projections or
-    #     - it has not projections that receive a LearningProjection;
+    #     - it has no outgoing projections or
+    #     - it has no projections that receive a LearningProjection;
     #   in either case, lc.error_projection returns None.
     #   Note:  this assumes that LearningProjections are being assigned from the end of the pathway to the beginning.
     is_target = not lc.error_projection
