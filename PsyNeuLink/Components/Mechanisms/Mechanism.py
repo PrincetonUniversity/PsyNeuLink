@@ -790,6 +790,7 @@ class Mechanism_Base(Mechanism):
 # IMPLEMENT **args (PER State)
 
         self._execution_id = None
+        self._instantiation_id = None
 
         # Register with MechanismRegistry or create one
         if not context is kwValidate:

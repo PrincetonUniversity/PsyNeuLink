@@ -45,7 +45,7 @@ HO_Weights = MappingProjection(name='Hidden-Output Weights',
                         matrix=HO_Weights_matrix
                         )
 
-color_naming_process = process(
+                        color_naming_process = process(
     default_input_value=[1, 2.5],
     pathway=[colors, CH_Weights, hidden, HO_Weights, response],
     learning=LEARNING,
@@ -60,6 +60,9 @@ word_reading_process = process(
     learning=LEARNING,
     target=[3,3],
     prefs=process_prefs)
+
+# color_naming_process.execute()
+# word_reading_process.execute()
 
 mySystem = system(processes=[color_naming_process, word_reading_process],
                   targets=[0,0],
