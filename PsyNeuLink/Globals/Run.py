@@ -601,7 +601,7 @@ def run(object,
     # EXECUTE
     for execution in range(num_executions):
 
-        execution_id = _get_get_execution_id()
+        execution_id = _get_unique_id()
 
         if call_before_trial:
             call_before_trial()
@@ -1251,5 +1251,5 @@ def _get_obect_type(object):
     
 
 import uuid
-def _get_get_execution_id():
+def _get_unique_id():
     return uuid.uuid4()

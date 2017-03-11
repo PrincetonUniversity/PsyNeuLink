@@ -851,6 +851,7 @@ class Process_Base(Process):
                                                   params=params)
 
         self._execution_id = None
+        self._instantiation_id = None
         self.pathway = None
         # # MODIFIED 2/17/17 OLD:
         # self.input = None
@@ -994,6 +995,10 @@ class Process_Base(Process):
         self._mech_tuples = []
         self._monitoring_mech_tuples = []
         self._target_mech_tuples = []
+
+        from PsyNeuLink.Globals.Run import _get_unique_id
+        self._instantiation_id = _get_unique_id()
+
 
         self._standardize_config_entries(pathway=pathway, context=context)
 
@@ -2036,8 +2041,8 @@ class Process_Base(Process):
         if not context:
             context = EXECUTING + " " + PROCESS + " " + self.name
 
-        from PsyNeuLink.Globals.Run import _get_get_execution_id
-        self._execution_id = execution_id or _get_get_execution_id()
+        from PsyNeuLink.Globals.Run import _get_unique_id
+        self._execution_id = execution_id or _get_unique_id()
         for mech in self.mechanisms:
             mech._execution_id = self._execution_id
 
