@@ -1521,6 +1521,7 @@ class System_Base(System):
             # FIX: DEAL WITH DUPLICATE OBJECTIVE MECHANISMS (FROM CONVERGENT PROCESSES)
             # FIX: AND "REWIRE" AFFECTED LearningMechanisms ACCORDINGLY
 
+
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.inputStates.values():
                 for projection in input_state.receivesFromProjections:
