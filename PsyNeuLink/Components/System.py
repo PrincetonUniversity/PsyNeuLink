@@ -1522,7 +1522,6 @@ class System_Base(System):
             # FIX: AND "REWIRE" AFFECTED LearningMechanisms ACCORDINGLY
 
 
-
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.inputStates.values():
                 for projection in input_state.receivesFromProjections:
@@ -1605,6 +1604,8 @@ class System_Base(System):
         # FIX: USE TOPOSORT TO FIND, OR AT LEAST CONFIRM, TARGET MECHANISMS, WHICH SHOULD EQUAL COMPARATOR MECHANISMS
         self.learningExecutionList = toposort_flatten(self.learningExecutionGraph, sort=False)
         # self.learningExecutionList = self._toposort_with_ordered_mech_tuples(self.learningExecutionGraph)
+
+        self.show_graph()
 
         # Instantiate TargetInputStates
         self._instantiate_target_inputs()
