@@ -2002,8 +2002,8 @@ class Process_Base(Process):
         if not context:
             context = EXECUTING + " " + PROCESS + " " + self.name
 
-        from PsyNeuLink.Globals.Run import _get_get_execution_id
-        self._execution_id = execution_id or _get_get_execution_id()
+        from PsyNeuLink.Globals.Run import _get_unique_id
+        self._execution_id = execution_id or _get_unique_id()
         for mech in self.mechanisms:
             mech._execution_id = self._execution_id
 
