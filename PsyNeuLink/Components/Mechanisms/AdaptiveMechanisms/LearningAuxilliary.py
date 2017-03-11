@@ -198,7 +198,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             and the mechanism to which it projects as the `activation_mech`;
         - the mechanism to which it projects is referred referred to as the error_mech (the source of the error_signal).
 
-    * See learning_components class for the names of the components of learning used here.
+    * See LearningComponents class for the names of the components of learning used here.
 
     * This method supports only a single pathway for learning;  that is, the learning sequence must be a linear
         sequence of ProcessingMechanisms.  This is consistent with its implementation at the process level;
@@ -245,7 +245,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     # Now that the receiver has been identified, use it to get the components (lc) needed for learning.
     # Note: error-related components may not yet be defined (if LearningProjection is for a TERMINAL mechanism)
-    lc = learning_components(learning_projection=learning_projection)
+    lc = LearningComponents(learning_projection=learning_projection)
 
     # Check if activation_mech already has a projection to an ObjectiveMechanism or a LearningMechanism
     #    (i.e., the source of an error_signal for learning_projection)
@@ -254,105 +254,143 @@ def _instantiate_learning_components(learning_projection, context=None):
     # FIX: CHECK THAT THE PROJECTION IS TO ANOTHER MECHANISM IN THE CURRENT PROCESS;
     #      OTHERWISE, ALLOW OBJECTIVE_MECHANISM TO BE IMPLEMENTED
 
-    for projection in lc.activation_mech_output.sendsToProjections:
 
-        receiver_mech = projection.receiver.owner
-        receiver_state = projection.receiver
-        error_signal_source = None
+    # MODIFIED 3/11/17 NEW:
+    # If projection is a MappingProjection to a mechanism that is not in the same process as
+    #    the mechanism (lc.activation_mech_input) that projects to the current mech (i.e., lc.activation_mech),
+    #    then ignore it
+    # Note: this handles the case in which the current mech belongs to more than one process, and is the
+    #    the TERMINAL of the one currently being instantiated.
+    # IMPLEMENTATION NOTE:  could check whether current mech is a TERMINAL for the process currently being
+    #                       instantiated, identified by the mechanism that projects to it.  However, the latter
+    #                       may also belong to more than one process, so would have to sort that out.  Current
+    #                       implementation doesn't have to worry about that.
+    if (lc.activation_mech_output.sendsToProjections and
+            not any(isinstance(projection.receiver.owner , ProcessingMechanism_Base) and
+                        any(process in projection.receiver.owner.processes
+                            for process in lc.activation_mech_input.owner.processes)
+                    for projection in lc.activation_mech_output.sendsToProjections)):
+        is_target = True
+    # MODIFIED 3/11/17 END
 
-        # Check if projection already projects to a LearningMechanism or ObjectiveMechanism
-        if isinstance(receiver_mech, LearningMechanism):
-            # If it projects to a LearningMechanism:
-            #    it must project to the ACTIVATION_OUTPUT inputState of that LearningMechanism;
-            #    the LearningMechanism must be the sender of learning_projection.
-            # FIX: CAN'T REFERENCE learning_projection.sender BELOW, AS THAT IS THE LEARNING_MECH BEING CREATED BELOW!
-            #      CHANGE CONDITIONAL TO BE THAT learning_projection DOESN'T ALREADY HAVE A SENDER??
-            # FIX: CHECK THAT THE PROJECTION IS TO ANOTHER MECHANISM IN THE CURRENT PROCESS;
-            #      OTHERWISE, ALLOW OBJECTIVE_MECHANISM TO BE IMPLEMENTED
-            # SOLUTION:  CHECK THAT OBJECT TO WHICH receiver_mech MECH PROJECTS ALSO RECEIVES A PROJECTION FROM
-            #            THE PRECEDING MECH IN THE PATHWAY (TO THE receiver mech's ACTIVATION_INPUT INPUTSTATE
-        # MODIFIED 3/10/17 OLD:
-            # # MODIFIED 3/9/17 OLD:
-            # if not (projection.receiver.name is ACTIVATION_OUTPUT and receiver_mech is learning_projection.sender.owner):
-            # MODIFIED 3/9/17 NEW:
-            if not projection.receiver.name is ACTIVATION_OUTPUT:
-            # # MODIFIED 3/9/17 NEWER:
-            # if not projection.receiver.name is ACTIVATION_OUTPUT:
-            # MODIFIED 3/9/17 END
-                if lc.activation_mech_projection.verbosePref:
-                    warnings.warn("{} projects to a LearningMechanism ({}) that is not the sender of its "
-                                  "LearningProjection ({})".
-                                  format(lc.activation_mech.name,receiver_mech.name,learning_projection.name))
-                    continue
-            else:
-                error_signal_source = receiver_mech.outputState
-        # # MODIFIED 3/10/17 NEWER:
-        #     # If the activation_mech projects to the inputStates[ACTIVATION_OUTPUT] of a LearningMechanism,
-        #     #    but preceding mechanism in the pathway (i.e., the one that projects to activation_mech)
-        #     #    does not project to the LearningMechanism's inputStates[ACTIVATION_OUTPUT], then that
-        #     #    LearningMechanism is for another process, so treat activation_mech as being at the end of a learning
-        #     #    sequence, and in need of a TARGET ObjectiveMechanism (i.e., make sure that lc.error_projection is
-        #     #    set to `None`
-        #     if (receiver_state.name is ACTIVATION_OUTPUT and
-        #             not any(
-        #                     any(
-        #                             any(
-        #                                     any(preceding_mech_proj.owner is act_in_proj.sender.owner
-        #                                         for act_in_proj in
-        #                                         receiver_mech.inputStates[ACTIVATION_INPUT].receivesFromProjections))
-        #                             for preceding_mech_proj in input_state.receivesFromProjections)
-        #                     for input_state in lc.activation_mech.inputStates)):
-        #         if lc.activation_mech_projection.verbosePref:
-        #             warnings.warn("{} projects to a LearningMechanism ({}) that is not the sender of its "
-        #                           "LearningProjection ({}), so it will be assigned an ObjectiveMechanism".
-        #                           format(lc.activation_mech.name,receiver_mech.name,learning_projection.name))
-        #
-        #     # CORRECT??:
-        #     else:
-        #         error_signal_source = receiver_mech.outputState
-        # MODIFIED 3/10/17 END
+    # MODIFIED 3/11/17 NEW:  [ELSE AND INDENTATION DUE TO NEW IF ABOVE]
+    else:
 
-        elif isinstance(receiver_mech, ObjectiveMechanism):
-            # If it projects to an ObjectiveMechanism:
-            #    it must project to the SAMPLE inputState of that ObjectiveMechanism;
-            #    its role attribute must be set to LEARNING;
-            #    it must also project to a LearningMechanism that is the sender for the learning_projection.
-            if not (projection.receiver.name is SAMPLE and
-                            LEARNING not in receiver_mech.role and
-                            learning_projection.sender.owner is
-                            receiver_mech.outputState.sendsToProjections[0].receiver.owner):
-                if lc.activation_mech_projection.verbosePref:
-                    warnings.warn("{} projects to an invalid ObjectiveMechanism ({})".
-                                  format(lc.activation_mech.name, receiver_mech.name,learning_projection.name))
-                    continue
-            else:
-                error_signal_source = receiver_mech.outputState
+        for projection in lc.activation_mech_output.sendsToProjections:
 
-        if error_signal_source:
-            # activation_mech has a projection to a valid LearningMechanism or ObjectiveMechanism,
-            #    so assign that as sender and return;
-            # This assumes that:
-            #    the LearningMechanism will be validated by learning_projection
-            #        in its call to super()._instantiate_sender()
-            #        (which is the case if this method is called from learning_projection._instantiate_sender()
-            # learning_projection.sender = receiver_mech.outputState
-            learning_projection.sender = error_signal_source
-            return
+            receiver_mech = projection.receiver.owner
+            receiver_state = projection.receiver
+            error_signal_source = None
 
-    # FIX: CHECK THAT THE PROJECTION IS TO ANOTHER MECHANISM IN THE CURRENT PROCESS;
-    #      OTHERWISE, ALLOW OBJECTIVE_MECHANISM TO BE IMPLEMENTED
-    #      BUT HOW CAN IT KNOW THIS, SINCE UNTIL THE METHOD IS PART OF A COMPOSITION, IT DOESN'T KNOW WHAT
-    #             COMPOSITION IS BEING CALLED.  -- LOOK AT LearningProjection_OLD TO SEE HOW IT WAS HANDLED THERE.
-    #             OR IS A TARGET/OBJECTIVE MECHANISM ALWAYS ASSIGNED FOR A PROCESS, AND THEN DELETED IN SYSTEM GRAPH?
-    #             IN THAT CASE, JUST IGNORE SECOND CONDITION BELOW (THAT IT HAS NO PROJECTIONS TO LEARNING_PROJECTIONS?
+            # # MODIFIED 3/11/17 NEW:
+            # # If projection is a MappingProjection to a mechanism that is not in the same process as
+            # #    the mechanism (lc.activation_mech_input) that projects to the current mech (i.e., lc.activation_mech),
+            # #    then ignore it
+            # # Note: this handles the case in which the current mech belongs to more than one process, and is the
+            # #    the TERMINAL of the one currently being instantiated.
+            # # IMPLEMENTATION NOTE:  could check whether current mech is a TERMINAL for the process currently being
+            # #                       instantiated, identified by the mechanism that projects to it.  However, the latter
+            # #                       may also belong to more than one process, so would have to sort that out.  Current
+            # #                       implementation doesn't have to worry about that.
+            # if isinstance(receiver_mech, ProcessingMechanism_Base) and \
+            #        not any(process in receiver_mech.processes for process in lc.activation_mech_input.owner.processes):
+            #     break
+            # # MODIFIED 3/11/17 END
 
-    # Next, determine whether an ObjectiveMechanism or LearningMechanism should be assigned as the sender
-    # It SHOULD be an ObjectiveMechanism (i.e., TARGET) if either:
-    #     - it has no outgoing projections or
-    #     - it has no projections that receive a LearningProjection;
-    #   in either case, lc.error_projection returns None.
-    #   Note:  this assumes that LearningProjections are being assigned from the end of the pathway to the beginning.
-    is_target = not lc.error_projection
+            # Check if projection already projects to a LearningMechanism or ObjectiveMechanism
+            if isinstance(receiver_mech, LearningMechanism):
+                # If it projects to a LearningMechanism:
+                #    it must project to the ACTIVATION_OUTPUT inputState of that LearningMechanism;
+                #    the LearningMechanism must be the sender of learning_projection.
+                # FIX: CAN'T REFERENCE learning_projection.sender BELOW, AS THAT IS THE LEARNING_MECH BEING CREATED BELOW!
+                #      CHANGE CONDITIONAL TO BE THAT learning_projection DOESN'T ALREADY HAVE A SENDER??
+                # FIX: CHECK THAT THE PROJECTION IS TO ANOTHER MECHANISM IN THE CURRENT PROCESS;
+                #      OTHERWISE, ALLOW OBJECTIVE_MECHANISM TO BE IMPLEMENTED
+                # SOLUTION:  CHECK THAT OBJECT TO WHICH receiver_mech MECH PROJECTS ALSO RECEIVES A PROJECTION FROM
+                #            THE PRECEDING MECH IN THE PATHWAY (TO THE receiver mech's ACTIVATION_INPUT INPUTSTATE
+            # MODIFIED 3/10/17 OLD:
+                # # MODIFIED 3/9/17 OLD:
+                # if not (projection.receiver.name is ACTIVATION_OUTPUT and receiver_mech is learning_projection.sender.owner):
+                # MODIFIED 3/9/17 NEW:
+                if not projection.receiver.name is ACTIVATION_OUTPUT:
+                # # MODIFIED 3/9/17 NEWER:
+                # if not projection.receiver.name is ACTIVATION_OUTPUT:
+                # MODIFIED 3/9/17 END
+                    if lc.activation_mech_projection.verbosePref:
+                        warnings.warn("{} projects to a LearningMechanism ({}) that is not the sender of its "
+                                      "LearningProjection ({})".
+                                      format(lc.activation_mech.name,receiver_mech.name,learning_projection.name))
+                        continue
+                else:
+                    error_signal_source = receiver_mech.outputState
+            # # MODIFIED 3/10/17 NEWER:
+            #     # If the activation_mech projects to the inputStates[ACTIVATION_OUTPUT] of a LearningMechanism,
+            #     #    but preceding mechanism in the pathway (i.e., the one that projects to activation_mech)
+            #     #    does not project to the LearningMechanism's inputStates[ACTIVATION_OUTPUT], then that
+            #     #    LearningMechanism is for another process, so treat activation_mech as being at the end of a learning
+            #     #    sequence, and in need of a TARGET ObjectiveMechanism (i.e., make sure that lc.error_projection is
+            #     #    set to `None`
+            #     if (receiver_state.name is ACTIVATION_OUTPUT and
+            #             not any(
+            #                     any(
+            #                             any(
+            #                                     any(preceding_mech_proj.owner is act_in_proj.sender.owner
+            #                                         for act_in_proj in
+            #                                         receiver_mech.inputStates[ACTIVATION_INPUT].receivesFromProjections))
+            #                             for preceding_mech_proj in input_state.receivesFromProjections)
+            #                     for input_state in lc.activation_mech.inputStates)):
+            #         if lc.activation_mech_projection.verbosePref:
+            #             warnings.warn("{} projects to a LearningMechanism ({}) that is not the sender of its "
+            #                           "LearningProjection ({}), so it will be assigned an ObjectiveMechanism".
+            #                           format(lc.activation_mech.name,receiver_mech.name,learning_projection.name))
+            #
+            #     # CORRECT??:
+            #     else:
+            #         error_signal_source = receiver_mech.outputState
+            # MODIFIED 3/10/17 END
+
+            elif isinstance(receiver_mech, ObjectiveMechanism):
+                # If it projects to an ObjectiveMechanism:
+                #    it must project to the SAMPLE inputState of that ObjectiveMechanism;
+                #    its role attribute must be set to LEARNING;
+                #    it must also project to a LearningMechanism that is the sender for the learning_projection.
+                if not (projection.receiver.name is SAMPLE and
+                                LEARNING not in receiver_mech.role and
+                                learning_projection.sender.owner is
+                                receiver_mech.outputState.sendsToProjections[0].receiver.owner):
+                    if lc.activation_mech_projection.verbosePref:
+                        warnings.warn("{} projects to an invalid ObjectiveMechanism ({})".
+                                      format(lc.activation_mech.name, receiver_mech.name,learning_projection.name))
+                        continue
+                else:
+                    error_signal_source = receiver_mech.outputState
+
+            if error_signal_source:
+                # activation_mech has a projection to a valid LearningMechanism or ObjectiveMechanism,
+                #    so assign that as sender and return;
+                # This assumes that:
+                #    the LearningMechanism will be validated by learning_projection
+                #        in its call to super()._instantiate_sender()
+                #        (which is the case if this method is called from learning_projection._instantiate_sender()
+                # learning_projection.sender = receiver_mech.outputState
+                learning_projection.sender = error_signal_source
+                return
+
+        # FIX: CHECK THAT THE PROJECTION IS TO ANOTHER MECHANISM IN THE CURRENT PROCESS;
+        #      OTHERWISE, ALLOW OBJECTIVE_MECHANISM TO BE IMPLEMENTED
+        #      BUT HOW CAN IT KNOW THIS, SINCE UNTIL THE METHOD IS PART OF A COMPOSITION, IT DOESN'T KNOW WHAT
+        #             COMPOSITION IS BEING CALLED.  -- LOOK AT LearningProjection_OLD TO SEE HOW IT WAS HANDLED THERE.
+        #             OR IS A TARGET/OBJECTIVE MECHANISM ALWAYS ASSIGNED FOR A PROCESS, AND THEN DELETED IN SYSTEM GRAPH?
+        #             IN THAT CASE, JUST IGNORE SECOND CONDITION BELOW (THAT IT HAS NO PROJECTIONS TO LEARNING_PROJECTIONS?
+
+        # Next, determine whether an ObjectiveMechanism or LearningMechanism should be assigned as the sender
+        # It SHOULD be an ObjectiveMechanism (i.e., TARGET) if either:
+        #     - it has no outgoing projections or
+        #     - it has no projections that receive a LearningProjection;
+        #   in either case, lc.error_projection returns None.
+        #   Note:  this assumes that LearningProjections are being assigned from the end of the pathway to the beginning.
+        is_target = not lc.error_projection
+    # MODIFIED 3/11/17 END
 
 
     # INSTANTIATE learning function
@@ -413,7 +451,6 @@ def _instantiate_learning_components(learning_projection, context=None):
 
         else:
             error_output = np.zeros_like(lc.error_mech_output.value)
-            temp = lc.error_signal_mech
             error_signal = np.zeros_like(lc.error_signal_mech.outputStates[ERROR_SIGNAL].value)
             error_matrix = lc.error_matrix
             try:
@@ -516,16 +553,19 @@ def _instantiate_learning_components(learning_projection, context=None):
     # - Use of AUTO_ASSIGN_MATRIX for the MappingProjections is safe, as compatibility of senders and receivers
     #    is checked in the instantiation of the learning_function
 
+    error_source = lc.error_signal_mech
+
     learning_mechanism = LearningMechanism(variable=[activation_input,
                                                      activation_output,
                                                      error_signal],
-                                           error_source=lc.error_signal_mech,
+                                           error_source=error_source,
                                            function=learning_function,
                                            name = lc.activation_mech_projection.name + " " +LEARNING_MECHANISM)
 
     # IMPLEMENTATION NOTE:
-    # ADD activation_input and activation_output ARGUMENTS TO LearningMechanism, AND THEN INSTANTIATE THE
-    # MappingProjections BELOW IN HELPER METHODS (FOLLOWING DESIGN OF _instantiate_error_source() IN LearningMechanism):
+    # ADD ARGUMENTS TO LearningMechanism FOR activation_input AND activation_output, AND THEN INSTANTIATE THE
+    # MappingProjections BELOW IN CALL TO HELPER METHODS FROM LearningMechanism._instantiate_attributes_before_function
+    # (FOLLOWING DESIGN OF _instantiate_error_signal_projection IN LearningMechanism):
 
     # Assign MappingProjection from activation_mech_input to LearningMechanism's ACTIVATION_INPUT inputState
     MappingProjection(sender=lc.activation_mech_input,
@@ -545,7 +585,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     learning_projection.sender = learning_mechanism.outputState
 
 
-class learning_components(object):
+class LearningComponents(object):
     """Gets components required to instantiate LearningMechanism and its Objective Function for a LearningProjection
 
     Has attributes for the following learning components relevant to a `LearningProjection`,
@@ -569,6 +609,11 @@ class learning_components(object):
                                                                       LearningMechanism in the sequence for all others)
     * `error_signal_mech_output` (OutputState): outputState of error_signal_mech, that projects to the preceeding
                                                 LearningMechanism in the learning sequence (or nothing for the 1st mech)
+
+    IMPLEMENTATION NOTE:  The helper methods in this class (that assign values to the various attributes)
+                          respect membership in a process;  that is, they do not assign attribute values to
+                          objects that belong to a process in which the root attribute (self.activation_mech)
+                          belongs
     """
 
     def __init__(self, learning_projection, context=None):
@@ -800,9 +845,21 @@ class learning_components(object):
             if not self.activation_mech_output:
                 return None
             projections = self.activation_mech_output.sendsToProjections
+            # MODIFIED 3/11/17 OLD:
             # error_proj must be a MappingProjection that has a LearningProjection to it
             error_proj = next((projection for projection in projections if
                               (isinstance(projection, MappingProjection) and projection.has_learning_projection)),None)
+            # # MODIFIED 3/11/17 NEW:
+            # # error_proj must be a MappingProjection:
+            # #   that project to another mechanism in the same process and
+            # #   that has a LearningProjection
+            # error_proj = next((projection for projection in projections if
+            #                    (isinstance(projection, MappingProjection) and
+            #                     projection.has_learning_projection and
+            #                     any(process in projection.receiver.owner.processes
+            #                         for process in self.activation_mech.processes))),
+            #                   None)
+            # MODIFIED 3/11/17 END
             if not error_proj:
                 return None
             self.error_projection = error_proj
@@ -910,12 +967,12 @@ class learning_components(object):
     @property
     def error_signal_mech(self):
         # Find from error_matrix:
-        def _get_obj_mech():
+        def _get_error_signal_mech():
             if not self.error_matrix:
                 return None
             # search the projections to the error_matrix parameter state for a LearningProjection
             learning_proj = next((proj for proj in self.error_matrix.receivesFromProjections
-                                 if isinstance(proj, LearningProjection)),None)
+                                 if isinstance(proj, LearningProjection)), None)
             # if there are none, the error_matrix might be for an error_projection to an ObjectiveMechanism
             #   (i.e., the TARGET mechanism)
             if not learning_proj:
@@ -938,10 +995,25 @@ class learning_components(object):
                 raise LearningAuxilliaryError("error_signal_mech not identified: "
                                               "the LearningProjection to error_matrix does not come from a "
                                               "LearningMechanism")
+            # MODIFIED 3/11/17 NEW:
+            # If the learning_mech found has already been assigned to a process that not a process to which the
+            #    preceding mechanism in the sequence (self.activation_mech_input.owner) belongs, then the current
+            #    mechanism (self.activation_mech) is the TERMINAL for its process, so look for an ObjectiveMechanism
+            if learning_mech.processes and not any(process in self.activation_mech_input.owner.processes
+                                                   for process in learning_mech.processes):
+                new_learning_proj = next((projection for projection in
+                                          self.activation_mech.outputState.sendsToProjections
+                                          if isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
+                if new_learning_proj is None:
+                    return None
+                else:
+                    learning_mech = new_learning_proj.receiver.owner
+            # MODIFIED 3/11/17 END
+
             self.error_signal_mech = learning_mech
             return self.error_signal_mech
 
-        return self._error_signal_mech or _get_obj_mech()
+        return self._error_signal_mech or _get_error_signal_mech()
 
     @error_signal_mech.setter
     def error_signal_mech(self, assignment):

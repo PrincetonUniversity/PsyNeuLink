@@ -442,11 +442,13 @@ class LearningProjection(Projection_Base):
         # MODIFIED 3/8/17 END
 
         learning_mechanism = self.sender.owner
-        objective_mechanism = learning_mechanism.inputStates[ERROR_SIGNAL].receivesFromProjections[0].sender.owner
-
         learned_projection = self.receiver.owner
-        if isinstance(objective_mechanism, ObjectiveMechanism) and objective_mechanism.role is LEARNING:
-            learned_projection.objective_mechanism = objective_mechanism
+
+        # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
+        #    if it does, assign it to the objective_mechanism attribute for the projection being learned
+        candidate_objective_mech = learning_mechanism.inputStates[ERROR_SIGNAL].receivesFromProjections[0].sender.owner
+        if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech.role is LEARNING:
+            learned_projection.objective_mechanism = candidate_objective_mech
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = True
 

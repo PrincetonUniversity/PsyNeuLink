@@ -24,6 +24,12 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: LearningComponents CLASS:
+#           ADD GENERIC CHECK (FOLLOWING IMPLEMENTATION IN error_signal_mech) THAT CHECKS THAT ANY RETURNED VALUE
+#               BELONGS TO AN OBJECT IN THE SAME PROCESS TO WHICH THE activation_mech BELONGS
+#           DOCUMENT THAT activation_mech IS THE "ROOT OBJECT" FOR THE CLASS (I.E., THE ONE FROM THE
+#               SEARCH/IDENTIFICATION OF ALL OBJECTS PROCEEDS
+
 # IMPLEMENT: WRITE PARSER THAT CONVERTS matrix.shape "(#, #, #)" INTO "(#x#x#)
 
 # FIX:  WHY DOES weights SPECIFICATION FOR LINEARCOMBINATION FUNCTION HAVE TO BE [[-1],[1]] RATHER THAN JUST [-1, 1]
