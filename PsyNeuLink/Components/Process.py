@@ -999,7 +999,6 @@ class Process_Base(Process):
         from PsyNeuLink.Globals.Run import _get_unique_id
         self._instantiation_id = _get_unique_id()
 
-
         self._standardize_config_entries(pathway=pathway, context=context)
 
         # VALIDATE PATHWAY THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
