@@ -1524,6 +1524,8 @@ class System_Base(System):
                                   format(sender_mech))
 
 
+            # MODIFIED 3/12/17 NEW:
+
             # MANAGE TARGET ObjectiveMechanism FOR INTERNAL or TERMINAL CONVERGENCE of PATHWAYS
 
             # If sender_mech is an ObjectiveMechanism, and:
@@ -1548,33 +1550,6 @@ class System_Base(System):
             #                      should project to ObjectiveMechanisms) and always replace internal
             #                      ObjectiveMechanism with projection from a LearningMechanism (if it is available)
 
-            # # MODIFIED 3/12/17 OLD:
-            # if (isinstance(sender_mech, ObjectiveMechanism) and len(self.learningExecutionGraph) and
-            #
-            #         # None of the mechanisms that project to it are a TERMINAL mechanism
-            #         ((not all(all(projection.sender.owner.processes[proc] is TERMINAL
-            #                       for proc in projection.sender.owner.processes)
-            #                   for projection in sender_mech.inputStates[SAMPLE].receivesFromProjections)) or
-            #
-            #          # OR --
-            #          # All of the mechanisms that project to sender_mech
-            #          #    project to another ObjectiveMechanism already in the learning_graph
-            #              all(
-            #                      any(
-            #                              (isinstance(receiver_mech, ObjectiveMechanism) and
-            #                                   # its already in a dependency set in the learningExecutionGraph
-            #                                   receiver_mech in set.union(*list(self.learningExecutionGraph.values()))
-            #                               and
-            #                                   not receiver_mech is sender_mech)
-            #                              # receivers of senders to sender_mech
-            #                              for receiver_mech in [proj.receiver.owner for proj in
-            #                                                    mech.outputState.sendsToProjections])
-            #                      # senders to sender_mech
-            #                      for mech in [proj.sender.owner
-            #                                   for proj in sender_mech.inputStates[SAMPLE].receivesFromProjections])
-            #          )
-            #     ):
-            # MODIFIED 3/12/17 NEW:
             # FIX: RELABEL "sender_mech" as "obj_mech" here
 
             if isinstance(sender_mech, ObjectiveMechanism) and len(self.learningExecutionGraph):
@@ -1586,8 +1561,8 @@ class System_Base(System):
                         any(
                                 (isinstance(receiver_mech, ObjectiveMechanism) and
                                  # its already in a dependency set in the learningExecutionGraph
-                                 receiver_mech in set.union(*list(self.learningExecutionGraph.values())) and
-                                 not receiver_mech is sender_mech)
+                                         receiver_mech in set.union(*list(self.learningExecutionGraph.values())) and
+                                     not receiver_mech is sender_mech)
                                 # receivers of senders to sender_mech
                                 for receiver_mech in [proj.receiver.owner for proj in
                                                       mech.outputState.sendsToProjections])
@@ -1600,16 +1575,15 @@ class System_Base(System):
 
                     # Get the other ObjectiveMechanism to which the error_source projects (in addition to sender_mech)
                     other_obj_mech = next((projection.receiver.owner for projection in
-                                              error_source_mech.outputState.sendsToProjections if
-                                              isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
+                                           error_source_mech.outputState.sendsToProjections if
+                                           isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
                     sender_mech = other_obj_mech
 
                 # INTERNAL CONVERGENCE
                 # None of the mechanisms that project to it are a TERMINAL mechanism
                 elif not all(all(projection.sender.owner.processes[proc] is TERMINAL
-                                                   for proc in projection.sender.owner.processes)
-                                               for projection in sender_mech.inputStates[
-                                 SAMPLE].receivesFromProjections):
+                                 for proc in projection.sender.owner.processes)
+                             for projection in sender_mech.inputStates[SAMPLE].receivesFromProjections):
 
                     # Get the LearningMechanism to which the sender_mech projected
                     try:
@@ -1632,17 +1606,17 @@ class System_Base(System):
                                               projection.receiver.name is ACTIVATION_INPUT), None)
 
 
-                    # Get any other error_signal projections that learning_mech receives
+                    # Check if learning_mech receives an error_signal_projection
+                    #    from any other ObjectiveMechanism or LearningMechanism in the system;
+                    # If it does, get the first one found
                     error_signal_projection = next ((projection for projection
                                                      in learning_mech.inputStates[ERROR_SIGNAL].receivesFromProjections
                                                      if (isinstance(projection.sender.owner,(ObjectiveMechanism,
                                                                                             LearningMechanism)) and
                                                      not projection.sender.owner is sender_mech and
                                                      self in projection.sender.owner.systems.values())), None)
-
-                    # Check that learning_mech doesn't receive any other projections from another
-                    #     ObjectiveMechanism or LearningMechanism in the system;
-                    # if it doesn't, reassign current sender_mech to sender of error_signal_projection
+                    # If learning_mech receives another error_signal projection,
+                    #    reassign sender_mech to the sender of that projection
                     if error_signal_projection:
                         if self.verbosePref:
                             warnings.warn("Although {} a TERMINAL mechanism for the {} process, it is an "
@@ -1653,9 +1627,9 @@ class System_Base(System):
                                                  self.name,
                                                  sender_mech.name,
                                                  error_signal_mech))
-                        # Reassign sender_mech to
                         sender_mech = error_signal_projection.sender.owner
 
+                    # FIX:  FINISH DOCUMENTATION HERE ABOUT HOW THIS IS DIFFERENT THAN ABOVE
                     if error_signal_mech is None:
                         raise SystemError("Could not find projection to an {} inputState of a LearningMechanism for "
                                           "the ProcessingMechanism ({}) that projects to {} in the {} process"
@@ -1668,11 +1642,12 @@ class System_Base(System):
                                                receiver=learning_mech.inputStates[ERROR_SIGNAL],
                                                matrix=IDENTITY_MATRIX)
                         if mp is None:
-                            raise SystemError("Could not instantiate a MappingProjection from {} to {} for the {} process".
+                            raise SystemError("Could not instantiate a MappingProjection "
+                                              "from {} to {} for the {} process".
                                               format(error_signal_mech.name, learning_mech.name))
 
                         sender_mech = error_signal_mech
-            # MODIFIED 3/12/17 END [INDENTED]
+            # MODIFIED 3/12/17 END
 
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
