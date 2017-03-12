@@ -256,9 +256,12 @@ def _instantiate_learning_components(learning_projection, context=None):
 
 
     # MODIFIED 3/11/17 NEW:
-    # If projection is a MappingProjection to a mechanism that is not in the same process as
-    #    the mechanism (lc.activation_mech_input) that projects to the current mech (i.e., lc.activation_mech),
-    #    then ignore it
+    # Check whether lc.activation_mech belongs to more than one process and, if it does, it is the TERMINAL
+    #    the one currently being instantiated, in which case it needs to be assigned an ObjectiveMechanism
+    #
+    # If the only MappingProjections from lc.activation_mech are to mechanisms that are not in the same
+    #    process as the mechanism that projects to it (i.e., lc.activation_mech_input.owner), then:
+    #    - set is_target to True so that it will be assigned an ObjectiveMechanism
     # Note: this handles the case in which the current mech belongs to more than one process, and is the
     #    the TERMINAL of the one currently being instantiated.
     # IMPLEMENTATION NOTE:  could check whether current mech is a TERMINAL for the process currently being
@@ -271,6 +274,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                             for process in lc.activation_mech_input.owner.processes)
                     for projection in lc.activation_mech_output.sendsToProjections)):
         is_target = True
+        # FIX: ALLOW ASSIGNMENT OF
+
     # MODIFIED 3/11/17 END
 
     # MODIFIED 3/11/17 NEW:  [ELSE AND INDENTATION DUE TO NEW IF ABOVE]
