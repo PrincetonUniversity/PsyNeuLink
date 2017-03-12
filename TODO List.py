@@ -150,7 +150,7 @@
 #           Figure out why calling update_state for the matrix ParameterState works,
 #                      but executing the LearningProjection to it does not
 #    4) ObjectiveMechanisms:  MODIFY TO:
-#                                d) Revise EVCMechainism._get_monitored_states() to NOT direclty assign weights
+#                                d) Revise EVCMechanism._get_monitored_states() to NOT direclty assign weights
 #                                           and exponents, but rather assign
 #                                e) Document monitored_values and default_input_value (sets size of inputSTates)
 #                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)

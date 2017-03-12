@@ -127,6 +127,7 @@ class LearningProjectionError(Exception):
         return repr(self.error_value)
 
 
+
 class LearningProjection(Projection_Base):
     """
     LearningProjection(               \
