@@ -1523,21 +1523,8 @@ class System_Base(System):
                                   "must be a LearningMechanism or an ObjectiveMechanism".
                                   format(sender_mech))
 
-            # FIX: DEAL WITH DUPLICATE OBJECTIVE MECHANISMS (FROM CONVERGENT PROCESSES)
-            # SOLUTION:  SIMPLY EXCLUDE EXTRA ObjectiveMechanism FROM LEARNING_GRAPH
-            #            AND ADD PROJECTION FROM RELEVANT LEARNING_MECHANISM IF IT DOESN'T ALREADY HAVE IT.
-            #            (THIS SHOULD NOT MESS UP THE PROCESS, SINCE ITS OBJECTIVE MECHANISM WILL STILL BE THERE
-            #             WHEREAS THE NEW PROJECTION WILL BE FROM A MECHANISM IN A DIFFERENT PROCESS WHICH
-            #             SHOULD BE IGNORED WHEN THE PROCESS IS EXECUTED ON ITS OWN)
-            #            IMPLEMENTATION NOTE: COULD BE ADDED IN LearningAuxilliary._instantiate_learning_components()
-            # FOR STROOP, THIS MEANS:
-            #    ASSIGNING A NEW PROJECTION RECEIVED FROM: "Word-Hidden Weights LearningMechanism"
-            #                                      SENT BY: "Hidden-Output Weights LearningMechanism"
-            #    IN ADDITION TO ITS EXISTING ONE FROM: "Word-Hidden Weights ObjectiveMechanism"
-            # IMPLEMENTATION NOTE: in Composition, will allow this if user indicates an internal TARGET is desired;
-            #                      for now, however, assuming this is not desired (i.e., only TERMINAL mechanisms
-            #                      should project to ObjectiveMechanisms) and always replace internal
-            #                      ObjectiveMechanism with projection from a LearningMechanism (if it is available)
+
+            # MANAGE TARGETS FOR CONVERGENT or CROSSING PATHWAYS
 
             # If sender_mech is an ObjectiveMechanism, and:
             #    - none of the mechanisms that project to it are are a TERMINAL mechanism for the current process, or
@@ -1556,17 +1543,12 @@ class System_Base(System):
             #                a LearningMechanism (labelled "error_signal" here)
             #            - instantiate a MappingProjection from error_signal to learning_mech
             #                projected
-
-            # MODIFIED 3/12 OLD:
+            # IMPLEMENTATION NOTE: Composition should allow 1st condition if user indicates internal TARGET is desired;
+            #                      for now, however, assuming this is not desired (i.e., only TERMINAL mechanisms
+            #                      should project to ObjectiveMechanisms) and always replace internal
+            #                      ObjectiveMechanism with projection from a LearningMechanism (if it is available)
 
             if (isinstance(sender_mech, ObjectiveMechanism) and len(self.learningExecutionGraph) and
-
-                # # MODIFIED 3/12/17 OLD:
-                # not all(all(projection.sender.owner.processes[proc] is TERMINAL
-                #     for proc in projection.sender.owner.processes)
-                #             for projection in sender_mech.inputStates[SAMPLE].receivesFromProjections)):
-
-                # MODIFIED 3/12/17 NEW:
 
                     # None of the mechanisms that project to it are a TERMINAL mechanism
                     ((not all(all(projection.sender.owner.processes[proc] is TERMINAL
@@ -1591,7 +1573,6 @@ class System_Base(System):
                                               for proj in sender_mech.inputStates[SAMPLE].receivesFromProjections])
                      )
                 ):
-                # MODIFIED 3/12/17 END
 
                 # FIX: ABOVE NOW FINDS OUPTUT CONVERGENT CASE
                 # FIX:      BUT NOW NEED TO DEAL WITH IT, AND NOT IN THE SAME WAY AS BELOW
@@ -1618,26 +1599,22 @@ class System_Base(System):
                                                  not projection.sender.owner is sender_mech and
                                                  self in projection.sender.owner.systems.values())), None)
 
-
-
-                # FIX: *** DELETE ObjectiveMechanisms (sender_mech) FROM self.targetMechanisms ***
-
-                if error_signal_projection:
-                    # FIX: ADD WARNING HERE FOR VERBOSENESS ON SYSTEM
-
-                    sender_mech = error_signal_projection.sender.owner
-
-                    # XXX NEED TO CONSTRAIN LIST OF OUTGOING PROJECTIONS TO ONLY THE ONE TO LEARNING_MECHANISM
-                    #     SINCE THE REST WERE PROBABLY TRAVERSED ALREADY (BUT MAYBE NOT?)
-                    #
-                    # XXX  - REASSIGN sender_mech TO error_signal_mech ??and receiver to learning_mech???? TO GET RID OF
-                    #        OBJECTIVE_MECH FROM GRAPH
-                    # AND SKIP THE REST OF THE STUFF HERE
-
                 error_source_mech = sender_mech.inputStates[SAMPLE].receivesFromProjections[0].sender.owner
                 error_signal_mech = next((projection.receiver.owner for projection in
                                           error_source_mech.outputState.sendsToProjections if
                                           projection.receiver.name is ACTIVATION_INPUT), None)
+
+                if error_signal_projection:
+                    if self.verbosePref:
+                        warnings.warn("Although {} a TERMINAL mechanism for the {} process, it is an "
+                                      "internal mechanism for other proesses in the {} system; therefore "
+                                      "its ObjectiveMechanism ({}) will be replaced with the {} LearningMechanism".
+                                      format(error_source_mech.name,
+                                             process.name,
+                                             self.name,
+                                             sender_mech.name,
+                                             error_signal_mech))
+                    sender_mech = error_signal_projection.sender.owner
 
                 if error_signal_mech is None:
                     raise SystemError("Could not find projection to an {} inputState of a LearningMechanism for "
@@ -1647,17 +1624,14 @@ class System_Base(System):
                                                 sender_mech.name,
                                                 process.name))
                 else:
-                    # FIX: MAKE SURE THIS IS CORRECTLY IMPLEMENTED (CHECK AGAINST LEARNING AUX)
                     mp = MappingProjection(sender=error_signal_mech.outputStates[ERROR_SIGNAL],
-                                           receiver=learning_mech.inputStates[ERROR_SIGNAL])
+                                           receiver=learning_mech.inputStates[ERROR_SIGNAL],
+                                           matrix=IDENTITY_MATRIX)
                     if mp is None:
                         raise SystemError("Could not instantiate a MappingProjection from {} to {} for the {} process".
                                           format(error_signal_mech.name, learning_mech.name))
 
                     sender_mech = error_signal_mech
-                    # XXX  - REASSIGN sender_mech TO error_signal_mech ??and receiver to learning_mech???? TO GET RID OF
-                    #        OBJECTIVE_MECH FROM GRAPH
-
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.inputStates.values():
