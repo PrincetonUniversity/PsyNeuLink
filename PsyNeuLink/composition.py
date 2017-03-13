@@ -239,7 +239,7 @@ class Composition(object):
             self.cycle_mechanisms.remove(mech) # Remove from Cycle list
 
     # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
-    #feed_dict is a dictionary of the input states of each mechanism of the specified type
+    # feed_dict is a dictionary of the input states of each mechanism of the specified type
     def validate_feed_dict(self, feed_dict, mech_type_list, mech_type):
         for mech in feed_dict.keys(): # For each mechanism given an input
             if mech not in mech_type_list: # Check that it is the right kind of mechanism in the composition

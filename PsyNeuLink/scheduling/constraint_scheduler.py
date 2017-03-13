@@ -1,4 +1,5 @@
 from PsyNeuLink.scheduling.condition import first_n_calls, every_n_calls, terminal, num_time_steps, after_n_calls
+from PsyNeuLink.composition import Composition
 
 
 class Constraint(object):
@@ -219,7 +220,7 @@ class Scheduler(object):
             print(var.component.name)
             change_list = update_dependent_vars(var)
             firing_queue = update_firing_queue(firing_queue, change_list)
-        print("===============================")
+
 
     def run_trial(self):
         ######
@@ -257,55 +258,67 @@ def main():
                                [(T, (C,), every_n_calls(4))],
                                [(sched, (T,), terminal())]],
 
+                            # Test 1 Expected Output: A AB A AB A ABC A AB A AB A ABC A AB A AB A ABC A AB A AB A ABCT
+
                             "Test 1b": [[(A, (Clock,), every_n_calls(1))],
                                        [(B, (A,), every_n_calls(2)),(B, (Clock,), after_n_calls(2))],
                                        [(C, (B,), every_n_calls(3))],
                                        [(T, (C,), every_n_calls(4))],
                                        [(sched, (T,), terminal())]],
 
-        # # after_n where C begins after 2 runs of B; C is terminal
-                            #  "Test 2": [(A, (Clock,), every_n_calls(1)),
-                            #             (B, (A,), every_n_calls(2)),
-                            #             (C, (B,), after_n_calls(2)),
-                            #             (sched, (C,), terminal())],
-                            #
-                            # # after_n where C begins after 2 runs of B; runs for 10 time steps
-                            # "Test 3": [(A, (Clock,), every_n_calls(1)),
-                            #            (B, (A,), every_n_calls(2)),
-                            #            (C, (B,), after_n_calls(2)),
-                            #            (sched, (Clock,), num_time_steps(10))],
-                            #
-                            # # after_n where C begins after 3 runs of B OR A; runs for 10 time steps
-                            #  "Test 4": [(A, (Clock,), every_n_calls(1)),
-                            #             (B, (A,), every_n_calls(2)),
-                            #             (C, (B,A), after_n_calls(3, op = "OR")),
-                            #             (sched, (Clock,), num_time_steps(10))],
-                            #
-                            # # after_n where C begins after 2 runs of B AND A; runs for 10 time steps
-                            # "Test 5": [(A, (Clock,), every_n_calls(1)),
-                            #             (B, (A,), every_n_calls(2)),
-                            #             (C, (B,A), after_n_calls(3)),
-                            #             (sched, (Clock,), num_time_steps(10))],
-                            #
-                            # # first n where A depends on the clock
-                            # "Test 6": [(A, (Clock,), first_n_calls(5)),
-                            #            (B, (A,), after_n_calls(5)),
-                            #            (C, (B,), after_n_calls(1)),
-                            #            (sched, (Clock,), num_time_steps(10))],
-                            #
-                            # # terminal where trial ends when A OR B runs
-                            # "Test 7": [(A, (Clock,), every_n_calls(1)),
-                            #            (B, (A,), every_n_calls(2)),
-                            #            (sched, (A,B), terminal(op="OR"))],
-                            #
-                            # # terminal where trial ends when A AND B have run
-                            # "Test 8": [(A, (Clock,), every_n_calls(1)),
-                            #            (B, (A,), every_n_calls(2)),
-                            #            (sched, (A, B), terminal())],
+                            # Test 1b Expected Output: A AB AB ABC AB AB ABC AB AB ABC AB AB ABCT
+
+                            "Test 1c": [[(A, (Clock,), every_n_calls(1))],
+                                       [(B, (A,), every_n_calls(2)),(B, (Clock,), after_n_calls(5))],
+                                       [(C, (B,), every_n_calls(3))],
+                                       [(T, (C,), every_n_calls(4))],
+                                       [(sched, (T,), terminal())]],
+
+                            # Test 1c Expected Output: A AB AB ABC AB AB ABC AB AB ABC AB AB ABCT
+
+                            # after_n where C begins after 2 runs of B; C is terminal
+                             "Test 2": [[(A, (Clock,), every_n_calls(1))],
+                                        [(B, (A,), every_n_calls(2))],
+                                        [(C, (B,), after_n_calls(2))],
+                                        [(sched, (C,), terminal())]],
+
+                            # after_n where C begins after 2 runs of B; runs for 10 time steps
+                            "Test 3": [[(A, (Clock,), every_n_calls(1))],
+                                       [(B, (A,), every_n_calls(2))],
+                                       [(C, (B,), after_n_calls(2))],
+                                       [(sched, (Clock,), num_time_steps(10))]],
+
+                            # after_n where C begins after 3 runs of B OR A; runs for 10 time steps
+                             "Test 4": [[(A, (Clock,), every_n_calls(1))],
+                                        [(B, (A,), every_n_calls(2))],
+                                        [(C, (B,A), after_n_calls(3, op = "OR"))],
+                                        [(sched, (Clock,), num_time_steps(10))]],
+
+                            # after_n where C begins after 2 runs of B AND A; runs for 10 time steps
+                            "Test 5": [[(A, (Clock,), every_n_calls(1))],
+                                        [(B, (A,), every_n_calls(2))],
+                                        [(C, (B,A), after_n_calls(3))],
+                                        [(sched, (Clock,), num_time_steps(10))]],
+
+                            # first n where A depends on the clock
+                            "Test 6": [[(A, (Clock,), first_n_calls(5))],
+                                       [(B, (A,), after_n_calls(5))],
+                                       [(C, (B,), after_n_calls(1))],
+                                       [(sched, (Clock,), num_time_steps(10))]],
+
+                            # terminal where trial ends when A OR B runs
+                            "Test 7": [[(A, (Clock,), every_n_calls(1))],
+                                       [(B, (A,), every_n_calls(2))],
+                                       [(sched, (A,B), terminal(op="OR"))]],
+
+                            # terminal where trial ends when A AND B have run
+                            "Test 8": [[(A, (Clock,), every_n_calls(1))],
+                                       [(B, (A,), every_n_calls(2))],
+                                       [(sched, (A, B), terminal())]],
 
                               }
 
-    test = "Test 1b"
+    test = "Test 2"
     sched.add_constraints(test_constraints_dict[test])
 
     for var in sched.var_list:
