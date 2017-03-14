@@ -2930,14 +2930,14 @@ class BackPropagation(LearningFunction): # -------------------------------------
         # Weight changes = delta rule (learning rate * activity * error)
         weight_change_matrix = self.learning_rate * activation_input * dE_dW
 
-        # TEST PRINT:
-        if context and not 'INIT' in context:
-            print("\nBACKPROP for {}:\n    "
-                  "-input: {}\n    "
-                  "-error_signal (dE_DA): {}\n    "
-                  "-derivative (dA_dW): {}\n    "
-                  "-error_derivative (dE_dW): {}\n".
-                  format(self.owner.name, self.activation_input, dE_dA, dA_dW ,dE_dW))
+        # # TEST PRINT:
+        # if context and not 'INIT' in context:
+        #     print("\nBACKPROP for {}:\n    "
+        #           "-input: {}\n    "
+        #           "-error_signal (dE_DA): {}\n    "
+        #           "-derivative (dA_dW): {}\n    "
+        #           "-error_derivative (dE_dW): {}\n".
+        #           format(self.owner.name, self.activation_input, dE_dA, dA_dW ,dE_dW))
 
         return [weight_change_matrix, dE_dW]
 
