@@ -346,8 +346,6 @@ from PsyNeuLink.Components.Component import function_type
 from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Process import Process, ProcessInputState
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import COMPARATOR_SAMPLE, \
-                                                                                      COMPARATOR_TARGET
 
 HOMOGENOUS = 1
 HETEROGENOUS = 0

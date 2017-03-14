@@ -1,7 +1,11 @@
 import numpy as np
 
-from PsyNeuLink import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Functions.Function import PROB
 from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
+from PsyNeuLink.Globals.TimeScale import CentralClock
 
 import random
 random.seed(0)

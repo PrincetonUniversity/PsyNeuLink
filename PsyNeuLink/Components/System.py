@@ -254,7 +254,6 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism impor
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple,\
                                                        OBJECT_ITEM, PARAMS_ITEM, PHASE_ITEM
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, ProcessTuple
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.ShellClasses import *
