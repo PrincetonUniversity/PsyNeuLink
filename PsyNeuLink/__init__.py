@@ -10,8 +10,6 @@
 
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
