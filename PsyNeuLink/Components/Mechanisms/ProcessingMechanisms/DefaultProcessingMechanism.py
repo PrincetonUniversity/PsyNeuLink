@@ -16,7 +16,6 @@
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 
-
 # **************************************** DefaultProcessingMechanism ******************************************************
 
 
@@ -36,7 +35,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
             + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
     """
 
-    componentType = DEFAULT_PROCESSING_MECHANISM
+    componentName = DEFAULT_PROCESSING_MECHANISM
     onlyFunctionOnInit = True
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
