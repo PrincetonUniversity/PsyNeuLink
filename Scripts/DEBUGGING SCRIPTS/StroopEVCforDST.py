@@ -6,13 +6,13 @@ Created on Mon Feb  6 13:47:38 2017
 """
 
 from PsyNeuLink.Components.Functions.Function import Linear, Logistic
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import *
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 
 #helpful commands! .show()   .excute()
 color_word_combine = TransferMechanism(name='color_word_combine', function = Linear()) #default_input_value = [1], #JON HOW TO MAKE THIS A SUBTRACTION? 

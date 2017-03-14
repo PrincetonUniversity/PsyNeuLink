@@ -43,10 +43,9 @@ Class Reference
 
 """
 
-
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism import defaultControlAllocation
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
 from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import defaultControlAllocation
 
 
 class MonitoringMechanismError(Exception):

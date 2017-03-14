@@ -9,7 +9,7 @@
 # ***********************************************  Init ****************************************************************
 
 from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
