@@ -250,7 +250,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # DefaultController does not require a system specification
         #    (it simply passes the defaultControlAllocation for default ConrolSignal Projections)
-        from PsyNeuLink.Components.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.DefaultControlMechanism import DefaultControlMechanism
         if isinstance(self,DefaultControlMechanism):
             pass
 
@@ -393,7 +393,7 @@ class ControlMechanism_Base(Mechanism_Base):
         output_state_name = projection.receiver.name + '_ControlSignal'
         output_state_value = self.allocation_policy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
-        from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlSignal import ControlSignal
         state = _instantiate_state(owner=self,
                                             state_type=ControlSignal,
                                             state_name=output_state_name,
