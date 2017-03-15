@@ -1,4 +1,4 @@
-from PsyNeuLink.scheduling.condition import first_n_calls, every_n_calls, terminal, num_time_steps, after_n_calls
+from PsyNeuLink.scheduling.condition import first_n_calls, every_n_calls, terminal, num_time_steps, after_n_calls, if_finished
 from PsyNeuLink.composition import Composition
 
 
@@ -282,17 +282,31 @@ def main():
                                         [(C, (B,), after_n_calls(2))],
                                         [(sched, (C,), terminal())]],
 
+                            #Test 2 Expected Output: A AB A ABC
+
                             # after_n where C begins after 2 runs of B; runs for 10 time steps
                             "Test 3": [[(A, (Clock,), every_n_calls(1))],
                                        [(B, (A,), every_n_calls(2))],
                                        [(C, (B,), after_n_calls(2))],
                                        [(sched, (Clock,), num_time_steps(10))]],
 
+                            # Test 3 Expected Output: A AB A ABC A ABC A ABC A ABC
+                            # Note -- after_n means that C will run *each* time B runs after B has run n times
+
                             # after_n where C begins after 3 runs of B OR A; runs for 10 time steps
-                             "Test 4": [[(A, (Clock,), every_n_calls(1))],
-                                        [(B, (A,), every_n_calls(2))],
-                                        [(C, (B,A), after_n_calls(3, op = "OR"))],
-                                        [(sched, (Clock,), num_time_steps(10))]],
+                            "Test 4": [[(A, (Clock,), every_n_calls(1))],
+                                       [(B, (A,), every_n_calls(2))],
+                                       [(C, (B, A), after_n_calls(3, op="OR"))],
+                                       [(sched, (Clock,), num_time_steps(10))]],
+
+                            # Test 4 Expected Output: A AB AC ABC AC ABC AC ABC AC ABC
+
+                            "Test 4b": [[(A, (Clock,), every_n_calls(1))],
+                                       [(B, (A,), every_n_calls(2))],
+                                       [(C, (B,), after_n_calls(3)), (C, (A,), after_n_calls(3))],
+                                       [(sched, (Clock,), num_time_steps(10))]],
+
+                            # Test 4b Expected Output: A AB AC ABC AC ABC AC ABC AC ABC
 
                             # after_n where C begins after 2 runs of B AND A; runs for 10 time steps
                             "Test 5": [[(A, (Clock,), every_n_calls(1))],
@@ -300,25 +314,60 @@ def main():
                                         [(C, (B,A), after_n_calls(3))],
                                         [(sched, (Clock,), num_time_steps(10))]],
 
+                            # Test 5 Expected Output: A AB A AB A ABC AC ABC AC ABC
+
                             # first n where A depends on the clock
                             "Test 6": [[(A, (Clock,), first_n_calls(5))],
                                        [(B, (A,), after_n_calls(5))],
                                        [(C, (B,), after_n_calls(1))],
                                        [(sched, (Clock,), num_time_steps(10))]],
 
+                            # Test 6 Expected Output: A A A A ABC -- -- -- -- --
+
                             # terminal where trial ends when A OR B runs
                             "Test 7": [[(A, (Clock,), every_n_calls(1))],
                                        [(B, (A,), every_n_calls(2))],
                                        [(sched, (A,B), terminal(op="OR"))]],
+
+                            # Test 7 Expected Output: A
 
                             # terminal where trial ends when A AND B have run
                             "Test 8": [[(A, (Clock,), every_n_calls(1))],
                                        [(B, (A,), every_n_calls(2))],
                                        [(sched, (A, B), terminal())]],
 
+                            # Test 8 Expected Output: A AB
+
+                            # if_finished where B runs when A is done
+                            "Test 9": [[(A, (Clock,), every_n_calls(1))],
+                                       [(B, (A,), if_finished())],
+                                       [(sched, (Clock,), num_time_steps(5))]],
+
+                            # Test 9 Expected Output: AB AB AB AB AB
+
+                            # if_finished where B runs when A is done or A has run n times
+                            "Test 10": [[(A, (Clock,), every_n_calls(1))],
+                                       [(B, (A,), if_finished()), (B, (A,), after_n_calls(3))],
+                                       [(sched, (Clock,), num_time_steps(5))]],
+
+                            # Test 10 Expected Output: AB AB AB AB AB
+
+                            # if_finished where C runs when A is and B has run n times
+                            "Test 11": [[(A, (Clock,), every_n_calls(1))],
+                                        [(B, (A,), every_n_calls(2))],
+                                        [(C, (A,), if_finished())],
+                                        [(C, (B,), after_n_calls(3))],
+                                        [(sched, (C), terminal())]],
+
+                            # Test 11 Expected Output: A AB A AB A ABC
+
+
                               }
 
-    test = "Test 2"
+    # Set mechanism A to finished for testing
+    A.is_finished = True
+
+    test = "Test 11"
     sched.add_constraints(test_constraints_dict[test])
 
     for var in sched.var_list:

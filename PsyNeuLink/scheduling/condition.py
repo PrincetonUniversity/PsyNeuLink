@@ -197,3 +197,43 @@ def after_n_calls(n, time_scale = 'trial', op = "AND"):
                     return True
             return False
     return check
+
+def if_finished(time_scale = 'trial', op = 'AND'):
+    """
+    Condition function to be applied to a constraint
+    Enforces condition that dependencies must have "is_finished" set to True before the owner's first run
+
+    Parameters
+    ----------
+    time_scale -- time_scale on which to count (trial, run or life)
+    op -- "AND": condition must be true of all dependencies; "OR": condition must be true of at least one dependency
+
+
+    Returns
+    -------
+    Boolean (True if condition is met for the number of dependencies required by op)
+
+    """
+    if op == "AND":
+        def check(dependencies):
+            for var in dependencies:
+                # # calls_current_run and calls_since_initialization currently have an offset of 1 due to initialization run
+                # num_calls = {"trial": var.component.calls_current_trial,
+                #              "run": var.component.calls_current_run - 1,
+                #              "life": var.component.calls_since_initialization - 1}
+                if var.component.is_finished is False:
+                    return False
+            return True
+
+    elif op == "OR":
+        def check(dependencies):
+            for var in dependencies:
+                # # calls_current_run and calls_since_initialization currently have an offset of 1 due to initialization run
+                # num_calls = {"trial": var.component.calls_current_trial,
+                #              "run": var.component.calls_current_run - 1,
+                #              "life": var.component.calls_since_initialization - 1}
+                if var.component.is_finished:
+                    return True
+            return False
+    return check
+

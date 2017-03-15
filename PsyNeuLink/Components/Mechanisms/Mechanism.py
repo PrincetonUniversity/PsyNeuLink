@@ -859,6 +859,8 @@ class Mechanism_Base(Mechanism):
         self.phaseSpec = None
         self.processes = {}
         self.systems = {}
+        self.is_finished = False
+
     def plot(self):
         import matplotlib.pyplot as plt
         if "Logistic" in str(self.function):
