@@ -339,7 +339,11 @@ class Component(object):
         self.variableInstanceDefault = None
         self.paramInstanceDefaults = {}
 
-        self.componentName = self.componentType
+        # self.componentName = self.componentType
+        try:
+            self.componentName = self.componentName or self.componentType
+        except AttributeError:
+            self.componentName = self.componentType
         #endregion
 
         #region ENFORCE REGISRY

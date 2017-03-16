@@ -1723,8 +1723,8 @@ class System_Base(System):
             context = EXECUTING + " " + SYSTEM + " " + self.name
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
-        from PsyNeuLink.Globals.Run import _get_get_execution_id
-        self._execution_id = execution_id or _get_get_execution_id()
+        from PsyNeuLink.Globals.Run import _get_unique_id
+        self._execution_id = execution_id or _get_unique_id()
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
         # self.learningExecutionList
         for mech in self.execution_graph_mechs:
