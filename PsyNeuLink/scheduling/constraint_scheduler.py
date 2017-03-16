@@ -219,10 +219,11 @@ class Scheduler(object):
             var.component.execute()
 
             if (var is not self.clock):
-                print(var.component.name, end=' ')
+                print(var.component.name, end='')
 
             change_list = update_dependent_vars(var)
             firing_queue = update_firing_queue(firing_queue, change_list)
+        print('', end=' ')
 
 
     def run_trial(self):
