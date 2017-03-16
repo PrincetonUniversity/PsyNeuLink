@@ -48,8 +48,12 @@ def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial)
 
 def show_weights():
-    print ('\nreward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
-    print ('action selected: ', action_selection.outputState.value)
+    # print ('\nreward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
+    # print ('action selected: ', action_selection.outputState.value)
+    print ('Reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
+    print ('\nAction selected:  {}; assigned probability: {}'.
+           format(np.nonzero(action_selection.outputState.value)[0][0],
+           action_selection.outputState.value[np.nonzero(action_selection.outputState.value)][0]))
 
 p.run(num_executions=10,
       # inputs=[[[1, 1, 1]]],
