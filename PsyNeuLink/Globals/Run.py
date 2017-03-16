@@ -622,14 +622,15 @@ def run(object,
                 if isinstance(targets, function_type):
                     object.target = targets
 
-                # IMPLEMENTATION NOTE:  USE input_num since it # of inputs must equal # targets,
-                #                       where as targets can be assigned a function (so can't be used to generated #)
+                # IMPLEMENTATION NOTE:  USE input_num since # of inputs must equal # targets,
+                #                       whereas targets can be assigned a function (so can't be used to generated #)
                 elif object_type == PROCESS:
                     # object.target = targets[input_num][time_step]
                     object.target = targets[input_num][time_step]
 
                 elif object_type == SYSTEM:
                     object.current_targets = targets[input_num]
+            # MODIFIED 3/16/17 END
 
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
