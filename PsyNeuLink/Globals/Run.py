@@ -620,7 +620,7 @@ def run(object,
             if targets is not None:
 
                 if isinstance(targets, function_type):
-                    object.target = targets
+                    object.target = targets()
 
                 # IMPLEMENTATION NOTE:  USE input_num since it # of inputs must equal # targets,
                 #                       where as targets can be assigned a function (so can't be used to generated #)

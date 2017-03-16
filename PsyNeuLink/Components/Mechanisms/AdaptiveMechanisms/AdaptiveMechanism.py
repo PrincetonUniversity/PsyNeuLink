@@ -22,14 +22,23 @@ COMMENT
 Overview
 --------
 
-A ComparatorMechanism monitors the `outputState <OutputState>` of a `ProcessingMechanism <ProcessingMechanism>` in a
-`process <Process>`, and compares this to a `target <Run_Targets>` provided as input to the :keyword:`run` method of
-the process or system to which it belongs. The comparison can be done using subtraction or division.
+An AdaptiveMechanism monitors one or more `outputStates <OutputState>` of one or more
+`ProcessingMechanisms <ProcessingMechanism>`, and uses that information to modify the parameters of another
+PsyNeuLink component.  There are two types of AdaptiveMechanism: `LearningMechanisms <LearningMechanism>`, that modify
+the parameters of `MappingProjections <MappingProjection>`; and `ControlMechanisms <ControlMechanism>` that modify the
+parameters of other ProcessingMechanisms.  In general, an AdaptiveMechanism receives its input (i.e., monitors the
+outputState) of an `ObjectiveMechanism`, however this need not be the case.  AdaptiveMechanisms are always executed
+after all ProcessingMechanisms in the `process <Process>` or `system <System>` to which they belong have been
+`executed <LINK>`, with all ControlMechanisms executed before all LearningMechanisms. Both types of
+AdaptiveMechanisms are executed before the next `round of execution <LINK>`, so that the modifications
+they make are available during that next round of execution of the process or system.
 
-.. _Comparator_Creation:
+.. _AdaptiveMechanism_Creation:
 
-Creating a ComparatorMechanism
+Creating an AdaptiveMechanism
 ------------------------------
+
+CAN BE DONE MANUALLY, BUT GENERALLY AUTOMATICALLY (SEE EACH SUBCLASS)
 
 A ComparatorMechanism can be created directly by calling its constructor
 COMMENT:
