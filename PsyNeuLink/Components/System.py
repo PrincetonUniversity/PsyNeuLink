@@ -2102,6 +2102,14 @@ class System_Base(System):
         #         else:
         #             raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
+        # MODIFIED 3/16/17 NEW:
+        # If targets were specified as a funtion, call the function now
+        #    (i.e., after execution of the pathways, but before learning)
+        # Note:  this accomodates functions that predicate the target on the outcome of processing
+        #        (e.g., for rewards in reinforcement learning)
+        if isinstance(self.targets, function_type):
+            self.target = self.targets()
+        # MODIFIED 3/16/17 END
 
         # Update all MonitoringMechanisms
         for component in self.learningExecutionList:

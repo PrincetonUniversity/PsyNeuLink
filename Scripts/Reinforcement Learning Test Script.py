@@ -24,7 +24,9 @@ print ('reward prediction weights: \n', action_selection.inputState.receivesFrom
 print ('targetMechanism weights: \n', action_selection.outputState.sendsToProjections[0].matrix)
 
 actions = ['left', 'middle', 'right']
-reward_values = [15, 7, 13]
+# reward_values = [15, 7, 13]
+reward_values = [15, 5, 10]
+# reward_values = [2.4, 0.1, 1.5]
 first_reward = 0
 
 # Must initialize reward (won't be used, but needed for declaration of lambda function)
@@ -55,10 +57,10 @@ def show_weights():
            format(np.nonzero(action_selection.outputState.value)[0][0],
            action_selection.outputState.value[np.nonzero(action_selection.outputState.value)][0]))
 
-p.run(num_executions=10,
-      # inputs=[[[1, 1, 1]]],
+p.run(num_executions=100,
+      inputs=[[[1, 1, 1]]],
       # inputs=[ [ [1, 1, 1] ],[ [.2, 1, .2] ]],
-      inputs={input_layer:[[1, 1, 1],[.2, 1, .2]]},
+      # inputs={input_layer:[[1, 1, 1],[.2, 1, .2]]},
       targets=reward,
       call_before_trial=print_header,
       call_after_trial=show_weights
