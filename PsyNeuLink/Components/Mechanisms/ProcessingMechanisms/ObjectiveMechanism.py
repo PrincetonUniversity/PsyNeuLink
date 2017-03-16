@@ -647,6 +647,19 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         self._instantiate_monitored_output_states(states_spec, context=context)
 
 
+    def _execute(self,
+                    variable=None,
+                    runtime_params=None,
+                    clock=CentralClock,
+                    time_scale=None,
+                    context=None):
+        return super()._execute(variable=variable,
+                                runtime_params=runtime_params,
+                                clock=clock,
+                                time_scale=time_scale,
+                                context=context)
+
+
 def validate_monitored_value(objective_mech, state_spec, context=None):
     """Validate specification for monitored_value arg
 
