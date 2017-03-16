@@ -17,6 +17,96 @@ COMMENT:
   linear, logistic, or exponential transform of its input.
 COMMENT
 
+
+
+Overview
+--------
+
+A ComparatorMechanism monitors the `outputState <OutputState>` of a `ProcessingMechanism <ProcessingMechanism>` in a
+`process <Process>`, and compares this to a `target <Run_Targets>` provided as input to the :keyword:`run` method of
+the process or system to which it belongs. The comparison can be done using subtraction or division.
+
+.. _Comparator_Creation:
+
+Creating a ComparatorMechanism
+------------------------------
+
+A ComparatorMechanism can be created directly by calling its constructor
+COMMENT:
+    , or using the
+    `mechanism` function and specifying keyword:`ComparatorMechanism` as its :keyword:`mech_spec` argument.
+COMMENT
+. The type of comparison is specified in the `comparison_operation` argument, which can be `SUBTRACTION` or
+`DIVISION`.  It can also be created by `in-context specification <Projection_Creation>` of a LearningProjection for a
+projection to the `TERMINAL` mechanism of a process.  One or more ComparatorMechanisms are also created automatically
+when learning is specified for a `process <Process_Learning>` or `system <System_Execution_Learning>`. Each
+ComparatorMechanism is assigned a projection from a `TERMINAL` mechanism that receives a MappingProjection being
+learned. A LearningProjection to that MappingProjection is also created (see `learning in a process <Process_Learning>`,
+and `automatic creation of LearningSignals  <LearningProjection_Automatic_Creation>` for details).
+
+.. _Comparator_Structure:
+
+Structure
+---------
+
+A ComparatorMechanism has two `inputStates <InputState>`:
+
+    * :keyword:`COMPARATOR_SAMPLE` inputState receives a MappingProjection
+      from the `primary outputState <OutputState_Primary>` of a `TERMINAL` mechanism in a process;
+    ..
+    * `COMPARATOR_TARGET` inputState is assigned its value from the :keyword:`target` argument of a call to the
+      `run <Run>` method of a process or system.  It has five outputStates, described under
+      :ref:`Execution <Comparator_Execution>` below.
+
+
+.. _Comparator_Execution:
+
+Execution
+---------
+
+A ComparatorMechanism always executes after the mechanism it is monitoring.  The :keyword:`value` of the
+`primary outputState <OutputState_Primary>` of the mechanism being monitored is assigned as the :keyword:`value` of the
+ComparatorMechanism's :keyword:`COMPARATOR_SAMPLE` inputState;  the value of the :keyword:`COMPARATOR_TARGET`
+inputState is received from the process (or system to which it belongs) when it is run (i.e., the input provided
+ in the process' or system's :keyword:`execute` method or :keyword:`run` method). When the ComparatorMechanism
+is executed, if `comparison_operation` is:
+
+    * `SUBTRACTION`, its `function <ComparatorMechanism.function>` subtracts the  `COMPARATOR_SAMPLE` from the
+      `COMPARATOR_TARGET`;
+    ..
+    * `DIVISION`, its `function <ComparatorMechanism.function>` divides the `COMPARATOR_TARGET`by the
+      `COMPARATOR_SAMPLE`.
+
+After each execution of the mechanism:
+
+.. _Comparator_Results:
+
+    * the **result** of the `function <ComparatorMechanism.function>` calculation is assigned to the mechanism's
+      `value <ComparatorMechanism.value>` attribute, the value of its `COMPARISON_RESULT`
+      outputState, and to the 1st item of its `outputValue <ComparatorMechanism.outputValue>` attribute;
+    ..
+    * the **mean** of the result is assigned to the :keyword:`value` of the mechanism's `COMPARISON_MEAN` outputState,
+      and to the 2nd item of its `outputValue <ComparatorMechanism.outputValue>` attribute.
+    ..
+
+    * the **sum** of the result is assigned to the :keyword:`value` of the mechanism's `COMPARISON_SUM` outputState,
+      and to the 3rd item of its `outputValue <ComparatorMechanism.outputValue>` attribute.
+    ..
+
+    * the **sum of squares** of the result is assigned to the :keyword:`value` of the mechanism's `COMPARISON_SSE`
+      outputState, and to the 4th item of its `outputValue <ComparatorMechanism.outputValue>` attribute.
+    ..
+
+    * the **mean of the squares** of the result is assigned to the :keyword:`value` of the mechanism's
+      :keyword:`COMPARISON_MSE` outputState, and to the 5th item of its `outputValue <ComparatorMechanism.outputValue>`
+      attribute.
+
+.. _Comparator_Class_Reference:
+
+Class Reference
+---------------
+
+
 """
 
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
