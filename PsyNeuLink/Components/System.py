@@ -2085,8 +2085,18 @@ class System_Base(System):
         # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
     # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
 
+        # MODIFIED 3/16/17 NEW:
+        # First, if targets were specified as a function, call the function now
+        #    (i.e., after execution of the pathways, but before learning)
+        # Note:  this accomodates functions that predicate the target on the outcome of processing
+        #        (e.g., for rewards in reinforcement learning)
+        if isinstance(self.targets, function_type):
+            self.target = self.targets()
+        # MODIFIED 3/16/17 END
+
+        # FIX: MOVE BACK TO HERE!! [TO ACCOMODATE ABOVE]
         # ASSIGNED IN Run
-        # # First assign targets to SystemInputStates:
+        # # Then assign targets to SystemInputStates:
         # num_target_mechs = len(list(self.targetMechanisms))
         #
         # # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
@@ -2101,15 +2111,6 @@ class System_Base(System):
         #             system_input_state.value = input[i][j]
         #         else:
         #             raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
-
-        # MODIFIED 3/16/17 NEW:
-        # If targets were specified as a funtion, call the function now
-        #    (i.e., after execution of the pathways, but before learning)
-        # Note:  this accomodates functions that predicate the target on the outcome of processing
-        #        (e.g., for rewards in reinforcement learning)
-        if isinstance(self.targets, function_type):
-            self.target = self.targets()
-        # MODIFIED 3/16/17 END
 
         # Update all MonitoringMechanisms
         for component in self.learningExecutionList:

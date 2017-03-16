@@ -1701,11 +1701,6 @@ class Process_Base(Process):
                 print("- No input provided;  default will be used: {0}")
 
         else:
-            # MODIFIED 8/19/16 OLD:
-            # PROBLEM: IF INPUT IS ALREADY A 2D ARRAY OR A LIST OF ITEMS, COMPRESSES THEM INTO A SINGLE ITEM IN AXIS 0
-            # input = convert_to_np_array(input, 2)
-            # ??SOLUTION: input = atleast_1d??
-            # MODIFIED 8/19/16 NEW:
             # Insure that input is a list of 1D array items, one for each processInputState
             # If input is a single number, wrap in a list
             from numpy import ndarray
@@ -2059,21 +2054,6 @@ class Process_Base(Process):
         # Use Process self.input as input to first Mechanism in Pathway
         self.variable = self.input
 
-        # If target was not provided to execute, use value provided on instantiation
-        if target is not None:
-            self.target = target
-
-        # Assign target to targetInputState (ProcessInputState that projects to targetMechanism for the process)
-        if self.learning:
-        # # Zero any input from projections to target from any other processes
-        # # Note: there is only one targetMechanism in a Process, so can assume it is first item and no need to iterate
-            for process in list(self.targetMechanisms)[0].processes:
-                process.targetInputStates[0].value *= 0
-            if callable(self.target):
-                self.targetInputStates[0].variable = self.target()
-            else:
-                self.targetInputStates[0].value = np.array(self.target)
-
         # Generate header and report input
         if report_output:
             self._report_process_initiation(separator=True)
@@ -2109,15 +2089,21 @@ class Process_Base(Process):
         if self._learning_enabled:
 
             # MODIFIED 3/16/17 NEW:
-            # If targets were specified as a funtion, call the function now
+            # If targets were specified as a function, call the function now and assign value to targetInputStates
             #    (i.e., after execution of the pathways, but before learning)
             # Note:  this accomodates functions that predicate the target on the outcome of processing
             #        (e.g., for rewards in reinforcement learning)
             if isinstance(self.targets, function_type):
                 self.target = self.targets()
+                for i, target_input_state in zip(range(len(self.targetInputStates)), self.targetInputStates):
+                    target_input_state.value = self.target[i]
+
+            # FIX:  NOW NEED TO UPDATE OBJECTIVE MECHANISM(S) (WHICH ARE PROCESSING MECHANISMS,
+            #       AND SO HAVE ALREADY BEEN EXECUTED)
+
             # MODIFIED 3/16/17 END
 
-            self._execute_learning(clock=clock, context=context)
+            self._execute_learning(target=target, clock=clock, context=context)
             # self._execute_learning(clock=clock, time_scale=time_scale, context=context)
 
         if report_output:
@@ -2126,7 +2112,7 @@ class Process_Base(Process):
         # FIX:  SHOULD THIS BE JUST THE VALUE OF THE PRIMARY OUTPUTSTATE, OR OF ALL OF THEM?
         return self.outputState.value
 
-    def _execute_learning(self, clock=CentralClock, context=None):
+    def _execute_learning(self, target=None, clock=CentralClock, context=None):
     # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """ Update each LearningProjection for mechanisms in _mech_tuples of process
 
@@ -2136,6 +2122,40 @@ class Process_Base(Process):
         # # MODIFIED 12/4/16 OLD:
         # for item in reversed(self._mech_tuples):
         # MODIFIED 12/4/16 NEW:  NO NEED TO REVERSE, AS THIS IS JUST UPDATING PARMAETER STATES, NOT ACTIVITIES
+
+        # MODIFIED 3/16/17 NEW:
+        # First, if targets were specified as a function, call the function now and assign value to targetInputStates
+        #    (i.e., after execution of the pathways, but before learning)
+        # Note:  this accommodates functions that predicate the target on the outcome of processing
+        #        (e.g., for rewards in reinforcement learning)
+        # If target was provided to execute, use that;  otherwise, will use value provided on instantiation
+        if target is not None:
+            self.target = target
+        # Assign target to targetInputState (ProcessInputState that projects to targetMechanism for the process)
+        if isinstance(self.targets, function_type):
+            self.target = self.targets()
+            # FIX: DOES THIS NEED TO BE A LOOP?  ISN'T THERE ONLY EVER ONE targetInputState FOR A PROCESS?
+            for i, target_input_state in zip(range(len(self.targetInputStates)), self.targetInputStates):
+                target_input_state.value = self.target[i]
+
+        # # Zero any input from projections to target from any other processes
+        # # Note: there is only one targetMechanism in a Process, so can assume it is first item and no need to iterate
+        for process in list(self.targetMechanisms)[0].processes:
+            process.targetInputStates[0].value *= 0
+        if callable(self.target):
+            self.targetInputStates[0].variable = self.target()
+        else:
+            self.targetInputStates[0].value = np.array(self.target)
+
+        # MODIFIED 3/16/17 NEW:
+        # Then, execute Objective and LearningMechanisms
+        # FIX:  MAKE SURE THEY ARE *NOT* EXECUTED ABOVE
+        for item in self._monitoring_mech_tuples:
+            XXXX
+
+
+        # Finally, execute LearningProjections to MappingProjections in the process' pathway
+        # MODIFIED 3/16/17 END
         for item in self._mech_tuples:
         # MODIFIED 12/4/16 END
             mech = item.mechanism
