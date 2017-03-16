@@ -217,7 +217,10 @@ class Scheduler(object):
         firing_queue = [self.clock]
         for var in firing_queue:
             var.component.execute()
-            print(var.component.name)
+
+            if (var is not self.clock):
+                print(var.component.name, end=' ')
+
             change_list = update_dependent_vars(var)
             firing_queue = update_firing_queue(firing_queue, change_list)
 
@@ -235,7 +238,7 @@ class Scheduler(object):
         self.trial_terminated = False
         while(not self.trial_terminated):
             self.run_time_step()
-            print('----------------')
+        print()
 
 
 def main():
@@ -246,138 +249,150 @@ def main():
     C = TransferMechanism(function = Linear(), name = 'C')
     Clock = TransferMechanism(function = Linear(), name = 'Clock')
     T = TransferMechanism(function = Linear(), name = 'Terminal')
+
     sched = Scheduler()
     sched.set_clock(Clock)
     sched.add_vars([(A, 1), (B, 2), (C, 3), (T, 0)])
 
     test_constraints_dict = {
-                            # every_n
-                             "Test 1": [[(A, (Clock,), every_n_calls(1))],
-                               [(B, (A,), every_n_calls(2))],
-                               [(C, (B,), every_n_calls(3))],
-                               [(T, (C,), every_n_calls(4))],
-                               [(sched, (T,), terminal())]],
+        # every_n
+         "Test 1": [[(A, (Clock,), every_n_calls(1))],
+           [(B, (A,), every_n_calls(2))],
+           [(C, (B,), every_n_calls(3))],
+           [(T, (C,), every_n_calls(4))],
+           [(sched, (T,), terminal())]],
 
-                            # Test 1 Expected Output: A AB A AB A ABC A AB A AB A ABC A AB A AB A ABC A AB A AB A ABCT
+        # Test 1 Expected Output: A AB A AB A ABC A AB A AB A ABC A AB A AB A ABC A AB A AB A ABCT
 
-                            "Test 1b": [[(A, (Clock,), every_n_calls(1))],
-                                       [(B, (A,), every_n_calls(2)),(B, (Clock,), after_n_calls(2))],
-                                       [(C, (B,), every_n_calls(3))],
-                                       [(T, (C,), every_n_calls(4))],
-                                       [(sched, (T,), terminal())]],
+        "Test 1b": [[(A, (Clock,), every_n_calls(1))],
+                   [(B, (A,), every_n_calls(2)),(B, (Clock,), after_n_calls(2))],
+                   [(C, (B,), every_n_calls(3))],
+                   [(T, (C,), every_n_calls(4))],
+                   [(sched, (T,), terminal())]],
 
-                            # Test 1b Expected Output: A AB AB ABC AB AB ABC AB AB ABC AB AB ABCT
+        # Test 1b Expected Output: A AB AB ABC AB AB ABC AB AB ABC AB AB ABCT
 
-                            "Test 1c": [[(A, (Clock,), every_n_calls(1))],
-                                       [(B, (A,), every_n_calls(2)),(B, (Clock,), after_n_calls(5))],
-                                       [(C, (B,), every_n_calls(3))],
-                                       [(T, (C,), every_n_calls(4))],
-                                       [(sched, (T,), terminal())]],
+        "Test 1c": [[(A, (Clock,), every_n_calls(1))],
+                   [(B, (A,), every_n_calls(2)),(B, (Clock,), after_n_calls(5))],
+                   [(C, (B,), every_n_calls(3))],
+                   [(T, (C,), every_n_calls(4))],
+                   [(sched, (T,), terminal())]],
 
-                            # Test 1c Expected Output: A AB AB ABC AB AB ABC AB AB ABC AB AB ABCT
+        # Test 1c Expected Output: A AB AB ABC AB AB ABC AB AB ABC AB AB ABCT
 
-                            # after_n where C begins after 2 runs of B; C is terminal
-                             "Test 2": [[(A, (Clock,), every_n_calls(1))],
-                                        [(B, (A,), every_n_calls(2))],
-                                        [(C, (B,), after_n_calls(2))],
-                                        [(sched, (C,), terminal())]],
+        # after_n where C begins after 2 runs of B; C is terminal
+         "Test 2": [[(A, (Clock,), every_n_calls(1))],
+                    [(B, (A,), every_n_calls(2))],
+                    [(C, (B,), after_n_calls(2))],
+                    [(sched, (C,), terminal())]],
 
-                            #Test 2 Expected Output: A AB A ABC
+        #Test 2 Expected Output: A AB A ABC
 
-                            # after_n where C begins after 2 runs of B; runs for 10 time steps
-                            "Test 3": [[(A, (Clock,), every_n_calls(1))],
-                                       [(B, (A,), every_n_calls(2))],
-                                       [(C, (B,), after_n_calls(2))],
-                                       [(sched, (Clock,), num_time_steps(10))]],
+        # after_n where C begins after 2 runs of B; runs for 10 time steps
+        "Test 3": [[(A, (Clock,), every_n_calls(1))],
+                   [(B, (A,), every_n_calls(2))],
+                   [(C, (B,), after_n_calls(2))],
+                   [(sched, (Clock,), num_time_steps(10))]],
 
-                            # Test 3 Expected Output: A AB A ABC A ABC A ABC A ABC
-                            # Note -- after_n means that C will run *each* time B runs after B has run n times
+        # Test 3 Expected Output: A AB A ABC A ABC A ABC A ABC
+        # Note -- after_n means that C will run *each* time B runs after B has run n times
 
-                            # after_n where C begins after 3 runs of B OR A; runs for 10 time steps
-                            "Test 4": [[(A, (Clock,), every_n_calls(1))],
-                                       [(B, (A,), every_n_calls(2))],
-                                       [(C, (B, A), after_n_calls(3, op="OR"))],
-                                       [(sched, (Clock,), num_time_steps(10))]],
+        # after_n where C begins after 3 runs of B OR A; runs for 10 time steps
+        "Test 4": [[(A, (Clock,), every_n_calls(1))],
+                   [(B, (A,), every_n_calls(2))],
+                   [(C, (B, A), after_n_calls(3, op="OR"))],
+                   [(sched, (Clock,), num_time_steps(10))]],
 
-                            # Test 4 Expected Output: A AB AC ABC AC ABC AC ABC AC ABC
+        # Test 4 Expected Output: A AB AC ABC AC ABC AC ABC AC ABC
 
-                            "Test 4b": [[(A, (Clock,), every_n_calls(1))],
-                                       [(B, (A,), every_n_calls(2))],
-                                       [(C, (B,), after_n_calls(3)), (C, (A,), after_n_calls(3))],
-                                       [(sched, (Clock,), num_time_steps(10))]],
+        "Test 4b": [[(A, (Clock,), every_n_calls(1))],
+                   [(B, (A,), every_n_calls(2))],
+                   [(C, (B,), after_n_calls(3)), (C, (A,), after_n_calls(3))],
+                   [(sched, (Clock,), num_time_steps(10))]],
 
-                            # Test 4b Expected Output: A AB AC ABC AC ABC AC ABC AC ABC
+        # Test 4b Expected Output: A AB AC ABC AC ABC AC ABC AC ABC
 
-                            # after_n where C begins after 2 runs of B AND A; runs for 10 time steps
-                            "Test 5": [[(A, (Clock,), every_n_calls(1))],
-                                        [(B, (A,), every_n_calls(2))],
-                                        [(C, (B,A), after_n_calls(3))],
-                                        [(sched, (Clock,), num_time_steps(10))]],
+        # after_n where C begins after 2 runs of B AND A; runs for 10 time steps
+        "Test 5": [[(A, (Clock,), every_n_calls(1))],
+                    [(B, (A,), every_n_calls(2))],
+                    [(C, (B,A), after_n_calls(3))],
+                    [(sched, (Clock,), num_time_steps(10))]],
 
-                            # Test 5 Expected Output: A AB A AB A ABC AC ABC AC ABC
-
-                            # first n where A depends on the clock
-                            "Test 6": [[(A, (Clock,), first_n_calls(5))],
-                                       [(B, (A,), after_n_calls(5))],
-                                       [(C, (B,), after_n_calls(1))],
-                                       [(sched, (Clock,), num_time_steps(10))]],
-
-                            # Test 6 Expected Output: A A A A ABC -- -- -- -- --
-
-                            # terminal where trial ends when A OR B runs
-                            "Test 7": [[(A, (Clock,), every_n_calls(1))],
-                                       [(B, (A,), every_n_calls(2))],
-                                       [(sched, (A,B), terminal(op="OR"))]],
-
-                            # Test 7 Expected Output: A
-
-                            # terminal where trial ends when A AND B have run
-                            "Test 8": [[(A, (Clock,), every_n_calls(1))],
-                                       [(B, (A,), every_n_calls(2))],
-                                       [(sched, (A, B), terminal())]],
-
-                            # Test 8 Expected Output: A AB
-
-                            # if_finished where B runs when A is done
-                            "Test 9": [[(A, (Clock,), every_n_calls(1))],
-                                       [(B, (A,), if_finished())],
-                                       [(sched, (Clock,), num_time_steps(5))]],
-
-                            # Test 9 Expected Output: AB AB AB AB AB
-
-                            # if_finished where B runs when A is done or A has run n times
-                            "Test 10": [[(A, (Clock,), every_n_calls(1))],
-                                       [(B, (A,), if_finished()), (B, (A,), after_n_calls(3))],
-                                       [(sched, (Clock,), num_time_steps(5))]],
-
-                            # Test 10 Expected Output: AB AB AB AB AB
-
-                            # if_finished where C runs when A is and B has run n times
-                            "Test 11": [[(A, (Clock,), every_n_calls(1))],
-                                        [(B, (A,), every_n_calls(2))],
-                                        [(C, (A,), if_finished())],
-                                        [(C, (B,), after_n_calls(3))],
-                                        [(sched, (C), terminal())]],
-
-                            # Test 11 Expected Output: A AB A AB A ABC
+        # Test 5 Expected Output: A AB A AB A ABC AC ABC AC ABC
 
 
-                              }
+        # first n where A depends on the clock
+        "Test 6": [[(A, (Clock,), first_n_calls(5))],
+                   [(B, (A,), after_n_calls(5))],
+                   [(C, (B,), after_n_calls(1))],
+                   [(sched, (Clock,), num_time_steps(10))]],
+
+        # Test 6 Expected Output: A A A A ABC -- -- -- -- --
+
+        # terminal where trial ends when A OR B runs
+        "Test 7": [[(A, (Clock,), every_n_calls(1))],
+                   [(B, (A,), every_n_calls(2))],
+                   [(sched, (A,B), terminal(op="OR"))]],
+
+        # Test 7 Expected Output: A
+
+        # terminal where trial ends when A AND B have run
+        "Test 8": [[(A, (Clock,), every_n_calls(1))],
+                   [(B, (A,), every_n_calls(2))],
+                   [(sched, (A, B), terminal())]],
+
+        # Test 8 Expected Output: A AB
+
+        # if_finished where B runs when A is done
+        "Test 9": [[(A, (Clock,), every_n_calls(1))],
+                   [(B, (A,), if_finished())],
+                   [(sched, (Clock,), num_time_steps(5))]],
+
+        # Test 9 Expected Output: AB AB AB AB AB
+
+        # if_finished where B runs when A is done or A has run n times
+        "Test 10": [[(A, (Clock,), every_n_calls(1))],
+                   [(B, (A,), if_finished()), (B, (A,), after_n_calls(3))],
+                   [(sched, (Clock,), num_time_steps(5))]],
+
+        # Test 10 Expected Output: AB AB AB AB AB
+
+        # if_finished where C runs when A is and B has run n times
+        "Test 11": [[(A, (Clock,), every_n_calls(1))],
+                    [(B, (A,), every_n_calls(2))],
+                    [(C, (A,), if_finished())],
+                    [(C, (B,), after_n_calls(3))],
+                    [(sched, (C), terminal())]],
+
+        # Test 11 Expected Output: A AB A AB A ABC
+
+
+    }
 
     # Set mechanism A to finished for testing
     A.is_finished = True
 
-    test = "Test 11"
-    sched.add_constraints(test_constraints_dict[test])
-
-    for var in sched.var_list:
-        var.component.new_trial()
-
-    sched.run_trial()
-    print("--- BEGINNING TRIAL 2 ---")
-    sched.run_trial()
-
     print('=================================')
+
+    for test in sorted(test_constraints_dict.keys()):
+        sched = Scheduler()
+        sched.set_clock(Clock)
+        sched.add_vars([(A, 1), (B, 2), (C, 3), (T, 0)])
+        # for now it is unnecessary to change terminal conditions in test cases
+        # in between runs because the only requirement for the condition to
+        # function properly is that sched (or its previous dicarded instance
+        # is a Scheduler()
+        print('--- RUNNING {0} ---'.format(test))
+        sched.add_constraints(test_constraints_dict[test])
+
+        for var in sched.var_list:
+            var.component.new_trial()
+
+        sched.run_trial()
+        #print("--- BEGINNING TRIAL 2 ---")
+        sched.run_trial()
+
+        print('=================================')
 
 if __name__ == '__main__':
     main()
