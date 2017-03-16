@@ -1,5 +1,5 @@
 from PsyNeuLink.scheduling.condition import first_n_calls, every_n_calls, terminal, num_time_steps, after_n_calls, if_finished
-from PsyNeuLink.composition import Composition
+# from PsyNeuLink.composition import Composition
 
 
 class Constraint(object):
@@ -105,7 +105,7 @@ class Scheduler(object):
         if constraints is not None:
             self.add_constraints(constraints)
         self.current_step = 0
-
+        self.feed_dicts = {}
 
     def add_vars(self, var_list):
         #######
@@ -216,7 +216,8 @@ class Scheduler(object):
         # initialize firing queue by adding clock
         firing_queue = [self.clock]
         for var in firing_queue:
-            var.component.execute()
+            yield var
+            # var.component.execute()
             print(var.component.name)
             change_list = update_dependent_vars(var)
             firing_queue = update_firing_queue(firing_queue, change_list)
@@ -227,25 +228,30 @@ class Scheduler(object):
         # Resets all mechanisms, then calls self.run_time_step() until the terminal mechanism runs
         ######
 
-        # reset each mechanism for the trial
         for var in self.var_list:
             var.new_trial()
-
-        # run time steps until terminal mechanism is run
         self.trial_terminated = False
-        while(not self.trial_terminated):
-            self.run_time_step()
-            print('----------------')
+        while (not self.trial_terminated):
+            for var in self.run_time_step():
+                yield var.component
+            print("-------------")
 
 
 def main():
     from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
     from PsyNeuLink.Components.Functions.Function import Linear
+    from PsyNeuLink.composition import Composition
+    comp = Composition()
     A = TransferMechanism(function = Linear(intercept=3.0), name = 'A')
     B = TransferMechanism(function = Linear(intercept=2.0), name = 'B')
     C = TransferMechanism(function = Linear(), name = 'C')
     Clock = TransferMechanism(function = Linear(), name = 'Clock')
     T = TransferMechanism(function = Linear(), name = 'Terminal')
+    comp.add_mechanism(A)
+    comp.add_mechanism(B)
+    comp.add_mechanism(C)
+    comp.add_mechanism(T)
+    comp.analyze_graph()
     sched = Scheduler()
     sched.set_clock(Clock)
     sched.add_vars([(A, 1), (B, 2), (C, 3), (T, 0)])
@@ -372,10 +378,8 @@ def main():
 
     for var in sched.var_list:
         var.component.new_trial()
+    comp.run(sched)
 
-    sched.run_trial()
-    print("--- BEGINNING TRIAL 2 ---")
-    sched.run_trial()
 
     print('=================================')
 

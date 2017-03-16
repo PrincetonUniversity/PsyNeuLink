@@ -1,6 +1,6 @@
 from collections import OrderedDict, Iterable
 import itertools
-# Needs to be created still| from PsyNeuLink.scheduling import Scheduler
+from PsyNeuLink.scheduling.constraint_scheduler import Scheduler
 
 class Edge(object):
     ########
@@ -102,6 +102,7 @@ class Composition(object):
         self.explicit_output_mechanisms = [] # Need to track to know which to leave untouched
         self.all_output_mechanisms = []
         self.target_mechanisms = [] # Do not need to track explicit as they mush be explicit
+        self.sched = Scheduler()
 
     def add_mechanism(self, mech):
         ########
@@ -266,8 +267,13 @@ class Composition(object):
                         raise ValueError("The value provided for input state {!s} of the mechanism \"{}\" has length {!s} \
                             where the input state takes values of length {!s}".format(i, mech.name, val_length, state_length))
 
-    def run(self, inputs = None, targets = None, recurrent_init = None):
+    def run(self, scheduler, inputs = None, targets = None, recurrent_init = None):
 
-        self.validate_feed_dict(inputs, self.origin_mechanisms, "Inputs")
-        self.validate_feed_dict(targets, self.target_mechanisms, "Targets")
-        self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
+        if inputs:
+            self.validate_feed_dict(inputs, self.origin_mechanisms, "Inputs")
+        if targets:
+            self.validate_feed_dict(targets, self.target_mechanisms, "Targets")
+        if recurrent_init:
+            self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
+        for current_component in scheduler.run_trial():
+            current_component.execute()
