@@ -245,24 +245,19 @@ Class Reference
 
 import math
 import re
-from collections import UserList, Iterable
 from collections import OrderedDict
-
+from collections import UserList, Iterable
 from toposort import *
-# from PsyNeuLink.Globals.toposort.toposort import toposort
 
-from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, ProcessTuple
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple,\
                                                        OBJECT_ITEM, PARAMS_ITEM, PHASE_ITEM
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
-#                                                                                       target_mech_TARGET_input_state
+from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, ProcessTuple
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
+from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Globals.Registry import register_category
 
 # ProcessRegistry ------------------------------------------------------------------------------------------------------
 
@@ -798,7 +793,7 @@ class System_Base(System):
         # Get/assign controller
 
         # Controller is DefaultControlMechanism
-        from PsyNeuLink.Components.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.DefaultControlMechanism import DefaultControlMechanism
         if self.paramsCurrent[CONTROLLER] is DefaultControlMechanism:
             # Get DefaultController from MechanismRegistry
             from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
