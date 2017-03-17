@@ -1,5 +1,5 @@
 from PsyNeuLink.scheduling.condition import first_n_calls, every_n_calls, terminal, num_time_steps, after_n_calls, if_finished
-# from PsyNeuLink.composition import Composition
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
 
 class Constraint(object):
@@ -242,17 +242,21 @@ def main():
     from PsyNeuLink.Components.Functions.Function import Linear
     from PsyNeuLink.composition import Composition
     comp = Composition()
-    A = TransferMechanism(function = Linear(intercept=3.0), name = 'A')
-    B = TransferMechanism(function = Linear(intercept=2.0), name = 'B')
-    C = TransferMechanism(function = Linear(), name = 'C')
+    A = TransferMechanism(function = Linear(slope=5.0, intercept = 2.0), name = 'A')
+    B = TransferMechanism(function = Linear(intercept = 4.0), name = 'B')
+    C = TransferMechanism(function = Linear(intercept = 1.5), name = 'C')
     Clock = TransferMechanism(function = Linear(), name = 'Clock')
     T = TransferMechanism(function = Linear(), name = 'Terminal')
     comp.add_mechanism(A)
     comp.add_mechanism(B)
     comp.add_mechanism(C)
     comp.add_mechanism(T)
+    comp.add_projection(A, MappingProjection(), B)
+    comp.add_projection(B, MappingProjection(), C)
+    comp.add_projection(C, MappingProjection(), T)
     comp.analyze_graph()
     sched = Scheduler()
+
     sched.set_clock(Clock)
     sched.add_vars([(A, 1), (B, 2), (C, 3), (T, 0)])
 
@@ -367,19 +371,17 @@ def main():
 
                             # Test 11 Expected Output: A AB A AB A ABC
 
-
-                              }
+                            }
 
     # Set mechanism A to finished for testing
     A.is_finished = True
 
-    test = "Test 11"
+    test = "Test 3"
     sched.add_constraints(test_constraints_dict[test])
 
     for var in sched.var_list:
         var.component.new_trial()
-    comp.run(sched)
-
+    comp.run(sched, inputs = {A: [[5.5]]})
 
     print('=================================')
 

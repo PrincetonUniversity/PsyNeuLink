@@ -116,7 +116,7 @@ class Composition(object):
     def add_projection(self, sender, projection, receiver):
         ########
         # Adds a new Projection to the Composition.
-        # If the projection has allready been added, passes.
+        # If the projection has already been added, passes.
         ########
         # Ensures that the projection does not already exist in the graph at this place
         if any([edge.projection is projection for edge in self.graph.get_incoming(receiver)]):
@@ -275,5 +275,15 @@ class Composition(object):
             self.validate_feed_dict(targets, self.target_mechanisms, "Targets")
         if recurrent_init:
             self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
+
+        print(self.origin_mechanisms)
+        print(self.target_mechanisms)
+        print(self.recurrent_init_mechanisms)
+
         for current_component in scheduler.run_trial():
-            current_component.execute()
+            if current_component in inputs.keys():
+                print(current_component.name, " was found in inputs")
+                current_component.execute(inputs[current_component])
+            else:
+                current_component.execute()
+            print(current_component.value)
