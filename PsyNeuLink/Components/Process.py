@@ -1408,7 +1408,6 @@ class Process_Base(Process):
                         # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
     # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
 
-                        # MODIFIED 9/12/16 NEW:
                         # If initialization of MappingProjection has been deferred,
                         #    check sender and receiver, assign them if they have not been assigned, and initialize it
                         if item.value is DEFERRED_INITIALIZATION:
@@ -1457,7 +1456,6 @@ class Process_Base(Process):
 
                             # Complete initialization of projection
                             item._deferred_init()
-                        # MODIFIED 9/12/16 END
 
                         if not item.sender.owner is sender_mech:
                             raise ProcessError("Sender of projection ({}) specified in item {} of pathway for {} "
@@ -1504,11 +1502,7 @@ class Process_Base(Process):
                     # Reassign Pathway entry
                     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
                     # IMPLEMENTATION NOTE:  params is currently ignored
-                    # # MODIFIED 10/16/16 OLD:
-                    # pathway[i] = (projection, params)
-                    # MODIFIED 10/16/16 NEW:
                     pathway[i] = MechanismTuple(projection, params, DEFAULT_PHASE_SPEC)
-                    # MODIFIED 10/16/16 END
 
     def _issue_warning_about_existing_projections(self, mechanism, context=None):
 
@@ -1719,11 +1713,9 @@ class Process_Base(Process):
 
         return input
 
-    # MODIFIED 2/17/17 NEW:
     def _update_input(self):
         for s, i in zip(self.processInputStates, range(len(self.processInputStates))):
             self.input = s.value
-    # MODIFIED 2/17/17 END
 
     def _instantiate__deferred_inits(self, context=None):
         """Instantiate any objects in the Process that have deferred their initialization
@@ -1810,7 +1802,6 @@ class Process_Base(Process):
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
                     for param_projection in parameter_state.receivesFromProjections:
                         param_projection._deferred_init(context=context)
-                        # MODIFIED 3/3/17 NEW:
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _monitoring_mech_tuples
                             try:
@@ -1840,7 +1831,6 @@ class Process_Base(Process):
                                                                            None,
                                                                            self._phaseSpecMax+1)
                                     self._monitoring_mech_tuples.append(learning_mech_tuple)
-                        # MODIFIED 3/3/17 END
 
             # Not all Projection subclasses instantiate parameterStates
             except AttributeError as e:
@@ -1850,20 +1840,6 @@ class Process_Base(Process):
                     error_msg = 'Error in attempt to initialize LearningProjection ({}) for {}: \"{}\"'.\
                         format(param_projection.name, projection.name, e.args[0])
                     raise ProcessError(error_msg)
-
-            # # MODIFIED 3/3/17 OLD:
-            # # Check if projection has monitoringMechanism attribute
-            # try:
-            #     monitoring_mechanism = projection.monitoringMechanism
-            # except AttributeError:
-            #     pass
-            # else:
-            #     # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to _monitoring_mech_tuples
-            #     if monitoring_mechanism and not any(monitoring_mechanism is mech_tuple.mechanism for
-            #                                         mech_tuple in self._monitoring_mech_tuples):
-            #         monitoring_mech_tuple = MechanismTuple(monitoring_mechanism, None, self._phaseSpecMax+1)
-            #         self._monitoring_mech_tuples.append(monitoring_mech_tuple)
-            # MODIFIED 3/3/17 END
 
     def _check_for_target_mechanism(self):
         """Check for and assign TARGET ObjectiveMechanism to use for reporting error during learning.
@@ -2080,20 +2056,6 @@ class Process_Base(Process):
         # Execute LearningMechanisms
         if self._learning_enabled:
 
-            # # MODIFIED 3/16/17 NEW:
-            # # If targets were specified as a function, call the function now and assign value to targetInputStates
-            # #    (i.e., after execution of the pathways, but before learning)
-            # # Note:  this accomodates functions that predicate the target on the outcome of processing
-            # #        (e.g., for rewards in reinforcement learning)
-            # if isinstance(self.targets, function_type):
-            #     self.target = self.targets()
-            #     for i, target_input_state in zip(range(len(self.targetInputStates)), self.targetInputStates):
-            #         target_input_state.value = self.target[i]
-            #
-            # # FIX:  NOW NEED TO UPDATE OBJECTIVE MECHANISM(S) (WHICH ARE PROCESSING MECHANISMS,
-            # #       AND SO HAVE ALREADY BEEN EXECUTED)
-            # # MODIFIED 3/16/17 END
-
             self._execute_learning(target=target, clock=clock, context=context)
             # self._execute_learning(clock=clock, time_scale=time_scale, context=context)
 
@@ -2110,13 +2072,8 @@ class Process_Base(Process):
         # Begin with projection(s) to last Mechanism in _mech_tuples, and work backwards
 
         """
-        # # MODIFIED 12/4/16 OLD:
-        # for item in reversed(self._mech_tuples):
-        # MODIFIED 12/4/16 NEW:  NO NEED TO REVERSE, AS THIS IS JUST UPDATING PARMAETER STATES, NOT ACTIVITIES
 
-        # MODIFIED 3/16/17 NEW:
-
-        # First, assign targets
+        # FIRST, assign targets
 
         # If target was provided to execute, use that;  otherwise, will use value provided on instantiation
         #
@@ -2132,7 +2089,6 @@ class Process_Base(Process):
             self.target = self.targets()
             # FIX: DOES THIS NEED TO BE A LOOP?  ISN'T THERE ONLY EVER ONE targetInputState FOR A PROCESS?
 
-
         # Assign target to targetInputState (ProcessInputState that projects to targetMechanism for the process)
         for i, target_input_state in zip(range(len(self.targetInputStates)), self.targetInputStates):
             target_input_state.value = self.target[i]
@@ -2146,9 +2102,7 @@ class Process_Base(Process):
         else:
             self.targetInputStates[0].value = np.array(self.target)
 
-        # MODIFIED 3/16/17 NEW:
-        # Then, execute Objective and LearningMechanisms
-        # FIX:  MAKE SURE THEY ARE *NOT* EXECUTED ABOVE
+        # THEN, execute Objective and LearningMechanisms
         for mechanism, params, phase_spec in self._monitoring_mech_tuples:
             mechanism.execute(clock=clock,
                               time_scale=self.timeScale,
@@ -2156,10 +2110,8 @@ class Process_Base(Process):
                               context=context)
 
 
-        # Finally, execute LearningProjections to MappingProjections in the process' pathway
-        # MODIFIED 3/16/17 END
+        # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for item in self._mech_tuples:
-        # MODIFIED 12/4/16 END
             mech = item.mechanism
             params = item.params
 
@@ -2172,7 +2124,6 @@ class Process_Base(Process):
                 # For each projection in the list
                 for projection in input_state.receivesFromProjections:
 
-                    # # MODIFIED 12/19/16 NEW:
                     # Skip learning if projection is an input from the Process or a system
                     # or comes from a mechanism that belongs to another process
                     #    (this is to prevent "double-training" of projections from mechanisms belonging
@@ -2180,18 +2131,6 @@ class Process_Base(Process):
                     sender = projection.sender.owner
                     if isinstance(sender, Process_Base) or not self in (sender.processes):
                         continue
-                    # # # MODIFIED 12/19/16 NEWER:
-                    # # Skip learning if projection is an input from the Process or a system (other than target input)
-                    # # or comes from a mechanism that belongs to another process
-                    # #    (this is to prevent "double-training" of projections from mechanisms belonging to other
-                    # # processes)
-                    # sender = projection.sender.owner
-                    # if isinstance(sender, Process_Base):
-                    #     if not mech is self.targetMechanisms[0]:
-                    #         continue
-                    # elif not self in (sender.processes):
-                    #     continue
-                    # MODIFIED 12/19/16 END
 
                     # For each parameter_state of the projection
                     try:
