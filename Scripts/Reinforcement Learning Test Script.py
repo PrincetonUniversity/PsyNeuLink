@@ -5,6 +5,7 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Functions.Function import PROB
 from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
+from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.TimeScale import CentralClock
 
 import random
