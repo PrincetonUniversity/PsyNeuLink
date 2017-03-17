@@ -4,8 +4,8 @@ from PsyNeuLink import *
 from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
 
 import random
-# random.seed(0)
-# np.random.seed(0)
+random.seed(0)
+np.random.seed(0)
 
 input_layer = TransferMechanism(default_input_value=[0,0,0],
                        name='Input Layer')
