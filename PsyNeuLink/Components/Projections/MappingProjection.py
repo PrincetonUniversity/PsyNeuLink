@@ -455,16 +455,8 @@ class MappingProjection(Projection_Base):
 
         # FIX: NEED TO EXECUTE PROJECTIONS TO PARAMS HERE (PER update_parameter_state FOR A MECHANISM)
 
-        # # MODIFIED 12/21/16 OLD:
-        # # Check whether weights changed
-        # if self.monitoringMechanism and self.monitoringMechanism.summed_error_signal:
-        # MODIFIED 12/21/16 NEW:
-        # Check whether error_signal has changed
-        # if self.monitoringMechanism and self.monitoringMechanism.status == CHANGED:
-        # MODIFIED 3/3/17 NEWER:
         # Check whether error_signal has changed
         if self.learning_mechanism and self.learning_mechanism.status == CHANGED:
-        # MODIFIED 12/21/16 END
 
             # Assume that if monitoringMechanism attribute is assigned,
             #    both a LearningProjection and parameterState[MATRIX] to receive it have been instantiated
