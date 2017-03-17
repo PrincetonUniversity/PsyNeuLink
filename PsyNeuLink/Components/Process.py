@@ -329,17 +329,13 @@ import PsyNeuLink.Components
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
-    # Mechanism_Base, \
-    # mechanism, \
-    # _is_mechanism_spec, \
-    # MechanismList, \
-    # MechanismTuple
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, _add_projection_to
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 
 # *****************************************    PROCESS CLASS    ********************************************************
 
@@ -2058,16 +2054,11 @@ class Process_Base(Process):
         if report_output:
             self._report_process_initiation(separator=True)
 
-        # # Execute ProcessInputStates (to convert variable into values in case variable is a function)
-        # for process_input_state in self.processInputStates:
-        #     process_input_state.update(context=context)
-
-        # Execute each Mechanism in the pathway, in the order listed
-        for i in range(len(self._mech_tuples)):
-            mechanism, params, phase_spec = self._mech_tuples[i]
-
-            # FIX:  DOES THIS BELONG HERE OR IN SYSTEM?
-            # CentralClock.time_step = i
+        # Execute each Mechanism in the pathway, in the order listed, except those used for learning
+        for mechanism, params, phase_spec in self._mech_tuples:
+            if (isinstance(mechanism, LearningMechanism) or
+                    (isinstance(mechanism, ObjectiveMechanism) and mechanism.role is LEARNING)):
+                continue
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             mechanism.execute(clock=clock,
@@ -2079,29 +2070,27 @@ class Process_Base(Process):
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
                 self._report_mechanism_execution(mechanism)
 
-            if not i and not self.clamp_input:
+            if mechanism is self.firstMechanism and not self.clamp_input:
                 # Zero self.input to first mechanism after first run
                 #     in case it is repeated in the pathway or receives a recurrent projection
                 self.variable = self.variable * 0
-            i += 1
 
-        # Execute learningSignals
+        # Execute LearningMechanisms
         if self._learning_enabled:
 
-            # MODIFIED 3/16/17 NEW:
-            # If targets were specified as a function, call the function now and assign value to targetInputStates
-            #    (i.e., after execution of the pathways, but before learning)
-            # Note:  this accomodates functions that predicate the target on the outcome of processing
-            #        (e.g., for rewards in reinforcement learning)
-            if isinstance(self.targets, function_type):
-                self.target = self.targets()
-                for i, target_input_state in zip(range(len(self.targetInputStates)), self.targetInputStates):
-                    target_input_state.value = self.target[i]
-
-            # FIX:  NOW NEED TO UPDATE OBJECTIVE MECHANISM(S) (WHICH ARE PROCESSING MECHANISMS,
-            #       AND SO HAVE ALREADY BEEN EXECUTED)
-
-            # MODIFIED 3/16/17 END
+            # # MODIFIED 3/16/17 NEW:
+            # # If targets were specified as a function, call the function now and assign value to targetInputStates
+            # #    (i.e., after execution of the pathways, but before learning)
+            # # Note:  this accomodates functions that predicate the target on the outcome of processing
+            # #        (e.g., for rewards in reinforcement learning)
+            # if isinstance(self.targets, function_type):
+            #     self.target = self.targets()
+            #     for i, target_input_state in zip(range(len(self.targetInputStates)), self.targetInputStates):
+            #         target_input_state.value = self.target[i]
+            #
+            # # FIX:  NOW NEED TO UPDATE OBJECTIVE MECHANISM(S) (WHICH ARE PROCESSING MECHANISMS,
+            # #       AND SO HAVE ALREADY BEEN EXECUTED)
+            # # MODIFIED 3/16/17 END
 
             self._execute_learning(target=target, clock=clock, context=context)
             # self._execute_learning(clock=clock, time_scale=time_scale, context=context)
@@ -2150,8 +2139,11 @@ class Process_Base(Process):
         # MODIFIED 3/16/17 NEW:
         # Then, execute Objective and LearningMechanisms
         # FIX:  MAKE SURE THEY ARE *NOT* EXECUTED ABOVE
-        for item in self._monitoring_mech_tuples:
-            XXXX
+        for mechanism, params, phase_spec in self._monitoring_mech_tuples:
+            mechanism.execute(clock=clock,
+                              time_scale=self.timeScale,
+                              runtime_params=params,
+                              context=context)
 
 
         # Finally, execute LearningProjections to MappingProjections in the process' pathway
