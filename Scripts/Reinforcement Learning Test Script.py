@@ -46,25 +46,30 @@ def show_weights():
     # print ('\nreward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
     # print ('action selected: ', action_selection.outputState.value)
     print ('Reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
-    print ('\nAction selected:  {}; assigned probability: {}'.
+    print ('\nAction selected:  {}; predicted reward: {}'.
            format(np.nonzero(action_selection.outputState.value)[0][0],
            action_selection.outputState.value[np.nonzero(action_selection.outputState.value)][0]))
 
-p.run(num_executions=30,
-      inputs=[[[1, 1, 1]]],
-      # inputs=[ [ [1, 1, 1] ],[ [.2, 1, .2] ]],
-      # inputs={input_layer:[[1, 1, 1],[.2, 1, .2]]},
-      targets=reward,
-      call_before_trial=print_header,
-      call_after_trial=show_weights
-      )
-
-# s = system(processes=[p])
-#
-# s.run(num_executions=10,
-#       # inputs=[[[1, 1, 1]]],
-#       inputs=[ [[1, 1, 1] ],[ [.2, 1, .2] ]],
+# p.run(num_executions=10,
+#       inputs=[[[1, 1, 1]]],
+#       # inputs=[ [ [1, 1, 1] ],[ [.2, 1, .2] ]],
+#       # inputs={input_layer:[[1, 1, 1],[.2, 1, .2]]},
 #       targets=reward,
 #       call_before_trial=print_header,
 #       call_after_trial=show_weights
 #       )
+
+input_list = {input_layer:[[1, 1, 1]]}
+
+s = system(processes=[p],
+           targets=[0])
+
+s.run(num_executions=10,
+      # inputs=[[1, 1, 1]],
+      # inputs=[[1, 1, 1],[.2, 1, .2 ]],
+      # inputs=[ [[1, 1, 1] ],[ [.2, 1, .2] ]],
+      inputs=input_list,
+      targets=reward,
+      call_before_trial=print_header,
+      call_after_trial=show_weights
+      )

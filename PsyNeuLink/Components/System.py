@@ -1933,34 +1933,17 @@ class System_Base(System):
                     else:
                         raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
-                # # MODIFIED 2/20/17 CHECK:
-                # # MODIFIED 2/13/17 NEW:
-                # # REMOVE THIS WHEN EXECUTE_ID IS IMPLEMENTED
-                # # Nullify inputs to ORIGIN mechanism from any processes
-                # for input_state in list(origin_mech.inputStates.values()):
-                #     for projection in input_state.receivesFromProjections:
-                #         if isinstance(projection.sender, ProcessInputState):
-                #             # projection.sender.value = None
-                #             projection.sender.value *= 0
-                # # MODIFIED 2/13/17 END
-
-            # Note: the following assumes that the order of the items in targets is aligned with
-            #       the order of the TARGET mechanisms in the sytem's targetMechanisms list;
-            #       it is tested for dict format in run._construct_stimulus_sets,
-            #       but can't be insured for list format.
-            # For each TARGET mechanism in the system's targetMechanismList
-            for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
-            # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
-            #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
-                self.targetInputStates[i].value = self.current_targets[i]
-
-                # # MODIFIED 2/20/17 CHECK:
-                # # REMOVE THIS WHEN EXECUTE_ID IS IMPLEMENTED
-                # # Nullify inputs to TARGET mechanism from any processes
-                # for process_target_projection in \
-                #         target_mech.inputStates[target_mech_TARGET_input_state].receivesFromProjections:
-                #     if isinstance(process_target_projection.sender, ProcessInputState):
-                #         process_target_projection.sender.value = process_target_projection.sender.value * 0
+            # # MODIFIED 3/17/17 OLD: [MOVED TO _execute_learning]
+            # # Note: the following assumes that the order of the items in targets is aligned with
+            # #       the order of the TARGET mechanisms in the sytem's targetMechanisms list;
+            # #       it is tested for dict format in run._construct_stimulus_sets,
+            # #       but can't be insured for list format.
+            # # For each TARGET mechanism in the system's targetMechanismList
+            # for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
+            # # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
+            # #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
+            #     self.targetInputStates[i].value = self.current_targets[i]
+            # # MODIFIED 3/17/17 END
 
         self.input = input
         #endregion
@@ -2086,8 +2069,16 @@ class System_Base(System):
         # Note:  this accomodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
         if isinstance(self.targets, function_type):
-            self.target = self.targets()
+            self.current_targets = self.targets()
         # MODIFIED 3/16/17 END
+
+        # MODIFIED 3/17/17 NEW: [MOVED TO HERE FROM execute() TO ACCOMODATE ABOVE]
+        for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
+        # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
+        #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
+            self.targetInputStates[i].value = self.current_targets[i]
+        # MODIFIED 3/17/17 END
+
 
         # FIX: MOVE BACK TO HERE!! [TO ACCOMODATE ABOVE]
         # ASSIGNED IN Run
