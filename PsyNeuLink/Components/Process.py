@@ -855,6 +855,7 @@ class Process_Base(Process):
         # MODIFIED 2/17/17 END
         self.processInputStates = []
         self.function = self.execute
+        self.targets = None
         self.targetInputStates = []
         self.systems = []
         self._phaseSpecMax = 0
@@ -2113,19 +2114,27 @@ class Process_Base(Process):
         # MODIFIED 12/4/16 NEW:  NO NEED TO REVERSE, AS THIS IS JUST UPDATING PARMAETER STATES, NOT ACTIVITIES
 
         # MODIFIED 3/16/17 NEW:
-        # First, if targets were specified as a function, call the function now and assign value to targetInputStates
+
+        # First, assign targets
+
+        # If target was provided to execute, use that;  otherwise, will use value provided on instantiation
+        #
+        if target is not None:
+            self.target = target
+
+        # If targets were specified as a function in call to Run() or in System,
+        #  call the function now and assign value to targetInputStates
         #    (i.e., after execution of the pathways, but before learning)
         # Note:  this accommodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
-        # If target was provided to execute, use that;  otherwise, will use value provided on instantiation
-        if target is not None:
-            self.target = target
-        # Assign target to targetInputState (ProcessInputState that projects to targetMechanism for the process)
         elif isinstance(self.targets, function_type):
             self.target = self.targets()
             # FIX: DOES THIS NEED TO BE A LOOP?  ISN'T THERE ONLY EVER ONE targetInputState FOR A PROCESS?
-            for i, target_input_state in zip(range(len(self.targetInputStates)), self.targetInputStates):
-                target_input_state.value = self.target[i]
+
+
+        # Assign target to targetInputState (ProcessInputState that projects to targetMechanism for the process)
+        for i, target_input_state in zip(range(len(self.targetInputStates)), self.targetInputStates):
+            target_input_state.value = self.target[i]
 
         # # Zero any input from projections to target from any other processes
         # # Note: there is only one targetMechanism in a Process, so can assume it is first item and no need to iterate
