@@ -309,7 +309,7 @@ class State_Base(State):
                  **kargs):
         """Initialize subclass that computes and represents the value of a particular state of a mechanism
 
-        This is used by subclasses to implement the input, output, and parameter states of a Mechanism
+        This is used by subclasses to implement the inputState(s), outputState(s), and parameterState(s) of a Mechanism.
 
         Arguments:
             - owner (Mechanism):
