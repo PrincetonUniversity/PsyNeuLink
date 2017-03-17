@@ -1035,13 +1035,13 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
         else:
             raise RunError("Unknown data type for inputs in {}".format(object.name))
 
-        if is_target:   # No phase dimension, so one less than for stimulus inputs
+        if is_target:    # No phase dimension, so one less than for stimulus inputs
             # If targets are homogeneous, inputs.ndim should be 4:
             # If targets are heterogenous:
             #   if states/mech are homogenous, inputs.ndim should be 3
             #   if states/mech are heterogenous, inputs.ndim should be 2
             expected_dim = 2 + input_homogenity + states_per_mech_heterog
-        else: # Stimuli, which have phases, so one extra dimension
+        else:            # Stimuli have phases, so one extra dimension
             # If inputs are homogeneous, inputs.ndim should be 5;
             # If inputs are heterogenous:
             #   if states sizes are heterogenous, inputs.ndim should be 4

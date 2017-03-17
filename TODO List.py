@@ -24,6 +24,8 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
+
 # FIX: LearningComponents CLASS:
 #           ADD GENERIC CHECK (FOLLOWING IMPLEMENTATION IN error_signal_mech) THAT CHECKS THAT ANY RETURNED VALUE
 #               BELONGS TO AN OBJECT IN THE SAME PROCESS TO WHICH THE activation_mech BELONGS
