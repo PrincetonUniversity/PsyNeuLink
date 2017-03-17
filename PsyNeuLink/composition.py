@@ -1,6 +1,7 @@
 from collections import OrderedDict, Iterable
 import itertools
 from PsyNeuLink.scheduling.constraint_scheduler import Scheduler
+from PsyNeuLink.Components.Functions.Function import LINEAR_MATRIX_FUNCTION
 
 class Edge(object):
     ########
@@ -276,27 +277,21 @@ class Composition(object):
         if recurrent_init:
             self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
 
-        print(self.graph.mechanisms)
-        print(self.origin_mechanisms)
-        print(self.target_mechanisms)
-        print(self.recurrent_init_mechanisms)
-
         for current_component in scheduler.run_trial():
             if current_component.name != "Clock":
-                print("NAME: ",current_component.name)
+                # print("NAME: ",current_component.name)
                 current_vertex = self.graph.mech_to_vertex[current_component]
-                print("INCOMING PROJECTION: ", current_vertex.incoming)
-                print("OUTGOING PROJECTION: ", current_vertex.outgoing)
-
-                current_vertex = self.graph.mech_to_vertex
-
+                # print("INCOMING PROJECTION: ", current_vertex.incoming)
+                # print("OUTGOING PROJECTION: ", current_vertex.outgoing)
                 if current_component in inputs.keys():
-                    print(current_component.name, " was found in inputs")
-                    current_component.execute(inputs[current_component])
+                    # print(current_component.name, " was found in inputs")
+                    new_value = current_component.execute(inputs[current_component])
+                    # for edge in current_vertex.outgoing:
+                    #     edge.projection.execute(new_value)
 
                 else:
                     current_component.execute()
-                print(current_component.value)
+                # print(current_component.value)
             else:
                 current_component.execute()
-                print(current_component.value)
+                # print(current_component.value)
