@@ -290,8 +290,8 @@ class ControlProjection(Projection_Base):
         #    (Note:  this includes ControlMechanism)
         if isinstance(self.sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its controlSignal projection
-            from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-            from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.ControlSignal import ControlSignalError
+            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism import ControlMechanism_Base
+            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlSignal import ControlSignalError
             if isinstance(self.sender, ControlMechanism_Base):
                 try:
                     params = params or self.control_signal

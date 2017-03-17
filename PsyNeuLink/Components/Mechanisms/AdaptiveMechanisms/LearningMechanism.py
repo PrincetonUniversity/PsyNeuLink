@@ -245,11 +245,6 @@ Class Reference
 """
 
 
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
-                                                                                      COMPARATOR_SAMPLE
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism, \
-                                                                                         PROJECTION_TO_NEXT_MECHANISM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import _objective_mechanism_role
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
@@ -622,8 +617,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
-        # TEST PRINT:
-        print("\n@@@ EXECUTED: {}".format(self.name))
+        # # TEST PRINT:
+        # print("\n@@@ EXECUTED: {}".format(self.name))
 
         self.value = [self.learning_signal, self.error_signal]
         return self.value
