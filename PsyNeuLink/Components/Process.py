@@ -2121,7 +2121,7 @@ class Process_Base(Process):
         if target is not None:
             self.target = target
         # Assign target to targetInputState (ProcessInputState that projects to targetMechanism for the process)
-        if isinstance(self.targets, function_type):
+        elif isinstance(self.targets, function_type):
             self.target = self.targets()
             # FIX: DOES THIS NEED TO BE A LOOP?  ISN'T THERE ONLY EVER ONE targetInputState FOR A PROCESS?
             for i, target_input_state in zip(range(len(self.targetInputStates)), self.targetInputStates):
