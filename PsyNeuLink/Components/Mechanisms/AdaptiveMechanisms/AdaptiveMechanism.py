@@ -29,9 +29,9 @@ the parameters of `MappingProjections <MappingProjection>`; and `ControlMechanis
 parameters of other ProcessingMechanisms.  In general, an AdaptiveMechanism receives its input (i.e., monitors the
 outputState) of an `ObjectiveMechanism`, however this need not be the case.  AdaptiveMechanisms are always executed
 after all ProcessingMechanisms in the `process <Process>` or `system <System>` to which they belong have been
-`executed <LINK>`, with all ControlMechanisms executed before all LearningMechanisms. Both types of
+`executed <LINK>`, with all LearningMechanisms executed before all ControlMechanisms. Both types of
 AdaptiveMechanisms are executed before the next `round of execution <LINK>`, so that the modifications
-they make are available during that next round of execution of the process or system.
+they make are available during the next round of execution of the process or system.
 
 .. _AdaptiveMechanism_Creation:
 

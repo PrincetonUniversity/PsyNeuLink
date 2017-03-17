@@ -130,23 +130,23 @@ Class Reference
 """
 
 import numpy as np
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism, \
-    _objective_mechanism_role
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import ACTIVATION_INPUT,\
-    ACTIVATION_OUTPUT, ERROR_SIGNAL
 
-from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _add_projection_from, _add_projection_to
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Functions.Function import Function, function_type, method_type
 from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, Reinforcement, BackPropagation
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import ACTIVATION_INPUT,\
+    ACTIVATION_OUTPUT, ERROR_SIGNAL
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism, \
+    _objective_mechanism_role
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _add_projection_from, _add_projection_to
+from PsyNeuLink.Components.States.InputState import InputState
+from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Globals.Keywords import *
 
 TARGET_ERROR = "TARGET_ERROR"
 TARGET_ERROR_MEAN = "TARGET_ERROR_MEAN"

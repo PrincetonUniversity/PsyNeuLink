@@ -246,6 +246,7 @@ kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Functi
 
 # Component Categories   -----------------
 
+kwSystemComponentCategory = "System_Base"
 kwProcessComponentCategory = "Process_Base"
 kwMechanismComponentCategory = "Mechanism_Base"
 kwStateComponentCategory = "State_Base"

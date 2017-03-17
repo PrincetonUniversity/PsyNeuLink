@@ -2,7 +2,7 @@
 import numpy as np
 import random as rand
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Process import process
