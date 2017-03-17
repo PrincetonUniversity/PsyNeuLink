@@ -69,7 +69,10 @@ Class Reference
 
 """
 
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import \
+    LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
 
+from PsyNeuLink.Components.Functions.Function import BackPropagation, Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import _objective_mechanism_role
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
@@ -78,9 +81,6 @@ from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.Functions.Function import BackPropagation, Logistic
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism, \
-    ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
 
 # Params:
 
@@ -381,7 +381,7 @@ class LearningProjection(Projection_Base):
         #    so call composition for "automatic" instantiation of a LearningMechanism
         # Note: this also instantiates an ObjectiveMechanism if necessary and assigns it the necessary projections
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
+            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningAuxilliary \
                 import _instantiate_learning_components
             _instantiate_learning_components(learning_projection=self,
                                              context=context + " " + self.name)

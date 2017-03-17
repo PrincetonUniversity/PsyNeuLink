@@ -35,8 +35,8 @@ class InitError(Exception):
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.DefaultControlMechanism import DefaultControlMechanism
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 
 
 # DDM ------------------------------------------------------------------------------------------------------------------

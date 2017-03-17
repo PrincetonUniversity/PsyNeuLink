@@ -322,20 +322,21 @@ Class Reference
 
 """
 
-import re
 import math
+import re
 from collections import Iterable
+
 import PsyNeuLink.Components
-from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Globals.Registry import register_category
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, _add_projection_to
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
-from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, _add_projection_to
+from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
+from PsyNeuLink.Globals.Registry import register_category
 
 # *****************************************    PROCESS CLASS    ********************************************************
 

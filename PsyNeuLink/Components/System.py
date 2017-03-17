@@ -245,12 +245,12 @@ Class Reference
 
 import math
 import re
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
 from collections import OrderedDict
 from collections import UserList, Iterable
 from toposort import *
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism import ControlMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple,\
                                                        OBJECT_ITEM, PARAMS_ITEM, PHASE_ITEM
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
@@ -712,7 +712,7 @@ class System_Base(System):
 
     """
 
-    componentCategory = kwProcessComponentCategory
+    componentCategory = kwSystemComponentCategory
     className = componentCategory
     suffix = " " + className
     componentType = "System"
@@ -793,7 +793,7 @@ class System_Base(System):
         # Get/assign controller
 
         # Controller is DefaultControlMechanism
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.DefaultControlMechanism import DefaultControlMechanism
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
         if self.paramsCurrent[CONTROLLER] is DefaultControlMechanism:
             # Get DefaultController from MechanismRegistry
             from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
@@ -1589,7 +1589,7 @@ class System_Base(System):
                         raise SystemError("{} does not project to a LearningMechanism in the same process {}".
                                           format(sender_mech.name, process.name))
 
-                    from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
+                    from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningAuxilliary \
                         import ACTIVATION_INPUT, ERROR_SIGNAL
 
                     # Get the ProcessingMechanism that projected to sender_mech
@@ -1838,7 +1838,7 @@ class System_Base(System):
         Execute mechanisms in the order specified in executionList and with phases equal to
         ``CentralClock.time_step % numPhases``.
 
-        Execute learning for processes (for those that specify it) at the appropriate phase.
+        Execute any learning components specified at the appropriate phase.
 
         Execute controller after all mechanisms have been executed (after each numPhases)
 
@@ -1933,18 +1933,6 @@ class System_Base(System):
                     else:
                         raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
-            # # MODIFIED 3/17/17 OLD: [MOVED TO _execute_learning]
-            # # Note: the following assumes that the order of the items in targets is aligned with
-            # #       the order of the TARGET mechanisms in the sytem's targetMechanisms list;
-            # #       it is tested for dict format in run._construct_stimulus_sets,
-            # #       but can't be insured for list format.
-            # # For each TARGET mechanism in the system's targetMechanismList
-            # for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
-            # # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
-            # #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
-            #     self.targetInputStates[i].value = self.current_targets[i]
-            # # MODIFIED 3/17/17 END
-
         self.input = input
         #endregion
 
@@ -1959,22 +1947,15 @@ class System_Base(System):
         #     print(self.executionList[i][0].name)
         # sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
 
-        # # MODIFIED 2/21/17 NEW:
-        # if self.learning:
-        #     context = context + LEARNING
-        # MODIFIED 12/21/16 NEW:
-        # Execute system without learning on projections (that will be taken care of in _execute
+        # Execute system without learning on projections (that will be taken care of in _execute_learning()
         self._execute_processing(clock=clock, context=context)
         #endregion
 
         # region EXECUTE LEARNING FOR EACH PROCESS
-        # FIX: NEED TO CHECK PHASE HERE
+
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context:
-            # IMPLEMENT: EXECUTE self.learningGraph HERE:  EXECUTE MECHANISMS AND PROJECTIONS
-            # Execute each Mechanism in self.executionList, in the order listed during its phase
             self._execute_learning(clock=clock, context=context + LEARNING)
-        TEST = True
         # endregion
 
 
@@ -2059,46 +2040,21 @@ class System_Base(System):
             i += 1
 
     def _execute_learning(self, clock=CentralClock, context=None):
-    # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
-    # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
 
-        # MODIFIED 3/16/17 NEW:
-        # First, if targets were specified as a function, call the function now
+        # FIRST, if targets were specified as a function, call the function now
         #    (i.e., after execution of the pathways, but before learning)
         # Note:  this accomodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
         if isinstance(self.targets, function_type):
             self.current_targets = self.targets()
-        # MODIFIED 3/16/17 END
 
-        # MODIFIED 3/17/17 NEW: [MOVED TO HERE FROM execute() TO ACCOMODATE ABOVE]
         for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
         # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
         #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
             self.targetInputStates[i].value = self.current_targets[i]
-        # MODIFIED 3/17/17 END
 
-
-        # FIX: MOVE BACK TO HERE!! [TO ACCOMODATE ABOVE]
-        # ASSIGNED IN Run
-        # # Then assign targets to SystemInputStates:
-        # num_target_mechs = len(list(self.targetMechanisms))
-        #
-        # # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
-        # for i, targ_mech in zip(range(num_target_mechs), self.targetMechanisms):
-        #     # For each inputState of the ORIGIN mechansim
-        #     input_states = list(origin_mech.inputStates.values())
-        #     for j, input_state in zip(range(len(origin_mech.inputStates)), input_states):
-        #        # Get the input from each projection to that inputState (from the corresponding SystemInputState)
-        #         system_input_state = next(projection.sender for projection in input_state.receivesFromProjections
-        #                                   if isinstance(projection.sender, SystemInputState))
-        #         if system_input_state:
-        #             system_input_state.value = input[i][j]
-        #         else:
-        #             raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
-
-        # Update all MonitoringMechanisms
+        # NEXT, execute all components involved in learning
         for component in self.learningExecutionList:
 
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
@@ -2126,15 +2082,13 @@ class System_Base(System):
             # # TEST PRINT:
             # print ("EXECUTING MONITORING UPDATES: ", component.name)
 
-        # Then update all MappingProjections
+        # THEN update all MappingProjections
         for component in self.learningExecutionList:
 
             if isinstance(component, (LearningMechanism, ObjectiveMechanism)):
                 continue
-            # MODIFIED 2/21/17 NEW:
             if not isinstance(component, MappingProjection):
                 raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
-            # MODIFIED 2/21/17 END
 
             component_type = "mappingProjection"
             processes = list(component.sender.owner.processes.keys())
@@ -2150,13 +2104,6 @@ class System_Base(System):
                                      component.name,
                                      re.sub('[\[,\],\n]','',str(process_names))))
 
-            # MODIFIED 2/21/17 OLD:
-            # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            # component.execute(clock=clock,
-            #                   time_scale=self.timeScale,
-            #                   # time_scale=time_scale,
-            #                   context=context_str)
-            # MODIFIED 2/21/17 NEW:
             component.parameterStates[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
 
             # TEST PRINT:
@@ -2178,21 +2125,6 @@ class System_Base(System):
                                                          for i in target_mech.outputState.value])),
                              ))
                              # process_names))
-
-            # if not i:
-            #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
-            #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
-            #     # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
-            #     # # MODIFIED 10/2/16 OLD:
-            #     # self.variable = self.variable * 0
-            #     # # MODIFIED 10/2/16 NEW:
-            #     # self.variable = self.input * 0
-            #     # MODIFIED 10/2/16 NEWER:
-            #     self.variable = convert_to_np_array(self.input, 2) * 0
-            #     # MODIFIED 10/2/16 END
-            # i += 1
-
-        # MODIFIED 12/21/16 END
 
     def run(self,
             inputs,
