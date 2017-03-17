@@ -115,9 +115,11 @@ and/or the role they play in a system:
 
 
 COMMENT:
+    .. _System_Control:
     Control
     ~~~~~~~
 
+    .. _System_Learning:
     Learning
     ~~~~~~~~
 

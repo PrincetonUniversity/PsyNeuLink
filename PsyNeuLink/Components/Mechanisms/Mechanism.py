@@ -774,7 +774,7 @@ class Mechanism_Base(Mechanism):
            it must be called by the subclass with a context value
 
         NOTES:
-        * Since Mechanism is a subclass of Function, it calls super.__init__
+        * Since Mechanism is a subclass of Component, it calls super.__init__
             to validate variable_default and param_defaults, and assign params to paramInstanceDefaults;
             it uses INPUT_STATE as the variable_default
         * registers mechanism with MechanismRegistry

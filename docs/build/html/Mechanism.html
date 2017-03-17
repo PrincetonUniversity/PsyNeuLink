@@ -89,8 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Mechanisms</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">MonitoringMechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-mechanism">Creating a Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
@@ -165,8 +164,7 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="MonitoringMechanism.html">MonitoringMechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanisms</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
@@ -259,7 +257,7 @@ and <a class="reference internal" href="OutputState.html#outputstates-creation">
 specified by the mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute.  Every type of mechanism has at least one
 (primary) function, and some have additional (auxiliary) ones (for example, the <code class="xref any docutils literal"><span class="pre">EVCMechanism</span></code>).
 Mechanism functions are generally from the PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> class.  Most mechanisms allow their function to be
-specified, using the <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.function" title="EVC.EVCMechanism.EVCMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> argument of the mechanism&#8217;s contructor.  The function can be specified using the name of
+specified, using the <a class="reference internal" href="Function.html#Function.Contradiction.function" title="Function.Contradiction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> argument of the mechanism&#8217;s contructor.  The function can be specified using the name of
 <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> class, or its constructor (including arguments that specify its parameters).  For example, the
 <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> can be specified to be the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
@@ -269,7 +267,7 @@ specified, using the <a class="reference internal" href="EVCMechanism.html#EVC.E
 them in its constructor.  Some mechanisms support only a single function.  In that case, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>
 argument is not available in the mechanism&#8217;s constructor, but it does include arguments for the function&#8217;s
 parameters.  For example, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is always the <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function,
-so its constructor does not have a <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> argument.  However, it does have a <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.comparison_operation" title="ComparatorMechanism.ComparatorMechanism.comparison_operation"><code class="xref any py py-attr docutils literal"><span class="pre">comparison_operation</span></code></a>
+so its constructor does not have a <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> argument.  However, it does have a <code class="xref any docutils literal"><span class="pre">comparison_operation</span></code>
 argument, that is used to set the LinearCombination function&#8217;s <code class="xref any docutils literal"><span class="pre">operation</span></code> parameter.</p>
 <p>For mechanisms that offer a selection of functions, if all of the functions use the same parameters then those
 parameters can also be specified as entries in a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a>
@@ -310,8 +308,8 @@ which is then used by its outputStates to assign items to its <a class="referenc
 <div class="section" id="inputstates">
 <span id="mechanism-inputstates"></span><h4>InputStates<a class="headerlink" href="#inputstates" title="Permalink to this headline">¶</a></h4>
 <p>These receive and represent the input to a mechanism. A mechanism usually has only one (<strong>primary</strong>) <code class="xref any docutils literal"><span class="pre">inputState</span></code> attribute.  However some mechanisms have
-more  than one inputState. For example, a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> has one inputState for its <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.sample" title="ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> and another for its
-<a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> input. If a mechanism has more than one inputState, they are identified in an OrderedDict in the mechanism&#8217;s
+more  than one inputState. For example, a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> has one inputState for its <code class="xref any docutils literal"><span class="pre">sample</span></code> and another for its
+<code class="xref any docutils literal"><span class="pre">target</span></code> input. If a mechanism has more than one inputState, they are identified in an OrderedDict in the mechanism&#8217;s
 <a class="reference internal" href="#Mechanism.Mechanism_Base.inputStates" title="Mechanism.Mechanism_Base.inputStates"><code class="xref any py py-attr docutils literal"><span class="pre">inputStates</span></code></a> attribute (note the plural).</p>
 <p>Each inputState of a mechanism can receive one or more projections from other mechanisms.  If the mechanism is an
 <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism of a process, it also receives a projection from the <a class="reference internal" href="Process.html#process-input-and-ouput"><span class="std std-ref">ProcessInputState</span></a>
@@ -431,7 +429,7 @@ for the system to which the mechanism belongs (see <a class="reference internal"
 <span id="mechanism-role-in-processes-and-systems"></span><h3>Role in Processes and Systems<a class="headerlink" href="#role-in-processes-and-systems" title="Permalink to this headline">¶</a></h3>
 <p>Mechanisms that are part of one or more processes are assigned designations that indicate the
 <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">role</span></a> they play in those processes, and similarly for <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">role</span></a> they play in
-any systems to which they belong. These designations are listed in the mechanism&#8217;s <a class="reference internal" href="System.html#System.System_Base.processes" title="System.System_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> and <a class="reference internal" href="#Mechanism.Mechanism_Base.systems" title="Mechanism.Mechanism_Base.systems"><code class="xref any py py-attr docutils literal"><span class="pre">systems</span></code></a>
+any systems to which they belong. These designations are listed in the mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.processes" title="Mechanism.Mechanism_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> and <a class="reference internal" href="#Mechanism.Mechanism_Base.systems" title="Mechanism.Mechanism_Base.systems"><code class="xref any py py-attr docutils literal"><span class="pre">systems</span></code></a>
 attributes, respectively.  Any mechanism designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> receives a projection to its primary inputState from
 the process(es) to which it belongs.  Accordingly, when the process (or system of which the process is a part) is
 executed, those mechainsms receive the input provided to the process (or system).  The <a class="reference internal" href="#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a> of any mechanism designated as the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism for a process is assigned as

@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Projections" href="Projection.html"/>
-        <link rel="next" title="LearningProjection" href="LearningProjection.html"/>
+        <link rel="next" title="Functions" href="Function.html"/>
         <link rel="prev" title="Projections" href="Projection.html"/> 
 
   
@@ -184,7 +184,7 @@ inputStates in the <a class="reference internal" href="ControlMechanism.html#con
 <li>by a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>, from a mechanism that is the source of an error signal to a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a>
 that is used to evaluate that error and generate a learning signal from it
 (see <a class="reference internal" href="LearningProjection.html#learningprojection-automatic-creation"><span class="std std-ref">LearningProjection</span></a>); the matrix used depends on the
-<code class="xref any docutils literal"><span class="pre">function</span></code> parameter of the LearningProjection.</li>
+<a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.function" title="LearningProjection.LearningProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> parameter of the LearningProjection.</li>
 </ul>
 </div></blockquote>
 <p id="mapping-matrix-specification">The <a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a MappingProjection is used to transform the input from its
@@ -322,6 +322,13 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 </dd></dl>
 
 <dl class="attribute">
+<dt id="MappingProjection.MappingProjection.has_learning_projection">
+<code class="descname">has_learning_projection</code><a class="headerlink" href="#MappingProjection.MappingProjection.has_learning_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool : False</em> &#8211; identifies whether the MappingProjection&#8217;s <code class="xref any docutils literal"><span class="pre">MATRIX</span></code> <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> has been assigned a
+<a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="MappingProjection.MappingProjection.name">
 <code class="descname">name</code><a class="headerlink" href="#MappingProjection.MappingProjection.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default MappingProjection-&lt;index&gt;</em> &#8211; the name of the MappingProjection.
@@ -351,7 +358,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="LearningProjection.html" class="btn btn-neutral float-right" title="LearningProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Function.html" class="btn btn-neutral float-right" title="Functions" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="Projection.html" class="btn btn-neutral" title="Projections" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

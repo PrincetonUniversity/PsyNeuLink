@@ -21,7 +21,7 @@
 Overview
 --------
 
-LearningMechanism is a subtype of the AdaptiveMechanism Type of the Mechanism Category of Component
+A LearningMechanism is a subtype of the AdaptiveMechanism Type of the Mechanism Category of Component
 It implements a mechanism that calculates changes to a projection's parameters.
 It's function takes the output of an ObjectiveMechanism (self.variable) and generates a
 learning_signal (2d arry of parameter changes) to be used by the recipient of a LearningProjection
@@ -314,7 +314,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  name=None,                  \
                  prefs=None)
 
-    Implements a projection that modifies the matrix param of a MappingProjection.
+    A LearningMechanism is a subtype of the `AdaptiveMechanism` Type of the `Mechanism <Mechanism>` Category of
+    Component.  It implements a projection that modifies the matrix parameter of a `MappingProjection`.
 
     COMMENT:
         Description:
