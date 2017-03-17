@@ -12,12 +12,15 @@
 Overview
 --------
 
-ControlMechanisms monitor the `outputState(s) <OutputState>` of `ProcessingMechanisms <ProcessingMechanism>` in a
-`System`, to assess the outcome of processing of those mechanisms.  They use this information to regulate the value of
-parameters of those or other mechanisms (or their functions) in the system.  This is done by way of
-`ControlProjections <ControlProjection>` from the ControlMechanism to the `ParameterStates <ParameterState>` for the
-parameter(s) to be controlled.  A ControlMechanism can regulate only the parameters of mechanism in the system for
-which it is the `controller <System_Execution_Control>`.
+A ControlMechanism is an `AdaptiveMechanism` that modifies the parameter(s) of one or more `ProcessingMechanisms`.
+It's function takes a value (usually the output of an `ObjectiveMechanism`) and uses that to calculate an
+`allocation_policy`:  a list of `allocation` values for each of its ControlSignals that specify the value to assign
+to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is conveyed by
+a `ControlProjection` to the `parameterState <ParameterState>` of the corresopnding ProcessingMechanism.  A
+ControlMechanism can regulate only the parameters of mechanism in the system for which it is the
+`controller <System_Execution_Control>`.  ControlMechanisms are executed after all ProcessingMechanisms and
+`LearningMechanisms <LearningMechanism>` in that system have been executed.
+
 
 .. _ControlMechanism_Creation:
 

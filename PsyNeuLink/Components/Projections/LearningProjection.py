@@ -35,12 +35,40 @@ COMMENT:
     IF IT IS A SENDER, THEN ?? HOW IS RECEIVER IDENTIFIED??
 COMMENT
 
+Its `sender <LearningProjection.sender>` (the source of its
+`error_signal`) must be a
+`MonitoringMechanism`, and its `receiver <LearningProjection.receiver>` must be the `parameterState <ParameterState>`
+of a `MappingProjection`.  When a LearningProjection is created, its full initialization is
+:ref:`deferred <Component_Deferred_Init>` until its `sender <LearningProjection.sender>` and
+`receiver <LearningProjection.receiver>` have been fully specified.  This allows a LearningProjection to be created
+before its `sender` and/or `receiver` have been created (e.g., before them in a script), by calling its constructor
+without specifying its :keyword:`sender` or :keyword:`receiver` arguments.
+
+It is also possible to create a LearningProjection without ever specifying its :keyword:`sender`.  In this case,
+when it is initialized, the type of `MonitoringMechanism <MonitoringMechanism>` it requires will be inferred from
+context, and created when it is initialized (see `Structure <LearningProjection_Structure>` below).  In contrast, a
+LearningProjection's :keyword:`receiver` must be explicitly specified at some point.  Once that is done,
+for the LearningProjection to be operational, initializaton must be completed by calling its `deferred_init`
+method.  This is not necessary if learning has been specified for a `system <System_Execution_Learning>`,
+`process <Process_Learning>`, or as the `projection <MappingProjection_Tuple_Specification>` in the `pathway` of a
+process -- in those cases, deferred initialization is completed automatically.
+
+COMMENT:
+   REPLACE WITH THIS ONCE FUNCTIONALITY IS IMPLEMENTED
+    Initialization will
+    be  completed as soon as the LearningProjection has been assigned as the projection *from* a MonitoringMechanism (i.e.,
+    it's ``sender`` has been specified) and as the projection *to* the parameterState of a MappingProjection (i.e.,
+    its ``receiver`` has been specified).  This is handled automatically when the LearningProjection is specified as part of
+    a system, process, or projection in the pathway of a process.
+COMMENT
+
+
 .. _LearningProjection_Automatic_Creation:
 
 Automatic creation
 ~~~~~~~~~~~~~~~~~~
 
-.. _LearningProjection_Simple_Learning_Figure:
+.. _LearningMechanism_Simple_Learning_Figure:
 
 
 .. _LearningProjection_Structure:
