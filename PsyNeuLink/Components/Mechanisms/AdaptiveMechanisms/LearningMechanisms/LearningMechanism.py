@@ -29,6 +29,33 @@ same `system <System>` or `process <Process>` to which it belongs, and is execut
 ProcessingMechanisms in that system or process have been executed.  If it belongs to a system, it is executed before
 the `ControlMechanism` for that system has been executed.
 
+.. _LearningMechanism_Learning_Configurations:
+COMMENT:
+    THIS SECTION SHOULD BE MOVED TO THE "USER'S MANUAL" WHEN THAT IS WRITTEN
+COMMENT
+
+Learning Configurations
+~~~~~~~~~~~~~~~~~~~~~~~
+
+When learning is specified for a :ref:`system <LINK>` or :ref:`process <LINK>`, PsyNeuLink automatically
+creates all of the components required for the `MappingProjections <MappingProjection>` between
+`ProcessingMechanisms <ProcessingMechanism>` in that composition to be learned.  The type of components that are
+generated depends on the :ref:`learning function  <LINK>` specified, and the configuration of the composition.
+
+.. _LearningMechanism_Single_Layer:
+
+"Single-layer" learning
+^^^^^^^^^^^^^^^^^^^^^^^
+
+For learning functions that only consider the output of a MappingProjection's receiver mechanism (e.g.,
+`Reinforcement`,
+
+.. _LearningMechanism_Multi_Layer:
+
+"Multi-layer" learning
+^^^^^^^^^^^^^^^^^^^^^^
+
+
 @@ DEFINE LEARNING SEQUENCE
 
 @@@ SEARCH FOR LearningProjection_Automatic_Creation AND REPLACE WITH REFERENCE TO THIS LABEL:
@@ -105,30 +132,48 @@ the MappingProjection for which it is responsible.
 InputStates
 ~~~~~~~~~~~
 
-These receive the information required by the LearningMechanism's `function <LearningMechanism.function>` to compute the
-`learning_signal` used to modify the matrix parameter of the MappingProjection for which it is responsible:
+These receive the information required by the LearningMechanism's `function <LearningMechanism.function>`:
+
+.. _LearningMechanism_Activation_Input:
 
 * `ACTIVATION_INPUT` - this receives the value of the input to the MappingProjection being learned (that is, the
-   value of its `sender <MappingProjection.sender>`).
+   value of its `sender <MappingProjection.sender>`).  It's value is assigned as the first item of the
+   LearningMechanism's `variable <LearingMechanism.variable>` attribute.
+
+.. _LearningMechanism_Activation_Output:
 
 * `ACTIVATION_OUTPUT` - this receives the value of the output of the ProcessingMechanism to which the MappingProjection
    being learned projects (that is, the value of its `receiver <MappingProjection.receiver>`.  By default, this is the
    value of the receiver's `primary outputState <OutputState_Primary>`, but a different outputState can be designated
    in a `parameter dictionary <ParameterState_Specifying_Parameters>` of the receiver's params argument, by including
    an entry with `MONITOR_FOR_LEARNING` as its key and a list containing the desired outputState(s) as its value.
+   It's value is assigned as the second item of the LearningMechanism's `variable <LearingMechanism.variable>`
+   attribute.
+
+.. _LearningMechanism_Input_Error_Signal:
 
 * `ERROR_SIGNAL` - this receives an `error_signal` from either an `ObjectiveMechanism` or another LearningMechanism.
   If the MappingProjection being learned projects to the `TERMINAL` mechanism of the process or system being trained,
-  or is not part of a :ref:`learning sequence <LINK>`, then the `error_signal` must come from an ObjectiveMechanism.
-  If the MappingProjection is part of a learning sequence, then it receives its `error_signal` from the next
-  LearningMechanism in the sequence.
-
+  or is not part of a `multilayer learning sequence <_LearningMechanism_Multi_Layer>`, then the `error_signal` must
+  come from an ObjectiveMechanism. If the MappingProjection is part of a multilayer learning sequence, then it receives
+  its `error_signal` from the next LearningMechanism in the sequence (i.e., the layer "above" it).  Its
+  value is assigned as the third item of the LearningMechanism's `variable <LearingMechanism.variable>` attribute.
 
 .. _LearningMechanism_Function:
 
 Learning Function
 ~~~~~~~~~~~~~~~~~
 
+This uses the three values received by the LearningMechanism's `inputStates <LearningMechanism_InputStates>` to
+calculate a `learning_signal` and a new `error_signal`.  The `learning_signal` is the set of changes to the
+`matrix <MappingProjection.matrix>` parameter of the MappingProjection required to reduce the value received by the
+LearningMechanism's `ERROR_SIGNAL` `inputState <LearningMechanism_Activation_Input>`.  The new `error_signal` reflects
+the contribution -- to the error_signal received -- made by the input to the MappingProjection being learned and
+the current value of its `matrix <MappingProjection.matrix>` parameter (i.e., before it has been modified).
+The function of a LearningMechanism can be any PsyNeuLink `LearningFunction <Function.LearningFunction>`,
+or any other python function that takes as its input a value with three 1d arrays or lists, and returns two 1d arrays
+or lists.  The two return values are assigned to the LearningMechanism's `learning_signal` and `error_signal`
+attributes, respectively, as well as to its two outputStates, as described below.
 
 .. _LearningMechanism_OutputStates:
 
@@ -137,15 +182,19 @@ OutputStates
 
 These receive the output of the LearningMechanism's `function <LearningMechanism.function>`:
 
-* `LEARNING_SIGNAL` - this receives the value used to modify the `matrix <MappingProjection.matrix>` parameter
+* `LEARNING_SIGNAL` - this is assigned the value used to modify the `matrix <MappingProjection.matrix>` parameter
   of the MappingProjection being learned.  It is assigned as the `sender <LearningProjection.sender>` for the
-  LearningProjection that projects to the MappingProjection.
+  LearningProjection that projects to the MappingProjection.  It's value is accessible as the LearningMechanism's
+  `learning_signal` attribute, and as the first item of the LearningMechanism's
+  `outputValue <LearningMechanism.outputValue>` attribute.
 
 * `ERROR_SIGNAL` - this receives the error_signal used to calculate the learning_signal, which may have been
   weighted by the contribution that the MappingProjection and the mechanism to which it projects made to the
-  `error_signal` received by the LearningProjection.  If the LearningMechanism is in a learning sequence,
-  it serves as the `sender <MappingProjection.sender>` for a MappingProjection to the next
-  LearningMechanism in the sequence.
+  `error_signal` received by the LearningProjection.  If the LearningMechanism is in a
+  `multilayer learning sequence <>`, it serves as the `sender <MappingProjection.sender>` for a MappingProjection to
+  the LearningMechanism for the MappingProjection before it in the sequence (i.e., the layer "below" it).  It's value
+  is accessible as the LearningMechanism's `learning_signal` attribute, and as the first item of the
+  LearningMechanism's `outputValue <LearningMechanism.outputValue>` attribute.
 
 
 
@@ -591,10 +640,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
             if not (is_numeric(self.variable[i])):
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
                                               format(item_num_string, self.name, item_name, self.variable[i]))
-
-        # self.activation_input = self.variable[ACTIVATION_INPUT_INDEX]
-        # self.activation_output = self.variable[ACTIVATION_OUTPUT_INDEX]
-        # self.error_signal = self.variable[ERROR_SIGNAL_INDEX]
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate error_source as an Objective mechanism or another LearningMechanism
