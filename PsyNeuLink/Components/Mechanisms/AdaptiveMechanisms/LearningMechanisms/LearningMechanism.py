@@ -151,7 +151,6 @@ These receive the output of the LearningMechanism's `function <LearningMechanism
 
 
 
-
 The following components and information are required by a LearningMechanism
 (see :ref:`figure above <LearningMechanism_Simple_Learning_Figure>`):
 
