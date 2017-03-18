@@ -13,16 +13,15 @@
 Overview
 --------
 
-An AdaptiveMechanism is a Type of `Mechanism <Mechanisms>` that monitors the `outputState(s) <OutputState>` of one or
-more `ProcessingMechanisms <ProcessingMechanism>`, and uses that information to modify the parameters of another
-PsyNeuLink component.  There are two types of AdaptiveMechanism: `LearningMechanisms <LearningMechanism>`, that modify
-the parameters of `MappingProjections <MappingProjection>`; and `ControlMechanisms <ControlMechanism>` that modify the
-parameters of other ProcessingMechanisms.  In general, an AdaptiveMechanism receives its input (i.e., monitors the
-`outputState <OutputState>`) of an `ObjectiveMechanism`, however this need not be the case.  AdaptiveMechanisms are
-always executed after all ProcessingMechanisms in the `process <Process>` or `system <System>` to which they belong
-have been :ref:`executed <LINK>`, with all LearningMechanisms then executed before all ControlMechanisms. Both types of
-AdaptiveMechanisms are executed before the next :ref:`round of execution <LINK>`, so that the modifications
-they make are available during the next round of execution of the process or system.
+An AdaptiveMechanism is a type of `Mechanism <Mechanisms>` that uses its input to modify the parameters of one or more
+other PsyNeuLink components.  In general, an AdaptiveMechanism receives its input from an `ObjectiveMechanism`, however
+this need not be the case. There are two types of AdaptiveMechanism: `LearningMechanisms <LearningMechanism>`, that
+modify the parameters of `MappingProjections <MappingProjection>`; and `ControlMechanisms <ControlMechanism>` that
+modify the  parameters of other ProcessingMechanisms.  AdaptiveMechanisms are always executed after all
+ProcessingMechanisms in the `process <Process>` or `system <System>` to which they belong have been
+:ref:`executed <LINK>`, with all LearningMechanisms then executed before all ControlMechanisms. Both types of
+AdaptiveMechanisms are executed before the next :ref:`round of execution <LINK>`, so that the modifications they make
+are available during the next round of execution of the process or system.
 
 .. _AdaptiveMechanism_Creation:
 
@@ -33,7 +32,7 @@ An AdaptiveMechanism can be created by using the standard Python method of calli
 AdaptiveMechanisms of the appropriate subtype are also created automatically when a :ref:`system
 <System.System_Creation>` is created,  and/or learning is  specified for a :ref:`system <System.System_Learning>`,
 a `process <Process_Learning>`, or any `projection <LearningProjection_Automatic_Creation>` within one.  See the
-documentation for individual subtypes of AdaptiveMechanism for more specific information about how to create them.
+documentation for the individual subtypes of AdaptiveMechanisms for more specific information about how to create them.
 
 .. _AdaptiveMechanism_Structure:
 

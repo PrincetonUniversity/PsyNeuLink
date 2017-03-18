@@ -96,45 +96,60 @@ COMMENT
 Structure
 ---------
 
-A LearningMechanism has three `inputStates <InputState>` and two `outputStates <OutputStates>` that are used to
-receive and transmit the information need to modify the MappingProjection for which it is responsible.
-
- It has two `outputStates <OutputState>`, one for
-the `learning_signal` (that is used by the LearningProjection to the MappingProjection), and another
-
-, and two `outputStates <OutputState>` that represent
-results of
-the function.
+A LearningMechanism has three `inputStates <InputState>`, a learning `function <LearningMechanism.function>`,
+and two `outputStates <OutputStates>` that are used to receive, compute, and transmit the information need to modify
+the MappingProjection for which it is responsible.
 
 .. _LearningMechanism_InputStates:
 
 InputStates
 ~~~~~~~~~~~
 
-These receive the information required by the learning `function <LearningMechanism.function>` to compute the
+These receive the information required by the LearningMechanism's `function <LearningMechanism.function>` to compute the
 `learning_signal` used to modify the matrix parameter of the MappingProjection for which it is responsible:
 
-* `activation_input`
+* `ACTIVATION_INPUT` - this receives the value of the input to the MappingProjection being learned (that is, the
+   value of its `sender <MappingProjection.sender>`).
 
-* `activation_output`
+* `ACTIVATION_OUTPUT` - this receives the value of the output of the ProcessingMechanism to which the MappingProjection
+   being learned projects (that is, the value of its `receiver <MappingProjection.receiver>`.  By default, this is the
+   value of the receiver's `primary outputState <OutputState_Primary>`, but a different outputState can be designated
+   in a `parameter dictionary <ParameterState_Specifying_Parameters>` of the receiver's params argument, by including
+   an entry with `MONITOR_FOR_LEARNING` as its key and a list containing the desired outputState(s) as its value.
 
-* `error_signal`
+* `ERROR_SIGNAL` - this receives an `error_signal` from either an `ObjectiveMechanism` or another LearningMechanism.
+  If the MappingProjection being learned projects to the `TERMINAL` mechanism of the process or system being trained,
+  or is not part of a :ref:`learning sequence <LINK>`, then the `error_signal` must come from an ObjectiveMechanism.
+  If the MappingProjection is part of a learning sequence, then it receives its `error_signal` from the next
+  LearningMechanism in the sequence.
+
+
+.. _LearningMechanism_Function:
+
+Learning Function
+~~~~~~~~~~~~~~~~~
+
 
 .. _LearningMechanism_OutputStates:
 
 OutputStates
 ~~~~~~~~~~~
 
-These represent results of the LearningMechanism's `function <LearningMechanism.function>`, used to modify the
-MappingProjection for which it is responsible, and to propagate an error signal in a learning sequence (if there is
-one):
+These receive the output of the LearningMechanism's `function <LearningMechanism.function>`:
 
-* `learning_signal` - this is assigned as the `sender <LearningProjection.sender>` for the LearningProjection that
-  projects to the MappingProjection being learned.  The value is used to modify the MappingProjection's
-  `matrix <MappingProjection.matrix>` parameter.
+* `LEARNING_SIGNAL` - this receives the value used to modify the `matrix <MappingProjection.matrix>` parameter
+  of the MappingProjection being learned.  It is assigned as the `sender <LearningProjection.sender>` for the
+  LearningProjection that projects to the MappingProjection.
 
-* `error_signal` - this is assigned as the `sender <MappingProjection.sender>` for a MappingProjection to the next
-  LearningMechanism in the learning sequence, if there is one, for use as its error_signal.
+* `ERROR_SIGNAL` - this receives the error_signal used to calculate the learning_signal, which may have been
+  weighted by the contribution that the MappingProjection and the mechanism to which it projects made to the
+  `error_signal` received by the LearningProjection.  If the LearningMechanism is in a learning sequence,
+  it serves as the `sender <MappingProjection.sender>` for a MappingProjection to the next
+  LearningMechanism in the sequence.
+
+
+
+
 
 
 The following components and information are required by a LearningMechanism
