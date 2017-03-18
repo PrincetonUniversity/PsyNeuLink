@@ -2,13 +2,13 @@ Processing Mechanisms
 =====================
 
 .. toctree:: 
-	:maxdepth:2
+   :maxdepth: 1
 
-	IntegratorMechanism
-	DDM
-	TransferMechanism
-	
-..
-    .. automodule:: ProcessingMechanism
-        :members:
-        :exclude-members: MechanismTuple, MechanismList, random
+   TransferMechanism
+   IntegratorMechanism
+   ObjectiveMechanism
+   DDM
+
+.. automodule:: ProcessingMechanism
+   :members:
+   :exclude-members: ProcessingMechanism_Base, MechanismTuple, MechanismList, random
