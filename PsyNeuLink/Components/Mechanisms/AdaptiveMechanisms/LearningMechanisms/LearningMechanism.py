@@ -34,7 +34,7 @@ COMMENT:
 COMMENT
 
 COMMENT:
-  AT PRESENT, LearningMechanisms SUPPORT MODIFICATION OF ONLY A SINGLE MappingProjection;  FUTURE VERSIONS MAY
+  AT PRESENT, LearningMechanisms SUPPORTS MODIFICATION OF ONLY A SINGLE MappingProjection;  FUTURE VERSIONS MAY
   ALLOW MODIFICATION OF MULTIPLE MappingProjections (USING MULTIPLE CORRESPONDING error_signals).
 COMMENT
 
@@ -58,28 +58,6 @@ required to implement learning that do not already exist are also instantiated. 
 `Learning Configurations <LearningMechanism_Learning_Configurations>`.
 
 .. _LearningMechanism_Structure:
-
-COMMENT:
-    The `receiver <MappingProjection.MappingProjection.receiver>` for each of those MappingProjections is assigned as the
-    `errorSource <LearningProjection.errorSource>` for the LearningProjection.  Each errorSource must project to a
-    :doc:`MonitoringMechanism`, which is assigned as the the LearningSignal's sender, and provides it with an
-    `error_signal`. If the `errorSource` assigned to a LearningProjection already has a projection to a
-    MonitoringMechanism, then that mechanism is simply assigned as the LearningProjection's
-    `sender <LearningProjection.sender>`; if the `errorSource` does not project to any MonitoringMechanism, then one is
-    created for it at the same time that the LearningProjection is created.
-
-    The type of MonitoringMechanism created depends on the type of learning. For `Reinforcement Learning <Reinforcement>`,
-    a `ComparatorMechanism` is created, and given a MappingProjection from the `errorSource`. For
-    `BackPropagation`, the type of  MonitoringMechanism created also depends on the `errorSource` itself.  If
-    the `errorSource` provides the output that will be compared with the target stimulus then, as for Reinforcement
-    Learning, a ComparatorMechanism is created.  This is the case if the `errorSource` is a standalone
-    mechanism (one not in a process or system), the `TERMINAL` mechanism of a standalone process (i.e., one not
-    in a system), or the `TERMINAL` mechanism of a system.  However, if the `errorSource` lies deeper in a process
-    or system -- that is, if it is an `ORIGIN` or `INTERNAL` mechanism -- then a `WeightedErrorMechanism` mechanism
-    is created.  This gets its error information from the MonitoringMechanism for the `errorSource` "after" it in the
-    process or system (i.e., the one to which it projects, and that is one closer to
-    the target).  Therefore, a MappingProjection is created that projects to it from that next `errorSource`.
-COMMENT
 
 Structure
 ---------
@@ -115,13 +93,14 @@ These receive the information required by the LearningMechanism's `function <Lea
 
 .. _LearningMechanism_Input_Error_Signal:
 
-* `ERROR_SIGNAL` -
+* `ERROR_SIGNAL`
    This receives an error_signal from either an `ObjectiveMechanism` or another LearningMechanism.
    If the MappingProjection being learned projects to the `TERMINAL` mechanism of the process or system being learned,
-   or is not part of a `multilayer learning sequence <LearningMechanism_Multi_Layer>`, then the error_signal must
-   come from an ObjectiveMechanism. If the MappingProjection is part of a multilayer learning sequence, then it
-   receives the error_signal from the next LearningMechanism in the sequence (i.e., the layer "above" it).  Its
-   value is assigned as the third item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
+   or is not part of a `multilayer learning sequence <LearningMechanism_Multi_Layer>`, then the error_signal comes
+   from an ObjectiveMechanism. If the MappingProjection is part of a multilayer learning sequence, then the
+   LearningMechanism receives the error_signal from the next LearningMechanism in the sequence (i.e., the layer "above"
+   it).  Its value is assigned as the third item of the LearningMechanism's
+   `variable <LearningMechanism.variable>` attribute.
 
    .. note::
       The value of a LearningMechanism's `ERROR_SIGNAL` inputState is distinct from its own `error_signal` attribute.
@@ -140,11 +119,11 @@ calculate a `learning_signal` and its own `error_signal`.  The `learning_signal`
 LearningMechanism's `ERROR_SIGNAL` `inputState <LearningMechanism_Input_Error_Signal>`.  In
 `multilayer learning <LearningMechanism_Multi_Layer>`, the `error_signal` it calculates reflects the contribution --
 to the error_signal received -- made by the input to the MappingProjection being learned and the current value of
-its `matrix <MappingProjection.matrix>` parameter (i.e., before it has been modified). The function of a
-LearningMechanism can be any PsyNeuLink `LearningFunction <Function.LearningFunction>`, or any other python function
-that takes as its input a value with three 1d arrays or lists, and returns two 1d arrays or lists.  The two return
-values are assigned to the LearningMechanism's `learning_signal` and `error_signal` attributes, respectively,
-as well as to its two outputStates, as described below.
+its `matrix <MappingProjection.matrix>` parameter (i.e., before it has been modified). The
+`function <LearningMechanism.function>` of a LearningMechanism can be any PsyNeuLink `LearningFunction`, or any other
+python function that takes as its input a value with three 1d arrays or lists, and returns two 1d arrays or lists.
+The two return values are assigned to the LearningMechanism's `learning_signal` and `error_signal` attributes,
+respectively, as well as to its two outputStates, as described below.
 
 .. _LearningMechanism_OutputStates:
 
@@ -155,21 +134,23 @@ These receive the output of the LearningMechanism's `function <LearningMechanism
 
 .. _LearningMechanism_Learning_Signal:
 
-* `LEARNING_SIGNAL` - this is assigned the value used to modify the `matrix <MappingProjection.matrix>` parameter
-  of the MappingProjection being learned.  It is assigned as the `sender <LearningProjection.sender>` for the
-  LearningProjection that projects to the MappingProjection.  It's value is accessible as the LearningMechanism's
-  `learning_signal` attribute, and as the first item of the LearningMechanism's
-  `outputValue <LearningMechanism.outputValue>` attribute.
+* `LEARNING_SIGNAL`
+   This is assigned the value used to modify the `matrix <MappingProjection.matrix>` parameter
+   of the MappingProjection being learned.  It is assigned as the `sender <LearningProjection.sender>` for the
+   LearningProjection that projects to the MappingProjection.  It's value is accessible as the LearningMechanism's
+   `learning_signal` attribute, and as the first item of the LearningMechanism's
+   `outputValue <LearningMechanism.outputValue>` attribute.
 
 .. _LearningMechanism_Output_Error_Signal:
 
-* `ERROR_SIGNAL` - this receives the error_signal used to calculate the learning_signal, which may have been
-  weighted by the contribution that the MappingProjection and the mechanism to which it projects made to the
-  `error_signal` received by the LearningProjection.  If the LearningMechanism is in a
-  `multilayer learning sequence <LearningMechanism_Multi_Layer>`, it serves as the `sender <MappingProjection.sender>`
-  for a MappingProjection to the LearningMechanism for the MappingProjection before it in the sequence (i.e.,
-  the layer "below" it).  It's value is accessible as the LearningMechanism's `learning_signal` attribute,
-  and as the first item of the LearningMechanism's `outputValue <LearningMechanism.outputValue>` attribute.
+* `ERROR_SIGNAL`
+   This receives the error_signal used to calculate the learning_signal, which may have been
+   weighted by the contribution that the MappingProjection and the mechanism to which it projects made to the
+   `error_signal` received by the LearningProjection.  If the LearningMechanism is in a
+   `multilayer learning sequence <LearningMechanism_Multi_Layer>`, it serves as the `sender <MappingProjection.sender>`
+   for a MappingProjection to the LearningMechanism for the MappingProjection before it in the sequence (i.e.,
+   the layer "below" it).  It's value is accessible as the LearningMechanism's `learning_signal` attribute,
+   and as the first item of the LearningMechanism's `outputValue <LearningMechanism.outputValue>` attribute.
 
 .. _LearningMechanism_Additional_Attributes:
 
@@ -179,11 +160,13 @@ Additional Attributes
 In addition to these constituent components, a LearningMechanism is assigned to attributes that refer to the
 components being learned:
 
-* `learned_projection` - the MappingProjection for which the LearningMechanism is responsible;  that is,
-  the one with the `matrix <MappingProjection.matrix>` parameter for which the LearningMechanism calculates changes.
+* `learned_projection`
+   This is the MappingProjection for which the LearningMechanism is responsible;  that is, the one with the
+   `matrix <MappingProjection.matrix>` parameter that the LearningMechanism modifies.
 ..
-* `error_source` - the mechanism that receives the `learned_projection`;  that is, the one that generates the output
-  used to calculate the error signal that the LearningMechanism attempts to reduce.
+* `error_source`
+   This is the mechanism that receives the `learned_projection`;  that is, the one that generates the output
+   used to calculate the error_signal that the LearningMechanism attempts to reduce.
 
 
 .. _LearningMechanism_Learning_Configurations:
@@ -238,7 +221,7 @@ This is the case when a set of MappingProjections are being learned that are in 
 process); that is, in which each projects to a ProcessingMechanism that is the `sender <MappingProjection.sender>` for
 the next MappingProjection in the sequence (see the `figure below <LearningMechanism_Simple_Learning_Figure>`).  This
 requires the use of a learning function that can calculate the influence that each MappingProjection and its input
-have on the error that the LearningMechanism receives from the next one in the sequence (e.g., `Backpropagation`).
+have on the error that the LearningMechanism receives from the next one in the sequence (e.g., `BackPropagation`).
 In multilayer learning, the components created depend on the position of the MappingProjection and its receiver (the
 LearningMechanism's `error_source`) in the sequence.  The last set in the sequence are treated in the same way as
 `single layer learning <LearningMechanism_Single_Layer>`, with one exception:  the LearningMechanism is assigned a
@@ -276,6 +259,29 @@ created or assigned to the LearningMechanism's `ERROR_SIGNAL` `outputState <Lear
        mechanism indicate the attributes of the LearningProjection with which they are associated.
 
 COMMENT:
+
+    The `receiver <MappingProjection.MappingProjection.receiver>` for each of those MappingProjections is assigned as the
+    `errorSource <LearningProjection.errorSource>` for the LearningProjection.  Each errorSource must project to a
+    :doc:`MonitoringMechanism`, which is assigned as the the LearningSignal's sender, and provides it with an
+    `error_signal`. If the `errorSource` assigned to a LearningProjection already has a projection to a
+    MonitoringMechanism, then that mechanism is simply assigned as the LearningProjection's
+    `sender <LearningProjection.sender>`; if the `errorSource` does not project to any MonitoringMechanism, then one is
+    created for it at the same time that the LearningProjection is created.
+
+    The type of MonitoringMechanism created depends on the type of learning. For `Reinforcement Learning <Reinforcement>`,
+    a `ComparatorMechanism` is created, and given a MappingProjection from the `errorSource`. For
+    `BackPropagation`, the type of  MonitoringMechanism created also depends on the `errorSource` itself.  If
+    the `errorSource` provides the output that will be compared with the target stimulus then, as for Reinforcement
+    Learning, a ComparatorMechanism is created.  This is the case if the `errorSource` is a standalone
+    mechanism (one not in a process or system), the `TERMINAL` mechanism of a standalone process (i.e., one not
+    in a system), or the `TERMINAL` mechanism of a system.  However, if the `errorSource` lies deeper in a process
+    or system -- that is, if it is an `ORIGIN` or `INTERNAL` mechanism -- then a `WeightedErrorMechanism` mechanism
+    is created.  This gets its error information from the MonitoringMechanism for the `errorSource` "after" it in the
+    process or system (i.e., the one to which it projects, and that is one closer to
+    the target).  Therefore, a MappingProjection is created that projects to it from that next `errorSource`.
+
+    -----------------------
+
     The following components and information are required by a LearningMechanism
     (see :ref:`figure above <LearningMechanism_Simple_Learning_Figure>`):
 
