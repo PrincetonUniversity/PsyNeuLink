@@ -35,8 +35,8 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
-        <link rel="next" title="Control Mechanisms" href="ControlMechanism.html"/>
-        <link rel="prev" title="DDM" href="DDM.html"/> 
+        <link rel="next" title="IntegratorMechanism" href="IntegratorMechanism.html"/>
+        <link rel="prev" title="Processing Mechanisms" href="ProcessingMechanism.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -90,8 +90,6 @@
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="DDM.html">DDM</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">TransferMechanism</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#creating-a-transfermechanism">Creating a TransferMechanism</a></li>
@@ -99,10 +97,12 @@
 <li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DDM.html">DDM</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">MonitoringMechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
@@ -212,8 +212,8 @@ parameters (in addition to those specified for the function):</p>
 <li><a class="reference internal" href="#TransferMechanism.TransferMechanism.noise" title="TransferMechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>: applied element-wise to the input before transforming it.</li>
 </ul>
 <ul class="simple">
-<li><a class="reference internal" href="#TransferMechanism.TransferMechanism.rate" title="TransferMechanism.TransferMechanism.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>: if <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.time_scale" title="Mechanism.Mechanism_Base.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>, the input is exponentially
-time-averaged before transforming it (higher value specifies faster rate); if <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.time_scale" title="Mechanism.Mechanism_Base.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is
+<li><a class="reference internal" href="#TransferMechanism.TransferMechanism.rate" title="TransferMechanism.TransferMechanism.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>: if <a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.time_scale" title="IntegratorMechanism.IntegratorMechanism.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>, the input is exponentially
+time-averaged before transforming it (higher value specifies faster rate); if <a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.time_scale" title="IntegratorMechanism.IntegratorMechanism.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is
 <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, <a class="reference internal" href="#TransferMechanism.TransferMechanism.rate" title="TransferMechanism.TransferMechanism.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> is ignored.</li>
 </ul>
 <ul class="simple">
@@ -428,10 +428,10 @@ if it is not specified, a default is assigned using <code class="xref any docuti
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="ControlMechanism.html" class="btn btn-neutral float-right" title="Control Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="IntegratorMechanism.html" class="btn btn-neutral float-right" title="IntegratorMechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="DDM.html" class="btn btn-neutral" title="DDM" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="ProcessingMechanism.html" class="btn btn-neutral" title="Processing Mechanisms" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -309,7 +309,7 @@ class State_Base(State):
                  **kargs):
         """Initialize subclass that computes and represents the value of a particular state of a mechanism
 
-        This is used by subclasses to implement the input, output, and parameter states of a Mechanism
+        This is used by subclasses to implement the inputState(s), outputState(s), and parameterState(s) of a Mechanism.
 
         Arguments:
             - owner (Mechanism):
@@ -744,14 +744,13 @@ class State_Base(State):
 
             # Projection specification is not valid
             else:
-                raise StateError("{0}Output ({1}) of function for {2}{3} "
-                                          "is not compatible with value ({4}) of {5}".
-                      format(item_prefix_string,
-                             projection_spec.value,
-                             default_string,
-                             projection_spec.name,
-                             self.value,
-                             item_suffix_string))
+                raise StateError("{}Output of function for {}{} ( ({})) is not compatible with value of {} ({})".
+                                 format(item_prefix_string,
+                                        default_string,
+                                        projection_spec.name,
+                                        projection_spec.value,
+                                        item_suffix_string,
+                                        self.value))
 
     def _instantiate_projection_from_state(self, projection_spec, receiver, context=None):
         """Instantiate projection from a state and assign it to self.sendsToProjections
@@ -1678,7 +1677,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     elif isinstance(constraint_value, ParamValueProjection):
         constraint_value = constraint_value.value
 
-    # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTOIN KEYWORD?  ZZZZZZZ
+    # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTION KEYWORD?
     # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
     if isinstance(constraint_value, str):
         constraint_value = get_param_value_for_keyword(owner, constraint_value)

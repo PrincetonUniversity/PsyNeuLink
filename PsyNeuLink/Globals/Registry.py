@@ -21,6 +21,7 @@ from PsyNeuLink.Globals.Keywords import *
 RegistryVerbosePrefs = {
     kwPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
     kwComponentPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
+    kwSystemComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwProcessComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwMechanismComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwStateComponentCategory: DEFAULT_REGISTRY_VERBOSITY,

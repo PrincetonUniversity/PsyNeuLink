@@ -292,8 +292,10 @@ Class Reference
 ---------------
 
 """
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import *
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCAuxiliary import ControlSignalGridSearch, ValueFunction
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCAuxiliary import \
+    ControlSignalGridSearch, ValueFunction
+
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 
 OBJECT = 0

@@ -1,11 +1,11 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
-from PsyNeuLink.Components.Functions.Function import Logistic
+#from PsyNeuLink.Components.Functions.Function import Logistic , random_matrix
+from PsyNeuLink.Components.Functions.Function import Logistic, Linear
 from PsyNeuLink.Components.System import *
+from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
 
 
 # specification of task environment
@@ -71,14 +71,14 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pr
 StimulusResponseProcess = process(
     pathway=[Stimulus_Layer, Stimulus_Hidden_Weights, Hidden_Layer, Hidden_Output_Weights, Output_Layer],
     prefs = process_prefs,
-    learning=LEARNING,
+    learning=LearningProjection,
     target = [1, 0],
     name = 'Stimulus Response Process')
 
 TaskHiddenProcess = process(
     pathway=[Task_Layer, Task_Hidden_Weights, Hidden_Layer],
     prefs = process_prefs,
-    learning=LEARNING,
+    learning=LearningProjection,
     target = [1, 0],
     name = 'Task Hidden Process')
 
@@ -109,4 +109,6 @@ stroop_mode.run(num_executions=1,
 # 1) enforcing to specify target at the process level ddoes seem redundant in this case
 # 2) specifying weights with random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1) doesn't work anymore
 # 3) how to specify learning rate?
+
+
 

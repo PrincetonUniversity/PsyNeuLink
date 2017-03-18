@@ -1,6 +1,5 @@
 
 
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
 from PsyNeuLink.Components.Process import Process_Base
 from PsyNeuLink.Globals.Keywords import *
 
@@ -27,9 +26,6 @@ import numpy as np
 #
 # my_process.execute([[-1, 30],[1, 15]])
 
-
-my_comparator = ComparatorMechanism(default_sample_and_target=[[0], [0]],
-                                 name='My ComparatorMechanism')
 
 
 my_process = Process_Base(default_input_value=[[0],[1]],
