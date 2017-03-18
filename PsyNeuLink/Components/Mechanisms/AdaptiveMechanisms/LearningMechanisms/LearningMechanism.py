@@ -165,7 +165,6 @@ These receive the output of the LearningMechanism's `function <LearningMechanism
   is accessible as the LearningMechanism's `learning_signal` attribute, and as the first item of the
   LearningMechanism's `outputValue <LearningMechanism.outputValue>` attribute.
 
-
 .. _LearningMechanism_Additional_Attributes:
 
 Additional Attributes
