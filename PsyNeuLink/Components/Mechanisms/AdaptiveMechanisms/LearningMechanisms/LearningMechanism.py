@@ -29,6 +29,7 @@ same `system <System>` or `process <Process>` to which it belongs, and is execut
 ProcessingMechanisms in that system or process have been executed.  If it belongs to a system, it is executed before
 the `ControlMechanism` for that system has been executed.
 
+@@ DEFINE LEARNING SEQUENCE
 
 @@@ SEARCH FOR LearningProjection_Automatic_Creation AND REPLACE WITH REFERENCE TO THIS LABEL:
 .. _LearningMechanism_Creation:
@@ -95,9 +96,49 @@ COMMENT
 Structure
 ---------
 
-The following components are involved in and/or required for learning
-(see :ref:`figure above <LearningMechanism_Simple_Learning_Figure>`),
-and are `implemented automatically <LearningMechanism_Creation>` when learning is specified:
+A LearningMechanism has three `inputStates <InputState>` and two `outputStates <OutputStates>` that are used to
+receive and transmit the information need to modify the MappingProjection for which it is responsible.
+
+ It has two `outputStates <OutputState>`, one for
+the `learning_signal` (that is used by the LearningProjection to the MappingProjection), and another
+
+, and two `outputStates <OutputState>` that represent
+results of
+the function.
+
+.. _LearningMechanism_InputStates:
+
+InputStates
+~~~~~~~~~~~
+
+These receive the information required by the learning `function <LearningMechanism.function>` to compute the
+`learning_signal` used to modify the matrix parameter of the MappingProjection for which it is responsible:
+
+* `activation_input`
+
+* `activation_output`
+
+* `error_signal`
+
+.. _LearningMechanism_OutputStates:
+
+OutputStates
+~~~~~~~~~~~
+
+These represent results of the LearningMechanism's `function <LearningMechanism.function>`, used to modify the
+MappingProjection for which it is responsible, and to propagate an error signal in a learning sequence (if there is
+one):
+
+* `learning_signal` - this is assigned as the `sender <LearningProjection.sender>` for the LearningProjection that
+  projects to the MappingProjection being learned.  The value is used to modify the MappingProjection's
+  `matrix <MappingProjection.matrix>` parameter.
+
+* `error_signal` - this is assigned as the `sender <MappingProjection.sender>` for a MappingProjection to the next
+  LearningMechanism in the learning sequence, if there is one, for use as its error_signal.
+
+
+The following components and information are required by a LearningMechanism
+(see :ref:`figure above <LearningMechanism_Simple_Learning_Figure>`):
 
 **MappingProjection**: the projection that is modified by the LearningMechanism.  The LearningMechanism sends a
 `LearningProjection` to the `parameterState <ParameterState>` for the `matrix <MappingProjection.matrix>` parameter
@@ -117,7 +158,10 @@ and assigned a MappingProjection from the `error_source`.
 
 .. _LearningProjection_MonitoringMechanism:
 
-**ObjectiveMechanism or another LearningMechanism**:  This calculates the `error_signal` used by the current
+**Error signal**: this is the value that the LearningMechanism seeks to reduce.  It is
+Usually it comes from an
+`ObjectiveMechanism or another LearningMechanism**:  This calculates the `error_signal` used by the
+current
 LearningMechanism to reduce the contribution of its `error_source` to the error.  Which of these is required, and how it
 calculates the `error_signal`, depend on the `function <LearningProjection.function>` that the LearningMechanism uses
 for learning. For `Reinforcement`, an `ObjectiveMechanism` is always used. This receives a MappingProjection directly
