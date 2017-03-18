@@ -32,6 +32,12 @@ it is executed before the `ControlMechanism <ControlMechanism>` for that system 
 COMMENT:
   @@@ SEARCH FOR LearningProjection_Automatic_Creation AND REPLACE WITH REFERENCE TO THIS LABEL:
 COMMENT
+
+COMMENT:
+  AT PRESENT, LearningMechanisms SUPPORT MODIFICATION OF ONLY A SINGLE MappingProjection;  FUTURE VERSIONS MAY
+  ALLOW MODIFICATION OF MULTIPLE MappingProjections (USING MULTIPLE CORRESPONDING error_signals).
+COMMENT
+
 .. _LearningMechanism_Creation:
 
 Creating a LearningMechanism
@@ -160,10 +166,10 @@ These receive the output of the LearningMechanism's `function <LearningMechanism
 * `ERROR_SIGNAL` - this receives the error_signal used to calculate the learning_signal, which may have been
   weighted by the contribution that the MappingProjection and the mechanism to which it projects made to the
   `error_signal` received by the LearningProjection.  If the LearningMechanism is in a
-  `multilayer learning sequence <>`, it serves as the `sender <MappingProjection.sender>` for a MappingProjection to
-  the LearningMechanism for the MappingProjection before it in the sequence (i.e., the layer "below" it).  It's value
-  is accessible as the LearningMechanism's `learning_signal` attribute, and as the first item of the
-  LearningMechanism's `outputValue <LearningMechanism.outputValue>` attribute.
+  `multilayer learning sequence <LearningMechanism_Multi_Layer>`, it serves as the `sender <MappingProjection.sender>`
+  for a MappingProjection to the LearningMechanism for the MappingProjection before it in the sequence (i.e.,
+  the layer "below" it).  It's value is accessible as the LearningMechanism's `learning_signal` attribute,
+  and as the first item of the LearningMechanism's `outputValue <LearningMechanism.outputValue>` attribute.
 
 .. _LearningMechanism_Additional_Attributes:
 
@@ -173,11 +179,12 @@ Additional Attributes
 In addition to these constituent components, a LearningMechanism is assigned to attributes that refer to the
 components being learned:
 
-* `learned_projection` - this is the MappingProjection for which the LearningMechanism is responsible;  that is,
+* `learned_projection` - the MappingProjection for which the LearningMechanism is responsible;  that is,
   the one with the `matrix <MappingProjection.matrix>` parameter for which the LearningMechanism calculates changes.
 ..
-* `error_source` - this the mechanism that receives the `learned_projection`;  that is, the one that generates
-  the output used to calculate the error signal that the LearningMechanism attempts to reduce.
+* `error_source` - the mechanism that receives the `learned_projection`;  that is, the one that generates the output
+  used to calculate the error signal that the LearningMechanism attempts to reduce.
+
 
 .. _LearningMechanism_Learning_Configurations:
 COMMENT:
@@ -187,8 +194,8 @@ COMMENT
 Learning Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-When learning is specified for a :ref:`system <LINK>` or :ref:`process <LINK>`, PsyNeuLink automatically
-creates all of the components required for the `MappingProjections <MappingProjection>` between
+When learning is specified for a :ref:`system <LINK TO SYSTEM LEARNING>` or :ref:`process <LINK TO PROCESS LEARNING>`,
+PsyNeuLink automatically creates all of the components required for the `MappingProjections <MappingProjection>` between
 `ProcessingMechanisms <ProcessingMechanism>` in that composition to be learned.  The type of components that are
 generated depends on the :ref:`learning function  <LINK>` specified, and the configuration of the composition.
 
@@ -227,13 +234,13 @@ created or assigned to the LearningMechanism's `ERROR_SIGNAL` `outputState <Lear
 "Multilayer" learning
 ^^^^^^^^^^^^^^^^^^^^^^
 
-This is the case when a sequence of MappingProjections are being learned, each of which projects to a
-ProcessingMechanism that is the `sender <MappingProjection.sender>` for the next MappingProjection in the sequence.
-(see the `figure below <LearningMechanism_Simple_Learning_Figure>`).  It requires the use of a learning function
-that can calculate the influence that each MappingProjection and its input have on the error that the
-LearningMechanism receives from the next set in the sequence (e.g., `Backpropagation`).  In multilayer learning,
-the components created depend on the position of the MappingProjection and its receiver (the LearningMechanism's
-`error_source`) in the sequence.  The last set in the sequence are treated in the same way as
+This is the case when a set of MappingProjections are being learned that are in a sequence (such as the `pathway` of a
+process); that is, in which each projects to a ProcessingMechanism that is the `sender <MappingProjection.sender>` for
+the next MappingProjection in the sequence (see the `figure below <LearningMechanism_Simple_Learning_Figure>`).  This
+requires the use of a learning function that can calculate the influence that each MappingProjection and its input
+have on the error that the LearningMechanism receives from the next one in the sequence (e.g., `Backpropagation`).
+In multilayer learning, the components created depend on the position of the MappingProjection and its receiver (the
+LearningMechanism's `error_source`) in the sequence.  The last set in the sequence are treated in the same way as
 `single layer learning <LearningMechanism_Single_Layer>`, with one exception:  the LearningMechanism is assigned a
 MappingProjection from its 'ERROR_SIGNAL` `outputState <LearningMechanism_Output_Error_Signal>` to the
 `ERROR_SIGNAL` `inputState <LearningMechanism_InputError_Signal>` of the LearningMechanism for the
@@ -269,7 +276,6 @@ created or assigned to the LearningMechanism's `ERROR_SIGNAL` `outputState <Lear
        mechanism indicate the attributes of the LearningProjection with which they are associated.
 
 COMMENT:
-
     The following components and information are required by a LearningMechanism
     (see :ref:`figure above <LearningMechanism_Simple_Learning_Figure>`):
 
@@ -372,7 +378,6 @@ COMMENT:
     is computed depends on the nature of the function that generated the error); failure to match the `function
     <LearningProjection.function>` for the LearningProjection with  the :keyword:`function` of its
     `errorSource <LearningProjection.errorSource>`  will generate an error.
-
 COMMENT
 
 .. _LearningProjection_Execution:
@@ -558,6 +563,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
     variable : 2d np.array
         has three items, each of which is a 1d np.array: `activation_input`, `activation_output`, and `error_signal`.
 
+    learned_projection : MappingProjection
+        the projection modified by the LearningMechanism.
+
     activation_input : 1d np.array
         the input to the `MappingProjection` being learned.
 
@@ -729,9 +737,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiates MappingProjection from error_source (if specified) to the LearningMechanism
+
+        Also assigns learned_projection attribute (to MappingProjection being learned)
         """
 
         super()._instantiate_attributes_before_function(context=context)
+
 
         if self.error_source:
             _instantiate_error_signal_projection(sender=self.error_source, receiver=self)
@@ -772,6 +783,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
         self.value = [self.learning_signal, self.error_signal]
         return self.value
 
+    # IMPLEMENTATION NOTE: Assumes that the LearningMechanism projects to and modifies only a single MappingProjection
+    @property
+    def learned_projection(self):
+        learning_projections = self.outputStates[LEARNING_SIGNAL].sendsToProjections
+        if learning_projections:
+            return learning_projections[0].receiver.owner
+        else:
+            return None
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _instantiate_error_signal_projection(sender, receiver):
