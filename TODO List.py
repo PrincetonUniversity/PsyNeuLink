@@ -24,7 +24,6 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
-# FIX: MAKE SURE THAT `MONITOR_FOR_LEARNING` WORKS FOR LearningMechanism (AS IT DID FOR LearningProjection)
 # FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
 
 # FIX: LearningComponents CLASS:

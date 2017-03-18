@@ -226,6 +226,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         raise LearningAuxilliaryError("PROGRAM ERROR".format("_instantiate_learning_components only supports "
                                                              "calls from a LearningProjection._instantiate_sender()"))
 
+
     # First determine whether receiver for LearningProjection has been instantiated and, if not, instantiate it:
     #    this is required to instantiate the LearningMechanism, as well as an ObjectiveMechanism if necessary.
     try:
@@ -255,7 +256,6 @@ def _instantiate_learning_components(learning_projection, context=None):
     #      OTHERWISE, ALLOW OBJECTIVE_MECHANISM TO BE IMPLEMENTED
 
 
-    # MODIFIED 3/11/17 NEW:
     # Check whether lc.activation_mech belongs to more than one process and, if it does, it is the TERMINAL
     #    the one currently being instantiated, in which case it needs to be assigned an ObjectiveMechanism
     #
@@ -276,9 +276,6 @@ def _instantiate_learning_components(learning_projection, context=None):
         is_target = True
         # FIX: ALLOW ASSIGNMENT OF
 
-    # MODIFIED 3/11/17 END
-
-    # MODIFIED 3/11/17 NEW:  [ELSE AND INDENTATION DUE TO NEW IF ABOVE]
     else:
 
         for projection in lc.activation_mech_output.sendsToProjections:
@@ -286,21 +283,6 @@ def _instantiate_learning_components(learning_projection, context=None):
             receiver_mech = projection.receiver.owner
             receiver_state = projection.receiver
             error_signal_source = None
-
-            # # MODIFIED 3/11/17 NEW:
-            # # If projection is a MappingProjection to a mechanism that is not in the same process as
-            # #    the mechanism (lc.activation_mech_input) that projects to the current mech (i.e., lc.activation_mech),
-            # #    then ignore it
-            # # Note: this handles the case in which the current mech belongs to more than one process, and is the
-            # #    the TERMINAL of the one currently being instantiated.
-            # # IMPLEMENTATION NOTE:  could check whether current mech is a TERMINAL for the process currently being
-            # #                       instantiated, identified by the mechanism that projects to it.  However, the latter
-            # #                       may also belong to more than one process, so would have to sort that out.  Current
-            # #                       implementation doesn't have to worry about that.
-            # if isinstance(receiver_mech, ProcessingMechanism_Base) and \
-            #        not any(process in receiver_mech.processes for process in lc.activation_mech_input.owner.processes):
-            #     break
-            # # MODIFIED 3/11/17 END
 
             # Check if projection already projects to a LearningMechanism or ObjectiveMechanism
             if isinstance(receiver_mech, LearningMechanism):
@@ -313,14 +295,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                 #      OTHERWISE, ALLOW OBJECTIVE_MECHANISM TO BE IMPLEMENTED
                 # SOLUTION:  CHECK THAT OBJECT TO WHICH receiver_mech MECH PROJECTS ALSO RECEIVES A PROJECTION FROM
                 #            THE PRECEDING MECH IN THE PATHWAY (TO THE receiver mech's ACTIVATION_INPUT INPUTSTATE
-            # MODIFIED 3/10/17 OLD:
-                # # MODIFIED 3/9/17 OLD:
-                # if not (projection.receiver.name is ACTIVATION_OUTPUT and receiver_mech is learning_projection.sender.owner):
-                # MODIFIED 3/9/17 NEW:
                 if not projection.receiver.name is ACTIVATION_OUTPUT:
-                # # MODIFIED 3/9/17 NEWER:
-                # if not projection.receiver.name is ACTIVATION_OUTPUT:
-                # MODIFIED 3/9/17 END
                     if lc.activation_mech_projection.verbosePref:
                         warnings.warn("{} projects to a LearningMechanism ({}) that is not the sender of its "
                                       "LearningProjection ({})".
@@ -328,31 +303,6 @@ def _instantiate_learning_components(learning_projection, context=None):
                         continue
                 else:
                     error_signal_source = receiver_mech.outputState
-            # # MODIFIED 3/10/17 NEWER:
-            #     # If the activation_mech projects to the inputStates[ACTIVATION_OUTPUT] of a LearningMechanism,
-            #     #    but preceding mechanism in the pathway (i.e., the one that projects to activation_mech)
-            #     #    does not project to the LearningMechanism's inputStates[ACTIVATION_OUTPUT], then that
-            #     #    LearningMechanism is for another process, so treat activation_mech as being at the end of a learning
-            #     #    sequence, and in need of a TARGET ObjectiveMechanism (i.e., make sure that lc.error_projection is
-            #     #    set to `None`
-            #     if (receiver_state.name is ACTIVATION_OUTPUT and
-            #             not any(
-            #                     any(
-            #                             any(
-            #                                     any(preceding_mech_proj.owner is act_in_proj.sender.owner
-            #                                         for act_in_proj in
-            #                                         receiver_mech.inputStates[ACTIVATION_INPUT].receivesFromProjections))
-            #                             for preceding_mech_proj in input_state.receivesFromProjections)
-            #                     for input_state in lc.activation_mech.inputStates)):
-            #         if lc.activation_mech_projection.verbosePref:
-            #             warnings.warn("{} projects to a LearningMechanism ({}) that is not the sender of its "
-            #                           "LearningProjection ({}), so it will be assigned an ObjectiveMechanism".
-            #                           format(lc.activation_mech.name,receiver_mech.name,learning_projection.name))
-            #
-            #     # CORRECT??:
-            #     else:
-            #         error_signal_source = receiver_mech.outputState
-            # MODIFIED 3/10/17 END
 
             elif isinstance(receiver_mech, ObjectiveMechanism):
                 # If it projects to an ObjectiveMechanism:
@@ -395,8 +345,6 @@ def _instantiate_learning_components(learning_projection, context=None):
         #   in either case, lc.error_projection returns None.
         #   Note:  this assumes that LearningProjections are being assigned from the end of the pathway to the beginning.
         is_target = not lc.error_projection
-    # MODIFIED 3/11/17 END
-
 
     # INSTANTIATE learning function
 
@@ -418,16 +366,9 @@ def _instantiate_learning_components(learning_projection, context=None):
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
-        # learning_function = Reinforcement(variable=objective_mechanism.outputState.value,
-        # # MODIFIED 3/9/17 OLD:
-        # learning_function = Reinforcement(variable_default=[[activation_input],[activation_output],[error_signal]],
-        #                                   activation_function=lc.activation_mech_fct,
-        #                                   learning_rate=learning_rate)
-        # MODIFIED 3/9/17 NEW:
         learning_function = Reinforcement(variable_default=[activation_input,activation_output,error_signal],
                                           activation_function=lc.activation_mech_fct,
                                           learning_rate=learning_rate)
-        # MODIFIED 3/9/17 END
 
     # BACKPROPAGATION LEARNING FUNCTION
     elif learning_function.componentName is BACKPROPAGATION_FUNCTION:
@@ -501,12 +442,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         # Assign derivative of Linear to lc.error_derivative (as default, until TARGET projection is assigned);
         #    this will induce a simple subtraction of target-sample (i.e., implement a comparator)
 
-        # # MODIFIED 3/9/17 OLD:
-        # sample_input = activation_output
-        # target_input = error_output
-        # MODIFIED 3/9/17 NEW:
         sample_input = target_input = error_output
-        # MODIFIED 3/9/17 END
         # Assign outputStates for TARGET ObjectiveMechanism (used for reporting)
         object_mech_params = {OUTPUT_STATES:
                                   [{NAME:TARGET_ERROR},
@@ -795,13 +731,24 @@ class LearningComponents(object):
         def _get_act_sample():
             if not self.activation_mech:
                 return None
+            # If MONITOR_FOR_LEARNING specifies an outputState, use that
             try:
-                self.activation_mech_output = self.activation_mech.outputState
-                return self.activation_mech.outputState
-            except AttributeError:
-                raise LearningAuxilliaryError("activation_mech_output not identified: activation_mech ({})"
-                                              "not appear to have been assiged a primary outputState.".
-                                              format(self.learning_projection))
+                sample_state_name = self.activation_mech.paramsCurrent[MONITOR_FOR_LEARNING]
+                self.activation_mech_output = self.activation_mech.outputStates[sample_state_name]
+                if not isinstance(self.activation_mech_output, OutputState):
+                    raise LearningAuxilliaryError("The specification of the MONITOR_FOR_LEARNING parameter ({}) "
+                                                  "for {} is not an outputState".
+                                                  format(self.activation_mech_output, self.learning_projection))
+            except KeyError:
+                # No outputState specified so use primary outputState
+                try:
+                    self.activation_mech_output = self.activation_mech.outputState
+                except AttributeError:
+                    raise LearningAuxilliaryError("activation_mech_output not identified: activation_mech ({})"
+                                                  "not appear to have been assigned a primary outputState.".
+                                                  format(self.learning_projection))
+            return self.activation_mech.outputState
+
         return self._activation_mech_output or _get_act_sample()
 
     @activation_mech_output.setter
