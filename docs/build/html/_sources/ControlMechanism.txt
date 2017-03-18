@@ -7,6 +7,6 @@ Control Mechanisms
    DefaultControlMechanism
    EVCMechanism
 
-.. automodule:: ControlMechanism
+.. automodule:: AdaptiveMechanisms.ControlMechanisms.ControlMechanism
    :members:
    :exclude-members: Linear, random

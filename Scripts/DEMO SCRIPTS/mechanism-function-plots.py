@@ -43,7 +43,7 @@ my_Transfer_Logistic.plot()
 # DDM - FIXED PARAMETERS
 
 # Creating a DDM Mechanism
-my_DDM = DDM(function=DDMIntegrator(rate=0.5, noise=0.2),
+my_DDM = DDM(function=DDMIntegrator(rate=0.01, noise=0.2),
              name='My_DDM',
              time_scale=TimeScale.TIME_STEP
              )

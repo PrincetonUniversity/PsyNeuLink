@@ -850,136 +850,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
 # FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
 
-class WeightedError(CombinationFunction):
-    """Calculate the contribution of each sender to the error signal based on the weight matrix
-
-    Description:
-
-    Initialization arguments:
-     - variable (1d np.array or list, 1d np.rarray or list): activity vector and error vector, respectively
-     - matrix (2d np.array or List(list))
-     - derivative (function or method)
-    WeightedError.function returns dot product of matrix and error * derivative of activity
-    Returns 1d np.array (error_signal)
-    """
-
-    componentName = WEIGHTED_ERROR_FUNCTION
-
-    classPreferences = {
-        kwPreferenceSetName: 'WeightedErrorCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
-    }
-
-    variableClassDefault = [[0], [0]]
-    # variableClassDefault_locked = True
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
-    from PsyNeuLink.Components.States.ParameterState import ParameterState
-    @tc.typecheck
-    def __init__(self,
-                 variable_default,
-                 matrix=None,
-                 # derivative:is_function_type,
-                 derivative=None,
-                 params=None,
-                 prefs:is_pref_set=None,
-                 context=componentName+INITIALIZING):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  derivative=derivative,
-                                                  params=params)
-
-        super().__init__(variable_default=variable_default,
-                         params=params,
-                         prefs=prefs,
-                         context=context)
-
-    def _validate_variable(self, variable, context=None):
-        """Insure that all items of list or np.ndarray in variable are of the same length
-
-        Args:
-            variable:
-            context:
-        """
-        super()._validate_variable(variable=variable, context=context)
-
-        # FIX: MAKE SURE VARIABLE ndim = 2
-        variable = np.array(variable)
-        # self.variable = np.atleast_2d(variable)
-
-        # variable must have two 1d items
-        if variable.shape[0] != 2:
-            raise FunctionError("variable for {} ({0}) must have two arrays (activity and error vectors)".
-                               format(self.__class__.__name__, variable))
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that dimensions of matrix are compatible with activity and error vectors in variable
-        """
-        super()._validate_params(request_set=request_set,
-                              target_set=target_set,
-                              context=context)
-
-        matrix = target_set[MATRIX].value
-
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if not isinstance(target_set[MATRIX], ParameterState):
-            raise FunctionError("\'matrix\' arg ({}) for {} must be a ParameterState".
-                                format(matrix, self.__class__.__name__))
-
-        try:
-            activity_len = len(self.variable[0])
-        except TypeError:
-            raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
-
-        try:
-            error_len = len(self.variable[1])
-        except TypeError:
-            raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
-
-        if activity_len != error_len:
-            raise FunctionError("length of activity vector ({}) and error vector ({}) in variable for {} must be equal".
-                format(activity_len, error_len, self.__class__.__name__))
-
-        if not isinstance(matrix, (np.ndarray, np.matrix)):
-            raise FunctionError("value of \'matrix\' arg ({}) for {} must be an ndarray nor matrix".
-                                format(matrix, self.__class__.__name__))
-
-        if matrix.ndim != 2:
-            raise FunctionError("\'matrix\' arg for {} must be 2d (it is {})".
-                               format(self.__class__.__name__, matrix.ndim))
-
-        cols = matrix.shape[1]
-        if  cols != error_len:
-            raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
-                                     " must equal length of error vector ({})".
-                                     format(cols,self.__class__.__name__,error_len))
-
-        if not isinstance(target_set['derivative'],(function_type, method_type)):
-            raise FunctionError("\'derivative\' arg ({}) for {} must be an ndarray nor matrix".
-                                format(matrix, self.__class__.__name__))
-
-
-    def function(self,
-                variable=None,
-                params=None,
-                time_scale=TimeScale.TRIAL,
-                context=None):
-
-        self._check_args(variable, params, context)
-
-        activity = self.variable[0]
-        error = self.variable[1]
-        matrix = self.matrix.value
-
-        activity_derivative = self.derivative(output=activity)
-        error_derivative = error * activity_derivative
-
-        return np.dot(matrix, error_derivative)
-
-
 #region ***********************************  TRANSFER FUNCTIONS  ***********************************************
 #endregion
 
@@ -1029,8 +899,8 @@ class Linear(TransferFunction): # ----------------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(slope=slope,
-                                                 intercept=intercept,
-                                                 params=params)
+                                                  intercept=intercept,
+                                                  params=params)
 
         super().__init__(variable_default=variable_default,
                                      params=params,
@@ -2579,10 +2449,112 @@ class LearningFunction(Function_Base):
     componentType = LEARNING_FUNCTION_TYPE
 
 
-ACTIVATION_FUNCTION = 'activation_function'
-MATRIX_INPUT = 0
-ACTIVATION_OUTPUT = 1
-ACTIVATION_ERROR = 2
+LEARNING_ACTIVATION_FUNCTION = 'activation_function'
+LEARNING_ACTIVATION_INPUT = 0       # a(j)
+# MATRIX = 1             # w
+LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
+LEARNING_ERROR_OUTPUT = 2
+
+class ErrorDerivative(LearningFunction):
+    """Calculate the contribution of each sender to the error signal based on the weight matrix
+
+    Description:
+
+    Initialization arguments:
+     - variable (1d np.array or list, 1d np.rarray or list): activity vector and error vector, respectively
+     - matrix (2d np.array or List(list))
+     - derivative (function or method)
+    ErrorDerivative.function returns dot product of matrix and error * derivative of activity
+    Returns 1d np.array (error_signal)
+    """
+
+    componentName = ERROR_DERIVATIVE_FUNCTION
+
+    classPreferences = {
+        kwPreferenceSetName: 'ErrorDerivativeCustomClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+
+    variableClassDefault = [[0], [0]]
+    # variableClassDefault_locked = True
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default,
+                 # matrix=None,
+                 # derivative:is_function_type,
+                 derivative:tc.optional(tc.any(function_type, method_type))=None,
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(derivative=derivative,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+    def _validate_variable(self, variable, context=None):
+        """Insure that all items of list or np.ndarray in variable are of the same length
+
+        Args:
+            variable:
+            context:
+        """
+        super()._validate_variable(variable=variable, context=context)
+
+        # FIX: MAKE SURE VARIABLE ndim = 2
+        variable = np.array(variable)
+        # self.variable = np.atleast_2d(variable)
+
+        # variable must have two 1d items
+        if variable.shape[0] != 2:
+            raise FunctionError("variable for {} ({}) must have two arrays (activity and error vectors)".
+                               format(self.__class__.__name__, variable))
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Insure that dimensions of matrix are compatible with activity and error vectors in variable
+        """
+        super()._validate_params(request_set=request_set,
+                              target_set=target_set,
+                              context=context)
+
+        if not isinstance(target_set['derivative'],(function_type, method_type)):
+            raise FunctionError("\'derivative\' arg ({}) for {} must be an ndarray or matrix".
+                                format(target_set[DERIVATIVE], self.__class__.__name__))
+
+
+    def function(self,
+                variable=None,
+                params=None,
+                time_scale=TimeScale.TRIAL,
+                context=None):
+
+        self._check_args(variable, params, context)
+
+        activity = self.variable[0]
+        error = self.variable[1]
+
+        activity_derivative = self.derivative(input=None, output=activity)
+        # FIX:  ??CORRECT:
+        #     ??dE/dA         ??E            dA/dW
+        error_derivative  =  error  *  activity_derivative
+
+        if ('WeightedError' in self.name):
+            print("\n{} ({}): ".format('WeightedError', self.name))
+            print("- activity ({}): {}".format(len(activity), activity))
+            print("- error ({}): {}".format(len(error), error))
+            print("- calculated activity_derivative ({}): {}".format(len(activity_derivative), activity_derivative))
+            print("- calculated error_derivative ({}): {}".format(len(error_derivative), error_derivative))
+
+        return error_derivative
+
 
 
 class Reinforcement(LearningFunction): # -------------------------------------------------------------------------------
@@ -2594,7 +2566,8 @@ class Reinforcement(LearningFunction): # ---------------------------------------
       return     =  LEARNING_RATE  *  self.variable
 
     Reinforcement.function:
-        variable must be a 1D np.array of error terms
+        variable must be a 1D np.array with three items (standard for learning functions)
+            note: only the LEARNING_ACTIVATION_OUTPUT and LEARNING_ERROR_OUTPUT items are used by RL
         assumes matrix to which errors are applied is the identity matrix
             (i.e., set of "parallel" weights from input to output)
         LEARNING_RATE param must be a float
@@ -2615,7 +2588,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  activation_function:tc.any(SoftMax, tc.enum(SoftMax))=SoftMax, # Allow class or instance
-                 learning_rate:parameter_spec=1.0,
+                 learning_rate:tc.optional(parameter_spec)=1.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
@@ -2640,18 +2613,28 @@ class Reinforcement(LearningFunction): # ---------------------------------------
             raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                 format(self.name, self.variable))
 
-        # FIX: GETS CALLED BY _check_args W/O KWINIT IN CONTEXT
-        if not INITIALIZING in context:
-            if np.count_nonzero(self.variable[ACTIVATION_OUTPUT]) != 1:
-                raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
-                                    "(if output mechanism being trained uses softmax,"
-                                    " its output arg may need to be set to to PROB)".
-                                    format(self.variable[ACTIVATION_OUTPUT], self.componentName))
-            if len(self.variable[ACTIVATION_ERROR]) != 1:
-                raise ComponentError("Error term ({}) for {} must be an array with a single element or a scalar value "
-                                    "(variable of ComparatorMechanism mechanism may need to be specified as an array of length 1)".
-                                    format(self.name, self.variable[ACTIVATION_ERROR]))
+        self.activation_input = self.variable[LEARNING_ACTIVATION_INPUT]
+        self.activation_output = self.variable[LEARNING_ACTIVATION_OUTPUT]
+        self.error_signal = self.variable[LEARNING_ERROR_OUTPUT]
 
+        if len(self.error_signal) != 1:
+            raise ComponentError("Error term for {} (the third item of its variable arg) must be an array with a "
+                                 "single element for {}".
+                                format(self.name, self.error_signal))
+
+        # Allow initializion with zero but not during a run (i.e., when called from check_args())
+        if not INITIALIZING in context:
+            if np.count_nonzero(self.activation_output) != 1:
+                raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
+                                     "(if output mechanism being trained uses softmax,"
+                                     " its \'output\' arg may need to be set to to PROB)".
+                                     format(self.variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        # This allows callers to specify None as learning_rate (e.g., _instantiate_learning_components)
+        request_set[LEARNING_RATE] = request_set[LEARNING_RATE] or 1.0
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def function(self,
                 variable=None,
@@ -2677,9 +2660,34 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         self._check_args(variable=variable, params=params, context=context)
 
-        output = self.variable[ACTIVATION_OUTPUT]
-        error = self.variable[ACTIVATION_ERROR]
-        learning_rate = self.paramsCurrent[LEARNING_RATE]
+    # # MODIFIED 3/9/17 OLD:
+    #     # input_thing = list(self.activation_input.squeeze())
+    #     activation_input = self.activation_input
+    #     output = self.activation_output
+    #     error = float(self.error_signal.squeeze())
+    #     error_assignment = np.full(activation_input.size, self.learning_rate * error)
+    #     null_assignment = np.zeros_like(activation_input)
+    #
+    #     # Assign error term to chosen item of output array
+    #     # error_array = np.atleast_1d(np.where(input, self.learning_rate * error, 0))
+    #     error_array = (np.where(input, error_assignment, null_assignment))
+    #
+    #     # Construct weight change matrix with error term in proper element
+    #
+    #     # MODIFIED 3/7/17 OLD:
+    #     weight_change_matrix = np.diag(error_array)
+    #     # # MODIFIED 3/7/17 NEW:
+    #     # weight_change_matrix = [error_array]
+    #     # MODIFIED 3/7/17 END
+    #
+    #     return [weight_change_matrix, error_array]
+
+    # MODIFIED 3/9/17 NEW:
+        # # FROM DEVEL:
+
+        output = self.activation_output
+        error = self.error_signal
+        learning_rate = self.learning_rate
 
         # Assign error term to chosen item of output array
         error_array = (np.where(output, learning_rate * error, 0))
@@ -2687,8 +2695,41 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        return weight_change_matrix
+        # return:
+        # - weight_change_matrix and error_array
+        return [weight_change_matrix, error_array]
 
+
+        # # input_thing = list(self.activation_input.squeeze())
+        # activation_input = self.activation_input
+        # output = self.activation_output
+        # error = float(self.error_signal.squeeze())
+        # error_assignment = np.full(activation_input.size, self.learning_rate * error)
+        # null_assignment = np.zeros_like(activation_input)
+        #
+        # # Assign error term to chosen item of output array
+        # # error_array = np.atleast_1d(np.where(input, self.learning_rate * error, 0))
+        # error_array = (np.where(input, error_assignment, null_assignment))
+        #
+        # # Construct weight change matrix with error term in proper element
+        #
+        # # MODIFIED 3/7/17 OLD:
+        # weight_change_matrix = np.diag(error_array)
+        # # # MODIFIED 3/7/17 NEW:
+        # # weight_change_matrix = [error_array]
+        # # MODIFIED 3/7/17 END
+        #
+        # return [weight_change_matrix, error_array]
+
+    # MODIFIED 3/9/17 END
+
+
+
+
+# Argument names:
+ERROR_MATRIX = 'error_matrix'
+WT_MATRIX_SENDERS_DIM = 0
+WT_MATRIX_RECEIVERS_DIM = 1
 
 class BackPropagation(LearningFunction): # ---------------------------------------------------------------------------------
     """Calculate matrix of weight changes using the backpropagation (Generalized Delta Rule) learning algorithm
@@ -2720,19 +2761,28 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    from PsyNeuLink.Components.States.ParameterState import ParameterState
+    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 activation_function:tc.any(Logistic, tc.enum(Logistic))=Logistic, # Allow class or instance
-                 learning_rate:parameter_spec=1.0,
+                 # variable_default:tc.any(list, np.ndarray),
+                 activation_derivative_fct :tc.optional(tc.any(function_type, method_type))=Logistic().derivative,
+                 error_derivative_fct:tc.optional(tc.any(function_type, method_type))=Logistic().derivative,
+                 # error_matrix:tc.optional(tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection))=None,
+                 error_matrix=None,
+                 learning_rate:tc.optional(parameter_spec)=1.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(activation_function=activation_function,
-                                                 learning_rate=learning_rate,
-                                                 params=params)
+        params = self._assign_args_to_param_dicts(activation_derivative_fct =activation_derivative_fct,
+                                                  error_derivative_fct=error_derivative_fct,
+                                                  error_matrix=error_matrix,
+                                                  learning_rate=learning_rate,
+                                                  params=params)
 
         super().__init__(variable_default=variable_default,
                          params=params,
@@ -2746,17 +2796,100 @@ class BackPropagation(LearningFunction): # -------------------------------------
         super()._validate_variable(variable, context)
 
         if len(self.variable) != 3:
-            raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
+            raise ComponentError("Variable for {} ({}) must have three items: "
+                                 "activation_input, activation_output, and error_signal)".
                                 format(self.name, self.variable))
-        if len(self.variable[ACTIVATION_ERROR]) != len(self.variable[ACTIVATION_OUTPUT]):
-            raise ComponentError("Length of error term ({}) for {} must match length of the output array ({})".
-                                format(self.variable[ACTIVATION_ERROR], self.name, self.variable[ACTIVATION_OUTPUT]))
 
-    def _instantiate_function(self, context=None):
-        """Get derivative of activation function being used
+        self.activation_input = self.variable[LEARNING_ACTIVATION_INPUT]
+        self.activation_output = self.variable[LEARNING_ACTIVATION_OUTPUT]
+        self.error_signal = self.variable[LEARNING_ERROR_OUTPUT]
+
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate error_matrix param
+
+        `error_matrix` argument must be one of the following
+            - 2d list, np.ndarray or np.matrix
+            - ParameterState for one of the above
+            - MappingProjection with a parameterStates[MATRIX] for one of the above
+
+        Parse error_matrix specification and insure it is compatible with error_signal and activation_output
+
+        Insure that the length of the error_signal matches the number of cols (receiver elements) of error_matrix
+            (since it will be dot-producted to generate the weighted error signal)
+
+        Insure that length of activation_output matches the number of rows (sender elements) of error_matrix
+           (since it will be compared against the *result* of the dot product of the error_matrix and error_signal
+
+        Note: error_matrix is left in the form in which it was specified so that, if it is a ParameterState
+              or MappingProjection, its current value can be accessed at runtime (i.e., it can be used as a "pointer")
         """
-        self.derivativeFunction = self.paramsCurrent[ACTIVATION_FUNCTION].derivative
-        super()._instantiate_function(context=context)
+
+
+        # This allows callers to specify None as learning_rate (e.g., _instantiate_learning_components)
+        request_set[LEARNING_RATE] = request_set[LEARNING_RATE] or 1.0
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        # Validate error_matrix specification
+        try:
+            error_matrix = target_set[ERROR_MATRIX]
+        except KeyError:
+            raise FunctionError("PROGRAM ERROR:  No specification for {} in {}".
+                                format(ERROR_MATRIX, self.name))
+
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
+            raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
+                                          "MappingProjection".format(ERROR_MATRIX, self.name))
+
+        if isinstance(error_matrix, MappingProjection):
+            try:
+                error_matrix = error_matrix.parameterStates[MATRIX].value
+                param_type_string = "MappingProjection's ParameterState"
+            except KeyError:
+                raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
+                                    "paramaterState that has been assigned a 2d array or matrix".
+                                    format(ERROR_MATRIX, self.name, error_matrix.shape, MATRIX))
+
+        elif isinstance(error_matrix, ParameterState):
+            try:
+                error_matrix = error_matrix.value
+                param_type_string = "ParameterState"
+            except KeyError:
+                raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                                              "must be a 2d array or matrix".
+                                              format(MATRIX, ERROR_MATRIX, self.name, error_matrix.shape))
+
+        else:
+            param_type_string = "array or matrix"
+
+        error_matrix = np.array(error_matrix)
+        rows = error_matrix.shape[WT_MATRIX_SENDERS_DIM]
+        cols = error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]
+        activity_output_len = len(self.activation_output)
+        error_signal_len = len(self.error_signal)
+
+        if error_matrix.ndim != 2:
+            raise FunctionError("The value of the {} specified for the {} arg of {} ({}) must be a 2d array or matrix".
+                                          format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
+
+        # The length of the sender outputState.value (the error signal) must be the
+        #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
+
+        # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
+        if cols != error_signal_len:
+            raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
+                                "must match the length of the error signal ({}) it receives".
+                                format(cols, MATRIX, error_matrix.shape, self.name, cols))
+
+        # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
+        if rows!= activity_output_len:
+            raise FunctionError("The height (number of rows, {}) of \'{}\' arg specified for {} must match the "
+                                "length of the output {} of the activity vector being monitored ({})".
+                                format(rows, MATRIX, self.name, activity_output_len))
+
 
     def function(self,
                 variable=None,
@@ -2773,17 +2906,121 @@ class BackPropagation(LearningFunction): # -------------------------------------
         :return number:
         """
 
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
         self._check_args(variable, params, context)
+        if isinstance(self.error_matrix, ParameterState):
+            error_matrix = self.error_matrix.value
+        else:
+            error_matrix = self.error_matrix
 
-        input = np.array(self.variable[MATRIX_INPUT]).reshape(len(self.variable[MATRIX_INPUT]),1)  # make input a 1D row array
-        output = np.array(self.variable[ACTIVATION_OUTPUT]).reshape(1,len(self.variable[ACTIVATION_OUTPUT])) # make output a 1D column array
-        error = np.array(self.variable[ACTIVATION_ERROR]).reshape(1,len(self.variable[ACTIVATION_ERROR]))  # make error a 1D column array
-        learning_rate = self.paramsCurrent[LEARNING_RATE]
-        derivative = self.derivativeFunction(input=input, output=output)
+        # MODIFIED 3/5/17 OLD:
 
-        weight_change_matrix = learning_rate * input * derivative * error
+        # make activation_input a 1D row array
+        activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
 
-        return weight_change_matrix
+        # Derivative of error with respect to output activity (contribution of each output unit to the error above)
+        dE_dA = np.dot(error_matrix, self.error_signal)
+
+        # Derivative of the output activity
+        dA_dW  = self.activation_derivative_fct(input=self.activation_input, output=self.activation_output)
+
+        # Chain rule to get the derivative of the error with respect to the weights
+        dE_dW = dE_dA * dA_dW
+
+        # Weight changes = delta rule (learning rate * activity * error)
+        weight_change_matrix = self.learning_rate * activation_input * dE_dW
+
+        # # TEST PRINT:
+        # if context and not 'INIT' in context:
+        #     print("\nBACKPROP for {}:\n    "
+        #           "-input: {}\n    "
+        #           "-error_signal (dE_DA): {}\n    "
+        #           "-derivative (dA_dW): {}\n    "
+        #           "-error_derivative (dE_dW): {}\n".
+        #           format(self.owner.name, self.activation_input, dE_dA, dA_dW ,dE_dW))
+
+        return [weight_change_matrix, dE_dW]
+
+        # # MODIFIED 3/4/17 NEW:  [TEST: REPRODUCE ERROR_CALC IN DEVEL ORIG]:
+        # try:
+        #     from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        #     from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
+        #     if self.owner.inputStates:
+        #         error_mech = self.owner.inputStates['error_signal'].receivesFromProjections[0].sender.owner
+        #         error_mech_name = error_mech.name
+        #         if isinstance(error_mech, ObjectiveMechanism):
+        #             error_mech_error = error_mech.outputState.value
+        #             error_mech_out = error_mech.inputStates['SAMPLE'].value
+        #             # TEST PRINT:
+        #             print("\nTARGET_ERROR for {}:\n    -error_mech_output: {}\n    -error_mech_error: {}\n".
+        #                   format(self.owner.name, error_mech_out, error_mech_error))
+        #
+        #                             # DEVEL:
+        #                             # activity = self.variable[0]  <- error_mech_output
+        #                             # error = self.variable[1]     <- error_signal
+        #                             # matrix = self.matrix.value   <- error_matrix
+        #                             #
+        #                             # # MODIFIED 3/4/17 OLD:
+        #                             # activity_derivative = self.derivative(output=activity)
+        #                             # error_derivative = error * activity_derivative
+        #
+        #         elif isinstance(error_mech, LearningMechanism):
+        #             # error_signal = self.error_signal
+        #             # error_mech_act_out = error_mech.inputStates['activation_output'].value
+        #             # # activity_derivative = self.activation_derivative_fct(output=error_mech_act_out)
+        #             # activity_derivative = self.error_derivative_fct(output=error_mech_act_out)
+        #             # error_derivative = error_signal * activity_derivative
+        #             # error_mech_error = np.dot(self.error_matrix, error_derivative)
+        #             activity = error_mech.inputStates['activation_output'].value
+        #             error = self.error_signal
+        #             matrix = error_matrix
+        #             activity_derivative = self.error_derivative_fct(output=activity)
+        #             error_derivative = error * activity_derivative
+        #             weighted_error = np.dot(error_matrix, error_derivative)
+        #             error_mech_error = weighted_error
+        #
+        #             # TEST PRINT:
+        #             print("\nWEIGHTED_ERROR for {}:\n    "
+        #                   "-error_mech_output: {}\n    "
+        #                   "-error_mech_error: {}\n    "
+        #                   "-error_derivative: {}\n    "
+        #                   "-dot_product of error derivative: {}\n    "
+        #                   "-error_matrix: {}\n".
+        #                   format(self.owner.name,
+        #                          activity,
+        #                          error,
+        #                          error_derivative,
+        #                          weighted_error,
+        #                          error_matrix))
+        #         TEST = True
+        # except AttributeError:
+        #     error_mech_error = np.dot(error_matrix, self.error_signal)
+        #
+        # # make activation_input a 1D row array
+        # activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
+        #
+        # # Derivative of the output activity
+        # derivative = self.activation_derivative_fct(input=self.activation_input, output=self.activation_output)
+        #
+        # weight_change_matrix = self.learning_rate * activation_input * derivative * error_mech_error
+        #
+        # if 'INIT' not in context:
+        #     print("\nBACKPROP for {}:\n    "
+        #           "-input: {}\n    "
+        #           "-derivative: {}\n    "
+        #           "-error_signal: {}\n    "
+        #           "-weight_change_matrix {}: \n".
+        #           format(self.owner.name,
+        #                  self.activation_input,
+        #                  derivative,
+        #                  error_mech_error,
+        #                  weight_change_matrix))
+        #
+        # return [weight_change_matrix, error_mech_error]
+
+        # MODIFIED 3/4/17 END
+
+
 
 #region *****************************************   OBJECTIVE FUNCTIONS ************************************************
 #endregion

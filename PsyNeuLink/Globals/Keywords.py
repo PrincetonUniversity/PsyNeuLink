@@ -226,7 +226,7 @@ INPUTS_DIM = 3
 
 COMPONENT_INIT = 'Function.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
-kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'
+DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
 
@@ -246,6 +246,7 @@ kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Functi
 
 # Component Categories   -----------------
 
+kwSystemComponentCategory = "System_Base"
 kwProcessComponentCategory = "Process_Base"
 kwMechanismComponentCategory = "Mechanism_Base"
 kwStateComponentCategory = "State_Base"
@@ -258,6 +259,7 @@ kwComponentCategory = "Function_Base"
 PROCESSING_MECHANISM = "ProcessingMechanism"
 MONITORING_MECHANISM = "MonitoringMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
+LEARNING_MECHANISM = "LearningMechanism"
 
 # States:
 INPUT_STATE = "InputState"
@@ -312,6 +314,7 @@ DDM_INTEGRATOR_FUNCTION = "DDMIntegrator"
 LINEAR_MATRIX_FUNCTION = "Linear Matrix"
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
 RL_FUNCTION = 'Reinforcement Learning Algorithm'
+ERROR_DERIVATIVE_FUNCTION = 'Error Derivative'
 
 #Distribution functions 
 
@@ -400,6 +403,7 @@ kwMechanismInterrogateFunction = "MECHANISM INTERROGATE FUNCTION"
 kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 # TBI: kwMechanismAccuracyFunction = "MECHANISM ACCURACY FUNCTION"
 #endregion
+
 
 #region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
 

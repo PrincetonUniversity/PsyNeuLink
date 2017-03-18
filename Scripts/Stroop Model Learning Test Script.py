@@ -61,6 +61,9 @@ word_reading_process = process(
     target=[3,3],
     prefs=process_prefs)
 
+color_naming_process.execute()
+word_reading_process.execute()
+
 mySystem = system(processes=[color_naming_process, word_reading_process],
                   targets=[0,0],
                   name='Stroop Model',

@@ -290,18 +290,15 @@ class ControlProjection(Projection_Base):
         #    (Note:  this includes ControlMechanism)
         if isinstance(self.sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its controlSignal projection
-            from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-            from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.ControlSignal import ControlSignalError
+            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
+            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignalError
             if isinstance(self.sender, ControlMechanism_Base):
-                # MODIFIED 12/23/16 NEW:
-                #   [TRY AND EXCEPT IS NEW, AS IS ADDITION OF param ARG IN CALL TO _instantiate_control_projection]
                 try:
                     params = params or self.control_signal
                     self.sender._instantiate_control_projection(self, params=params, context=context)
                 except ControlSignalError as error_msg:
                     raise FunctionError("Error in attempt to specify controlSignal for {} of {}".
                                         format(self.name, self.receiver.owner.name, error_msg))
-                # MODIFIED 12/23/16 END
 
         # Call super to instantiate sender
 
@@ -309,7 +306,7 @@ class ControlProjection(Projection_Base):
 
 
     def _instantiate_receiver(self, context=None):
-        # FIX: THIS NEEDS TO BE PUT BEFORE _instantate_function SINCE THAT USES self.receiver
+        # FIX: THIS NEEDS TO BE PUT BEFORE _instantiate_function SINCE THAT USES self.receiver
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         Overrides Projection._instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
@@ -327,13 +324,6 @@ class ControlProjection(Projection_Base):
                 receiver_parameter_state = [state for state in dict.values()][0]
                 # Reassign self.receiver to Mechanism's parameterState
                 self.receiver = receiver_parameter_state
-                # # Add self as projection to that parameterState
-                # # IMPLEMENTATION NOTE:
-                # #   THIS SHOULD REALLY BE HANDLED BY THE Mechanism.add_projection METHOD, AS IT IS FOR inputStates
-                # # # MODIFIED 6/22/16 OLD:
-                # # self.receiver.receivesFromProjections.append(self)
-                # # MODIFIED 6/22/16 NEW:
-                # self.receiver.add_projection(projection=self, state=receiver_parameter_state, context=context)
             else:
                 raise ControlProjectionError("Unable to assign ControlProjection ({0}) from {1} to {2}, "
                                          "as it has several parameterStates;  must specify one (or each) of them"

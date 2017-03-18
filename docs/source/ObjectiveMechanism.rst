@@ -1,6 +1,6 @@
-ComparatorMechanism
+ObjectiveMechanism
 ===================
 
-.. automodule:: ComparatorMechanism
+.. automodule:: ObjectiveMechanism
    :members:
    :exclude-members: random

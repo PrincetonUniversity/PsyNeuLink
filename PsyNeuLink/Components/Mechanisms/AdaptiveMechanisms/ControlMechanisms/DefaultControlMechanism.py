@@ -38,7 +38,7 @@ COMMENT
 
 from collections import OrderedDict
 
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Components.ShellClasses import *
 
 

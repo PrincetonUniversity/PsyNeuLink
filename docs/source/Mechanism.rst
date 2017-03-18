@@ -5,8 +5,7 @@ Mechanisms
   :maxdepth: 1
 
   ProcessingMechanism
-  ControlMechanism
-  MonitoringMechanism
+  AdaptiveMechanism
 
 .. toctree::
    :maxdepth: 3
