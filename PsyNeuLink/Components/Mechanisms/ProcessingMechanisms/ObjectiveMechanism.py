@@ -233,11 +233,17 @@ Examples
 
 .. _ObjectiveMechanism_Default_Input_Value_Example:
 
+*Using* `default_input_value` *to format values*
+
 The use of default_input_value to override a specification in `monitored_values` can be useful in some situations.
-For example, for `Reinforcement Learning <Reinforcement>`, an ObjectiveMechanism is used to monitor an "action
-selection" mechanism, the output of which might be a vector with a single non-zero value (the currently selected
-action).  However, the ObjectiveMechanism requires only the value of the action (the non-zero item -- that it will
-compare with a scalar reward value -- not the entire vector.  This can be configured as in the example below::
+For example, for `Reinforcement Learning <Reinforcement>`, an ObjectiveMechanism is used to monitor an action
+selection mechanism.  In the example below, the latter uses a `TransferMechanism` with the `SoftMax` function (and the
+`PROB <Softmax.PROB>` as its output format) to select the action.  This generates a vector with a single non-zero
+value, which designates the predicted reward for the selected action.  Because the output is a vector,
+by default the inputState of the ObjectiveMechanism created to monitor it will also be a vector.  However, the
+ObjectiveMechanism requires that this be a single value, that it can compare with the value of the reward mechanism.
+This can be dealt with by using `default_input_value` in the construction of the ObjectiveMechanism, to force
+the inputState for the ObjectiveMechanism to have a single value, as in the example below::
 
     my_action_select_mech = TransferMechanism(default_input_value = [0,0,0],
                                 function=SoftMax(output=PROB))
@@ -247,20 +253,26 @@ compare with a scalar reward value -- not the entire vector.  This can be config
     my_objective_mech = ObjectiveMechanism(default_input_value = [[0],[0]],
                                           monitored_values = [my_action_select_mech, my_reward_mech])
 
-Note that the outputStates for the action selection mechanism and the one that provides the reward are specified
-in `monitored_values`.  However, the outputState of the action selection mechanism is a vector that can be of any
-length, whereas the inputState of the ObjectiveMechanism should have only a single value (the action selected).
-This is accomplished by specifying `default_input_value` as an array with two single-value arrays (one for the
-action and the other for the reward).  This will force the inputState for the action selection value to be a single
-value, which will create a MappingProjection from the action selection outputState to the
-ObjectiveMechanism's inputState using a `FULL_CONNECTIVITY_MATRIX` (the outcome of `AUTO_ASSIGN_MATRIX` for
-case in which the sender and receiver values are of different lengths); this will produce the desired effect,
-since the action is the only non-zero value in the output and so its value will be assigned to the inputState
-to which it projects in the ObjectiveMechanism.
+Note that the outputState for the `my_action_selection` and `my_reward_mech` are specified
+in `monitored_values`.  If that were the only specification, the inputState created for `my_action_select_mech`
+would be a vector of length 3.  This is overridden by specifying `default_input_value` as an array with two
+single-value arrays (one corresponding to `my_action_select_mech` and the other to `my_reward_mech`).  This forces
+the inputState for `my_action_select_mech` to have only a single element which, in turn, will cause a
+MappingProjection to be created from  `my_action_select_mech` to the ObjectiveMechanism's inputState using a
+`FULL_CONNECTIVITY_MATRIX` (the one used for `AUTO_ASSIGN_MATRIX` when the sender and receiver have values of
+different lengths).  This produces the desired effect, since the action selected is the only non-zero value in the
+output of `my_action_select_mech`, and so the `FULL_CONNECTIVITY_MATRIX` will combine it with zeros (the other values
+in the vector), and so its value will be assigned as the value of the corresponding inputState in the
+ObjectiveMechanism.  Another option would have been to customize the ObjectiveMechanism's
+`function <ObjectiveMechanism.function>` to convert the output of `my_action_select_mech` to a length 1 vector, though
+this would have been more involved.  The next example describes a simple case of customizing the ObjectiveMechanism's
+`function <ObjectiveMechanism.function>`, however more sophisticated ones are possible, just as the one just suggested.
 
 .. _ObjectiveMechanism_Weights_and_Exponents_Example:
 
-The simplest way to customize the `function <ObjectiveMechanism.function` of an ObjectiveMechanism is to
+*Customizing the ObjectiveMechanism's* `function <ObjectiveMechanism.function>`
+
+The simplest way to customize the `function <ObjectiveMechanism.function>` of an ObjectiveMechanism is to
 parameterize its default `LinearCombination` function.  In the example below, the ObjectiveMechanism used in the
 `previous example <ObjectiveMechanism_Default_Input_Value_Example>` is further customized to subtract the value
 of the action selected from the value of the reward::
@@ -401,7 +413,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
 
+    COMMENT:
     default_input_value : Optional[List[array] or 2d np.array]
+    COMMENT
 
     monitored_values : [List[OutputState, Mechanism, InputState, dict, value, or str]
         determines  the values monitored, and evaluated by `function <ObjectiveMechanism>`.  Once the
