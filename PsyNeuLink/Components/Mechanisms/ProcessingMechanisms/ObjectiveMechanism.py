@@ -233,7 +233,7 @@ Examples
 
 .. _ObjectiveMechanism_Default_Input_Value_Example:
 
-*Using* `default_input_value` *to format values*
+*Formatting inputState values*
 
 The use of default_input_value to override a specification in `monitored_values` can be useful in some situations.
 For example, for `Reinforcement Learning <Reinforcement>`, an ObjectiveMechanism is used to monitor an action
@@ -270,10 +270,10 @@ this would have been more involved.  The next example describes a simple case of
 
 .. _ObjectiveMechanism_Weights_and_Exponents_Example:
 
-*Customizing the ObjectiveMechanism's* `function <ObjectiveMechanism.function>`
+*Customizing the ObjectiveMechanism's function*
 
 The simplest way to customize the `function <ObjectiveMechanism.function>` of an ObjectiveMechanism is to
-parameterize its default `LinearCombination` function.  In the example below, the ObjectiveMechanism used in the
+parameterize its default function (`LinearCombination`).  In the example below, the ObjectiveMechanism used in the
 `previous example <ObjectiveMechanism_Default_Input_Value_Example>` is further customized to subtract the value
 of the action selected from the value of the reward::
 
@@ -282,10 +282,11 @@ of the action selected from the value of the reward::
                                           function=LinearCombination(weights=[[-1], [1]]))
 
 This is done by specifying the `weights <LinearCombination.weights>` parameter of the `LinearCombination` function,
-with two values [-1] and [1] that correspond to the two items in monitored_values (and default_input_value).  Thus,
-the value from `my_action_select_mech` will be multiplied by -1 before being added to (and thus subtracting it from)
-the value of `my_reward_mech`.  Similarly, the `operation <LinearCombination.operation>` parameter, together with the
-`exponents <LinearCombination.exponents>` parameter, can be used to multiply and divide quantities.
+with two values [-1] and [1] corresponding to the two items in `monitored_values` (and `default_input_value`).  This
+will multiply the value from `my_action_select_mech` by -1 before adding it to (and thus
+subtracting it from) the value of `my_reward_mech`.  Similarly, the `operation <LinearCombination.operation>`
+and `exponents <LinearCombination.exponents>` parameters of `LinearCombination` can be used together to multiply and
+divide quantities.
 
 
 Class Reference
@@ -428,7 +429,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         items or a number equal to the number of items in the ObjectiveMechanism's variable (and its number of
         inputStates), and returns a 1d array.
 
-    role : None, `LEARNING` or `CONTROL`
+    role : None, LEARNING or CONTROL
         specifies whether the ObjectiveMechanism is being used for learning in a process or system (in conjunction
         with a `LearningMechanism`), or for control in a system (in conjunction with a `ControlMechanism`).
 
