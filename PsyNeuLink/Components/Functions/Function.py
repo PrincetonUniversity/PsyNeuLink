@@ -2446,6 +2446,22 @@ class WaldDist(DistributionFunction):
 
 
 class LearningFunction(Function_Base):
+    """Abstract class of `Function` used for learning.
+
+    All LearningFunctions take three input values (specified in each of the three required items of the
+    `variable` argument), and return two output values.
+
+    Input values:
+       • input to the parameter being modified (variable[0];
+       * output of the parameter being modified (variable[1];
+       * error associated with the output (variable[2]).
+
+    Output values:
+       * learning_signal: modifications calculated by the function that attempt to reduce the error;
+       * error_signal: the error received, possibly modified by the learning function.
+
+    """
+
     componentType = LEARNING_FUNCTION_TYPE
 
 

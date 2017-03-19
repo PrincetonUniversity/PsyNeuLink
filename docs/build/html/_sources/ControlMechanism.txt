@@ -1,5 +1,5 @@
-Control Mechanisms
-==================
+Control Mechanism
+=================
 
 .. toctree::
    :maxdepth: 2
