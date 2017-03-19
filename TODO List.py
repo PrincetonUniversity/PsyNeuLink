@@ -13,7 +13,8 @@
 #        - RENAME ANY CONFLICTS WITH PREFIX "function_<param_name>" (E.G., function_learning_rate)
 #        - RENAME ALL FUNCTION_PARAMS WITH PREFIX "function_<param_name>"
 #        - DISALLOW CONFLICTING NAMES AND THROW EXCPETION WHEN THEY ARE DETECTED IN _instantiate_parameter_state()
-
+#   3) MONITORING SPECIFICATION SYNTAX:  Restrict specifation to ObjectiveMechanism and possibly ControlMechanism,
+#                                        or also allow "locally" on OutputStates, Mechanisms, Processes and Systems?
 
 # COMPOSITION IMPLEMENTATION NOTE:
 #   add_projection_to and add_projection_from methods
@@ -25,6 +26,17 @@
 #   added attribute to Projections:  has_learning_projection
 
 # FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
+# IMPLEMENT:  MONITORED_OUTPUT_STATES param for Mechanism --
+#                  make this a general form of MONITOR_FOR_CONTROL, that can be used by ObjectiveMechanism
+#             [SEE `monitoring_status` in ObjectiveMechanism]
+#
+# DOCUMENTATION:
+#    search for "specification dictionary" and replace with: `specification dictionary <Mechanism_Creation>`
+#
+# CONFIRM (IN ObjectiveMechanism):
+#         elif isinstance(monitored_value, InputState): [~616]
+#         if isinstance(state_spec, dict): [~753]
+#         if isinstance(state_spec, MonitoredOutputStatesOption): [~759]
 
 # FIX: LearningComponents CLASS:
 #           ADD GENERIC CHECK (FOLLOWING IMPLEMENTATION IN error_signal_mech) THAT CHECKS THAT ANY RETURNED VALUE
