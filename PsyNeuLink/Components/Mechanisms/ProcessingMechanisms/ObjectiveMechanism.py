@@ -9,27 +9,15 @@
 # *********************************************  ObjectiveMechanism *******************************************************
 
 """
-**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
-One inputState is assigned to each of the
-`outputStates <OutputState>` that have been specified to be evaluated. The EVCMechanism's
-`MONITOR_FOR_CONTROL <monitor_for_control>` parameter is used to specify which outputStates are evaluated, and how.
-
-
 
 Overview
 --------
 
-An ObjectiveMechanism monitors the `outputStates <OutputState>` of one or more `ProcessingMechanism` specified in its
-`monitor <ObjectiveMechanism.monitor>` attribute, and evaluates them using its `function`.  The contribution of each
-outputState to the evaluation can be specified by an exponent and/or a weight
-(see `ControlMechanism_Monitored_OutputStates` for specifying monitored outputStates; and
-`below <EVCMechanism_Examples>` for examples). By default, the value of the EVCMechanism's `MONITOR_FOR_CONTROL`
-parameter is `MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`, which specifies monitoring the
-`primary outputState <OutputState_Primary>` of every `TERMINAL` mechanism in the system, each of which is assigned an
-exponent and weight of 1.  When an EVCMechanism is `created automatically <EVCMechanism_Creation>`, an inputState is
-created for each outputState specified in its `MONITOR_FOR_CONTROL` parameter,  and a `MappingProjection` is created
-that projects to that inputState from the outputState to be monitored.  The outputStates of a system being monitored
-by an EVCMechanism are listed in its `monitored_output_states` attribute.
+An ObjectiveMechanism is a `ProcessingMechanism` that monitors the `outputStates <OutputState>` of one or more other
+ProcessingMechanisms specified in its `monitor <ObjectiveMechanism.monitor>` attribute, and evaluates them using its
+`function <ObjectiveMechanism.function>`. The result of the evaluation is placed in the ObjectiveMechanism's
+`primary outputState <OutputState_Primary>`.  ObjectiveMechanisms are typically used closely (and often created
+automatically) with `AdaptiveMechanisms <AdpativeMechanism>`.
 
 .. _Comparator_Creation:
 
@@ -37,16 +25,18 @@ Creating a ComparatorMechanism
 ------------------------------
 
 An ObjectiveMechanism can be created directly by calling its constructor.  ObjectiveMechanisms are also created
-automatically by other types of mechanisms (such as an `EVCMechanism`
-COMMENT:
-   or a `LearningMechanism`).
-COMMENT
-).
-The mechanisms and/or outputStates monitored by an ObjectiveMechanism are specified by the
-:keyword:`monitor` argument in its constructor.  These can be specified in a variety of ways, and assigned
-weights and/or exponents to specify the contribution of each to the evaluation (as described
-`below <Monitored OutputStates>`); however all are converted to references to outputStates, that are listed in the
-ObjectiveMechanism's `monitor <ObjectiveMechanism.monitor>` attribute.
+automatically when other PsyNeuLink components are created (such as `LearningMechanisms <LearningMechanism_Creation>`
+and `ControlMechanisms <ControlMechanism_Creation>`.
+
+.. _ObjectiveMechanism_Structure:
+
+Structure
+---------
+
+An ObjectiveMechanism has one `inputState <InputState>` for each of the `outputStates <OutputState>` that are specified
+to be monitored in its `monitor` attribute, a `function <ObjectiveMechanism.function>` that uses the value of those
+outputStates to compute an `objective (or "loss") function <https://en.wikipedia.org/wiki/Loss_function>`_,
+and a single outputState of its own that receives the result.
 
 .. _ObjectiveMechanism_Monitored_OutputStates:
 
@@ -58,10 +48,33 @@ COMMENT:
      VALUES AND INPUTSTATE CAN BE SPECIFIED
      AUTOMATIC IMPLEMETNATION BY PROCESS AND/OR SYSTEM
      SPECIFCATION OF WEIGHTS AND EXPONENTS IN LinearCombination FUNCTION, AS SPECIAL CASE / EXAMPLE
+
+    The EVCMechanism's
+    `MONITOR_FOR_CONTROL <monitor_for_control>` parameter is used to specify which outputStates are evaluated, and how.
+
+    The contribution of each monitored outputState to the evaluation can be specified by an exponent and/or a weight
+    (see `ControlMechanism_Monitored_OutputStates` for specifying monitored outputStates; and
+    `below <EVCMechanism_Examples>` for examples). By default, the value of the EVCMechanism's `MONITOR_FOR_CONTROL`
+    parameter is `MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`, which specifies monitoring the
+    `primary outputState <OutputState_Primary>` of every `TERMINAL` mechanism in the system, each of which is assigned an
+    exponent and weight of 1.  When an EVCMechanism is `created automatically <EVCMechanism_Creation>`, an inputState is
+    created for each outputState specified in its `MONITOR_FOR_CONTROL` parameter,  and a `MappingProjection` is created
+    that projects to that inputState from the outputState to be monitored.  The outputStates of a system being monitored
+    by an EVCMechanism are listed in its `monitored_output_states` attribute.
+
+    , and assigned
+    weights and/or exponents to specify the contribution of each to the evaluation (as described
+    `below <Monitored OutputStates>`);
 COMMENT
 
-The outputState(s) monitored by an ObjectiveMechanism can be specified in any of the places listed below.  The
-list also describes the order of precedence when more than one specification pertains to the same
+The outputStates monitored by an ObjectiveMechanism are specified in the :keyword:`monitor` argument of its
+constructor.  These can be specified in a variety of ways, as described below.  Each specification
+is converted to a reference to the outputState of a mechanism, and the collection are listed in the
+ObjectiveMechanism's `monitor <ObjectiveMechanism.monitor>` attribute.
+
+xxx
+
+The list also describes the order of precedence when more than one specification pertains to the same
 outputState(s). In all cases, specifications can be a references to an outputState object, or a string that is the
 name of one (see :ref:ControlMechanism_Examples' below). The specification of whether an outputState is monitored by
 a ControlMechanism can be done in the following places:

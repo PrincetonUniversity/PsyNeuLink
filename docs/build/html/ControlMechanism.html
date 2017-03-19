@@ -195,7 +195,7 @@ ControlMechanism can regulate only the parameters of mechanism in the system for
 A ControlMechanism is also created automatically whenever a <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">system is created</span></a>, and assigned as
 the <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a> for that system. The <a class="reference internal" href="OutputState.html"><span class="doc">outputStates</span></a> to be monitored by a
 ControlMechanism are specified in its <code class="xref any docutils literal"><span class="pre">monitored_output_states</span></code> argument, which can take  a number of
-<a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-outputstates"><span class="std std-ref">forms</span></a>.  When the ControlMechanism is created, it automatically creates
+<code class="xref any docutils literal"><span class="pre">forms</span></code>.  When the ControlMechanism is created, it automatically creates
 an ObjectiveMechanism that is used to monitor and evaluate the mechanisms and/or outputStates specified in its
 <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> attribute.  The result of the evaluation is used to
 specify the value of the ControlMechanism&#8217;s <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>. How a ControlMechanism creates its
@@ -212,7 +212,7 @@ to which the parameter belongs (see <a class="reference internal" href="Mechanis
 <p>When an ControlMechanism is constructed automatically, it creates an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> (specified in its
 <code class="xref any docutils literal"><span class="pre">montioring_mechanism</span></code> attribute) that is used to monitor and evaluate the system&#8217;s performance.  The
 ObjectiveMechanism monitors each mechanism and/or outputState listed in the ControlMechanism&#8217;s
-&#8216;monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="Function.html#Function.LinearMatrix.function" title="Function.LinearMatrix.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
+&#8216;monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="Function.html#Function.Exponential.function" title="Function.Exponential.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
 This information is used to set the value of the ControlMechanism&#8217;s ControlProjections.</p>
 </div>
 </div>
@@ -245,7 +245,7 @@ They should be instantiated using the constructor for a <a class="reference inte
 <dt id="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.controlProjections">
 <code class="descname">controlProjections</code><a class="headerlink" href="#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.controlProjections" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[ControlProjection]</em> &#8211; list of <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> managed by the ControlMechanism.
-There is one for each ouputState in the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputStates" title="Mechanism.Mechanism_Base.outputStates"><code class="xref any py py-attr docutils literal"><span class="pre">outputStates</span></code></a> dictionary.</p>
+There is one for each ouputState in the <a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.outputStates" title="TransferMechanism.TransferMechanism.outputStates"><code class="xref any py py-attr docutils literal"><span class="pre">outputStates</span></code></a> dictionary.</p>
 </dd></dl>
 
 <dl class="attribute">
