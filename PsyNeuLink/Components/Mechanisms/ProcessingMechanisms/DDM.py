@@ -15,7 +15,9 @@
       * :ref:`DDM_Creation`
       * :ref:`DDM_Execution`
       * :ref:`DDM_Class_Reference`
+
 .. _DDM_Overview:
+
 Overview
 --------
 The DDM mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
@@ -23,7 +25,9 @@ Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This cor
 the sequential probability ratio test (SPRT [REF]), which is the statistically optimal procedure for two alternative
 forced choice (TAFC) decision making ([REF]).  It can be executed analytically using one of two solutions (in `TRIAL`
 mode), or integrated numerically (in `TIME_STEP` mode).
+
 .. _DDM_Creation:
+
 Creating a DDM Mechanism
 -----------------------------
 A DDM Mechanism can be instantiated directly by calling its constructor, or by using the `mechanism` function
@@ -51,7 +55,9 @@ a single DDM process is implemented, and the input is used as the stimulus compo
 multiple parallel DDM processes are implemented all of which use the same parameters but each of which receives its
 own input (from the corresponding element of the input array) and is executed independently of the others.
 COMMENT
+
 .. _DDM_Structure:
+
 Structure
 ---------
 The DDM mechanism implements a general form of the decision process.  A DDM mechanism has a single `inputState
@@ -89,16 +95,22 @@ values of that type over all of the processes run.  If ``average_output_states``
 then the value of each ouputState is a 1d array, each element of which is the outcome of that type for the
 corresponding decision process.
 COMMENT
+
 .. _DDM_Functions:
+
 DDM Functions
 ~~~~~~~~~~~~~
+
 The `function <DDM.function>` parameter can be used to select one of two analytic solutions (`BogaczEtAl` and
 `NavarroAndFuss`) that are used when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL`.  These both return an
 expected mean response time and accuracy, while `NavarroAndFuss` also returns an expected mean correct response time
 and accuracy.
+
 .. _DDM_Parameters:
+
 DDM Parameters
 ~~~~~~~~~~~~~~
+
 The DDM process uses the same set of parameters for all modes of execution.  These can be specified as arguments
 for the functions used in :keyword:`TRIAL` mode, or in a params dictionary assigned to the `params` argument,
 using the keywords in the list below, as in the following example::
@@ -106,6 +118,7 @@ using the keywords in the list below, as in the following example::
                  params={DRIFT_RATE:(0.2, ControlProjection),
                          STARTING_POINT:-0.5},
                  time_scale=TimeScale.TIME_STEP)
+
 .. note::  Parameters specified in the `params` argument (as in the example above) will be used for both
    `TRIAL` and `TIME_STEP` mode, since parameters specified in the `params` argument of a mechanism's constructor
    override corresponding ones specified as arguments of its `function <Mechanism.Mechanism_Base.function>`
@@ -113,8 +126,11 @@ using the keywords in the list below, as in the following example::
    set to `TimeScale.TRIAL`, the `drift_rate` of 0.2 will be used (rather than 0.1).  For parameters NOT specified
    as entries in the `params` dictionary, the value specified for those in the function will be used in both `TRIAL`
    and `TIME_STEP` mode.
+
 The parameters for the DDM are:
+
 .. _DDM_Drift_Rate:
+
 * `DRIFT_RATE <drift_rate>` (default 0.0)
   - multiplies the input to the mechanism before assigning it to the `variable <DDM.variable>` on each call of
   `function <DDM.function>`.  The resulting value is further multiplied by the value of any ControlProjections to the
@@ -144,9 +160,12 @@ The parameters for the DDM are:
   when ``time_scale <DDM.time_scale>`` is  :keyword:`TIME_STEP`, it is added to the number of time steps
   taken to complete the decision process when reporting the response time.
   COMMENT
+
 .. _DDM_Execution:
+
 Execution
 ---------
+
 When a DDM mechanism is executed it computes the decision process, either analytically (in `TRIAL` mode) or by
 step-wise integration (in `TIME_STEP` mode).
 COMMENT:
@@ -161,6 +180,7 @@ this mode that use different parameters, a separate DDM mechanism should explici
 paths and outcomes for the same input value will vary. This can be used to generate distributions of the process for a
 single set of parameters that are not subject to the analytic solution (e.g., for time-varying drift rates).
 COMMENT
+
 .. note::
    DDM handles "runtime" parameters (specified in a call to its
    :py:meth:`execute <Mechanism.Mechanism_Base.exeucte>` or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods)
@@ -173,8 +193,11 @@ COMMENT:
   ADD NOTE ABOUT INTERROGATION PROTOCOL, USING ``terminate_function``
   ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
 COMMENT
+
 .. _DDM_Results:
+
 After each execution of the mechanism:
+
     * the value of the **decision variable** is assigned to the mechanism's `value <DDM.value>` attribute, the value of
       the 1st item of its `outputValue <DDM.outputState>` attribute, and as the value of its `DDM_DECISION_VARIABLE`
       outputState.
@@ -240,7 +263,9 @@ After each execution of the mechanism:
         (e.g., as confirmation of /deviation from noise param??)??
     COMMENT
     ..
+
 .. _DDM_Class_Reference:
+
 Class Reference
 ---------------
 """
