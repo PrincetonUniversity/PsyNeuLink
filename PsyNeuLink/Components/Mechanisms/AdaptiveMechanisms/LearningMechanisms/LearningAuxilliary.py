@@ -464,6 +464,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                  role=LEARNING,
                                                  params=object_mech_params,
                                                  name=lc.activation_mech_projection.name + " " + OBJECTIVE_MECHANISM)
+
         objective_mechanism.learning_role = TARGET
 
         try:
