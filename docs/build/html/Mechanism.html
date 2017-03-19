@@ -185,7 +185,7 @@ itself.</li>
 and compares these to generate error signals used for <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning</span></a>).</li>
 </ul>
 <ul class="simple">
-<li>A <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> evaluates the output of one or more other mechanisms in the system to which it belongs,
+<li>A <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> evaluates the output of one or more other mechanisms in the system to which it belongs,
 and uses this to modify the parameters of those or other mechanisms in the system.</li>
 </ul>
 </div></blockquote>
@@ -257,7 +257,7 @@ and <a class="reference internal" href="OutputState.html#outputstates-creation">
 specified by the mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute.  Every type of mechanism has at least one
 (primary) function, and some have additional (auxiliary) ones (for example, the <code class="xref any docutils literal"><span class="pre">EVCMechanism</span></code>).
 Mechanism functions are generally from the PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> class.  Most mechanisms allow their function to be
-specified, using the <a class="reference internal" href="Function.html#Function.Exponential.function" title="Function.Exponential.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> argument of the mechanism&#8217;s contructor.  The function can be specified using the name of
+specified, using the <a class="reference internal" href="Function.html#Function.NavarroAndFuss.function" title="Function.NavarroAndFuss.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> argument of the mechanism&#8217;s contructor.  The function can be specified using the name of
 <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> class, or its constructor (including arguments that specify its parameters).  For example, the
 <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> can be specified to be the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
@@ -327,7 +327,7 @@ of accessing its individual items.</p>
 <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>.  One <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> is assigned to each of the parameters of the mechanism
 and/or its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> (these correspond to the arguments in their constructors).  Like other states,
 parameterStates can receive projections. Typically these are from the <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>
-of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> that is used to modify parameter values in response to the outcome(s) of
+of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> that is used to modify parameter values in response to the outcome(s) of
 processing.  A parameter value (and the value of its associated parameterState) can be specified when a mechanism or
 its function is first created  using the corresponding argument in the object&#8217;s constructor.  Parameter values can
 also be assigned later, using the mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">assign_param</span></code> method (the safest means) or by direct assignment to the
