@@ -198,14 +198,23 @@ Additional Attributes
    inputState.  These values take precedence over the specification of values in `monitored_values`, and can be used
    to override the defaults assumed there. If `default_input_value` is specified, it must have the same number of items
    as `monitored_values`. If  `default_input_value` is `None` (the default), then the specifications in
-   `monitored_values` are used.
+   `monitored_values` are used.  The use of `default_input_value` to override defaults used by `monitored_values`
+   can be helpful in some situations (see `example <ObjectiveMechanism_Default_Input_Value_Example>` below).
+
 
 .. _ObjectiveMechanism_Function:
 
 Function
 ~~~~~~~~
 
-SPECIFCATION OF WEIGHTS AND EXPONENTS IN LinearCombination FUNCTION, AS SPECIAL CASE / EXAMPLE
+The ObjectiveMechanism's `function` can be customized to implement a wide variety of
+`objective (or "loss") functions <https://en.wikipedia.org/wiki/Loss_function>`_.  The default is the
+`LinearCombination` function, which simply sums the values of the outputStates listed in `monitored_values`.
+However, this can easily be configured to calculate differnces, ratios, etc. (see
+`example <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  It can also be replaced with any
+`CombinationFunction`, or any python function that takes a 2d array with an arbitrary number of
+items or a number equal to the number of items in the ObjectiveMechanism's variable (and its number of
+inputStates), and returns a 1d array.
 
 .. _ObjectiveMechanism_Execution:
 
@@ -222,19 +231,21 @@ evaluate these.  The result is assigned as to its `value <ObjectiveMechanism.val
 Examples
 --------
 
+.. _ObjectiveMechanism_Default_Input_Value_Example:
+
 The use of default_input_value to override a specification in `monitored_values` can be useful in some situations.
 For example, for `Reinforcement Learning <Reinforcement>`, an ObjectiveMechanism is used to monitor an "action
 selection" mechanism, the output of which might be a vector with a single non-zero value (the currently selected
 action).  However, the ObjectiveMechanism requires only the value of the action (the non-zero item -- that it will
 compare with a scalar reward value -- not the entire vector.  This can be configured as in the example below::
 
-my_action_select_mech = TransferMechanism(default_input_value = [0,0,0],
-                            function=SoftMax(output=PROB))
+    my_action_select_mech = TransferMechanism(default_input_value = [0,0,0],
+                                function=SoftMax(output=PROB))
 
-my_reward_mech = TransferMechanism(default_input_value = [0])
+    my_reward_mech = TransferMechanism(default_input_value = [0])
 
-my_objective_mech = ObjectiveMechanism(default_input_value = [[0],[0]],
-                                      monitored_values = [my_action_select_mech, my_reward_mech])
+    my_objective_mech = ObjectiveMechanism(default_input_value = [[0],[0]],
+                                          monitored_values = [my_action_select_mech, my_reward_mech])
 
 Note that the outputStates for the action selection mechanism and the one that provides the reward are specified
 in `monitored_values`.  However, the outputState of the action selection mechanism is a vector that can be of any
@@ -247,6 +258,22 @@ case in which the sender and receiver values are of different lengths); this wil
 since the action is the only non-zero value in the output and so its value will be assigned to the inputState
 to which it projects in the ObjectiveMechanism.
 
+.. _ObjectiveMechanism_Weights_and_Exponents_Example:
+
+The simplest way to customize the `function <ObjectiveMechanism.function` of an ObjectiveMechanism is to
+parameterize its default `LinearCombination` function.  In the example below, the ObjectiveMechanism used in the
+`previous example <ObjectiveMechanism_Default_Input_Value_Example>` is further customized to subtract the value
+of the action selected from the value of the reward::
+
+    my_objective_mech = ObjectiveMechanism(default_input_value = [[0],[0]],
+                                          monitored_values = [my_action_select_mech, my_reward_mech],
+                                          function=LinearCombination(weights=[[-1], [1]]))
+
+This is done by specifying the `weights <LinearCombination.weights>` parameter of the `LinearCombination` function,
+with two values [-1] and [1] that correspond to the two items in monitored_values (and default_input_value).  Thus,
+the value from `my_action_select_mech` will be multiplied by -1 before being added to (and thus subtracting it from)
+the value of `my_reward_mech`.  Similarly, the `operation <LinearCombination.operation>` parameter, together with the
+`exponents <LinearCombination.exponents>` parameter, can be used to multiply and divide quantities.
 
 
 Class Reference
