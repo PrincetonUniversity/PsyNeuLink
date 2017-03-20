@@ -14,172 +14,88 @@
 Overview
 --------
 
-A LearningProjection takes as its input the output of its `sender <LearningProjection.sender>` --
-a `MonitoringMechanism <MonitoringMechanism>`.  It uses this as an `error_signal` to compute a `weight_change_matrix`
-that is assigned as the `value <LearningProjection.value>` of the LearningProjection.  This is used, in turn,
-by the LearningProjection's `receiver <LearningProjection.receiver>` -- a `parameterState <ParameterState>` for
-a `MappingProjection` to modify its  `matrix <MappingProjection.matrix>` parameter.  A LearningProjection can
-be assigned different `functions <LearningProjection_Function>` to implement different learning algorithms,
-which are associated with corresponding types of `MonitoringMechanisms <MonitoringMechanism>`.
-
+A LearningProjection is a subclass of `Projection` that projects from a `LearningMechanism` to the
+:keyword:`MATRIX` `parameterState <ParameterState>` of a `MappingProjection`, and modifies the value of the
+`matrix <MappingProjection.matrix>` parameter of that MappingProjection.
 
 .. _LearningProjection_Creation:
 
 Creating a LearningProjection
 ------------------------------------
 
-COMMENT:
-    NOTE HERE THAT EITHER SENDER OR RECEIVER HAS TO BE SPECIFIED FOR FINAL IMPLEMENTATION
-    IF IT IS A RECEIVER, THEN APPRPRIATE SENDER COMPONENTS (LearningMechanism and, if necessary ObjectiveMechanism)
-        WILL BE INSTANTIATED
-    IF IT IS A SENDER, THEN ?? HOW IS RECEIVER IDENTIFIED??
-COMMENT
+A LearningProjection can be created using any of the standard ways to `create a projection <Projection_Creation>`,
+or by including it in a tuple that specifies the `matrix <Mapping_Matrix_Specification>` parameter for a
+`MappingProjection`.  LearningProjections are also created automatically, along with the other
+`components required for learning <LearningMechanism_Learning_Configurations>`, when learning is specified for a
+`process <Process_Learning>` or a `system <System_Execution_Learning>`.
 
-Its `sender <LearningProjection.sender>` (the source of its
-`error_signal`) must be a
-`MonitoringMechanism`, and its `receiver <LearningProjection.receiver>` must be the `parameterState <ParameterState>`
-of a `MappingProjection`.  When a LearningProjection is created, its full initialization is
-:ref:`deferred <Component_Deferred_Init>` until its `sender <LearningProjection.sender>` and
-`receiver <LearningProjection.receiver>` have been fully specified.  This allows a LearningProjection to be created
-before its `sender` and/or `receiver` have been created (e.g., before them in a script), by calling its constructor
-without specifying its :keyword:`sender` or :keyword:`receiver` arguments.
+If a LearningProjection is created using its constructor on its own, the `receiver <ControlProjection.receiver>`
+argument must be specified.  If it is included in the `matrix specification <Mapping_Matrix_Specification>` for a
+MappingProjection, the parameterState for the MappingProjection's :keyword:`MATRIX` will be assigned as the
+LearningProjection's `receiver <LearningProjection.receiver>`.  If its `sender <LearningProjection.sender>` is not
+specified, its assignment depends on the `receiver <LearningProjection.receiver>`.  If the receiver belongs to a
+MappingProjection that projects between two mechanisms that are both in the same `process <Process_Learning>` or
+`system <System_Execution_Learning>`, then the LearningProjection's `sender <LearningProjection.sender>` is assigned
+to the `LEARNING_SIGNAL <LearningMechanism_Learning_Signal>` outputState of the `LearningMechanism` for the
+MappingProjection. If there is none, it is `created <LearningMechanism_Creation>` along with any other components
+needed to implement learning for the MappingProjection (see `LearningMechanism_Learning_Configurations`).
 
-It is also possible to create a LearningProjection without ever specifying its :keyword:`sender`.  In this case,
-when it is initialized, the type of `MonitoringMechanism <MonitoringMechanism>` it requires will be inferred from
-context, and created when it is initialized (see `Structure <LearningProjection_Structure>` below).  In contrast, a
-LearningProjection's :keyword:`receiver` must be explicitly specified at some point.  Once that is done,
-for the LearningProjection to be operational, initializaton must be completed by calling its `deferred_init`
+When a LearningProjection is created, its full initialization is :ref:`deferred <Component_Deferred_Init>` until its
+`sender <LearningProjection.sender>` and `receiver <LearningProjection.receiver>` have been fully specified.  This
+allows a LearningProjection to be created before its `sender` and/or `receiver` have been created (e.g., before them
+in a script), by calling its constructor without specifying its :keyword:`sender` or :keyword:`receiver` arguments.
+However, for the LearningProjection to be operational, initialization must be completed by calling its `deferred_init`
 method.  This is not necessary if learning has been specified for a `system <System_Execution_Learning>`,
 `process <Process_Learning>`, or as the `projection <MappingProjection_Tuple_Specification>` in the `pathway` of a
 process -- in those cases, deferred initialization is completed automatically.
-
-COMMENT:
-   REPLACE WITH THIS ONCE FUNCTIONALITY IS IMPLEMENTED
-    Initialization will
-    be  completed as soon as the LearningProjection has been assigned as the projection *from* a MonitoringMechanism (i.e.,
-    it's ``sender`` has been specified) and as the projection *to* the parameterState of a MappingProjection (i.e.,
-    its ``receiver`` has been specified).  This is handled automatically when the LearningProjection is specified as part of
-    a system, process, or projection in the pathway of a process.
-COMMENT
-
-
-COMMENT:
-
-    The `receiver <MappingProjection.MappingProjection.receiver>` for each of those MappingProjections is assigned as the
-    `errorSource <LearningProjection.errorSource>` for the LearningProjection.  Each errorSource must project to a
-    :doc:`MonitoringMechanism`, which is assigned as the the LearningSignal's sender, and provides it with an
-    `error_signal`. If the `errorSource` assigned to a LearningProjection already has a projection to a
-    MonitoringMechanism, then that mechanism is simply assigned as the LearningProjection's
-    `sender <LearningProjection.sender>`; if the `errorSource` does not project to any MonitoringMechanism, then one is
-    created for it at the same time that the LearningProjection is created.
-
-    The type of MonitoringMechanism created depends on the type of learning. For `Reinforcement Learning <Reinforcement>`,
-    a `ComparatorMechanism` is created, and given a MappingProjection from the `errorSource`. For
-    `BackPropagation`, the type of  MonitoringMechanism created also depends on the `errorSource` itself.  If
-    the `errorSource` provides the output that will be compared with the target stimulus then, as for Reinforcement
-    Learning, a ComparatorMechanism is created.  This is the case if the `errorSource` is a standalone
-    mechanism (one not in a process or system), the `TERMINAL` mechanism of a standalone process (i.e., one not
-    in a system), or the `TERMINAL` mechanism of a system.  However, if the `errorSource` lies deeper in a process
-    or system -- that is, if it is an `ORIGIN` or `INTERNAL` mechanism -- then a `WeightedErrorMechanism` mechanism
-    is created.  This gets its error information from the MonitoringMechanism for the `errorSource` "after" it in the
-    process or system (i.e., the one to which it projects, and that is one closer to
-    the target).  Therefore, a MappingProjection is created that projects to it from that next `errorSource`.
-
-    -----------------------
-
-    The following components and information are required by a LearningMechanism
-    (see :ref:`figure above <LearningMechanism_Simple_Learning_Figure>`):
-
-    **MappingProjection**: the projection that is modified by the LearningMechanism.  The LearningMechanism sends a
-    `LearningProjection` to the `parameterState <ParameterState>` for the `matrix <MappingProjection.matrix>` parameter
-    of that MappingProjection.
-
-    **Error source**: the ProcessingMechanism to which the `MappingProjection` that is being learned projects;  it is the
-    mechanism responsible for the component of the error that the LearningMechanism tries to reduce.  It is
-    referenced by the LearningMechanism's `error_source` attribute.  The `error_source` must project to either an
-    `ObjectiveMechanism` or another LearningMechanism (see below). By default, the projection from the error_source
-    comes from its `primary outputState <OutputState_Primary>`, but a different outputState can be specified by
-    including an entry with `MONITOR_FOR_LEARNING` as its key in a
-    `parameter dictionary <ParameterState_Specifying_Parameters>` for the `error_source`, and assigning it a list with
-    the desired outputState(s) as its value.  When a LearningMechanism is `created automatically, if its `error_source`
-    already has a projection to an ObjectiveMechanism or anotherLearningMechanism, then that is used; if its
-    `error_source` does not project to one of these, then one of the appropriate type is created (see below)
-    and assigned a MappingProjection from the `error_source`.
-
-    .. _LearningProjection_MonitoringMechanism:
-
-    **Error signal**: this is the value that the LearningMechanism seeks to reduce.  It is
-    Usually it comes from an
-    `ObjectiveMechanism or another LearningMechanism**:  This calculates the `error_signal` used by the
-    current
-    LearningMechanism to reduce the contribution of its `error_source` to the error.  Which of these is required, and how it
-    calculates the `error_signal`, depend on the `function <LearningProjection.function>` that the LearningMechanism uses
-    for learning. For `Reinforcement`, an `ObjectiveMechanism` is always used. This receives a MappingProjection directly
-    from the `error_source <LearningProjection.errorSource>`, and receives a **target** stimulus from the process or
-    system to
-
-    xxxxxx
-
-    which the `errorSource <LearningProjection.errorSource>` belongs.  It calculates the `error_signal` by comparing the
-    output of the `errorSource <LearningProjection.errorSource>` with the target stimulus provided when the process or
-    system is `run <Run_Targets>`. For `BackPropagation`, the type of MonitoringMechanism depends on the
-    `errorSource <LearningProjection.errorSource>`. If the `errorSource <LearningProjection.errorSource>` receives a target
-    directly, then a `ComparatorMechanism` is used.  This is the case if the `errorSource <LearningProjection.errorSource>`
-    is a standalone mechanism (one not in a process or system), the `TERMINAL` mechanism of a standalone
-    process (i.e., one not in a system), the `TERMINAL` mechanism of a system, or it has been specified explicitly as a
-    `TARGET <LINK>` mechanism.  However, if the `errorSource <LearningProjection.errorSource>` lies deeper in any process
-    to which it  belongs (i.e., it is not a `TERMINAL` mechanism), and has not been explicitly specified as a
-    `TARGET <LINK>` and therefore does not receive a target directly, then a `WeightedErrorMechanism` mechanism is used.
-    This receives a MappingProjection carrying its error information from the MonitoringMechanism for the
-    `errorSource <LearningProjection.errorSource>` "after" it in the process (i.e., the one to which it projects, and that
-    is one closer to the target), rather than from a target stimulus. It calculates its `error_signal` by taking account of
-    the contribution that its `errorSource <LearningProjection.errorSource>` makes to the `error_signal` of the *next*
-    mechanism in the process or system.
-
-    **LearningProjection**:  this calculates the changes to the `matrix <MappingProjection.MappingProjection.matrix>`
-    parameter of the MappingProjection to which the LearningProjection projects (i.e., the owner of its
-    `receiver <LearningProjection.receiver>`), so as to reduce the error generated by its
-    `errorSource <LearningProjection.errorSource>`. It uses the `error_signal` received from the `MonitoringMechanism` (i.e.,
-    the owner of its `sender <LearningProjection.sender>`), to which the `errorSource <LearningProjection.errorSource>`
-    projects. The weight changes it provides to its `receiver <LearningProjection.receiver>`are stored in its
-    `weightChangeMatrix` attribute.
-
-    .. _LearningProjection_Function:
-
-    **Function**:  calculates the changes to the `matrix <MappingProjection.MappingProjection.matrix>` parameter
-    of the LearningProjection's `mappingProjection required to reduce the error for its
-    `errorSource <LearningProjection.errorSource>`.  The result is assigned to the LearningProjection's
-    `weightChangeMatrix` attribute. The default `function <LearningProjection.function>` is BackPropagation` (also known
-    as the *Generalized Delta Rule*; see
-    `Rumelhart et al., 1986 <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_). However, it can be
-    assigned to other functions that implement different learning algorithms, as long as it is compatible with the
-    :keyword:`function` of the LearningProjection's `errorSource <LearningProjection.errorSource>` (how the `error_signal`
-    is computed depends on the nature of the function that generated the error); failure to match the `function
-    <LearningProjection.function>` for the LearningProjection with  the :keyword:`function` of its
-    `errorSource <LearningProjection.errorSource>`  will generate an error.
-COMMENT
-
-.. _LearningProjection_Automatic_Creation:
-
-Automatic creation
-~~~~~~~~~~~~~~~~~~
-
-.. _LearningMechanism_Simple_Learning_Figure:
-
 
 .. _LearningProjection_Structure:
 
 Structure
 ---------
 
+A LearningProjection has the standard attributes of a `Projection` as well as the additional ones list below:
 
-.. _LearningProjection_MonitoringMechanism:
+* `sender <LearningProjection.sender>`
+   the `LEARNING_SIGNAL <LearningMechanism_Learning_Signal>` outputState of a LearningMechanism
 
-.. _LearningProjection_Targets:
+* `receiver <LearningProjection.receiver>`
+   the `MATRIX` parameterState for the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
 
-.. _LearningProjection_Target_vs_Terminal_Figure:
+* `learning_signal`
+   value (matrix of "weight" changes) calculated by the LearningProjection's
+   `sender <LearningProjection.sender>` and used to modify the `matrix
+   <MappingProjection.matrix>` parameter of the LearningProjection's `receiver <LearningProjection.receiver>`.
 
-.. _LearningProjection_Function:
+* `learned_projection <LearningProjection.learned_projection>`
+   the `MappingProjection` to which the LearningProjection projects.
+
+* `weight_change_params`
+   specifies to the `receiver <LearningProjection.receiver>` how the parameter (weight) changes specified by the
+   `learning_signal <LearningProjection.learning_signal>` received from the LearningMechanism should be applied to its
+   `matrix <MappingProjection.matrix> parameter.  It assumes that the `function <MappingProjection.function>` of the
+   receiver is a `LinearCombination` Function.  By default it includes the following entries:
+   ????
+   `FUNCTION_PARAMS`:
+       `OPERATION`: `SUM`,
+       `PARAMETER_MODULATION_OPERATION`: `ModulationOperation.ADD`,
+       `PROJECTION_TYPE`: `LEARNING_PROJECTION`.
+
+* `weight_change_matrix`
+   matrix of changes that will be made to the `mappingWeightMatrix` when the `learned_projection` is executed
+   (rows correspond to sender, columns to receiver);  same as `value <LearningProjection.value>`.
+
+* `learning_rate <LearingProjection.learning_rate>`
+   this is multiplicatively applied to the `weight_change_matrix` and
+   COMMENT:
+   takes precedence over any
+   COMMENT
+   and thus can be used to modulate the learning rate in addition to (and on top of) the one
+   specified for the `LearningMechanism`, its `function <LearningMechanism.function>`, and/or the process or system
+   to which it belongs (see `learning_rate <LearningMechanism>` for details).
+   COMMENT:
+   If it is `None`, the learning_rate for the `LearningMechanism` will be used.
+   COMMENT
 
 .. _LearningProjection_Execution:
 
@@ -187,6 +103,8 @@ Execution
 ---------
 
 .. _LearningProjection_Class_Reference:
+
+LAZY EXECUTION - GET FROM LearningMechanism
 
 Class Reference
 ---------------
@@ -292,7 +210,7 @@ class LearningProjection(Projection_Base):
 
     Arguments
     ---------
-    sender : Optional[MonitoringMechanism or OutputState of one]
+    sender : Optional[LearningMechanism or LEARNING_SIGNAL OutputState of one]
         the source of the `error_signal` for the LearningProjection. If it is not specified, one will be
         `automatically created <LearningProjection_Automatic_Creation>` that is appropriate for the
         LearningProjection's `errorSource <LearningProjection.errorSource>`.
@@ -328,23 +246,23 @@ class LearningProjection(Projection_Base):
 
     componentType : LEARNING_PROJECTION
 
-    sender : OutputState of MonitoringMechanism
-        source of `error_signal`.
+    sender : LEARNING_SIGNAL OutputState of a LearningMechanism
+        source of `learning_signal <LearningProjection.learning_signal>`.
 
     receiver : ParameterState of MappingProjection
         parameterState for the `matrix <MappingProjection.MappingProjection.matrix>` parameter of
-        the `mappingProjection` to be modified by the LearningProjection.
+        the `learned_projection` to be modified by the LearningProjection.
 
-    mappingProjection : MappingProjection
+    learned_projection : MappingProjection
         the `MappingProjection` that owns the `parameterState <ParameterState>` to which the
         LearningProjection projects (i.e., that owns its `receiver <LearningProjection.receiver>`).
 
     variable : 2d np.array
         COMMENT:
             WRONG?  CORRECTED BELOW
-            same as :py:data:`mappingProjection <LearningProjection.mappingProjection>`.
+            same as `learned_projection <LearningProjection.learned_projection>`.
         COMMENT
-        same as `learning_signal`.
+        same as `learning_signal <LearningProjection.learning_signal>`.
 
     learning_signal : 2d np.array
         matrix of parameter (weight) changes to convey to the matrix parameter of the LearningProjection's
@@ -355,9 +273,9 @@ class LearningProjection(Projection_Base):
 
     weight_change_params : dict : default: see below
         specifies to `receiver <LearningProjection.receiver>` how the weight changes specified by the
-        `learning_signal` received from the LearningMechanism should be applied to its matrix parameter.
-        It assumes that the MappingProjection.function of the receiver is a LinearCombination Function.
-        By default it includes the following entries:  `FUNCTION_PARAMS`: `OPERATION`: `SUM`,
+        `learning_signal <LearningProjection.learning_signal>` received from the LearningMechanism should be applied to
+        its matrix parameter.  It assumes that the MappingProjection.function of the receiver is a LinearCombination
+        Function. By default it includes the following entries:  `FUNCTION_PARAMS`: `OPERATION`: `SUM`,
         `PARAMETER_MODULATION_OPERATION`: `ModulationOperation.ADD`, `PROJECTION_TYPE`: `LEARNING_PROJECTION`.
 
     learning_rate : Optional[float]

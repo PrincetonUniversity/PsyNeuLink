@@ -47,17 +47,20 @@ MappingProjections are also generated automatically in the following circumstanc
 appropriate to the circumstance:
 
   * by a `process <Process>`, when two adjacent mechanisms in its `pathway` do not already have a projection assigned
-    between them; `AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines the appropriate matrix by
-    context;
+    between them (`AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines the appropriate matrix by
+    context);
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from outputStates listed in its
-    `monitored_output_states <ControlMechanism.ControlMechanism_Base.monitored_output_states>` attribute to assigned
-    inputStates in the `ControlMechanism <ControlMechanism_Creation>`); an `IDENTITY_MATRIX` is used for each;
+  * by an `ObjectiveMechanism`, from each outputState listed in its `monitored_values` attribute to the corresponding
+    inputState of the ObjectiveMechanism (`AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines
+    the appropriate matrix by context).
   ..
-  * by a `LearningProjection`, from a mechanism that is the source of an error signal to a `MonitoringMechanism`
-    that is used to evaluate that error and generate a learning signal from it
-    (see `LearningProjection<LearningProjection_Automatic_Creation>`); the matrix used depends on the
-    `function <LearningProjection.LearningProjection.function>` parameter of the LearningProjection.
+  * by a `ControlMechanism <ControlMechanism>`, from the ObjectiveMechanism that provides it with the outcome of the
+    outputStates that it monitors, and from those outputStates (listed in its
+    `monitored_output_states <ControlMechanism.ControlMechanism_Base.monitored_output_states>` attribute) to
+    the ObjectiveMechanism (an `IDENTITY_MATRIX` is used for all of these);
+  ..
+  * by a `LearningMechanism`, between it and the other components required to implement learning
+    (see `LearningMechanism_Learning_Configurations` for details);
 
 .. _Mapping_Matrix_Specification:
 
