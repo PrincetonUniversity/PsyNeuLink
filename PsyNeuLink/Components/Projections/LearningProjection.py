@@ -74,7 +74,8 @@ when the ProcessingMechanism to which the `learned_projection <LearningProjectio
 executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When the LearningProjection is
 executed, it gets the `learning_signal` from its `sender <LearningProjection.sender>`
 and conveys this to its `receiver <LearningProjection.receiver>`, modified only by the `learning_rate
-<LearningProjection.learning_rate>` if that is specified.
+<LearningProjection.learning_rate>` if that is specified.  Additional attributes are described under
+`Class Reference <LearningProjection_Class_Reference>` below.
 
 .. _LearningProjection_Class_Reference:
 
