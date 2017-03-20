@@ -13,7 +13,7 @@
 #        - RENAME ANY CONFLICTS WITH PREFIX "function_<param_name>" (E.G., function_learning_rate)
 #        - RENAME ALL FUNCTION_PARAMS WITH PREFIX "function_<param_name>"
 #        - DISALLOW CONFLICTING NAMES AND THROW EXCPETION WHEN THEY ARE DETECTED IN _instantiate_parameter_state()
-#   3) MONITORING SPECIFICATION SYNTAX:  Restrict specifation to ObjectiveMechanism and possibly ControlMechanism,
+#   3) MONITORING SPECIFICATION SYNTAX:  Restrict specification to ObjectiveMechanism and possibly ControlMechanism,
 #                                        or also allow "locally" on OutputStates, Mechanisms, Processes and Systems?
 #   4) HOW TO HANDLE LEARNING RATE:  Only on LearningMechanism, or also specifiable on:
 #                                    - its function
@@ -42,6 +42,7 @@
 # IMPLEMENT:  MONITORED_OUTPUT_STATES param for Mechanism --
 #                  make this a general form of MONITOR_FOR_CONTROL, that can be used by ObjectiveMechanism
 #             [SEE `monitoring_status` in ObjectiveMechanism]
+# IMPLEMENT: MonitoredOutputStatesOption in string for MONITORED_VALUES specification of ObjectiveMechanism
 #
 # DOCUMENTATION:
 #    search for "specification dictionary" and replace with: `specification dictionary <Mechanism_Creation>`
