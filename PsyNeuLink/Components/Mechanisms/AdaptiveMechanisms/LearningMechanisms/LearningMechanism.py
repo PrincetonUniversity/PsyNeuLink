@@ -172,30 +172,43 @@ These receive the output of the LearningMechanism's `function <LearningMechanism
 Additional Attributes
 ~~~~~~~~~~~~~~~~~~~~~
 
-In addition to these constituent components, a LearningMechanism is assigned to attributes that refer to the
+In addition to these constituent components, a LearningMechanism is assigned attributes that refer to the
 components being learned:
 
 * `learned_projection`
-   This is the MappingProjection for which the LearningMechanism is responsible;  that is, the one with the
+   the MappingProjection for which the LearningMechanism is responsible;  that is, the one with the
    `matrix <MappingProjection.matrix>` parameter that the LearningMechanism modifies.
 ..
 * `error_source`
-   This is the mechanism that receives the `learned_projection`;  that is, the one that generates the output
+   the mechanism that receives the `learned_projection`;  that is, the one that generates the output
    used to calculate the error_signal that the LearningMechanism attempts to reduce.
+..
+* `mech_learning_rate`
+   the learning rate for the LearningMechanism, used to specify the `learning_rate` parameter for its
+   `function <LearningMechanism.function>`.  It is superceded by specification of a learning_rate for the `process
+   <Process.Process_Base.learning_rate>` or `system <System.System_Base.learning_rate>` if either of those is specified.
+   COMMENT:
+   ALTERNATIVE IMPLEMENTATION:
+   this is multiplicatively applied to the `learning_signal`.  Its effect is combined with any and all learning rate
+   parameters specified for the `function <LearningMechanism.function>`, any LearningProjections assigned to the
+   `LEARNING_SIGNAL <LearningMechanism_Learning_Signal>` outputState, and/or the process or system to which the
+   LearningMechanism belongs.
+   COMMENT
 
 
-.. _LearningMechanism_Learning_Configurations:
 COMMENT:
-    @@@ THIS SECTION SHOULD BE MOVED TO THE "USER'S MANUAL" WHEN THAT IS WRITTEN
+@@@ THE FOLLOWING SECTION SHOULD BE MOVED TO THE "USER'S MANUAL" WHEN THAT IS WRITTEN
 COMMENT
+.. _LearningMechanism_Learning_Configurations:
 
 Learning Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-When learning is specified for a :ref:`system <System_Execution_Learning>` or :ref:`process <Process_Learning>`,
-PsyNeuLink automatically creates all of the components required for the `MappingProjections <MappingProjection>` between
-`ProcessingMechanisms <ProcessingMechanism>` in that composition to be learned.  The type of components that are
-generated depends on the :ref:`learning function  <LINK>` specified, and the configuration of the composition.
+When learning is specified for a `MappingProjection`, a `process <Process_Learning>`, or a
+`system <System_Execution_Learning>`, PsyNeuLink automatically creates all of the components required for the
+`MappingProjections <MappingProjection>` between `ProcessingMechanisms <ProcessingMechanism>` in that composition to
+be learned.  The type of components that are generated depends on the :ref:`learning function <LearningFunction>`
+specified, and the configuration of the composition.
 
 .. _LearningMechanism_Single_Layer:
 
@@ -220,10 +233,10 @@ already exist, along with the following MappingProjections:
 * from the ObjectiveMechanism's `primary outputState <OutputState_Primary>` to the LearningMechanism's
   `ERROR_SIGNAL <LearningMechanism_Activation_Input>` inputState .
 
-In addition, a `LearningProjection` is created from LearningMechanism's `LEARNING_SIGNAL`
-`outputState <LearningMechanism_Learning_Signal>` to the `matrix` `parameterState <ParameterState>` for the
-`learned_projection <LearningMechanism_Additional_Attributes>`.  Because this case involves only a single layer of
-learning, *no* projection is created or assigned to the LearningMechanism's
+In addition, a `LearningProjection` is created from the LearningMechanism's
+`LEARNING_SIGNAL <LearningMechanism_Learning_Signal>` outputState to the `matrix` `parameterState <ParameterState>`
+for the `learned_projection <LearningMechanism_Additional_Attributes>`.  Because this case involves only a single
+layer of learning, *no* projection is created or assigned to the LearningMechanism's
 `ERROR_SIGNAL <LearningMechanism_Output_Error_Signal>` outputState.
 
 .. _LearningMechanism_Simple_Learning_Figure:
@@ -272,9 +285,9 @@ an `ObjectiveMechanism` is created that receives the output of the `error_source
   next MappingProjection in the sequence (i.e., the layer "above" it) to the LearningMechanism's
   `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>` inputState.
 
-In addition, a `LearningProjection` is created from each LearningMechanism's `LEARNING_SIGNAL`
-`outputState <LearningMechanism_Learning_Signal>` to the `matrix` `parameterState <ParameterState>` of its
-`learned_projection`.  If the `learned_projection` is the first in the sequence, then *no* projection is
+In addition, a `LearningProjection` is created from each LearningMechanism's
+`LEARNING_SIGNAL <LearningMechanism_Learning_Signal>` outputState to the `matrix` `parameterState <ParameterState>`
+of its `learned_projection`.  If the `learned_projection` is the first in the sequence, then *no* projection is
 created or assigned to its LearningMechanism's `ERROR_SIGNAL <LearningMechanism_Output_Error_Signal>` outputState.
 
 .. _LearningMechanism_Multilayer_Learning_Figure:
@@ -560,6 +573,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         for the LearningMechanism's `learning function <LearningMechanism.function>`;  It is superceded by specification
         of a learning_rate for the `process <Process.Process_Base.learning_rate>` or
         `system <System.System_Base.learning_rate>` if either of those is specified.
+        COMMENT:
+        ?? WHAT ABOUT THE LearningProjection??
+        COMMENT
 
     error_signal : 1d np.array
         the error signal returned by the LearningMechanism's `function <LearningMechanism.function>`.  For
