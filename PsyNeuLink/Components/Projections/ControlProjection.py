@@ -14,8 +14,8 @@
 Overview
 --------
 
-A ControlProjection is a `projection <Projection> that projects to the `parameterState <ParameterState>` of a mechanism.
-It takes the value of an `outputState <OutputState> of another mechanism (e.g., usually a
+A ControlProjection is a subclass of `Projection` that projects to the `parameterState <ParameterState>`
+of a `ProcessingMechanism`. It takes the value of an `outputState <OutputState> of another mechanism (e.g., usually a
 `ControlMechanism <ControlMechanism>`), and uses it to  modify the value of the parameter associated with the
 parameterState to which it projects.
 
