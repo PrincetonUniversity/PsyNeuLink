@@ -60,51 +60,58 @@ A LearningProjection has the standard attributes of a `Projection` as well as th
    the `LEARNING_SIGNAL <LearningMechanism_Learning_Signal>` outputState of a LearningMechanism
 
 * `receiver <LearningProjection.receiver>`
-   the `MATRIX` parameterState for the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
+   the MATRIX parameterState of the `learned_projection <LearningProjection.learned_projection>`.
 
 * `learning_signal`
    value (matrix of "weight" changes) calculated by the LearningProjection's
    `sender <LearningProjection.sender>` and used to modify the `matrix
-   <MappingProjection.matrix>` parameter of the LearningProjection's `receiver <LearningProjection.receiver>`.
+   <MappingProjection.matrix>` parameter of the `learned_projection <LearningProjection.learned_projection>`.
 
 * `learned_projection <LearningProjection.learned_projection>`
    the `MappingProjection` to which the LearningProjection projects.
 
 * `weight_change_params`
-   specifies to the `receiver <LearningProjection.receiver>` how the parameter (weight) changes specified by the
-   `learning_signal <LearningProjection.learning_signal>` received from the LearningMechanism should be applied to its
-   `matrix <MappingProjection.matrix> parameter.  It assumes that the `function <MappingProjection.function>` of the
-   receiver is a `LinearCombination` Function.  By default it includes the following entries:
-   ????
-   `FUNCTION_PARAMS`:
-       `OPERATION`: `SUM`,
-       `PARAMETER_MODULATION_OPERATION`: `ModulationOperation.ADD`,
-       `PROJECTION_TYPE`: `LEARNING_PROJECTION`.
+   specifies to the `receiver <LearningProjection.receiver>` how the `weight_change_matrix` should be applied to the
+   `matrix <MappingProjection.matrix> parameter of its `receiver <LearningProjection.receiver>`.  It assumes that the
+   `function <MappingProjection.function>` of the receiver is `LinearCombination`.  By default it passes
+   the following dictionary of specifications to the `receiver <LearningProjection.receiver>`::
+
+       FUNCTION_PARAMS: {OPERATION: SUM,
+                         PARAMETER_MODULATION_OPERATION: ModulationOperation.ADD,
+                         PROJECTION_TYPE: LEARNING_PROJECTION}
 
 * `weight_change_matrix`
    matrix of changes that will be made to the `mappingWeightMatrix` when the `learned_projection` is executed
    (rows correspond to sender, columns to receiver);  same as `value <LearningProjection.value>`.
 
 * `learning_rate <LearingProjection.learning_rate>`
-   this is multiplicatively applied to the `weight_change_matrix` and
    COMMENT:
-   takes precedence over any
+      VERIFY THAT THE FOLLOWING IS TRUE:
    COMMENT
+   this is multiplicatively applied to the `weight_change_matrix` and
+   takes precedence over any
+   COMMENT:
    and thus can be used to modulate the learning rate in addition to (and on top of) the one
+   COMMENT
    specified for the `LearningMechanism`, its `function <LearningMechanism.function>`, and/or the process or system
    to which it belongs (see `learning_rate <LearningMechanism>` for details).
-   COMMENT:
-   If it is `None`, the learning_rate for the `LearningMechanism` will be used.
-   COMMENT
+   If it is `None`, the `mech_learning_rate` for the `LearningMechanism` will be used.
 
 .. _LearningProjection_Execution:
 
 Execution
 ---------
 
-.. _LearningProjection_Class_Reference:
+A LearningProjection cannot be executed directly.  It is executed when its
+`learned_projection <LearningProjection.learned_projection>` is executed the MATRIX parameterState
+for the `learned_projection <LearningProjection.learned_projection>` is updated.  Note that these events only occur
+when the ProcessingMechanism to which the `learned_projection <LearningProjection.learned_projection>` projects is
+executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When the LearningProjection is
+executed, it gets the `learning_signal` from its `sender <LearningProjection.sender>`
+and conveys this to its `receiver <LearningProjection.receiver>`, modified only by the `learning_rate
+<LearningProjection.learning_rate>` if that is specified.
 
-LAZY EXECUTION - GET FROM LearningMechanism
+.. _LearningProjection_Class_Reference:
 
 Class Reference
 ---------------

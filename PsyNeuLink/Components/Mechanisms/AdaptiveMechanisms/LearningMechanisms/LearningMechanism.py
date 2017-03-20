@@ -176,24 +176,30 @@ In addition to these constituent components, a LearningMechanism is assigned att
 components being learned:
 
 * `learned_projection`
-   This is the MappingProjection for which the LearningMechanism is responsible;  that is, the one with the
+   the MappingProjection for which the LearningMechanism is responsible;  that is, the one with the
    `matrix <MappingProjection.matrix>` parameter that the LearningMechanism modifies.
 ..
 * `error_source`
-   This is the mechanism that receives the `learned_projection`;  that is, the one that generates the output
+   the mechanism that receives the `learned_projection`;  that is, the one that generates the output
    used to calculate the error_signal that the LearningMechanism attempts to reduce.
 ..
-* `learning_rate`
+* `mech_learning_rate`
+   the learning rate for the LearningMechanism, used to specify the `learning_rate` parameter for its
+   `function <LearningMechanism.function>`.  It is superceded by specification of a learning_rate for the `process
+   <Process.Process_Base.learning_rate>` or `system <System.System_Base.learning_rate>` if either of those is specified.
+   COMMENT:
+   ALTERNATIVE IMPLEMENTATION:
    this is multiplicatively applied to the `learning_signal`.  Its effect is combined with any and all learning rate
    parameters specified for the `function <LearningMechanism.function>`, any LearningProjections assigned to the
    `LEARNING_SIGNAL <LearningMechanism_Learning_Signal>` outputState, and/or the process or system to which the
    LearningMechanism belongs.
+   COMMENT
 
 
-.. _LearningMechanism_Learning_Configurations:
 COMMENT:
-    @@@ THIS SECTION SHOULD BE MOVED TO THE "USER'S MANUAL" WHEN THAT IS WRITTEN
+@@@ THE FOLLOWING SECTION SHOULD BE MOVED TO THE "USER'S MANUAL" WHEN THAT IS WRITTEN
 COMMENT
+.. _LearningMechanism_Learning_Configurations:
 
 Learning Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -567,6 +573,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         for the LearningMechanism's `learning function <LearningMechanism.function>`;  It is superceded by specification
         of a learning_rate for the `process <Process.Process_Base.learning_rate>` or
         `system <System.System_Base.learning_rate>` if either of those is specified.
+        COMMENT:
+        ?? WHAT ABOUT THE LearningProjection??
+        COMMENT
 
     error_signal : 1d np.array
         the error signal returned by the LearningMechanism's `function <LearningMechanism.function>`.  For
