@@ -2,7 +2,7 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# HIGH LEVEL ISSUES:
+ # HIGH LEVEL ISSUES:
 #   1) MANAGEMENT OF RETURN_VALUE FOR MECHANISMS (AS LIST VS. 2d NP.ARRAY)
 #   2) ASSIGNMENT AND NAMING OF FUNCTION_PARAMS FOR AN OBJECT;
 #      PROBLEMS:
@@ -15,6 +15,13 @@
 #        - DISALLOW CONFLICTING NAMES AND THROW EXCPETION WHEN THEY ARE DETECTED IN _instantiate_parameter_state()
 #   3) MONITORING SPECIFICATION SYNTAX:  Restrict specifation to ObjectiveMechanism and possibly ControlMechanism,
 #                                        or also allow "locally" on OutputStates, Mechanisms, Processes and Systems?
+#   4) HOW TO HANDLE LEARNING RATE:  Only on LearningMechanism, or also specifiable on:
+#                                    - its function
+#                                    - LearningProjection
+#                                    - Process
+#                                    - System
+#                                    and how should it interact with these:  multiplicatively, or precedence hierarchy?
+#                                    NOTE: can't have the same name as the function one
 
 # COMPOSITION IMPLEMENTATION NOTE:
 #   add_projection_to and add_projection_from methods
@@ -26,6 +33,12 @@
 #   added attribute to Projections:  has_learning_projection
 
 # FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
+# FIX: GET STRAIGHT THE HANDLING OF learning_rate for:
+#                  LearnMechanism
+#                  its function
+#                  LearningProjection
+#                  Processs
+#                  System
 # IMPLEMENT:  MONITORED_OUTPUT_STATES param for Mechanism --
 #                  make this a general form of MONITOR_FOR_CONTROL, that can be used by ObjectiveMechanism
 #             [SEE `monitoring_status` in ObjectiveMechanism]

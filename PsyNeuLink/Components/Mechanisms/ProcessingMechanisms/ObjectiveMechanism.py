@@ -5,89 +5,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-
-
-# COMMENT:
-#     @@@@ MOVE TO MECHANISM?? @@@@
-#
-#     * a `monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`;
-#     |
-#     * a value of `MonitoredOutputStatesOption` --  this applies to any mechanisms that appear in the list
-#     (except those that override it with their own :keyword:`monitor_for_control` specification); if the value of
-#     `MonitoredOutputStatesOption` appears alone in the list, it is treated as follows:
-#
-#     * `PRIMARY_OUTPUT_STATES` -- only the primary (first) outputState of the `TERMINAL` mechanism(s)
-#       in the system for which the ControlMechanism is the `controller` is monitored;
-#     |
-#     * `ALL_OUTPUT_STATES` -- all of the outputStates of the `TERMINAL` mechanism(s)
-#       in the system for which the ControlMechanism is the `controller` are monitored;
-#     * `None`.
-#
-#     ---------------------------
-#
-#     * a **mechanism** or the name of one -- only the mechanism's primary (first) outputState will be monitored,
-#       unless a `MonitoredOutputStatesOption` value is also in the list (see below) or the specification is
-#       overridden in a params dictionary for the mechanism (see above);
-#     |
-#     * a `monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`;
-#     |
-#     * a value of `MonitoredOutputStatesOption` --  this applies to any mechanisms that appear in the list
-#       (except those that override it with their own :keyword:`monitor_for_control` specification); if the value of
-#       `MonitoredOutputStatesOption` appears alone in the list, it is treated as follows:
-#
-#     * `PRIMARY_OUTPUT_STATES` -- only the primary (first) outputState of the `TERMINAL` mechanism(s)
-#       in the system for which the ControlMechanism is the `controller` is monitored;
-#     |
-#     * `ALL_OUTPUT_STATES` -- all of the outputStates of the `TERMINAL` mechanism(s)
-#       in the system for which the ControlMechanism is the `controller` are monitored;
-#     * `None`.
-#
-#     ---------------------------
-#
-#     The value of the entry must be either a list containing the outputState(s) and/or their name(s),
-#     a `monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`, a `MonitoredOutputStatesOption` value, or `None`.
-#     The values of `MonitoredOutputStatesOption` are treated as follows:
-#
-#      * `PRIMARY_OUTPUT_STATES`: only the primary (first) outputState of the mechanism is monitored;
-#      |
-#      * `ALL_OUTPUT_STATES`:  all of the mechanism's outputStates are monitored.
-#
-#
-#     @@@@ MOVE TO CONTROL MECHANISM??  SYSTEM?? @@@@
-#
-#     * **ControlMechanism** or **System**: outputStates to be monitored by a `ControlMechanism` can be specified in the
-#       ControlMechanism itself , or in the system for which that ControlMechanism is the `controller`.  The specification
-#       can be in the :keyword:`monitor_for_control` argument of the ControlMechanism or System's constructor, or in the
-#       `MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in the `params` argument of the constructor.
-#       In either case, the value must be a list, each item of which must be one of the following:
-#
-#     -----------------------------
-#
-#     Specifications in a ControlMechanism take precedence over any in the system; both are superceded by specifications
-#     in the constructor or params dictionary for an outputState or mechanism.
-#
-#     @@@ MOVE TO EVCMechanism OR ControlMechanism ??
-#     The EVCMechanism's
-#     `MONITOR_FOR_CONTROL <monitor_for_control>` parameter is used to specify which outputStates are evaluated, and how.
-#
-#     The contribution of each monitored outputState to the evaluation can be specified by an exponent and/or a weight
-#     (see `ControlMechanism_Monitored_OutputStates` for specifying monitored outputStates; and
-#     `below <EVCMechanism_Examples>` for examples). By default, the value of the EVCMechanism's `MONITOR_FOR_CONTROL`
-#     parameter is `MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`, which specifies monitoring the
-#     `primary outputState <OutputState_Primary>` of every `TERMINAL` mechanism in the system, each of which is assigned an
-#     exponent and weight of 1.  When an EVCMechanism is `created automatically <EVCMechanism_Creation>`, an inputState is
-#     created for each outputState specified in its `MONITOR_FOR_CONTROL` parameter,  and a `MappingProjection` is created
-#     that projects to that inputState from the outputState to be monitored.  The outputStates of a system being monitored
-#     by an EVCMechanism are listed in its `monitored_output_states` attribute.
-#
-#     , and assigned
-#     weights and/or exponents to specify the contribution of each to the evaluation (as described
-#     `below <Monitored OutputStates>`);
-#
-# COMMENT
-#
-
-
 # *********************************************  ObjectiveMechanism *******************************************************
 
 """
@@ -233,11 +150,17 @@ Examples
 
 .. _ObjectiveMechanism_Default_Input_Value_Example:
 
+*Formatting inputState values*
+
 The use of default_input_value to override a specification in `monitored_values` can be useful in some situations.
-For example, for `Reinforcement Learning <Reinforcement>`, an ObjectiveMechanism is used to monitor an "action
-selection" mechanism, the output of which might be a vector with a single non-zero value (the currently selected
-action).  However, the ObjectiveMechanism requires only the value of the action (the non-zero item -- that it will
-compare with a scalar reward value -- not the entire vector.  This can be configured as in the example below::
+For example, for `Reinforcement Learning <Reinforcement>`, an ObjectiveMechanism is used to monitor an action
+selection mechanism.  In the example below, the latter uses a `TransferMechanism` with the `SoftMax` function (and the
+`PROB <Softmax.PROB>` as its output format) to select the action.  This generates a vector with a single non-zero
+value, which designates the predicted reward for the selected action.  Because the output is a vector,
+by default the inputState of the ObjectiveMechanism created to monitor it will also be a vector.  However, the
+ObjectiveMechanism requires that this be a single value, that it can compare with the value of the reward mechanism.
+This can be dealt with by using `default_input_value` in the construction of the ObjectiveMechanism, to force
+the inputState for the ObjectiveMechanism to have a single value, as in the example below::
 
     my_action_select_mech = TransferMechanism(default_input_value = [0,0,0],
                                 function=SoftMax(output=PROB))
@@ -247,21 +170,27 @@ compare with a scalar reward value -- not the entire vector.  This can be config
     my_objective_mech = ObjectiveMechanism(default_input_value = [[0],[0]],
                                           monitored_values = [my_action_select_mech, my_reward_mech])
 
-Note that the outputStates for the action selection mechanism and the one that provides the reward are specified
-in `monitored_values`.  However, the outputState of the action selection mechanism is a vector that can be of any
-length, whereas the inputState of the ObjectiveMechanism should have only a single value (the action selected).
-This is accomplished by specifying `default_input_value` as an array with two single-value arrays (one for the
-action and the other for the reward).  This will force the inputState for the action selection value to be a single
-value, which will create a MappingProjection from the action selection outputState to the
-ObjectiveMechanism's inputState using a `FULL_CONNECTIVITY_MATRIX` (the outcome of `AUTO_ASSIGN_MATRIX` for
-case in which the sender and receiver values are of different lengths); this will produce the desired effect,
-since the action is the only non-zero value in the output and so its value will be assigned to the inputState
-to which it projects in the ObjectiveMechanism.
+Note that the outputState for the `my_action_selection` and `my_reward_mech` are specified
+in `monitored_values`.  If that were the only specification, the inputState created for `my_action_select_mech`
+would be a vector of length 3.  This is overridden by specifying `default_input_value` as an array with two
+single-value arrays (one corresponding to `my_action_select_mech` and the other to `my_reward_mech`).  This forces
+the inputState for `my_action_select_mech` to have only a single element which, in turn, will cause a
+MappingProjection to be created from  `my_action_select_mech` to the ObjectiveMechanism's inputState using a
+`FULL_CONNECTIVITY_MATRIX` (the one used for `AUTO_ASSIGN_MATRIX` when the sender and receiver have values of
+different lengths).  This produces the desired effect, since the action selected is the only non-zero value in the
+output of `my_action_select_mech`, and so the `FULL_CONNECTIVITY_MATRIX` will combine it with zeros (the other values
+in the vector), and so its value will be assigned as the value of the corresponding inputState in the
+ObjectiveMechanism.  Another option would have been to customize the ObjectiveMechanism's
+`function <ObjectiveMechanism.function>` to convert the output of `my_action_select_mech` to a length 1 vector, though
+this would have been more involved.  The next example describes a simple case of customizing the ObjectiveMechanism's
+`function <ObjectiveMechanism.function>`, however more sophisticated ones are possible, just as the one just suggested.
 
 .. _ObjectiveMechanism_Weights_and_Exponents_Example:
 
-The simplest way to customize the `function <ObjectiveMechanism.function` of an ObjectiveMechanism is to
-parameterize its default `LinearCombination` function.  In the example below, the ObjectiveMechanism used in the
+*Customizing the ObjectiveMechanism's function*
+
+The simplest way to customize the `function <ObjectiveMechanism.function>` of an ObjectiveMechanism is to
+parameterize its default function (`LinearCombination`).  In the example below, the ObjectiveMechanism used in the
 `previous example <ObjectiveMechanism_Default_Input_Value_Example>` is further customized to subtract the value
 of the action selected from the value of the reward::
 
@@ -270,10 +199,11 @@ of the action selected from the value of the reward::
                                           function=LinearCombination(weights=[[-1], [1]]))
 
 This is done by specifying the `weights <LinearCombination.weights>` parameter of the `LinearCombination` function,
-with two values [-1] and [1] that correspond to the two items in monitored_values (and default_input_value).  Thus,
-the value from `my_action_select_mech` will be multiplied by -1 before being added to (and thus subtracting it from)
-the value of `my_reward_mech`.  Similarly, the `operation <LinearCombination.operation>` parameter, together with the
-`exponents <LinearCombination.exponents>` parameter, can be used to multiply and divide quantities.
+with two values [-1] and [1] corresponding to the two items in `monitored_values` (and `default_input_value`).  This
+will multiply the value from `my_action_select_mech` by -1 before adding it to (and thus
+subtracting it from) the value of `my_reward_mech`.  Similarly, the `operation <LinearCombination.operation>`
+and `exponents <LinearCombination.exponents>` parameters of `LinearCombination` can be used together to multiply and
+divide quantities.
 
 
 Class Reference
@@ -401,7 +331,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
 
+    COMMENT:
     default_input_value : Optional[List[array] or 2d np.array]
+    COMMENT
 
     monitored_values : [List[OutputState, Mechanism, InputState, dict, value, or str]
         determines  the values monitored, and evaluated by `function <ObjectiveMechanism>`.  Once the
@@ -414,7 +346,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         items or a number equal to the number of items in the ObjectiveMechanism's variable (and its number of
         inputStates), and returns a 1d array.
 
-    role : None, `LEARNING` or `CONTROL`
+    role : None, LEARNING or CONTROL
         specifies whether the ObjectiveMechanism is being used for learning in a process or system (in conjunction
         with a `LearningMechanism`), or for control in a system (in conjunction with a `ControlMechanism`).
 
