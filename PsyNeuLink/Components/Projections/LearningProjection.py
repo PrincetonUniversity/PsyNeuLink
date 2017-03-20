@@ -85,17 +85,14 @@ A LearningProjection has the standard attributes of a `Projection` as well as th
    (rows correspond to sender, columns to receiver);  same as `value <LearningProjection.value>`.
 
 * `learning_rate <LearingProjection.learning_rate>`
+   this is multiplicatively applied to the `learning_signal <LearningProjection.learning_signal>` and
    COMMENT:
-      VERIFY THAT THE FOLLOWING IS TRUE:
-   COMMENT
-   this is multiplicatively applied to the `weight_change_matrix` and
    takes precedence over any
-   COMMENT:
-   and thus can be used to modulate the learning rate in addition to (and on top of) the one
    COMMENT
+   thus can be used to modulate the learning rate in addition to (and on top of) the one
    specified for the `LearningMechanism`, its `function <LearningMechanism.function>`, and/or the process or system
    to which it belongs (see `learning_rate <LearningMechanism>` for details).
-   If it is `None`, the `mech_learning_rate` for the `LearningMechanism` will be used.
+   If it is `None`, the `mech_learning_rate` for the `LearningMechanism` is used.
 
 .. _LearningProjection_Execution:
 
@@ -265,10 +262,6 @@ class LearningProjection(Projection_Base):
         LearningProjection projects (i.e., that owns its `receiver <LearningProjection.receiver>`).
 
     variable : 2d np.array
-        COMMENT:
-            WRONG?  CORRECTED BELOW
-            same as `learned_projection <LearningProjection.learned_projection>`.
-        COMMENT
         same as `learning_signal <LearningProjection.learning_signal>`.
 
     learning_signal : 2d np.array
@@ -514,11 +507,6 @@ class LearningProjection(Projection_Base):
         if self.learning_rate:
             self.learning_signal *= self.learning_rate
 
-        # # MODIFIED 3/3/17 OLD:
-        # self.weight_change_matrix = self.function(variable=self.learning_signal,
-        #                                           params=params,
-        #                                           context=context)
-        # MODIFIED 3/3/17 NEW:
         self.weight_change_matrix = self.function(variable=self.sender.value,
                                                   params=params,
                                                   context=context)
