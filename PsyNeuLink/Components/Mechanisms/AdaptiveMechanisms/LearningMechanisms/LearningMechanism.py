@@ -239,11 +239,11 @@ for the `learned_projection <LearningMechanism_Additional_Attributes>`.  Because
 layer of learning, *no* projection is created or assigned to the LearningMechanism's
 `ERROR_SIGNAL <LearningMechanism_Output_Error_Signal>` outputState.
 
-.. _LearningMechanism_Simple_Learning_Figure:
+.. _LearningMechanism_Single_Layer_Learning_Figure:
 
     **Components for Single Layer Learning**
 
-    .. figure:: _static/LearningMechanism_Single_Layer_Learning_fig.jpg
+    .. figure:: _static/LearningMechanism_Single_Layer_Learning_fig.pdf
        :alt: Schematic of mechanisms and projections involved in learning for a single MappingProjection
        :scale: 50%
 
@@ -294,7 +294,7 @@ created or assigned to its LearningMechanism's `ERROR_SIGNAL <LearningMechanism_
 
     **Components for Multilayer Learning**
 
-    .. figure:: _static/LearningMechanism_Multilayer_Learning_fig.jpg
+    .. figure:: _static/LearningMechanism_Multilayer_Learning_fig.pdf
        :alt: Schematic of mechanisms and projections involved in learning for a sequence of MappingProjections
        :scale: 50%
 
@@ -322,7 +322,7 @@ processes converge on that mechanism), only one ObjectiveMechanism will be creat
 
     **TERMINAL** and **TARGET** Mechanisms in Learning
 
-    .. figure:: _static/LearningMechanism_TERMINAL_vs_TARGET_fig.jpg
+    .. figure:: _static/LearningMechanism_TERMINAL_vs_TARGET_fig.pdf
        :alt: Schematic of mechanisms and projections involved in learning
        :scale: 50 %
 
@@ -477,7 +477,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         to the `learned_projection`, the output of the `error_source`, and the error_signal received by the
         LearningMechanism (see `variable <LearningMechanism.variable>` for details).
 
-    COMMENT
+    COMMENT:
         activation_derivative : Function or function
             specifies the derivative of the function of the mechanism that receives the `MappingProjection` being learned
             (see `activation_derivative` for details).
@@ -552,6 +552,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             the projection is from its `ERROR_SIGNAL <LearningMechanism.outputStates>` outputState.  In either case,
             the MappingProjection uses an `IDENTITY_MATRIX`, and so the value of the outputState used for the
             `error_source` must be equal in length to the value of the LearningMechanism's `ERROR_SIGNAL` inputstate.
+    COMMENT
 
     COMMENT:
        MOVE THIS TO Backpropagation
