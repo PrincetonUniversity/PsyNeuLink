@@ -15,14 +15,6 @@
 #        - DISALLOW CONFLICTING NAMES AND THROW EXCPETION WHEN THEY ARE DETECTED IN _instantiate_parameter_state()
 #   3) MONITORING SPECIFICATION SYNTAX:  Restrict specification to ObjectiveMechanism and possibly ControlMechanism,
 #                                        or also allow "locally" on OutputStates, Mechanisms, Processes and Systems?
-#   4) HOW TO HANDLE LEARNING RATE:  Only on LearningMechanism, or also specifiable on:
-#                                    - its function
-#                                    - LearningProjection
-#                                    - Process
-#                                    - System
-#                                    and how should it interact with these:  multiplicatively, or precedence hierarchy?
-#                                    NOTE: can't have the same name as the function one
-
 # COMPOSITION IMPLEMENTATION NOTE:
 #   add_projection_to and add_projection_from methods
 #   methods in LearningAuxilliary
@@ -43,6 +35,10 @@
 #                  make this a general form of MONITOR_FOR_CONTROL, that can be used by ObjectiveMechanism
 #             [SEE `monitoring_status` in ObjectiveMechanism]
 # IMPLEMENT: MonitoredOutputStatesOption in string for MONITORED_VALUES specification of ObjectiveMechanism
+#
+# FIX: learning_rate:
+#      Both LearningMechanism and LearningProjection should pass this specification on to LearningMechanism.function
+#      Update docs accordingly
 #
 # DOCUMENTATION:
 #    search for "specification dictionary" and replace with: `specification dictionary <Mechanism_Creation>`

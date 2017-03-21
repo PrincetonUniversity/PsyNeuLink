@@ -752,6 +752,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         else:
             return None
 
+    @property
+    def learning_rate(self):
+        return self.function_object.learning_rate
+
+
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _instantiate_error_signal_projection(sender, receiver):
     """Instantiate a MappingProjection to carry an error_signal to a LearningMechanism
