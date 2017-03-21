@@ -13,6 +13,7 @@
 #        - RENAME ANY CONFLICTS WITH PREFIX "function_<param_name>" (E.G., function_learning_rate)
 #        - RENAME ALL FUNCTION_PARAMS WITH PREFIX "function_<param_name>"
 #        - DISALLOW CONFLICTING NAMES AND THROW EXCPETION WHEN THEY ARE DETECTED IN _instantiate_parameter_state()
+#        * MAKE @property ATTRIBUTES THAT POINT TO FUNCTION'S PARAM(S)
 #   3) MONITORING SPECIFICATION SYNTAX:  Restrict specification to ObjectiveMechanism and possibly ControlMechanism,
 #                                        or also allow "locally" on OutputStates, Mechanisms, Processes and Systems?
 # COMPOSITION IMPLEMENTATION NOTE:
