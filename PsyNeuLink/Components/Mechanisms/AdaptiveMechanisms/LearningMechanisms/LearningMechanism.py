@@ -477,7 +477,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         to the `learned_projection`, the output of the `error_source`, and the error_signal received by the
         LearningMechanism (see `variable <LearningMechanism.variable>` for details).
 
-    COMMENT
+    COMMENT:
         activation_derivative : Function or function
             specifies the derivative of the function of the mechanism that receives the `MappingProjection` being learned
             (see `activation_derivative` for details).
@@ -552,6 +552,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             the projection is from its `ERROR_SIGNAL <LearningMechanism.outputStates>` outputState.  In either case,
             the MappingProjection uses an `IDENTITY_MATRIX`, and so the value of the outputState used for the
             `error_source` must be equal in length to the value of the LearningMechanism's `ERROR_SIGNAL` inputstate.
+    COMMENT
 
     COMMENT:
        MOVE THIS TO Backpropagation
