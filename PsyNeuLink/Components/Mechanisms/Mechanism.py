@@ -1242,15 +1242,15 @@ class Mechanism_Base(Mechanism):
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
             a dictionary that can include any of the parameters used as arguments to instantiate the mechanism,
             its function, or projection(s) to any of its states.  Any value assigned to a parameter will override
-            the current value of that parameter for this and only this execution of the mechanism; it will return
-            to its previous value following execution.  Each entry is either the specification for one of the
+            the current value of that parameter for the (and only the current) execution of the mechanism; it will
+            return to its previous value following execution.  Each entry is either the specification for one of the
             mechanism's parameters (in which case the key is the name of the parameter, and its value the value to be
             assigned to that parameter), or a dictionary for a specified type of state (in which case, the key is the
             name of a specific state or a keyword for the type of state (`INPUT_STATE_PARAMS`, `OUTPUT_STATE_PARAMS`
             or `PARAMETER_STATE_PARAMS`), and the value is a dictionary containing a parameter dictionary for that
             state or all states of the specified type.  The latter (state dictionaries) contain entries that are
             themselves dictionaries containing parameters for the state's function or its projections. The key for
-            each entry is a keyword indicating whether it is for the state's function (`FUNCTON_PARAMS`),
+            each entry is a keyword indicating whether it is for the state's function (`FUNCTION_PARAMS`),
             all of its projections (`PROJECTION_PARAMS`), a particular type of projection (`MAPPING_PROJECTION_PARAMS`
             or `CONTROL_PROJECTION_PARAMS`), or to a specific projection (using its name), and the value of
             each entry is a dictionary containing the parameters for the function, projection, or set of projections
@@ -1354,16 +1354,19 @@ class Mechanism_Base(Mechanism):
                                              context=context)
                 return np.atleast_2d(return_value)
 
+
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
         if self.prefs.paramValidationPref:
-            # if runtime_params != NotImplemented:
             if runtime_params:
-                for param_set in runtime_params:
-                    if not (INPUT_STATE_PARAMS in param_set or
-                            PARAMETER_STATE_PARAMS in param_set or
-                            OUTPUT_STATE_PARAMS in param_set):
-                        raise MechanismError("{0} is not a valid parameter set for runtime specification".
+                # runtime_params can have entries with any of these keys
+                #     (each of which should be for a params dictionary for the corresponding state type)
+                state_keys = [INPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, OUTPUT_STATE_PARAMS]
+                # runtime_params can also have entries for the mechanism's params or its function's params
+                param_names = list({**self.user_params, **self.user_params[FUNCTION_PARAMS]}.keys())
+                # all of the entries in runtime_params must be one of the above
+                if not all(key in state_keys + param_names for key in runtime_params):
+                        raise MechanismError("{0} is not a valid specification for a runtime parameter".
                                              format(param_set))
         #endregion
 
@@ -1570,8 +1573,10 @@ class Mechanism_Base(Mechanism):
 
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
-            # Assign parameterState's value to parameter value in runtime_params
-            if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
+            # If runtime_params is specified has a spec for the current param
+            #    assign parameter value there as parameterState's value
+            if runtime_params and PARAMETER_STATE_PARAMS in runtime_params and state_name in runtime_params[
+                PARAMETER_STATE_PARAMS]:
                 param = param_template = runtime_params
             # Otherwise use paramsCurrent
             else:

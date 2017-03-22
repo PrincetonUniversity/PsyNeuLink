@@ -904,7 +904,7 @@ class Process_Base(Process):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Note: don't confuse target_set (argument of validate_params) with self.target (process attribute for learning)
-        if target_set[kwInitialValues]:
+        if kwInitialValues in target_set and target_set[kwInitialValues]:
             for mech, value in target_set[kwInitialValues].items():
                 if not isinstance(mech, Mechanism):
                     raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
@@ -2102,8 +2102,28 @@ class Process_Base(Process):
         else:
             self.targetInputStates[0].value = np.array(self.target)
 
+        # MODIFIED 3/22/17 NEW:
+        # NEXT, implement process learning_rate param if specified:
+        #    embed it in a param specification dict for inclusion with runtime_params
+        process_learning_rate_spec_dict = None
+        if self.learning_rate is not None:
+            process_learning_rate_spec_dict = {LEARNING_RATE: self.learning_rate}
+        # MODIFIED 3/22/17 END
+
         # THEN, execute Objective and LearningMechanisms
         for mechanism, params, phase_spec in self._monitoring_mech_tuples:
+
+            # MODIFIED 3/22/17 NEW:
+            # If learning_rate was specified for process and this is a LearningMechanism
+            if process_learning_rate_spec_dict is not None and isinstance(mechanism, LearningMechanism):
+                # Add to any existing params
+                if params is not None:
+                    params.update(process_learning_rate_spec_dict)
+                # Or just assign if none
+                else:
+                    params = process_learning_rate_spec_dict
+            # MODIFIED 3/22/17 END
+
             mechanism.execute(clock=clock,
                               time_scale=self.timeScale,
                               runtime_params=params,

@@ -1023,8 +1023,15 @@ class System_Base(System):
             if isinstance(process, Process):
                 if process_input is not None:
                     process._assign_defaults(variable=process_input, context=context)
+                # If learning_rate is specified for system but not for process, then apply to process
+                # # MODIFIED 3/21/17 OLD:
                 # if self.learning_rate and not process.learning_rate:
-                #     process.assign_params(request_set={LEARNING_RATE:self.learning_rate})
+                    # # FIX:  assign_params WANTS TO CREATE A ParamaterState ON process FOR learning_rate
+                    # process.assign_params(request_set={LEARNING_RATE:self.learning_rate})
+                # # MODIFIED 3/21/17 NEW:[learning_rate SHOULD BE NOT BE RE-ASSIGNED FOR PROCESS, BUT RATHER ON EXECUTE]
+                # if self.learning_rate is not None and process.learning_rate is None:
+                #     process.learning_rate = self.learning_rate
+                # # MODIFIED 3/21/17 END
 
             # Otherwise, instantiate Process
             else:
@@ -1033,7 +1040,9 @@ class System_Base(System):
                     # Provide self as context, so that Process knows it is part of a System (and which one)
                     # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
                     #           in Pathway, to override instantiation of projections from Process.input_state
-                    process = Process(default_input_value=process_input, learning_rate=learning_rate, context=self)
+                    process = Process(default_input_value=process_input,
+                                      learning_rate=self.learning_rate,
+                                      context=self)
                 elif isinstance(process, dict):
                     # IMPLEMENT:  HANDLE Process specification dict here;
                     #             include process_input as ??param, and context=self
@@ -2051,19 +2060,44 @@ class System_Base(System):
         if isinstance(self.targets, function_type):
             self.current_targets = self.targets()
 
+        # NEXT, implement system learning_rate param if specified:
+        #    embed it in a param specification dict for inclusion with runtime_params
+        # MODIFIED 3/22/17 NEW:
+        system_learning_rate_spec_dict = None
+        if self.learning_rate is not None:
+            system_learning_rate_spec_dict = {LEARNING_RATE: self.learning_rate}
+        # MODIFIED 3/22/17 END
+
         for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
         # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
         #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
             self.targetInputStates[i].value = self.current_targets[i]
 
-        # NEXT, execute all components involved in learning
+        # AFTER THAT, execute all components involved in learning
         for component in self.learningExecutionList:
 
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
             if isinstance(component, MappingProjection):
                 continue
 
-            component_type = "monitoringMechanism"
+            # MODIFIED 3/22/17 NEW:
+            params = None
+            # If learning_rate was specified for system and this is a LearningMechanism
+            if system_learning_rate_spec_dict is not None and isinstance(component, LearningMechanism):
+                # Add to any existing params
+                if params is not None:
+                    params.update(system_learning_rate_spec_dict)
+                # Or just assign if none
+                else:
+                    params = system_learning_rate_spec_dict
+            # MODIFIED 3/22/17 END
+
+            # # MODIFIED 3/22/17 OLD:
+            # component_type = "monitoringMechanism"
+            # MODIFIED 3/22/17 NEW:
+            component_type = component.componentType
+            # MODIFIED 3/22/17 END
+
             processes = list(component.processes.keys())
 
             # Sort for consistency of reporting:
@@ -2079,6 +2113,7 @@ class System_Base(System):
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             component.execute(clock=clock,
                               time_scale=self.timeScale,
+                              runtime_params=params,
                               # time_scale=time_scale,
                               context=context_str)
             # # TEST PRINT:
@@ -2111,6 +2146,7 @@ class System_Base(System):
             # TEST PRINT:
             # print ("EXECUTING WEIGHT UPDATES: ", component.name)
 
+        # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
             # Report learning for targetMechanisms (and the processes to which they belong)
             # Sort for consistency of reporting:
