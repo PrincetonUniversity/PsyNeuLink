@@ -13,15 +13,12 @@
 #        - RENAME ANY CONFLICTS WITH PREFIX "function_<param_name>" (E.G., function_learning_rate)
 #        - RENAME ALL FUNCTION_PARAMS WITH PREFIX "function_<param_name>"
 #        - DISALLOW CONFLICTING NAMES AND THROW EXCPETION WHEN THEY ARE DETECTED IN _instantiate_parameter_state()
+#        * MAKE @property ATTRIBUTES THAT POINT TO FUNCTION'S PARAM(S)
 #   3) MONITORING SPECIFICATION SYNTAX:  Restrict specification to ObjectiveMechanism and possibly ControlMechanism,
 #                                        or also allow "locally" on OutputStates, Mechanisms, Processes and Systems?
-#   4) HOW TO HANDLE LEARNING RATE:  Only on LearningMechanism, or also specifiable on:
-#                                    - its function
-#                                    - LearningProjection
-#                                    - Process
-#                                    - System
-#                                    and how should it interact with these:  multiplicatively, or precedence hierarchy?
-#                                    NOTE: can't have the same name as the function one
+#   4) SPECIFICATION OF LEARNING USING A PROJECTION SPEC VS. A DEDICATED KEYWORD (THAT ALLOWS FCT AND LEARNING_RATE)
+#          PRO:  CONSISTENT WITH CONTROL
+#          CON:  AKWARD TO HAVE TO GIVE THE PROJECTION THE FUNCTION AND LEARNING RATE THAT ARE PASSED TO LearningMech
 
 # COMPOSITION IMPLEMENTATION NOTE:
 #   add_projection_to and add_projection_from methods
@@ -32,6 +29,7 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: SEARCH FOR AND PURGE: monitoringMechanism and monitoring_mechanism
 # FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
 # FIX: GET STRAIGHT THE HANDLING OF learning_rate for:
 #                  LearnMechanism
@@ -39,10 +37,19 @@
 #                  LearningProjection
 #                  Processs
 #                  System
+# IMPLEMENT: runtime_params FOR learning mechanisms in system (CURRENTLY ONLY SUPPORTS learning_rate);
+#            NEED TO IMPLEMENT SOME WAY OF SPECIFYING A LearningMechanism IN A mech_tuple,
+#            (SINCE LearningMechanisms ARE NOT CURRENTLY SPECIFIABLE IN A PROCESS' pathway ATTRIBUTE)
+#            [OR DOCUMENT THAT THIS IS NOT SUPPORTED]
+
 # IMPLEMENT:  MONITORED_OUTPUT_STATES param for Mechanism --
 #                  make this a general form of MONITOR_FOR_CONTROL, that can be used by ObjectiveMechanism
 #             [SEE `monitoring_status` in ObjectiveMechanism]
 # IMPLEMENT: MonitoredOutputStatesOption in string for MONITORED_VALUES specification of ObjectiveMechanism
+#
+# FIX: learning_rate:
+#      Both LearningMechanism and LearningProjection should pass this specification on to LearningMechanism.function
+#      Update docs accordingly
 #
 # DOCUMENTATION:
 #    search for "specification dictionary" and replace with: `specification dictionary <Mechanism_Creation>`

@@ -351,6 +351,10 @@ def _instantiate_learning_components(learning_projection, context=None):
     # Note: have to wait to do it here, as Backpropagation needs error_matrix,
     #       which depends on projection to ObjectiveMechanism
 
+    # IMPLEMENTATION NOTE:
+    #      THESE SHOULD BE MOVED (ALONG WITH THE SPECIFICATION FOR LEARNING) TO A DEDICATED LEARNING SPEC
+    #      RATHER THAN USING A LearningProjection
+    # Get function used for learning and the learning_rate from their specification in the LearningProjection
     learning_function = learning_projection.learning_function
     learning_rate = learning_projection.learning_rate
 
