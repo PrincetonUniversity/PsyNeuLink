@@ -1023,8 +1023,8 @@ class System_Base(System):
             if isinstance(process, Process):
                 if process_input is not None:
                     process._assign_defaults(variable=process_input, context=context)
-                # MODIFIED 3/21/17 - REINSTATED:
-                if self.learning_rate and not process.learning_rate:
+                # If learning_rate is specified for system but not for process, then apply to process
+                if not self.learning_rate is None and process.learning_rate is None:
                     process.assign_params(request_set={LEARNING_RATE:self.learning_rate})
 
             # Otherwise, instantiate Process
