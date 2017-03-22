@@ -1354,18 +1354,20 @@ class Mechanism_Base(Mechanism):
                                              context=context)
                 return np.atleast_2d(return_value)
 
-        #region VALIDATE RUNTIME PARAMETER SETS
-        # Insure that param set is for a States:
-        if self.prefs.paramValidationPref:
-            # if runtime_params != NotImplemented:
-            if runtime_params:
-                for param_set in runtime_params:
-                    if not (INPUT_STATE_PARAMS in param_set or
-                            PARAMETER_STATE_PARAMS in param_set or
-                            OUTPUT_STATE_PARAMS in param_set):
-                        raise MechanismError("{0} is not a valid parameter set for runtime specification".
-                                             format(param_set))
-        #endregion
+        # MODIFIED 3/22/17 OLD: REINSTATE ONCE REST IS DEBUGGED:
+        # #region VALIDATE RUNTIME PARAMETER SETS
+        # # Insure that param set is for a States:
+        # if self.prefs.paramValidationPref:
+        #     # if runtime_params != NotImplemented:
+        #     if runtime_params:
+        #         for param_set in runtime_params:
+        #             if not (INPUT_STATE_PARAMS in param_set or
+        #                     PARAMETER_STATE_PARAMS in param_set or
+        #                     OUTPUT_STATE_PARAMS in param_set):
+        #                 raise MechanismError("{0} is not a valid parameter set for runtime specification".
+        #                                      format(param_set))
+        # #endregion
+        # MODIFIED 3/22/17 END
 
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
         self._check_args(variable=self.inputValue,
@@ -1570,8 +1572,10 @@ class Mechanism_Base(Mechanism):
 
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
-            # Assign parameterState's value to parameter value in runtime_params
-            if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
+            # If runtime_params is specified has a spec for the current param
+            #    assign parameter value there as parameterState's value
+            if runtime_params and PARAMETER_STATE_PARAMS in runtime_params and state_name in runtime_params[
+                PARAMETER_STATE_PARAMS]:
                 param = param_template = runtime_params
             # Otherwise use paramsCurrent
             else:

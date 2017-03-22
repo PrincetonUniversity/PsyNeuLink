@@ -2114,7 +2114,7 @@ class Process_Base(Process):
         for mechanism, params, phase_spec in self._monitoring_mech_tuples:
 
             # MODIFIED 3/22/17 NEW:
-            if process_learning_rate is not None:
+            if process_learning_rate is not None and isinstance(mechanism, LearningMechanism):
                 if params is not None:
                     params.update(process_learning_rate)
                 else:
