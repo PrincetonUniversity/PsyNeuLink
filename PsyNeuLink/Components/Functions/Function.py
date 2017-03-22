@@ -2925,7 +2925,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
         """
 
         from PsyNeuLink.Components.States.ParameterState import ParameterState
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
         if isinstance(self.error_matrix, ParameterState):
             error_matrix = self.error_matrix.value
         else:
