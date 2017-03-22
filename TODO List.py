@@ -29,6 +29,7 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: SEARCH FOR AND PURGE: monitoringMechanism and monitoring_mechanism
 # FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
 # FIX: GET STRAIGHT THE HANDLING OF learning_rate for:
 #                  LearnMechanism
@@ -36,6 +37,11 @@
 #                  LearningProjection
 #                  Processs
 #                  System
+# IMPLEMENT: runtime_params FOR learning mechanisms in system (CURRENTLY ONLY SUPPORTS learning_rate);
+#            NEED TO IMPLEMENT SOME WAY OF SPECIFYING A LearningMechanism IN A mech_tuple,
+#            (SINCE LearningMechanisms ARE NOT CURRENTLY SPECIFIABLE IN A PROCESS' pathway ATTRIBUTE)
+#            [OR DOCUMENT THAT THIS IS NOT SUPPORTED]
+
 # IMPLEMENT:  MONITORED_OUTPUT_STATES param for Mechanism --
 #                  make this a general form of MONITOR_FOR_CONTROL, that can be used by ObjectiveMechanism
 #             [SEE `monitoring_status` in ObjectiveMechanism]
