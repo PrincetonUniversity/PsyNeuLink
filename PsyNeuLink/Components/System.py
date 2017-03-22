@@ -1023,8 +1023,9 @@ class System_Base(System):
             if isinstance(process, Process):
                 if process_input is not None:
                     process._assign_defaults(variable=process_input, context=context)
-                # if self.learning_rate and not process.learning_rate:
-                #     process.assign_params(request_set={LEARNING_RATE:self.learning_rate})
+                # MODIFIED 3/21/17 - REINSTATED:
+                if self.learning_rate and not process.learning_rate:
+                    process.assign_params(request_set={LEARNING_RATE:self.learning_rate})
 
             # Otherwise, instantiate Process
             else:
@@ -1033,7 +1034,9 @@ class System_Base(System):
                     # Provide self as context, so that Process knows it is part of a System (and which one)
                     # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
                     #           in Pathway, to override instantiation of projections from Process.input_state
-                    process = Process(default_input_value=process_input, learning_rate=learning_rate, context=self)
+                    process = Process(default_input_value=process_input,
+                                      learning_rate=learning_rate,
+                                      context=self)
                 elif isinstance(process, dict):
                     # IMPLEMENT:  HANDLE Process specification dict here;
                     #             include process_input as ??param, and context=self
