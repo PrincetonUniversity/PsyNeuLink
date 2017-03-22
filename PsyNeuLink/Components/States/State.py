@@ -373,8 +373,8 @@ class State_Base(State):
         if isinstance(owner, (Mechanism, Projection)):
             self.owner = owner
         else:
-            raise StateError("owner argument ({0}) for {1} must be a mechanism or projection".
-                                      format(owner, self.name))
+            raise StateError("\'owner\' argument ({0}) for {1} must be a mechanism or projection".
+                                      format(owner, name))
 
         register_category(entry=self,
                           base_class=State_Base,

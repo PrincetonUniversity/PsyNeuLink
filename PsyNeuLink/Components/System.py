@@ -1024,8 +1024,14 @@ class System_Base(System):
                 if process_input is not None:
                     process._assign_defaults(variable=process_input, context=context)
                 # If learning_rate is specified for system but not for process, then apply to process
-                if not self.learning_rate is None and process.learning_rate is None:
-                    process.assign_params(request_set={LEARNING_RATE:self.learning_rate})
+                # # MODIFIED 3/21/17 OLD:
+                # if self.learning_rate and not process.learning_rate:
+                    # # FIX:  assign_params WANTS TO CREATE A ParamaterState ON process FOR learning_rate
+                    # process.assign_params(request_set={LEARNING_RATE:self.learning_rate})
+                # # MODIFIED 3/21/17 NEW:[learning_rate SHOULD BE NOT BE RE-ASSIGNED FOR PROCESS, BUT RATHER ON EXECUTE]
+                # if self.learning_rate is not None and process.learning_rate is None:
+                #     process.learning_rate = self.learning_rate
+                # # MODIFIED 3/21/17 END
 
             # Otherwise, instantiate Process
             else:
@@ -1035,7 +1041,7 @@ class System_Base(System):
                     # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
                     #           in Pathway, to override instantiation of projections from Process.input_state
                     process = Process(default_input_value=process_input,
-                                      learning_rate=learning_rate,
+                                      learning_rate=self.learning_rate,
                                       context=self)
                 elif isinstance(process, dict):
                     # IMPLEMENT:  HANDLE Process specification dict here;

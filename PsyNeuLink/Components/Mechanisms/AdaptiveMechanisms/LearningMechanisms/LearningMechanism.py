@@ -122,23 +122,14 @@ to the error_signal received -- made by the input to the MappingProjection being
 its `matrix <MappingProjection.matrix>` parameter (i.e., before it has been modified). The default
 `function <LearningMechanism.function>` is BackPropagation` (also known as the *Generalized Delta Rule*; see
 `Rumelhart et al., 1986 <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_).  However, it can be any
-PsyNeuLink `LearningFunction`, or any other python function that takes as its input a value with three 1d arrays or
-lists, and returns two 1d arrays or lists. The two return values are assigned to the LearningMechanism's
-`learning_signal` and `error_signal` attributes, respectively, as well as to its two outputStates, as described below.
-
+other PsyNeuLink `LearningFunction`
 COMMENT:
-    **Function**:  calculates the changes to the `matrix <MappingProjection.MappingProjection.matrix>` parameter
-    of the LearningProjection's `mappingProjection required to reduce the error for its
-    `errorSource <LearningProjection.errorSource>`.  The result is assigned to the LearningProjection's
-    `weightChangeMatrix` attribute. The default `function <LearningProjection.function>` is BackPropagation` (also known
-    as the *Generalized Delta Rule*; see
-    `Rumelhart et al., 1986 <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_). However, it can be
-    assigned to other functions that implement different learning algorithms, as long as it is compatible with the
-    :keyword:`function` of the LearningProjection's `errorSource <LearningProjection.errorSource>` (how the `error_signal`
-    is computed depends on the nature of the function that generated the error); failure to match the `function
-    <LearningProjection.function>` for the LearningProjection with  the :keyword:`function` of its
-    `errorSource <LearningProjection.errorSource>`  will generate an error.
+, or any other python function that takes as its input a value with three 1d arrays or
+lists, and returns two 1d arrays or lists.  The two return values
 COMMENT
+It returns two values that
+are assigned to the LearningMechanism's
+`learning_signal` and `error_signal` attributes, respectively, as well as to its two outputStates, as described below.
 
 .. _LearningMechanism_OutputStates:
 
@@ -723,19 +714,18 @@ class LearningMechanism(AdaptiveMechanism_Base):
         :return: (2D np.array) self.learning_signal
         """
 
-        # # MODIFIED 3/4/17 NEW:
-        # # If error signal is from Objective function, make input = 1 so that when BP multiplies by it nothing happens
-        # # if self.inputStates[ERROR_SIGNAL].receivesFromProjections:
-        # if not INITIALIZING in context:
-        #     if isinstance(self.error_source, ObjectiveMechanism):
-        #         variable[ACTIVATION_INPUT_INDEX] = np.ones_like(variable[ACTIVATION_INPUT_INDEX])
-        # # MODIFIED 3/4/17 END
+        # FIX: IMPLEMENT RUNTIME PARAMS HERE, W/ LEARNING_RATE??
 
         # COMPUTE LEARNING SIGNAL (dE/dW):
-        self.learning_signal, self.error_signal = self.function(variable=variable, context=context)
+        self.learning_signal, self.error_signal = self.function(variable=variable,
+                                                                params=runtime_params,
+                                                                context=context)
 
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+
+        # FIX: IMPLEMENT mech_learning_rate, process.learning_rate and system.learning_rate HERE
+        # FIX: USE runtime_params?? SEE ABOVE
 
         # # TEST PRINT:
         # print("\n@@@ EXECUTED: {}".format(self.name))
