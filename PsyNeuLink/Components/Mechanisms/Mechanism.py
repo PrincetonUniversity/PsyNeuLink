@@ -1242,15 +1242,15 @@ class Mechanism_Base(Mechanism):
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
             a dictionary that can include any of the parameters used as arguments to instantiate the mechanism,
             its function, or projection(s) to any of its states.  Any value assigned to a parameter will override
-            the current value of that parameter for this and only this execution of the mechanism; it will return
-            to its previous value following execution.  Each entry is either the specification for one of the
+            the current value of that parameter for the (and only the current) execution of the mechanism; it will
+            return to its previous value following execution.  Each entry is either the specification for one of the
             mechanism's parameters (in which case the key is the name of the parameter, and its value the value to be
             assigned to that parameter), or a dictionary for a specified type of state (in which case, the key is the
             name of a specific state or a keyword for the type of state (`INPUT_STATE_PARAMS`, `OUTPUT_STATE_PARAMS`
             or `PARAMETER_STATE_PARAMS`), and the value is a dictionary containing a parameter dictionary for that
             state or all states of the specified type.  The latter (state dictionaries) contain entries that are
             themselves dictionaries containing parameters for the state's function or its projections. The key for
-            each entry is a keyword indicating whether it is for the state's function (`FUNCTON_PARAMS`),
+            each entry is a keyword indicating whether it is for the state's function (`FUNCTION_PARAMS`),
             all of its projections (`PROJECTION_PARAMS`), a particular type of projection (`MAPPING_PROJECTION_PARAMS`
             or `CONTROL_PROJECTION_PARAMS`), or to a specific projection (using its name), and the value of
             each entry is a dictionary containing the parameters for the function, projection, or set of projections
