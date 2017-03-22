@@ -1355,18 +1355,25 @@ class Mechanism_Base(Mechanism):
                 return np.atleast_2d(return_value)
 
         # MODIFIED 3/22/17 OLD: REINSTATE ONCE REST IS DEBUGGED:
-        # #region VALIDATE RUNTIME PARAMETER SETS
-        # # Insure that param set is for a States:
-        # if self.prefs.paramValidationPref:
-        #     # if runtime_params != NotImplemented:
-        #     if runtime_params:
-        #         for param_set in runtime_params:
-        #             if not (INPUT_STATE_PARAMS in param_set or
-        #                     PARAMETER_STATE_PARAMS in param_set or
-        #                     OUTPUT_STATE_PARAMS in param_set):
-        #                 raise MechanismError("{0} is not a valid parameter set for runtime specification".
-        #                                      format(param_set))
-        # #endregion
+        # FIX:  ALLOW PARAMS FOR mech AND FUNCTION_PARAMS TO GO THROUGH
+        #region VALIDATE RUNTIME PARAMETER SETS
+        # Insure that param set is for a States:
+        if self.prefs.paramValidationPref:
+            if runtime_params:
+                for param_set in runtime_params:
+                    # if not (INPUT_STATE_PARAMS in param_set or
+                    #         PARAMETER_STATE_PARAMS in param_set or
+                    #         OUTPUT_STATE_PARAMS in param_set):
+                    # FIX: ADD user_params and user_params[FUNCTION_PARAMS] TO SEARCH SET??
+                    if not param_set in (INPUT_STATE_PARAMS,
+                                         PARAMETER_STATE_PARAMS,
+                                         OUTPUT_STATE_PARAMS,
+                                         self.user_params
+                                         self.user_params[FUNCTION_PARAMS]
+                                         ):
+                        raise MechanismError("{0} is not a valid parameter set for runtime specification".
+                                             format(param_set))
+        #endregion
         # MODIFIED 3/22/17 END
 
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
