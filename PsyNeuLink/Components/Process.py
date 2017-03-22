@@ -2102,8 +2102,25 @@ class Process_Base(Process):
         else:
             self.targetInputStates[0].value = np.array(self.target)
 
+        # MODIFIED 3/22/17 NEW:
+        # Assign process' learning_rate as runtime_param if specified
+        process_learning_rate = None
+        if self.learning_rate is not None:
+            # process_learning_rate = {FUNCTION_PARAMS:{LEARNING_RATE: self.learning_rate}}
+            process_learning_rate = {LEARNING_RATE: self.learning_rate}
+        # MODIFIED 3/22/17 END
+
         # THEN, execute Objective and LearningMechanisms
         for mechanism, params, phase_spec in self._monitoring_mech_tuples:
+
+            # MODIFIED 3/22/17 NEW:
+            if process_learning_rate is not None:
+                if params is not None:
+                    params.update(process_learning_rate)
+                else:
+                    params = process_learning_rate
+            # MODIFIED 3/22/17 END
+
             mechanism.execute(clock=clock,
                               time_scale=self.timeScale,
                               runtime_params=params,
