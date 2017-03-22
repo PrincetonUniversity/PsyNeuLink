@@ -752,9 +752,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         else:
             return None
 
-    @property
-    def learning_rate(self):
-        return self.function_object.learning_rate
+    # @property
+    # def learning_rate(self):
+    #     return self.function_object.learning_rate
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED

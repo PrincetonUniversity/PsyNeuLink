@@ -92,7 +92,7 @@ z = process(default_input_value=[0, 0],
                            Output_Layer],
             clamp_input=SOFT_CLAMP,
             learning=LEARNING,
-            learning_rate=0.0,
+            learning_rate=None,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})
