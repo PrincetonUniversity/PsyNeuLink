@@ -16,6 +16,10 @@
 #        * MAKE @property ATTRIBUTES THAT POINT TO FUNCTION'S PARAM(S)
 #   3) MONITORING SPECIFICATION SYNTAX:  Restrict specification to ObjectiveMechanism and possibly ControlMechanism,
 #                                        or also allow "locally" on OutputStates, Mechanisms, Processes and Systems?
+#   4) SPECIFICATION OF LEARNING USING A PROJECTION SPEC VS. A DEDICATED KEYWORD (THAT ALLOWS FCT AND LEARNING_RATE)
+#          PRO:  CONSISTENT WITH CONTROL
+#          CON:  AKWARD TO HAVE TO GIVE THE PROJECTION THE FUNCTION AND LEARNING RATE THAT ARE PASSED TO LearningMech
+
 # COMPOSITION IMPLEMENTATION NOTE:
 #   add_projection_to and add_projection_from methods
 #   methods in LearningAuxilliary
