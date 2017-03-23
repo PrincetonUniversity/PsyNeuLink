@@ -2632,8 +2632,6 @@ class System_Base(System):
             # loop through each reciever
             for receiver in receivers:
                 # filter out objective mechanism
-                if isinstance(receiver[0], ObjectiveMechanism):
-                    continue
                 receiver_name = receiver[0].name
                 G.node(receiver_name)
                 senders = system_graph[receiver]
@@ -2660,8 +2658,6 @@ class System_Base(System):
             # loop through each reciever
             for receiver in receivers:
                 # filter out objective mechanism
-                if isinstance(receiver[0], ObjectiveMechanism):
-                    continue
                 receiver_name = receiver[0].name
                 G.node(receiver_name)
                 senders = system_graph[receiver]
@@ -2731,16 +2727,16 @@ class System_Base(System):
                                        direction='BT', 
                                        proj_shape='diamond', 
                                        mech_shape='oval',
-                                       learning_color='dodgerblue',
-                                       system_color='crimson',
+                                       learning_color='black',
+                                       system_color='black',
                                        label_internal_projections=False
                                        ):
-        
-        
+
+
         # filter objective mechanisms from system graph
         filter_objective_mechanisms=True
-        
-        
+
+
         # legwork
         import graphviz as gv   
         G = gv.Digraph(engine = "dot", 
@@ -2756,6 +2752,8 @@ class System_Base(System):
 
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+
 
         # LEARNING GRAPH
         learning_graph = self.learningGraph
@@ -2790,6 +2788,8 @@ class System_Base(System):
                 sndrs = learning_graph[rcvr]
                 # for each sender of the given reciever
                 for sndr in sndrs:
+                    if isinstance(rcvr, LearningMechanism) and isinstance(sndr, LearningMechanism):
+                        continue
                     # for each output state in sndr,
                     sndr_outputstates = list(sndr.outputStates.values())
                     for sndr_outputstate in sndr_outputstates:
@@ -2803,7 +2803,7 @@ class System_Base(System):
                     # add nodes and edges
                     G.node(rcvr.name, color=learning_color)
                     G.node(sndr.name, color=learning_color)
-                    
+
                     if label_internal_projections:
                         G.edge(rcvr.name, sndr.name, label=proj_name)
                     else:
@@ -2838,7 +2838,7 @@ class System_Base(System):
                 G.edge(edge_name, receiver_name)
 
         if output_fmt == 'pdf':
-            G.view(system.name.replace(" ", "-"), cleanup=True)
+            G.view(self.name.replace(" ", "-"), cleanup=True)
         elif output_fmt == 'jupyter':
             return G
 
