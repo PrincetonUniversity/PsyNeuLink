@@ -84,9 +84,9 @@ and `Nengo <http://www.nengo.ca>`_  (for biophysically-realistic models of neuro
 These packages are all better to elaborate and detailed models of a particular form.
 Rather, the initial efforts in the design and implementation of PsyNeuLink have been put into making it as
 flexible and easy to use as possible, including its ability to integrate components constructed in other packages
-(includling some of those listed above).  These are characteristics that are often (at least in initial development) in
-tension with efficiency (think:  interpreted vs. compiled).  As PsyNeuLink grows and matures, our expectation is that
-effort will be put into making it more efficient.
+(includling some of the ones listed above).  These are characteristics that are often (at least in the initial
+stages of development) in tension with efficiency (think:  interpreted vs. compiled).  As PsyNeuLink grows and matures,
+our expectation is that effort will be put into making it more efficient.
 
 
 .. _Overview:
