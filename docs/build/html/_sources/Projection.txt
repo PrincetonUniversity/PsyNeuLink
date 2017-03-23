@@ -5,8 +5,8 @@ Projections
    :maxdepth: 1
 
    MappingProjection
-   ControlProjection
    LearningProjection
+   ControlProjection
 
 .. automodule:: Projection
 
