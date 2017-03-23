@@ -2632,8 +2632,6 @@ class System_Base(System):
             # loop through each reciever
             for receiver in receivers:
                 # filter out objective mechanism
-                if isinstance(receiver[0], ObjectiveMechanism):
-                    continue
                 receiver_name = receiver[0].name
                 G.node(receiver_name)
                 senders = system_graph[receiver]
@@ -2660,8 +2658,6 @@ class System_Base(System):
             # loop through each reciever
             for receiver in receivers:
                 # filter out objective mechanism
-                if isinstance(receiver[0], ObjectiveMechanism):
-                    continue
                 receiver_name = receiver[0].name
                 G.node(receiver_name)
                 senders = system_graph[receiver]
