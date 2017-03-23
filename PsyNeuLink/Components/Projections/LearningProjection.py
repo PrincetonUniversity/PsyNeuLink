@@ -199,9 +199,8 @@ class LearningProjection(Projection_Base):
         `function <LearningMechanism.function>` attribute).
 
     learning_rate : Optional[float]
-        specifies a learning_rate for the LearningProjection, that will supercede any specified for the
-        `LearningMechanism` from which it projects, of any `process <Process>` and/or `system <System>` to which that
-        belongs (see `learning_rate <LearningProjection>` for details).
+        if specified, it is applied mulitiplicatively to `learning_signal` received from the `LearningMechanism`
+        from which it projects (see `learning_rate <LearningProjection.learning_rate>` for additional details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -259,15 +258,11 @@ class LearningProjection(Projection_Base):
                              PROJECTION_TYPE: LEARNING_PROJECTION}
 
     learning_rate : Optional[float]
-        determines the learning_rate for the LearningProjection.  If specified, it is applied multiplicatively to the
-        `learning_signal <LearningProjection.learning_signal>` and
-        COMMENT:
-        takes precedence over any
-        COMMENT
-        thus can be used to modulate the learning rate in addition to (and on top of) the one
-        specified for the `LearningMechanism`, its `function <LearningMechanism.function>`, and/or the process or system
-        to which it belongs (see `learning_rate <LearningMechanism>` for details).
-        If it is `None`, the `mech_learning_rate` for the `LearningMechanism` is used.
+        determines the :keyword:`learning_rate` for the LearningProjection.  If specified, it is applied
+        multiplicatively to the `learning_signal <LearningProjection.learning_signal>` and thus can be used to
+        modulate the learning rate in addition to (and on top of) the one specified for the `LearningMechanism`,
+        its `function <LearningMechanism.function>`, and/or the process or system to which it belongs
+        (see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism for additional details).
 
     weight_change_matrix : 2d np.array
         matrix of changes to be made to the `mappingWeightMatrix`, after learning_rate has been applied to the
