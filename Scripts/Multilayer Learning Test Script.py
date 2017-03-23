@@ -92,7 +92,7 @@ z = process(default_input_value=[0, 0],
                            Output_Layer],
             clamp_input=SOFT_CLAMP,
             learning=LEARNING,
-            learning_rate=1.0,
+            # learning_rate=1.0,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})
@@ -155,7 +155,7 @@ elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
     x = system(processes=[z],
                targets=[0, 0, 1],
-               learning_rate=0.0)
+               learning_rate=1.0)
 
     x.reportOutputPref = True
     composition = x
