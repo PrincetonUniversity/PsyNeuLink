@@ -174,18 +174,17 @@ components being learned:
    the mechanism that receives the `learned_projection`;  that is, the one that generates the output
    used to calculate the error_signal that the LearningMechanism attempts to reduce.
 ..
-* `mech_learning_rate`
-   the learning rate for the LearningMechanism, used to specify the `learning_rate` parameter for its
-   `function <LearningMechanism.function>`.  It is superceded by specification of a learning_rate for the `process
-   <Process.Process_Base.learning_rate>` or `system <System.System_Base.learning_rate>` if either of those is specified.
-   COMMENT:
-   ALTERNATIVE IMPLEMENTATION:
-   this is multiplicatively applied to the `learning_signal`.  Its effect is combined with any and all learning rate
-   parameters specified for the `function <LearningMechanism.function>`, any LearningProjections assigned to the
-   `LEARNING_SIGNAL <LearningMechanism_Learning_Signal>` outputState, and/or the process or system to which the
-   LearningMechanism belongs.
-   COMMENT
-
+.. _LearningMechanism_Learning_Rate:
+* `learning_rate`
+   the learning rate for the LearningMechanism (used to specify the `learning_rate` parameter for its
+   `function <LearningMechanism.function>`.  Specifiying this (or the learning_rate parameter of the
+   `function <LearningMechanism.function>` directly) supercedes any specification of a learning_rate for
+   any `process <Process.Process_Base.learning_rate>` and/or `system <System.System_Base.learning_rate>` to which
+   the LearningMechanism belongs.  The default is `None`, in which case the LearingMechanism (and its
+   `function <LearningMechanism.function`) inherit the specification of the `learning_rate
+   <Process.Process_Base.learning_rate>` for the process in which the LearningMechanism is being executed.
+   If that is `None`, then it inherits it from the system in which it is being executed.  If that is also `None`,
+   then it uses the default value assigned by its `function <LearningMechanism.function>`.
 
 COMMENT:
 @@@ THE FOLLOWING SECTION SHOULD BE MOVED TO THE "USER'S MANUAL" WHEN THAT IS WRITTEN
@@ -395,8 +394,6 @@ output_state_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
 
 ERROR_SOURCE = 'error_source'
 
-MECH_LEARNING_RATE = 'mech_learning_rate'
-
 DefaultTrainingMechanism = ObjectiveMechanism
 
 class LearningMechanismError(Exception):
@@ -413,7 +410,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  variable,                   \
                  error_source                \
                  function=BackPropagation    \
-                 mech_learning_rate=None     \
                  params=None,                \
                  name=None,                  \
                  prefs=None)
@@ -484,8 +480,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         `learning sequence <LearningMechanism_Learning_Configurations>`
         (see `function <LearningMechanism.function>` for details).
 
-    mech_learning_rate : float
-        specifies the learning rate for this LearningMechanism (see `mech_learning_rate` for details).
+    learning_rate : float
+        specifies the learning rate for this LearningMechanism (see `learning_rate` for details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -560,14 +556,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         specifies function used to compute the `learning_signal`.  Must take the following arguments:
         `input` (list or 1d array), `output` (list or 1d array), `derivative` (function) and `error` (list or 1d array).
 
-    mech_learning_rate : float : default 1.0
+    learning_rate : float : None
         determines the learning rate for the LearningMechanism.  It is used to specify the `learning_rate` parameter
-        for the LearningMechanism's `learning function <LearningMechanism.function>`;  It is superceded by specification
-        of a learning_rate for the `process <Process.Process_Base.learning_rate>` or
-        `system <System.System_Base.learning_rate>` if either of those is specified.
-        COMMENT:
-        ?? WHAT ABOUT THE LearningProjection??
-        COMMENT
+        for the LearningMechanism's `learning function <LearningMechanism.function>`
+        (see description of `learning_rate <`LearningMechanism_Learning_Rate>` above for additional details).
 
     error_signal : 1d np.array
         the error signal returned by the LearningMechanism's `function <LearningMechanism.function>`.  For
@@ -619,7 +611,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  variable:tc.any(list, np.ndarray),
                  error_source:tc.optional(Mechanism)=None,
                  function:is_function_type=BackPropagation,
-                 mech_learning_rate:float=1.0,
+                 learning_rate:tc.optional(float)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -628,7 +620,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(error_source=error_source,
                                                   function=function,
-                                                  mech_learning_rate=mech_learning_rate,
                                                   params=params)
 
         # # USE FOR IMPLEMENTATION OF deferred_init()
@@ -637,10 +628,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # self.init_args['context'] = self
         # self.init_args['name'] = name
         # delete self.init_args[ERROR_MATRIX]
-        # delete self.init_args[MECH_LEARNING_RATE]
 
         # # Flag for deferred initialization
         # self.value = DEFERRED_INITIALIZATION
+
+        self._learning_rate = learning_rate
 
         super().__init__(variable=variable,
                          params=params,
@@ -698,9 +690,18 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if self.error_source:
             _instantiate_error_signal_projection(sender=self.error_source, receiver=self)
 
-
     def _instantiate_function(self, context=None):
         super()._instantiate_function(context=context)
+
+
+    # MODIFIED 3/22/17 NEW:
+    def _instantiate_attributes_after_function(self, context=None):
+
+        super()._instantiate_attributes_after_function(context=context)
+
+        if self._learning_rate is not None:
+            self.learning_rate = self._learning_rate
+    # MODIFIED 3/22/17 END
 
 
     def _execute(self,
@@ -724,9 +725,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
-        # FIX: IMPLEMENT mech_learning_rate, process.learning_rate and system.learning_rate HERE
-        # FIX: USE runtime_params?? SEE ABOVE
-
         # # TEST PRINT:
         # print("\n@@@ EXECUTED: {}".format(self.name))
 
@@ -742,9 +740,15 @@ class LearningMechanism(AdaptiveMechanism_Base):
         else:
             return None
 
-    # @property
-    # def learning_rate(self):
-    #     return self.function_object.learning_rate
+    # MODIFIED 3/22/17 NEW:
+    @property
+    def learning_rate(self):
+        return self.function_object.learning_rate
+
+    @learning_rate.setter
+    def learning_rate(self, assignment):
+        self.function_object.learning_rate = assignment
+    # MODIFIED 3/22/17 END
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
