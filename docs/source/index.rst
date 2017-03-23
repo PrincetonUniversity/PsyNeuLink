@@ -72,8 +72,7 @@ PsyNeuLink is not presently well suited to:
  - biophysically-realistic models of individual neurons
 
 Other packages that are much better for such applications are:
-`Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_,
-`PyPDP <LINK>`_, and
+`Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_ and
 `TensorFlow <https://www.tensorflow.org>`_ (for neural network models);
 `HDDM <http://ski.clps.brown.edu/hddm_docs/>`_ (for Drift Diffusion Models);
 `ACT-R <http://act-r.psy.cmu.edu>`_ (for production system models);
