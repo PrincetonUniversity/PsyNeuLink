@@ -9,14 +9,43 @@
 # ********************************************  ProcessingMechanism ****************************************************
 
 """
-**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
 
-COMMENT:
-  MOVE TO ProcessingMechanisms overview:
-  Different ProcessingMechanisms transform their input in different ways, and some allow this to be customized
-  by modifying their ``function`` parameter.  For example, a :doc:`TransferMechanism` can be configured to produce a
-  linear, logistic, or exponential transform of its input.
-COMMENT
+Overview
+--------
+
+A ProcessingMechanism is a type of `Mechanism <Mechanism>` that transforms its input in some way.  A
+ProcessingMechanism always receives its input either from another ProcessingMechanism, or from the input to a `process
+<Process>` or `system <System>` when it is executed.  Similarly, its output is generally conveyed to another
+ProcessingMechanism or used as the ouput for a process or system.  However, the output of a ProcessingMechanism may
+also be used by an `AdaptiveMechanism` to modify the parameters of other components (or its own).
+ProcessingMechanisms are always executed before all AdpativeMechanisms in the process and/or system to which they
+belong, so that any modificatons made by the AdpativeMechanism are available to all ProcessingMechanisms in the next
+round of execution.
+
+.. _ProcessingMechanism_Creation:
+
+Creating a ProcessingMechanism
+------------------------------
+
+A ProcessingMechanism can be created by using the standard Python method of calling the constructor for the desired
+type. Some types of ProcessingMechanism (for example, `ObjectiveMechanisms <ObjectiveMechanism>`) are also created
+when a system or process is created, if `learning <LINK>` and/or `control <LINK>` have been specified for it.
+
+.. _AdaptiveMechanism_Structure:
+
+Structure
+---------
+
+A ProcessingMechanism has the same basic structure as a `Mechanism <Mechanisms>`.  See the documentation for
+individual subtypes of ProcessingMechanism for more specific information about their structure.
+
+.. _Comparator_Execution:
+
+Execution
+---------
+
+A ProcessingMechanism always executes before any `AdaptiveMechanisms <AdaptiveMechanism>` in the process or
+system to which it belongs.
 
 """
 
