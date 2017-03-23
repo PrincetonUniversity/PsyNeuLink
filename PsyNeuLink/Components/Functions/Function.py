@@ -2599,12 +2599,14 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
     variableClassDefault = [[0],[0],[0]]
 
+    default_learning_rate = 0.05
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     def __init__(self,
                  variable_default=variableClassDefault,
                  activation_function:tc.any(SoftMax, tc.enum(SoftMax))=SoftMax, # Allow class or instance
-                 learning_rate:tc.optional(parameter_spec)=1.0,
+                 learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
@@ -2646,11 +2648,15 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                                      " its \'output\' arg may need to be set to to PROB)".
                                      format(self.variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-
-        # This allows callers to specify None as learning_rate (e.g., _instantiate_learning_components)
-        request_set[LEARNING_RATE] = request_set[LEARNING_RATE] or 1.0
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+    # def _validate_params(self, request_set, target_set=None, context=None):
+    #
+    #     # This allows callers to specify None as learning_rate (e.g., _instantiate_learning_components)
+    #     # request_set[LEARNING_RATE] = request_set[LEARNING_RATE] or 1.0
+    #
+    #     if request_set[LEARNING_RATE] is None:
+    #         request_set[LEARNING_RATE] = self.default_learning_rate
+    #
+    #     super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def function(self,
                 variable=None,
@@ -2676,34 +2682,22 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         self._check_args(variable=variable, params=params, context=context)
 
-    # # MODIFIED 3/9/17 OLD:
-    #     # input_thing = list(self.activation_input.squeeze())
-    #     activation_input = self.activation_input
-    #     output = self.activation_output
-    #     error = float(self.error_signal.squeeze())
-    #     error_assignment = np.full(activation_input.size, self.learning_rate * error)
-    #     null_assignment = np.zeros_like(activation_input)
-    #
-    #     # Assign error term to chosen item of output array
-    #     # error_array = np.atleast_1d(np.where(input, self.learning_rate * error, 0))
-    #     error_array = (np.where(input, error_assignment, null_assignment))
-    #
-    #     # Construct weight change matrix with error term in proper element
-    #
-    #     # MODIFIED 3/7/17 OLD:
-    #     weight_change_matrix = np.diag(error_array)
-    #     # # MODIFIED 3/7/17 NEW:
-    #     # weight_change_matrix = [error_array]
-    #     # MODIFIED 3/7/17 END
-    #
-    #     return [weight_change_matrix, error_array]
-
-    # MODIFIED 3/9/17 NEW:
-        # # FROM DEVEL:
-
         output = self.activation_output
         error = self.error_signal
-        learning_rate = self.learning_rate
+
+        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
+        #                      1) if no learning_rate is specified for the mechanism, need to assign None
+        #                          so that the process or system can see it is free to be assigned
+        #                      2) if neither the system nor the process assigns a value to the learning_rate,
+        #                          then need to assign it to the default value
+        # If learning_rate was not specified for instance or composition, use default value
+        if self.learning_rate is None:
+            learning_rate = self.default_learning_rate
+        else:
+            learning_rate = self.learning_rate
+        # # MODIFIED 3/22/17 NEWER:
+        # learning_rate = self.learning_rate
+        # MODIFIED 3/22/17 END
 
         # Assign error term to chosen item of output array
         error_array = (np.where(output, learning_rate * error, 0))
@@ -2714,32 +2708,6 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         # return:
         # - weight_change_matrix and error_array
         return [weight_change_matrix, error_array]
-
-
-        # # input_thing = list(self.activation_input.squeeze())
-        # activation_input = self.activation_input
-        # output = self.activation_output
-        # error = float(self.error_signal.squeeze())
-        # error_assignment = np.full(activation_input.size, self.learning_rate * error)
-        # null_assignment = np.zeros_like(activation_input)
-        #
-        # # Assign error term to chosen item of output array
-        # # error_array = np.atleast_1d(np.where(input, self.learning_rate * error, 0))
-        # error_array = (np.where(input, error_assignment, null_assignment))
-        #
-        # # Construct weight change matrix with error term in proper element
-        #
-        # # MODIFIED 3/7/17 OLD:
-        # weight_change_matrix = np.diag(error_array)
-        # # # MODIFIED 3/7/17 NEW:
-        # # weight_change_matrix = [error_array]
-        # # MODIFIED 3/7/17 END
-        #
-        # return [weight_change_matrix, error_array]
-
-    # MODIFIED 3/9/17 END
-
-
 
 
 # Argument names:
@@ -2775,6 +2743,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
     variableClassDefault = [[0],[0],[0]]
 
+    default_learning_rate = 1.0
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -2788,7 +2758,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                  error_derivative_fct:tc.optional(tc.any(function_type, method_type))=Logistic().derivative,
                  # error_matrix:tc.optional(tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection))=None,
                  error_matrix=None,
-                 learning_rate:tc.optional(parameter_spec)=1.0,
+                 learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
@@ -2841,11 +2811,12 @@ class BackPropagation(LearningFunction): # -------------------------------------
               or MappingProjection, its current value can be accessed at runtime (i.e., it can be used as a "pointer")
         """
 
-
-        # This allows callers to specify None as learning_rate (e.g., _instantiate_learning_components)
-        if request_set[LEARNING_RATE] is None:
-            request_set[LEARNING_RATE] = 1.0
-        # request_set[LEARNING_RATE] = request_set[LEARNING_RATE] or 1.0
+        # # MODIFIED 3/22/17 OLD:
+        # # This allows callers to specify None as learning_rate (e.g., _instantiate_learning_components)
+        # if request_set[LEARNING_RATE] is None:
+        #     request_set[LEARNING_RATE] = 1.0
+        # # request_set[LEARNING_RATE] = request_set[LEARNING_RATE] or 1.0
+        # # MODIFIED 3/22/17 END
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -2931,7 +2902,20 @@ class BackPropagation(LearningFunction): # -------------------------------------
         else:
             error_matrix = self.error_matrix
 
-        # MODIFIED 3/5/17 OLD:
+        # MODIFIED 3/22/17 NEW:
+        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
+        #                      1) if no learning_rate is specified for the mechanism, need to assign None
+        #                          so that the process or system can see it is free to be assigned
+        #                      2) if neither the system nor the process assigns a value to the learning_rate,
+        #                          then need to assign it to the default value
+        # If learning_rate was not specified for instance or composition, use default value
+        if self.learning_rate is None:
+            learning_rate = self.default_learning_rate
+        else:
+            learning_rate = self.learning_rate
+        # # MODIFIED 3/22/17 NEWER:
+        # learning_rate = self.learning_rate
+        # MODIFIED 3/22/17 END
 
         # make activation_input a 1D row array
         activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
@@ -2946,7 +2930,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
         dE_dW = dE_dA * dA_dW
 
         # Weight changes = delta rule (learning rate * activity * error)
-        weight_change_matrix = self.learning_rate * activation_input * dE_dW
+        weight_change_matrix = learning_rate * activation_input * dE_dW
 
         # # TEST PRINT:
         # if context and not 'INIT' in context:
