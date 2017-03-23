@@ -8,6 +8,7 @@ PsyNeuLink Documentation
 
 * :ref:`Purpose`
 * :ref:`Overview`
+* :ref:`What PsyNeuLink is NOT`
 * :ref:`Component Hierarchy <Component_Hierarchy>`
 * :ref:`Installation`
 * :ref:`Contributors`
@@ -54,6 +55,38 @@ in a manner that:
 
 The goal is to encourage users to think about information processing in a "mind/brain-like" way, while imposing as few
 constraints as possible on what it is possible to implement or ask the model to do.
+
+.. _What_PsyNeuLink_is_NOT:
+
+What PsyNeuLink is **NOT**
+--------------------------
+
+PsyNeuLink is not presently well suited to:
+
+ - extensive model fitting
+ |
+ - large scale simulations
+ |
+ - elaborate and detailed models of a particular form
+ |
+ - biophysically-realistic models of individual neurons
+
+Other packages much better for such applications, such as:
+`Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_,
+`PyPDP <LINK>`_, and
+`TensorFlow <https://www.tensorflow.org>`_ (for neural network models);
+`HDDM <http://ski.clps.brown.edu/hddm_docs/>`_ (for Drift Diffusion Models);
+`ACT-R <http://act-r.psy.cmu.edu>`_ (for production system models);
+`Genesis <http://www.genesis-sim.org>`_,
+`Neuron <https://www.neuron.yale.edu/neuron/>`_,
+and `Nengo <http://www.nengo.ca>`_  (for biophysically-realistic models of neuronal function).
+
+These packages are all better to elaborate and detailed models of a particular form.
+Rather, the initial efforts in the design and implementation of PsyNeuLink have been put into making it as
+flexible and easy to use as possible, including its ability to integrate components constructed in other packages
+(includling some of those listed above).  These are characteristics that are often (at least in initial development) in
+tension with efficiency (think:  interpreted vs. compiled).  As PsyNeuLink grows and matures, our expectation is that
+effort will be put into making it more efficient.
 
 
 .. _Overview:
@@ -223,6 +256,8 @@ Contributors
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Bryn Keller**, Intel Labs, Intel Corporation
+* **Kristin Manning**, Princeton Neuroscience Institute, Princeton University
+* **Kevin Mantel**, Princeton Neuroscience Institute, Princeton University
 * **Sebastian Musslick**, Princeton Neuroscience Institute, Princeton University
 * **Amitai Shenhav**, Cognitive, Linguistic, & Psychological Sciences, Brown University
 * **Michael Shvartsman**, Princeton Neuroscience Institute, Princeton University
