@@ -140,6 +140,7 @@
 <ul class="simple">
 <li><a class="reference internal" href="#purpose"><span class="std std-ref">Purpose</span></a></li>
 <li><a class="reference internal" href="#overview"><span class="std std-ref">Overview</span></a></li>
+<li><span class="xref std std-ref">What PsyNeuLink is NOT</span></li>
 <li><a class="reference internal" href="#component-hierarchy"><span class="std std-ref">Component Hierarchy</span></a></li>
 <li><a class="reference internal" href="#installation"><span class="std std-ref">Installation</span></a></li>
 <li><a class="reference internal" href="#contributors"><span class="std std-ref">Contributors</span></a></li>
@@ -196,8 +197,50 @@ integration of, and interaction among disparate components that can vary in thei
 <p>The goal is to encourage users to think about information processing in a &#8220;mind/brain-like&#8221; way, while imposing as few
 constraints as possible on what it is possible to implement or ask the model to do.</p>
 </div>
+<div class="section" id="what-psyneulink-is-not">
+<span id="id2"></span><h2>What PsyNeuLink is <strong>NOT</strong><a class="headerlink" href="#what-psyneulink-is-not" title="Permalink to this headline">¶</a></h2>
+<p>PsyNeuLink is not presently well suited to:</p>
+<blockquote>
+<div><ul class="simple">
+<li>extensive model fitting</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li>large scale simulations</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li>elaborate and detailed models of a particular form</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li>biophysically-realistic models of individual neurons</li>
+</ul>
+</div></blockquote>
+<p>Other packages much better for such applications, such as:
+<a class="reference external" href="https://grey.colorado.edu/emergent/index.php/Main_Page">Emergent</a>,
+<a class="reference external" href="LINK">PyPDP</a>, and
+<a class="reference external" href="https://www.tensorflow.org">TensorFlow</a> (for neural network models);
+<a class="reference external" href="http://ski.clps.brown.edu/hddm_docs/">HDDM</a> (for Drift Diffusion Models);
+<a class="reference external" href="http://act-r.psy.cmu.edu">ACT-R</a> (for production system models);
+<a class="reference external" href="http://www.genesis-sim.org">Genesis</a>,
+<a class="reference external" href="https://www.neuron.yale.edu/neuron/">Neuron</a>,
+and <a class="reference external" href="http://www.nengo.ca">Nengo</a>  (for biophysically-realistic models of neuronal function).</p>
+<p>These packages are all better to elaborate and detailed models of a particular form.
+Rather, the initial efforts in the design and implementation of PsyNeuLink have been put into making it as
+flexible and easy to use as possible, including its ability to integrate components constructed in other packages
+(includling some of those listed above).  These are characteristics that are often (at least in initial development) in
+tension with efficiency (think:  interpreted vs. compiled).  As PsyNeuLink grows and matures, our expectation is that
+effort will be put into making it more efficient.</p>
+</div>
 <div class="section" id="overview">
-<span id="id2"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="id3"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink is written in Python, and conforms to the syntax and (most of the) coding standards for the language.
 The primary constructs in PsyNeuLink are mechanisms, projections, processes, and systems.</p>
 <p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.  A PsyNeuLink mechanism takes an input, transforms it with a function in some way, and makes the
@@ -241,7 +284,7 @@ elements into a single integrated system.  This affords modelers the flexibility
 model to a form of processing and/or level of analysis that is appropriate for that component, while providing
 the opportunity to test and explore how they interact with one another in a single system.</p>
 <p id="system-figure"><strong>Major Components in PsyNeuLink</strong></p>
-<div class="figure" id="id7">
+<div class="figure" id="id8">
 <a class="reference internal image-reference" href="_images/System_simple_fig.jpg"><img alt="Overview of major PsyNeuLink components" src="_images/System_simple_fig.jpg" style="width: 498.0px; height: 571.5px;" /></a>
 <p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">system</span></a>.  Each process has a
 series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
@@ -250,7 +293,7 @@ complete example, that includes components responsible for control and learning)
 </div>
 </div>
 <div class="section" id="component-hierarchy">
-<span id="id3"></span><h2>Component Hierarchy<a class="headerlink" href="#component-hierarchy" title="Permalink to this headline">¶</a></h2>
+<span id="id4"></span><h2>Component Hierarchy<a class="headerlink" href="#component-hierarchy" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink uses the following primary constructs (illustrated in the <a class="reference internal" href="#system-figure"><span class="std std-ref">figure</span></a> below):</p>
 <ul>
 <li><dl class="first docutils">
@@ -346,7 +389,7 @@ and uses it to modulate the parameter of a projection (usually the matrix of a M
 </ul>
 </div>
 <div class="section" id="installation">
-<span id="id4"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<span id="id5"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>Currently, PsyNeuLink is in an alpha state and is not available through pypi/pip.
 Instead, you can clone the github repo (<a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink">https://github.com/PrincetonUniversity/PsyNeuLink</a>).
 Clone the master branch.
@@ -366,11 +409,13 @@ started.</p>
 <p>If you have trouble installing the package, or run into other problems, please contact <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>.</p>
 </div>
 <div class="section" id="contributors">
-<span id="id5"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
+<span id="id6"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><strong>Jonathan D. Cohen</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Peter Johnson</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Bryn Keller</strong>, Intel Labs, Intel Corporation</li>
+<li><strong>Kristin Manning</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Kevin Mantel</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Sebastian Musslick</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Amitai Shenhav</strong>, Cognitive, Linguistic, &amp; Psychological Sciences, Brown University</li>
 <li><strong>Michael Shvartsman</strong>, Princeton Neuroscience Institute, Princeton University</li>
@@ -383,7 +428,7 @@ started.</p>
 </div>
 </div>
 <div class="section" id="indices-and-tables">
-<span id="id6"></span><h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<span id="id7"></span><h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
