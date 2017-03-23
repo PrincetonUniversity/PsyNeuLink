@@ -2596,7 +2596,7 @@ class System_Base(System):
         """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
-    def show_graph(self, output_fmt='pdf', direction = 'BT', projections='edges'):
+        def show_graphxx(self, output_fmt='pdf', direction = 'BT', projections='edges'):
         """Shows a graph of a system's mechanisms and projections.
         Arguments
         output_fmt : output format can be either 'pdf' or 'jupyter'
@@ -2632,8 +2632,6 @@ class System_Base(System):
             # loop through each reciever
             for receiver in receivers:
                 # filter out objective mechanism
-                if isinstance(receiver[0], ObjectiveMechanism):
-                    continue
                 receiver_name = receiver[0].name
                 G.node(receiver_name)
                 senders = system_graph[receiver]
@@ -2660,8 +2658,6 @@ class System_Base(System):
             # loop through each reciever
             for receiver in receivers:
                 # filter out objective mechanism
-                if isinstance(receiver[0], ObjectiveMechanism):
-                    continue
                 receiver_name = receiver[0].name
                 G.node(receiver_name)
                 senders = system_graph[receiver]
