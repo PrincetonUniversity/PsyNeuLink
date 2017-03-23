@@ -2596,7 +2596,7 @@ class System_Base(System):
         """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
-        def show_graphxx(self, output_fmt='pdf', direction = 'BT', projections='edges'):
+    def show_graphxx(self, output_fmt='pdf', direction = 'BT', projections='edges'):
         """Shows a graph of a system's mechanisms and projections.
         Arguments
         output_fmt : output format can be either 'pdf' or 'jupyter'
