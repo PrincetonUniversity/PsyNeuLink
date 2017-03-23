@@ -173,15 +173,16 @@ components being learned:
 * `error_source`
    the mechanism that receives the `learned_projection`;  that is, the one that generates the output
    used to calculate the error_signal that the LearningMechanism attempts to reduce.
-..
+
 .. _LearningMechanism_Learning_Rate:
-* `learning_rate`
-   the learning rate for the LearningMechanism (used to specify the `learning_rate` parameter for its
+
+* `learning_rate <LearningMechanism.learning_rate>`
+   the learning rate for the LearningMechanism (used to specify the :keyword:`learning_rate` parameter for its
    `function <LearningMechanism.function>`.  Specifiying this (or the learning_rate parameter of the
    `function <LearningMechanism.function>` directly) supercedes any specification of a learning_rate for
    any `process <Process.Process_Base.learning_rate>` and/or `system <System.System_Base.learning_rate>` to which
    the LearningMechanism belongs.  The default is `None`, in which case the LearingMechanism (and its
-   `function <LearningMechanism.function`) inherit the specification of the `learning_rate
+   `function <LearningMechanism.function>`) inherit the specification of the `learning_rate
    <Process.Process_Base.learning_rate>` for the process in which the LearningMechanism is being executed.
    If that is `None`, then it inherits it from the system in which it is being executed.  If that is also `None`,
    then it uses the default value assigned by its `function <LearningMechanism.function>`.
@@ -202,8 +203,8 @@ specified, and the configuration of the composition.
 
 .. _LearningMechanism_Single_Layer:
 
-"Single layer" learning
-^^^^^^^^^^^^^^^^^^^^^^^
+Single layer learning
+^^^^^^^^^^^^^^^^^^^^^
 
 This is the case when only a single MappingProjection is specified for learning, or the LearningMechanism's function
 only considers the output of its `error_source <LearningMechanism_Additional_Attributes>`  when computing the changes
@@ -245,8 +246,8 @@ layer of learning, *no* projection is created or assigned to the LearningMechani
 
 .. _LearningMechanism_Multi_Layer:
 
-"Multilayer" learning
-^^^^^^^^^^^^^^^^^^^^^^
+Multilayer learning
+^^^^^^^^^^^^^^^^^^^
 
 This is the case when a set of MappingProjections are being learned that are in a sequence (such as the `pathway` of a
 process); that is, in which each projects to a ProcessingMechanism that is the `sender <MappingProjection.sender>` for
@@ -481,7 +482,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         (see `function <LearningMechanism.function>` for details).
 
     learning_rate : float
-        specifies the learning rate for this LearningMechanism (see `learning_rate` for details).
+        specifies the learning rate for this LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
+        for details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -557,13 +559,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
         `input` (list or 1d array), `output` (list or 1d array), `derivative` (function) and `error` (list or 1d array).
 
     learning_rate : float : None
-        determines the learning rate for the LearningMechanism.  It is used to specify the `learning_rate` parameter
-        for the LearningMechanism's `learning function <LearningMechanism.function>`
-        (see description of `learning_rate <`LearningMechanism_Learning_Rate>` above for additional details).
+        determines the learning rate for the LearningMechanism.  It is used to specify the :keyword:`learning_rate`
+        parameter for the LearningMechanism's `learning function <LearningMechanism.function>`
+        (see description of `learning_rate <LearningMechanism_Learning_Rate>` above for additional details).
 
     error_signal : 1d np.array
         the error signal returned by the LearningMechanism's `function <LearningMechanism.function>`.  For
-        `single layer learning <LearningMechanism_Singe_Layer>`, this is the same as the value received in the
+        `single layer learning <LearningMechanism_Single_Layer>`, this is the same as the value received in the
         LearningMechanism's `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>` inputState;  for `multilayer
         learning <LearningMechanism_Multi_Layer>`, it is a modified version of the value received, that takes
         account of the contribution to the error signal received, made by the learned_projection and its input.
