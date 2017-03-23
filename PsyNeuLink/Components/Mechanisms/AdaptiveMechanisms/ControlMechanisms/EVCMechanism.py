@@ -8,8 +8,6 @@
 
 # *************************************************  EVCMechanism ******************************************************
 
-#FIX: SEARCH FOR :ref`xxx <LINK>`
-
 """
 
 Overview
@@ -79,11 +77,10 @@ assigned a projection from each of the mechanisms and/or outputStates specified 
 `monitor_for_control <EVCMechanism.monitor_for_control>` attribute, which it evaluates using the function specified in
 the EVCMechanism's `outcome_function` attribute.  By default, the ObjectiveMechanism is assigned a projection from
 the `primary outputState <OutputState_Primary>` of every `TERMINAL` mechanism in the system, and its function
-calcaultes the product of their values.  However, the contribution of each item listed in
-`monitor_for_control <EVCMechanism.monitor_for_control>` can be specified using a weight
-and/or an exponent (see `ObjectiveMechanism_Monitored_OutputStates` for specifying these parameters;
-and `below <EVCMechanism_Examples>` for examples). The outputStates of the system being monitored by an EVCMechanism
-are listed in its `monitored_output_states` attribute.
+calculates the product of their values.  However, the contribution of each item listed in
+`monitor_for_control <EVCMechanism.monitor_for_control>` can be specified using the EVCMechanism's
+`monitor_for_control_weights_and_exponents` attribute` (see `below <EVCMechanism_Examples>` for examples).
+The outputStates of the system being monitored by an EVCMechanism are listed in its `monitored_output_states` attribute.
 
 .. _EVC_Function
 
@@ -292,8 +289,10 @@ Class Reference
 ---------------
 
 """
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import *
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCAuxiliary import ControlSignalGridSearch, ValueFunction
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCAuxiliary import \
+    ControlSignalGridSearch, ValueFunction
+
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 
 OBJECT = 0

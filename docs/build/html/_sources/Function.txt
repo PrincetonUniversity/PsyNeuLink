@@ -16,5 +16,6 @@ Functions
 	          Integrator,
               BogaczEtAl,
 	          NavarroAndFuss,
+              LearningFunction,
               Reinforcement,
 	          BackPropagation

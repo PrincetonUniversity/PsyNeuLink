@@ -33,10 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="up" title="Mechanisms" href="Mechanism.html"/>
-        <link rel="next" title="ComparatorMechanism" href="ComparatorMechanism.html"/>
-        <link rel="prev" title="ControlProjection" href="ControlProjection.html"/> 
+    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -85,28 +82,10 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">MonitoringMechanisms</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="WeightedErrorMechanism.html">WeightedErrorMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-a-monitoringmechanism">Creating A MonitoringMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
@@ -141,8 +120,6 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Mechanism.html">Mechanisms</a> &raquo;</li>
-      
     <li>MonitoringMechanisms</li>
       <li class="wy-breadcrumbs-aside">
         
@@ -161,64 +138,9 @@
 <h1>MonitoringMechanisms<a class="headerlink" href="#monitoringmechanisms" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ComparatorMechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ComparatorMechanism.html#creating-a-comparatormechanism">Creating a ComparatorMechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ComparatorMechanism.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ComparatorMechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ComparatorMechanism.html#class-reference">Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="WeightedErrorMechanism.html">WeightedErrorMechanism</a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="WeightedErrorMechanism.html">WeightedErrorMechanism</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="WeightedErrorMechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="WeightedErrorMechanism.html#creating-a-weightederrormechanism">Creating A WeightedErrorMechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="WeightedErrorMechanism.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="WeightedErrorMechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="WeightedErrorMechanism.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
-</ul>
-</div>
-<span class="target" id="module-MonitoringMechanism"></span><div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A MonitoringMechanism monitors the <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> in a
-<a class="reference internal" href="Process.html"><span class="doc">process</span></a> or <a class="reference internal" href="System.html"><span class="doc">system</span></a>.  This can generate an error signal (e.g., for use in
-<a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a>) or some other value (e.g., a conflict signal).</p>
-</div>
-<div class="section" id="creating-a-monitoringmechanism">
-<span id="monitoringmechanism-creation"></span><h2>Creating A MonitoringMechanism<a class="headerlink" href="#creating-a-monitoringmechanism" title="Permalink to this headline">¶</a></h2>
-<p>Generally, one or more <a class="reference internal" href="#"><span class="doc">MonitoringMechanisms</span></a> are <a class="reference internal" href="LearningProjection.html#learningprojection-automatic-creation"><span class="std std-ref">created automatically</span></a> when learning is specified for a <code class="xref any docutils literal"><span class="pre">process</span></code>.  However, MonitoringMechanisms can also be created using the standard Python method of
-calling the constructor for the desired type.  Different types of MonitoringMechanisms monitor  different types of
-information, and therefore have varying input requirements.</p>
-</div>
-<div class="section" id="execution">
-<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>MonitoringMechanisms always execute after all of the mechanism being monitored in the system have execute.
-The <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a> of the mechanism being monitored is
-assigned as the primary input to the MonitoringMechanism. Other items may be also be assigned (for example,
-a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> takes an additional  input <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> against
-which it compares the monitored value).</p>
-</div>
-<div class="section" id="class-reference">
-<span id="monitoringmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="MonitoringMechanism.MonitoringMechanism_Base">
-<em class="property">class </em><code class="descclassname">MonitoringMechanism.</code><code class="descname">MonitoringMechanism_Base</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MonitoringMechanism.MonitoringMechanism_Base" title="Permalink to this definition">¶</a></dt>
-<dd><p>MonitoringMechanism(     variable=None,           params=None,             name=None,               prefs=None,              context=None):
-Abstract class for MonitoringMechanism</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">MonitoringMechanisms should NEVER be instantiated by a direct call to the base class.
-They should be instantiated using the constructor for a <a class="reference internal" href="#"><span class="doc">subclass</span></a>.</p>
-</div>
-<dl class="attribute">
-<dt id="MonitoringMechanism.MonitoringMechanism_Base.monitoredStateChanged">
-<code class="descname">monitoredStateChanged</code><a class="headerlink" href="#MonitoringMechanism.MonitoringMechanism_Base.monitoredStateChanged" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> &#8211; identifies whether the outputState being monitored has changed since the last execution.</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 </div>
 
@@ -226,15 +148,6 @@ They should be instantiated using the constructor for a <a class="reference inte
            </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="ComparatorMechanism.html" class="btn btn-neutral float-right" title="ComparatorMechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="ControlProjection.html" class="btn btn-neutral" title="ControlProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

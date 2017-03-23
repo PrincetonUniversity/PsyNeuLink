@@ -35,9 +35,8 @@ class InitError(Exception):
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 
 
 # DDM ------------------------------------------------------------------------------------------------------------------
@@ -262,7 +261,8 @@ for projection_type in ProjectionRegistry:
     try:
         projection_sender = projection_params[PROJECTION_SENDER]
     except KeyError:
-        raise InitError("{0} must define paramClassDefaults[PROJECTION_SENDER]".format(projection_type.__name__))
+        # raise InitError("{0} must define paramClassDefaults[PROJECTION_SENDER]".format(projection_type.__name__))
+        raise InitError("{0} must define paramClassDefaults[PROJECTION_SENDER]".format(projection_type))
 
     # If it is a subclass of Mechanism or State, leave it alone
     if (inspect.isclass(projection_sender) and

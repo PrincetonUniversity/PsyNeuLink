@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="EVCMechanism" href="EVCMechanism.html"/>
-        <link rel="next" title="MonitoringMechanisms" href="MonitoringMechanism.html"/>
+        <link rel="next" title="States" href="State.html"/>
         <link rel="prev" title="ControlSignal" href="ControlSignal.html"/> 
 
   
@@ -90,25 +90,23 @@
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="DefaultControlMechanism.html">DefaultControlMechanism</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="EVCMechanism.html">EVCMechanism</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="ControlSignal.html">ControlSignal</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">ControlProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="EVCMechanism.html#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="EVCMechanism.html#creating-an-evcmechanism">Creating an EVCMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="EVCMechanism.html#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="EVCMechanism.html#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="EVCMechanism.html#class-reference">Class Reference</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanisms</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="ControlMechanism.html">Control Mechanism</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="DefaultControlMechanism.html">DefaultControlMechanism</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="EVCMechanism.html">EVCMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ControlMechanism.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ControlMechanism.html#creating-a-controlmechanism">Creating A ControlMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ControlMechanism.html#execution">Execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ControlMechanism.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#creating-a-controlmechanism">Creating A ControlMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#class-reference">Class Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#creating-an-adaptivemechanism">Creating an AdaptiveMechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#execution">Execution</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">MonitoringMechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
@@ -152,7 +150,9 @@
       
           <li><a href="Mechanism.html">Mechanisms</a> &raquo;</li>
       
-          <li><a href="ControlMechanism.html">Control Mechanisms</a> &raquo;</li>
+          <li><a href="AdaptiveMechanism.html">Adaptive Mechanisms</a> &raquo;</li>
+      
+          <li><a href="ControlMechanism.html">Control Mechanism</a> &raquo;</li>
       
           <li><a href="EVCMechanism.html">EVCMechanism</a> &raquo;</li>
       
@@ -176,8 +176,8 @@
 </div>
 <span class="target" id="module-ControlProjection"></span><div class="section" id="overview">
 <span id="controlprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A ControlProjection is a <code class="xref any docutils literal"><span class="pre">projection</span></code> of a mechanism.
-It takes the value of an <code class="xref any docutils literal"><span class="pre">outputState</span></code>), and uses it to  modify the value of the parameter associated with the
+<p>A ControlProjection is a subclass of <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> that projects to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a>
+of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>. It takes the value of an <code class="xref any docutils literal"><span class="pre">outputState</span></code>), and uses it to  modify the value of the parameter associated with the
 parameterState to which it projects.</p>
 </div>
 <div class="section" id="creating-a-controlprojection">
@@ -310,7 +310,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="MonitoringMechanism.html" class="btn btn-neutral float-right" title="MonitoringMechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="State.html" class="btn btn-neutral float-right" title="States" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="ControlSignal.html" class="btn btn-neutral" title="ControlSignal" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

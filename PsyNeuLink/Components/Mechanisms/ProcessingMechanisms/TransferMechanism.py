@@ -369,12 +369,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         """
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                 initial_value=initial_value,
-                                                 noise=noise,
-                                                 rate=rate,
-                                                 time_scale=time_scale,
-                                                 range=range,
-                                                 params=params)
+                                                  initial_value=initial_value,
+                                                  noise=noise,
+                                                  rate=rate,
+                                                  time_scale=time_scale,
+                                                  range=range,
+                                                  params=params)
 
         # self.integrator_function = Integrator(weighting=ADAPTIVE, rate=self.rate, noise = self.noise)
         self.integrator_function = Integrator(weighting=ADAPTIVE, rate=self.rate, noise = self.noise)
@@ -448,7 +448,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             self.user_params[RANGE] = np.array([0,1])
 
         super()._instantiate_parameter_states(context=context)
-
 
     def _instantiate_attributes_before_function(self, context=None):
 

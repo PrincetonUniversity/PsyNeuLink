@@ -1,4 +1,3 @@
-
 RUNNING EVC System Laming Validation Test Script.py
 
 
@@ -177,35 +176,22 @@ RUNNING Multilayer Learning Test Script.py
 
 **** TRIAL:  0
 
-
-****************************************
-
+'System_Base-1' executing with: **** (time_step 0) 
+- processes: ['Process_Base-1']
+- input: [[[-1, 30]]]
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: [-1 30]
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- input: [ -1.  30.]
 
-'Process_Base-1' completed:
-- output: 0.834 0.871 0.9
+'System_Base-1' learning completed:
+- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.834 -0.871 0.1
+
+'System_Base-1' completed ***********(time_step 0)
 
 - MSE: 0.488
 
-
-Input: [-1 30]
-Target: [0 0 1]
-
-
-Activity from old weights: 
-
-- Middle 1: 
- [[ 0.65178489  0.68000359  0.70696362  0.73254561  0.75666301]]
-- Middle 2: 
- [[ 0.83754065  0.86013841  0.88004307  0.89745268]]
-- Output:
- [[ 0.8344837   0.87072018  0.89997433]]
-
-New weights: 
-
+OLD WEIGHTS: 
 
 - Input Weights: 
  [[ 0.1  0.2  0.3  0.4  0.5]
@@ -222,38 +208,37 @@ New weights:
  [ 0.58333333  0.66666667  0.75      ]
  [ 0.83333333  0.91666667  1.        ]]
 
+STIMULI:
+
+- Input: [[[-1 30]]]
+- Target: [0 0 1]
+
+ACTIVITY FROM OLD WEIGHTS: 
+
+- Middle 1: 
+ [[ 0.65178489  0.68000359  0.70696362  0.73254561  0.75666301]]
+- Middle 2: 
+ [[ 0.83754065  0.86013841  0.88004307  0.89745268]]
+- Output:
+ [[ 0.8344837   0.87072018  0.89997433]]
+
 
 **** TRIAL:  1
 
-
-****************************************
-
+'System_Base-1' executing ********** (time_step 1) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: [-1 30]
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- input: [ -1.  30.]
 
-'Process_Base-1' completed:
-- output: 0.78 0.833 0.902
+'System_Base-1' learning completed:
+- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.78 -0.833 0.0984
+
+'System_Base-1' completed ***********(time_step 1)
 
 - MSE: 0.437
 
-
-Input: [-1 30]
-Target: [0 0 1]
-
-
-Activity from old weights: 
-
-- Middle 1: 
- [[ 0.65143632  0.67925855  0.70590305  0.73125212  0.75521569]]
-- Middle 2: 
- [[ 0.8360676   0.85705304  0.87615224  0.89332565]]
-- Output:
- [[ 0.77970193  0.83263138  0.90159627]]
-
-New weights: 
-
+OLD WEIGHTS: 
 
 - Input Weights: 
  [[ 0.09961491  0.19914181  0.2987174   0.39834673  0.49803252]
@@ -270,38 +255,37 @@ New weights:
  [ 0.48190007  0.58041016  0.75792423]
  [ 0.72989345  0.82870377  1.00808099]]
 
+STIMULI:
+
+- Input: [[[-1 30]]]
+- Target: [0 0 1]
+
+ACTIVITY FROM OLD WEIGHTS: 
+
+- Middle 1: 
+ [[ 0.65143632  0.67925855  0.70590305  0.73125212  0.75521569]]
+- Middle 2: 
+ [[ 0.8360676   0.85705304  0.87615224  0.89332565]]
+- Output:
+ [[ 0.77970193  0.83263138  0.90159627]]
+
 
 **** TRIAL:  2
 
-
-****************************************
-
+'System_Base-1' executing ********** (time_step 2) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: [-1 30]
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- input: [ -1.  30.]
 
-'Process_Base-1' completed:
-- output: 0.702 0.777 0.903
+'System_Base-1' learning completed:
+- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.702 -0.777 0.0969
+
+'System_Base-1' completed ***********(time_step 2)
 
 - MSE: 0.369
 
-
-Input: [-1 30]
-Target: [0 0 1]
-
-
-Activity from old weights: 
-
-- Middle 1: 
- [[ 0.65110145  0.67854297  0.70488312  0.7300061   0.75381897]]
-- Middle 2: 
- [[ 0.83543398  0.85423656  0.8720961   0.88874829]]
-- Output:
- [[ 0.70218502  0.7773823   0.90307765]]
-
-New weights: 
-
+OLD WEIGHTS: 
 
 - Input Weights: 
  [[ 0.09924512  0.19831854  0.29748649  0.39675889  0.49614127]
@@ -318,38 +302,37 @@ New weights:
  [ 0.36455969  0.47874804  0.76557341]
  [ 0.61025308  0.72504898  1.0158801 ]]
 
+STIMULI:
+
+- Input: [[[-1 30]]]
+- Target: [0 0 1]
+
+ACTIVITY FROM OLD WEIGHTS: 
+
+- Middle 1: 
+ [[ 0.65110145  0.67854297  0.70488312  0.7300061   0.75381897]]
+- Middle 2: 
+ [[ 0.83543398  0.85423656  0.8720961   0.88874829]]
+- Output:
+ [[ 0.70218502  0.7773823   0.90307765]]
+
 
 **** TRIAL:  3
 
-
-****************************************
-
+'System_Base-1' executing ********** (time_step 3) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: [-1 30]
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- input: [ -1.  30.]
 
-'Process_Base-1' completed:
-- output: 0.603 0.7 0.905
+'System_Base-1' learning completed:
+- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.603 -0.7 0.0955
+
+'System_Base-1' completed ***********(time_step 3)
 
 - MSE: 0.287
 
-
-Input: [-1 30]
-Target: [0 0 1]
-
-
-Activity from old weights: 
-
-- Middle 1: 
- [[ 0.65081725  0.67794995  0.7040424   0.7289806   0.75266956]]
-- Middle 2: 
- [[ 0.83617904  0.85222415  0.86833289  0.88407255]]
-- Output:
- [[ 0.60279149  0.69958079  0.90453143]]
-
-New weights: 
-
+OLD WEIGHTS: 
 
 - Input Weights: 
  [[ 0.09893141  0.197637    0.29647373  0.39545552  0.49459031]
@@ -366,38 +349,37 @@ New weights:
  [ 0.23649954  0.36142229  0.7729718 ]
  [ 0.4797477   0.60548296  1.02341976]]
 
+STIMULI:
+
+- Input: [[[-1 30]]]
+- Target: [0 0 1]
+
+ACTIVITY FROM OLD WEIGHTS: 
+
+- Middle 1: 
+ [[ 0.65081725  0.67794995  0.7040424   0.7289806   0.75266956]]
+- Middle 2: 
+ [[ 0.83617904  0.85222415  0.86833289  0.88407255]]
+- Output:
+ [[ 0.60279149  0.69958079  0.90453143]]
+
 
 **** TRIAL:  4
 
-
-****************************************
-
+'System_Base-1' executing ********** (time_step 4) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: [-1 30]
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- input: [ -1.  30.]
 
-'Process_Base-1' completed:
-- output: 0.497 0.6 0.906
+'System_Base-1' learning completed:
+- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.497 -0.6 0.0939
+
+'System_Base-1' completed ***********(time_step 4)
 
 - MSE: 0.205
 
-
-Input: [-1 30]
-Target: [0 0 1]
-
-
-Activity from old weights: 
-
-- Middle 1: 
- [[ 0.65062587  0.67758662  0.70354132  0.72837699  0.7519976 ]]
-- Middle 2: 
- [[ 0.83860595  0.85157286  0.86552385  0.87995615]]
-- Output:
- [[ 0.4967927   0.60030321  0.90610082]]
-
-New weights: 
-
+OLD WEIGHTS: 
 
 - Input Weights: 
  [[ 0.09872023  0.19721976  0.2958709   0.39468981  0.49368583]
@@ -414,38 +396,37 @@ New weights:
  [ 0.11117416  0.23375204  0.78013044]
  [ 0.35215064  0.47549852  1.03070816]]
 
+STIMULI:
+
+- Input: [[[-1 30]]]
+- Target: [0 0 1]
+
+ACTIVITY FROM OLD WEIGHTS: 
+
+- Middle 1: 
+ [[ 0.65062587  0.67758662  0.70354132  0.72837699  0.7519976 ]]
+- Middle 2: 
+ [[ 0.83860595  0.85157286  0.86552385  0.87995615]]
+- Output:
+ [[ 0.4967927   0.60030321  0.90610082]]
+
 
 **** TRIAL:  5
 
-
-****************************************
-
+'System_Base-1' executing ********** (time_step 5) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: [-1 30]
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- input: [ -1.  30.]
 
-'Process_Base-1' completed:
-- output: 0.406 0.495 0.908
+'System_Base-1' learning completed:
+- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.406 -0.495 0.0921
+
+'System_Base-1' completed ***********(time_step 5)
 
 - MSE: 0.139
 
-
-Input: [-1 30]
-Target: [0 0 1]
-
-
-Activity from old weights: 
-
-- Middle 1: 
- [[ 0.6505459   0.67749606  0.70344352  0.7282752   0.75189485]]
-- Middle 2: 
- [[ 0.84233126  0.85238259  0.86410609  0.87702731]]
-- Output:
- [[ 0.4056202   0.49472391  0.90786617]]
-
-New weights: 
-
+OLD WEIGHTS: 
 
 - Input Weights: 
  [[ 0.09863201  0.19711582  0.2957533   0.39456079  0.49354767]
@@ -462,38 +443,37 @@ New weights:
  [ 0.0036821   0.10908518  0.78704524]
  [ 0.24286618  0.34875288  1.03773826]]
 
+STIMULI:
+
+- Input: [[[-1 30]]]
+- Target: [0 0 1]
+
+ACTIVITY FROM OLD WEIGHTS: 
+
+- Middle 1: 
+ [[ 0.6505459   0.67749606  0.70344352  0.7282752   0.75189485]]
+- Middle 2: 
+ [[ 0.84233126  0.85238259  0.86410609  0.87702731]]
+- Output:
+ [[ 0.4056202   0.49472391  0.90786617]]
+
 
 **** TRIAL:  6
 
-
-****************************************
-
+'System_Base-1' executing ********** (time_step 6) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: [-1 30]
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- input: [ -1.  30.]
 
-'Process_Base-1' completed:
-- output: 0.338 0.404 0.91
+'System_Base-1' learning completed:
+- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.338 -0.404 0.0902
+
+'System_Base-1' completed ***********(time_step 6)
 
 - MSE: 0.0951
 
-
-Input: [-1 30]
-Target: [0 0 1]
-
-
-Activity from old weights: 
-
-- Middle 1: 
- [[ 0.65055618  0.67761551  0.70365258  0.72855342  0.7522221 ]]
-- Middle 2: 
- [[ 0.84646666  0.85414176  0.86391576  0.87539647]]
-- Output:
- [[ 0.33763025  0.40397637  0.90977675]]
-
-New weights: 
-
+OLD WEIGHTS: 
 
 - Input Weights: 
  [[ 0.09864334  0.19725294  0.29600469  0.39491351  0.49398783]
@@ -510,38 +490,37 @@ New weights:
  [-0.08082053  0.00222359  0.79370451]
  [ 0.15709996  0.24029337  1.04449711]]
 
+STIMULI:
+
+- Input: [[[-1 30]]]
+- Target: [0 0 1]
+
+ACTIVITY FROM OLD WEIGHTS: 
+
+- Middle 1: 
+ [[ 0.65055618  0.67761551  0.70365258  0.72855342  0.7522221 ]]
+- Middle 2: 
+ [[ 0.84646666  0.85414176  0.86391576  0.87539647]]
+- Output:
+ [[ 0.33763025  0.40397637  0.90977675]]
+
 
 **** TRIAL:  7
 
-
-****************************************
-
+'System_Base-1' executing ********** (time_step 7) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: [-1 30]
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- input: [ -1.  30.]
 
-'Process_Base-1' completed:
-- output: 0.289 0.336 0.912
+'System_Base-1' learning completed:
+- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.289 -0.336 0.0883
+
+'System_Base-1' completed ***********(time_step 7)
 
 - MSE: 0.0681
 
-
-Input: [-1 30]
-Target: [0 0 1]
-
-
-Activity from old weights: 
-
-- Middle 1: 
- [[ 0.65061768  0.67784104  0.70401176  0.72901464  0.75275442]]
-- Middle 2: 
- [[ 0.85032251  0.85621552  0.86444353  0.87470705]]
-- Output:
- [[ 0.28892812  0.33633532  0.9117193 ]]
-
-New weights: 
-
+OLD WEIGHTS: 
 
 - Input Weights: 
  [[ 0.09871119  0.19751191  0.29643685  0.39549873  0.49470464]
@@ -558,38 +537,37 @@ New weights:
  [-0.14605161 -0.08180882  0.8001025 ]
  [ 0.09100201  0.15514424  1.05098012]]
 
+STIMULI:
+
+- Input: [[[-1 30]]]
+- Target: [0 0 1]
+
+ACTIVITY FROM OLD WEIGHTS: 
+
+- Middle 1: 
+ [[ 0.65061768  0.67784104  0.70401176  0.72901464  0.75275442]]
+- Middle 2: 
+ [[ 0.85032251  0.85621552  0.86444353  0.87470705]]
+- Output:
+ [[ 0.28892812  0.33633532  0.9117193 ]]
+
 
 **** TRIAL:  8
 
-
-****************************************
-
+'System_Base-1' executing ********** (time_step 8) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: [-1 30]
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- input: [ -1.  30.]
 
-'Process_Base-1' completed:
-- output: 0.253 0.288 0.914
+'System_Base-1' learning completed:
+- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.253 -0.288 0.0864
+
+'System_Base-1' completed ***********(time_step 8)
 
 - MSE: 0.0515
 
-
-Input: [-1 30]
-Target: [0 0 1]
-
-
-Activity from old weights: 
-
-- Middle 1: 
- [[ 0.65070104  0.67810064  0.7044144   0.72952588  0.75334066]]
-- Middle 2: 
- [[ 0.85366832  0.85824373  0.86527874  0.87455785]]
-- Output:
- [[ 0.25348771  0.28791896  0.9136125 ]]
-
-New weights: 
-
+OLD WEIGHTS: 
 
 - Input Weights: 
  [[ 0.09880317  0.19781013  0.29692165  0.39614816  0.49549527]
@@ -606,38 +584,37 @@ New weights:
  [-0.19736489 -0.14670666  0.80624477]
  [ 0.03907949  0.08947586  1.05719533]]
 
+STIMULI:
+
+- Input: [[[-1 30]]]
+- Target: [0 0 1]
+
+ACTIVITY FROM OLD WEIGHTS: 
+
+- Middle 1: 
+ [[ 0.65070104  0.67810064  0.7044144   0.72952588  0.75334066]]
+- Middle 2: 
+ [[ 0.85366832  0.85824373  0.86527874  0.87455785]]
+- Output:
+ [[ 0.25348771  0.28791896  0.9136125 ]]
+
 
 **** TRIAL:  9
 
-
-****************************************
-
+'System_Base-1' executing ********** (time_step 9) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: [-1 30]
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- input: [ -1.  30.]
 
-'Process_Base-1' completed:
-- output: 0.227 0.253 0.915
+'System_Base-1' learning completed:
+- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.227 -0.253 0.0846
+
+'System_Base-1' completed ***********(time_step 9)
 
 - MSE: 0.0408
 
-
-Input: [-1 30]
-Target: [0 0 1]
-
-
-Activity from old weights: 
-
-- Middle 1: 
- [[ 0.65079122  0.67836129  0.70481298  0.73002872  0.75391503]]
-- Middle 2: 
- [[ 0.85652384  0.86010532  0.86620989  0.87469337]]
-- Output:
- [[ 0.22686074  0.25270212  0.91542149]]
-
-New weights: 
-
+OLD WEIGHTS: 
 
 - Input Weights: 
  [[ 0.09890269  0.19810968  0.29740194  0.39678767  0.49627111]
@@ -653,6 +630,20 @@ New weights:
  [-0.47462798 -0.43340256  0.56113343]
  [-0.2388705  -0.19778374  0.81214434]
  [-0.00287122  0.03785105  1.06315816]]
+
+STIMULI:
+
+- Input: [[[-1 30]]]
+- Target: [0 0 1]
+
+ACTIVITY FROM OLD WEIGHTS: 
+
+- Middle 1: 
+ [[ 0.65079122  0.67836129  0.70481298  0.73002872  0.75391503]]
+- Middle 2: 
+ [[ 0.85652384  0.86010532  0.86620989  0.87469337]]
+- Output:
+ [[ 0.22686074  0.25270212  0.91542149]]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -670,93 +661,183 @@ targetMechanism weights:
 
 
 **** TRIAL:  0
-
-reward prediction weights: 
+Reward prediction weights: 
  [[ 1.  0.  0.]
  [ 0.  1.  0.]
  [ 0.  0.  1.]]
-action selected:  [ 0.  1.  0.]
+
+Action selected:  1; predicted reward: 1.0
 
 
 **** TRIAL:  1
-
-reward prediction weights: 
+Reward prediction weights: 
  [[ 1.    0.    0.  ]
- [ 0.    0.95  0.  ]
+ [ 0.    1.45  0.  ]
  [ 0.    0.    1.  ]]
-action selected:  [ 0.    0.95  0.  ]
+
+Action selected:  1; predicted reward: 1.45
 
 
 **** TRIAL:  2
-
-reward prediction weights: 
+Reward prediction weights: 
  [[ 1.      0.      0.    ]
- [ 0.      0.9025  0.    ]
+ [ 0.      1.8775  0.    ]
  [ 0.      0.      1.    ]]
-action selected:  [ 0.      0.9025  0.    ]
+
+Action selected:  1; predicted reward: 1.8775
 
 
 **** TRIAL:  3
-
-reward prediction weights: 
+Reward prediction weights: 
  [[ 1.        0.        0.      ]
- [ 0.        0.857375  0.      ]
+ [ 0.        2.283625  0.      ]
  [ 0.        0.        1.      ]]
-action selected:  [ 0.        0.857375  0.      ]
+
+Action selected:  1; predicted reward: 2.283625
 
 
 **** TRIAL:  4
-
-reward prediction weights: 
+Reward prediction weights: 
  [[ 1.          0.          0.        ]
- [ 0.          0.81450625  0.        ]
+ [ 0.          2.66944375  0.        ]
  [ 0.          0.          1.        ]]
-action selected:  [ 0.  0.  1.]
+
+Action selected:  2; predicted reward: 1.0
 
 
 **** TRIAL:  5
-
-reward prediction weights: 
+Reward prediction weights: 
  [[ 1.          0.          0.        ]
- [ 0.          0.81450625  0.        ]
- [ 0.          0.          0.95      ]]
-action selected:  [ 0.    0.    0.19]
+ [ 0.          2.66944375  0.        ]
+ [ 0.          0.          1.45      ]]
+
+Action selected:  2; predicted reward: 1.45
 
 
 **** TRIAL:  6
-
-reward prediction weights: 
+Reward prediction weights: 
  [[ 1.          0.          0.        ]
- [ 0.          0.81450625  0.        ]
- [ 0.          0.          0.9405    ]]
-action selected:  [ 0.          0.81450625  0.        ]
+ [ 0.          2.66944375  0.        ]
+ [ 0.          0.          1.8775    ]]
+
+Action selected:  1; predicted reward: 2.6694437499999997
 
 
 **** TRIAL:  7
-
-reward prediction weights: 
+Reward prediction weights: 
  [[ 1.          0.          0.        ]
- [ 0.          0.77378094  0.        ]
- [ 0.          0.          0.9405    ]]
-action selected:  [ 0.      0.      0.1881]
+ [ 0.          3.03597156  0.        ]
+ [ 0.          0.          1.8775    ]]
+
+Action selected:  2; predicted reward: 1.8775
 
 
 **** TRIAL:  8
-
-reward prediction weights: 
+Reward prediction weights: 
  [[ 1.          0.          0.        ]
- [ 0.          0.77378094  0.        ]
- [ 0.          0.          0.931095  ]]
-action selected:  [ 0.          0.77378094  0.        ]
+ [ 0.          3.03597156  0.        ]
+ [ 0.          0.          2.283625  ]]
+
+Action selected:  1; predicted reward: 3.0359715625
 
 
 **** TRIAL:  9
-
-reward prediction weights: 
+Reward prediction weights: 
  [[ 1.          0.          0.        ]
- [ 0.          0.73509189  0.        ]
- [ 0.          0.          0.931095  ]]
-action selected:  [ 0.          0.73509189  0.        ]
+ [ 0.          3.38417298  0.        ]
+ [ 0.          0.          2.283625  ]]
+
+Action selected:  1; predicted reward: 3.3841729843749997
+
+
+**** TRIAL:  0
+Reward prediction weights: 
+ [[ 1.          0.          0.        ]
+ [ 0.          3.71496434  0.        ]
+ [ 0.          0.          2.283625  ]]
+
+Action selected:  2; predicted reward: 2.283625
+
+
+**** TRIAL:  1
+Reward prediction weights: 
+ [[ 1.          0.          0.        ]
+ [ 0.          3.71496434  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  1; predicted reward: 3.7149643351562496
+
+
+**** TRIAL:  2
+Reward prediction weights: 
+ [[ 1.          0.          0.        ]
+ [ 0.          4.02921612  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  1; predicted reward: 4.029216118398437
+
+
+**** TRIAL:  3
+Reward prediction weights: 
+ [[ 1.          0.          0.        ]
+ [ 0.          4.32775531  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  0; predicted reward: 1.0
+
+
+**** TRIAL:  4
+Reward prediction weights: 
+ [[ 1.45        0.          0.        ]
+ [ 0.          4.32775531  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  1; predicted reward: 4.327755312478515
+
+
+**** TRIAL:  5
+Reward prediction weights: 
+ [[ 1.45        0.          0.        ]
+ [ 0.          4.61136755  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  1; predicted reward: 4.611367546854589
+
+
+**** TRIAL:  6
+Reward prediction weights: 
+ [[ 1.45        0.          0.        ]
+ [ 0.          4.88079917  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  1; predicted reward: 4.880799169511859
+
+
+**** TRIAL:  7
+Reward prediction weights: 
+ [[ 1.45        0.          0.        ]
+ [ 0.          5.13675921  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  2; predicted reward: 2.6694437499999997
+
+
+**** TRIAL:  8
+Reward prediction weights: 
+ [[ 1.45        0.          0.        ]
+ [ 0.          5.13675921  0.        ]
+ [ 0.          0.          3.03597156]]
+
+Action selected:  1; predicted reward: 5.136759211036266
+
+
+**** TRIAL:  9
+Reward prediction weights: 
+ [[ 1.45        0.          0.        ]
+ [ 0.          5.37992125  0.        ]
+ [ 0.          0.          3.03597156]]
+
+Action selected:  1; predicted reward: 5.379921250484453
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -842,8 +923,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- input: [[1, 1]]
 
 ''Color Naming' process' completed:
 - output: 0.881 0.881
@@ -859,8 +940,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- input: [[1, 1]]
 
 ''Word Reading' process' completed:
 - output: 0.881 0.881
@@ -876,8 +957,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- input: [[1, 1]]
 
 ''Color Naming' process' completed:
 - output: 0.86 0.883
@@ -893,8 +974,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- input: [[1, 1]]
 
 ''Word Reading' process' completed:
 - output: 0.883 0.86
@@ -910,8 +991,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- input: [[1, 1]]
 
 ''Color Naming' process' completed:
 - output: 0.833 0.886
@@ -927,8 +1008,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- input: [[1, 1]]
 
 ''Word Reading' process' completed:
 - output: 0.886 0.833
@@ -944,8 +1025,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- input: [[1, 1]]
 
 ''Color Naming' process' completed:
 - output: 0.798 0.888
@@ -961,8 +1042,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- input: [[1, 1]]
 
 ''Word Reading' process' completed:
 - output: 0.888 0.798
@@ -978,8 +1059,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- input: [[1, 1]]
 
 ''Color Naming' process' completed:
 - output: 0.754 0.89
@@ -995,8 +1076,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- input: [[1, 1]]
 
 ''Word Reading' process' completed:
 - output: 0.89 0.754
@@ -1012,8 +1093,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- input: [[1, 1]]
 
 ''Color Naming' process' completed:
 - output: 0.698 0.892
@@ -1029,8 +1110,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- input: [[1, 1]]
 
 ''Word Reading' process' completed:
 - output: 0.892 0.698
@@ -1046,8 +1127,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- input: [[1, 1]]
 
 ''Color Naming' process' completed:
 - output: 0.633 0.894
@@ -1063,8 +1144,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- input: [[1, 1]]
 
 ''Word Reading' process' completed:
 - output: 0.894 0.633
@@ -1080,8 +1161,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- input: [[1, 1]]
 
 ''Color Naming' process' completed:
 - output: 0.562 0.896
@@ -1097,8 +1178,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- input: [[1, 1]]
 
 ''Word Reading' process' completed:
 - output: 0.896 0.562
@@ -1114,8 +1195,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- input: [[1, 1]]
 
 ''Color Naming' process' completed:
 - output: 0.494 0.898
@@ -1131,8 +1212,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- input: [[1, 1]]
 
 ''Word Reading' process' completed:
 - output: 0.898 0.494
@@ -1148,8 +1229,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- input: [[1, 1]]
 
 ''Color Naming' process' completed:
 - output: 0.432 0.9
@@ -1165,8 +1246,8 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
-- input: [1, 1]
+- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- input: [[1, 1]]
 
 ''Word Reading' process' completed:
 - output: 0.9 0.432
@@ -1184,6 +1265,32 @@ RUNNING Stroop Model Learning Test Script.py
 
 
 
+****************************************
+
+
+''Color Naming-1' process' executing with:
+- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Hidden-Output Weights ObjectiveMechanism' 'Hidden-Output Weights LearningMechanism' 'Color-Hidden Weights LearningMechanism']
+- input: [[0 0]]
+
+''Color Naming-1' process' completed:
+- output: 0.731 0.881
+
+- MSE: 1.43
+
+
+****************************************
+
+
+''Word Reading-1' process' executing with:
+- pathway: ['Words-1' 'Hidden' 'Word-Hidden Weights ObjectiveMechanism' 'Word-Hidden Weights LearningMechanism']
+- input: [[0 0]]
+
+''Word Reading-1' process' completed:
+- output: 0.5 0.5
+
+- MSE: 6.25
+
+
 **** TRIAL:  0
 
 'Stroop Model-1' system executing with: **** (time_step 0) 
@@ -1191,58 +1298,17 @@ RUNNING Stroop Model Learning Test Script.py
 - inputs: [[[1, 1]], [[-2, -2]]]
 
 ''Color Naming-1' process' executing with:
-- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Hidden-Output Weights Target_Error' 'Color-Hidden Weights Weighted_Error']
+- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Hidden-Output Weights ObjectiveMechanism' 'Hidden-Output Weights LearningMechanism' 'Color-Hidden Weights LearningMechanism']
 - input: [ 1.  1.]
 
 ''Word Reading-1' process' executing with:
-- pathway: ['Words-1' 'Hidden' 'Word-Hidden Weights Weighted_Error']
+- pathway: ['Words-1' 'Hidden' 'Word-Hidden Weights ObjectiveMechanism' 'Word-Hidden Weights LearningMechanism']
 - input: [-2. -2.]
 
 'Stroop Model-1' learning completed:
-- error for target 'Hidden-Output Weights Target_Error' processingmechanism_base': 0.491 0.457
+- error for target 'Hidden-Output Weights ObjectiveMechanism' processingmechanism_base': 0.487 0.455
 
 'Stroop Model-1' system completed ***********(time_step 0)
-- output for Response-1: '0.509' '0.543'
-
-- MSE: 0.225
-
-Color Naming
-	Input: [[ 1.  1.]]
-	Target: [[[1 1]]]
-Wording Reading:
-	Input: [[-2. -2.]]
-	Target: [[[1 1]]]
-
-Response: 
- [ 0.50899214  0.54318254]
-Hidden-Output:
-[[0 1]
- [2 3]]
-Color-Hidden:
-[[0 1]
- [2 3]]
-Word-Hidden:
-[[0 1]
- [2 3]]
-
-
-**** TRIAL:  1
-
-'Stroop Model-1' system executing ********** (time_step 1) 
-
-''Color Naming-1' process' executing with:
-- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Hidden-Output Weights Target_Error' 'Color-Hidden Weights Weighted_Error']
-- input: [ 1.  1.]
-
-''Word Reading-1' process' executing with:
-- pathway: ['Words-1' 'Hidden' 'Word-Hidden Weights Weighted_Error']
-- input: [-2. -2.]
-
-'Stroop Model-1' learning completed:
-- error for target 'Hidden-Output Weights Target_Error' processingmechanism_base': 0.49 0.452
-
-'Stroop Model-1' system completed ***********(time_step 1)
-- output for Response-1: '0.51' '0.548'
 
 - MSE: 0.222
 
@@ -1254,16 +1320,55 @@ Wording Reading:
 	Target: [[[1 1]]]
 
 Response: 
- [ 0.51044657  0.5483048 ]
+ [ 0.51326839  0.54518192]
 Hidden-Output:
-[[ 0.01462766  1.01351195]
- [ 2.00220713  3.00203878]]
+[[ 0.12474451  1.05875456]
+ [ 2.12474451  3.05875456]]
 Color-Hidden:
-[[ 0.01190129  1.0103412 ]
- [ 2.01190129  3.0103412 ]]
+[[ 0.  1.]
+ [ 2.  3.]]
 Word-Hidden:
-[[-0.02380258  0.9793176 ]
- [ 1.97619742  2.9793176 ]]
+[[ 0.  1.]
+ [ 2.  3.]]
+
+
+**** TRIAL:  1
+
+'Stroop Model-1' system executing ********** (time_step 1) 
+
+''Color Naming-1' process' executing with:
+- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Hidden-Output Weights ObjectiveMechanism' 'Hidden-Output Weights LearningMechanism' 'Color-Hidden Weights LearningMechanism']
+- input: [ 1.  1.]
+
+''Word Reading-1' process' executing with:
+- pathway: ['Words-1' 'Hidden' 'Word-Hidden Weights ObjectiveMechanism' 'Word-Hidden Weights LearningMechanism']
+- input: [-2. -2.]
+
+'Stroop Model-1' learning completed:
+- error for target 'Hidden-Output Weights ObjectiveMechanism' processingmechanism_base': 0.467 0.337
+
+'Stroop Model-1' system completed ***********(time_step 1)
+
+- MSE: 0.166
+
+Color Naming
+	Input: [[ 1.  1.]]
+	Target: [[[1 1]]]
+Wording Reading:
+	Input: [[-2. -2.]]
+	Target: [[[1 1]]]
+
+Response: 
+ [ 0.53336266  0.66333872]
+Hidden-Output:
+[[ 0.13923926  1.0721978 ]
+ [ 2.12693159  3.06078298]]
+Color-Hidden:
+[[ 0.01412906  1.01065622]
+ [ 2.01412906  3.01065622]]
+Word-Hidden:
+[[-0.55050178  0.90770261]
+ [ 1.44949822  2.90770261]]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -1291,7 +1396,7 @@ RUNNING Mixed NN & DDM script.py
 - output: -1.0 2.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  -0.512, 1.43, 0.263, 0.711, -0.111
+- input:  0.45, 0.778, 1.32, 1.34, 0.101
 - params:
 	function: Logistic
 		bias: 0
@@ -1299,10 +1404,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.375 0.807 0.565 0.671 0.472
+- output: 0.611 0.685 0.789 0.793 0.525
 
 'My_DDM-2' mechanism executed:
-- input:  2.89
+- input:  3.4
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1341,7 +1446,7 @@ RUNNING Mixed NN & DDM script.py
 - output: 2.0 3.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  2.03, 3.76, 3.13, 1.48, 2.07
+- input:  3.38, 2.76, 3.97, 2.08, 2.31
 - params:
 	function: Logistic
 		bias: 0
@@ -1349,10 +1454,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.884 0.977 0.958 0.815 0.888
+- output: 0.967 0.941 0.981 0.889 0.91
 
 'My_DDM-2' mechanism executed:
-- input:  4.52
+- input:  4.69
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1391,7 +1496,7 @@ RUNNING Mixed NN & DDM script.py
 - output: 5.0 5.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  4.71, 7.03, 6.51, 2.66, 4.52
+- input:  6.93, 5.37, 7.56, 3.5, 4.89
 - params:
 	function: Logistic
 		bias: 0
@@ -1399,10 +1504,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.991 0.999 0.999 0.935 0.989
+- output: 0.999 0.995 0.999 0.971 0.993
 
 'My_DDM-2' mechanism executed:
-- input:  4.91
+- input:  4.96
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5

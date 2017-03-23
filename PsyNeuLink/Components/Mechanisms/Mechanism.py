@@ -774,7 +774,7 @@ class Mechanism_Base(Mechanism):
            it must be called by the subclass with a context value
 
         NOTES:
-        * Since Mechanism is a subclass of Function, it calls super.__init__
+        * Since Mechanism is a subclass of Component, it calls super.__init__
             to validate variable_default and param_defaults, and assign params to paramInstanceDefaults;
             it uses INPUT_STATE as the variable_default
         * registers mechanism with MechanismRegistry
@@ -1140,7 +1140,6 @@ class Mechanism_Base(Mechanism):
                 i += 1
             params[OUTPUT_STATES] = param_value
 
-
     def _validate_inputs(self, inputs=None):
         # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and MonitoringMechanism do not
         raise MechanismError("{} does not support run() method".format(self.__class__.__name__))
@@ -1243,15 +1242,15 @@ class Mechanism_Base(Mechanism):
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
             a dictionary that can include any of the parameters used as arguments to instantiate the mechanism,
             its function, or projection(s) to any of its states.  Any value assigned to a parameter will override
-            the current value of that parameter for this and only this execution of the mechanism; it will return
-            to its previous value following execution.  Each entry is either the specification for one of the
+            the current value of that parameter for the (and only the current) execution of the mechanism; it will
+            return to its previous value following execution.  Each entry is either the specification for one of the
             mechanism's parameters (in which case the key is the name of the parameter, and its value the value to be
             assigned to that parameter), or a dictionary for a specified type of state (in which case, the key is the
             name of a specific state or a keyword for the type of state (`INPUT_STATE_PARAMS`, `OUTPUT_STATE_PARAMS`
             or `PARAMETER_STATE_PARAMS`), and the value is a dictionary containing a parameter dictionary for that
             state or all states of the specified type.  The latter (state dictionaries) contain entries that are
             themselves dictionaries containing parameters for the state's function or its projections. The key for
-            each entry is a keyword indicating whether it is for the state's function (`FUNCTON_PARAMS`),
+            each entry is a keyword indicating whether it is for the state's function (`FUNCTION_PARAMS`),
             all of its projections (`PROJECTION_PARAMS`), a particular type of projection (`MAPPING_PROJECTION_PARAMS`
             or `CONTROL_PROJECTION_PARAMS`), or to a specific projection (using its name), and the value of
             each entry is a dictionary containing the parameters for the function, projection, or set of projections
@@ -1319,7 +1318,33 @@ class Mechanism_Base(Mechanism):
                                                  clock=clock,
                                                  time_scale=time_scale,
                                                  context=context)
-                return np.atleast_2d(return_value)
+
+                # # # MODIFIED 3/3/17 OLD:
+                # # return np.atleast_2d(return_value)
+                # # MODIFIED 3/3/17 NEW:
+                # converted_to_2d = np.atleast_2d(return_value)
+                # MODIFIED 3/7/17 NEWER:
+                # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
+                #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
+                #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
+                if (isinstance(return_value, list) and
+                    (all(isinstance(item, np.ndarray) for item in return_value) and
+                        all(
+                                all(item.shape[i]==return_value[0].shape[0]
+                                    for i in range(len(item.shape)))
+                                for item in return_value))):
+
+                        return return_value
+                else:
+                    converted_to_2d = np.atleast_2d(return_value)
+                # If return_value is a list of heterogenous elements, return as is
+                #     (satisfies requirement that return_value be an array of possibly multidimensional values)
+                if converted_to_2d.dtype == object:
+                    return return_value
+                # Otherwise, return value converted to 2d np.array
+                else:
+                    return converted_to_2d
+                # MODIFIED 3/3/17 END
 
             # Only call mechanism's function method for init
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
@@ -1329,16 +1354,19 @@ class Mechanism_Base(Mechanism):
                                              context=context)
                 return np.atleast_2d(return_value)
 
+
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
         if self.prefs.paramValidationPref:
-            # if runtime_params != NotImplemented:
             if runtime_params:
-                for param_set in runtime_params:
-                    if not (INPUT_STATE_PARAMS in param_set or
-                            PARAMETER_STATE_PARAMS in param_set or
-                            OUTPUT_STATE_PARAMS in param_set):
-                        raise MechanismError("{0} is not a valid parameter set for runtime specification".
+                # runtime_params can have entries with any of these keys
+                #     (each of which should be for a params dictionary for the corresponding state type)
+                state_keys = [INPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, OUTPUT_STATE_PARAMS]
+                # runtime_params can also have entries for the mechanism's params or its function's params
+                param_names = list({**self.user_params, **self.user_params[FUNCTION_PARAMS]}.keys())
+                # all of the entries in runtime_params must be one of the above
+                if not all(key in state_keys + param_names for key in runtime_params):
+                        raise MechanismError("{0} is not a valid specification for a runtime parameter".
                                              format(param_set))
         #endregion
 
@@ -1385,7 +1413,40 @@ class Mechanism_Base(Mechanism):
         # context = EXECUTING + ' ' + self.name + ASSIGN_VALUE
         # MODIFIED 1/28/17 END
 
-        self.value = np.atleast_2d(self.value)
+
+        # # MODIFIED 3/3/17 OLD:
+        # self.value = np.atleast_2d(self.value)
+        # # MODIFIED 3/3/17 NEW:
+        # converted_to_2d = np.atleast_2d(self.value)
+        # # If self.value is a list of heterogenous elements, leave as is;
+        # # Otherwise, use converted value (which is a genuine 2d array)
+        # if converted_to_2d.dtype != object:
+        #     self.value = converted_to_2d
+        # MODIFIED 3/8/17 NEWER:
+        # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
+        #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
+        #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
+        if (isinstance(self.value, list) and
+            (all(isinstance(item, np.ndarray) for item in self.value) and
+                all(
+                        all(item.shape[i]==self.value[0].shape[0]
+                            for i in range(len(item.shape)))
+                        for item in self.value))):
+                # return self.value
+                pass
+        else:
+            converted_to_2d = np.atleast_2d(self.value)
+            # If return_value is a list of heterogenous elements, return as is
+            #     (satisfies requirement that return_value be an array of possibly multidimensional values)
+            if converted_to_2d.dtype == object:
+                # return self.value
+                pass
+            # Otherwise, return value converted to 2d np.array
+            else:
+                # return converted_to_2d
+                self.value = converted_to_2d
+        # MODIFIED 3/3/17 END
+
         # Set status based on whether self.value has changed
         self.status = self.value
 
@@ -1512,8 +1573,10 @@ class Mechanism_Base(Mechanism):
 
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
-            # Assign parameterState's value to parameter value in runtime_params
-            if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
+            # If runtime_params is specified has a spec for the current param
+            #    assign parameter value there as parameterState's value
+            if runtime_params and PARAMETER_STATE_PARAMS in runtime_params and state_name in runtime_params[
+                PARAMETER_STATE_PARAMS]:
                 param = param_template = runtime_params
             # Otherwise use paramsCurrent
             else:
@@ -1718,7 +1781,6 @@ class Mechanism_Base(Mechanism):
         #     self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
         # # MODIFIED 1/28/17 END
 
-
     @property
     def status(self):
         return self._status
@@ -1726,11 +1788,15 @@ class Mechanism_Base(Mechanism):
     @status.setter
     def status(self, current_value):
         # if current_value != self._old_value:
-        if np.array_equal(current_value, self._old_value):
-            self._status = UNCHANGED
-        else:
+        try:
+            if np.array_equal(current_value, self._old_value):
+                self._status = UNCHANGED
+            else:
+                self._status = CHANGED
+                self._old_value = current_value
+        # FIX:  CATCHES ELEMENTWISE COMPARISON DEPRECATION WARNING/ERROR -- NEEDS TO BE FIXED AT SOME POINT
+        except:
             self._status = CHANGED
-            self._old_value = current_value
 
 
     @property
