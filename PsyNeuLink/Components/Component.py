@@ -524,7 +524,8 @@ class Component(object):
 
             # If name is None, mark as deferred so that name can be customized
             #    using info that has become available at time of deferred init
-            self.init_args['name'] = self.init_args['name'] or kwDeferredDefaultName
+            self.init_args['name'] = self.init_args['name'] or ('deferred_init_' + self.className) or \
+                                     DEFERRED_DEFAULT_NAME
 
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
@@ -623,7 +624,7 @@ class Component(object):
                 else:
                     if inspect.isclass(default(arg)) and issubclass(default(arg),inspect._empty):
                         raise ComponentError("PROGRAM ERROR: \'{}\' parameter of {} must be assigned a default value "
-                                             "(it can be \'None\') in its constructor or in paramClassDefaults".
+                                             "in its constructor or in paramClassDefaults (it can be \'None\')".
                                              format(arg, self.__class__.__name__))
                     self.paramClassDefaults[arg] = default(arg)
 
@@ -692,11 +693,19 @@ class Component(object):
                     from inspect import isfunction
 
                     # It is a PsyNeuLink Function
+                    # IMPLEMENTATION NOTE:  REPLACE THIS WITH "CONTINUE" ONCE _instantiate_function IS REFACTORED TO
+                    #                       TO ALLOW Function SPECIFICATkION (VS. ONLY CLASS)
                     if isinstance(function, Function):
+                        # MODIFIED 3/7/17 OLD:
                         # Set it to the class (for compatibility with current implementation of _instantiate_function()
                         # and put its params in FUNCTION_PARAMS
                         params[FUNCTION] = function.__class__
                         params[FUNCTION_PARAMS] = function.user_params.copy()
+                        # # MODIFIED 3/7/17 NEW:
+                        # self.function_variable = function.variable
+                        # # MODIFIED 3/7/17 NEWER:
+                        # continue
+                        # MODIFIED 3/7/17 END
 
                     # It is a generic function
                     elif isfunction(function):
@@ -1114,7 +1123,8 @@ class Component(object):
             # Variable passed validation, so assign as instance_default
 
 
-    def assign_params(self, request_set:dict=None):
+    @tc.typecheck
+    def assign_params(self, request_set:tc.optional(dict)=None):
         """Validates specified params, adds them TO paramsInstanceDefaults, and instantiates any if necessary
 
         Call _assign_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
@@ -1354,7 +1364,7 @@ class Component(object):
 
             # If the value is a projection, projection class, or a keyword for one, for anything other than
             #    the FUNCTION param (which is not allowed to be specified as a projection)
-            #    then simply assign value to paramClassDefault (implicaton of not specifying it explicitly);
+            #    then simply assign value to paramClassDefault (implication of not specifying it explicitly);
             #    this also allows it to pass the test below and function execution to occur for initialization;
             from PsyNeuLink.Components.Projections.Projection import Projection, ProjectionRegistry
             # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
@@ -1746,12 +1756,25 @@ class Component(object):
                                 from PsyNeuLink.Components.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec[0]
 
+                # MODIFIED 3/7/17 OLD:
                 # Instantiate function from class specification
                 function_instance = function(variable_default=self.variable,
                                              params=function_param_specs,
                                              # FIX 10/29/16 WHY NOT?
                                              # owner=self,
                                              context=context)
+                # # MODIFIED 3/7/17 NEW:
+                # try:
+                #     func_variable = self.function_variable
+                # except AttributeError:
+                #     func_variable= self.variable
+                # # Instantiate function from class specification
+                # function_instance = function(variable_default=func_variable,
+                #                              params=function_param_specs,
+                #                              # FIX 10/29/16 WHY NOT?
+                #                              # owner=self,
+                #                              context=context)
+                # MODIFIED 3/7/17 END
                 self.paramsCurrent[FUNCTION] = function_instance.function
                 # MODIFIED 8/31/16 NEW:
                 # # FIX: ?? COMMENT OUT WHEN self.paramsCurrent[FUNCTION] NOW MAPS TO self.function

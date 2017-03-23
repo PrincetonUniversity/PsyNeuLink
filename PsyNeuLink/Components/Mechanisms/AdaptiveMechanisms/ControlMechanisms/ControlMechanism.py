@@ -12,12 +12,15 @@
 Overview
 --------
 
-ControlMechanisms monitor the `outputState(s) <OutputState>` of `ProcessingMechanisms <ProcessingMechanism>` in a
-`System`, to assess the outcome of processing of those mechanisms.  They use this information to regulate the value of
-parameters of those or other mechanisms (or their functions) in the system.  This is done by way of
-`ControlProjections <ControlProjection>` from the ControlMechanism to the `ParameterStates <ParameterState>` for the
-parameter(s) to be controlled.  A ControlMechanism can regulate only the parameters of mechanism in the system for
-which it is the `controller <System_Execution_Control>`.
+A ControlMechanism is an `AdaptiveMechanism` that modifies the parameter(s) of one or more `ProcessingMechanisms`.
+It's function takes a value (usually the output of an `ObjectiveMechanism`) and uses that to calculate an
+`allocation_policy`:  a list of `allocation` values for each of its ControlSignals that specify the value to assign
+to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is conveyed by
+a `ControlProjection` to the `parameterState <ParameterState>` of the corresopnding ProcessingMechanism.  A
+ControlMechanism can regulate only the parameters of mechanism in the system for which it is the
+`controller <System_Execution_Control>`.  ControlMechanisms are executed after all ProcessingMechanisms and
+`LearningMechanisms <LearningMechanism>` in that system have been executed.
+
 
 .. _ControlMechanism_Creation:
 
@@ -86,7 +89,6 @@ from collections import OrderedDict
 
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.ShellClasses import *
-
 
 ControlMechanismRegistry = {}
 
@@ -250,7 +252,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # DefaultController does not require a system specification
         #    (it simply passes the defaultControlAllocation for default ConrolSignal Projections)
-        from PsyNeuLink.Components.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
         if isinstance(self,DefaultControlMechanism):
             pass
 
@@ -393,7 +395,7 @@ class ControlMechanism_Base(Mechanism_Base):
         output_state_name = projection.receiver.name + '_ControlSignal'
         output_state_value = self.allocation_policy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
-        from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
         state = _instantiate_state(owner=self,
                                             state_type=ControlSignal,
                                             state_name=output_state_name,

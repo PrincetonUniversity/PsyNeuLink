@@ -126,7 +126,7 @@ Class Reference
 
 # import Components
 from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import *
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import *
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.State import *
 

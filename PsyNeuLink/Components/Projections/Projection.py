@@ -640,8 +640,8 @@ class Projection_Base(Projection):
                 # MODIFIED 9/12/16 END
                 self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
             else:
-                raise ProjectionError("Sender ({0}, for {1}) must be a OutputState".
-                                      format(self.sender.__class__.__name__, self.name))
+                raise ProjectionError("Sender ({0}) for {1} must be a OutputState".
+                                      format(self.sender.__name__, self.name))
 
         # # If sender is a Mechanism (rather than a State), get relevant outputState and assign it to self.sender
         if isinstance(self.sender, Mechanism):
@@ -698,20 +698,23 @@ class Projection_Base(Projection):
           - calls this method (as super) to assign projection to the Mechanism
         * Constraint that self.value is compatible with receiver.inputState.value
             is evaluated and enforced in _instantiate_function, since that may need to be modified (see below)
+        * Verification that projection has not already been assigned to receiver is handled by _add_projection_to;
+            if it has, a warning is issued and the assignment request is ignored
 
-        IMPLEMENTATION NOTE: since projection is added using Mechanism.add_projection(projection, state) method,
-                             could add state specification as arg here, and pass through to add_projection()
-                             to request a particular state
 
         :param context: (str)
         :return:
         """
+        # IMPLEMENTATION NOTE: since projection is added using Mechanism.add_projection(projection, state) method,
+        #                      could add state specification as arg here, and pass through to add_projection()
+        #                      to request a particular state
+        # IMPLEMENTATION NOTE: should check that projection isn't already received by receivers
 
         if isinstance(self.receiver, State):
             _add_projection_to(receiver=self.receiver.owner,
-                              state=self.receiver,
-                              projection_spec=self,
-                              context=context)
+                               state=self.receiver,
+                               projection_spec=self,
+                               context=context)
 
         # This should be handled by implementation of _instantiate_receiver by projection's subclass
         elif isinstance(self.receiver, Mechanism):
@@ -722,7 +725,6 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    # MODIFIED 12/21/16 NEW:
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
         for state_name, state in self.parameterStates.items():
 
@@ -750,13 +752,10 @@ class Projection_Base(Projection):
             # Assign version of parameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
             param[state_name] = type_match(state.value, param_type)
-    # MODIFIED 12/21/16 END
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
-# from PsyNeuLink.Components.Projections.ControlProjection import is_control_projection
-# from PsyNeuLink.Components.Projections.LearningProjection import is_learning_signal
 
 def _is_projection_spec(spec):
     """Evaluate whether spec is a valid Projection specification
@@ -908,6 +907,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                 raise ProjectionError("Unable to assign projection {0} to receiver {1}".
                                       format(projection_spec.name, receiver.name))
 
+    # validate that projection has not already been assigned to receiver
     if receiver.verbosePref or projection_spec.sender.owner.verbosePref:
         if projection_spec in receiver.receivesFromProjections:
             warnings.warn("Request to assign {} as projection to {} was ignored; it was already assigned".
@@ -947,6 +947,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
         state (OutputState, str, or value):
         context:
     """
+    # IMPLEMENTATION NOTE: add verification that projection is not already assigned to sender; if so, warn and ignore
 
     from PsyNeuLink.Components.States.State import _instantiate_state
     from PsyNeuLink.Components.States.State import State_Base

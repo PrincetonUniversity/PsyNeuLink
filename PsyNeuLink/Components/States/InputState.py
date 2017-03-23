@@ -401,9 +401,10 @@ def _instantiate_input_states(owner, context=None):
     If INPUT_STATES is not specified, use self.variable to create a default input state
     When completed:
         - self.inputStates contains an OrderedDict of one or more inputStates
-        - self.inputState contains first or only inputState in OrderedDict
+        - self.inputState contains the `primary inputState <Mechanism_InputStates>`:  first or only one in OrderedDict
         - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more inputStates)
         - each inputState corresponds to an item in the variable of the owner's function
+        - the value of all of the inputStates is stored in a list in inputValue
         - if there is only one inputState, it is assigned the full value
 
     Note: State._instantiate_state_list()
@@ -450,6 +451,7 @@ def _instantiate_input_states(owner, context=None):
     # Initialize self.inputValue to correspond to format of owner's variable, and zero it
 # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
 # FIX:  IS THIS A LIST OR np.array (SHOULD BE A LIST)
+    # ??REPLACE THIS WITH owner.inputValue = list(owner.variable) * 0.0??
     owner.inputValue = owner.variable.copy() * 0.0
 
     # Assign self.inputState to first inputState in dict
