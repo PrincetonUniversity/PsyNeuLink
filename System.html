@@ -194,14 +194,14 @@ and assign the result as their output.</p>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a></dt>
+<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a></dt>
 <dd><p class="first last">These monitor the output of other mechanisms for use in controlling the parameters of other mechanisms or their
 functions.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a></dt>
+<dt><code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code></dt>
 <dd><p class="first last">These monitor the output of other mechanisms for use in modifying the parameters of projections (learning)</p>
 </dd>
 </dl>
@@ -256,13 +256,13 @@ necessarily the case that the <a class="reference internal" href="Keywords.html#
 </div></blockquote>
 <p id="system-full-fig"><strong>Components of a System</strong></p>
 <div class="figure" id="id1">
-<a class="reference internal image-reference" href="_images/System_full_fig.png"><img alt="Overview of major PsyNeuLink components" src="_images/System_full_fig.png" style="width: 8775.0px; height: 7625.25px;" /></a>
+<a class="reference internal image-reference" href="_images/System_full_fig.pdf"><img alt="Overview of major PsyNeuLink components" src="_images/System_full_fig.pdf" /></a>
 <p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> are shown, both belonging to the same <a class="reference internal" href="#"><span class="doc">system</span></a>.  Each process has a
 series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
 that converge on a common final ProcessingMechanism.  Each ProcessingMechanism is labeled with its designation in
-the system.  The <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism for both processes projects to a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a> that is used to drive
-<a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a> in Process B. It also projects to a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>
-that <a class="reference internal" href="ControlProjection.html"><span class="doc">controls</span></a> ProcessingMechanisms in both Processes A and B.  Note that the mechanisms and
+the system.  The <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism for both processes projects to an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that is used to
+drive <a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a> in Process B. It also projects to a separate ObjectiveMechanism that is used
+for control of ProcessingMechanisms in both Processes A and B.  Note that the mechanisms and
 projections responsible for learning and control belong to the system and can monitor and/or control mechanisms
 belonging to more than one process (as shown for control in this figure).</span></p>
 </div>
@@ -308,7 +308,7 @@ of execution, as input to mechanisms that close recurrent loops (designated as <
 </div>
 <div class="section" id="learning">
 <span id="system-execution-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
-<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="#System.System_Base.learning" title="System.System_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
+<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="Process.html#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
 indicates whether learning is enabled for the system. Learning is executed for any
 components (individual projections or processes) for which it is specified after all processing mechanisms in the
 system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
@@ -328,7 +328,7 @@ in sequence or mechanism format, one target must be provided for each <a class="
 <div class="section" id="control">
 <span id="system-execution-control"></span><h3>Control<a class="headerlink" href="#control" title="Permalink to this headline">¶</a></h3>
 <p>Every system is associated with a single <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.  The controller monitors the outputState(s) of one or more
-mechanisms in the system (listed in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitored_output_states" title="EVC.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute), and uses that information to set the
+mechanisms in the system (listed in its <code class="xref any docutils literal"><span class="pre">monitored_output_states</span></code> attribute), and uses that information to set the
 value of parameters for those or other mechanisms in the system, or their functions
 (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for a description of how to specify which outputStates are
 monitored, and <a class="reference internal" href="ControlProjection.html#controlprojection-creation"><span class="std std-ref">Creating a ControlProjection</span></a> for specifying parameters to be controlled). The controller is
@@ -361,7 +361,7 @@ dictionary (see <a class="reference internal" href="Process.html"><span class="d
 <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>). The key for each entry is a mechanism object, and the value is a number,
 list or 1d np.array that must be compatible with the format of the first item of the mechanism&#8217;s value
 (i.e., mechanism.value[0]).</li>
-<li><strong>controller</strong> (<em>ControlMechanism : default DefaultController</em>) &#8211; specifies the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> used to monitor the value of the outputState(s) for mechanisms specified in
+<li><strong>controller</strong> (<em>ControlMechanism : default DefaultController</em>) &#8211; specifies the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> used to monitor the value of the outputState(s) for mechanisms specified in
 <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code>, and that specify the value of <code class="xref any docutils literal"><span class="pre">ControlProjections</span></code> in the system.</li>
 <li><strong>enable_controller</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; specifies whether the <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is executed during system execution.</li>
 <li><strong>monitor_for_control</strong> (<em>list of OutputState objects or specifications : default None</em>) &#8211; specifies the outputStates of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms in the system to be monitored by its <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>
@@ -541,7 +541,7 @@ based on _target_mech_tuples)</div></blockquote>
 <p>Assign items of input to <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms</p>
 <p>Execute mechanisms in the order specified in executionList and with phases equal to
 <code class="docutils literal"><span class="pre">CentralClock.time_step</span> <span class="pre">%</span> <span class="pre">numPhases</span></code>.</p>
-<p>Execute learning for processes (for those that specify it) at the appropriate phase.</p>
+<p>Execute any learning components specified at the appropriate phase.</p>
 <p>Execute controller after all mechanisms have been executed (after each numPhases)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -588,11 +588,20 @@ If it is <code class="xref std std-keyword docutils literal"><span class="pre">T
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;system&gt;.results</strong> &#8211; list of the value of the outputState for each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of the system returned for
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul>
+<li><p class="first"><em>COMMMENT</em> &#8211; OLD;  CORRECT?
+&lt;system&gt;.results : List[outputState.value]</p>
+<blockquote>
+<div><p>list of the value of the outputState for each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of the system returned for
 each execution.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[outputState.value]</p>
+</div></blockquote>
+</li>
+<li><p class="first"><em>COMMMENT</em></p>
+</li>
+<li><p class="first"><strong>&lt;system&gt;.results</strong> (<em>List[Mechanism.OutputValue]</em>) &#8211; list of the OutputValue for each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of the system returned for each execution.</p>
+</li>
+</ul>
+</p>
 </td>
 </tr>
 </tbody>
