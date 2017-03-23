@@ -131,7 +131,7 @@ COMMENT
 
 **Components of a System**
 
-.. figure:: _static/System_full_fig.png
+.. figure:: _static/System_full_fig.pdf
    :alt: Overview of major PsyNeuLink components
    :scale: 75 %
 
