@@ -155,7 +155,7 @@ elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
     x = system(processes=[z],
                targets=[0, 0, 1],
-               learning_rate=1.0)
+               learning_rate=0.0)
 
     x.reportOutputPref = True
     composition = x

@@ -1751,6 +1751,14 @@ class System_Base(System):
         for item in self.learningExecutionList:
             if isinstance(item, MappingProjection):
                 continue
+
+            # If a learning_rate has been specified for the system, assign that to all LearningMechanisms
+            #    for which a mechanism-specific learning_rate has NOT been assigned
+            if (isinstance(item, LearningMechanism) and
+                        self.learning_rate is not None and
+                        item.function_object.learning_rate is None):
+                item.function_object.learning_rate = self.learning_rate
+
             mech_tuple = self._allMechanisms._get_tuple_for_mech(item)
             if not mech_tuple in self._monitoring_mech_tuples:
                 self._monitoring_mech_tuples.append(mech_tuple)
@@ -2060,43 +2068,21 @@ class System_Base(System):
         if isinstance(self.targets, function_type):
             self.current_targets = self.targets()
 
-        # NEXT, implement system learning_rate param if specified:
-        #    embed it in a param specification dict for inclusion with runtime_params
-        # MODIFIED 3/22/17 NEW:
-        system_learning_rate_spec_dict = None
-        if self.learning_rate is not None:
-            system_learning_rate_spec_dict = {LEARNING_RATE: self.learning_rate}
-        # MODIFIED 3/22/17 END
-
         for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
         # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
         #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
             self.targetInputStates[i].value = self.current_targets[i]
 
-        # AFTER THAT, execute all components involved in learning
+        # NEXT, execute all components involved in learning
         for component in self.learningExecutionList:
 
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
             if isinstance(component, MappingProjection):
                 continue
 
-            # MODIFIED 3/22/17 NEW:
             params = None
-            # If learning_rate was specified for system and this is a LearningMechanism
-            if system_learning_rate_spec_dict is not None and isinstance(component, LearningMechanism):
-                # Add to any existing params
-                if params is not None:
-                    params.update(system_learning_rate_spec_dict)
-                # Or just assign if none
-                else:
-                    params = system_learning_rate_spec_dict
-            # MODIFIED 3/22/17 END
 
-            # # MODIFIED 3/22/17 OLD:
-            # component_type = "monitoringMechanism"
-            # MODIFIED 3/22/17 NEW:
             component_type = component.componentType
-            # MODIFIED 3/22/17 END
 
             processes = list(component.processes.keys())
 

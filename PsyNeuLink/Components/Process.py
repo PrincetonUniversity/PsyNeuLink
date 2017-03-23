@@ -1779,6 +1779,14 @@ class Process_Base(Process):
                             ):
                     mech_tuple[0].processes[self] = TARGET
                 else:
+                    # mech must be a LearningMechanism;
+                    # If a learning_rate has been specified for the process, assign that to all LearningMechanisms
+                    #    for which a mechanism-specific learning_rate has NOT been assigned
+                    if (self.learning_rate is not None and
+                                mech.function_object.learning_rate is None):
+                        mech.function_object.learning_rate = self.learning_rate
+
+                    # Assign its label
                     mech_tuple[0].processes[self] = MONITORING
 
             # Add _monitoring_mech_tuples to _mech_tuples
@@ -1914,7 +1922,6 @@ class Process_Base(Process):
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as TARGET ObjectiveMechanism for output of \'{}\'".
                       format(self.targetMechanism.name, self.name))
-
 
     def _instantiate_target_input(self):
 
@@ -2102,27 +2109,27 @@ class Process_Base(Process):
         else:
             self.targetInputStates[0].value = np.array(self.target)
 
-        # MODIFIED 3/22/17 NEW:
-        # NEXT, implement process learning_rate param if specified:
-        #    embed it in a param specification dict for inclusion with runtime_params
-        process_learning_rate_spec_dict = None
-        if self.learning_rate is not None:
-            process_learning_rate_spec_dict = {LEARNING_RATE: self.learning_rate}
-        # MODIFIED 3/22/17 END
+        # # MODIFIED 3/22/17 NEW:
+        # # NEXT, implement process learning_rate param if specified:
+        # #    embed it in a param specification dict for inclusion with runtime_params
+        # process_learning_rate_spec_dict = None
+        # if self.learning_rate is not None:
+        #     process_learning_rate_spec_dict = {LEARNING_RATE: self.learning_rate}
+        # # MODIFIED 3/22/17 END
 
         # THEN, execute Objective and LearningMechanisms
         for mechanism, params, phase_spec in self._monitoring_mech_tuples:
 
-            # MODIFIED 3/22/17 NEW:
-            # If learning_rate was specified for process and this is a LearningMechanism
-            if process_learning_rate_spec_dict is not None and isinstance(mechanism, LearningMechanism):
-                # Add to any existing params
-                if params is not None:
-                    params.update(process_learning_rate_spec_dict)
-                # Or just assign if none
-                else:
-                    params = process_learning_rate_spec_dict
-            # MODIFIED 3/22/17 END
+            # # MODIFIED 3/22/17 NEW:
+            # # If learning_rate was specified for process and this is a LearningMechanism
+            # if process_learning_rate_spec_dict is not None and isinstance(mechanism, LearningMechanism):
+            #     # Add to any existing params
+            #     if params is not None:
+            #         params.update(process_learning_rate_spec_dict)
+            #     # Or just assign if none
+            #     else:
+            #         params = process_learning_rate_spec_dict
+            # # MODIFIED 3/22/17 END
 
             mechanism.execute(clock=clock,
                               time_scale=self.timeScale,
