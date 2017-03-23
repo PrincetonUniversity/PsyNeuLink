@@ -178,7 +178,7 @@
 </dl>
 <dl class="class">
 <dt id="Function.Contradiction">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Contradiction</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None</em>, <em>context='Contradiction INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Contradiction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Contradiction</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None</em>, <em>context='Contradiction INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Contradiction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Example function for use as template for function construction</p>
 <dl class="docutils">
 <dt>Iniialization arguments:</dt>
@@ -238,7 +238,7 @@ kwPertinacity: float - obstinate or equivocal (default: 10)</li>
 
 <dl class="class">
 <dt id="Function.UserDefinedFunction">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">UserDefinedFunction</code><span class="sig-paren">(</span><em>function</em>, <em>variable=None</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None</em>, <em>context='USER DEFINED FUNCTION INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.UserDefinedFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">UserDefinedFunction</code><span class="sig-paren">(</span><em>function</em>, <em>variable=None</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None</em>, <em>context='USER DEFINED FUNCTION INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.UserDefinedFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement user-defined function</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -252,7 +252,7 @@ kwPertinacity: float - obstinate or equivocal (default: 10)</li>
 
 <dl class="class">
 <dt id="Function.LinearCombination">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearCombination</code><span class="sig-paren">(</span><em>variable_default=[2, 2], scale: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0, offset: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.0, weights=None, exponents=None, operation: &lt;typecheck.tc_predicates.enum object at 0x10c13abe0&gt; = 'sum', params=None, prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None, context='LinearCombination INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearCombination" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearCombination</code><span class="sig-paren">(</span><em>variable_default=[2, 2], scale: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0, offset: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.0, weights=None, exponents=None, operation: &lt;typecheck.tc_predicates.enum object at 0x10c3387f0&gt; = 'sum', params=None, prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None, context='LinearCombination INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearCombination" title="Permalink to this definition">¶</a></dt>
 <dd><p>Linearly combine arrays of values with optional weighting, offset, and/or scaling</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -370,7 +370,7 @@ OPERATION: LinearCombination.Operation - operation to perform (default: SUM):</t
 
 <dl class="class">
 <dt id="Function.Linear">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0, intercept: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.0, params=None, prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Linear" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0, intercept: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.0, params=None, prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Linear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate a linear transform of input variable (SLOPE, INTERCEPT)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -398,7 +398,7 @@ OPERATION: LinearCombination.Operation - operation to perform (default: SUM):</t
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.BackPropagation.ParameterState.variable" title="Function.BackPropagation.ParameterState.variable"><strong>variable</strong></a> &#8211; (number) - value to be &#8220;plotted&#8221; (default: 0</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><strong>variable</strong></a> &#8211; (number) - value to be &#8220;plotted&#8221; (default: 0</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 SLOPE: number - slope (default: 1)
@@ -420,7 +420,7 @@ INTERCEPT: number - intercept (default: 0)</td>
 
 <dl class="class">
 <dt id="Function.Exponential">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Exponential</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>rate: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0</em>, <em>scale: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None</em>, <em>context='Exponential INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Exponential" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Exponential</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>rate: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0</em>, <em>scale: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None</em>, <em>context='Exponential INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Exponential" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate an exponential transform of input variable  (RATE, SCALE)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -454,7 +454,7 @@ INTERCEPT: number - intercept (default: 0)</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.BackPropagation.ParameterState.variable" title="Function.BackPropagation.ParameterState.variable"><strong>variable</strong></a> &#8211; (number) - value to be exponentiated (default: 0</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><strong>variable</strong></a> &#8211; (number) - value to be exponentiated (default: 0</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 RATE: number - rate (default: 1)
@@ -476,7 +476,7 @@ SCALE: number - scale (default: 1)</td>
 
 <dl class="class">
 <dt id="Function.Logistic">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Logistic</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>gain: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0</em>, <em>bias: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.0</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None</em>, <em>context='Logistic Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Logistic" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Logistic</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>gain: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0</em>, <em>bias: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.0</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None</em>, <em>context='Logistic Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Logistic" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the logistic transform of input variable  (GAIN, BIAS)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -510,7 +510,7 @@ SCALE: number - scale (default: 1)</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.BackPropagation.ParameterState.variable" title="Function.BackPropagation.ParameterState.variable"><strong>variable</strong></a> &#8211; (number) - value to be transformed by logistic function (default: 0)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><strong>variable</strong></a> &#8211; (number) - value to be transformed by logistic function (default: 0)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 GAIN: number - gain (default: 1)
@@ -532,7 +532,7 @@ BIAS: number - rate (default: 0)</td>
 
 <dl class="class">
 <dt id="Function.SoftMax">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">SoftMax</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>gain: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0</em>, <em>output: &lt;typecheck.tc_predicates.enum object at 0x10c133d68&gt; = 'all'</em>, <em>params: &lt;typecheck.framework.optional object at 0x10c13ae80&gt; = None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None</em>, <em>context='SoftMax Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">SoftMax</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>gain: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0</em>, <em>output: &lt;typecheck.tc_predicates.enum object at 0x10be1b9e8&gt; = 'all'</em>, <em>params: &lt;typecheck.framework.optional object at 0x10c075ac8&gt; = None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None</em>, <em>context='SoftMax Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the softMax transform of input variable  (GAIN, BIAS)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -576,7 +576,7 @@ PROB: probabilistially picks an element based on their softmax values to pass th
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.BackPropagation.ParameterState.variable" title="Function.BackPropagation.ParameterState.variable"><strong>variable</strong></a> &#8211; (number) - value to be transformed by softMax function (default: 0)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><strong>variable</strong></a> &#8211; (number) - value to be transformed by softMax function (default: 0)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 GAIN: number - gain (default: 1)
@@ -598,7 +598,7 @@ BIAS: number - rate (default: 0)</td>
 
 <dl class="class">
 <dt id="Function.LinearMatrix">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearMatrix</code><span class="sig-paren">(</span><em>variable_default=[0], matrix: &lt;function matrix_spec at 0x10c115d08&gt; = None, params=None, prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None, context='Linear Matrix INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearMatrix</code><span class="sig-paren">(</span><em>variable_default=[0], matrix: &lt;function matrix_spec at 0x10c312730&gt; = None, params=None, prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None, context='Linear Matrix INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, MATRIX)</p>
 <p>Use a weight matrix to convert a sender vector into a receiver vector:
 - each row of the mapping corresponds to an element of the sender vector (outer index)
@@ -648,7 +648,7 @@ BIAS: number - rate (default: 0)</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.BackPropagation.ParameterState.variable" title="Function.BackPropagation.ParameterState.variable"><strong>variable</strong></a> &#8211; (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><strong>variable</strong></a> &#8211; (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; <p>(dict) with entries specifying:
 MATRIX: value - used to override self.matrix implemented by __init__;  must be one of:</p>
@@ -676,7 +676,7 @@ MATRIX: value - used to override self.matrix implemented by __init__;  must be o
 
 <dl class="class">
 <dt id="Function.Integrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x10c13a6d8&gt; = 'constant'</em>, <em>params: &lt;typecheck.framework.optional object at 0x10bfb22e8&gt; = None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x10c075160&gt; = 'constant'</em>, <em>params: &lt;typecheck.framework.optional object at 0x10c075b00&gt; = None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -729,7 +729,7 @@ rate 1:    instantaneous change (returns new_value)</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.BackPropagation.ParameterState.variable" title="Function.BackPropagation.ParameterState.variable"><strong>variable</strong></a> &#8211; (list) - old_value and new_value (default: [0, 0]:</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><strong>variable</strong></a> &#8211; (list) - old_value and new_value (default: [0, 0]:</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
@@ -745,7 +745,7 @@ WEIGHTING: Integrator.Weightings - type of weighting (default = CONSTANT)</td>
 
 <dl class="class">
 <dt id="Function.BogaczEtAl">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.2, params=None, prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.2, params=None, prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to DDM process and return mean response time and accuracy.</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -791,7 +791,7 @@ tasks.  Psychological review, 113(4), 700. (<a class="reference external" href="
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.BackPropagation.ParameterState.variable" title="Function.BackPropagation.ParameterState.variable"><strong>variable</strong></a> &#8211; (list)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><strong>variable</strong></a> &#8211; (list)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 drift_rate...</td>
@@ -804,7 +804,7 @@ drift_rate...</td>
 
 <dl class="class">
 <dt id="Function.NavarroAndFuss">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.2, params=None, prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba719d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba719d8&gt; = 0.2, params=None, prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to distribution of DDM responses (mean and variance of response time and accuracy).</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -850,7 +850,7 @@ Wiener diffusion models.&#8221; Journal of Mathematical Psychology 53.4 (2009): 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.BackPropagation.ParameterState.variable" title="Function.BackPropagation.ParameterState.variable"><strong>variable</strong></a> &#8211; (list)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><strong>variable</strong></a> &#8211; (list)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 drift_rate...</td>
@@ -866,7 +866,7 @@ drift_rate...</td>
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="#Function.BackPropagation.ParameterState.variable" title="Function.BackPropagation.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first simple">
@@ -888,7 +888,7 @@ drift_rate...</td>
 
 <dl class="class">
 <dt id="Function.Reinforcement">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Reinforcement</code><span class="sig-paren">(</span><em>variable_default=[[0], [0], [0]], activation_function: &lt;typecheck.tc_predicates.any object at 0x10c14c668&gt; = &lt;class 'Function.SoftMax'&gt;, learning_rate: &lt;typecheck.framework.optional object at 0x10c020080&gt; = 1.0, params=None, prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None, context='Component Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Reinforcement" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Reinforcement</code><span class="sig-paren">(</span><em>variable_default=[[0], [0], [0]], activation_function: &lt;typecheck.tc_predicates.any object at 0x10bee72b0&gt; = &lt;class 'Function.SoftMax'&gt;, learning_rate: &lt;typecheck.framework.optional object at 0x10bee75f8&gt; = None, params=None, prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None, context='Component Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Reinforcement" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate matrix of weight changes using the reinforcement (delta) learning rule</p>
 <dl class="docutils">
 <dt>Reinforcement learning rule</dt>
@@ -938,7 +938,7 @@ Assume weight matrix (for MappingProjection to error_source) is a diagonal matri
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.BackPropagation.ParameterState.variable" title="Function.BackPropagation.ParameterState.variable"><strong>variable</strong></a> &#8211; 2D np.array with three items (input array, output array, error array)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><strong>variable</strong></a> &#8211; 2D np.array with three items (input array, output array, error array)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entry specifying:
 LEARNING_RATE: (float) - (default: 1)</td>
@@ -953,7 +953,7 @@ LEARNING_RATE: (float) - (default: 1)</td>
 
 <dl class="class">
 <dt id="Function.BackPropagation">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BackPropagation</code><span class="sig-paren">(</span><em>variable_default=[[0], [0], [0]], activation_derivative_fct: &lt;typecheck.framework.optional object at 0x10bfc4278&gt; = &lt;bound method Logistic.derivative of &lt;Function.Logistic object&gt;&gt;, error_derivative_fct: &lt;typecheck.framework.optional object at 0x10c011c18&gt; = &lt;bound method Logistic.derivative of &lt;Function.Logistic object&gt;&gt;, error_matrix=None, learning_rate: &lt;typecheck.framework.optional object at 0x10c011748&gt; = 1.0, params=None, prefs: &lt;function is_pref_set at 0x10ba56598&gt; = None, context='Component Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BackPropagation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BackPropagation</code><span class="sig-paren">(</span><em>variable_default=[[0], [0], [0]], activation_derivative_fct: &lt;typecheck.framework.optional object at 0x10c0dc470&gt; = &lt;bound method Logistic.derivative of &lt;Function.Logistic object&gt;&gt;, error_derivative_fct: &lt;typecheck.framework.optional object at 0x10c0dc278&gt; = &lt;bound method Logistic.derivative of &lt;Function.Logistic object&gt;&gt;, error_matrix=None, learning_rate: &lt;typecheck.framework.optional object at 0x10c006f98&gt; = None, params=None, prefs: &lt;function is_pref_set at 0x10ba51598&gt; = None, context='Component Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BackPropagation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate matrix of weight changes using the backpropagation (Generalized Delta Rule) learning algorithm</p>
 <dl class="docutils">
 <dt>Backpropagation learning algorithm (Generalized Delta Rule):</dt>
@@ -1006,7 +1006,7 @@ the context in which the projection is used.</li>
 <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">primary inputState</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the projection is used.</li>
 <li><strong>matrix</strong> (<em>list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX</em>) &#8211; the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform the
-value of the <a class="reference internal" href="#Function.BackPropagation.MappingProjection.sender" title="Function.BackPropagation.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</li>
+value of the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.sender" title="MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</li>
 <li><strong>param_modulation_operation</strong> (<em>ModulationOperation : default ModulationOperation.ADD</em>) &#8211; specifies the operation used to combine the value of any projections to the matrix&#8217;s parameterState with the
 <a class="reference internal" href="#Function.BackPropagation.MappingProjection.matrix" title="Function.BackPropagation.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> itself.  Most commonly used with <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a>.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
@@ -1060,7 +1060,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dt id="Function.BackPropagation.MappingProjection.matrix">
 <code class="descname">matrix</code><a class="headerlink" href="#Function.BackPropagation.MappingProjection.matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>2d np.array</em> &#8211; matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> to transform input from the
-<a class="reference internal" href="#Function.BackPropagation.MappingProjection.sender" title="Function.BackPropagation.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to the value provided to the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.receiver" title="MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
+<a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.sender" title="MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to the value provided to the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.receiver" title="MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1265,7 +1265,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.BackPropagation.ParameterState.variable" title="Function.BackPropagation.ParameterState.variable"><strong>variable</strong></a> &#8211; (list or np.array) len = 3 (input, output, error)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><strong>variable</strong></a> &#8211; (list or np.array) len = 3 (input, output, error)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; <p>(dict) with entries specifying:
 LEARNING_RATE: (float) - (default: 1)
