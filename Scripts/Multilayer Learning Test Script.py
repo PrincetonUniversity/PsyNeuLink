@@ -92,7 +92,7 @@ z = process(default_input_value=[0, 0],
                            Output_Layer],
             clamp_input=SOFT_CLAMP,
             learning=LEARNING,
-            # learning_rate=1.0,
+            learning_rate=1.0,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})
@@ -160,7 +160,7 @@ elif COMPOSITION is SYSTEM:
     x.reportOutputPref = True
     composition = x
 
-    x.show_graph()
+    # x.show_graph()
     x.run(num_executions=10,
           # inputs=stim_list,
           # inputs=[[-1, 30],[2, 10]],
