@@ -47,10 +47,6 @@
 #             [SEE `monitoring_status` in ObjectiveMechanism]
 # IMPLEMENT: MonitoredOutputStatesOption in string for MONITORED_VALUES specification of ObjectiveMechanism
 #
-# FIX: learning_rate:
-#      Both LearningMechanism and LearningProjection should pass this specification on to LearningMechanism.function
-#      Update docs accordingly
-#
 # DOCUMENTATION:
 #    search for "specification dictionary" and replace with: `specification dictionary <Mechanism_Creation>`
 #
