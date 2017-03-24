@@ -575,25 +575,6 @@ class Component(object):
 
                     # FIX: REFACTOR Component._instantiate_function TO USE COPY OF INSTANTIATED function
 
-                    # # MODIFIED 12/24/16 OLD:
-                    # # Note: this is for compatibility with current implementation of _instantiate_function()
-                    # self.paramClassDefaults[arg] = default(arg).__class__
-                    # self.paramClassDefaults[FUNCTION_PARAMS] = default(arg).user_params.copy()
-
-                    # # MODIFIED 12/24/16 NEW:
-                    # # Note: this is for compatibility with current implementation of _instantiate_function()
-                    # self.paramClassDefaults[arg] = default(arg).__class__
-                    # # Get params from instantiated function
-                    # try:
-                    #     self.paramClassDefaults[FUNCTION_PARAMS] = default(arg).user_params.copy()
-                    # except AttributeError:
-                    #     # FIX: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
-                    #     # if self.verbosePref:
-                    #     #     warnings.warn("{} is not a PsyNeuLink Function;  "
-                    #     #                   "therefore runtime_params cannot be used".format(default(arg).__name__))
-                    #     pass
-
-                    # MODIFIED 12/24/16 NEWER:
                     function = default(arg)
                     from PsyNeuLink.Components.Functions.Function import Function
                     from inspect import isfunction
@@ -613,7 +594,6 @@ class Component(object):
                     else:
                         raise ComponentError("Unrecognized object ({}) specified as function for {}".
                                              format(function, self.name))
-                    # MODIFIED 12/24/16 END
 
                 # Get defaults values for args listed in FUNCTION_PARAMS
                 # Note:  is not an arg, but rather used to package args that belong to a non-instantiated function
@@ -671,24 +651,6 @@ class Component(object):
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
 
-                    # # MODIFIED 12/24/16 OLD:
-                    # # Convert it to a class
-                    # # Note: this is for compatibility with current implementation of _instantiate_function()
-                    # params[FUNCTION] = function.__class__
-                    # params[FUNCTION_PARAMS] = function.user_params.copy()
-
-                    # # MODIFIED 12/24/16 NEW:
-                    # params[FUNCTION] = function.__class__
-                    # try:
-                    #     params[FUNCTION_PARAMS] = function.user_params.copy()
-                    # except (AttributeError, ValueError):
-                    #     # FIX: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
-                    #     # if self.verbosePref:
-                    #     #     warnings.warn("{} is not a PsyNeuLink Function;  "
-                    #     #                   "therefore runtime_params cannot be used".format(default(arg).__name__))
-                    #     pass
-
-                    # MODIFIED 12/24/16 NEWER:
                     from PsyNeuLink.Components.Functions.Function import Function
                     from inspect import isfunction
 
@@ -696,16 +658,10 @@ class Component(object):
                     # IMPLEMENTATION NOTE:  REPLACE THIS WITH "CONTINUE" ONCE _instantiate_function IS REFACTORED TO
                     #                       TO ALLOW Function SPECIFICATkION (VS. ONLY CLASS)
                     if isinstance(function, Function):
-                        # MODIFIED 3/7/17 OLD:
                         # Set it to the class (for compatibility with current implementation of _instantiate_function()
                         # and put its params in FUNCTION_PARAMS
                         params[FUNCTION] = function.__class__
                         params[FUNCTION_PARAMS] = function.user_params.copy()
-                        # # MODIFIED 3/7/17 NEW:
-                        # self.function_variable = function.variable
-                        # # MODIFIED 3/7/17 NEWER:
-                        # continue
-                        # MODIFIED 3/7/17 END
 
                     # It is a generic function
                     elif isfunction(function):
@@ -719,8 +675,6 @@ class Component(object):
                     else:
                         raise ComponentError("Unrecognized object ({}) specified as function for {}".
                                              format(fct, self.name))
-
-                    # MODIFIED 12/24/16 END
 
                     ignore_FUNCTION_PARAMS = True
 
@@ -774,6 +728,9 @@ class Component(object):
         pass
 
     def _create_attributes_for_user_params(self, **kwargs):
+
+        # IMPLEMENTATION NOTE:  REFACTOR TO IMPLEMENT AS PROPERTIES, WITH GETTER AND SETTER METHODS
+        #                       USE self.assign_param FOR SETTER
         for arg in kwargs:
             self.__setattr__(arg, kwargs[arg])
 
@@ -1839,10 +1796,6 @@ class Component(object):
                                          self.name,
                                          self.function.__self__.name))
 
-        # MODIFIED 11/27/16 NEW:
-        # self.paramInstanceDefaults[FUNCTION] = self.function
-        # MODIFIED 11/27/16 END
-
         # Now that function has been instantiated, call self.function
         # to assign its output (and type of output) to self.value
         if not context:
@@ -1860,11 +1813,11 @@ class Component(object):
         self.function_object = self.function.__self__
         self.function_object.owner = self
 
-        # MODIFIED 11/30/16 NEW:
+        # IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
+        #             SEE learning_rate IN LearningMechanism FOR EXAMPLE
         self.function_params = self.function_object.user_params
         self.paramInstanceDefaults[FUNCTION] = self.function
         self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
-        # MODIFIED 11/30/16 END
 
 
     def _instantiate_attributes_after_function(self, context=None):
