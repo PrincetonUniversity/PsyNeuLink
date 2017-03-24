@@ -717,8 +717,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         :return: (2D np.array) self.learning_signal
         """
 
-        # FIX: IMPLEMENT RUNTIME PARAMS HERE, W/ LEARNING_RATE??
-
         # COMPUTE LEARNING SIGNAL (dE/dW):
         self.learning_signal, self.error_signal = self.function(variable=variable,
                                                                 params=runtime_params,
@@ -742,7 +740,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         else:
             return None
 
-    # MODIFIED 3/22/17 NEW:
     @property
     def learning_rate(self):
         return self.function_object.learning_rate
@@ -750,7 +747,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
     @learning_rate.setter
     def learning_rate(self, assignment):
         self.function_object.learning_rate = assignment
-    # MODIFIED 3/22/17 END
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
