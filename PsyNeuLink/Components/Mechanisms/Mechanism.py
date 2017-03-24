@@ -1363,11 +1363,12 @@ class Mechanism_Base(Mechanism):
                 #     (each of which should be for a params dictionary for the corresponding state type)
                 state_keys = [INPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, OUTPUT_STATE_PARAMS]
                 # runtime_params can also have entries for the mechanism's params or its function's params
-                param_names = list({**self.user_params, **self.user_params[FUNCTION_PARAMS]}.keys())
+                # param_names = list({**self.user_params, **self.user_params[FUNCTION_PARAMS]}.keys())
+                param_names = list({**self.user_params, **self.function_params})
                 # all of the entries in runtime_params must be one of the above
                 if not all(key in state_keys + param_names for key in runtime_params):
-                        raise MechanismError("{0} is not a valid specification for a runtime parameter".
-                                             format(param_set))
+                        raise MechanismError("There is an invalid specification for a runtime parameter of {}".
+                                             format(self.name))
         #endregion
 
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
