@@ -1797,20 +1797,25 @@ class Component(object):
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
         self._value_template = self.value
 
-        self.function_object = self.function.__self__
-        # MODIFIED 3/25/17 NEW:
-        if not self.function_object.owner:
-            self.function_object.owner = self
-        elif self.function_object.owner != self:
-            raise ComponentError("Function being assigned to {} ({}) belongs to another component: {}".
-                                 format(self.name, self.function_object.name, self.function_object.owner.name))
-        # MODIFIED 3/25/17 END
-
-        # IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
-        #             SEE learning_rate IN LearningMechanism FOR EXAMPLE
-        self.function_params = self.function_object.user_params
         self.paramInstanceDefaults[FUNCTION] = self.function
-        self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
+
+        # For all components other than a Function itself, assign function_object and function_params
+        from PsyNeuLink.Components.Functions.Function import Function
+        if not isinstance(self, Function):
+            self.function_object = self.function.__self__
+            # MODIFIED 3/25/17 NEW:
+            if not self.function_object.owner:
+                self.function_object.owner = self
+            elif self.function_object.owner != self:
+                raise ComponentError("Function being assigned to {} ({}) belongs to another component: {}".
+                                     format(self.name, self.function_object.name, self.function_object.owner.name))
+            # MODIFIED 3/25/17 END
+
+            # IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
+            #             SEE learning_rate IN LearningMechanism FOR EXAMPLE
+            self.function_params = self.function_object.user_params
+            self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
+
 
 
     def _instantiate_attributes_after_function(self, context=None):
