@@ -56,7 +56,7 @@ parameters of the function, that allow these to be set and modified -- either di
 the execution of PsyNeuLink components (e.g., `mechanisms <Mechanism>`, `processes <Process>` and `systems <System>`).
 The second reason is for  **modularity**.  By providing a standard interface, Functions of components in
 PsyNeuLink can be replaced with other PsyNeuLink Functions, or with user-written custom functions so long as they
-adhere to certain standards (the Function API).
+adhere to certain standards (the PsyNeuLink `Function API <LINK>`).
 
 .. _Function_Creation:
 
@@ -236,7 +236,7 @@ class Function_Base(Function):
          prefs=None          \
     )
 
-    Implements abstract class for Function category of Component class
+    Implement abstract class for Function category of Component class
 
     COMMENT:
         Description:
@@ -315,7 +315,7 @@ class Function_Base(Function):
     ---------
 
     variable : value : variableClassDefault
-        specifies the format and a default value for the `function <Function>`.
+        specifies the format and a default value for the input to `function <Function>`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -334,7 +334,7 @@ class Function_Base(Function):
     ----------
 
     variable: value
-        format and default value can be specifed by the :keyword:`variable` argument of the constructor;  otherwise,
+        format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
         they are specified by the Function's :keyword:`variableClassDefault`.
 
     function : function
@@ -612,12 +612,66 @@ class Contradiction(Function_Base): # Example
 #endregion
 
 class UserDefinedFunction(Function_Base):
-    """Implement user-defined function
+    """
+    Function_Base(           \
+         variable_default,   \
+         params=None,        \
+         owner=None,         \
+         name=None,          \
+         prefs=None          \
+    )
 
-    Initialization arguments:
-     - variable
+    Implement user-defined Function.  This is used to "wrap" custom functions in the PsyNeuLink `Function API <LINK>`.
+    It is automatically invoked and applied to any function that is assigned to the `function <Component.function>`
+    attribute of a PsyNeuLink component (other than a Function itself).
 
-    Linear.function returns scalar result
+    Arguments
+    ---------
+
+    variable : value : variableClassDefault
+        specifies the format and a default value for the input to `function <Function>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable: value
+        format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
+        they are specified by the Function's :keyword:`variableClassDefault`.
+
+    function : function
+        called by the Function's `owner <Function_Base.owner>` when it is executed.
+
+    COMMENT:
+    functionOutputTypeConversion : Bool : False
+        specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
+
+    functionOutputType : FunctionOutputType : None
+        used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
+        must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
+        for details).
+    COMMENT
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
     componentName = USER_DEFINED_FUNCTION
     componentType = USER_DEFINED_FUNCTION_TYPE
@@ -768,39 +822,105 @@ class LinearCombination(CombinationFunction): # --------------------------------
 # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
 # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
 # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
-    """Linearly combine arrays of values with optional weighting, offset, and/or scaling
+    """
+    LinearCombination(              \
+         variable_default,          \
+         weights=None,              \
+         exponents=None,            \
+         offset:parameter_spec=0.0, \
+         scale:parameter_spec=1.0,  \
+         operation=SUM,             \
+         params=None,               \
+         owner=None,                \
+         name=None,                 \
+         prefs=None                 \
+         )
 
-    Description:
-        Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by OPERATION
-        Use optional WEIGHTING argument to weight contribution of each array to the combination
-        Use optional SCALE and OFFSET parameters to linearly transform the resulting array
-        Returns a list or 1D array of the same length as the individual ones in the variable
+    Linearly combine arrays of values with optional weighting, exponentiation, offset, and/or scaling.
 
-        Notes:
-        * If variable contains only a single array, it is simply linearly transformed using SCALE and OFFSET
-        * If there is more than one array in variable, they must all be of the same length
-        * WEIGHTS can be:
-            - 1D: each array in the variable is scaled by the corresponding element of WEIGHTS)
-            - 2D: each array in the variable is multiplied by (Hadamard Product) the corresponding array in kwWeight
+    COMMENT:
+        Description:
+            Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by OPERATION
+            Use optional WEIGHTING argument to weight contribution of each array to the combination
+            Use optional SCALE and OFFSET parameters to linearly transform the resulting array
+            Returns a list or 1D array of the same length as the individual ones in the variable
 
-    Initialization arguments:
-     - variable (value, np.ndarray or list): values to be combined;
-         can be a list of lists, or a 1D or 2D np.array;  a 1D np.array is always returned
-         if it is a list, it must be a list of numbers, lists, or np.arrays
-         all items in the list or 2D np.array must be of equal length
-         the length of WEIGHTS (if provided) must equal the number of arrays (2nd dimension; default is 2)
-     - params (dict) can include:
-         + WEIGHTS (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1, 1])
-         + OFFSET (value): added to the result (after the arithmetic operation is applied; default is 0)
-         + SCALE (value): multiples the result (after combining elements; default: 1)
-         + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
-              SUM: element-wise sum of the arrays in variable
-              PRODUCT: Hadamard Product of the arrays in variable
+            Notes:
+            * If variable contains only a single array, it is simply linearly transformed using SCALE and OFFSET
+            * If there is more than one array in variable, they must all be of the same length
+            * WEIGHTS can be:
+                - 1D: each array in the variable is scaled by the corresponding element of WEIGHTS)
+                - 2D: each array in the variable is multiplied by (Hadamard Product) the corresponding array in kwWeight
 
-    LinearCombination.function returns combined values:
-    - single number if variable was a single number
-    - list of numbers if variable was list of numbers
-    - 1D np.array if variable was a single np.variable or np.ndarray
+        Initialization arguments:
+         - variable (value, np.ndarray or list): values to be combined;
+             can be a list of lists, or a 1D or 2D np.array;  a 1D np.array is always returned
+             if it is a list, it must be a list of numbers, lists, or np.arrays
+             all items in the list or 2D np.array must be of equal length
+             the length of WEIGHTS (if provided) must equal the number of arrays (2nd dimension; default is 2)
+         - params (dict) can include:
+             + WEIGHTS (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1,1])
+             + OFFSET (value): added to the result (after the arithmetic operation is applied; default is 0)
+             + SCALE (value): multiples the result (after combining elements; default: 1)
+             + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
+                  SUM: element-wise sum of the arrays in variable
+                  PRODUCT: Hadamard Product of the arrays in variable
+
+        LinearCombination.function returns combined values:
+        - single number if variable was a single number
+        - list of numbers if variable was list of numbers
+        - 1D np.array if variable was a single np.variable or np.ndarray
+    COMMENT
+
+    Arguments
+    ---------
+
+    variable : value : variableClassDefault
+        specifies the format and a default value for the input to `function <Function>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable: value
+        format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
+        they are specified by the Function's :keyword:`variableClassDefault`.
+
+    function : function
+        called by the Function's `owner <Function_Base.owner>` when it is executed.
+
+    COMMENT:
+    functionOutputTypeConversion : Bool : False
+        specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
+
+    functionOutputType : FunctionOutputType : None
+        used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
+        must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
+        for details).
+    COMMENT
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+
+
     """
 
     componentName = LINEAR_COMBINATION_FUNCTION
@@ -819,8 +939,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 scale:parameter_spec=1.0,
-                 offset:parameter_spec=0.0,
                  # IMPLEMENTATION NOTE - these don't check whether every element of np.array is numerical:
                  # weights:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
                  # exponents:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
@@ -830,6 +948,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  # MODIFIED 2/10/17 NEW:
                  weights=None,
                  exponents=None,
+                 offset:parameter_spec=0.0,
+                 scale:parameter_spec=1.0,
                  # MODIFIED 2/10/17 END
                  operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
@@ -2703,6 +2823,9 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
@@ -2737,17 +2860,17 @@ class Reinforcement(LearningFunction): # ---------------------------------------
     learning_rate : float
         the learning rate used by the function.  If specified, it supercedes any learning_rate specified for the
         `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
-        <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
-        which the `owner <BackPropagationowner>` belongs is used;  and, if that is `None`, then the learning_rate for the
+        <Reinforcement.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
+        which the `owner <Reinforcement.owner>` belongs is used;  and, if that is `None`, then the learning_rate for the
         system to which it belongs is used. If all are `None`, then the
-        `default_learning_rate <BackPropagation.default_learning_rate>` is used.
+        `default_learning_rate <Reinforcement.default_learning_rate>` is used.
 
     default_learning_rate : float : 1.0
-        the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
+        the value used for the `learning_rate <Reinforcement.learning_rate>` if it is not otherwise specified.
 
     function : function
          the function that computes the weight change matrix, and returns that along with the
-         `error_signal <BackPropagation.error_signal>` received.
+         `error_signal <Reinforcement.error_signal>` received.
 
     owner : Mechanism
         `mechanism <Mechanism>` to which the function belongs.
@@ -2837,9 +2960,9 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         variable : List or 2d np.array [length 3] : default variableClassDefault
            must have three items that are the values for (in order):
-           `activation_input <BackPropagation.activation_input>` (not used),
-           `activation_output <BackPropagation.activation_output>` (1d np.array with a single non-zero value),
-           `error_signal <BackPropagation.error_signal>` (1d np.array).
+           `activation_input <Reinforcement.activation_input>` (not used),
+           `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value),
+           `error_signal <Reinforcement.error_signal>` (1d np.array).
 
         params : Optional[Dict[param keyword, param value]]
             a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -2967,6 +3090,9 @@ class BackPropagation(LearningFunction):
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
 
     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
