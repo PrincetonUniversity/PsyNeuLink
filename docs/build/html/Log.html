@@ -150,14 +150,14 @@
 </div>
 <span class="target" id="module-Log"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A Log object is a set of structures and methods for recording information about PsyNeuLink components during their
-&#8220;life cycle&#8221; (i.e., as they are created, validated, executed, etc.).  Every component has a log object &#8211; assigned to
-its <code class="xref std std-keyword docutils literal"><span class="pre">log</span></code> attribute when the component is created &#8211; that maintains a dictionary with entries for each
-attribute of the component that has been designated to be logged.  Information is added to the entries under specified
-conditions (e.g., when the component is initialized, validated, executed, etc.), which can be designated by a
-<a class="reference internal" href="#Log.LogLevel" title="Log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a> specification in the component&#8217;s preferences; entries can also be made by the user programmatically.
-Each entry contains the time at which a value was assigned to the attribute, the context in which this occured, and
-the value assigned.  This information can be displayed using the log&#8217;s <a class="reference internal" href="#Log.Log.print_entries" title="Log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a> method.</p>
+<p>A Log object is used to record information about PsyNeuLink components during their &#8220;life cycle&#8221; (i.e., as they are
+created, validated and executed).  Every component has a log object &#8211; assigned to its <code class="xref std std-keyword docutils literal"><span class="pre">log</span></code> attribute
+when the component is created &#8211; that maintains a dictionary with entries for each attribute of the component that
+has been designated to be logged.  Information is added to the entries under specified conditions (e.g., when the
+component is initialized, validated, or executed), which can be designated by a <a class="reference internal" href="#Log.LogLevel" title="Log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a> specification in the
+component&#8217;s preferences.  Entries can also be made by the user programmatically. Each entry contains the time at
+which a value was assigned to the attribute, the context in which this occurred, and the value assigned.  This
+information can be displayed using the log&#8217;s <a class="reference internal" href="#Log.Log.print_entries" title="Log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a> method.</p>
 </div>
 <div class="section" id="creating-logs-and-entries">
 <h2>Creating Logs and Entries<a class="headerlink" href="#creating-logs-and-entries" title="Permalink to this headline">¶</a></h2>

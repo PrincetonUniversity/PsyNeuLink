@@ -2,7 +2,7 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
- # HIGH LEVEL ISSUES:
+ # HIGH LEVEL / DESIGN / CONVENTION ISSUES:
 #   1) MANAGEMENT OF RETURN_VALUE FOR MECHANISMS (AS LIST VS. 2d NP.ARRAY)
 #   2) ASSIGNMENT AND NAMING OF FUNCTION_PARAMS FOR AN OBJECT;
 #      PROBLEMS:
@@ -19,6 +19,12 @@
 #   4) SPECIFICATION OF LEARNING USING A PROJECTION SPEC VS. A DEDICATED KEYWORD (THAT ALLOWS FCT AND LEARNING_RATE)
 #          PRO:  CONSISTENT WITH CONTROL
 #          CON:  AKWARD TO HAVE TO GIVE THE PROJECTION THE FUNCTION AND LEARNING RATE THAT ARE PASSED TO LearningMech
+#   5) SHOULD ATTRIBUTES OF PARENT CLASSED BE DOCUMENTED ON CHILD CLASSES?
+#          (E.G., PREFS, NAME, FUNCTION, FUNCTON_PARAMS, USER_PARAMS, ETC.)
+
+# HIGH LEVEL TASKS:
+#  1) BREAK UP FUNCTION INTO SEPARATE MODULES
+#
 
 # COMPOSITION IMPLEMENTATION NOTE:
 #   add_projection_to and add_projection_from methods
@@ -29,6 +35,7 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: ADD owner ARG TO Function CONSTRUCTOR (DEFAULT = NONE)
 # FIX: SEARCH FOR AND PURGE: monitoringMechanism and monitoring_mechanism AND monitoring_mech
 # FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
 # FIX: GET STRAIGHT THE HANDLING OF learning_rate for:

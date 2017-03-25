@@ -5,7 +5,8 @@ Functions
    :maxdepth: 3
 
 .. automodule:: Function
-	:members: Contradiction,
+	:members: Function_Base,
+	          Contradiction,
 	          UserDefinedFunction,
 	          LinearCombination,
 	          Linear,
@@ -19,3 +20,5 @@ Functions
               LearningFunction,
               Reinforcement,
 	          BackPropagation
+..
+    :exclude-members: function
