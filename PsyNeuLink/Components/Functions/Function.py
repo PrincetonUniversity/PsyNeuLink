@@ -371,6 +371,7 @@ class Function_Base(Function):
     def __init__(self,
                  variable_default,
                  params,
+                 owner = None,
                  name=None,
                  prefs=None,
                  context='Function_Base Init'):
@@ -397,14 +398,18 @@ class Function_Base(Function):
                           name=name,
                           context=context)
 
-        # This is assigned by owner in Function._instantiate_function()
-        self.owner = None
+        # # MODIFIED 3/25/17 OLD:
+        # # This is assigned by owner in Function._instantiate_function()
+        # self.owner = None
+        # # MODIFIED 3/25/17 NEW:
+        self.owner = owner
+        # # MODIFIED 3/25/17 END
 
         super().__init__(variable_default=variable_default,
-                                           param_defaults=params,
-                                           name=name,
-                                           prefs=prefs,
-                                           context=context)
+                         param_defaults=params,
+                         name=name,
+                         prefs=prefs,
+                         context=context)
 
     def execute(self, variable=None, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
@@ -481,6 +486,7 @@ class Contradiction(Function_Base): # Example
     def __init__(self,
                  variable_default=variableClassDefault,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
         # This validates variable and/or params_list if assigned (using _validate_params method below),
@@ -491,6 +497,7 @@ class Contradiction(Function_Base): # Example
         #    * paramInstanceDefaults can be changed by calling assign_default
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -624,6 +631,7 @@ class UserDefinedFunction(Function_Base):
                  function,
                  variable=None,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -633,6 +641,7 @@ class UserDefinedFunction(Function_Base):
 
         super().__init__(variable_default=variable,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -690,6 +699,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
                  variable_default=variableClassDefault,
                  operation:tc.enum(SUM, PRODUCT)=SUM,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -699,6 +709,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -818,19 +829,21 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  # MODIFIED 2/10/17 END
                  operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(scale=scale,
-                                                 offset=offset,
-                                                 weights=weights,
-                                                 exponents=exponents,
-                                                 operation=operation,
-                                                 params=params)
+                                                  offset=offset,
+                                                  weights=weights,
+                                                  exponents=exponents,
+                                                  operation=operation,
+                                                  params=params)
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1025,6 +1038,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                  slope:parameter_spec=1.0,
                  intercept:parameter_spec=0.0,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -1034,9 +1048,10 @@ class Linear(TransferFunction): # ----------------------------------------------
                                                   params=params)
 
         super().__init__(variable_default=variable_default,
-                                     params=params,
-                                     prefs=prefs,
-                                     context=context)
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
 
         self.functionOutputType = None
 
@@ -1144,6 +1159,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                  rate:parameter_spec=1.0,
                  scale:parameter_spec=1.0,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName + INITIALIZING):
 
@@ -1153,9 +1169,10 @@ class Exponential(TransferFunction): # -----------------------------------------
                                                  params=params)
 
         super().__init__(variable_default=variable_default,
-                                          params=params,
-                                          prefs=prefs,
-                                          context=context)
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
         TEST = True
 
     def function(self,
@@ -1214,6 +1231,7 @@ class Logistic(TransferFunction): # --------------------------------------------
                  gain:parameter_spec=1.0,
                  bias:parameter_spec=0.0,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context='Logistic Init'):
 
@@ -1224,6 +1242,7 @@ class Logistic(TransferFunction): # --------------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1285,6 +1304,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                  gain:parameter_spec=1.0,
                  output:tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB)=ALL,
                  params:tc.optional(dict)=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context='SoftMax Init'):
 
@@ -1295,6 +1315,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1424,6 +1445,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  variable_default=variableClassDefault,
                  matrix:matrix_spec=None,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName + INITIALIZING):
         """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
@@ -1449,6 +1471,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # super(LinearMatrix, self).__init__(variable_default=variable_default,
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1814,10 +1837,11 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                  variable_default=None,
                  rate:parameter_spec=1.0,
                  weighting:tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION)=CONSTANT,
-                 params:tc.optional(dict)=None,
-                 prefs:is_pref_set=None,
                  noise=0.0,
-                 time_step_size = 1.0, 
+                 time_step_size = 1.0,
+                 params:tc.optional(dict)=None,
+                 owner=None,
+                 prefs:is_pref_set=None,
                  context="Integrator Init"):
 
         # Assign here as default, for use in initialization of function
@@ -1831,9 +1855,10 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                                  time_step_size=time_step_size)
 
         super().__init__(variable_default=variable_default,
-                                         params=params,
-                                         prefs=prefs,
-                                         context=context)
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
 
         # Reassign to kWInitializer in case default value was overridden
         self.oldValue = [self.paramsCurrent[kwInitializer]]
@@ -1993,6 +2018,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
                  noise=0.5,
                  rate = 1.0,
                  time_step_size = 1.0,
+                 owner=None,
                  context="DDMIntegrator Init"):
 
         # Assign here as default, for use in initialization of function
@@ -2007,9 +2033,10 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
                                                  time_step_size=time_step_size)
 
         super().__init__(variable_default=variable_default,
-                                         params=params,
-                                         prefs=prefs,
-                                         context=context)
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
 
         # Reassign to kWInitializer in case default value was overridden
         self.oldValue = [self.paramsCurrent[kwInitializer]]
@@ -2097,6 +2124,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                  noise:parameter_spec=0.5,
                  t0:parameter_spec=.200,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context='Integrator Init'):
 
@@ -2110,6 +2138,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2240,6 +2269,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
                  noise:parameter_spec=0.5,
                  t0:parameter_spec=.200,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context='Integrator Init'):
 
@@ -2253,6 +2283,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2326,6 +2357,7 @@ class NormalDist(DistributionFunction):
                  mean = 0.0,
                  standard_dev = 1.0, 
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -2336,6 +2368,7 @@ class NormalDist(DistributionFunction):
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2379,6 +2412,7 @@ class ExponentialDist(DistributionFunction):
                  variable_default=variableClassDefault,
                  beta = 1.0,  
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -2388,6 +2422,7 @@ class ExponentialDist(DistributionFunction):
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2429,8 +2464,9 @@ class UniformDist(DistributionFunction):
     def __init__(self,
                  variable_default=variableClassDefault,
                  low = 0.0,
-                 high = 1.0, 
+                 high = 1.0,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -2441,6 +2477,7 @@ class UniformDist(DistributionFunction):
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2485,6 +2522,7 @@ class GammaDist(DistributionFunction):
                  scale = 1.0,  
                  shape = 1.0, 
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -2495,6 +2533,7 @@ class GammaDist(DistributionFunction):
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2539,6 +2578,7 @@ class WaldDist(DistributionFunction):
                  scale = 1.0,  
                  mean = 1.0, 
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -2549,6 +2589,7 @@ class WaldDist(DistributionFunction):
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2726,6 +2767,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                  activation_function:tc.any(SoftMax, tc.enum(SoftMax))=SoftMax, # Allow class or instance
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
 
@@ -2736,6 +2778,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2996,6 +3039,7 @@ class BackPropagation(LearningFunction):
                  error_matrix=None,
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
 
@@ -3008,6 +3052,7 @@ class BackPropagation(LearningFunction):
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
