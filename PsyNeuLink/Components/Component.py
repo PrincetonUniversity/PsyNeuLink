@@ -1743,12 +1743,7 @@ class Component(object):
                 
 
                 from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
-                # # MODIFIED 1/10/17 OLD:
                 self.paramsCurrent[FUNCTION] = UserDefinedFunction(function=function, context=context).function
-                # # MODIFIED 1/10/17 NEW:
-                # udf = UserDefinedFunction(function=function, context=context)
-                # self.paramsCurrent[FUNCTION] = udf.function
-                # MODIFIED 1/10/17 END
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
@@ -1803,13 +1798,11 @@ class Component(object):
         from PsyNeuLink.Components.Functions.Function import Function
         if not isinstance(self, Function):
             self.function_object = self.function.__self__
-            # MODIFIED 3/25/17 NEW:
             if not self.function_object.owner:
                 self.function_object.owner = self
             elif self.function_object.owner != self:
                 raise ComponentError("Function being assigned to {} ({}) belongs to another component: {}".
                                      format(self.name, self.function_object.name, self.function_object.owner.name))
-            # MODIFIED 3/25/17 END
 
             # IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
             #             SEE learning_rate IN LearningMechanism FOR EXAMPLE

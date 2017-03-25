@@ -235,7 +235,7 @@ of the <a class="reference internal" href="#Function.Function_Base.function" tit
 <h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="Function.Function_Base">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Function_Base</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Function_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Function_Base</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Function_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements abstract class for Function category of Component class</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -246,6 +246,7 @@ of the <a class="reference internal" href="#Function.Function_Base.function" tit
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
+<li><strong>owner</strong> (<em>Component</em>) &#8211; component to which the Function is being assigned.</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
 defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
 </ul>
@@ -269,7 +270,7 @@ they are specified by the Function&#8217;s <code class="xref std std-keyword doc
 <dl class="attribute">
 <dt id="Function.Function_Base.owner">
 <code class="descname">owner</code><a class="headerlink" href="#Function.Function_Base.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Mechanism</em> &#8211; <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> to which the function belongs.</p>
+<dd><p><em>Mechanism</em> &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which the Function belongs.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -284,7 +285,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 
 <dl class="class">
 <dt id="Function.Contradiction">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Contradiction</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b95b598&gt; = None</em>, <em>context='Contradiction INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Contradiction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Contradiction</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None</em>, <em>context='Contradiction INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Contradiction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Example function for use as template for function construction</p>
 <dl class="docutils">
 <dt>Iniialization arguments:</dt>
@@ -344,7 +345,7 @@ kwPertinacity: float - obstinate or equivocal (default: 10)</li>
 
 <dl class="class">
 <dt id="Function.UserDefinedFunction">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">UserDefinedFunction</code><span class="sig-paren">(</span><em>function</em>, <em>variable=None</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b95b598&gt; = None</em>, <em>context='USER DEFINED FUNCTION INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.UserDefinedFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">UserDefinedFunction</code><span class="sig-paren">(</span><em>function</em>, <em>variable=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None</em>, <em>context='USER DEFINED FUNCTION INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.UserDefinedFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement user-defined function</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -358,7 +359,7 @@ kwPertinacity: float - obstinate or equivocal (default: 10)</li>
 
 <dl class="class">
 <dt id="Function.LinearCombination">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearCombination</code><span class="sig-paren">(</span><em>variable_default=[2, 2], scale: &lt;function parameter_spec at 0x10b9ae950&gt; = 1.0, offset: &lt;function parameter_spec at 0x10b9ae950&gt; = 0.0, weights=None, exponents=None, operation: &lt;typecheck.tc_predicates.enum object at 0x10c148eb8&gt; = 'sum', params=None, prefs: &lt;function is_pref_set at 0x10b95b598&gt; = None, context='LinearCombination INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearCombination" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearCombination</code><span class="sig-paren">(</span><em>variable_default=[2, 2], scale: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0, offset: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.0, weights=None, exponents=None, operation: &lt;typecheck.tc_predicates.enum object at 0x10c148630&gt; = 'sum', params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None, context='LinearCombination INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearCombination" title="Permalink to this definition">¶</a></dt>
 <dd><p>Linearly combine arrays of values with optional weighting, offset, and/or scaling</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -476,7 +477,7 @@ OPERATION: LinearCombination.Operation - operation to perform (default: SUM):</t
 
 <dl class="class">
 <dt id="Function.Linear">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10b9ae950&gt; = 1.0, intercept: &lt;function parameter_spec at 0x10b9ae950&gt; = 0.0, params=None, prefs: &lt;function is_pref_set at 0x10b95b598&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Linear" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0, intercept: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.0, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Linear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate a linear transform of input variable (SLOPE, INTERCEPT)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -526,7 +527,7 @@ INTERCEPT: number - intercept (default: 0)</td>
 
 <dl class="class">
 <dt id="Function.Exponential">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Exponential</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>rate: &lt;function parameter_spec at 0x10b9ae950&gt; = 1.0</em>, <em>scale: &lt;function parameter_spec at 0x10b9ae950&gt; = 1.0</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b95b598&gt; = None</em>, <em>context='Exponential INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Exponential" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Exponential</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>rate: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0</em>, <em>scale: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None</em>, <em>context='Exponential INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Exponential" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate an exponential transform of input variable  (RATE, SCALE)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -582,7 +583,7 @@ SCALE: number - scale (default: 1)</td>
 
 <dl class="class">
 <dt id="Function.Logistic">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Logistic</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>gain: &lt;function parameter_spec at 0x10b9ae950&gt; = 1.0</em>, <em>bias: &lt;function parameter_spec at 0x10b9ae950&gt; = 0.0</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b95b598&gt; = None</em>, <em>context='Logistic Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Logistic" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Logistic</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>gain: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0</em>, <em>bias: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None</em>, <em>context='Logistic Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Logistic" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the logistic transform of input variable  (GAIN, BIAS)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -638,7 +639,7 @@ BIAS: number - rate (default: 0)</td>
 
 <dl class="class">
 <dt id="Function.SoftMax">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">SoftMax</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>gain: &lt;function parameter_spec at 0x10b9ae950&gt; = 1.0</em>, <em>output: &lt;typecheck.tc_predicates.enum object at 0x10c148b00&gt; = 'all'</em>, <em>params: &lt;typecheck.framework.optional object at 0x10c148f28&gt; = None</em>, <em>prefs: &lt;function is_pref_set at 0x10b95b598&gt; = None</em>, <em>context='SoftMax Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">SoftMax</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>gain: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0</em>, <em>output: &lt;typecheck.tc_predicates.enum object at 0x10c1480b8&gt; = 'all'</em>, <em>params: &lt;typecheck.framework.optional object at 0x10c148b00&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None</em>, <em>context='SoftMax Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the softMax transform of input variable  (GAIN, BIAS)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -704,7 +705,7 @@ BIAS: number - rate (default: 0)</td>
 
 <dl class="class">
 <dt id="Function.LinearMatrix">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearMatrix</code><span class="sig-paren">(</span><em>variable_default=[0], matrix: &lt;function matrix_spec at 0x10c10b7b8&gt; = None, params=None, prefs: &lt;function is_pref_set at 0x10b95b598&gt; = None, context='Linear Matrix INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearMatrix</code><span class="sig-paren">(</span><em>variable_default=[0], matrix: &lt;function matrix_spec at 0x10c10e7b8&gt; = None, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None, context='Linear Matrix INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, MATRIX)</p>
 <p>Use a weight matrix to convert a sender vector into a receiver vector:
 - each row of the mapping corresponds to an element of the sender vector (outer index)
@@ -782,7 +783,7 @@ MATRIX: value - used to override self.matrix implemented by __init__;  must be o
 
 <dl class="class">
 <dt id="Function.Integrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x10b9ae950&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x10c132f60&gt; = 'constant'</em>, <em>params: &lt;typecheck.framework.optional object at 0x10c132748&gt; = None</em>, <em>prefs: &lt;function is_pref_set at 0x10b95b598&gt; = None</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x10c136f60&gt; = 'constant'</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params: &lt;typecheck.framework.optional object at 0x10c136940&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -851,7 +852,7 @@ WEIGHTING: Integrator.Weightings - type of weighting (default = CONSTANT)</td>
 
 <dl class="class">
 <dt id="Function.BogaczEtAl">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10b9ae950&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10b9ae950&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10b9ae950&gt; = 1.0, noise: &lt;function parameter_spec at 0x10b9ae950&gt; = 0.5, t0: &lt;function parameter_spec at 0x10b9ae950&gt; = 0.2, params=None, prefs: &lt;function is_pref_set at 0x10b95b598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to DDM process and return mean response time and accuracy.</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -910,7 +911,7 @@ drift_rate...</td>
 
 <dl class="class">
 <dt id="Function.NavarroAndFuss">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10b9ae950&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10b9ae950&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10b9ae950&gt; = 1.0, noise: &lt;function parameter_spec at 0x10b9ae950&gt; = 0.5, t0: &lt;function parameter_spec at 0x10b9ae950&gt; = 0.2, params=None, prefs: &lt;function is_pref_set at 0x10b95b598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to distribution of DDM responses (mean and variance of response time and accuracy).</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -969,7 +970,7 @@ drift_rate...</td>
 
 <dl class="class">
 <dt id="Function.LearningFunction">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
 <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
