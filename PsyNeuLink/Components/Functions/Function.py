@@ -228,6 +228,13 @@ def get_param_value_for_function(owner, function):
 
 class Function_Base(Function):
     """
+    Function_Base(           \
+         variable_default,   \
+         params=None,        \
+         owner=None,         \
+         name=None,          \
+         prefs=None          \
+    )
 
     Implements abstract class for Function category of Component class
 
@@ -315,6 +322,9 @@ class Function_Base(Function):
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
@@ -341,7 +351,7 @@ class Function_Base(Function):
     COMMENT
 
     owner : Mechanism
-        `mechanism <Mechanism>` to which the function belongs.
+        `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
@@ -397,13 +407,7 @@ class Function_Base(Function):
                           registry=FunctionRegistry,
                           name=name,
                           context=context)
-
-        # # MODIFIED 3/25/17 OLD:
-        # # This is assigned by owner in Function._instantiate_function()
-        # self.owner = None
-        # # MODIFIED 3/25/17 NEW:
         self.owner = owner
-        # # MODIFIED 3/25/17 END
 
         super().__init__(variable_default=variable_default,
                          param_defaults=params,
