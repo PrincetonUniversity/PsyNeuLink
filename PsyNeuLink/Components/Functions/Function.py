@@ -1219,10 +1219,10 @@ class Linear(TransferFunction): # ----------------------------------------------
     variable : number or np.array : variableClassDefault
         specifies a template for the value to be transformed.
 
-    slope : float : 1.0
+    slope : float : default 1.0
         specifies a value by which to multiply `variable <Linear.variable>`.
 
-    intercept : float : 0.0
+    intercept : float : default 0.0
         specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
 
     params : Optional[Dict[param keyword, param value]]
@@ -1307,7 +1307,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                 time_scale=TimeScale.TRIAL,
                 context=None):
         """
-        Return `slope <Linear.slope>` * `variable <Linear.variable>` + `intercept <Linear.intercept>`.
+        Return: `slope <Linear.slope>` * `variable <Linear.variable>` + `intercept <Linear.intercept>`.
 
         Arguments
         ---------
@@ -1497,7 +1497,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                 time_scale=TimeScale.TRIAL,
                 context=None):
         """
-        Return `scale <Exponential.scale>` * e**(`rate <Exponential.rate>` * `variable <Linear.variable>`).
+        Return: `scale <Exponential.scale>` * e**(`rate <Exponential.rate>` * `variable <Linear.variable>`).
 
         Arguments
         ---------
@@ -1545,16 +1545,69 @@ class Exponential(TransferFunction): # -----------------------------------------
 
 
 class Logistic(TransferFunction): # ------------------------------------------------------------------------------------
-    """Calculate the logistic transform of input variable  (GAIN, BIAS)
+    """
+    Logistic(              \
+         variable_default, \
+         gain=1.0,         \
+         bias=0.0,        \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
 
-    Initialization arguments:
-     - variable (number):
-         + scalar value to be transformed by logistic function: 1 / (1 + e**(gain*variable + bias))
-     - params (dict): specifies
-         + gain (GAIN): coeffiencent on exponent (default: 1)
-         + bias (BIAS): additive constant in exponent (default: 0)
+    .. _Logistic:
 
-    Logistic.function returns scalar result
+    Logistically transform variable.
+
+    Arguments
+    ---------
+
+    variable : number or np.array : variableClassDefault
+        specifies a template for the value to be transformed.
+
+    gain : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>` before logistic transformation
+
+    bias : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `gain <Linear.gain>`
+        but before logistic transformation.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    gain : float
+        value by which each element of `variable <Logistic.variable>` is multiplied before applying the
+        `bias <Linear.bias>` (if it is specified).
+
+    bias : float
+        value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
+        (if it is specified).
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = LOGISTIC_FUNCTION
@@ -1590,45 +1643,121 @@ class Logistic(TransferFunction): # --------------------------------------------
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Logistic sigmoid function
+        """
+        Return: 1 / (1 + e**( (`gain <Logistic.gain>` * `variable <Logistic.variable>`) + `bias <Logistic.bias>`))
 
-        :var variable: (number) - value to be transformed by logistic function (default: 0)
-        :parameter params: (dict) with entries specifying:
-                           GAIN: number - gain (default: 1)
-                           BIAS: number - rate (default: 0)
-        :return number:
+        Arguments
+        ---------
+
+        variable : number or np.array : default variableClassDefault
+           a single value or array to be transformed.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        logistic transformation of variable : number or np.array
+
         """
 
         self._check_args(variable, params, context)
-
-        # Assign the params and return the result
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
         return 1 / (1 + np.exp(-(gain * self.variable) + bias))
 
     def derivative(self, output, input=None):
-        """Derivative of the logistic signmoid function
+        """
+        derivative(output)
+
+        Derivative of `function <Logistic.function>`.
+
+        Returns
+        -------
+
+        derivative :  number
+            output * (1 - output).
+
         """
         return output*(1-output)
 
 
 class SoftMax(TransferFunction): # -------------------------------------------------------------------------------------
-    """Calculate the softMax transform of input variable  (GAIN, BIAS)
+    """
+    SoftMax(               \
+         variable_default, \
+         gain=1.0,         \
+         output=ALL,       \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
 
-    Initialization arguments:
-     - variable (number):
-         + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
-     - params (dict): specifies
-         + gain (GAIN): coeffiencent on exponent (default: 1)
-         + output (OUTPUT_TYPE): determines how to populate the return array (default: ALL)
-             ALL: array each element of which is the softmax value of the elements in the input array
-             MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
-             MAX_INDICATOR: array with a one for the element with the maximum softmax value, and zeros elsewhere
-             PROB: probabilistially picks an element based on their softmax values to pass through; all others are zero
-         # + max (kwMax): only reports max value, all others set to 0 (default: :keyword:`False`)
+    .. _SoftMax:
 
-    SoftMax.function returns scalar result
+    SoftMax transform of variable.
+
+    Arguments
+    ---------
+
+    variable : 1d np.array : variableClassDefault
+        specifies a template for the value to be transformed.
+
+    gain : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>` before softmax transformation.
+
+    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
+        specifies the format of array returned by `function <SoftMax.function>`
+        (see `output <SoftMax.output>` for details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 1d np.array
+        contains value to be transformed.
+
+    gain : float
+        value by which `variable <Logistic.variable>` is multiplied before the softmax transformation;  determines
+        the "sharpness" of the distribution.
+
+    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
+        determines how the softmax-transformed values of the elements in `variable <SoftMax.variable>` are reported
+        in the array returned by `function <SoftMax.funtion>`:
+            * **ALL**: array of all softmax-transformed values;
+            * **MAX_VAL**: softmax-transformed value for the element with the maximum such value, 0 for all others;
+            * **MAX_INDICATOR**: 1 for the element with the maximum softmax-transformed value, 0 for all others;
+            * **PROB**: probabilistically chosen element based on softmax-transformed values after normalizing sum of
+              values to 1, 0 reported for all others.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = SOFTMAX_FUNCTION
@@ -1663,13 +1792,30 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """SoftMax sigmoid function
+        """
+        Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
+        sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
+        filtered by `ouptput <SoftMax.output>` specification.
 
-        :var variable: (number) - value to be transformed by softMax function (default: 0)
-        :parameter params: (dict) with entries specifying:
-                           GAIN: number - gain (default: 1)
-                           BIAS: number - rate (default: 0)
-        :return number:
+        Arguments
+        ---------
+
+        variable : 1d np.array : default variableClassDefault
+           an array to be transformed.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        softmax transformation of variable : number or np.array
+
         """
 
         self._check_args(variable, params, context)
@@ -1688,7 +1834,6 @@ class SoftMax(TransferFunction): # ---------------------------------------------
 
         # For the element that is max of softmax, set it's value to its softmax value, set others to zero
         if output is MAX_VAL:
-            # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             sm = np.where(sm == max_value, max_value, 0)
 
@@ -1710,12 +1855,21 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         return sm
 
     def derivative(self, output, input=None):
-        """Derivative of the softMax sigmoid function
+        """
+        derivative(output)
+
+        Derivative of `function <SoftMax.function>`.
+
+        Returns
+        -------
+
+        derivative :  number
+            output - maximum value.
+
         """
         # FIX: ??CORRECT:
         indicator = self.function(input, params={MAX_VAL:True})
         return output - indicator
-        # raise FunctionError("Derivative not yet implemented for {}".format(self.componentName))
 
 
 def matrix_spec(m):
@@ -3080,7 +3234,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         system to which it belongs is used. If all are `None`, then the
         `default_learning_rate <Reinforcement.default_learning_rate>` is used.
 
-    default_learning_rate : float : 1.0
+    default_learning_rate : float
         the value used for the `learning_rate <Reinforcement.learning_rate>` if it is not otherwise specified.
 
     function : function
@@ -3332,7 +3486,7 @@ class BackPropagation(LearningFunction):
         system to which it belongs is used. If all are `None`, then the
         `default_learning_rate <BackPropagation.default_learning_rate>` is used.
 
-    default_learning_rate : float : 1.0
+    default_learning_rate : float
         the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
 
     function : function

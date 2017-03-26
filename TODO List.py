@@ -35,6 +35,7 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: DERIVATIVE FOR SoftMax Function
 # FIX: ADD owner ARG TO Function CONSTRUCTOR (DEFAULT = NONE)
 # FIX: SEARCH FOR AND PURGE: monitoringMechanism and monitoring_mechanism AND monitoring_mech
 # FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
