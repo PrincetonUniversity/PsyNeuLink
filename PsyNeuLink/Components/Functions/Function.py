@@ -50,13 +50,18 @@ component is executed, that Function's `function <Function_Base.function` is exe
 `function <Function_Base.function` can be any callable operation, although most commonly it is a mathematical operation
 (and, for those, almost always uses calls to numpy function).
 
-There are two reasons PsyNeuLink packages functions in Functions. The first is to **manage parameters**.
-Every Function has, in addition to its `function <Function_Base.function>`, a set of attributes corresponding to the
-parameters of the function, that allow these to be set and modified -- either directly (i.e., in a script), or during
-the execution of PsyNeuLink components (e.g., `mechanisms <Mechanism>`, `processes <Process>` and `systems <System>`).
-The second reason is for  **modularity**.  By providing a standard interface, Functions of components in
-PsyNeuLink can be replaced with other PsyNeuLink Functions, or with user-written custom functions so long as they
-adhere to certain standards (the PsyNeuLink `Function API <LINK>`).
+There are two reasons PsyNeuLink packages functions in a Function component. The first is to **manage parameters**.
+Parameters are attributes of a function that either remain stable over multiple calls to the
+function (e.g., the gain or bias of a logistic function, or the learning rate of a learning function);
+or, if they change, they do less frequently or under the control of different factors than the function's variable
+(i.e., its input).  As a consequence, it is useful to manage these separately from the function's variable,
+and not have to provide them every time the function is called.  To address this, every PsyNeuLink Function has a
+set of attributes corresponding to the parameters of the function, that can be specified at the time the Function is
+created (in arguments to its constructor), and can be modified independently of a call to its :keyword:`function`.
+Modifications can be directly (e.g., in a script), or by the operation of other PsyNeuLink components (e.g.,
+`AdaptiveMechanisms`).  The second to reason PsyNeuLink uses Functions is for  **modularity**. By providing a standard
+interface, any Function assigned to a components in PsyNeuLink can be replaced with other PsyNeuLink Functions, or with
+user-written custom functions (so long as they adhere to certain standards (the PsyNeuLink `Function API <LINK>`).
 
 .. _Function_Creation:
 
@@ -614,19 +619,33 @@ class Contradiction(Function_Base): # Example
 class UserDefinedFunction(Function_Base):
     """
     Function_Base(           \
-         variable_default,   \
+         function,           \
+         variable=None,      \
          params=None,        \
          owner=None,         \
          name=None,          \
          prefs=None          \
     )
 
-    Implement user-defined Function.  This is used to "wrap" custom functions in the PsyNeuLink `Function API <LINK>`.
+    Implement user-defined Function.
+
+    This is used to "wrap" custom functions in the PsyNeuLink `Function API <LINK>`.
     It is automatically invoked and applied to any function that is assigned to the `function <Component.function>`
-    attribute of a PsyNeuLink component (other than a Function itself).
+    attribute of a PsyNeuLink component (other than a Function itself).  The function can take any arguments and
+    return any values.  However, if UserDefinedFunction is used to create a custom version of another PsyNeuLink
+    `Function <Function>`, then it must conform to the requirements of that Function's type.
+
+    .. note::
+       Currently the arguments for the `function <UserDefinedFunction.function>` of a UserDefinedFunction are NOT
+       assigned as attributes of the UserDefinedFunction object or its owner, nor to its :keyword:`user_params` dict.
 
     Arguments
     ---------
+
+    function : function
+        specifies function to "wrap." It can be any function, take any arguments (including standard ones,
+        such as :keyword:`params` and :keyword:`context`) and return any value(s), so long as these are consistent
+        with the context in which the UserDefinedFunction will be used.
 
     variable : value : variableClassDefault
         specifies the format and a default value for the input to `function <Function>`.
@@ -708,12 +727,7 @@ class UserDefinedFunction(Function_Base):
         # IMPLEMENT: PARSE ARGUMENTS FOR user_defined_function AND ASSIGN TO user_params
 
     def function(self,
-                 # variable=None,
-                 # params=None,
-                 # time_scale=TimeScale.TRIAL,
-                 # context=None,
                  **kwargs):
-        # raise FunctionError("Function must be provided for {}".format(self.componentType))
         return self.user_defined_function(**kwargs)
 
 
@@ -815,9 +829,6 @@ class Reduce(CombinationFunction): # -------------------------------------------
         return result
 
 
-kwLinearCombinationInitializer = "Initializer"
-
-
 class LinearCombination(CombinationFunction): # ------------------------------------------------------------------------
 # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
 # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
@@ -827,8 +838,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
          variable_default,          \
          weights=None,              \
          exponents=None,            \
-         offset:parameter_spec=0.0, \
          scale:parameter_spec=1.0,  \
+         offset:parameter_spec=0.0, \
          operation=SUM,             \
          params=None,               \
          owner=None,                \
@@ -836,7 +847,13 @@ class LinearCombination(CombinationFunction): # --------------------------------
          prefs=None                 \
          )
 
-    Linearly combine arrays of values with optional weighting, exponentiation, offset, and/or scaling.
+    .. _LinearCombination:
+
+    Linearly combine arrays of values with optional weighting, exponentiation, scaling and/or offset.
+
+    Combines the arrays in the items of the `variable <LinearCombination.variable>` argument.  Each array can be
+    individually weighted and/or exponentiated; they can combined additively or multiplicatively; and the resulting
+    array can be multiplicatively transformed and/or additively offset.
 
     COMMENT:
         Description:
@@ -851,7 +868,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
             * WEIGHTS can be:
                 - 1D: each array in the variable is scaled by the corresponding element of WEIGHTS)
                 - 2D: each array in the variable is multiplied by (Hadamard Product) the corresponding array in kwWeight
-
         Initialization arguments:
          - variable (value, np.ndarray or list): values to be combined;
              can be a list of lists, or a 1D or 2D np.array;  a 1D np.array is always returned
@@ -875,8 +891,34 @@ class LinearCombination(CombinationFunction): # --------------------------------
     Arguments
     ---------
 
-    variable : value : variableClassDefault
-        specifies the format and a default value for the input to `function <Function>`.
+    variable : 1d or 2d np.array : variableClassDefault
+        specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
+
+    weights : 1d or 2d np.array
+        specifies values used to multiply the elements of each array in `variable  <LinearCombination.variable>`.
+        If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
+        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        and there must be the same number of items as there are in `variable <LinearCombination.variable>`
+        (see `weights <LinearCombination.weights>` for details)
+
+    exponents : 1d or 2d np.array
+        specifies values used to exponentiate the elements of each array in `variable  <LinearCombination.variable>`.
+        If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
+        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        and there must be the same number of items as there are in `variable <LinearCombination.variable>`
+        (see `exponents <LinearCombination.exponents>` for details)
+
+    scale : float
+        specifies a value by which to multiply each element of the output of `function <LinearCombination.function>`
+        (see `scale <LinearCombination.scale>` for details)
+
+    offset : float
+        specifies a value to add to each element of the output of `function <LinearCombination.function>`
+        (see `offset <LinearCombination.offset>` for details)
+
+    operation : SUM or PRODUCT
+        specifies whether the `function <LinearCombination.function>` takes the elementwise (Hadamarad)
+        sum or product of the arrays in `variable  <LinearCombination.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -894,14 +936,46 @@ class LinearCombination(CombinationFunction): # --------------------------------
     Attributes
     ----------
 
-    variable: value
-        format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
-        they are specified by the Function's :keyword:`variableClassDefault`.
+    variable : 1d or 2d np.array
+        contains the arrays to be combined by `function <LinearCombination>`.  If it is 1d, the array is simply
+        linearly transformed by and `scale <LinearCombination.scale>` and `offset <LinearCombination.scale>`.
+        If it is 2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
+        specified by `weights <LinearCombination.weights>` and/or `exponents <LinearCombination.exponents>`
+        and then combined as specified by `operation <LinearCombination.operation>`.
 
-    function : function
-        called by the Function's `owner <Function_Base.owner>` when it is executed.
+    weights : 1d or 2d np.array
+        if it is 1d, each element is used to multiply all elements in the corresponding array of
+        `variable <LinearCombination.variable>`;    if it is 2d, then each array is multiplied elementwise
+        (i.e., the Hadamard Product is taken) with the corresponding array of `variable <LinearCombinations.variable>`.
+        All :keyword:`weights` are applied before any exponentiation (if it is specified).
+
+    exponents : 1d or 2d np.array
+        if it is 1d, each element is used to exponentiate the elements of the corresponding array of
+        `variable <LinearCombinations.variable>`;  if it is 2d, the element of each array is used to exponentiate
+        the correspnding element of the corresponding array of `variable <LinearCombination.variable>`.
+        In either case, exponentiating is applied after application of the `weights <LinearCombination.weights>`
+        (if any are specified).
+
+    scale : float
+        value is multiplied by each element of the array after applying the `operation <LinearCombination.operation>`
+        (see `scale <LinearCombination.scale>` for details);  this done before applying the
+        `offset <LinearCombination.offset>` (if it is specified).
+
+    offset : float
+        value is added to each element of the array after applying the `operation <LinearCombination.operation>`
+        and `scale <LinearCombination.scale>` (if it is specified).
+
+    operation : SUM or PRODUCT
+        determines whether the `function <LinearCombination.function>` takes the elementwise (Hadamard) sum or
+        product of the arrays in `variable  <LinearCombination.variable>`.
 
     COMMENT:
+    function : function
+        applies the `weights <LinearCombination.weights>` and/or `exponents <LinearCombinations.weights>` to the
+        arrays in `variable <LinearCombination.variable>`, then takes their sum or product (as specified by
+        `operation <LinearCombination.operation>`), and finally applies `scale <LinearCombination.scale>` and/or
+        `offset <LinearCombination.offset>`.
+
     functionOutputTypeConversion : Bool : False
         specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
 
@@ -918,8 +992,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
         the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
-
-
 
     """
 
@@ -948,10 +1020,10 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  # MODIFIED 2/10/17 NEW:
                  weights=None,
                  exponents=None,
-                 offset:parameter_spec=0.0,
                  scale:parameter_spec=1.0,
+                 offset:parameter_spec=0.0,
                  # MODIFIED 2/10/17 END
-                 operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
+                 operation:tc.enum(SUM, PRODUCT)=SUM,
                  params=None,
                  owner=None,
                  prefs:is_pref_set=None,
@@ -1037,39 +1109,52 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Linearly combine a list of values, and optionally offset and/or scale them
+        """
+        Applies the `weights <LinearCombination.weights>` and/or `exponents <LinearCombinations.weights>` to the
+        arrays in `variable <LinearCombination.variable>`, then takes their sum or product (as specified by
+        `operation <LinearCombination.operation>`), applies `scale <LinearCombination.scale>` and/or `offset
+        <LinearCombination.offset>`, and returns the resulting array.
 
-# DOCUMENT:
-        Handles 1-D or 2-D arrays of numbers
-        Convert to np.array
-        All elements must be numeric
-        If linear (single number or 1-D array of numbers) just apply scale and offset
-        If 2D (array of arrays), apply exponents to each array
-        If 2D (array of arrays), apply weights to each array
-        Operators:  SUM AND PRODUCT
-        -------------------------------------------
-        OLD:
-        Variable must be a list of items:
-            - each item can be a number or a list of numbers
-        Corresponding elements of each item in variable are combined based on OPERATION param:
-            - SUM adds corresponding elements
-            - PRODUCT multiples corresponding elements
-        An initializer (kwLinearCombinationInitializer) can be provided as the first item in variable;
-            it will be populated with a number of elements equal to the second item,
-            each element of which is determined by OPERATION param:
-            - for SUM, initializer will be a list of 0's
-            - for PRODUCT, initializer will be a list of 1's
-        Returns a list of the same length as the items in variable,
-            each of which is the combination of their corresponding elements specified by OPERATION
+        COMMENT:
+            Linearly combine multiple arrays, optionally weighted and/or exponentiated, and return optionally scaled
+            and/or offset array (see :ref:`above <LinearCombination>` for details of param specifications`).
 
-        :var variable: (list of numbers) - values to calculate (default: [0, 0]:
-        :params: (dict) with entries specifying:
-                           EXPONENTS (2D np.array): exponentiate each value in the variable array (default: none)
-                           WEIGHTS (2D np.array): multiply each value in the variable array (default: none):
-                           OFFSET (scalar) - additive constant (default: 0):
-                           SCALE: (scalar) - scaling factor (default: 1)
-                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
-        :return: (1D np.array)
+            Handles 1-D or 2-D arrays
+            All elements must be numeric
+            If linear (single number or 1-D array of numbers) just apply scale and offset
+            If 2D (array of arrays), apply weights and/or exponents to each array
+            Operators:  SUM AND PRODUCT
+            -------------------------------------------
+            OLD:
+            Variable must be a list of items:
+                - each item can be a number or a list of numbers
+            Corresponding elements of each item in variable are combined based on OPERATION param:
+                - SUM adds corresponding elements
+                - PRODUCT multiples corresponding elements
+            Returns a list of the same length as the items in variable,
+                each of which is the combination of their corresponding elements specified by OPERATION
+        COMMENT
+
+        Arguments
+        ---------
+
+        variable : 1d or 2d np.array : default variableClassDefault
+           a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        combined array : 1d np.array
+            the result of linearly combining the arrays in `variable <LinearCombination.variable>`.
+
         """
 
         # Validate variable and assign to self.variable, and validate params
@@ -3041,29 +3126,14 @@ class BackPropagation(LearningFunction):
             delta_weight =  learning rate *   input      *            d(output)/d(input)                 *     error
               return     =  LEARNING_RATE * variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
 
-        BackPropagation.function:
-            variable must be a list or np.array with three items:
-                - input (e.g, array of activities of sender units)
-                - output (array of activities of receiver units)
-                - error (array of errors for receiver units)
-            LEARNING_RATE param must be a float
-            kwTransferFunctionDerivative param must be a function reference for dReceiver/dSender
-            returns matrix of weight changes
-
-        Initialization arguments:
-         - variable (list or np.array): must have three 1D elements
-         - params (dict): specifies
-             + LEARNING_RATE: (float) - learning rate (default: 1.0)
-             + kwTransferFunctionDerivative - (function) derivative of TransferMechanism function
-                                                                      (default: derivative of logistic)
     COMMENT
 
     Arguments
     ---------
 
     variable : List or 2d np.array [length 3] : default variableClassDefault
-       template for the three items provided as the variable in the call to the `function <BackPropagation.function>`
-       (in order):
+       specifies a template for the three items provided as the variable in the call to the
+       `function <BackPropagation.function>` (in order):
        `activation_input <BackPropagation.activation_input>` (1d np.array),
        `activation_output <BackPropagation.activation_output>` (1d np.array),
        `error_signal <BackPropagation.error_signal>` (1d np.array).
@@ -3103,7 +3173,7 @@ class BackPropagation(LearningFunction):
     ----------
 
     variable: 2d np.array
-        specifies three values uses as input to the `function <BackPropagation.function>`:
+        contains the three values used as input to the `function <BackPropagation.function>`:
        `activation_input <BackPropagation.activation_input>`,
        `activation_output <BackPropagation.activation_output>`, and
        `error_signal <BackPropagation.error_signal>`.
