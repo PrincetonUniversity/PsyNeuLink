@@ -124,6 +124,25 @@ class MatrixKeywords:
         self.AUTO_ASSIGN_MATRIX = AUTO_ASSIGN_MATRIX
         self.DEFAULT_MATRIX = DEFAULT_MATRIX
 
+    def _values(self):
+        return list(self.__dict__.values())
+
+    def _names(self):
+        return list(self.__dict__)
+
+MATRIX = "matrix"
+IDENTITY_MATRIX = "IdentityMatrix"
+FULL_CONNECTIVITY_MATRIX = "FullConnectivityMatrix"
+RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
+AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
+# DEFAULT_MATRIX = AUTO_ASSIGN_MATRIX
+DEFAULT_MATRIX = IDENTITY_MATRIX
+
+MATRIX_KEYWORDS = MatrixKeywords()
+MATRIX_KEYWORD_VALUES = MATRIX_KEYWORDS._values()
+MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
+# MATRIX_KEYWORD_VALUES = list(MATRIX_KEYWORDS.__dict__.values())
+# MATRIX_KEYWORD_NAMES = list(MATRIX_KEYWORDS.__dict__)
 
 # **********************************************************************************************************************
 # ******************************************    CONSTANTS  *************************************************************
@@ -521,14 +540,5 @@ CONSTANT = 'constant'
 SIMPLE = 'scaled'
 ADAPTIVE = 'apaptive'
 DIFFUSION = 'diffusion'
-
-
-MATRIX = "matrix"
-IDENTITY_MATRIX = "IdentityMatrix"
-FULL_CONNECTIVITY_MATRIX = "FullConnectivityMatrix"
-RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
-AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
-# DEFAULT_MATRIX = AUTO_ASSIGN_MATRIX
-DEFAULT_MATRIX = IDENTITY_MATRIX
 
 #endregion
