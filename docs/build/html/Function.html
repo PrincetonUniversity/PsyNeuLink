@@ -290,7 +290,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 
 <dl class="class">
 <dt id="Function.Contradiction">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Contradiction</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b945598&gt; = None</em>, <em>context='Contradiction INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Contradiction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Contradiction</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba5a598&gt; = None</em>, <em>context='Contradiction INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Contradiction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Example function for use as template for function construction</p>
 <dl class="docutils">
 <dt>Iniialization arguments:</dt>
@@ -367,7 +367,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="#Function.Contradiction.function" title="Function.Contradiction.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -862,7 +862,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>np.array : variableClassDefault</em>) &#8211; specifies a template for the value to be transformed.</li>
+<li><strong>variable</strong> (<em>1d np.array : variableClassDefault</em>) &#8211; specifies a template for the value to be transformed.</li>
 <li><strong>gain</strong> (<em>float : default 1.0</em>) &#8211; specifies a value by which to multiply <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before softmax transformation.</li>
 <li><strong>output</strong> (<em>ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL</em>) &#8211; specifies the format of array returned by <a class="reference internal" href="#Function.SoftMax.function" title="Function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
 (see <a class="reference internal" href="#Function.SoftMax.output" title="Function.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">output</span></code></a> for details).</li>
@@ -880,7 +880,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.SoftMax.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Function.SoftMax.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or np.array</em> &#8211; contains value to be transformed.</p>
+<dd><p><em>1d np.array</em> &#8211; contains value to be transformed.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -900,8 +900,8 @@ in the array returned by <code class="xref any docutils literal"><span class="pr
 <li><strong>ALL</strong>: array of all softmax-transformed values;</li>
 <li><strong>MAX_VAL</strong>: softmax-transformed value for the element with the maximum such value, 0 for all others;</li>
 <li><strong>MAX_INDICATOR</strong>: 1 for the element with the maximum softmax-transformed value, 0 for all others;</li>
-<li><strong>PROB</strong>: probabilistically chosen element based on value of softmax-transformed values;
-its value is reported after normalizing sum of all values to 1, 0 reported for all others;</li>
+<li><strong>PROB</strong>: probabilistically chosen element based on softmax-transformed values after normalizing sum of
+values to 1, 0 reported for all others.</li>
 </ul>
 </div></blockquote>
 </dd></dl>
@@ -924,22 +924,52 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <dt id="Function.SoftMax.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return: e**(<a class="reference internal" href="#Function.SoftMax.gain" title="Function.SoftMax.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> * <a class="reference internal" href="#Function.SoftMax.variable" title="Function.SoftMax.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) /
-sum(e**(<a class="reference internal" href="#Function.SoftMax.gain" title="Function.SoftMax.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> * <a class="reference internal" href="#Function.SoftMax.variable" title="Function.SoftMax.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>))
+sum(e**(<a class="reference internal" href="#Function.SoftMax.gain" title="Function.SoftMax.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> * <a class="reference internal" href="#Function.SoftMax.variable" title="Function.SoftMax.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>)),
 filtered by <a class="reference internal" href="#Function.SoftMax.output" title="Function.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">ouptput</span></code></a> specification.</p>
-<p>SoftMax.function returns scalar result</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>1d np.array : default variableClassDefault</em>) &#8211; an array to be transformed.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) &#8211; specifies whether the function is executed on the time_step or trial time scale.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>softmax transformation of variable</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or np.array</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="Function.SoftMax.derivative">
-<code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em>, <em>input=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax.derivative" title="Permalink to this definition">¶</a></dt>
-<dd><p>Derivative of the softMax sigmoid function</p>
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derivative of <a class="reference internal" href="#Function.SoftMax.function" title="Function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivative</strong> &#8211; output - maximum value.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">number</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="Function.LinearMatrix">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearMatrix</code><span class="sig-paren">(</span><em>variable_default=[0], matrix: &lt;function matrix_spec at 0x10c10d378&gt; = None, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10b945598&gt; = None, context='Linear Matrix INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearMatrix</code><span class="sig-paren">(</span><em>variable_default=[0], matrix: &lt;function matrix_spec at 0x10c40d400&gt; = None, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba5a598&gt; = None, context='Linear Matrix INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, MATRIX)</p>
 <p>Use a weight matrix to convert a sender vector into a receiver vector:
 - each row of the mapping corresponds to an element of the sender vector (outer index)
@@ -989,7 +1019,7 @@ filtered by <a class="reference internal" href="#Function.SoftMax.output" title=
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.SoftMax.variable" title="Function.SoftMax.variable"><strong>variable</strong></a> &#8211; (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.Function_Base.variable" title="Function.Function_Base.variable"><strong>variable</strong></a> &#8211; (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; <p>(dict) with entries specifying:
 MATRIX: value - used to override self.matrix implemented by __init__;  must be one of:</p>
@@ -1017,7 +1047,7 @@ MATRIX: value - used to override self.matrix implemented by __init__;  must be o
 
 <dl class="class">
 <dt id="Function.Integrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x10b9559d8&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x10bee55c0&gt; = 'constant'</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params: &lt;typecheck.framework.optional object at 0x10be306d8&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b945598&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x10ba789d8&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x10c07e390&gt; = 'constant'</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params: &lt;typecheck.framework.optional object at 0x10c02e0b8&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba5a598&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -1070,7 +1100,7 @@ rate 1:    instantaneous change (returns new_value)</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.SoftMax.variable" title="Function.SoftMax.variable"><strong>variable</strong></a> &#8211; (list) - old_value and new_value (default: [0, 0]:</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.Function_Base.variable" title="Function.Function_Base.variable"><strong>variable</strong></a> &#8211; (list) - old_value and new_value (default: [0, 0]:</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
@@ -1086,7 +1116,7 @@ WEIGHTING: Integrator.Weightings - type of weighting (default = CONSTANT)</td>
 
 <dl class="class">
 <dt id="Function.BogaczEtAl">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10b9559d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10b9559d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10b9559d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10b9559d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10b9559d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10b945598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba789d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba789d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba789d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba789d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba789d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba5a598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to DDM process and return mean response time and accuracy.</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -1132,7 +1162,7 @@ tasks.  Psychological review, 113(4), 700. (<a class="reference external" href="
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.SoftMax.variable" title="Function.SoftMax.variable"><strong>variable</strong></a> &#8211; (list)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.Function_Base.variable" title="Function.Function_Base.variable"><strong>variable</strong></a> &#8211; (list)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 drift_rate...</td>
@@ -1145,7 +1175,7 @@ drift_rate...</td>
 
 <dl class="class">
 <dt id="Function.NavarroAndFuss">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10b9559d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10b9559d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10b9559d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10b9559d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10b9559d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10b945598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba789d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba789d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba789d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba789d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba789d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba5a598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to distribution of DDM responses (mean and variance of response time and accuracy).</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -1191,7 +1221,7 @@ Wiener diffusion models.&#8221; Journal of Mathematical Psychology 53.4 (2009): 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.SoftMax.variable" title="Function.SoftMax.variable"><strong>variable</strong></a> &#8211; (list)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.Function_Base.variable" title="Function.Function_Base.variable"><strong>variable</strong></a> &#8211; (list)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 drift_rate...</td>
@@ -1207,7 +1237,7 @@ drift_rate...</td>
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="#Function.SoftMax.variable" title="Function.SoftMax.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="#Function.Function_Base.variable" title="Function.Function_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">

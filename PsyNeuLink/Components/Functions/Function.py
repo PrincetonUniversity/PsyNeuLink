@@ -1748,7 +1748,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
             * **MAX_VAL**: softmax-transformed value for the element with the maximum such value, 0 for all others;
             * **MAX_INDICATOR**: 1 for the element with the maximum softmax-transformed value, 0 for all others;
             * **PROB**: probabilistically chosen element based on softmax-transformed values after normalizing sum of
-              values to 1, 0 reported for all others.
+              values to 1, 0 for all others.
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
