@@ -197,13 +197,18 @@ for use by PsyNeuLink components.  Every <code class="xref any docutils literal"
 component is executed, that Function&#8217;s <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;Function_Base.function</span></code> is executed.  The
 <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;Function_Base.function</span></code> can be any callable operation, although most commonly it is a mathematical operation
 (and, for those, almost always uses calls to numpy function).</p>
-<p>There are two reasons PsyNeuLink packages functions in Functions. The first is to <strong>manage parameters</strong>.
-Every Function has, in addition to its <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, a set of attributes corresponding to the
-parameters of the function, that allow these to be set and modified &#8211; either directly (i.e., in a script), or during
-the execution of PsyNeuLink components (e.g., <a class="reference internal" href="Mechanism.html"><span class="doc">mechanisms</span></a>, <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> and <a class="reference internal" href="System.html"><span class="doc">systems</span></a>).
-The second reason is for  <strong>modularity</strong>.  By providing a standard interface, Functions of components in
-PsyNeuLink can be replaced with other PsyNeuLink Functions, or with user-written custom functions so long as they
-adhere to certain standards (the Function API).</p>
+<p>There are two reasons PsyNeuLink packages functions in a Function component. The first is to <strong>manage parameters</strong>.
+Parameters are attributes of a function that either remain stable over multiple calls to the
+function (e.g., the gain or bias of a logistic function, or the learning rate of a learning function);
+or, if they change, they do less frequently or under the control of different factors than the function&#8217;s variable
+(i.e., its input).  As a consequence, it is useful to manage these separately from the function&#8217;s variable,
+and not have to provide them every time the function is called.  To address this, every PsyNeuLink Function has a
+set of attributes corresponding to the parameters of the function, that can be specified at the time the Function is
+created (in arguments to its constructor), and can be modified independently of a call to its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>.
+Modifications can be directly (e.g., in a script), or by the operation of other PsyNeuLink components (e.g.,
+<code class="xref any docutils literal"><span class="pre">AdaptiveMechanisms</span></code>).  The second to reason PsyNeuLink uses Functions is for  <strong>modularity</strong>. By providing a standard
+interface, any Function assigned to a components in PsyNeuLink can be replaced with other PsyNeuLink Functions, or with
+user-written custom functions (so long as they adhere to certain standards (the PsyNeuLink <code class="xref any docutils literal"><span class="pre">Function</span> <span class="pre">API</span></code>).</p>
 </div>
 <div class="section" id="creating-a-function">
 <span id="function-creation"></span><h2>Creating a Function<a class="headerlink" href="#creating-a-function" title="Permalink to this headline">¶</a></h2>
@@ -236,17 +241,17 @@ of the <a class="reference internal" href="#Function.Function_Base.function" tit
 <dl class="class">
 <dt id="Function.Function_Base">
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Function_Base</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Function_Base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements abstract class for Function category of Component class</p>
+<dd><p>Implement abstract class for Function category of Component class</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>value : variableClassDefault</em>) &#8211; specifies the format and a default value for the <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
+<li><strong>variable</strong> (<em>value : variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
-<li><strong>owner</strong> (<em>Component</em>) &#8211; component to which the Function is being assigned.</li>
+<li><strong>owner</strong> (<em>Component</em>) &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which to assign the Function.</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
 defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
 </ul>
@@ -257,7 +262,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.Function_Base.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Function.Function_Base.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value</em> &#8211; format and default value can be specifed by the <code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code> argument of the constructor;  otherwise,
+<dd><p><em>value</em> &#8211; format and default value can be specified by the <code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code> argument of the constructor;  otherwise,
 they are specified by the Function&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">variableClassDefault</span></code>.</p>
 </dd></dl>
 
@@ -270,7 +275,7 @@ they are specified by the Function&#8217;s <code class="xref std std-keyword doc
 <dl class="attribute">
 <dt id="Function.Function_Base.owner">
 <code class="descname">owner</code><a class="headerlink" href="#Function.Function_Base.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Mechanism</em> &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which the Function belongs.</p>
+<dd><p><em>Mechanism</em> &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which the Function has been assigned.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -285,7 +290,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 
 <dl class="class">
 <dt id="Function.Contradiction">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Contradiction</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None</em>, <em>context='Contradiction INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Contradiction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Contradiction</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba53598&gt; = None</em>, <em>context='Contradiction INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Contradiction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Example function for use as template for function construction</p>
 <dl class="docutils">
 <dt>Iniialization arguments:</dt>
@@ -345,139 +350,207 @@ kwPertinacity: float - obstinate or equivocal (default: 10)</li>
 
 <dl class="class">
 <dt id="Function.UserDefinedFunction">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">UserDefinedFunction</code><span class="sig-paren">(</span><em>function</em>, <em>variable=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None</em>, <em>context='USER DEFINED FUNCTION INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.UserDefinedFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implement user-defined function</p>
-<dl class="docutils">
-<dt>Initialization arguments:</dt>
-<dd><ul class="first last simple">
-<li>variable</li>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">UserDefinedFunction</code><span class="sig-paren">(</span><em>function</em>, <em>variable=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.UserDefinedFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement user-defined Function.</p>
+<p>This is used to &#8220;wrap&#8221; custom functions in the PsyNeuLink <code class="xref any docutils literal"><span class="pre">Function</span> <span class="pre">API</span></code>.
+It is automatically invoked and applied to any function that is assigned to the <code class="xref any docutils literal"><span class="pre">function</span></code>
+attribute of a PsyNeuLink component (other than a Function itself).  The function can take any arguments and
+return any values.  However, if UserDefinedFunction is used to create a custom version of another PsyNeuLink
+<a class="reference internal" href="#"><span class="doc">Function</span></a>, then it must conform to the requirements of that Function&#8217;s type.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Currently the arguments for the <a class="reference internal" href="#Function.UserDefinedFunction.function" title="Function.UserDefinedFunction.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a UserDefinedFunction are NOT
+assigned as attributes of the UserDefinedFunction object or its owner, nor to its <code class="xref std std-keyword docutils literal"><span class="pre">user_params</span></code> dict.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>function</strong> (<a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.function" title="LearningProjection.LearningProjection.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
+with the context in which the UserDefinedFunction will be used.</li>
+<li><strong>variable</strong> (<em>value : variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<em>Component</em>) &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
 </ul>
-</dd>
-</dl>
-<p>Linear.function returns scalar result</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.UserDefinedFunction.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Function.UserDefinedFunction.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value</em> &#8211; format and default value can be specified by the <code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code> argument of the constructor;  otherwise,
+they are specified by the Function&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">variableClassDefault</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.UserDefinedFunction.function">
+<code class="descname">function</code><a class="headerlink" href="#Function.UserDefinedFunction.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function</em> &#8211; called by the Function&#8217;s <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> when it is executed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.UserDefinedFunction.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.UserDefinedFunction.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.UserDefinedFunction.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.UserDefinedFunction.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.UserDefinedFunction.prefs" title="Function.UserDefinedFunction.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="Function.LinearCombination">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearCombination</code><span class="sig-paren">(</span><em>variable_default=[2, 2], scale: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0, offset: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.0, weights=None, exponents=None, operation: &lt;typecheck.tc_predicates.enum object at 0x10c148630&gt; = 'sum', params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None, context='LinearCombination INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearCombination" title="Permalink to this definition">¶</a></dt>
-<dd><p>Linearly combine arrays of values with optional weighting, offset, and/or scaling</p>
-<dl class="docutils">
-<dt>Description:</dt>
-<dd><p class="first">Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by OPERATION
-Use optional WEIGHTING argument to weight contribution of each array to the combination
-Use optional SCALE and OFFSET parameters to linearly transform the resulting array
-Returns a list or 1D array of the same length as the individual ones in the variable</p>
-<p>Notes:
-* If variable contains only a single array, it is simply linearly transformed using SCALE and OFFSET
-* If there is more than one array in variable, they must all be of the same length
-* WEIGHTS can be:</p>
-<blockquote class="last">
-<div><ul class="simple">
-<li>1D: each array in the variable is scaled by the corresponding element of WEIGHTS)</li>
-<li>2D: each array in the variable is multiplied by (Hadamard Product) the corresponding array in kwWeight</li>
-</ul>
-</div></blockquote>
-</dd>
-<dt>Initialization arguments:</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>variable (value, np.ndarray or list): values to be combined;</dt>
-<dd><p class="first last">can be a list of lists, or a 1D or 2D np.array;  a 1D np.array is always returned
-if it is a list, it must be a list of numbers, lists, or np.arrays
-all items in the list or 2D np.array must be of equal length
-the length of WEIGHTS (if provided) must equal the number of arrays (2nd dimension; default is 2)</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>params (dict) can include:</dt>
-<dd><ul class="first last">
-<li><p class="first">WEIGHTS (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1, 1])</p>
-</li>
-<li><p class="first">OFFSET (value): added to the result (after the arithmetic operation is applied; default is 0)</p>
-</li>
-<li><p class="first">SCALE (value): multiples the result (after combining elements; default: 1)</p>
-</li>
-<li><dl class="first docutils">
-<dt>OPERATION (Operation Enum) - method used to combine terms (default: SUM)</dt>
-<dd><p class="first last">SUM: element-wise sum of the arrays in variable
-PRODUCT: Hadamard Product of the arrays in variable</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-<p>LinearCombination.function returns combined values:
-- single number if variable was a single number
-- list of numbers if variable was list of numbers
-- 1D np.array if variable was a single np.variable or np.ndarray</p>
-<dl class="method">
-<dt id="Function.LinearCombination.function">
-<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearCombination.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Linearly combine a list of values, and optionally offset and/or scale them</p>
-<dl class="docutils">
-<dt># DOCUMENT:</dt>
-<dd><p class="first">Handles 1-D or 2-D arrays of numbers
-Convert to np.array
-All elements must be numeric
-If linear (single number or 1-D array of numbers) just apply scale and offset
-If 2D (array of arrays), apply exponents to each array
-If 2D (array of arrays), apply weights to each array
-Operators:  SUM AND PRODUCT
-&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-
-OLD:
-Variable must be a list of items:</p>
-<blockquote>
-<div><ul class="simple">
-<li>each item can be a number or a list of numbers</li>
-</ul>
-</div></blockquote>
-<dl class="docutils">
-<dt>Corresponding elements of each item in variable are combined based on OPERATION param:</dt>
-<dd><ul class="first last simple">
-<li>SUM adds corresponding elements</li>
-<li>PRODUCT multiples corresponding elements</li>
-</ul>
-</dd>
-<dt>An initializer (kwLinearCombinationInitializer) can be provided as the first item in variable;</dt>
-<dd>it will be populated with a number of elements equal to the second item,
-each element of which is determined by OPERATION param:
-- for SUM, initializer will be a list of 0&#8217;s
-- for PRODUCT, initializer will be a list of 1&#8217;s</dd>
-<dt>Returns a list of the same length as the items in variable,</dt>
-<dd>each of which is the combination of their corresponding elements specified by OPERATION</dd>
-</dl>
-<table class="last docutils field-list" frame="void" rules="none">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearCombination</code><span class="sig-paren">(</span><em>variable_default</em>, <em>weights=None</em>, <em>exponents=None</em>, <em>scale:parameter_spec=1.0</em>, <em>offset:parameter_spec=0.0</em>, <em>operation=SUM</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearCombination" title="Permalink to this definition">¶</a></dt>
+<dd><p id="linearcombination">Linearly combine arrays of values with optional weighting, exponentiation, scaling and/or offset.</p>
+<p>Combines the arrays in the items of the <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument.  Each array can be
+individually weighted and/or exponentiated; they can combined additively or multiplicatively; and the resulting
+array can be multiplicatively transformed and/or additively offset.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">var variable:</th><td class="field-body">(list of numbers) - values to calculate (default: [0, 0]:</td>
-</tr>
-<tr class="field-even field"><th class="field-name">params:</th><td class="field-body">(dict) with entries specifying:
-EXPONENTS (2D np.array): exponentiate each value in the variable array (default: none)
-WEIGHTS (2D np.array): multiply each value in the variable array (default: none):
-OFFSET (scalar) - additive constant (default: 0):
-SCALE: (scalar) - scaling factor (default: 1)
-OPERATION: LinearCombination.Operation - operation to perform (default: SUM):</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">return:</th><td class="field-body">(1D np.array)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>1d or 2d np.array : variableClassDefault</em>) &#8211; specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.</li>
+<li><strong>weights</strong> (<em>1d or 2d np.array</em>) &#8211; specifies values used to multiply the elements of each array in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.
+If it is 1d, its length must equal the number of items in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;
+if it is 2d, the length of each item must be the same as those in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>,
+and there must be the same number of items as there are in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+(see <a class="reference internal" href="#Function.LinearCombination.weights" title="Function.LinearCombination.weights"><code class="xref any py py-attr docutils literal"><span class="pre">weights</span></code></a> for details)</li>
+<li><strong>exponents</strong> (<em>1d or 2d np.array</em>) &#8211; specifies values used to exponentiate the elements of each array in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.
+If it is 1d, its length must equal the number of items in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;
+if it is 2d, the length of each item must be the same as those in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>,
+and there must be the same number of items as there are in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+(see <a class="reference internal" href="#Function.LinearCombination.exponents" title="Function.LinearCombination.exponents"><code class="xref any py py-attr docutils literal"><span class="pre">exponents</span></code></a> for details)</li>
+<li><strong>scale</strong> (<em>float</em>) &#8211; specifies a value by which to multiply each element of the output of <a class="reference internal" href="#Function.LinearCombination.function" title="Function.LinearCombination.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+(see <a class="reference internal" href="#Function.LinearCombination.scale" title="Function.LinearCombination.scale"><code class="xref any py py-attr docutils literal"><span class="pre">scale</span></code></a> for details)</li>
+<li><strong>offset</strong> (<em>float</em>) &#8211; specifies a value to add to each element of the output of <a class="reference internal" href="#Function.LinearCombination.function" title="Function.LinearCombination.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+(see <a class="reference internal" href="#Function.LinearCombination.offset" title="Function.LinearCombination.offset"><code class="xref any py py-attr docutils literal"><span class="pre">offset</span></code></a> for details)</li>
+<li><strong>operation</strong> (<em>SUM or PRODUCT</em>) &#8211; specifies whether the <a class="reference internal" href="#Function.LinearCombination.function" title="Function.LinearCombination.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> takes the elementwise (Hadamarad)
+sum or product of the arrays in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<em>Component</em>) &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
-</dd>
-</dl>
+<dl class="attribute">
+<dt id="Function.LinearCombination.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Function.LinearCombination.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d or 2d np.array</em> &#8211; contains the arrays to be combined by <a class="reference internal" href="#linearcombination"><span class="std std-ref">function</span></a>.  If it is 1d, the array is simply
+linearly transformed by and <a class="reference internal" href="#Function.LinearCombination.scale" title="Function.LinearCombination.scale"><code class="xref any py py-attr docutils literal"><span class="pre">scale</span></code></a> and <a class="reference internal" href="#Function.LinearCombination.scale" title="Function.LinearCombination.scale"><code class="xref any py py-attr docutils literal"><span class="pre">offset</span></code></a>.
+If it is 2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
+specified by <a class="reference internal" href="#Function.LinearCombination.weights" title="Function.LinearCombination.weights"><code class="xref any py py-attr docutils literal"><span class="pre">weights</span></code></a> and/or <a class="reference internal" href="#Function.LinearCombination.exponents" title="Function.LinearCombination.exponents"><code class="xref any py py-attr docutils literal"><span class="pre">exponents</span></code></a>
+and then combined as specified by <a class="reference internal" href="#Function.LinearCombination.operation" title="Function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.LinearCombination.weights">
+<code class="descname">weights</code><a class="headerlink" href="#Function.LinearCombination.weights" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d or 2d np.array</em> &#8211; if it is 1d, each element is used to multiply all elements in the corresponding array of
+<a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;    if it is 2d, then each array is multiplied elementwise
+(i.e., the Hadamard Product is taken) with the corresponding array of <code class="xref any docutils literal"><span class="pre">variable</span></code>.
+All <code class="xref std std-keyword docutils literal"><span class="pre">weights</span></code> are applied before any exponentiation (if it is specified).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.LinearCombination.exponents">
+<code class="descname">exponents</code><a class="headerlink" href="#Function.LinearCombination.exponents" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d or 2d np.array</em> &#8211; if it is 1d, each element is used to exponentiate the elements of the corresponding array of
+<code class="xref any docutils literal"><span class="pre">variable</span></code>;  if it is 2d, the element of each array is used to exponentiate
+the correspnding element of the corresponding array of <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.
+In either case, exponentiating is applied after application of the <a class="reference internal" href="#Function.LinearCombination.weights" title="Function.LinearCombination.weights"><code class="xref any py py-attr docutils literal"><span class="pre">weights</span></code></a>
+(if any are specified).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.LinearCombination.scale">
+<code class="descname">scale</code><a class="headerlink" href="#Function.LinearCombination.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; value is multiplied by each element of the array after applying the <a class="reference internal" href="#Function.LinearCombination.operation" title="Function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a>
+(see <a class="reference internal" href="#Function.LinearCombination.scale" title="Function.LinearCombination.scale"><code class="xref any py py-attr docutils literal"><span class="pre">scale</span></code></a> for details);  this done before applying the
+<a class="reference internal" href="#Function.LinearCombination.offset" title="Function.LinearCombination.offset"><code class="xref any py py-attr docutils literal"><span class="pre">offset</span></code></a> (if it is specified).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.LinearCombination.offset">
+<code class="descname">offset</code><a class="headerlink" href="#Function.LinearCombination.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; value is added to each element of the array after applying the <a class="reference internal" href="#Function.LinearCombination.operation" title="Function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a>
+and <a class="reference internal" href="#Function.LinearCombination.scale" title="Function.LinearCombination.scale"><code class="xref any py py-attr docutils literal"><span class="pre">scale</span></code></a> (if it is specified).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.LinearCombination.operation">
+<code class="descname">operation</code><a class="headerlink" href="#Function.LinearCombination.operation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>SUM or PRODUCT</em> &#8211; determines whether the <a class="reference internal" href="#Function.LinearCombination.function" title="Function.LinearCombination.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> takes the elementwise (Hadamard) sum or
+product of the arrays in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.LinearCombination.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.LinearCombination.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.LinearCombination.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.LinearCombination.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.LinearCombination.prefs" title="Function.LinearCombination.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.LinearCombination.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearCombination.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the <a class="reference internal" href="#Function.LinearCombination.weights" title="Function.LinearCombination.weights"><code class="xref any py py-attr docutils literal"><span class="pre">weights</span></code></a> and/or <code class="xref any docutils literal"><span class="pre">exponents</span></code> to the
+arrays in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, then takes their sum or product (as specified by
+<a class="reference internal" href="#Function.LinearCombination.operation" title="Function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a>), and finally applies <a class="reference internal" href="#Function.LinearCombination.scale" title="Function.LinearCombination.scale"><code class="xref any py py-attr docutils literal"><span class="pre">scale</span></code></a> and/or
+<a class="reference internal" href="#Function.LinearCombination.offset" title="Function.LinearCombination.offset"><code class="xref any py py-attr docutils literal"><span class="pre">offset</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>1d or 2d np.array : default variableClassDefault</em>) &#8211; a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) &#8211; specifies whether the function is executed on the time_step or trial time scale.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>combined array</strong> &#8211; the result of linearly combining the arrays in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">1d np.array</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="Function.Linear">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0, intercept: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.0, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Linear" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10ba749d8&gt; = 1.0, intercept: &lt;function parameter_spec at 0x10ba749d8&gt; = 0.0, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba53598&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Linear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate a linear transform of input variable (SLOPE, INTERCEPT)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -505,7 +578,7 @@ OPERATION: LinearCombination.Operation - operation to perform (default: SUM):</t
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable"><strong>variable</strong></a> &#8211; (number) - value to be &#8220;plotted&#8221; (default: 0</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.variable" title="LearningProjection.LearningProjection.variable"><strong>variable</strong></a> &#8211; (number) - value to be &#8220;plotted&#8221; (default: 0</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 SLOPE: number - slope (default: 1)
@@ -527,7 +600,7 @@ INTERCEPT: number - intercept (default: 0)</td>
 
 <dl class="class">
 <dt id="Function.Exponential">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Exponential</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>rate: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0</em>, <em>scale: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None</em>, <em>context='Exponential INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Exponential" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Exponential</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>rate: &lt;function parameter_spec at 0x10ba749d8&gt; = 1.0</em>, <em>scale: &lt;function parameter_spec at 0x10ba749d8&gt; = 1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba53598&gt; = None</em>, <em>context='Exponential INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Exponential" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate an exponential transform of input variable  (RATE, SCALE)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -561,7 +634,7 @@ INTERCEPT: number - intercept (default: 0)</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable"><strong>variable</strong></a> &#8211; (number) - value to be exponentiated (default: 0</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.variable" title="LearningProjection.LearningProjection.variable"><strong>variable</strong></a> &#8211; (number) - value to be exponentiated (default: 0</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 RATE: number - rate (default: 1)
@@ -583,7 +656,7 @@ SCALE: number - scale (default: 1)</td>
 
 <dl class="class">
 <dt id="Function.Logistic">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Logistic</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>gain: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0</em>, <em>bias: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None</em>, <em>context='Logistic Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Logistic" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Logistic</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>gain: &lt;function parameter_spec at 0x10ba749d8&gt; = 1.0</em>, <em>bias: &lt;function parameter_spec at 0x10ba749d8&gt; = 0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba53598&gt; = None</em>, <em>context='Logistic Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Logistic" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the logistic transform of input variable  (GAIN, BIAS)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -617,7 +690,7 @@ SCALE: number - scale (default: 1)</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable"><strong>variable</strong></a> &#8211; (number) - value to be transformed by logistic function (default: 0)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.variable" title="LearningProjection.LearningProjection.variable"><strong>variable</strong></a> &#8211; (number) - value to be transformed by logistic function (default: 0)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 GAIN: number - gain (default: 1)
@@ -639,7 +712,7 @@ BIAS: number - rate (default: 0)</td>
 
 <dl class="class">
 <dt id="Function.SoftMax">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">SoftMax</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>gain: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0</em>, <em>output: &lt;typecheck.tc_predicates.enum object at 0x10c1480b8&gt; = 'all'</em>, <em>params: &lt;typecheck.framework.optional object at 0x10c148b00&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None</em>, <em>context='SoftMax Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">SoftMax</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>gain: &lt;function parameter_spec at 0x10ba749d8&gt; = 1.0</em>, <em>output: &lt;typecheck.tc_predicates.enum object at 0x10c138278&gt; = 'all'</em>, <em>params: &lt;typecheck.framework.optional object at 0x10c148f98&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba53598&gt; = None</em>, <em>context='SoftMax Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the softMax transform of input variable  (GAIN, BIAS)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -683,7 +756,7 @@ PROB: probabilistially picks an element based on their softmax values to pass th
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable"><strong>variable</strong></a> &#8211; (number) - value to be transformed by softMax function (default: 0)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.variable" title="LearningProjection.LearningProjection.variable"><strong>variable</strong></a> &#8211; (number) - value to be transformed by softMax function (default: 0)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 GAIN: number - gain (default: 1)
@@ -705,7 +778,7 @@ BIAS: number - rate (default: 0)</td>
 
 <dl class="class">
 <dt id="Function.LinearMatrix">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearMatrix</code><span class="sig-paren">(</span><em>variable_default=[0], matrix: &lt;function matrix_spec at 0x10c10e7b8&gt; = None, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None, context='Linear Matrix INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LinearMatrix</code><span class="sig-paren">(</span><em>variable_default=[0], matrix: &lt;function matrix_spec at 0x10c10e6a8&gt; = None, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba53598&gt; = None, context='Linear Matrix INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LinearMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, MATRIX)</p>
 <p>Use a weight matrix to convert a sender vector into a receiver vector:
 - each row of the mapping corresponds to an element of the sender vector (outer index)
@@ -755,7 +828,7 @@ BIAS: number - rate (default: 0)</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable"><strong>variable</strong></a> &#8211; (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.variable" title="LearningProjection.LearningProjection.variable"><strong>variable</strong></a> &#8211; (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; <p>(dict) with entries specifying:
 MATRIX: value - used to override self.matrix implemented by __init__;  must be one of:</p>
@@ -783,7 +856,7 @@ MATRIX: value - used to override self.matrix implemented by __init__;  must be o
 
 <dl class="class">
 <dt id="Function.Integrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x10c136f60&gt; = 'constant'</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params: &lt;typecheck.framework.optional object at 0x10c136940&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x10ba749d8&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x10bdce278&gt; = 'constant'</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params: &lt;typecheck.framework.optional object at 0x10be165c0&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba53598&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -836,7 +909,7 @@ rate 1:    instantaneous change (returns new_value)</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable"><strong>variable</strong></a> &#8211; (list) - old_value and new_value (default: [0, 0]:</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.variable" title="LearningProjection.LearningProjection.variable"><strong>variable</strong></a> &#8211; (list) - old_value and new_value (default: [0, 0]:</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
@@ -852,7 +925,7 @@ WEIGHTING: Integrator.Weightings - type of weighting (default = CONSTANT)</td>
 
 <dl class="class">
 <dt id="Function.BogaczEtAl">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba749d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba749d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba749d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba749d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba749d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba53598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to DDM process and return mean response time and accuracy.</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -898,7 +971,7 @@ tasks.  Psychological review, 113(4), 700. (<a class="reference external" href="
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable"><strong>variable</strong></a> &#8211; (list)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.variable" title="LearningProjection.LearningProjection.variable"><strong>variable</strong></a> &#8211; (list)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 drift_rate...</td>
@@ -911,7 +984,7 @@ drift_rate...</td>
 
 <dl class="class">
 <dt id="Function.NavarroAndFuss">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba729d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba729d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba67598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba749d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba749d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba749d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba749d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba749d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba53598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to distribution of DDM responses (mean and variance of response time and accuracy).</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -957,7 +1030,7 @@ Wiener diffusion models.&#8221; Journal of Mathematical Psychology 53.4 (2009): 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable"><strong>variable</strong></a> &#8211; (list)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.variable" title="LearningProjection.LearningProjection.variable"><strong>variable</strong></a> &#8211; (list)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 drift_rate...</td>
@@ -973,7 +1046,7 @@ drift_rate...</td>
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.variable" title="LearningProjection.LearningProjection.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
@@ -1012,6 +1085,7 @@ learning rule.</p>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
+<li><strong>owner</strong> (<em>Component</em>) &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which to assign the Function.</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
 defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
 </ul>
@@ -1061,23 +1135,23 @@ return and array with a single non-zero value.</p>
 <dt id="Function.Reinforcement.learning_rate">
 <code class="descname">learning_rate</code><a class="headerlink" href="#Function.Reinforcement.learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float</em> &#8211; the learning rate used by the function.  If specified, it supercedes any learning_rate specified for the
-<code class="xref any docutils literal"><span class="pre">process</span></code> and/or <code class="xref any docutils literal"><span class="pre">system</span></code> to which the function&#8217;s  <a class="reference internal" href="#Function.BackPropagation.owner" title="Function.BackPropagation.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs.  If it is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the learning_rate specified for the process to
-which the <code class="xref any docutils literal"><span class="pre">owner</span></code> belongs is used;  and, if that is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the learning_rate for the
+<code class="xref any docutils literal"><span class="pre">process</span></code> and/or <code class="xref any docutils literal"><span class="pre">system</span></code> to which the function&#8217;s  <a class="reference internal" href="#Function.Reinforcement.owner" title="Function.Reinforcement.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs.  If it is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the learning_rate specified for the process to
+which the <a class="reference internal" href="#Function.Reinforcement.owner" title="Function.Reinforcement.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs is used;  and, if that is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the learning_rate for the
 system to which it belongs is used. If all are <code class="xref any docutils literal"><span class="pre">None</span></code>, then the
-<a class="reference internal" href="#Function.BackPropagation.default_learning_rate" title="Function.BackPropagation.default_learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">default_learning_rate</span></code></a> is used.</p>
+<a class="reference internal" href="#Function.Reinforcement.default_learning_rate" title="Function.Reinforcement.default_learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">default_learning_rate</span></code></a> is used.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Function.Reinforcement.default_learning_rate">
 <code class="descname">default_learning_rate</code><a class="headerlink" href="#Function.Reinforcement.default_learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float : 1.0</em> &#8211; the value used for the <a class="reference internal" href="#Function.BackPropagation.learning_rate" title="Function.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
+<dd><p><em>float : 1.0</em> &#8211; the value used for the <a class="reference internal" href="#Function.Reinforcement.learning_rate" title="Function.Reinforcement.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Function.Reinforcement.function">
 <code class="descname">function</code><a class="headerlink" href="#Function.Reinforcement.function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>function</em> &#8211; the function that computes the weight change matrix, and returns that along with the
-<a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> received.</p>
+<a class="reference internal" href="#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> received.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1104,9 +1178,9 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>variable</strong> (<em>List or 2d np.array [length 3] : default variableClassDefault</em>) &#8211; must have three items that are the values for (in order):
-<a class="reference internal" href="#Function.BackPropagation.activation_input" title="Function.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (not used),
-<a class="reference internal" href="#Function.BackPropagation.activation_output" title="Function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array with a single non-zero value),
-<a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d np.array).</li>
+<a class="reference internal" href="#Function.Reinforcement.activation_input" title="Function.Reinforcement.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (not used),
+<a class="reference internal" href="#Function.Reinforcement.activation_output" title="Function.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array with a single non-zero value),
+<a class="reference internal" href="#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d np.array).</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1138,8 +1212,8 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>List or 2d np.array [length 3] : default variableClassDefault</em>) &#8211; template for the three items provided as the variable in the call to the <a class="reference internal" href="#Function.BackPropagation.function" title="Function.BackPropagation.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-(in order):
+<li><strong>variable</strong> (<em>List or 2d np.array [length 3] : default variableClassDefault</em>) &#8211; specifies a template for the three items provided as the variable in the call to the
+<a class="reference internal" href="#Function.BackPropagation.function" title="Function.BackPropagation.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (in order):
 <a class="reference internal" href="#Function.BackPropagation.activation_input" title="Function.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d np.array),
 <a class="reference internal" href="#Function.BackPropagation.activation_output" title="Function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array),
 <a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d np.array).</li>
@@ -1156,6 +1230,7 @@ MATRIX parameterState.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
+<li><strong>owner</strong> (<em>Component</em>) &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which to assign the Function.</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
 defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
 </ul>
@@ -1166,7 +1241,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.BackPropagation.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Function.BackPropagation.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211;  specifies three values uses as input to the <a class="reference internal" href="#Function.BackPropagation.function" title="Function.BackPropagation.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
+<dd><p><em>2d np.array</em> &#8211;  contains the three values used as input to the <a class="reference internal" href="#Function.BackPropagation.function" title="Function.BackPropagation.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
 <a class="reference internal" href="#Function.BackPropagation.activation_input" title="Function.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a>,
 <a class="reference internal" href="#Function.BackPropagation.activation_output" title="Function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>, and
 <a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>.</p>

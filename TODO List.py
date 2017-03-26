@@ -222,10 +222,6 @@
 
 # DOCUMENT: EVCMechanism NOTES ON API FOR CUSTOM VERSIONS:
 
-
-# DOCUMENT:  UserDefinedFunction API:  wraps custom function, that can then be called using its function method;
-#                can take variable, params, time_scale, and context as params, along with any of its own
-
 #           FROM EVCMechanism.control_signal_grid_search:
 #             Gets controller as argument (along with any standard params specified in call)
 #             Must include **kwargs to receive standard args (variable, params, time_scale, and context)
@@ -2589,6 +2585,7 @@
 # FIX: name of Functions is being assigned to Type rather than subtype
 # FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix._validate_params IS OK
 #
+# IMPLEMENT: UserDefinedFuction SHOULD INSTANTIATE ITS function's ARGS AS ATTRIBUTES AND ADD TO ITS user_params DICT
 # IMPLEMENT BOTH FULL_CONNECTIVITY_MATRIX AND 2D np.array AND np.matrix OBJECTS
 # IMPLEMENT:  Demos of Functions that plots each Function
 #                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
