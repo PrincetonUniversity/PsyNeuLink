@@ -834,17 +834,17 @@ class LinearCombination(CombinationFunction): # --------------------------------
 # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
 # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
     """
-    LinearCombination(              \
-         variable_default,          \
-         weights=None,              \
-         exponents=None,            \
-         scale:parameter_spec=1.0,  \
-         offset:parameter_spec=0.0, \
-         operation=SUM,             \
-         params=None,               \
-         owner=None,                \
-         name=None,                 \
-         prefs=None                 \
+    LinearCombination(     \
+         variable_default, \
+         weights=None,     \
+         exponents=None,   \
+         scale=1.0,        \
+         offset=0.0,       \
+         operation=SUM,    \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
          )
 
     .. _LinearCombination:
@@ -1110,29 +1110,14 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 time_scale=TimeScale.TRIAL,
                 context=None):
         """
-        Applies the `weights <LinearCombination.weights>` and/or `exponents <LinearCombinations.weights>` to the
-        arrays in `variable <LinearCombination.variable>`, then takes their sum or product (as specified by
-        `operation <LinearCombination.operation>`), applies `scale <LinearCombination.scale>` and/or `offset
-        <LinearCombination.offset>`, and returns the resulting array.
+        Apply `weights <LinearCombination.weights>` and/or `exponents <LinearCombinations.weights>` to the
+        arrays in `variable <LinearCombination.variable>`, then take their sum or product (as specified by
+        `operation <LinearCombination.operation>`), apply `scale <LinearCombination.scale>` and/or `offset
+        <LinearCombination.offset>`, and return the resulting array.
 
-        COMMENT:
+        COMMENT: [SHORTER VERSION]
             Linearly combine multiple arrays, optionally weighted and/or exponentiated, and return optionally scaled
             and/or offset array (see :ref:`above <LinearCombination>` for details of param specifications`).
-
-            Handles 1-D or 2-D arrays
-            All elements must be numeric
-            If linear (single number or 1-D array of numbers) just apply scale and offset
-            If 2D (array of arrays), apply weights and/or exponents to each array
-            Operators:  SUM AND PRODUCT
-            -------------------------------------------
-            OLD:
-            Variable must be a list of items:
-                - each item can be a number or a list of numbers
-            Corresponding elements of each item in variable are combined based on OPERATION param:
-                - SUM adds corresponding elements
-                - PRODUCT multiples corresponding elements
-            Returns a list of the same length as the items in variable,
-                each of which is the combination of their corresponding elements specified by OPERATION
         COMMENT
 
         Arguments
@@ -1211,27 +1196,79 @@ class TransferFunction(Function_Base):
 
 
 class Linear(TransferFunction): # --------------------------------------------------------------------------------------
-    """Calculate a linear transform of input variable (SLOPE, INTERCEPT)
+    """
+    Linear(                \
+         variable_default, \
+         slope=1.0,        \
+         intercept=0.0,    \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
 
-    Initialization arguments:
-     - variable (number): transformed by linear function: slope * variable + intercept
-     - params (dict): specifies
-         + slope (SLOPE: value) - slope (default: 1)
-         + intercept (INTERCEPT: value) - intercept (defaul: 0)
+    .. _Linear:
 
-    Linear.function returns scalar result
+    Linearly transform variable.
+
+    Note: default values for `slope` and `intercept` implement the IDENTITY_FUNCTION
+
+    Arguments
+    ---------
+
+    variable : number or np.array : variableClassDefault
+        specifies a template for the value to be transformed.
+
+    slope : float : 1.0
+        specifies a value by which to multiply `variable <Linear.variable>`.
+
+    intercept : float : 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    slope : float
+        value by which each element of `variable <Linear.variable>` is multiplied before applying the
+        `intercept <Linear.intercept>` (if it is specified).
+
+    intercept : float
+        value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
+        (if it is specified).
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = LINEAR_FUNCTION
 
-    # MODIFIED 11/29/16 NEW:
     classPreferences = {
         kwPreferenceSetName: 'LinearClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
         kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
-    # MODIFIED 11/29/16 END
-
 
     variableClassDefault = [0]
 
@@ -1269,13 +1306,28 @@ class Linear(TransferFunction): # ----------------------------------------------
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Calculate single value (defined by slope and intercept)
+        """
+        Return `slope <Linear.slope>` * `variable <Linear.variable>` + `intercept <Linear.intercept>`.
 
-        :var variable: (number) - value to be "plotted" (default: 0
-        :parameter params: (dict) with entries specifying:
-                           SLOPE: number - slope (default: 1)
-                           INTERCEPT: number - intercept (default: 0)
-        :return number:
+        Arguments
+        ---------
+
+        variable : number or np.array : default variableClassDefault
+           a single value or array to be transformed.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        linear transformation of variable : number or np.array
+
         """
 
         self._check_args(variable, params, context)
@@ -1332,31 +1384,87 @@ class Linear(TransferFunction): # ----------------------------------------------
 
         return result
 
-    def derivative(self, output, input=None):
-        """Derivative of the softMax sigmoid function
+    def derivative(self, input=None, output=None):
         """
-        # FIX: ??CORRECT:
+        derivative()
+
+        Derivative of `function <Linear.function>`.
+
+        Returns
+        -------
+
+        derivative :  number
+            current value of `slope <Linear.slope>`.
+
+        """
+
         return self.slope
-        # raise FunctionError("Derivative not yet implemented for {}".format(self.componentName))
+
 
 class Exponential(TransferFunction): # ---------------------------------------------------------------------------------
-    """Calculate an exponential transform of input variable  (RATE, SCALE)
+    """
+    Exponential(           \
+         variable_default, \
+         scale=1.0,        \
+         rate=1.0,         \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
 
-    Initialization arguments:
-     - variable (number):
-         + scalar value to be transformed by exponential function: scale * e**(rate * x)
-     - params (dict): specifies
-         + rate (RATE: coeffiencent on variable in exponent (default: 1)
-         + scale (SCALE: coefficient on exponential (default: 1)
+    .. _Exponential:
 
-    Exponential.function returns scalar result
+    Exponentially transform variable.
+
+    Arguments
+    ---------
+
+    variable : number or np.array : variableClassDefault
+        specifies a template for the value to be transformed.
+
+    rate : float : default 1.0
+        specifies a value by which to multiply `variable <Exponential.variable>` before exponentiation.
+
+    scale : float : default 1.0
+        specifies a value by which to multiply the exponentiated value of `variable <Exponential.variable>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    rate : float
+        value by which `variable <Exponential.variable>` is multiplied before exponentiation.
+
+    scale : float
+        value by which the exponentiated value is multipled.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = EXPONENTIAL_FUNCTION
-
-    # # Params
-    # RATE = "rate"
-    # SCALE = "scale"
 
     variableClassDefault = 0
 
@@ -1382,20 +1490,34 @@ class Exponential(TransferFunction): # -----------------------------------------
                          owner=owner,
                          prefs=prefs,
                          context=context)
-        TEST = True
 
     def function(self,
                 variable=None,
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Exponential function
+        """
+        Return `scale <Exponential.scale>` * e**(`rate <Exponential.rate>` * `variable <Linear.variable>`).
 
-        :var variable: (number) - value to be exponentiated (default: 0
-        :parameter params: (dict) with entries specifying:
-                           RATE: number - rate (default: 1)
-                           SCALE: number - scale (default: 1)
-        :return number:
+        Arguments
+        ---------
+
+        variable : number or np.array : default variableClassDefault
+           a single value or array to be exponentiated.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        exponential transformation of variable : number or np.array
+
         """
 
         self._check_args(variable, params, context)
@@ -1406,12 +1528,20 @@ class Exponential(TransferFunction): # -----------------------------------------
 
         return scale * np.exp(rate * self.variable)
 
-    def derivative(self, output, input=None):
-        """Derivative of the softMax sigmoid function
+    def derivative(self, input, output=None):
         """
-        # FIX: ??CORRECT:
-        return output
-        # raise FunctionError("Derivative not yet implemented for {}".format(self.componentName))
+        derivative(input)
+
+        Derivative of `function <Exponential.function>`.
+
+        Returns
+        -------
+
+        derivative :  number
+            `rate <Exponential.rate>` * input.
+
+        """
+        return self.rate * input
 
 
 class Logistic(TransferFunction): # ------------------------------------------------------------------------------------
