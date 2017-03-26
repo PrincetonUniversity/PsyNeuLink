@@ -319,7 +319,7 @@ class Function_Base(Function):
     Arguments
     ---------
 
-    variable : value : variableClassDefault
+    variable : value : default variableClassDefault
         specifies the format and a default value for the input to `function <Function>`.
 
     params : Optional[Dict[param keyword, param value]]
@@ -647,7 +647,7 @@ class UserDefinedFunction(Function_Base):
         such as :keyword:`params` and :keyword:`context`) and return any value(s), so long as these are consistent
         with the context in which the UserDefinedFunction will be used.
 
-    variable : value : variableClassDefault
+    variable : value : default variableClassDefault
         specifies the format and a default value for the input to `function <Function>`.
 
     params : Optional[Dict[param keyword, param value]]
@@ -891,7 +891,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
     Arguments
     ---------
 
-    variable : 1d or 2d np.array : variableClassDefault
+    variable : 1d or 2d np.array : default variableClassDefault
         specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
 
     weights : 1d or 2d np.array
@@ -1216,7 +1216,7 @@ class Linear(TransferFunction): # ----------------------------------------------
     Arguments
     ---------
 
-    variable : number or np.array : variableClassDefault
+    variable : number or np.array : default variableClassDefault
         specifies a template for the value to be transformed.
 
     slope : float : default 1.0
@@ -1420,7 +1420,7 @@ class Exponential(TransferFunction): # -----------------------------------------
     Arguments
     ---------
 
-    variable : number or np.array : variableClassDefault
+    variable : number or np.array : default variableClassDefault
         specifies a template for the value to be transformed.
 
     rate : float : default 1.0
@@ -1549,7 +1549,7 @@ class Logistic(TransferFunction): # --------------------------------------------
     Logistic(              \
          variable_default, \
          gain=1.0,         \
-         bias=0.0,        \
+         bias=0.0,         \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -1563,7 +1563,7 @@ class Logistic(TransferFunction): # --------------------------------------------
     Arguments
     ---------
 
-    variable : number or np.array : variableClassDefault
+    variable : number or np.array : default variableClassDefault
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
@@ -1708,7 +1708,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     Arguments
     ---------
 
-    variable : 1d np.array : variableClassDefault
+    variable : 1d np.array : default variableClassDefault
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
@@ -1872,57 +1872,105 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         return output - indicator
 
 
+matrix_keywords = {AUTO_ASSIGN_MATRIX, IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}
+
+
 def matrix_spec(m):
     if m is None:
         return True
-    if m in {IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
+    if m in matrix_keywords:
         return True
     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
         return True
     return False
 
 
+
 class LinearMatrix(TransferFunction):  # -----------------------------------------------------------------------------------
-    """Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, MATRIX)
+    """
+    LinearMatrix(          \
+         variable_default, \
+         matrix=None,      \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
 
-    Use a weight matrix to convert a sender vector into a receiver vector:
-    - each row of the mapping corresponds to an element of the sender vector (outer index)
-    - each column of the mapping corresponds to an element of the receiver vector (inner index):
+    .. _LinearMatrix:
 
-    COMMENT:
-    XXXX CONVERT TO FIGURE:
-    ----------------------------------------------------------------------------------------------------------
-    MATRIX FORMAT
-                                     INDICES:
-                                 Receiver elements:
-                            0       1       2       3
-                        0  [0,0]   [0,1]   [0,2]   [0,3]
-    Sender elements:    1  [1,0]   [1,1]   [1,2]   [1,3]
-                        2  [2,0]   [2,1]   [2,2]   [2,3]
+    Matrix transform of variable:
+        - each row of the `matrix <LinearMatrix.matrix>` corresponds to an element of the input array (outer index)
+        - each col of the `matrix <LinearMatrix.matrix>` corresponds to an element of the output array (inner index).
 
-    matrix.shape => (sender/rows, receiver/cols)
+    COMMENT:  [CONVERT TO FIGURE]
+        ----------------------------------------------------------------------------------------------------------
+        MATRIX FORMAT
+                                         INDICES:
+                                     Output elements:
+                              0       1       2       3
+                         0  [0,0]   [0,1]   [0,2]   [0,3]
+        Input elements:  1  [1,0]   [1,1]   [1,2]   [1,3]
+                         2  [2,0]   [2,1]   [2,2]   [2,3]
 
-    ----------------------------------------------------------------------------------------------------------
-    ARRAY FORMAT
-                                                                        INDICES
-                                           [ [      Sender 0 (row0)      ], [       Sender 1 (row1)      ]... ]
-                                           [ [ rec0,  rec1,  rec2,  rec3 ], [ rec0,  rec1,  rec2,  rec3  ]... ]
-    matrix[senders/rows, receivers/cols]:  [ [ row0,  row0,  row0,  row0 ], [ row1,  row1,  row1,  row1  ]... ]
-                                           [ [ col0,  col1,  col2,  col3 ], [ col0,  col1,  col2,  col3  ]... ]
-                                           [ [[0,0], [0,1], [0,2], [0,3] ], [[1,0], [1,1], [1,2], [1,3] ]... ]
+        matrix.shape => (input/rows, output/cols)
 
-    ----------------------------------------------------------------------------------------------------------
+        ----------------------------------------------------------------------------------------------------------
+        ARRAY FORMAT
+                                                                            INDICES
+                                          [ [      Input 0 (row0)       ], [       Input 1 (row1)      ]... ]
+                                          [ [ out0,  out1,  out2,  out3 ], [ out0,  out1,  out2,  out3 ]... ]
+        matrix[input/rows, output/cols]:  [ [ row0,  row0,  row0,  row0 ], [ row1,  row1,  row1,  row1 ]... ]
+                                          [ [ col0,  col1,  col2,  col3 ], [ col0,  col1,  col2,  col3 ]... ]
+                                          [ [[0,0], [0,1], [0,2], [0,3] ], [[1,0], [1,1], [1,2], [1,3] ]... ]
+
+        ----------------------------------------------------------------------------------------------------------
     COMMENT
 
-    Initialization arguments:
-    - variable (2D np.ndarray containing exactly two sub-arrays:  sender and receiver vectors
-    - params (dict) specifying:
-         + filler (kwFillerValue: number) value used to initialize all entries in matrix (default: 0)
-         + identity (kwkwIdentityMapping: boolean): constructs identity matrix (default: :keyword:`False`)
 
-    Create a matrix in self.matrix that is used in calls to LinearMatrix.function.
+    Arguments
+    ---------
 
-    Returns sender 2D array linearly transformed by self.matrix
+    variable : 1d np.array : default variableClassDefault
+        specifies a template for the value to be transformed.
+
+    matrix : number, 2d np.ndarray or np.matrix, or IDENTITY_MATRIX : default IDENTITY_MATRIX
+        specifies matrix used to transform `variable <LinearMatrix.variable>`
+        (see `matrix <LinearMatrix.matrix>` for specification details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    matrix : 2d np.array
+        matrix used to transform `variable <LinearMatrix.variable>`.  If specified as:
+            * number - used as the value for all elements of the :keyword:`matrix` (call to np.fill);
+            + 2d np.array or np.matrix - assigned as value of :keyword:`matrix`;
+            + IDENTITY_MATRIX - identity matrix is created with dimensions of `variable <LinearMatrix.variable>`.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = LINEAR_MATRIX_FUNCTION
@@ -1941,19 +1989,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  owner=None,
                  prefs:is_pref_set=None,
                  context=componentName + INITIALIZING):
-        """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
-
-        Variable = sender vector (list of numbers)
-
-        :param variable_default: (list) - list of numbers (default: [0]
-        :param params: (dict) with entries specifying:
-                                kwReceiver: value - list of numbers, determines width (cols) of matrix (defalut: [0])
-                                MATRIX: value - value used to initialize matrix;  can be one of the following:
-                                    + single number - used to fill self.matrix (default: DEFAULT_FILLER_VALUE)
-                                    + matrix - assigned to self.matrix
-                                    + kwIdentity - create identity matrix (diagonal elements = 1;  all others = 0)
-        :return none
-        """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
@@ -2009,7 +2044,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
         sender_len = sender.size
 
-
         # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
         # First try to get receiver from specification in params
         if kwReceiver in param_set:
@@ -2049,8 +2083,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if isinstance(param_value, numbers.Number):
                     continue
 
-# FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING_PROJECTION._instantiate_receiver)
-# FIX: IMPLEMENT RANDOM_CONNECTIVITY_MATRIX?
                 #np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
                 elif isinstance(param_value, (np.ndarray, np.matrix)):
                     # get dimensions specified by:
@@ -2059,29 +2091,26 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                     weight_matrix = np.matrix(param_value)
                     if 'U' in repr(weight_matrix.dtype):
-                        raise FunctionError("Non-numeric entry in MATRIX specification ({0})".format(param_value))
+                        raise FunctionError("Non-numeric entry in MATRIX specification ({}) for the {} function of {}".
+                            format(param_value), self.name, self.owner.name)
+
+                    if weight_matrix.ndim != 2:
+                        raise FunctionError("The matrix provided for the {} function of {} must be 2d (it is {}d".
+                            format(weight_matrix.ndim, self.name, self.owner.name))
 
                     matrix_rows = weight_matrix.shape[0]
                     matrix_cols = weight_matrix.shape[1]
 
                     # Check that number of rows equals length of sender vector (variable)
                     if matrix_rows != sender_len:
-                        raise FunctionError("The number of rows ({0}) of the matrix provided does not equal the "
-                                            "length ({1}) of the sender vector (variable)".
-                                            format(matrix_rows, sender_len))
-                    # MODIFIED 9/21/16:
-                    #  IF MATRIX IS SPECIFIED, NO NEED TO VALIDATE RECEIVER_LEN (AND MAY NOT EVEN KNOW IT YET)
-                    #  SINCE _instantiate_function() IS GENERALLY CALLED BEFORE _instantiate_receiver()
-                    # # Check that number of columns equals length of specified receiver vector (kwReceiver)
-                    # if matrix_cols != receiver_len:
-                    #     raise FunctionError("The number of columns ({}) of the matrix provided for {} "
-                    #                        "does not equal the length ({}) of the reciever vector (kwReceiver param)".
-                    #                         format(matrix_cols, self.name, receiver_len))
+                        raise FunctionError("The number of rows ({}) of the matrix provided for {} function of {} "
+                                            "does not equal the length ({}) of the sender vector (variable)".
+                                            format(matrix_rows, self.name, self.owner.name, sender_len))
 
                 # Auto, full or random connectivity matrix requested (using keyword):
                 # Note:  assume that these will be properly processed by caller
                 #        (e.g., MappingProjection._instantiate_receiver)
-                elif param_value in {AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
+                elif param_value in matrix_keywords:
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
@@ -2094,8 +2123,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         #            format(receiver_len, sender_len))
                         # # Set receiver to sender
                         # param_set[kwReceiver] = sender
-                        raise FunctionError("Identity matrix requested, but length of receiver ({0})"
-                                           " does not match length of sender ({1})".format(receiver_len, sender_len))
+                        raise FunctionError("Identity matrix requested for the {} function of {}, "
+                                            "but length of receiver ({}) does not match length of sender ({})".
+                                            format(self.name, self.owner.name, receiver_len, sender_len))
                     continue
 
                 # list used to describe matrix, so convert to 2D np.array and pass to validation of matrix below
@@ -2103,18 +2133,19 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     try:
                         param_value = np.atleast_2d(param_value)
                     except (ValueError, TypeError) as error_msg:
-                        raise FunctionError("Error in list specification ({0}) of matrix for {1}: {2})".
-                                           format(param_value, self.__class__.__name__, error_msg))
+                        raise FunctionError("Error in list specification ({}) of matrix for the {} function of {}: {})".
+                                           # format(param_value, self.__class__.__name__, error_msg))
+                                           format(param_value, self.name, self.owner.name, error_msg))
 
                 # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
                 elif isinstance(param_value, str):
                     try:
                         param_value = np.matrix(param_value)
                     except (ValueError, TypeError) as error_msg:
-                        raise FunctionError("Error in string specification ({0}) of matrix for {1}: {2})".
-                                           format(param_value, self.__class__.__name__, error_msg))
-
-                
+                        raise FunctionError("Error in string specification ({}) of the matrix "
+                                            "for the {} function of {}: {})".
+                                           # format(param_value, self.__class__.__name__, error_msg))
+                                           format(param_value, self.name, self.owner.name, error_msg))
 
                 # function so:
                 # - assume it uses random.rand()
@@ -2123,16 +2154,19 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 elif isinstance(param_value, function_type):
                     test = param_value(1,1)
                     if not isinstance(test, (np.ndarray, np.matrix)):
-                        raise FunctionError("A function is specified for matrix for {1}: {2}) "
-                                           "that returns a value ({}) that is neither a matrix nor array ".
-                               format(param_value, self.__class__.__name__, test))
+                        raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
+                                           "that returns a value ({}) that is neither a matrix nor an array".
+                                            # format(param_value, self.__class__.__name__, test))
+                                            format(self.name, self.owner.name, param_value, test))
 
                 else:
-                    raise FunctionError("Value of {0} param ({1}) must be a matrix, a number (for filler), "
-                                       "or a matrix keyword ({2}, {3})".
-                                        format(param_name, param_value, IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX))
+                    raise FunctionError("Value of {} param ({}) for the {} function of {} "
+                                        "must be a matrix, a number (for filler), or a matrix keyword ({})".
+                                        format(param_name, param_value, self.name, self.owner.name, matrix_keywords))
             else:
-                message += "Param {0} not recognized by {1} function".format(param_name, self.componentName)
+                message += "Unrecognized param ({}) specified for the {} function of {}".format(param_name,
+                                                                                                self.name,
+                                                                                                self.owner.name)
                 continue
 
         if message:
@@ -2164,9 +2198,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         try:
             receiver = self.receiver
         except:
-            raise FunctionError("Can't instantiate matrix specification ({}) for {} "
+            raise FunctionError("Can't instantiate matrix specification ({}) for the {} function of {} "
                                "since its receiver has not been specified".
-                               format(specification, self.__class__.__name__))
+                               format(specification, self.name, self.owner.name))
             # receiver = sender
         receiver_len = receiver.shape[0]
 
@@ -2174,9 +2208,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         # This should never happen (should have been picked up in validate_param or above)
         if matrix is None:
-            raise FunctionError("MATRIX param ({0}) must be a matrix, a function that returns one, "
-                               "a matrix specification keyword, or a number (filler)".
-                                format(specification))
+            raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function that returns "
+                                "one, a matrix specification keyword ({}), or a number (filler)".
+                                format(specification, self.name, self.owner.name, matrix_keywords))
         else:
             return matrix
 
@@ -2187,7 +2221,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 context=None):
         """Transforms variable vector using either self.matrix or specification in params
 
-        :var variable: (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix
+        :var variable: (list) - vector of numbers with length equal to height (number of rows, inner index) of matrix
         :parameter params: (dict) with entries specifying:
                             MATRIX: value - used to override self.matrix implemented by __init__;  must be one of:
                                                  + 2D matrix - two-item list, each of which is a list of numbers with
@@ -2204,9 +2238,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def keyword(self, keyword):
 
-        # # MODIFIED 10/29/16 OLD:
-        # matrix = get_matrix(keyword)
-        # MODIFIED 10/29/16 NEW:
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         rows = None
         cols = None
@@ -2214,10 +2245,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             rows = len(self.sender.value)
             cols = len(self.receiver.variable)
         matrix = get_matrix(keyword, rows, cols)
-        # MODIFIED 10/29/16 END
 
         if matrix is None:
-            raise FunctionError("Unrecognized keyword ({}) specified for LinearMatrix Function Function".format(keyword))
+            raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
+                                format(keyword, self.name, self.owner.name))
         else:
             return matrix
 
@@ -2254,8 +2285,8 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         elif specification.ndim < 2:
             return np.atleast_2d(specification)
         else:
-            raise FunctionError("Specification of np.array for matrix ({}) in {} was more than 2d".
-                               format(specification,self.name))
+            raise FunctionError("Specification of np.array for matrix ({}) is more than 2d".
+                               format(specification))
 
     if specification is AUTO_ASSIGN_MATRIX:
         if rows == cols:
