@@ -1872,20 +1872,6 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         return output - indicator
 
 
-matrix_keywords = {AUTO_ASSIGN_MATRIX, IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}
-
-
-def matrix_spec(m):
-    if m is None:
-        return True
-    if m in matrix_keywords:
-        return True
-    if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
-        return True
-    return False
-
-
-
 class LinearMatrix(TransferFunction):  # -----------------------------------------------------------------------------------
     """
     LinearMatrix(          \
@@ -1934,7 +1920,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     variable : 1d np.array : default variableClassDefault
         specifies a template for the value to be transformed.
 
-    matrix : number, 2d np.ndarray or np.matrix, or IDENTITY_MATRIX : default IDENTITY_MATRIX
+    matrix : number, list, 1d or 2d np.ndarray, np.matrix, function, or str : default IDENTITY_MATRIX
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
 
@@ -1959,9 +1945,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     matrix : 2d np.array
         matrix used to transform `variable <LinearMatrix.variable>`.  If specified as:
-            * number - used as the value for all elements of the :keyword:`matrix` (call to np.fill);
-            + 2d np.array or np.matrix - assigned as value of :keyword:`matrix`;
-            + IDENTITY_MATRIX - identity matrix is created with dimensions of `variable <LinearMatrix.variable>`.
+            * number - used as the filler value for all elements of the :keyword:`matrix` (call to np.fill);
+            * list of arrays, 2d np.array or np.matrix - assigned as value of :keyword:`matrix`;
+            * str - matrix keyword
+
+            identity matrix is created with dimensions of `variable <LinearMatrix.variable>`.
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -1980,6 +1968,15 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     variableClassDefault = [DEFAULT_FILLER_VALUE]  # Sender vector
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    def matrix_spec(m):
+        if m is None:
+            return True
+        if m in MATRIX_KEYWORD_VALUES:
+            return True
+        if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+            return True
+        return False
 
     @tc.typecheck
     def __init__(self,
@@ -2044,23 +2041,24 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
         sender_len = sender.size
 
-        # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
-        # First try to get receiver from specification in params
-        if kwReceiver in param_set:
-            self.receiver = param_set[kwReceiver]
-            # Check that specification is a list of numbers or an np.array
-            if ((isinstance(self.receiver, list) and all(isinstance(elem, numbers.Number) for elem in self.receiver)) or
-                    isinstance(self.receiver, np.ndarray)):
-                self.receiver = np.atleast_1d(self.receiver)
-            else:
-                raise FunctionError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
-                                   format(self.receiver, self.name))
-        # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
-        else:
-            if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
-                print ("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
-                       format(sender_len))
-            self.receiver = param_set[kwReceiver] = sender
+        # # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
+        # # First try to get receiver from specification in params
+        # if kwReceiver in param_set:
+        #     self.receiver = param_set[kwReceiver]
+        #     # Check that specification is a list of numbers or an np.array
+        #     if ((isinstance(self.receiver, list) and all(isinstance(elem, numbers.Number) for elem in self.receiver)) or
+        #             isinstance(self.receiver, np.ndarray)):
+        #         self.receiver = np.atleast_1d(self.receiver)
+        #     else:
+        #         raise FunctionError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
+        #                            format(self.receiver, self.name))
+        # # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
+        # else:
+        #     if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
+        #         print ("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
+        #                format(sender_len))
+        #     self.receiver = param_set[kwReceiver] = sender
+        self.receiver = param_set[kwReceiver] = sender
 
         receiver_len = len(self.receiver)
 
@@ -2110,7 +2108,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 # Auto, full or random connectivity matrix requested (using keyword):
                 # Note:  assume that these will be properly processed by caller
                 #        (e.g., MappingProjection._instantiate_receiver)
-                elif param_value in matrix_keywords:
+                elif param_value in MATRIX_KEYWORD_VALUES:
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
@@ -2162,7 +2160,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 else:
                     raise FunctionError("Value of {} param ({}) for the {} function of {} "
                                         "must be a matrix, a number (for filler), or a matrix keyword ({})".
-                                        format(param_name, param_value, self.name, self.owner.name, matrix_keywords))
+                                        format(param_name,
+                                               param_value,
+                                               self.name,
+                                               self.owner.name,
+                                               MATRIX_KEYWORD_NAMES))
             else:
                 message += "Unrecognized param ({}) specified for the {} function of {}".format(param_name,
                                                                                                 self.name,
