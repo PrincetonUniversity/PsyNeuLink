@@ -1161,11 +1161,6 @@ class State_Base(State):
 
         #region AGGREGATE INPUT FROM PROJECTION_SPECS
 
-        #region Initialize aggregation
-        from PsyNeuLink.Components.Functions.Function import kwLinearCombinationInitializer
-        combined_values = kwLinearCombinationInitializer
-        #endregion
-
         #region Get type-specific params from PROJECTION_PARAMS
         mapping_params = merge_param_dicts(self.stateParams, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         control_projection_params = merge_param_dicts(self.stateParams, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
