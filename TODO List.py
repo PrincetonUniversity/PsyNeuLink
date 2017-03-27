@@ -2,7 +2,11 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
- # HIGH LEVEL / DESIGN / CONVENTION ISSUES:
+# Bryn:
+#  1) Programmatic creation of @property
+#  2) Plug & play
+
+# HIGH LEVEL / DESIGN / CONVENTION ISSUES:
 #   1) MANAGEMENT OF RETURN_VALUE FOR MECHANISMS (AS LIST VS. 2d NP.ARRAY)
 #   2) ASSIGNMENT AND NAMING OF FUNCTION_PARAMS FOR AN OBJECT;
 #      PROBLEMS:
