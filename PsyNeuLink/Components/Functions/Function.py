@@ -829,44 +829,31 @@ class Reduce(CombinationFunction): # -------------------------------------------
 # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
 # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
     """
-    Reduce(
-         variable_default=variableClassDefault,
-         operation=SUM,
-         params=None,
-         owner=None,
-         prefs=None,
+    Reduce(                                     \
+         variable_default=variableClassDefault, \
+         operation=SUM,                         \
+         params=None,                           \
+         owner=None,                            \
+         prefs=None,                            \
     )
 
     .. _Reduce:
 
-    Combine an array of values into a single value
+    Combine values in each of one or more arrays into a single value for each array.
 
     COMMENT:
         IMPLEMENTATION NOTE: EXTEND TO MULTIDIMENSIONAL ARRAY ALONG ARBITRARY AXIS
-
-        Description:
-            Combine elements of an array in variable arg, using arithmetic operation determined by OPERATION.
-            Returns a scalar value.
-
-        Initialization arguments:
-         - variable (list or np.ndarray of numbers): values to be combined;
-         - params (dict) can include:
-             + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
-                  SUM: element-wise sum of the arrays in variable
-                  PRODUCT: Hadamard Product of the arrays in variable
-
-        Reduce.function returns combined values:
-        - single scalar value
     COMMENT
 
     Arguments
     ---------
 
-    variable : list or 1d np.array : default variableClassDefault
-        specifies a template for the value to be transformed.
+    variable_default : list or np.array : default variableClassDefault
+        specifies a template for the value to be transformed and its default value;  all entries must be numeric.
 
     operation : SUM or PRODUCT : default SUM
-        specifies whether to sum or multiply the elements `variable <Reduce.variable>`.
+        specifies whether to sum or multiply the elements in `variable <Reduce.function.variable>` of
+        `function <Reduce.function>`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -884,11 +871,12 @@ class Reduce(CombinationFunction): # -------------------------------------------
     Attributes
     ----------
 
-    variable : 1d np.array
-        contains array to be reduced.
+    variable_default : list or np.array
+        contains array(s) to be reduced.
 
     operation : SUM or PRODUCT
-        determines whether elements of `variable <Reduce.variable>` are summmed or multiplied.
+        determines whether elements of each array in `variable <Reduce.function.variable>` of
+        `function <Reduce.function>` are summmed or multiplied.
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -943,14 +931,31 @@ class Reduce(CombinationFunction): # -------------------------------------------
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Combine a list or array of values
+        """
+        Returns a scalar value for each array in `variable <Reduce.variable>` that is either the sum or
+        product of the elements in that array.
 
-        Returns a scalar value
+        Arguments
+        ---------
 
-        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
-        :params: (dict) with entries specifying:
-                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
-        :return: (scalar)
+        variable : list or np.array : default variableClassDefault
+           a list or np.array of numeric values.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        Sum or product of arrays in variable : np.array
+            in an array that is one dimension less than `variable <Reduce.variable>`.
+
+
         """
 
         # Validate variable and assign to self.variable, and validate params

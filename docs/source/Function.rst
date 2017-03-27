@@ -8,6 +8,7 @@ Functions
 	:members: Function_Base,
 	          ArgumentTherapy,
 	          UserDefinedFunction,
+              Reduce,
 	          LinearCombination,
 	          Linear,
 	          Exponential,

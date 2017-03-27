@@ -155,6 +155,7 @@
 </dd>
 <dt>Combination Functions:</dt>
 <dd><ul class="first last simple">
+<li><a class="reference internal" href="#Function.Reduce" title="Function.Reduce"><code class="xref any py py-class docutils literal"><span class="pre">Reduce</span></code></a></li>
 <li><a class="reference internal" href="#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a></li>
 </ul>
 </dd>
@@ -352,7 +353,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="method">
 <dt id="Function.ArgumentTherapy.function">
 <code class="descclassname">ArgumentTherapy.</code><code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.ArgumentTherapy.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a boolean that is (or tends to be) the same as or opposite the one passed in</p>
+<dd><p>Returns a boolean that is (or tends to be) the same as or opposite the one passed in.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -397,7 +398,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="#Function.UserDefinedFunction.function" title="Function.UserDefinedFunction.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="#Function.Logistic.function" title="Function.Logistic.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -437,6 +438,84 @@ they are specified by the Function&#8217;s <code class="xref std std-keyword doc
 <dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.UserDefinedFunction.prefs" title="Function.UserDefinedFunction.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.Reduce">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Reduce</code><span class="sig-paren">(</span><em>variable_default=variableClassDefault</em>, <em>operation=SUM</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Reduce" title="Permalink to this definition">¶</a></dt>
+<dd><p id="reduce">Combine values in each of one or more arrays into a single value for each array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable_default</strong> (<em>list or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be transformed and its default value;  all entries must be numeric.</li>
+<li><strong>operation</strong> (<em>SUM or PRODUCT : default SUM</em>) &#8211; specifies whether to sum or multiply the elements in <code class="xref any docutils literal"><span class="pre">variable</span></code>.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<em>Component</em>) &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.Reduce.variable_default">
+<code class="descname">variable_default</code><a class="headerlink" href="#Function.Reduce.variable_default" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list or np.array</em> &#8211; contains array(s) to be reduced.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Reduce.operation">
+<code class="descname">operation</code><a class="headerlink" href="#Function.Reduce.operation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>SUM or PRODUCT</em> &#8211; determines whether elements of each array in <a class="reference internal" href="#Function.Reduce.variable_default" title="Function.Reduce.variable_default"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> are summmed or multiplied.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Reduce.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.Reduce.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Reduce.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.Reduce.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Reduce.prefs" title="Function.Reduce.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.Reduce.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Reduce.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a scalar value for each array in <code class="xref any docutils literal"><span class="pre">variable</span></code> that is either the sum or
+product of the elements in that array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>list or np.array : default variableClassDefault</em>) &#8211; a list or np.array of numeric values.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) &#8211; specifies whether the function is executed on the time_step or trial time scale.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Sum or product of arrays in variable</strong> &#8211; in an array that is one dimension less than <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.array</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -1116,7 +1195,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.Integrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x10ba73ae8&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x10bf70ba8&gt; = 'constant'</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params: &lt;typecheck.framework.optional object at 0x10bf70a20&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba556a8&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x10ba6aae8&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x10be0de10&gt; = 'constant'</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params: &lt;typecheck.framework.optional object at 0x10be0de48&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba466a8&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -1169,7 +1248,7 @@ rate 1:    instantaneous change (returns new_value)</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.Logistic.variable" title="Function.Logistic.variable"><strong>variable</strong></a> &#8211; (list) - old_value and new_value (default: [0, 0]:</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.ArgumentTherapy.variable" title="Function.ArgumentTherapy.variable"><strong>variable</strong></a> &#8211; (list) - old_value and new_value (default: [0, 0]:</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
@@ -1185,7 +1264,7 @@ WEIGHTING: Integrator.Weightings - type of weighting (default = CONSTANT)</td>
 
 <dl class="class">
 <dt id="Function.BogaczEtAl">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba73ae8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba73ae8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba73ae8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba73ae8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba73ae8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba556a8&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba6aae8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba6aae8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba6aae8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba6aae8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba6aae8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba466a8&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to DDM process and return mean response time and accuracy.</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -1231,7 +1310,7 @@ tasks.  Psychological review, 113(4), 700. (<a class="reference external" href="
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.Logistic.variable" title="Function.Logistic.variable"><strong>variable</strong></a> &#8211; (list)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.ArgumentTherapy.variable" title="Function.ArgumentTherapy.variable"><strong>variable</strong></a> &#8211; (list)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 drift_rate...</td>
@@ -1244,7 +1323,7 @@ drift_rate...</td>
 
 <dl class="class">
 <dt id="Function.NavarroAndFuss">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba73ae8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba73ae8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba73ae8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba73ae8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba73ae8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba556a8&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba6aae8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba6aae8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba6aae8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba6aae8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba6aae8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba466a8&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to distribution of DDM responses (mean and variance of response time and accuracy).</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -1290,7 +1369,7 @@ Wiener diffusion models.&#8221; Journal of Mathematical Psychology 53.4 (2009): 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.Logistic.variable" title="Function.Logistic.variable"><strong>variable</strong></a> &#8211; (list)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.ArgumentTherapy.variable" title="Function.ArgumentTherapy.variable"><strong>variable</strong></a> &#8211; (list)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 drift_rate...</td>
@@ -1306,7 +1385,7 @@ drift_rate...</td>
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="#Function.Logistic.variable" title="Function.Logistic.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="#Function.ArgumentTherapy.variable" title="Function.ArgumentTherapy.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
