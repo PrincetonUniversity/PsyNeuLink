@@ -11,7 +11,7 @@
 
 """
 Example function:
-  * `Contradiction`
+  * `ArgumentTherapist`
 
 Combination Functions:
   * `LinearCombination`
@@ -456,20 +456,91 @@ class Function_Base(Function):
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
 
-class Contradiction(Function_Base): # Example
+class ArgumentTherapist(Function_Base): # Example
     """Example function for use as template for function construction
 
-    Iniialization arguments:
+    Initialization arguments:
      - variable (boolean or statement resolving to boolean)
      - params (dict) specifying the:
          + propensity (kwPropensity: a mode specifying the manner of responses (tendency to agree or disagree)
          + pertinacity (kwPertinacity: the consistency with which the manner complies with the propensity
 
-    Contradiction.function returns :keyword:`True` or :keyword:`False`
+
+    ArgumentTherapist(                 \
+         variable,                     \
+         propensity=Manner.CONTRARIAN, \
+         pertinacity=10.0              \
+         params=None,                  \
+         owner=None,                   \
+         name=None,                    \
+         prefs=None                    \
+         )
+
+    .. _ArgumentTherapist:
+
+    Return :keyword:`True` or :keyword:`False` according to the manner of the therapist.
+
+    Arguments
+    ---------
+
+    variable : number or np.array : default variableClassDefault
+        specifies a template for the value to be transformed.
+
+    slope : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>`.
+
+    intercept : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    slope : float
+        value by which each element of `variable <Linear.variable>` is multiplied before applying the
+        `intercept <Linear.intercept>` (if it is specified).
+
+    intercept : float
+        value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
+        (if it is specified).
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+
+
+
+
+
+
+
+
+
+
     """
 
     # Function componentName and type (defined at top of module)
-    componentName = CONTRADICTION_FUNCTION
+    componentName = ARGUMENT_THERAPIST_FUNCTION
     componentType = EXAMPLE_FUNCTION_TYPE
 
     # Variable class default
@@ -525,7 +596,7 @@ class Contradiction(Function_Base): # Example
 
         :param variable: (boolean) Statement to probe
         :param params: (dict) with entires specifying
-                       kwPropensity: Contradiction.Manner - contrarian or obsequious (default: CONTRARIAN)
+                       kwPropensity: ArgumentTherapist.Manner - contrarian or obsequious (default: CONTRARIAN)
                        kwPertinacity: float - obstinate or equivocal (default: 10)
         :return response: (boolean)
         """
@@ -588,7 +659,7 @@ class Contradiction(Function_Base): # Example
                 message += "{0} is not a valid parameter for {1}".format(param_name, self.name)
 
             if param_name == self.kwPropensity:
-                if isinstance(param_value, Contradiction.Manner):
+                if isinstance(param_value, ArgumentTherapist.Manner):
                     # target_set[self.kwPropensity] = param_value
                     pass # This leaves param in request_set, clear to be assigned to target_set in call to super below
                 else:
@@ -1886,8 +1957,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     .. _LinearMatrix:
 
     Matrix transform of variable:
-        - each row of the `matrix <LinearMatrix.matrix>` corresponds to an element of the input array (outer index)
-        - each col of the `matrix <LinearMatrix.matrix>` corresponds to an element of the output array (inner index).
+
+        `function <LinearMatrix.function>` returns dot product of `variable <LinearMatrix.variable>` and
+        `matrix <LinearMatrix.matrix>`.
 
     COMMENT:  [CONVERT TO FIGURE]
         ----------------------------------------------------------------------------------------------------------
@@ -1917,10 +1989,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     Arguments
     ---------
 
-    variable : 1d np.array : default variableClassDefault
-        specifies a template for the value to be transformed.
+    variable : list or 1d np.array : default variableClassDefault
+        specifies a template for the value to be transformed; length must equal the number of rows of `matrix
+        <LinearMatrix.matrix>`.
 
-    matrix : number, list, 1d or 2d np.ndarray, np.matrix, function, or str : default IDENTITY_MATRIX
+    matrix : number, list, 1d or 2d np.ndarray, np.matrix, function, or matrix keyword : default IDENTITY_MATRIX
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
 
@@ -1940,16 +2013,17 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     Attributes
     ----------
 
-    variable : number or np.array
+    variable : 1d np.array
         contains value to be transformed.
 
     matrix : 2d np.array
-        matrix used to transform `variable <LinearMatrix.variable>`.  If specified as:
+        matrix used to transform `variable <LinearMatrix.variable>`.
+        Can be specified as any of the following:
             * number - used as the filler value for all elements of the :keyword:`matrix` (call to np.fill);
-            * list of arrays, 2d np.array or np.matrix - assigned as value of :keyword:`matrix`;
-            * str - matrix keyword
-
-            identity matrix is created with dimensions of `variable <LinearMatrix.variable>`.
+            * list of arrays, 2d np.array or np.matrix - assigned as the value of :keyword:`matrix`;
+            * matrix keyword - see `MatrixKeywords` for list of options.
+        Rows correspond to elements of the input array (outer index), and
+        columns correspond to elements of the output array (inner index).
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -2041,24 +2115,37 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
         sender_len = sender.size
 
-        # # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
-        # # First try to get receiver from specification in params
-        # if kwReceiver in param_set:
-        #     self.receiver = param_set[kwReceiver]
-        #     # Check that specification is a list of numbers or an np.array
-        #     if ((isinstance(self.receiver, list) and all(isinstance(elem, numbers.Number) for elem in self.receiver)) or
-        #             isinstance(self.receiver, np.ndarray)):
-        #         self.receiver = np.atleast_1d(self.receiver)
-        #     else:
-        #         raise FunctionError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
-        #                            format(self.receiver, self.name))
-        # # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
-        # else:
-        #     if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
-        #         print ("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
-        #                format(sender_len))
-        #     self.receiver = param_set[kwReceiver] = sender
-        self.receiver = param_set[kwReceiver] = sender
+        # FIX: RELABEL sender -> input AND receiver -> output
+        # FIX: THIS NEEDS TO BE CLEANED UP:
+        #      - AT LEAST CHANGE THE NAME FROM kwReceiver TO output_template OR SOMETHING LIKE THAT
+        #      - MAKE ARG?  OR ADD OTHER PARAMS:  E.G., FILLER?
+        #      - OR REFACTOR TO INCLUDE AS MATRIX SPEC:
+        #                  IF MATRIX IS 1D, USE AS OUTPUT TEMPLATE
+        #                     IF ALL ITS VALUES ARE 1'S => FULL CONNECTIVITY MATRIX
+        #                     IF ALL ITS VALUES ARE 0'S => RANDOM CONNECTIVITY MATRIX
+        #                     NOTE:  NO NEED FOR IDENTITY MATRIX, AS THAT WOULD BE SQUARE SO NO NEED FOR OUTPUT TEMPLATE
+        #      - DOCUMENT WHEN DONE
+        # MODIFIED 3/26/17 OLD:
+        # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
+        # First try to get receiver from specification in params
+        if kwReceiver in param_set:
+            self.receiver = param_set[kwReceiver]
+            # Check that specification is a list of numbers or an np.array
+            if ((isinstance(self.receiver, list) and all(isinstance(elem, numbers.Number) for elem in self.receiver)) or
+                    isinstance(self.receiver, np.ndarray)):
+                self.receiver = np.atleast_1d(self.receiver)
+            else:
+                raise FunctionError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
+                                   format(self.receiver, self.name))
+        # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
+        else:
+            if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
+                print ("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
+                       format(sender_len))
+            self.receiver = param_set[kwReceiver] = sender
+        # # MODIFIED 3/26/17 NEW:
+        # self.receiver = param_set[kwReceiver] = sender
+        # MODIFIED 3/26/17 END
 
         receiver_len = len(self.receiver)
 
@@ -2221,16 +2308,28 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Transforms variable vector using either self.matrix or specification in params
+        """
+        Return: `variable <LinearMatrix.variable>` • `matrix <LinearMatrix.matrix>`
 
-        :var variable: (list) - vector of numbers with length equal to height (number of rows, inner index) of matrix
-        :parameter params: (dict) with entries specifying:
-                            MATRIX: value - used to override self.matrix implemented by __init__;  must be one of:
-                                                 + 2D matrix - two-item list, each of which is a list of numbers with
-                                                              length that matches the length of the vector in variable
-                                                 + kwIdentity - specifies use of identity matrix (dimensions of vector)
-                                                 + number - used to fill matrix of same dimensions as self.matrix
-        :return list of numbers: vector with length = width (number of columns, outer index) of matrix
+        Arguments
+        ---------
+        variable : list or 1d np.array
+            array to be transformed;  length must equal the number of rows of 'matrix <LinearMatrix.matrix>`.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        ---------
+
+        dot product of variable and matrix : 1d np.array
+            length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
+
         """
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
