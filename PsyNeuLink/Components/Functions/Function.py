@@ -2500,36 +2500,118 @@ class IntegratorFunction(Function_Base):
 
 
 class Integrator(IntegratorFunction): # --------------------------------------------------------------------------------------
-    """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
-
-    Initialization arguments:
-     - variable: new input value, to be combined with old value at rate and using method specified by params
-     - params (dict): specifying:
-         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
-             - must be same type and format as variable
-             - can be specified as a runtime parameter, which resets oldValue to one specified
-             Note: self.oldValue stores previous value with which new value is integrated
-         + RATE (value): rate of accumulation based on weighting of new vs. old value (default: 1)
-         + WEIGHTING (Weightings Enum): method of accumulation (default: CONSTANT):
-                CONSTANT -- returns old_value incremented by rate parameter (ignores input) with optional noise 
-                SIMPLE -- returns old_value incremented by rate * new_value with optional noise
-                ADAPTIVE -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter) with optional noise
-                                rate = 0:  no change (returns old_value)
-                                rate 1:    instantaneous change (returns new_value)
-                DIFFUSION -- returns old_value incremented by drift_rate * old_value * time_step_size and the standard DDM noise distribution 
-
-    Class attributes:
-    - oldValue (value): stores previous value with which value provided in variable is integrated
-
-    Integrator.function returns scalar result
     """
+    Integrator(                 \
+        variable_default=None,  \
+        rate=1.0,               \
+        weighting=CONSTANT,     \
+        noise=0.0,              \
+        time_step_size=1.0,     \
+        params=None,            \
+        owner=None,             \
+        prefs:is_pref_set=None, \
+        )
+
+    .. _Integrator:
+
+    Integrate current value of `variable <Integrator.variable>` with prior values
+
+    COMMENT:
+        Initialization arguments:
+         - variable: new input value, to be combined with old value at rate and using method specified by params
+         - params (dict): specifying:
+             + INITIALIZER (value): initial value to which to set self.oldValue (default: variableClassDefault)
+                 - must be same type and format as variable
+                 - can be specified as a runtime parameter, which resets oldValue to one specified
+                 Note: self.oldValue stores previous value with which new value is integrated
+             + RATE (value): rate of accumulation based on weighting of new vs. old value (default: 1)
+             + WEIGHTING (Weightings Enum): method of accumulation (default: CONSTANT):
+                    CONSTANT -- returns old_value incremented by rate parameter (ignores input) with optional noise
+                    SIMPLE -- returns old_value incremented by rate * new_value with optional noise
+                    ADAPTIVE -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter) with optional noise
+                                    rate = 0:  no change (returns old_value)
+                                    rate 1:    instantaneous change (returns new_value)
+                    DIFFUSION -- returns old_value incremented by drift_rate * old_value * time_step_size and the standard DDM noise distribution
+
+        Class attributes:
+        - oldValue (value): stores previous value with which value provided in variable is integrated
+    COMMENT
+
+    Arguments
+    ---------
+
+    variable : number or np.array : default variableClassDefault
+        specifies a template for the value to be transformed.
+
+    rate : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>`.
+
+    weighting : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    noise : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    time_step_size : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    initializer : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    rate : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>`.
+
+    weighting : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    noise : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    time_step_size : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    initializer : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    old_value
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    """
+
+    # FIX: MOVE INITIATLIZER TO ARGUMENT
 
     componentName = INTEGRATOR_FUNCTION
 
     variableClassDefault = [[0]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwInitializer: variableClassDefault})
+    paramClassDefaults.update({INITIALIZER: variableClassDefault})
 
     @tc.typecheck
     def __init__(self,
@@ -2544,7 +2626,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                  context="Integrator Init"):
 
         # Assign here as default, for use in initialization of function
-        self.oldValue = self.paramClassDefaults[kwInitializer]
+        self.oldValue = self.paramClassDefaults[INITIALIZER]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -2560,7 +2642,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.oldValue = [self.paramsCurrent[kwInitializer]]
+        self.oldValue = [self.paramsCurrent[INITIALIZER]]
 
 
         # self.noise = self.paramsCurrent[NOISE]
@@ -2618,9 +2700,9 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         # Make sure initializer is compatible with variable
         try:
-            if not iscompatible(target_set[kwInitializer],self.variableClassDefault):
-                raise FunctionError("kwInitializer param {0} for {1} must be same type as variable {2}".
-                                   format(target_set[kwInitializer],
+            if not iscompatible(target_set[INITIALIZER],self.variableClassDefault):
+                raise FunctionError("INITIALIZER param {0} for {1} must be same type as variable {2}".
+                                   format(target_set[INITIALIZER],
                                           self.__class__.__name__,
                                           self.variable))
         except KeyError:
@@ -2660,7 +2742,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
             noise = self.noise
 
         try:
-            old_value = params[kwInitializer]
+            old_value = params[INITIALIZER]
         except (TypeError, KeyError):
             old_value = self.oldValue
 
@@ -2692,7 +2774,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
 
     Initialization arguments:
      - params (dict): specifying:
-         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
+         + INITIALIZER (value): initial value to which to set self.oldValue (default: variableClassDefault)
              - can be specified as a runtime parameter, which resets oldValue to one specified
              Note: self.oldValue stores previous value
         + drift_rate (DRIFT_RATE: float)
@@ -2721,7 +2803,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
                  context="DDMIntegrator Init"):
 
         # Assign here as default, for use in initialization of function
-        self.oldValue = self.paramClassDefaults[kwInitializer]
+        self.oldValue = self.paramClassDefaults[INITIALIZER]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
@@ -2738,7 +2820,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.oldValue = [self.paramsCurrent[kwInitializer]]
+        self.oldValue = [self.paramsCurrent[INITIALIZER]]
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set,
