@@ -22,9 +22,12 @@
 #   5) SHOULD ATTRIBUTES OF PARENT CLASSED BE DOCUMENTED ON CHILD CLASSES?
 #          (E.G., PREFS, NAME, FUNCTION, FUNCTON_PARAMS, USER_PARAMS, ETC.)
 
-# HIGH LEVEL TASKS:
+
+# TASKS:
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
-#
+#  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMLAR TO MatrixKeywords)
+
+
 
 # COMPOSITION IMPLEMENTATION NOTE:
 #   add_projection_to and add_projection_from methods
@@ -35,6 +38,7 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
 # FIX: DERIVATIVE FOR SoftMax Function
 # FIX: ADD owner ARG TO Function CONSTRUCTOR (DEFAULT = NONE)
 # FIX: SEARCH FOR AND PURGE: monitoringMechanism and monitoring_mechanism AND monitoring_mech
