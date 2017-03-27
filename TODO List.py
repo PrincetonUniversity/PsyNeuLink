@@ -49,7 +49,7 @@
 # FIX: SEARCH FOR AND PURGE: monitoringMechanism and monitoring_mechanism AND monitoring_mech
 # FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
 # FIX: GET STRAIGHT THE HANDLING OF learning_rate for:
-#                  LearnMechanism
+#                  LearningMechanism
 #                  its function
 #                  LearningProjection
 #                  Processs

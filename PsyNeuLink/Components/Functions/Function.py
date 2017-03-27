@@ -2611,7 +2611,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     variableClassDefault = [[0]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({INITIALIZER: variableClassDefault})
+    # paramClassDefaults.update({INITIALIZER: variableClassDefault})
+    paramClassDefaults.update({})
 
     @tc.typecheck
     def __init__(self,
@@ -2620,20 +2621,24 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                  weighting:tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION)=CONSTANT,
                  noise=0.0,
                  time_step_size = 1.0,
+                 initializer=variableClassDefault,
                  params:tc.optional(dict)=None,
                  owner=None,
                  prefs:is_pref_set=None,
                  context="Integrator Init"):
 
-        # Assign here as default, for use in initialization of function
-        self.oldValue = self.paramClassDefaults[INITIALIZER]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                 weighting=weighting,
-                                                 params=params,
-                                                 noise=noise,
-                                                 time_step_size=time_step_size)
+                                                  weighting=weighting,
+                                                  time_step_size=time_step_size,
+                                                  initializer=initializer,
+                                                  params=params,
+                                                  noise=noise,
+                                                  )
+
+        # Assign here as default, for use in initialization of function
+        self.old_value = self.paramClassDefaults[INITIALIZER]
 
         super().__init__(variable_default=variable_default,
                          params=params,
@@ -2642,7 +2647,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.oldValue = [self.paramsCurrent[INITIALIZER]]
+        self.old_value = [self.paramsCurrent[INITIALIZER]]
+        self.old_value = self.initializer
 
 
         # self.noise = self.paramsCurrent[NOISE]
@@ -2744,7 +2750,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         try:
             old_value = params[INITIALIZER]
         except (TypeError, KeyError):
-            old_value = self.oldValue
+            old_value = self.old_value
 
         old_value = np.atleast_2d(old_value)
         new_value = self.variable
@@ -2765,7 +2771,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not INITIALIZING in context:
-            self.oldValue = value
+            self.old_value = value
 
         return value
 
@@ -2803,7 +2809,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
                  context="DDMIntegrator Init"):
 
         # Assign here as default, for use in initialization of function
-        self.oldValue = self.paramClassDefaults[INITIALIZER]
+        self.old_value = self.paramClassDefaults[INITIALIZER]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
@@ -2820,7 +2826,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.oldValue = [self.paramsCurrent[INITIALIZER]]
+        self.old_value = [self.paramsCurrent[INITIALIZER]]
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set,
