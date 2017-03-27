@@ -2,7 +2,11 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
- # HIGH LEVEL ISSUES:
+# Bryn:
+#  1) Programmatic creation of @property
+#  2) Plug & play
+
+# HIGH LEVEL / DESIGN / CONVENTION ISSUES:
 #   1) MANAGEMENT OF RETURN_VALUE FOR MECHANISMS (AS LIST VS. 2d NP.ARRAY)
 #   2) ASSIGNMENT AND NAMING OF FUNCTION_PARAMS FOR AN OBJECT;
 #      PROBLEMS:
@@ -19,6 +23,15 @@
 #   4) SPECIFICATION OF LEARNING USING A PROJECTION SPEC VS. A DEDICATED KEYWORD (THAT ALLOWS FCT AND LEARNING_RATE)
 #          PRO:  CONSISTENT WITH CONTROL
 #          CON:  AKWARD TO HAVE TO GIVE THE PROJECTION THE FUNCTION AND LEARNING RATE THAT ARE PASSED TO LearningMech
+#   5) SHOULD ATTRIBUTES OF PARENT CLASSED BE DOCUMENTED ON CHILD CLASSES?
+#          (E.G., PREFS, NAME, FUNCTION, FUNCTON_PARAMS, USER_PARAMS, ETC.)
+
+
+# TASKS:
+#  1) BREAK UP FUNCTION INTO SEPARATE MODULES
+#  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMLAR TO MatrixKeywords)
+
+
 
 # COMPOSITION IMPLEMENTATION NOTE:
 #   add_projection_to and add_projection_from methods
@@ -29,6 +42,9 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
+# FIX: DERIVATIVE FOR SoftMax Function
+# FIX: ADD owner ARG TO Function CONSTRUCTOR (DEFAULT = NONE)
 # FIX: SEARCH FOR AND PURGE: monitoringMechanism and monitoring_mechanism AND monitoring_mech
 # FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
 # FIX: GET STRAIGHT THE HANDLING OF learning_rate for:
@@ -214,10 +230,6 @@
 #                        GIVE EXAMPLES.
 
 # DOCUMENT: EVCMechanism NOTES ON API FOR CUSTOM VERSIONS:
-
-
-# DOCUMENT:  UserDefinedFunction API:  wraps custom function, that can then be called using its function method;
-#                can take variable, params, time_scale, and context as params, along with any of its own
 
 #           FROM EVCMechanism.control_signal_grid_search:
 #             Gets controller as argument (along with any standard params specified in call)
@@ -2582,7 +2594,10 @@
 # FIX: name of Functions is being assigned to Type rather than subtype
 # FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix._validate_params IS OK
 #
-# IMPLEMENT BOTH FULL_CONNECTIVITY_MATRIX AND 2D np.array AND np.matrix OBJECTS
+# IMPLEMENT: UserDefinedFuction SHOULD INSTANTIATE ITS function's ARGS AS ATTRIBUTES AND ADD TO ITS user_params DICT
+# IMPLEMENT: LinearMatrix: REFACTOR kwReceiver PARAM AS output_template ARG
+# IMPLEMENT: BOTH FULL_CONNECTIVITY_MATRIX AND 2D np.array AND np.matrix OBJECTS
+# IMPLEMENT: Reduce: EXTEND TO MULTIDIMENSIONAL ARRAY ALONG ARBITRARY AXIS
 # IMPLEMENT:  Demos of Functions that plots each Function
 #                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
 # IMPLEMENT: Add scale to TransferFunction (but make sure it doesn't conflictf with or cause trouble for range)

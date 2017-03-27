@@ -14,14 +14,14 @@
 Overview
 --------
 
-A Log object is a set of structures and methods for recording information about PsyNeuLink components during their
-"life cycle" (i.e., as they are created, validated, executed, etc.).  Every component has a log object -- assigned to
-its :keyword:`log` attribute when the component is created -- that maintains a dictionary with entries for each
-attribute of the component that has been designated to be logged.  Information is added to the entries under specified
-conditions (e.g., when the component is initialized, validated, executed, etc.), which can be designated by a
-`LogLevel` specification in the component's preferences; entries can also be made by the user programmatically.
-Each entry contains the time at which a value was assigned to the attribute, the context in which this occured, and
-the value assigned.  This information can be displayed using the log's `print_entries` method.
+A Log object is used to record information about PsyNeuLink components during their "life cycle" (i.e., as they are
+created, validated and executed).  Every component has a log object -- assigned to its :keyword:`log` attribute
+when the component is created -- that maintains a dictionary with entries for each attribute of the component that
+has been designated to be logged.  Information is added to the entries under specified conditions (e.g., when the
+component is initialized, validated, or executed), which can be designated by a `LogLevel` specification in the
+component's preferences.  Entries can also be made by the user programmatically. Each entry contains the time at
+which a value was assigned to the attribute, the context in which this occurred, and the value assigned.  This
+information can be displayed using the log's `print_entries` method.
 
 Creating Logs and Entries
 -------------------------
