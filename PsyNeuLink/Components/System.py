@@ -2595,7 +2595,7 @@ class System_Base(System):
         """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
-    def show_graph(self, output_fmt='jupyter', direction = 'BT'):
+    def show_graph(self, output_fmt='pdf', direction = 'BT'):
         """Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections
 
         Arguments
@@ -2659,7 +2659,7 @@ class System_Base(System):
         elif output_fmt == 'jupyter':
             return G
 
-    def show_graph_with_learning(self, output_fmt='jupyter', direction = 'BT', learning_color='blue'):
+    def show_graph_with_learning(self, output_fmt='pdf', direction = 'BT', learning_color='blue'):
         """Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections
 
         Arguments
@@ -2676,7 +2676,7 @@ class System_Base(System):
 
         Returns
         -------
-        
+
         Graphviz graph object if output_fmt is 'jupyter'
 
         """
