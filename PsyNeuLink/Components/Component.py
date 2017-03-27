@@ -1713,29 +1713,16 @@ class Component(object):
                                 from PsyNeuLink.Components.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec[0]
 
-                # MODIFIED 3/7/17 OLD:
                 # Instantiate function from class specification
                 function_instance = function(variable_default=self.variable,
                                              params=function_param_specs,
-                                             # FIX 10/29/16 WHY NOT?
-                                             # owner=self,
+                                             # IMPLEMENTATION NOTE:
+                                             #    Don't bother with this, since it has to be assigned explicitly below
+                                             #    anyhow, for cases in which function already exists
+                                             #    and would require every function to have the owner arg in its __init__
+                                             owner=self,
                                              context=context)
-                # # MODIFIED 3/7/17 NEW:
-                # try:
-                #     func_variable = self.function_variable
-                # except AttributeError:
-                #     func_variable= self.variable
-                # # Instantiate function from class specification
-                # function_instance = function(variable_default=func_variable,
-                #                              params=function_param_specs,
-                #                              # FIX 10/29/16 WHY NOT?
-                #                              # owner=self,
-                #                              context=context)
-                # MODIFIED 3/7/17 END
                 self.paramsCurrent[FUNCTION] = function_instance.function
-                # MODIFIED 8/31/16 NEW:
-                # # FIX: ?? COMMENT OUT WHEN self.paramsCurrent[FUNCTION] NOW MAPS TO self.function
-                # self.function = self.paramsCurrent[FUNCTION]
 
                 # If in VERBOSE mode, report assignment
                 if self.prefs.verbosePref:
@@ -1756,12 +1743,7 @@ class Component(object):
                 
 
                 from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
-                # # MODIFIED 1/10/17 OLD:
                 self.paramsCurrent[FUNCTION] = UserDefinedFunction(function=function, context=context).function
-                # # MODIFIED 1/10/17 NEW:
-                # udf = UserDefinedFunction(function=function, context=context)
-                # self.paramsCurrent[FUNCTION] = udf.function
-                # MODIFIED 1/10/17 END
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
@@ -1810,14 +1792,23 @@ class Component(object):
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
         self._value_template = self.value
 
-        self.function_object = self.function.__self__
-        self.function_object.owner = self
-
-        # IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
-        #             SEE learning_rate IN LearningMechanism FOR EXAMPLE
-        self.function_params = self.function_object.user_params
         self.paramInstanceDefaults[FUNCTION] = self.function
-        self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
+
+        # For all components other than a Function itself, assign function_object and function_params
+        from PsyNeuLink.Components.Functions.Function import Function
+        if not isinstance(self, Function):
+            self.function_object = self.function.__self__
+            if not self.function_object.owner:
+                self.function_object.owner = self
+            elif self.function_object.owner != self:
+                raise ComponentError("Function being assigned to {} ({}) belongs to another component: {}".
+                                     format(self.name, self.function_object.name, self.function_object.owner.name))
+
+            # IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
+            #             SEE learning_rate IN LearningMechanism FOR EXAMPLE
+            self.function_params = self.function_object.user_params
+            self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
+
 
 
     def _instantiate_attributes_after_function(self, context=None):
