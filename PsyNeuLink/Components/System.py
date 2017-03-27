@@ -2595,20 +2595,22 @@ class System_Base(System):
         """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
-    def show_graph(self, output_fmt='jupyter', direction = 'BT'):
+    def show_graph(self, output_fmt='pdf', direction = 'BT'):
         """Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections
 
         Arguments
         ---------
+
         output_fmt : 'jupyter' or 'pdf'
-            pdf to generate and open a pdf with the visualization
+            pdf to generate and open a pdf with the visualization,
             jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
 
-        direction : 'BT', 'TB', 'LR', or 'RL'
+        direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
             rank direction of graph
 
         Returns
         -------
+
         Graphviz graph object if output_fmt is 'jupyter'
 
         """
@@ -2657,23 +2659,24 @@ class System_Base(System):
         elif output_fmt == 'jupyter':
             return G
 
-    def show_graph_with_learning(self, output_fmt='jupyter', direction = 'BT', learning_color='blue'):
+    def show_graph_with_learning(self, output_fmt='pdf', direction = 'BT', learning_color='blue'):
         """Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections
 
         Arguments
         ---------
         output_fmt : 'jupyter' or 'pdf'
-            pdf to generate and open a pdf with the visualization
+            pdf to generate and open a pdf with the visualization,
             jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
 
-        direction : 'BT', 'TB', 'LR', or 'RL'
+        direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
             rank direction of graph
 
         learning_color : default is 'blue', set to 'black' to turn off
-            determins which color to highlight learning machinery with
+            determines color with which to highlight learning machinery
 
         Returns
         -------
+
         Graphviz graph object if output_fmt is 'jupyter'
 
         """
