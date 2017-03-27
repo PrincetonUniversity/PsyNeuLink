@@ -14,6 +14,7 @@ Example function:
   * `ArgumentTherapy`
 
 Combination Functions:
+  * `Reduce`
   * `LinearCombination`
 
 TransferMechanism Functions:
@@ -121,7 +122,8 @@ Class Reference
 
 """
 
-# __all__ = ['LinearCombination',
+# __all__ = ['Reduce',
+#            'LinearCombination',
 #            'Linear',
 #            'Exponential',
 #            'Logistic',
@@ -459,7 +461,7 @@ PROPENSITY = "PROPENSITY"
 PERTINACITY = "PERTINACITY"
 
 
-class ArgumentTherapy(Function_Base): # Example
+class ArgumentTherapy(Function_Base):
     """
     ArgumentTherapy(                   \
          variable,                     \
@@ -526,6 +528,13 @@ class ArgumentTherapy(Function_Base): # Example
     componentName = ARGUMENT_THERAPY_FUNCTION
     componentType = EXAMPLE_FUNCTION_TYPE
 
+    classPreferences = {
+        kwPreferenceSetName: 'ExampleClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+
+
     # Variable class default
     # This is used both to type-cast the variable, and to initialize variableInstanceDefault
     variableClassDefault = 0
@@ -541,16 +550,28 @@ class ArgumentTherapy(Function_Base): # Example
     #  in the initialization call or later (using either _assign_defaults or during a function call)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROPENSITY: Manner.CONTRARIAN,
-                               PERTINACITY:  10,
-                               })
+    paramClassDefaults.update({kwFunctionOutputTypeConversion: True,
+                               PARAMETER_STATE_PARAMS: None
+                               # PROPENSITY: Manner.CONTRARIAN,
+                               # PERTINACITY:  10
+    })
+
+
 
     def __init__(self,
                  variable_default=variableClassDefault,
+                 propensity=10.0,
+                 pertincacity=Manner.CONTRARIAN,
                  params=None,
                  owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(propensity=propensity,
+                                                  pertinacity=pertincacity,
+                                                  params=params)
+
         # This validates variable and/or params_list if assigned (using _validate_params method below),
         #    and assigns them to paramsCurrent and paramInstanceDefaults;
         #    otherwise, assigns paramClassDefaults to paramsCurrent and paramInstanceDefaults
@@ -562,6 +583,8 @@ class ArgumentTherapy(Function_Base): # Example
                          owner=owner,
                          prefs=prefs,
                          context=context)
+
+        self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
         """Validates variable and assigns validated values to self.variable
@@ -629,19 +652,28 @@ class ArgumentTherapy(Function_Base): # Example
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Returns a boolean that is (or tends to be) the same as or opposite the one passed in
+        """
+        Returns a boolean that is (or tends to be) the same as or opposite the one passed in.
 
-        Returns :keyword:`True` or :keyword:`False`, that is either the same or opposite the statement passed in as the
-        variable
-        The propensity parameter must be set to be Manner.OBSEQUIOUS or Manner.CONTRARIAN, which
-            determines whether the response is (or tends to be) the same as or opposite to the statement
-        The pertinacity parameter determines the consistency with which the response conforms to the manner
+        Arguments
+        ---------
 
-        :param variable: (boolean) Statement to probe
-        :param params: (dict) with entires specifying
-                       PROPENSITY: ArgumentTherapy.Manner - contrarian or obsequious (default: CONTRARIAN)
-                       PERTINACITY: float - obstinate or equivocal (default: 10)
-        :return response: (boolean)
+        variable : boolean : default variableClassDefault
+           an assertion to which a therapeutic response is made.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        therapeutic response : boolean
+
         """
         self._check_args(variable, params, context)
 
@@ -649,8 +681,8 @@ class ArgumentTherapy(Function_Base): # Example
 
         # Use self.variable (rather than variable), as it has been validated (and default assigned, if necessary)
         statement = self.variable
-        propensity = self.paramsCurrent[self.PROPENSITY]
-        pertinacity = self.paramsCurrent[self.PERTINACITY]
+        propensity = self.paramsCurrent[PROPENSITY]
+        pertinacity = self.paramsCurrent[PERTINACITY]
         whim = randint(-10, 10)
 
         if propensity == self.Manner.OBSEQUIOUS:
@@ -796,21 +828,76 @@ class Reduce(CombinationFunction): # -------------------------------------------
 # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
 # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
 # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
-    """Combines an array of values into a single value
+    """
+    Reduce(
+         variable_default=variableClassDefault,
+         operation=SUM,
+         params=None,
+         owner=None,
+         prefs=None,
+    )
 
-    Description:
-        Combine elements of an array in variable arg, using arithmetic operation determined by OPERATION.
-        Returns a scalar value.
+    .. _Reduce:
 
-    Initialization arguments:
-     - variable (list or np.ndarray of numbers): values to be combined;
-     - params (dict) can include:
-         + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
-              SUM: element-wise sum of the arrays in variable
-              PRODUCT: Hadamard Product of the arrays in variable
+    Combine an array of values into a single value
 
-    Reduce.function returns combined values:
-    - single scalar value
+    COMMENT:
+        IMPLEMENTATION NOTE: EXTEND TO MULTIDIMENSIONAL ARRAY ALONG ARBITRARY AXIS
+
+        Description:
+            Combine elements of an array in variable arg, using arithmetic operation determined by OPERATION.
+            Returns a scalar value.
+
+        Initialization arguments:
+         - variable (list or np.ndarray of numbers): values to be combined;
+         - params (dict) can include:
+             + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
+                  SUM: element-wise sum of the arrays in variable
+                  PRODUCT: Hadamard Product of the arrays in variable
+
+        Reduce.function returns combined values:
+        - single scalar value
+    COMMENT
+
+    Arguments
+    ---------
+
+    variable : list or 1d np.array : default variableClassDefault
+        specifies a template for the value to be transformed.
+
+    operation : SUM or PRODUCT : default SUM
+        specifies whether to sum or multiply the elements `variable <Reduce.variable>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 1d np.array
+        contains array to be reduced.
+
+    operation : SUM or PRODUCT
+        determines whether elements of `variable <Reduce.variable>` are summmed or multiplied.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
     componentName = REDUCE_FUNCTION
 
@@ -839,7 +926,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
                          context=context)
 
     def _validate_variable(self, variable, context=None):
-        """Insure that all items of list or np.ndarray in variable are of the same length
+        """Insure that list or array is 1d and that all elements are numeric
 
         Args:
             variable:

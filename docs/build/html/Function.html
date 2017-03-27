@@ -150,7 +150,7 @@
 <span class="target" id="module-Function"></span><dl class="docutils">
 <dt>Example function:</dt>
 <dd><ul class="first last simple">
-<li><a class="reference internal" href="#Function.Contradiction" title="Function.Contradiction"><code class="xref any py py-class docutils literal"><span class="pre">Contradiction</span></code></a></li>
+<li><a class="reference internal" href="#Function.ArgumentTherapy" title="Function.ArgumentTherapy"><code class="xref any py py-class docutils literal"><span class="pre">ArgumentTherapy</span></code></a></li>
 </ul>
 </dd>
 <dt>Combination Functions:</dt>
@@ -289,57 +289,87 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 </dd></dl>
 
 <dl class="class">
-<dt id="Function.Contradiction">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Contradiction</code><span class="sig-paren">(</span><em>variable_default=0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba396a8&gt; = None</em>, <em>context='Contradiction INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Contradiction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Example function for use as template for function construction</p>
-<dl class="docutils">
-<dt>Iniialization arguments:</dt>
-<dd><ul class="first last">
-<li><p class="first">variable (boolean or statement resolving to boolean)</p>
-</li>
-<li><dl class="first docutils">
-<dt>params (dict) specifying the:</dt>
-<dd><ul class="first last simple">
-<li>propensity (kwPropensity: a mode specifying the manner of responses (tendency to agree or disagree)</li>
-<li>pertinacity (kwPertinacity: the consistency with which the manner complies with the propensity</li>
+<dt id="Function.ArgumentTherapy">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">ArgumentTherapy</code><span class="sig-paren">(</span><em>variable</em>, <em>propensity=Manner.CONTRARIAN</em>, <em>pertinacity=10.0                       params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.ArgumentTherapy" title="Permalink to this definition">¶</a></dt>
+<dd><p id="argumenttherapist">Return <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code> according to the manner of the therapist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>boolean or statement that resolves to one : default variableClassDefault</em>) &#8211; assertion for which a therapeutic response will be offered.</li>
+<li><strong>propensity</strong> (<em>Manner value : default Manner.CONTRARIAN</em>) &#8211; specifies preferred therapeutic manner</li>
+<li><strong>pertinacity</strong> (<em>float : default 10.0</em>) &#8211; specifies therapeutic consistency</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<em>Component</em>) &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
 </ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-<p>Contradiction.function returns <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.ArgumentTherapy.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Function.ArgumentTherapy.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>boolean</em> &#8211; assertion to which a therapeutic response is made.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.ArgumentTherapy.propensity">
+<code class="descname">propensity</code><a class="headerlink" href="#Function.ArgumentTherapy.propensity" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Manner value : default Manner.CONTRARIAN</em> &#8211; determines therapeutic manner:  tendency to agree or disagree.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.ArgumentTherapy.pertinacity">
+<code class="descname">pertinacity</code><a class="headerlink" href="#Function.ArgumentTherapy.pertinacity" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 10.0</em> &#8211; determines consistency with which the manner complies with the propensity.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.ArgumentTherapy.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.ArgumentTherapy.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.ArgumentTherapy.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.ArgumentTherapy.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.ArgumentTherapy.prefs" title="Function.ArgumentTherapy.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
 <dl class="class">
-<dt id="Function.Contradiction.Manner">
-<em class="property">class </em><code class="descname">Manner</code><a class="headerlink" href="#Function.Contradiction.Manner" title="Permalink to this definition">¶</a></dt>
+<dt id="Function.ArgumentTherapy.Manner">
+<em class="property">class </em><code class="descname">Manner</code><a class="headerlink" href="#Function.ArgumentTherapy.Manner" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="Function.Contradiction.function">
-<code class="descclassname">Contradiction.</code><code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Contradiction.function" title="Permalink to this definition">¶</a></dt>
+<dt id="Function.ArgumentTherapy.function">
+<code class="descclassname">ArgumentTherapy.</code><code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.ArgumentTherapy.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a boolean that is (or tends to be) the same as or opposite the one passed in</p>
-<p>Returns <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>, that is either the same or opposite the statement passed in as the
-variable
-The propensity parameter must be set to be Manner.OBSEQUIOUS or Manner.CONTRARIAN, which</p>
-<blockquote>
-<div>determines whether the response is (or tends to be) the same as or opposite to the statement</div></blockquote>
-<p>The pertinacity parameter determines the consistency with which the response conforms to the manner</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> &#8211; (boolean) Statement to probe</li>
-<li><strong>params</strong> &#8211; (dict) with entires specifying
-kwPropensity: Contradiction.Manner - contrarian or obsequious (default: CONTRARIAN)
-kwPertinacity: float - obstinate or equivocal (default: 10)</li>
+<li><strong>variable</strong> (<em>boolean : default variableClassDefault</em>) &#8211; an assertion to which a therapeutic response is made.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) &#8211; specifies whether the function is executed on the time_step or trial time scale.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Return response:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">(boolean)</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>therapeutic response</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">boolean</p>
 </td>
 </tr>
 </tbody>
@@ -367,7 +397,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="DDM.html#DDM.DDM.function" title="DDM.DDM.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="#Function.UserDefinedFunction.function" title="Function.UserDefinedFunction.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -1086,7 +1116,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.Integrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x10ba5bae8&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x10c341080&gt; = 'constant'</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params: &lt;typecheck.framework.optional object at 0x10bf08160&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba396a8&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x10ba73ae8&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x10bf70ba8&gt; = 'constant'</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params: &lt;typecheck.framework.optional object at 0x10bf70a20&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ba556a8&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -1155,7 +1185,7 @@ WEIGHTING: Integrator.Weightings - type of weighting (default = CONSTANT)</td>
 
 <dl class="class">
 <dt id="Function.BogaczEtAl">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba5bae8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba5bae8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba5bae8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba5bae8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba5bae8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba396a8&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba73ae8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba73ae8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba73ae8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba73ae8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba73ae8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba556a8&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to DDM process and return mean response time and accuracy.</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -1214,7 +1244,7 @@ drift_rate...</td>
 
 <dl class="class">
 <dt id="Function.NavarroAndFuss">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba5bae8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba5bae8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba5bae8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba5bae8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba5bae8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba396a8&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10ba73ae8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10ba73ae8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10ba73ae8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10ba73ae8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10ba73ae8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10ba556a8&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to distribution of DDM responses (mean and variance of response time and accuracy).</p>
 <dl class="docutils">
 <dt>Description:</dt>

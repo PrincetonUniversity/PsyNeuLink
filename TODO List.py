@@ -2591,7 +2591,9 @@
 # FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix._validate_params IS OK
 #
 # IMPLEMENT: UserDefinedFuction SHOULD INSTANTIATE ITS function's ARGS AS ATTRIBUTES AND ADD TO ITS user_params DICT
-# IMPLEMENT BOTH FULL_CONNECTIVITY_MATRIX AND 2D np.array AND np.matrix OBJECTS
+# IMPLEMENT: LinearMatrix: REFACTOR kwReceiver PARAM AS output_template ARG
+# IMPLEMENT: BOTH FULL_CONNECTIVITY_MATRIX AND 2D np.array AND np.matrix OBJECTS
+# IMPLEMENT: Reduce: EXTEND TO MULTIDIMENSIONAL ARRAY ALONG ARBITRARY AXIS
 # IMPLEMENT:  Demos of Functions that plots each Function
 #                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
 # IMPLEMENT: Add scale to TransferFunction (but make sure it doesn't conflictf with or cause trouble for range)
