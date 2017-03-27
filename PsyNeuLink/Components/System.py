@@ -2600,15 +2600,17 @@ class System_Base(System):
 
         Arguments
         ---------
+
         output_fmt : 'jupyter' or 'pdf'
-            pdf to generate and open a pdf with the visualization
+            pdf to generate and open a pdf with the visualization,
             jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
 
-        direction : 'BT', 'TB', 'LR', or 'RL'
+        direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
             rank direction of graph
 
         Returns
         -------
+
         Graphviz graph object if output_fmt is 'jupyter'
 
         """
@@ -2663,17 +2665,18 @@ class System_Base(System):
         Arguments
         ---------
         output_fmt : 'jupyter' or 'pdf'
-            pdf to generate and open a pdf with the visualization
+            pdf to generate and open a pdf with the visualization,
             jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
 
-        direction : 'BT', 'TB', 'LR', or 'RL'
+        direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
             rank direction of graph
 
         learning_color : default is 'blue', set to 'black' to turn off
-            determins which color to highlight learning machinery with
+            determines color with which to highlight learning machinery
 
         Returns
         -------
+        
         Graphviz graph object if output_fmt is 'jupyter'
 
         """
