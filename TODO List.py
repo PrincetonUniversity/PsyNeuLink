@@ -42,6 +42,7 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: NAMING OF MAPPING PROJECTIONS
 # FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
 # FIX: DERIVATIVE FOR SoftMax Function
 # FIX: ADD owner ARG TO Function CONSTRUCTOR (DEFAULT = NONE)
