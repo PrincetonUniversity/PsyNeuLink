@@ -2647,7 +2647,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.old_value = [self.paramsCurrent[INITIALIZER]]
         self.old_value = self.initializer
 
 
