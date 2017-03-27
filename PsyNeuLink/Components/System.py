@@ -2699,10 +2699,6 @@ class System_Base(System):
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
-    #         # do not filter objective and learning mechanisms
-    #         if isinstance(rcvr[0], ObjectiveMechanism) or isinstance(rcvr[0], LearningMechanism):
-    #             continue
-            
             rcvr_name = rcvr[0].name
             rcvr_label = rcvr_name
 
@@ -2717,12 +2713,18 @@ class System_Base(System):
                 for proj in projs:
                     if proj.receiver.owner == rcvr[0]:
                         edge_name = proj.name
+                        draw_node = not proj.has_learning_projection
                 edge_label = edge_name
-                G.node(sndr_label, shape="oval")
-                G.node(edge_label, shape="diamond")
-                G.node(rcvr_label, shape="oval")
-                G.edge(sndr_label, edge_label, arrowhead='none')
-                G.edge(edge_label, rcvr_label)
+                #### CHANGE MADE HERE ###
+                if draw_node:
+                    G.edge(sndr_label, rcvr_label, label = edge_label)
+                else:
+                    G.node(sndr_label, shape="oval")
+                    G.node(edge_label, shape="diamond")
+                    G.node(rcvr_label, shape="oval")
+                    G.edge(sndr_label, edge_label, arrowhead='none')
+                    G.edge(edge_label, rcvr_label)
+                #### CHANGE MADE HERE ###
                     
         rcvrs = list(learning_graph.keys())
         
