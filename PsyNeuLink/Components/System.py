@@ -2777,4 +2777,3 @@ class SystemInputState(OutputState):
         self.sendsToProjections = []
         self.owner = owner
         self.value = variable
-

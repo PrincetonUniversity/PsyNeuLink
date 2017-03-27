@@ -224,7 +224,7 @@ already exist, along with the following MappingProjections:
 * from the ObjectiveMechanism's `primary outputState <OutputState_Primary>` to the LearningMechanism's
   `ERROR_SIGNAL <LearningMechanism_Activation_Input>` inputState .
 
-In addition, a `Learn
+In addition, a `LearningProjection` is created from the LearningMechanism's
 `LEARNING_SIGNAL <LearningMechanism_Learning_Signal>` outputState to the `matrix` `parameterState <ParameterState>`
 for the `learned_projection <LearningMechanism_Additional_Attributes>`.  Because this case involves only a single
 layer of learning, *no* projection is created or assigned to the LearningMechanism's
@@ -319,9 +319,9 @@ processes converge on that mechanism), only one ObjectiveMechanism will be creat
 
        Mechanism 3 is the `TERMINAL` mechanism for Process A, However, it is also an `INTERNAL` mechanism of Process B.
        Therefore, Mechanism 3 is designated as an `INTERNAL` mechanism for the system, and Mechanism 4 is its `TERMINAL`
-       mechanism. As a consequence, if `BackPropagation <Function.BackPropagation>` is used for learning,
-       then Mechanism 4 projects to an `ObjectiveMechanism` (that is designated as the `TARGET`), while Mechanism 3
-       projects to a LearningMechanism (that is designated as a `MONITORING` mechanism).
+       mechanism. As a consequence, if `BackPropagation` is used for learning, then Mechanism 4 is an
+       `ObjectiveMechanism` and designated as a `TARGET`, while Mechanism 3 is a LearningMechanism
+       and designated as a `MONITORING` mechanism.
 
 .. _LearningMechanism_Execution:
 
