@@ -6,7 +6,7 @@ Functions
 
 .. automodule:: Function
 	:members: Function_Base,
-	          Contradiction,
+	          ArgumentTherapy,
 	          UserDefinedFunction,
 	          LinearCombination,
 	          Linear,
