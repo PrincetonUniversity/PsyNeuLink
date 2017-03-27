@@ -11,7 +11,7 @@
 
 """
 Example function:
-  * `ArgumentTherapist`
+  * `ArgumentTherapy`
 
 Combination Functions:
   * `LinearCombination`
@@ -455,18 +455,13 @@ class Function_Base(Function):
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
-
-class ArgumentTherapist(Function_Base): # Example
-    """Example function for use as template for function construction
-
-    Initialization arguments:
-     - variable (boolean or statement resolving to boolean)
-     - params (dict) specifying the:
-         + propensity (kwPropensity: a mode specifying the manner of responses (tendency to agree or disagree)
-         + pertinacity (kwPertinacity: the consistency with which the manner complies with the propensity
+PROPENSITY = "PROPENSITY"
+PERTINACITY = "PERTINACITY"
 
 
-    ArgumentTherapist(                 \
+class ArgumentTherapy(Function_Base): # Example
+    """
+    ArgumentTherapy(                   \
          variable,                     \
          propensity=Manner.CONTRARIAN, \
          pertinacity=10.0              \
@@ -483,14 +478,14 @@ class ArgumentTherapist(Function_Base): # Example
     Arguments
     ---------
 
-    variable : number or np.array : default variableClassDefault
-        specifies a template for the value to be transformed.
+    variable : boolean or statement that resolves to one : default variableClassDefault
+        assertion for which a therapeutic response will be offered.
 
-    slope : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>`.
+    propensity : Manner value : default Manner.CONTRARIAN
+        specifies preferred therapeutic manner
 
-    intercept : float : default 0.0
-        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+    pertinacity : float : default 10.0
+        specifies therapeutic consistency
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -508,16 +503,14 @@ class ArgumentTherapist(Function_Base): # Example
     Attributes
     ----------
 
-    variable : number or np.array
-        contains value to be transformed.
+    variable : boolean
+        assertion to which a therapeutic response is made.
 
-    slope : float
-        value by which each element of `variable <Linear.variable>` is multiplied before applying the
-        `intercept <Linear.intercept>` (if it is specified).
+    propensity : Manner value : default Manner.CONTRARIAN
+        determines therapeutic manner:  tendency to agree or disagree.
 
-    intercept : float
-        value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
-        (if it is specified).
+    pertinacity : float : default 10.0
+        determines consistency with which the manner complies with the propensity.
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -527,20 +520,10 @@ class ArgumentTherapist(Function_Base): # Example
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
-
-
-
-
-
-
-
-
-
-
     """
 
     # Function componentName and type (defined at top of module)
-    componentName = ARGUMENT_THERAPIST_FUNCTION
+    componentName = ARGUMENT_THERAPY_FUNCTION
     componentType = EXAMPLE_FUNCTION_TYPE
 
     # Variable class default
@@ -556,12 +539,11 @@ class ArgumentTherapist(Function_Base): # Example
     # Param class defaults
     # These are used both to type-cast the params, and as defaults if none are assigned
     #  in the initialization call or later (using either _assign_defaults or during a function call)
-    kwPropensity = "PROPENSITY"
-    kwPertinacity = "PERTINACITY"
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwPropensity: Manner.CONTRARIAN,
-                          kwPertinacity:  10,
-                          })
+    paramClassDefaults.update({PROPENSITY: Manner.CONTRARIAN,
+                               PERTINACITY:  10,
+                               })
 
     def __init__(self,
                  variable_default=variableClassDefault,
@@ -580,44 +562,6 @@ class ArgumentTherapist(Function_Base): # Example
                          owner=owner,
                          prefs=prefs,
                          context=context)
-
-    def function(self,
-                variable=None,
-                params=None,
-                time_scale=TimeScale.TRIAL,
-                context=None):
-        """Returns a boolean that is (or tends to be) the same as or opposite the one passed in
-
-        Returns :keyword:`True` or :keyword:`False`, that is either the same or opposite the statement passed in as the
-        variable
-        The propensity parameter must be set to be Manner.OBSEQUIOUS or Manner.CONTRARIAN, which
-            determines whether the response is (or tends to be) the same as or opposite to the statement
-        The pertinacity parameter determines the consistency with which the response conforms to the manner
-
-        :param variable: (boolean) Statement to probe
-        :param params: (dict) with entires specifying
-                       kwPropensity: ArgumentTherapist.Manner - contrarian or obsequious (default: CONTRARIAN)
-                       kwPertinacity: float - obstinate or equivocal (default: 10)
-        :return response: (boolean)
-        """
-        self._check_args(variable, params, context)
-
-        # Compute the function
-
-        # Use self.variable (rather than variable), as it has been validated (and default assigned, if necessary)
-        statement = self.variable
-        propensity = self.paramsCurrent[self.kwPropensity]
-        pertinacity = self.paramsCurrent[self.kwPertinacity]
-        whim = randint(-10, 10)
-
-        if propensity == self.Manner.OBSEQUIOUS:
-            return whim < pertinacity
-
-        elif propensity == self.Manner.CONTRARIAN:
-            return whim > pertinacity
-
-        else:
-            raise FunctionError("This should not happen if parameter_validation == True;  check its value")
 
     def _validate_variable(self, variable, context=None):
         """Validates variable and assigns validated values to self.variable
@@ -658,18 +602,18 @@ class ArgumentTherapist(Function_Base): # Example
             if param_name not in request_set.keys():
                 message += "{0} is not a valid parameter for {1}".format(param_name, self.name)
 
-            if param_name == self.kwPropensity:
-                if isinstance(param_value, ArgumentTherapist.Manner):
-                    # target_set[self.kwPropensity] = param_value
+            if param_name == PROPENSITY:
+                if isinstance(param_value, ArgumentTherapy.Manner):
+                    # target_set[self.PROPENSITY] = param_value
                     pass # This leaves param in request_set, clear to be assigned to target_set in call to super below
                 else:
                     message = "Propensity must be of type Example.Mode"
                 continue
 
             # Validate param
-            if param_name == self.kwPertinacity:
+            if param_name == PERTINACITY:
                 if isinstance(param_value, numbers.Number) and 0 <= param_value <= 10:
-                    # target_set[self.kwPertinacity] = param_value
+                    # target_set[PERTINACITY] = param_value
                     pass # This leaves param in request_set, clear to be assigned to target_set in call to super below
                 else:
                     message += "Pertinacity must be a number between 0 and 10"
@@ -679,6 +623,44 @@ class ArgumentTherapist(Function_Base): # Example
             raise FunctionError(message)
 
         super()._validate_params(request_set, target_set, context)
+
+    def function(self,
+                variable=None,
+                params=None,
+                time_scale=TimeScale.TRIAL,
+                context=None):
+        """Returns a boolean that is (or tends to be) the same as or opposite the one passed in
+
+        Returns :keyword:`True` or :keyword:`False`, that is either the same or opposite the statement passed in as the
+        variable
+        The propensity parameter must be set to be Manner.OBSEQUIOUS or Manner.CONTRARIAN, which
+            determines whether the response is (or tends to be) the same as or opposite to the statement
+        The pertinacity parameter determines the consistency with which the response conforms to the manner
+
+        :param variable: (boolean) Statement to probe
+        :param params: (dict) with entires specifying
+                       PROPENSITY: ArgumentTherapy.Manner - contrarian or obsequious (default: CONTRARIAN)
+                       PERTINACITY: float - obstinate or equivocal (default: 10)
+        :return response: (boolean)
+        """
+        self._check_args(variable, params, context)
+
+        # Compute the function
+
+        # Use self.variable (rather than variable), as it has been validated (and default assigned, if necessary)
+        statement = self.variable
+        propensity = self.paramsCurrent[self.PROPENSITY]
+        pertinacity = self.paramsCurrent[self.PERTINACITY]
+        whim = randint(-10, 10)
+
+        if propensity == self.Manner.OBSEQUIOUS:
+            return whim < pertinacity
+
+        elif propensity == self.Manner.CONTRARIAN:
+            return whim > pertinacity
+
+        else:
+            raise FunctionError("This should not happen if parameter_validation == True;  check its value")
 
 
 #region ****************************************   FUNCTIONS   *********************************************************
