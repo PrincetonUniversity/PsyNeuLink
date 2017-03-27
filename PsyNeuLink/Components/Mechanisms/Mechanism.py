@@ -612,6 +612,10 @@ class Mechanism_Base(Mechanism):
         parameter); the function parameters are listed in the mechanism's
         `function_params <Mechanism_Base.function_params>` attribute.
 
+    COMMENT:
+       MOVE function and function_params (and add user_params) to Component docstring
+    COMMENT
+
     function : Function, function or method
         the primary function for the mechanism, called when it is executed.  It takes the mechanism's
         `variable <Mechanism_Base.variable>` attribute as its input, and its result is assigned to the mechanism's

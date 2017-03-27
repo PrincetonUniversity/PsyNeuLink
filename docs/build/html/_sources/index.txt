@@ -64,11 +64,8 @@ What PsyNeuLink is **NOT**
 PsyNeuLink is not presently well suited to:
 
  - extensive model fitting
- |
  - large scale simulations
- |
  - elaborate and detailed models of a particular form
- |
  - biophysically-realistic models of individual neurons
 
 Other packages that are much better for such applications are:
@@ -80,8 +77,8 @@ Other packages that are much better for such applications are:
 `Neuron <https://www.neuron.yale.edu/neuron/>`_,
 and `Nengo <http://www.nengo.ca>`_  (for biophysically-realistic models of neuronal function).
 
-These packages are all better to elaborate and detailed models of a particular form.
-Rather, the initial efforts in the design and implementation of PsyNeuLink have been put into making it as
+These packages are all better for elaborate and detailed models of a particular form.
+In contrast, the initial efforts in the design and implementation of PsyNeuLink have been put into making it as
 flexible and easy to use as possible, including its ability to integrate components constructed in other packages
 (includling some of the ones listed above).  These are characteristics that are often (at least in the initial
 stages of development) in tension with efficiency (think:  interpreted vs. compiled).  As PsyNeuLink grows and matures,

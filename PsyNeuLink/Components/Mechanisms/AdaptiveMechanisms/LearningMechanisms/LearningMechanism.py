@@ -460,16 +460,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     Arguments
     ---------
+
     variable : List or 2d np.array
         specifies a template for the three items required by the `function <LearningMechanism.function>: the input
         to the `learned_projection`, the output of the `error_source`, and the error_signal received by the
         LearningMechanism (see `variable <LearningMechanism.variable>` for details).
-
-    COMMENT:
-        activation_derivative : Function or function
-            specifies the derivative of the function of the mechanism that receives the `MappingProjection` being learned
-            (see `activation_derivative` for details).
-    COMMENT
 
     error_source : ProcessingMechanism
         specifies the mechanism that generates the output on which the error_signal received by the LearningMechanism
@@ -516,17 +511,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         the projection, the `matrix <MappingProjection.matrix>` of which is  modified by the LearningMechanism.
 
     COMMENT:
-        OLD:
-        activation_input : 1d np.array
-            the input to the `MappingProjection` being learned.
-
-        activation_output : 1d np.array
-            the output of the mechanism that receives the `MappingProjection` being learned.
-
-        activation_derivative : Function or function
-            the derivative of the function of the mechanism that receives the `MappingProjection` being learned.
-
-        error_output : 1d np.array
+      error_output : 1d np.array
             the output of the next mechanism in the pathway (the one to which the `error_signal` pertains, and projected
             to by the mechanism that receives the projection being learned). Typically this comes from  the
             `LearningMechanism` for that next mechanism.  However, if the current LearningMechanism is for the last
@@ -541,13 +526,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
             the projection is from its `ERROR_SIGNAL <LearningMechanism.outputStates>` outputState.  In either case,
             the MappingProjection uses an `IDENTITY_MATRIX`, and so the value of the outputState used for the
             `error_source` must be equal in length to the value of the LearningMechanism's `ERROR_SIGNAL` inputstate.
-    COMMENT
-
-    COMMENT:
-       MOVE THIS TO Backpropagation
-        error_matrix : List or 2d np.array
-            the matrix for the `MappingProjection` that projects *from* the mechanism that receives the MappingProjection
-            being learned, *to* the next mechanism in the process or system, from which the `error_signal` was generated.
     COMMENT
 
     error_source : ProcessingMechanism
