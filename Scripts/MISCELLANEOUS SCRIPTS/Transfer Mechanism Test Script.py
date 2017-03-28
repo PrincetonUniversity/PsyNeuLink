@@ -8,7 +8,7 @@ my_Transfer = TransferMechanism(name='my_Transfer',
                        default_input_value = [0,0],
                        function=Logistic(gain=1.0, bias=0),
                        noise=0.0,
-                       rate = .1,
+                       time_constant = .1,
                        time_scale=TimeScale.TIME_STEP
                        # function=Linear(slope=2, intercept=10)
                        )
