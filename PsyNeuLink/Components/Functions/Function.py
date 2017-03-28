@@ -2499,6 +2499,9 @@ class IntegratorFunction(Function_Base):
     componentType = INTEGRATOR_FUNCTION_TYPE
 
 
+# FIX: IF RATE HAS TO BE BETWEEN 0 AND 1, VALIDATE_VARIABLE ACCORDINGLY
+# SEARCH & REPLACE: old_value -> previous_value
+
 class Integrator(IntegratorFunction): # --------------------------------------------------------------------------------------
     """
     Integrator(                 \
@@ -2516,47 +2519,32 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
     Integrate current value of `variable <Integrator.variable>` with its prior value.
 
-    COMMENT:
-        Initialization arguments:
-         - variable: new input value, to be combined with old value at rate and using method specified by params
-         - params (dict): specifying:
-             + INITIALIZER (value): initial value to which to set self.oldValue (default: variableClassDefault)
-                 - must be same type and format as variable
-                 - can be specified as a runtime parameter, which resets oldValue to one specified
-                 Note: self.oldValue stores previous value with which new value is integrated
-             + RATE (value): rate of accumulation based on weighting of new vs. old value (default: 1)
-             + WEIGHTING (Weightings Enum): method of accumulation (default: CONSTANT):
-                    CONSTANT -- returns old_value incremented by rate parameter (ignores input) with optional noise
-                    SIMPLE -- returns old_value incremented by rate * new_value with optional noise
-                    ADAPTIVE -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter) with optional noise
-                                    rate = 0:  no change (returns old_value)
-                                    rate 1:    instantaneous change (returns new_value)
-                    DIFFUSION -- returns old_value incremented by drift_rate * old_value * time_step_size and the standard DDM noise distribution
-
-        Class attributes:
-        - oldValue (value): stores previous value with which value provided in variable is integrated
-    COMMENT
-
     Arguments
     ---------
 
     variable_default : number, list or np.array : default variableClassDefault
         specifies a template for the value to be integrated
 
-    rate : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>`.
+    rate : float, list or 1d np.array : default 1.0
+        specifies the rate of integration.  If it is a list or array, it must be the same length as
+        `variable <Integrator.variable>` and all elements must be floats between 0 and 1
+        (see `rate <Integrator.rate>` for details).
 
-    weighting : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : CONSTANT
-        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+    weighting : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
+        specifies type of integration (see `weighting <Integrator.weighting>` for details).
 
-    noise : float : default 0.0
-        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+    noise : float, list or 1d np.array : default 0.0
+        specifies random value to be added in each call to `function <Integrator.function>`.
+        If it is a list or array, it must be the same length as `variable <Integrator.variable>` and all elements
+        must be floats between 0 and 1 (see `noise <Integrator.rate>` for details).
 
     time_step_size : float : default 0.0
-        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+        determines the timing precision of the integration process when `weighting <Integrator.weighting>` is set to
+        DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
 
-    initializer : float : default 0.0
-        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+    initializer float, list or 1d np.array : default 0.0
+        specifies starting value for integration.  If it is a list or array, it must be the same length as `variable
+        <Integrator.variable>` (see `initializer <Integrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -2574,25 +2562,48 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     Attributes
     ----------
 
-    variable : number or np.array
-        contains value to be transformed.
+    variable_default : number, list or np.array
+        current input value some portion of which (determined by `rate <Integrator.rate>` that will be
+        added to prior value.
 
-    rate : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>`.
+    rate : 1d np.array
+        determines the rate of integration based on current and prior values.  All elements are between 0 and 1
+        (0 = no change; 1 = instantaneous change). If it has a single element, it applies to all elements of
+        `variable <Integrator.variable>`;  if it has more than n array, each element applies to the corresponding
+        element of `variable <Integrator.variable>`.
 
-    weighting : float : default 0.0
-        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+    weighting : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
+        specifies type of integration:
+            * **CONSTANT**: `old_value <Integrator.old_value>` + `rate <Integrator.rate>` + `noise <Integrator.noise>`
+              (ignores `variable <Integrator.variable>`);
+            * **SIMPLE**: `old_value <Integrator.old_value>` + `rate <Integrator.rate>` *
+              `variable <variable.Integrator.variable>` + `noise <Integrator.noise>`;
+            * **ADAPTIVE**: (1-`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
+              (`rate <Integrator.rate>` * `old_value <Integrator.old_value>`) + `noise <Integrator.noise>`
+              (`Weiner filter <https://en.wikipedia.org/wiki/Wiener_filter>`_ or
+              `Delta rule <https://en.wikipedia.org/wiki/Delta_rule>`_);
+            * **DIFFUSION**: `old_value <Integrator.old_value>` +
+              (`rate <Integrator.rate>` * `old_value` * `time_step_size <Integrator.time_step_size>`) +
+              √(`time_step_size <Integrator.time_step_size>` * `noise <Integrator.noise>` * Gaussian(0,1))
+              (`Drift Diffusion Model
+              <https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model>`_).
 
-    noise : float : default 0.0
-        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+    noise : float, list or 1d np.array
+        specifies random value to be added in each call to `function <Integrator.function>`.
+        If it is a list or array, it must be the same length as `variable <Integrator.variable>` and all elements
+        must be floats between 0 and 1 (see `noise <Integrator.rate>` for details).
 
-    time_step_size : float : default 0.0
-        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+    time_step_size : float
+        determines the timing precision of the integration process when `weighting <Integrator.weighting>` is set to
+        DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
-    initializer : float : default 0.0
-        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+    initializer : float, list or 1d np.array
+        determines the starting value for integration (i.e., the value to which `old_value <Integrator.old_value>`
+        is set.  If it is assigned as a `runtime_param <LINK>` it resets `old_value <Integrator.old_value>` to the
+        specified value. <Integrator.variable>` (see `initializer <Integrator.initializer>` for details).
 
-    old_value
+    old_value : 1d np.array : default variableClassDefault
+        stores previous value with `variable <Integrator.variable>` is integrated.
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -2603,8 +2614,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """
-
-    # FIX: MOVE INITIATLIZER TO ARGUMENT
 
     componentName = INTEGRATOR_FUNCTION
 
@@ -2654,7 +2663,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
-        # MODIFIED 11/22/16 NEW:
         # Handle list or array for rate specification
         rate = request_set[RATE]
         if isinstance(rate, (list, np.ndarray)):
@@ -2680,7 +2688,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                         format(len(rate), rate, self.name,np.array(self.variable).size, self.variable))
 
             self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
-        # MODIFIED 11/22/16 END
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -2713,21 +2720,34 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         except KeyError:
             pass
 
-
-    # def function(self, old_value, new_value, param_list=NotImplemented):
-
     def function(self,
                 variable=None,
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Integrator function
+        """
+        Return: some fraction of `variable <Linear.slope>` combined with some fraction of `old_value
+        <Integrator.old_value>` (see `weighting <Integrator.weighting>`).
 
-        :var variable: (list) - old_value and new_value (default: [0, 0]:
-        :parameter params: (dict) with entries specifying:
-                        RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
-                        WEIGHTING: Integrator.Weightings - type of weighting (default = CONSTANT)
-        :return number:
+        Arguments
+        ---------
+
+        variable : number, list or np.array : default variableClassDefault
+           a single value or array to be transformed.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        updated value of integral : 2d np.array
+
         """
 
 # FIX:  CONVERT TO NP?
