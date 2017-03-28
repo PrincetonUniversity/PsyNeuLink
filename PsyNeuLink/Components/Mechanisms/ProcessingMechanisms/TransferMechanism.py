@@ -66,9 +66,9 @@ parameters (in addition to those specified for the function):
 
     * `noise <TransferMechanism.noise>`: applied element-wise to the input before transforming it.
     ..
-    * `time_constant <TransferMechanism.time_constant>`: if `time_scale` is :keyword:`TimeScale.TIME_STEP`, the input is exponentially
-      time-averaged before transforming it (higher value specifies faster time_constant); if `time_scale` is
-      :keyword:`TimeScale.TRIAL`, `time_constant <TransferMechanism.time_constant>` is ignored.
+    * `time_constant <TransferMechanism.time_constant>`: if `time_scale` is :keyword:`TimeScale.TIME_STEP`,
+      the input is exponentially time-averaged before transforming it (higher value specifies faster rate);
+      if `time_scale` is :keyword:`TimeScale.TRIAL`, `time_constant <TransferMechanism.time_constant>` is ignored.
     ..
     * `range <TransferMechanism.range>`: caps all elements of the `function <TransferMechanism.function>` result by
       the lower and upper values specified by range.
