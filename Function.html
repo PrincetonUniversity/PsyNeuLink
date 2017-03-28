@@ -398,7 +398,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="DDM.html#DDM.DDM.function" title="DDM.DDM.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -1197,51 +1197,85 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.Integrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate: &lt;function parameter_spec at 0x1099b99d8&gt; = 1.0</em>, <em>weighting: &lt;typecheck.tc_predicates.enum object at 0x109cb0978&gt; = 'constant'</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params: &lt;typecheck.framework.optional object at 0x109cb0630&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x109953620&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method</p>
-<dl class="docutils">
-<dt>Initialization arguments:</dt>
-<dd><ul class="first last">
-<li><p class="first">variable: new input value, to be combined with old value at rate and using method specified by params</p>
-</li>
-<li><dl class="first docutils">
-<dt>params (dict): specifying:</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)</dt>
-<dd><ul class="first simple">
-<li>must be same type and format as variable</li>
-<li>can be specified as a runtime parameter, which resets oldValue to one specified</li>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate=1.0</em>, <em>weighting=CONSTANT</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs:is_pref_set=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
+<dd><p id="integrator">Integrate current value of <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> with its prior value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable_default</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be integrated</li>
+<li><strong>rate</strong> (<em>float : default 1.0</em>) &#8211; specifies a value by which to multiply <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>weighting</strong> (<em>CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : CONSTANT</em>) &#8211; specifies a value to add to each element of <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after applying <a class="reference internal" href="#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>.</li>
+<li><strong>noise</strong> (<em>float : default 0.0</em>) &#8211; specifies a value to add to each element of <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after applying <a class="reference internal" href="#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>.</li>
+<li><strong>time_step_size</strong> (<em>float : default 0.0</em>) &#8211; specifies a value to add to each element of <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after applying <a class="reference internal" href="#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>.</li>
+<li><strong>initializer</strong> (<em>float : default 0.0</em>) &#8211; specifies a value to add to each element of <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after applying <a class="reference internal" href="#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<em>Component</em>) &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
 </ul>
-<p class="last">Note: self.oldValue stores previous value with which new value is integrated</p>
-</dd>
-</dl>
-</li>
-<li><p class="first">RATE (value): rate of accumulation based on weighting of new vs. old value (default: 1)</p>
-</li>
-<li><dl class="first docutils">
-<dt>WEIGHTING (Weightings Enum): method of accumulation (default: CONSTANT):</dt>
-<dd><p class="first">CONSTANT &#8211; returns old_value incremented by rate parameter (ignores input) with optional noise
-SIMPLE&nbsp;&#8211; returns old_value incremented by rate * new_value with optional noise
-ADAPTIVE &#8211; returns rate-weighted average of old and new values  (Delta rule, Wiener filter) with optional noise</p>
-<blockquote>
-<div><p>rate = 0:  no change (returns old_value)
-rate 1:    instantaneous change (returns new_value)</p>
-</div></blockquote>
-<p class="last">DIFFUSION &#8211; returns old_value incremented by drift_rate * old_value * time_step_size and the standard DDM noise distribution</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-<p>Class attributes:
-- oldValue (value): stores previous value with which value provided in variable is integrated</p>
-<p>Integrator.function returns scalar result</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.Integrator.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Function.Integrator.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number or np.array</em> &#8211; contains value to be transformed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Integrator.rate">
+<code class="descname">rate</code><a class="headerlink" href="#Function.Integrator.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; specifies a value by which to multiply <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Integrator.weighting">
+<code class="descname">weighting</code><a class="headerlink" href="#Function.Integrator.weighting" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> &#8211; specifies a value to add to each element of <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after applying <a class="reference internal" href="#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Integrator.noise">
+<code class="descname">noise</code><a class="headerlink" href="#Function.Integrator.noise" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> &#8211; specifies a value to add to each element of <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after applying <a class="reference internal" href="#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Integrator.time_step_size">
+<code class="descname">time_step_size</code><a class="headerlink" href="#Function.Integrator.time_step_size" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> &#8211; specifies a value to add to each element of <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after applying <a class="reference internal" href="#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Integrator.initializer">
+<code class="descname">initializer</code><a class="headerlink" href="#Function.Integrator.initializer" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> &#8211; specifies a value to add to each element of <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after applying <a class="reference internal" href="#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Integrator.old_value">
+<code class="descname">old_value</code><a class="headerlink" href="#Function.Integrator.old_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Integrator.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.Integrator.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Integrator.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.Integrator.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Integrator.prefs" title="Function.Integrator.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="Function.Integrator.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator.function" title="Permalink to this definition">¶</a></dt>
@@ -1250,7 +1284,7 @@ rate 1:    instantaneous change (returns new_value)</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.Reinforcement.variable" title="Function.Reinforcement.variable"><strong>variable</strong></a> &#8211; (list) - old_value and new_value (default: [0, 0]:</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.UserDefinedFunction.variable" title="Function.UserDefinedFunction.variable"><strong>variable</strong></a> &#8211; (list) - old_value and new_value (default: [0, 0]:</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
@@ -1266,7 +1300,7 @@ WEIGHTING: Integrator.Weightings - type of weighting (default = CONSTANT)</td>
 
 <dl class="class">
 <dt id="Function.BogaczEtAl">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x1099b99d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x1099b99d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x1099b99d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x1099b99d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x1099b99d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x109953620&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x1099a69d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x1099a69d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x1099a69d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x1099a69d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x1099a69d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x1047c7598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to DDM process and return mean response time and accuracy.</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -1312,7 +1346,7 @@ tasks.  Psychological review, 113(4), 700. (<a class="reference external" href="
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.Reinforcement.variable" title="Function.Reinforcement.variable"><strong>variable</strong></a> &#8211; (list)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.UserDefinedFunction.variable" title="Function.UserDefinedFunction.variable"><strong>variable</strong></a> &#8211; (list)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 drift_rate...</td>
@@ -1325,7 +1359,7 @@ drift_rate...</td>
 
 <dl class="class">
 <dt id="Function.NavarroAndFuss">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x1099b99d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x1099b99d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x1099b99d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x1099b99d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x1099b99d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x109953620&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x1099a69d8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x1099a69d8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x1099a69d8&gt; = 1.0, noise: &lt;function parameter_spec at 0x1099a69d8&gt; = 0.5, t0: &lt;function parameter_spec at 0x1099a69d8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x1047c7598&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute analytic solution to distribution of DDM responses (mean and variance of response time and accuracy).</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -1371,7 +1405,7 @@ Wiener diffusion models.&#8221; Journal of Mathematical Psychology 53.4 (2009): 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.Reinforcement.variable" title="Function.Reinforcement.variable"><strong>variable</strong></a> &#8211; (list)</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.UserDefinedFunction.variable" title="Function.UserDefinedFunction.variable"><strong>variable</strong></a> &#8211; (list)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 drift_rate...</td>
@@ -1387,7 +1421,7 @@ drift_rate...</td>
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="#Function.Reinforcement.variable" title="Function.Reinforcement.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="#Function.UserDefinedFunction.variable" title="Function.UserDefinedFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
