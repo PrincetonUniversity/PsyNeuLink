@@ -366,7 +366,7 @@ list or 1d np.array that must be compatible with the format of the first item of
 <li><strong>enable_controller</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; specifies whether the <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is executed during system execution.</li>
 <li><strong>monitor_for_control</strong> (<em>list of OutputState objects or specifications : default None</em>) &#8211; specifies the outputStates of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms in the system to be monitored by its <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>
 (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for specifying the <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> argument).</li>
-<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all mechanisms in the system (see <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_rate" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
+<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all mechanisms in the system (see <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learning_rate" title="LearningProjection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
 information).</li>
 <li><strong>targets</strong> (<em>Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes</em>) &#8211; the values assigned to the TARGET input of each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism in the system (listed in its
 <a class="reference internal" href="Process.html#Process.Process_Base.targetMechanisms" title="Process.Process_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanisms</span></code></a> attribute).  There must be the same number of items as there are <a class="reference internal" href="Process.html#Process.Process_Base.targetMechanisms" title="Process.Process_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanisms</span></code></a>,
@@ -723,17 +723,53 @@ each execution.</p>
 
 <dl class="method">
 <dt id="System.System_Base.show_graph">
-<code class="descname">show_graph</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='BT'</em>, <em>projections='edges'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shows a graph of a system&#8217;s mechanisms and projections.
-Arguments
-output_fmt : output format can be either &#8216;pdf&#8217; or &#8216;jupyter&#8217;</p>
-<blockquote>
-<div>pdf will actually render and open a pdf
-jupyter will just return the graph to the output stream, ideal for working in jupyter notebooks</div></blockquote>
-<dl class="docutils">
-<dt>direction</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">can be used to set rank direction of graph</span><dd>possible inputs are BT, TB, LR, and RL</dd>
-</dl>
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='BT'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>output_fmt</strong> (<em>'jupyter' or 'pdf'</em>) &#8211; pdf to generate and open a pdf with the visualization,
+jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)</li>
+<li><strong>direction</strong> (<em>'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left</em>) &#8211; rank direction of graph</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Graphviz graph object if output_fmt is &#8216;jupyter&#8217;</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="System.System_Base.show_graph_with_learning">
+<code class="descname">show_graph_with_learning</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='BT'</em>, <em>learning_color='blue'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph_with_learning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>output_fmt</strong> (<em>'jupyter' or 'pdf'</em>) &#8211; pdf to generate and open a pdf with the visualization,
+jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)</li>
+<li><strong>direction</strong> (<em>'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left</em>) &#8211; rank direction of graph</li>
+<li><strong>learning_color</strong> (<em>default is 'blue', set to 'black' to turn off</em>) &#8211; determines color with which to highlight learning machinery</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Graphviz graph object if output_fmt is &#8216;jupyter&#8217;</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
