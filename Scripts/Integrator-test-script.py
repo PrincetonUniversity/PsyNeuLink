@@ -99,7 +99,7 @@ try:
                            default_input_value = [0,0],
                            function=Logistic(gain=0.1, bias=0.2),
                            noise=5,
-                           rate = 0.1,
+                           time_constant = 0.1,
                            time_scale=TimeScale.TIME_STEP
                            )
     my_Transfer_Test.execute([1,2])
@@ -115,7 +115,7 @@ my_Transfer_Test2 = TransferMechanism(name='my_Transfer_Test2',
                         default_input_value = [0,0],
                         function=Logistic(gain=0.1, bias=0.2),
                         noise=5.0,
-                        rate = 0.1,
+                        time_constant = 0.1,
                         time_scale=TimeScale.TIME_STEP
                         )
 my_Transfer_Test2.execute([1,2])
@@ -130,7 +130,7 @@ print("Transfer Test #3: Execute Transfer with noise not specified")
 my_Transfer_Test3 = TransferMechanism(name='my_Transfer_Test3',
                         default_input_value = [0,0,0,0,0],
                         function=Logistic(gain=0.1, bias=0.2),
-                        rate = 0.2,
+                        time_constant = 0.2,
                         time_scale=TimeScale.TIME_STEP
                         )
 my_Transfer_Test3.execute([10,20,30,40,50])
@@ -147,7 +147,7 @@ my_Transfer = TransferMechanism(name='my_Transfer',
                        default_input_value = [0,0],
                        function=Logistic(gain=0.1, bias=0.2),
                        noise=WaldDist(scale = 2.0, mean = 2.0).function,
-                       rate = 0.1,
+                       time_constant = 0.1,
                        time_scale=TimeScale.TIME_STEP
                        )
 my_Transfer.execute([1,1])
@@ -164,7 +164,7 @@ my_Transfer2 = TransferMechanism(name='my_Transfer2',
                        default_input_value = [0,0],
                        function=Logistic(gain=0.1, bias=0.2),
                        noise=GammaDist(scale = 1.0, shape = 1.0).function,
-                       rate = 0.1,
+                       time_constant = 0.1,
                        time_scale=TimeScale.TIME_STEP
                        )
 my_Transfer2.execute([1,1])
@@ -180,7 +180,7 @@ my_Transfer3 = TransferMechanism(name='my_Transfer3',
                        default_input_value = [0,0],
                        function=Logistic(gain=0.1, bias=0.2),
                        noise=UniformDist(low = 2.0, high = 3.0).function,
-                       rate = 0.1,
+                       time_constant = 0.1,
                        time_scale=TimeScale.TIME_STEP
                        )
 my_Transfer3.execute([1,1])
@@ -196,7 +196,7 @@ my_Transfer4 = TransferMechanism(name='my_Transfer4',
                        default_input_value = [0,0],
                        function=Logistic(gain=0.1, bias=0.2),
                        noise=ExponentialDist(beta=1.0).function,
-                       rate = 0.1,
+                       time_constant = 0.1,
                        time_scale=TimeScale.TIME_STEP
                        )
 my_Transfer4.execute([1,1])
@@ -212,7 +212,7 @@ my_Transfer5 = TransferMechanism(name='my_Transfer5',
                        default_input_value = [0,0],
                        function=Logistic(gain=0.1, bias=0.2),
                        noise=NormalDist(mean=1.0, standard_dev = 2.0).function,
-                       rate = 0.1,
+                       time_constant = 0.1,
                        time_scale=TimeScale.TIME_STEP
                        )
 my_Transfer5.execute([1,1])
