@@ -2514,7 +2514,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
     .. _Integrator:
 
-    Integrate current value of `variable <Integrator.variable>` with prior values
+    Integrate current value of `variable <Integrator.variable>` with its prior value.
 
     COMMENT:
         Initialization arguments:
@@ -2540,13 +2540,13 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     Arguments
     ---------
 
-    variable : number or np.array : default variableClassDefault
-        specifies a template for the value to be transformed.
+    variable_default : numer, list or np.array : default variableClassDefault
+        specifies a template for the value to be integrated
 
     rate : float : default 1.0
         specifies a value by which to multiply `variable <Linear.variable>`.
 
-    weighting : float : default 0.0
+    weighting : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : CONSTANT
         specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
 
     noise : float : default 0.0
