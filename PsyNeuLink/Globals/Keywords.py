@@ -530,7 +530,7 @@ MAX_INDICATOR = 'max_indicator'
 PROB = 'prob'
 MUTUAL_ENTROPY = 'mutual entropy'
 
-kwInitializer = 'initializer'
+INITIALIZER = 'initializer'
 WEIGHTS = "weights"
 EXPONENTS = "exponents"
 OPERATION = "operation"

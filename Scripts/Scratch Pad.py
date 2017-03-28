@@ -24,10 +24,9 @@ from PsyNeuLink.Components.Functions.Function import Linear
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 
 
-#region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-print = Linear(variable=[[1,1],[2,2]])
-
+# #region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# print = Linear(variable=[[1,1],[2,2]])
 
 # #region TEST ASSIGNMENT OF PROJECTION TO PARAMETER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
