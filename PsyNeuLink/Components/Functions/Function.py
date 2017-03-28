@@ -2502,6 +2502,17 @@ class IntegratorFunction(Function_Base):
 # FIX: IF RATE HAS TO BE BETWEEN 0 AND 1, VALIDATE_VARIABLE ACCORDINGLY
 # SEARCH & REPLACE: old_value -> previous_value
 
+# • why does integrator return a 2d array?
+# • does rate have to be between 0 and 1 (if so, validate_variable)
+# • does rate = 0 and rate = 1 have the same meaning for all weightings?
+# • should we change "weighting" to "type"??
+# • are rate and noise converted to 1d np.array?  If not, correct docstring
+# • can noise and initializer be an array?  If so, validated in validate_param?
+# • time_step_size?? (vs rate??)
+# • can noise be a function now?
+# • check documentation I've written
+
+
 class Integrator(IntegratorFunction): # --------------------------------------------------------------------------------------
     """
     Integrator(                 \
