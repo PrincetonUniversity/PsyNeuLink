@@ -28,7 +28,6 @@ from PsyNeuLink.Components.Functions.Function import Linear
 #
 # print = Linear(variable=[[1,1],[2,2]])
 
-
 # #region TEST ASSIGNMENT OF PROJECTION TO PARAMETER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # Decision = DDM(function=BogaczEtAl(drift_rate=ControlProjection),
