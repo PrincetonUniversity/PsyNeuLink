@@ -53,6 +53,7 @@ def show_weights():
            format(np.nonzero(action_selection.outputState.value)[0][0],
            action_selection.outputState.value[np.nonzero(action_selection.outputState.value)][0]))
 
+
 # p.run(num_executions=10,
 #       inputs=[[[1, 1, 1]]],
 #       # inputs=[ [ [1, 1, 1] ],[ [.2, 1, .2] ]],
