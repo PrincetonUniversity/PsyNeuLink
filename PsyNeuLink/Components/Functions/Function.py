@@ -2540,7 +2540,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     Arguments
     ---------
 
-    variable_default : numer, list or np.array : default variableClassDefault
+    variable_default : number, list or np.array : default variableClassDefault
         specifies a template for the value to be integrated
 
     rate : float : default 1.0
@@ -2769,7 +2769,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not INITIALIZING in context:
+        if not context or not INITIALIZING in context:
             self.old_value = value
 
         return value
