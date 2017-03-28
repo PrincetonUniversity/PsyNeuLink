@@ -754,6 +754,96 @@ Reward prediction weights:
 
 Action selected:  1; predicted reward: 3.3841729843749997
 
+
+**** TRIAL:  0
+Reward prediction weights: 
+ [[ 1.          0.          0.        ]
+ [ 0.          3.71496434  0.        ]
+ [ 0.          0.          2.283625  ]]
+
+Action selected:  2; predicted reward: 2.283625
+
+
+**** TRIAL:  1
+Reward prediction weights: 
+ [[ 1.          0.          0.        ]
+ [ 0.          3.71496434  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  1; predicted reward: 3.7149643351562496
+
+
+**** TRIAL:  2
+Reward prediction weights: 
+ [[ 1.          0.          0.        ]
+ [ 0.          4.02921612  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  1; predicted reward: 4.029216118398437
+
+
+**** TRIAL:  3
+Reward prediction weights: 
+ [[ 1.          0.          0.        ]
+ [ 0.          4.32775531  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  0; predicted reward: 1.0
+
+
+**** TRIAL:  4
+Reward prediction weights: 
+ [[ 1.45        0.          0.        ]
+ [ 0.          4.32775531  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  1; predicted reward: 4.327755312478515
+
+
+**** TRIAL:  5
+Reward prediction weights: 
+ [[ 1.45        0.          0.        ]
+ [ 0.          4.61136755  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  1; predicted reward: 4.611367546854589
+
+
+**** TRIAL:  6
+Reward prediction weights: 
+ [[ 1.45        0.          0.        ]
+ [ 0.          4.88079917  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  1; predicted reward: 4.880799169511859
+
+
+**** TRIAL:  7
+Reward prediction weights: 
+ [[ 1.45        0.          0.        ]
+ [ 0.          5.13675921  0.        ]
+ [ 0.          0.          2.66944375]]
+
+Action selected:  2; predicted reward: 2.6694437499999997
+
+
+**** TRIAL:  8
+Reward prediction weights: 
+ [[ 1.45        0.          0.        ]
+ [ 0.          5.13675921  0.        ]
+ [ 0.          0.          3.03597156]]
+
+Action selected:  1; predicted reward: 5.136759211036266
+
+
+**** TRIAL:  9
+Reward prediction weights: 
+ [[ 1.45        0.          0.        ]
+ [ 0.          5.37992125  0.        ]
+ [ 0.          0.          3.03597156]]
+
+Action selected:  1; predicted reward: 5.379921250484453
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
@@ -1311,7 +1401,7 @@ RUNNING Mixed NN & DDM script.py
 - output: -1.0 2.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  -0.512, 1.43, 0.263, 0.711, -0.111
+- input:  0.45, 0.778, 1.32, 1.34, 0.101
 - params:
 	function: Logistic
 		bias: 0
@@ -1319,10 +1409,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.375 0.807 0.565 0.671 0.472
+- output: 0.611 0.685 0.789 0.793 0.525
 
 'My_DDM-2' mechanism executed:
-- input:  2.89
+- input:  3.4
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1361,7 +1451,7 @@ RUNNING Mixed NN & DDM script.py
 - output: 2.0 3.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  2.03, 3.76, 3.13, 1.48, 2.07
+- input:  3.38, 2.76, 3.97, 2.08, 2.31
 - params:
 	function: Logistic
 		bias: 0
@@ -1369,10 +1459,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.884 0.977 0.958 0.815 0.888
+- output: 0.967 0.941 0.981 0.889 0.91
 
 'My_DDM-2' mechanism executed:
-- input:  4.52
+- input:  4.69
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1411,7 +1501,7 @@ RUNNING Mixed NN & DDM script.py
 - output: 5.0 5.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  4.71, 7.03, 6.51, 2.66, 4.52
+- input:  6.93, 5.37, 7.56, 3.5, 4.89
 - params:
 	function: Logistic
 		bias: 0
@@ -1419,10 +1509,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.991 0.999 0.999 0.935 0.989
+- output: 0.999 0.995 0.999 0.971 0.993
 
 'My_DDM-2' mechanism executed:
-- input:  4.91
+- input:  4.96
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1750,4 +1840,3 @@ RUNNING Documentation Examples Script.py
 [ 0.65077768]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
