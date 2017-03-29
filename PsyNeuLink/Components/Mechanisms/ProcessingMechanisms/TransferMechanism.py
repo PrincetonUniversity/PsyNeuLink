@@ -379,7 +379,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   range=range,
                                                   params=params)
 
-        self.integrator_function = Integrator(weighting=ADAPTIVE, rate=self.time_constant, noise = self.noise)
+        self.integrator_function = Integrator(integration_type=ADAPTIVE, rate=self.time_constant, noise = self.noise)
 
         if default_input_value is None:
             default_input_value = Transfer_DEFAULT_BIAS
