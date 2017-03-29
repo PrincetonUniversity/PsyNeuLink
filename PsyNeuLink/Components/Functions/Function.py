@@ -994,7 +994,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
     .. _LinearCombination:
 
-    Linearly combine arrays of values with optional weighting, exponentiation, scaling and/or offset.
+    Linearly combine arrays of values with optional integration_type, exponentiation, scaling and/or offset.
 
     Combines the arrays in the items of the `variable <LinearCombination.variable>` argument.  Each array can be
     individually weighted and/or exponentiated; they can combined additively or multiplicatively; and the resulting
@@ -1003,7 +1003,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
     COMMENT:
         Description:
             Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by OPERATION
-            Use optional WEIGHTING argument to weight contribution of each array to the combination
+            Use optional INTEGRATION_TYPE argument to weight contribution of each array to the combination
             Use optional SCALE and OFFSET parameters to linearly transform the resulting array
             Returns a list or 1D array of the same length as the individual ones in the variable
 
@@ -2507,7 +2507,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     Integrator(                 \
         variable_default=None,  \
         rate=1.0,               \
-        weighting=CONSTANT,     \
+        integration_type=CONSTANT,     \
         noise=0.0,              \
         time_step_size=1.0,     \
         params=None,            \
@@ -2530,8 +2530,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         `variable <Integrator.variable>` and all elements must be floats between 0 and 1
         (see `rate <Integrator.rate>` for details).
 
-    weighting : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
-        specifies type of integration (see `weighting <Integrator.weighting>` for details).
+    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
+        specifies type of integration (see `integration_type <Integrator.integration_type>` for details).
 
     noise : float, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <Integrator.function>`.
@@ -2539,7 +2539,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         must be floats between 0 and 1 (see `noise <Integrator.rate>` for details).
 
     time_step_size : float : default 0.0
-        determines the timing precision of the integration process when `weighting <Integrator.weighting>` is set to
+        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
         DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
 
     initializer float, list or 1d np.array : default 0.0
@@ -2572,7 +2572,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         `variable <Integrator.variable>`;  if it has more than n array, each element applies to the corresponding
         element of `variable <Integrator.variable>`.
 
-    weighting : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
+    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
         specifies type of integration:
             * **CONSTANT**: `old_value <Integrator.old_value>` + `rate <Integrator.rate>` + `noise <Integrator.noise>`
               (ignores `variable <Integrator.variable>`);
@@ -2594,7 +2594,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         must be floats between 0 and 1 (see `noise <Integrator.rate>` for details).
 
     time_step_size : float
-        determines the timing precision of the integration process when `weighting <Integrator.weighting>` is set to
+        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
         DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
     initializer : float, list or 1d np.array
@@ -2627,7 +2627,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     def __init__(self,
                  variable_default=None,
                  rate:parameter_spec=1.0,
-                 weighting:tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION)=CONSTANT,
+                 integration_type:tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION)=CONSTANT,
                  noise=0.0,
                  time_step_size = 1.0,
                  initializer=variableClassDefault,
@@ -2639,7 +2639,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  weighting=weighting,
+                                                  integration_type=integration_type,
                                                   time_step_size=time_step_size,
                                                   initializer=initializer,
                                                   params=params,
@@ -2727,7 +2727,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                 context=None):
         """
         Return: some fraction of `variable <Linear.slope>` combined with some fraction of `old_value
-        <Integrator.old_value>` (see `weighting <Integrator.weighting>`).
+        <Integrator.old_value>` (see `integration_type <Integrator.integration_type>`).
 
         Arguments
         ---------
@@ -2756,7 +2756,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        weighting = self.paramsCurrent[WEIGHTING]
+        integration_type = self.paramsCurrent[INTEGRATION_TYPE]
 
         time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
 
@@ -2774,14 +2774,14 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         old_value = np.atleast_2d(old_value)
         new_value = self.variable
 
-        # Compute function based on weighting param
-        if weighting is CONSTANT:
+        # Compute function based on integration_type param
+        if integration_type is CONSTANT:
             value = old_value + rate + noise 
-        elif weighting is SIMPLE:
+        elif integration_type is SIMPLE:
             value = old_value + (new_value * rate) + noise 
-        elif weighting is ADAPTIVE:
+        elif integration_type is ADAPTIVE:
             value = (1-rate)*old_value + rate*new_value + noise 
-        elif weighting is DIFFUSION: 
+        elif integration_type is DIFFUSION:
             value = old_value + rate*old_value*time_step_size + np.sqrt(time_step_size*noise)*np.random.normal()
         else:
             value = new_value
@@ -2795,7 +2795,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         return value
 
 class DDMIntegrator(Integrator): # --------------------------------------------------------------------------------------
-    """Calculate an accumulated value for input variable using a the DDM accumulation method. The DDMIntegrator only allows for 'DIFFUSION' weighting, and requires the noise parameter to be a float, as it is used to construct the standard DDM Gaussian.  
+    """Calculate an accumulated value for input variable using a the DDM accumulation method. The DDMIntegrator only allows for 'DIFFUSION' integration_type, and requires the noise parameter to be a float, as it is used to construct the standard DDM Gaussian.
 
     Initialization arguments:
      - params (dict): specifying:
@@ -2818,7 +2818,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
     @tc.typecheck
     def __init__(self,
                  variable_default=None,
-                 weighting=DIFFUSION,
+                 integration_type=DIFFUSION,
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
                  noise=0.5,
@@ -2832,7 +2832,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
-                                                 weighting=weighting,
+                                                 integration_type=integration_type,
                                                  params=params,
                                                  noise=noise,
                                                  rate=rate,
@@ -2858,10 +2858,10 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
             raise FunctionError("noise parameter ({}) for {} must be a float.".
                                 format(noise, self.name))
 
-        weighting = target_set[WEIGHTING]
-        if (weighting != "diffusion"):
-            raise FunctionError("weighting parameter ({}) for {} must be diffusion. For alternate methods of accumulation, use the Integrator function".
-                                format(weighting, self.name))
+        integration_type = target_set[INTEGRATION_TYPE]
+        if (integration_type != "diffusion"):
+            raise FunctionError("integration_type parameter ({}) for {} must be diffusion. For alternate methods of accumulation, use the Integrator function".
+                                format(integration_type, self.name))
 
 
     

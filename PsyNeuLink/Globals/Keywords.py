@@ -521,7 +521,7 @@ BETA = 'beta'
 
 SHAPE = 'shape'
 
-WEIGHTING = "weighting"
+INTEGRATION_TYPE = "integration_type"
 
 OUTPUT_TYPE = 'output'
 ALL = 'all'
@@ -538,7 +538,7 @@ OFFSET = "offset"
 LINEAR = 'linear'
 CONSTANT = 'constant'
 SIMPLE = 'scaled'
-ADAPTIVE = 'apaptive'
+ADAPTIVE = 'adaptive'
 DIFFUSION = 'diffusion'
 
 #endregion
