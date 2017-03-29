@@ -2526,21 +2526,27 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         specifies a template for the value to be integrated
 
     rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <Integrator.variable>` and all elements must be floats between 0 and 1
-        (see `rate <Integrator.rate>` for details).
+        specifies the rate of integration. Precise definition varies with type of integration (see `integration_type
+        <Integrator.integration_type>` for details).  If it is a list or array, it must be the same length as
+        `variable <Integrator.variable>`.
 
     integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
         specifies type of integration (see `integration_type <Integrator.integration_type>` for details).
 
-    noise : float, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <Integrator.function>`.
-        If it is a list or array, it must be the same length as `variable <Integrator.variable>` and all elements
-        must be floats between 0 and 1 (see `noise <Integrator.rate>` for details).
+    noise : float, function, list, or 1d np.array : default 0.0
+        specifies value to be added in each call to `function <Integrator.function>`. Note that if noise is specified as
+        a float or as a function with a fixed output  (or a list or np.array of these), then the noise will simply be an
+        offset that remains the same across all executions. To generate random noise, select a probability distribution
+        function (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value
+        on each execution according to its distribution. If noise is specified as a list or array of floats or functions,
+        it must be the same length as `variable <Integrator.variable>`, and all noise elements will be applied to their
+        corresponding variable elements. If noise is specified as a single float or function, while variable is a list or
+        array, noise will be applied to each variable element. In the case of a noise function, this means that the
+        function will be executed separately for each variable element.
 
     time_step_size : float : default 0.0
         determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
-        DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
+        DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details).
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as `variable
