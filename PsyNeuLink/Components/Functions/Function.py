@@ -3147,7 +3147,19 @@ class DistributionFunction(Function_Base):
 
 class NormalDist(DistributionFunction):
 
-    """Return a random sample from a normal distribution.
+    """
+    NormalDist(                \
+         variable_default, \
+         mean = 0.0,        \
+         standard_dev = 1.0,    \
+         params=None,      \
+         owner=None,       \
+         prefs=None        \
+         )
+
+    .. _NormalDist:
+
+    Return a random sample from a normal distribution.
 
     Description:
         Draws samples from a normal distribution of the specified mean and variance using numpy.random.normal
@@ -3204,7 +3216,19 @@ class NormalDist(DistributionFunction):
         return result
 
 class ExponentialDist(DistributionFunction):
-    """Return a random sample from an exponential distribution.
+    """
+
+    ExponentialDist(                \
+         variable_default, \
+         beta = 1.0,        \
+         params=None,      \
+         owner=None,       \
+         prefs=None        \
+         )
+
+    .. _Exponential:
+
+    Return a random sample from an exponential distribution.
 
     Description:
         Draws samples from an exponential distribution of the specified beta using numpy.random.exponential 
@@ -3256,7 +3280,20 @@ class ExponentialDist(DistributionFunction):
         return result
 
 class UniformDist(DistributionFunction):
-    """Return a random sample from a uniform distribution.
+    """
+
+    UniformDist(                \
+         variable_default, \
+         low = 0.0          \
+         high = 1.0,        \
+         params=None,      \
+         owner=None,       \
+         prefs=None        \
+         )
+
+    .. _Uniform:
+
+    Return a random sample from a uniform distribution.
 
     Description:
         Draws samples from a uniform distribution of the specified low and high values using numpy.random.uniform
@@ -3312,7 +3349,20 @@ class UniformDist(DistributionFunction):
         return result
 
 class GammaDist(DistributionFunction):
-    """Return a random sample from a gamma distribution.
+    """
+
+    GammaDist(                \
+         variable_default, \
+         scale = 1.0,        \
+         shape = 1.0,       \
+         params=None,      \
+         owner=None,       \
+         prefs=None        \
+         )
+
+    .. _Gamma:
+
+    Return a random sample from a gamma distribution.
 
     Description:
         Draws samples from a gamma distribution of the specified mean and variance using numpy.random.gamma
@@ -3368,7 +3418,21 @@ class GammaDist(DistributionFunction):
         return result
 
 class WaldDist(DistributionFunction):
-    """Return a random sample from a wald distribution.
+
+    """
+
+    WaldDist(                \
+         variable_default, \
+         scale = 1.0,        \
+         mean = 1.0,        \
+         params=None,      \
+         owner=None,       \
+         prefs=None        \
+         )
+
+    .. _Wald:
+
+    Return a random sample from a wald distribution.
 
     Description:
         Draws samples from a wald distribution of the specified mean and variance using numpy.random.wald
