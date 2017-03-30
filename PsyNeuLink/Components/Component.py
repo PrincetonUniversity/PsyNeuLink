@@ -731,8 +731,24 @@ class Component(object):
 
         # IMPLEMENTATION NOTE:  REFACTOR TO IMPLEMENT AS PROPERTIES, WITH GETTER AND SETTER METHODS
         #                       USE self.assign_param FOR SETTER
-        for arg in kwargs:
-            self.__setattr__(arg, kwargs[arg])
+
+        # # MODIFIED 3/30/17 OLD:
+        # for arg in kwargs:
+        #     self.__setattr__(arg, kwargs[arg])
+
+
+        # MODIFIED 3/30/17 NEW: [IMPLEMENT AUTO PROPERTY]
+        # QUESTION: SEEMS TO BE RETURNING PROPERTY RATHER THAN ITS VALUE??
+        # ERROR:
+        #    <class 'tuple'>: (<class 'typecheck.framework.InputParameterError'>, InputParameterError('__init__() has \
+        #    got an incompatible value for rate: <property object at 0x10b01fc28>',), None)
+        for arg_name, arg_value in kwargs.items():
+            # QUESTION: IF THE ATTRIBUTE EXISTS (I.E., THE BACKING FIELD IS ALREADY THERE) WILL IT LEAVE IT AS SUCH?
+            setattr(self, arg_name, make_property(arg_name, arg_value))
+            TEST = True
+
+        # MODIFIED 3/30/17 END
+
 
     def _check_args(self, variable, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params
@@ -1946,5 +1962,70 @@ class Component(object):
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
 
-
 COMPONENT_BASE_CLASS = Component
+
+# **********************************************************************************************************************
+
+# Autoprop Functions
+# per Bryn Keller
+
+defaults = {'foo':5, 'bar': ['hello', 'world']}
+
+docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
+        'bar': 'Bar none, the most important property'}
+
+
+# def make_property(name):
+def make_property(name, default_value):
+    backing_field = '_' + name
+
+    def getter(self):
+        if hasattr(self, backing_field):
+            return getattr(self, backing_field)
+        else:
+            # return defaults[name]
+            return default_value
+
+    def setter(self, val):
+        setattr(self, backing_field, val)
+
+    # QUESTION: THIS ASSIGNS, IN ONE STATEMENT, BOTH GETTER AND SETTER?
+    # Create the property
+    prop = property(getter).setter(setter)
+
+    # # Install some documentation
+    # prop.__doc__ = docs[name]
+    return prop
+
+
+# def autoprop(cls):
+#     for k, v in defaults.items():
+#         setattr(cls, k, make_property(k))
+#     return cls
+
+
+# Decorator automatically creates attributes for all params in user_params dict (by calling autoprop())
+# @autoprop
+# class Test:
+#     pass
+#
+# if __name__ == '__main__':
+#     t = Test()
+#     t2 = Test()
+#     print("Stored values in t", t.__dict__)
+#     print("Properties on t", dir(t))
+#     print("Check that default values are there by default")
+#     assert t.foo == 5
+#     assert t.bar == ['hello', 'world']
+#     print("Assign and check the assignment holds")
+#     t.foo = 20
+#     assert t.foo == 20
+#     print("Check that assignment on t didn't change the defaulting on t2 somehow")
+#     assert t2.foo == 5
+#     print("Check that changing the default changes the value on t2")
+#     defaults['foo'] = 27
+#     assert t2.foo == 27
+#     print("But t1 keeps the value it was assigned")
+#     assert t.foo == 20
+#     print(""""Note that 'help(Test.foo)' and help('Test.bar') will show
+#     the docs we installed are available in the help system""")
