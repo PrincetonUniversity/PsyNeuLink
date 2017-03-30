@@ -398,7 +398,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="#Function.UserDefinedFunction.function" title="Function.UserDefinedFunction.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="#Function.Reinforcement.function" title="Function.Reinforcement.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -1197,24 +1197,26 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.Integrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate=1.0</em>, <em>weighting=CONSTANT</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs:is_pref_set=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
-<dd><p id="integrator">Integrate current value of <code class="xref any docutils literal"><span class="pre">variable</span></code> with its prior value.</p>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate=1.0</em>, <em>weighting=CONSTANT</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
+<dd><p id="integrator">Integrate current value of <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> with its prior value.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable_default</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be integrated</li>
+<li><strong>variable_default</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+integrated.</li>
 <li><strong>rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the rate of integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> and all elements must be floats between 0 and 1
 (see <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
 <li><strong>weighting</strong> (<em>CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT</em>) &#8211; specifies type of integration (see <a class="reference internal" href="#Function.Integrator.weighting" title="Function.Integrator.weighting"><code class="xref any py py-attr docutils literal"><span class="pre">weighting</span></code></a> for details).</li>
 <li><strong>noise</strong> (<em>float, list or 1d np.array : default 0.0</em>) &#8211; specifies random value to be added in each call to <a class="reference internal" href="#Function.Integrator.function" title="Function.Integrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
-If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code> and all elements
-must be floats between 0 and 1 (see <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
+If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code> and all
+elements must be floats between 0 and 1.</li>
 <li><strong>time_step_size</strong> (<em>float : default 0.0</em>) &#8211; determines the timing precision of the integration process when <a class="reference internal" href="#Function.Integrator.weighting" title="Function.Integrator.weighting"><code class="xref any py py-attr docutils literal"><span class="pre">weighting</span></code></a> is set to
 DIFFUSION (see <a class="reference internal" href="#Function.Integrator.time_step_size" title="Function.Integrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for details.</li>
-<li><strong>float, list or 1d np.array</strong> (<a class="reference internal" href="#Function.Integrator.initializer" title="Function.Integrator.initializer"><em>initializer</em></a>) &#8211; specifies starting value for integration.  If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#Function.Integrator.initializer" title="Function.Integrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
+<li><strong>float, list or 1d np.array</strong> (<a class="reference internal" href="#Function.Integrator.initializer" title="Function.Integrator.initializer"><em>initializer</em></a>) &#8211; specifies starting value for integration.  If it is a list or array, it must be the same length as
+<code class="xref any docutils literal"><span class="pre">variable_default</span></code> (see <a class="reference internal" href="#Function.Integrator.initializer" title="Function.Integrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1227,10 +1229,10 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 </tbody>
 </table>
 <dl class="attribute">
-<dt id="Function.Integrator.variable_default">
-<code class="descname">variable_default</code><a class="headerlink" href="#Function.Integrator.variable_default" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.array</em> &#8211; current input value some portion of which (determined by <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> that will be
-added to prior value.</p>
+<dt id="Function.Integrator.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Function.Integrator.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number or np.array</em> &#8211; current input value some portion of which (determined by <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) that will be
+added to the prior value;  if it is an array, each element is independently integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1238,8 +1240,8 @@ added to prior value.</p>
 <code class="descname">rate</code><a class="headerlink" href="#Function.Integrator.rate" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>1d np.array</em> &#8211; determines the rate of integration based on current and prior values.  All elements are between 0 and 1
 (0 = no change; 1 = instantaneous change). If it has a single element, it applies to all elements of
-<code class="xref any docutils literal"><span class="pre">variable</span></code>;  if it has more than n array, each element applies to the corresponding
-element of <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+<a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if it has more than one element, each element applies to the
+corresponding element of <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1250,10 +1252,10 @@ element of <code class="xref any docutils literal"><span class="pre">variable</s
 <dt>specifies type of integration:</dt>
 <dd><ul class="first last simple">
 <li><strong>CONSTANT</strong>: <a class="reference internal" href="#Function.Integrator.old_value" title="Function.Integrator.old_value"><code class="xref any py py-attr docutils literal"><span class="pre">old_value</span></code></a> + <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> + <a class="reference internal" href="#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>
-(ignores <code class="xref any docutils literal"><span class="pre">variable</span></code>);</li>
+(ignores <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>);</li>
 <li><strong>SIMPLE</strong>: <a class="reference internal" href="#Function.Integrator.old_value" title="Function.Integrator.old_value"><code class="xref any py py-attr docutils literal"><span class="pre">old_value</span></code></a> + <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> *
 <code class="xref any docutils literal"><span class="pre">variable</span></code> + <a class="reference internal" href="#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>;</li>
-<li><strong>ADAPTIVE</strong>: (1-<a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) * <code class="xref any docutils literal"><span class="pre">variable</span></code> +
+<li><strong>ADAPTIVE</strong>: (1-<a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) * <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> +
 (<a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> * <a class="reference internal" href="#Function.Integrator.old_value" title="Function.Integrator.old_value"><code class="xref any py py-attr docutils literal"><span class="pre">old_value</span></code></a>) + <a class="reference internal" href="#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>
 (<a class="reference external" href="https://en.wikipedia.org/wiki/Wiener_filter">Weiner filter</a> or
 <a class="reference external" href="https://en.wikipedia.org/wiki/Delta_rule">Delta rule</a>);</li>
@@ -1269,9 +1271,7 @@ element of <code class="xref any docutils literal"><span class="pre">variable</s
 <dl class="attribute">
 <dt id="Function.Integrator.noise">
 <code class="descname">noise</code><a class="headerlink" href="#Function.Integrator.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, list or 1d np.array</em> &#8211; specifies random value to be added in each call to <a class="reference internal" href="#Function.Integrator.function" title="Function.Integrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
-If it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code> and all elements
-must be floats between 0 and 1 (see <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</p>
+<dd><p><em>float or 1d np.array</em> &#8211; specifies random value to be added in each call to <a class="reference internal" href="#Function.Integrator.function" title="Function.Integrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1284,15 +1284,15 @@ DIFFUSION (and used to scale the <a class="reference internal" href="#Function.I
 <dl class="attribute">
 <dt id="Function.Integrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#Function.Integrator.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, list or 1d np.array</em> &#8211; determines the starting value for integration (i.e., the value to which <a class="reference internal" href="#Function.Integrator.old_value" title="Function.Integrator.old_value"><code class="xref any py py-attr docutils literal"><span class="pre">old_value</span></code></a>
+<dd><p><em>float or 1d np.array</em> &#8211; determines the starting value for integration (i.e., the value to which <a class="reference internal" href="#Function.Integrator.old_value" title="Function.Integrator.old_value"><code class="xref any py py-attr docutils literal"><span class="pre">old_value</span></code></a>
 is set.  If it is assigned as a <code class="xref any docutils literal"><span class="pre">runtime_param</span></code> it resets <a class="reference internal" href="#Function.Integrator.old_value" title="Function.Integrator.old_value"><code class="xref any py py-attr docutils literal"><span class="pre">old_value</span></code></a> to the
-specified value. &lt;Integrator.variable&gt;` (see <a class="reference internal" href="#Function.Integrator.initializer" title="Function.Integrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</p>
+specified value (see <a class="reference internal" href="#Function.Integrator.initializer" title="Function.Integrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Function.Integrator.old_value">
 <code class="descname">old_value</code><a class="headerlink" href="#Function.Integrator.old_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default variableClassDefault</em> &#8211; stores previous value with <code class="xref any docutils literal"><span class="pre">variable</span></code> is integrated.</p>
+<dd><p><em>1d np.array : default variableClassDefault</em> &#8211; stores previous value with which <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1318,7 +1318,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; a single value or array to be transformed.</li>
+<li><strong>variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; a single value or array of values to be integrated.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1340,56 +1340,121 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.BogaczEtAl">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10b973ae8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10b973ae8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10b973ae8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10b973ae8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10b973ae8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10b9626a8&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute analytic solution to DDM process and return mean response time and accuracy.</p>
-<dl class="docutils">
-<dt>Description:</dt>
-<dd><dl class="first last docutils">
-<dt>generates mean response time (RT) and mean error rate (ER) as described in:</dt>
-<dd>Bogacz, R., Brown, E., Moehlis, J., Holmes, P., &amp; Cohen, J. D. (2006). The physics of optimal
-decision making: a formal analysis of models of performance in two-alternative forced-choice
-tasks.  Psychological review, 113(4), 700. (<a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/17014301">PubMed entry</a>)</dd>
-</dl>
-</dd>
-<dt>Initialization arguments:</dt>
-<dd><p class="first">variable (float): set to self.value (== self.inputValue)
-- params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:</p>
-<blockquote>
-<div><ul class="simple">
-<li>drift_rate (DRIFT_RATE: float)</li>
-<li>threshold (THRESHOLD: float)</li>
-<li>bias (kwDDM_Bias: float)</li>
-<li>noise (NOISE: float)</li>
-<li>t0 (NON_DECISION_TIME: float)</li>
-</ul>
-</div></blockquote>
-<ul class="simple">
-<li>time_scale (TimeScale): specifies &#8220;temporal granularity&#8221; with which mechanism is executed</li>
-<li>context (str)</li>
-</ul>
-<dl class="last docutils">
-<dt>Returns the following values in self.value (2D np.array) and in</dt>
-<dd>the value of the corresponding outputState in the self.outputStates dict:
-- decision variable (float)
-- mean error rate (float)
-- mean RT (float)
-- correct mean RT (float) - Navarro and Fuss only
-- correct mean ER (float) - Navarro and Fuss only</dd>
-</dl>
-</dd>
-</dl>
-<dl class="method">
-<dt id="Function.BogaczEtAl.function">
-<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>DDM function</p>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>variable_default=variableCLassDefault</em>, <em>drift_rate=1.0</em>, <em>threshold=1.0</em>, <em>starting_point=0.0</em>, <em>t0=0.2                                          noise=0.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
+<dd><p id="bogaczetal">Return terminal value of decision variable, mean accuracy, and mean response time computed analytically for the
+drift diffusion process as described in <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/17014301">Bogacz et al (2006)</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.ArgumentTherapy.variable" title="Function.ArgumentTherapy.variable"><strong>variable</strong></a> &#8211; (list)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable_default</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
+independently for each element.</li>
+<li><strong>drift_rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the drift_rate of the drift diffusion process.  If it is a list or array,
+it must be the same length as <code class="xref any docutils literal"><span class="pre">variable_default</span></code>.</li>
+<li><strong>threshold</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
+it must be the same length as <code class="xref any docutils literal"><span class="pre">variable_default</span></code>.</li>
+<li><strong>starting_point</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
+array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable_default</span></code>.</li>
+<li><strong>noise</strong> (<em>float, list or 1d np.array : default 0.0</em>) &#8211; specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
+If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
+<code class="xref any docutils literal"><span class="pre">variable_default</span></code> and all elements must be floats from 0 to 1.</li>
+<li><strong>t0</strong> (<em>float, list or 1d np.array : default 0.2</em>) &#8211; specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
+list or array, it must be the same length as  <code class="xref any docutils literal"><span class="pre">variable_default</span></code> and all
+elements must be floats from 0 to 1.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<em>Component</em>) &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
-drift_rate...</td>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.BogaczEtAl.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Function.BogaczEtAl.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number or 1d np.array</em> &#8211; current value of the decision variable.  If it is an array, each element is integrated independently.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.BogaczEtAl.drift_rate">
+<code class="descname">drift_rate</code><a class="headerlink" href="#Function.BogaczEtAl.drift_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d np.array</em> &#8211; determines the drift component of the drift diffusion process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.BogaczEtAl.threshold">
+<code class="descname">threshold</code><a class="headerlink" href="#Function.BogaczEtAl.threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d np.array</em> &#8211; determines the threshold (boundary) of the drift diffusion process (i.e., at which the integration
+process is assumed to terminate).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.BogaczEtAl.starting_point">
+<code class="descname">starting_point</code><a class="headerlink" href="#Function.BogaczEtAl.starting_point" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d np.array</em> &#8211; determines the initial value of the decision variable for the drift diffusion process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.BogaczEtAl.noise">
+<code class="descname">noise</code><a class="headerlink" href="#Function.BogaczEtAl.noise" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d np.array</em> &#8211; determines the diffusion component of the drift diffusion process (used to specify the variance of a
+Gaussian random process).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.BogaczEtAl.t0">
+<code class="descname">t0</code><a class="headerlink" href="#Function.BogaczEtAl.t0" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d np.array</em> &#8211; determines the assumed non-decision time to determine the response time returned by the solution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.BogaczEtAl.bias">
+<code class="descname">bias</code><a class="headerlink" href="#Function.BogaczEtAl.bias" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d np.array</em> &#8211; normalized starting point:
+(<a class="reference internal" href="#Function.BogaczEtAl.starting_point" title="Function.BogaczEtAl.starting_point"><code class="xref any py py-attr docutils literal"><span class="pre">starting_point</span></code></a> + <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>) /
+(2 * <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.BogaczEtAl.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.BogaczEtAl.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.BogaczEtAl.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.BogaczEtAl.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.BogaczEtAl.prefs" title="Function.BogaczEtAl.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.BogaczEtAl.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return: terminal value of decision variable, mean accuracy (error rate; ER) and mean response time (RT)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>ignored</em>) &#8211; uses value of <a class="reference internal" href="#Function.BogaczEtAl.drift_rate" title="Function.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a>, <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, <a class="reference internal" href="#Function.BogaczEtAl.starting_point" title="Function.BogaczEtAl.starting_point"><code class="xref any py py-attr docutils literal"><span class="pre">starting_point</span></code></a>, <a class="reference internal" href="#Function.BogaczEtAl.noise" title="Function.BogaczEtAl.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <a class="reference internal" href="#Function.BogaczEtAl.t0" title="Function.BogaczEtAl.t0"><code class="xref any py py-attr docutils literal"><span class="pre">t0</span></code></a> parameters for calculation.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) &#8211; specifies whether the function is executed on the time_step or trial time scale.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Decision variable, mean ER, mean RT</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(float, float, float)</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1399,56 +1464,127 @@ drift_rate...</td>
 
 <dl class="class">
 <dt id="Function.NavarroAndFuss">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=[[0]], drift_rate: &lt;function parameter_spec at 0x10b973ae8&gt; = 1.0, starting_point: &lt;function parameter_spec at 0x10b973ae8&gt; = 0.0, threshold: &lt;function parameter_spec at 0x10b973ae8&gt; = 1.0, noise: &lt;function parameter_spec at 0x10b973ae8&gt; = 0.5, t0: &lt;function parameter_spec at 0x10b973ae8&gt; = 0.2, params=None, owner=None, prefs: &lt;function is_pref_set at 0x10b9626a8&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute analytic solution to distribution of DDM responses (mean and variance of response time and accuracy).</p>
-<dl class="docutils">
-<dt>Description:</dt>
-<dd><dl class="first last docutils">
-<dt>generates distributions of response time (RT) and error rate (ER) as described in:</dt>
-<dd>Navarro, D. J., and Fuss, I. G. &#8220;Fast and accurate calculations for first-passage times in
-Wiener diffusion models.&#8221; Journal of Mathematical Psychology 53.4 (2009): 222-230.
-(<a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0022249609000200">ScienceDirect entry</a>)</dd>
-</dl>
-</dd>
-<dt>Initialization arguments:</dt>
-<dd><p class="first">variable (float): set to self.value (== self.inputValue)
-- params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:</p>
-<blockquote>
-<div><ul class="simple">
-<li>drift_rate (DRIFT_RATE: float)</li>
-<li>threshold (THRESHOLD: float)</li>
-<li>bias (kwDDM_Bias: float)</li>
-<li>noise (NOISE: float)</li>
-<li>t0 (NON_DECISION_TIME: float)</li>
-</ul>
-</div></blockquote>
-<ul class="simple">
-<li>time_scale (TimeScale): specifies &#8220;temporal granularity&#8221; with which mechanism is executed</li>
-<li>context (str)</li>
-</ul>
-<dl class="last docutils">
-<dt>Returns the following values in self.value (2D np.array) and in</dt>
-<dd>the value of the corresponding outputState in the self.outputStates dict:
-- decision variable (float)
-- mean error rate (float)
-- mean RT (float)
-- correct mean RT (float) - Navarro and Fuss only
-- correct mean ER (float) - Navarro and Fuss only</dd>
-</dl>
-</dd>
-</dl>
-<dl class="method">
-<dt id="Function.NavarroAndFuss.function">
-<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>DDM function</p>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=variableCLassDefault</em>, <em>drift_rate=1.0</em>, <em>threshold=1.0</em>, <em>starting_point=0.0</em>, <em>t0=0.2                                          noise=0.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
+<dd><p id="navarroandfuss">Return terminal value of decision variable, mean accuracy, mean response time (RT), correct RT mean, correct RT
+variance and correct RT skew computed analytically for the drift diffusion process as described in
+<a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0022249609000200">Navarro and Fuss (2009)</a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Use of this Function requires that the MatLab engine is installed.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="#Function.ArgumentTherapy.variable" title="Function.ArgumentTherapy.variable"><strong>variable</strong></a> &#8211; (list)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable_default</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
+independently for each element.</li>
+<li><strong>drift_rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the drift_rate of the drift diffusion process.  If it is a list or array,
+it must be the same length as <code class="xref any docutils literal"><span class="pre">variable_default</span></code>.</li>
+<li><strong>threshold</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
+it must be the same length as <code class="xref any docutils literal"><span class="pre">variable_default</span></code>.</li>
+<li><strong>starting_point</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
+array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable_default</span></code>.</li>
+<li><strong>noise</strong> (<em>float, list or 1d np.array : default 0.0</em>) &#8211; specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
+If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
+<code class="xref any docutils literal"><span class="pre">variable_default</span></code> and all elements must be floats from 0 to 1.</li>
+<li><strong>t0</strong> (<em>float, list or 1d np.array : default 0.2</em>) &#8211; specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
+list or array, it must be the same length as  <code class="xref any docutils literal"><span class="pre">variable_default</span></code> and all
+elements must be floats from 0 to 1.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<em>Component</em>) &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
-drift_rate...</td>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.NavarroAndFuss.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Function.NavarroAndFuss.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number or 1d np.array</em> &#8211; current value of the decision variable.  If it is an array, each element is integrated independently.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NavarroAndFuss.drift_rate">
+<code class="descname">drift_rate</code><a class="headerlink" href="#Function.NavarroAndFuss.drift_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d np.array</em> &#8211; determines the drift component of the drift diffusion process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NavarroAndFuss.threshold">
+<code class="descname">threshold</code><a class="headerlink" href="#Function.NavarroAndFuss.threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d np.array</em> &#8211; determines the threshold (boundary) of the drift diffusion process (i.e., at which the integration
+process is assumed to terminate).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NavarroAndFuss.starting_point">
+<code class="descname">starting_point</code><a class="headerlink" href="#Function.NavarroAndFuss.starting_point" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d np.array</em> &#8211; determines the initial value of the decision variable for the drift diffusion process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NavarroAndFuss.noise">
+<code class="descname">noise</code><a class="headerlink" href="#Function.NavarroAndFuss.noise" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d np.array</em> &#8211; determines the diffusion component of the drift diffusion process (used to specify the variance of a
+Gaussian random process).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NavarroAndFuss.t0">
+<code class="descname">t0</code><a class="headerlink" href="#Function.NavarroAndFuss.t0" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d np.array</em> &#8211; determines the assumed non-decision time to determine the response time returned by the solution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NavarroAndFuss.bias">
+<code class="descname">bias</code><a class="headerlink" href="#Function.NavarroAndFuss.bias" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d np.array</em> &#8211; normalized starting point:
+(<a class="reference internal" href="#Function.BogaczEtAl.starting_point" title="Function.BogaczEtAl.starting_point"><code class="xref any py py-attr docutils literal"><span class="pre">starting_point</span></code></a> + <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>) /
+(2 * <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NavarroAndFuss.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.NavarroAndFuss.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> &#8211; <code class="xref any docutils literal"><span class="pre">component</span></code> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NavarroAndFuss.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.NavarroAndFuss.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.NavarroAndFuss.prefs" title="Function.NavarroAndFuss.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.NavarroAndFuss.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return: terminal value of decision variable, mean accuracy (error rate; ER), mean response time (RT),
+correct RT mean, correct RT variance and correct RT skew.  <strong>Requires that the MatLab engine is installed.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>ignored</em>) &#8211; uses value of <a class="reference internal" href="#Function.NavarroAndFuss.drift_rate" title="Function.NavarroAndFuss.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a>, <a class="reference internal" href="#Function.NavarroAndFuss.threshold" title="Function.NavarroAndFuss.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, <a class="reference internal" href="#Function.NavarroAndFuss.starting_point" title="Function.NavarroAndFuss.starting_point"><code class="xref any py py-attr docutils literal"><span class="pre">starting_point</span></code></a>, <a class="reference internal" href="#Function.NavarroAndFuss.noise" title="Function.NavarroAndFuss.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <a class="reference internal" href="#Function.NavarroAndFuss.t0" title="Function.NavarroAndFuss.t0"><code class="xref any py py-attr docutils literal"><span class="pre">t0</span></code></a> parameters for calculation.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) &#8211; specifies whether the function is executed on the time_step or trial time scale.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Decision variable, mean ER, mean RT, correct RT mean, correct RT variance, correct RT skew</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(float, float, float, float, float, float)</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1461,7 +1597,7 @@ drift_rate...</td>
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="#Function.ArgumentTherapy.variable" title="Function.ArgumentTherapy.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="#Function.NavarroAndFuss.variable" title="Function.NavarroAndFuss.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
@@ -1695,8 +1831,8 @@ if it is a <a class="reference internal" href="ParameterState.html"><span class=
 <code class="descname">learning_rate</code><a class="headerlink" href="#Function.BackPropagation.learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float</em> &#8211; the learning rate used by the function.  If specified, it supercedes any learning_rate specified for the
 <code class="xref any docutils literal"><span class="pre">process</span></code> and/or <code class="xref any docutils literal"><span class="pre">system</span></code> to which the function&#8217;s  <a class="reference internal" href="#Function.BackPropagation.owner" title="Function.BackPropagation.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> belongs.  If it is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the learning_rate specified for the process to
-which the <code class="xref any docutils literal"><span class="pre">owner</span></code> belongs is used;  and, if that is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the learning_rate for the
-system to which it belongs is used. If all are <code class="xref any docutils literal"><span class="pre">None</span></code>, then the
+which the <code class="xref any docutils literal"><span class="pre">owner</span></code> belongs is used;  and, if that is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the learning_rate for
+the system to which it belongs is used. If all are <code class="xref any docutils literal"><span class="pre">None</span></code>, then the
 <a class="reference internal" href="#Function.BackPropagation.default_learning_rate" title="Function.BackPropagation.default_learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">default_learning_rate</span></code></a> is used.</p>
 </dd></dl>
 
