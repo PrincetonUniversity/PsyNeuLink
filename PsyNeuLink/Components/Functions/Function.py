@@ -3114,7 +3114,8 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
         Arguments
         ---------
 
-        variable : ignored
+        variable : 2d np.array
+            ignored.
 
         params : Optional[Dict[param keyword, param value]]
             a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -3360,7 +3361,8 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
         Arguments
         ---------
 
-        variable : ignored
+        variable : 2d np.array
+            ignored.
 
         params : Optional[Dict[param keyword, param value]]
             a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
