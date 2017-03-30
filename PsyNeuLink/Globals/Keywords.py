@@ -329,7 +329,6 @@ EXPONENTIAL_FUNCTION = "Exponential"
 LOGISTIC_FUNCTION = "Logistic"
 SOFTMAX_FUNCTION = 'SoftMax'
 INTEGRATOR_FUNCTION = "Integrator"
-DDM_INTEGRATOR_FUNCTION = "DDMIntegrator"
 LINEAR_MATRIX_FUNCTION = "Linear Matrix"
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
 RL_FUNCTION = 'Reinforcement Learning Algorithm'

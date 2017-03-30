@@ -530,8 +530,8 @@ class DDM(ProcessingMechanism_Base):
                                                   params=params,
                                                   )
         if time_scale == TimeScale.TIME_STEP:
-            self.get_axes_function = DDMIntegrator(rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function
-            self.plot_function = DDMIntegrator(rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function
+            self.get_axes_function = Integrator(integration_type = DIFFUSION, rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function
+            self.plot_function = Integrator(integration_type = DIFFUSION, rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
@@ -601,7 +601,7 @@ class DDM(ProcessingMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        functions = {BogaczEtAl, NavarroAndFuss, Integrator, DDMIntegrator}
+        functions = {BogaczEtAl, NavarroAndFuss, Integrator}
         if not target_set[FUNCTION] in functions:
             function_names = list (function.componentName for function in functions)
             raise DDMError("{} param of {} must be one of the following functions: {}".
