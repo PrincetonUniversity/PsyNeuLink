@@ -307,7 +307,7 @@ class Function_Base(Function):
             + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
             + paramsCurrent (dict) - set currently in effect
             + value (value) - output of execute method
-            + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
+            + name (str) - if not specified as an arg, a default based on the class is assigned in register_category
             + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ComponentPreferenceSet
 
         Instance methods:
@@ -2017,7 +2017,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         return output - indicator
 
 
-class LinearMatrix(TransferFunction):  # -----------------------------------------------------------------------------------
+class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------
     """
     LinearMatrix(          \
          variable_default, \
@@ -2510,10 +2510,9 @@ class IntegratorFunction(Function_Base):
 # • can noise and initializer be an array?  If so, validated in validate_param?
 # • time_step_size?? (vs rate??)
 # • can noise be a function now?
-# • check documentation I've written
 
 
-class Integrator(IntegratorFunction): # --------------------------------------------------------------------------------------
+class Integrator(IntegratorFunction): # --------------------------------------------------------------------------------
     """
     Integrator(                 \
         variable_default=None,  \
@@ -2523,7 +2522,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         time_step_size=1.0,     \
         params=None,            \
         owner=None,             \
-        prefs:is_pref_set=None, \
+        prefs=None,             \
         )
 
     .. _Integrator:
@@ -2534,11 +2533,12 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     ---------
 
     variable_default : number, list or np.array : default variableClassDefault
-        specifies a template for the value to be integrated
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently 
+        integrated.
 
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <Integrator.variable>` and all elements must be floats between 0 and 1
+        `variable <Integrator.variable_default>` and all elements must be floats between 0 and 1
         (see `rate <Integrator.rate>` for details).
 
     weighting : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
@@ -2546,16 +2546,16 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
     noise : float, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <Integrator.function>`.
-        If it is a list or array, it must be the same length as `variable <Integrator.variable>` and all elements
-        must be floats between 0 and 1 (see `noise <Integrator.rate>` for details).
+        If it is a list or array, it must be the same length as `variable <Integrator.variable_default>` and all 
+        elements must be floats between 0 and 1.
 
     time_step_size : float : default 0.0
         determines the timing precision of the integration process when `weighting <Integrator.weighting>` is set to
         DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
 
     initializer float, list or 1d np.array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as `variable
-        <Integrator.variable>` (see `initializer <Integrator.initializer>` for details).
+        specifies starting value for integration.  If it is a list or array, it must be the same length as 
+        `variable_default <Integrator.variable_default>` (see `initializer <Integrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -2573,15 +2573,15 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     Attributes
     ----------
 
-    variable_default : number, list or np.array
-        current input value some portion of which (determined by `rate <Integrator.rate>` that will be
-        added to prior value.
+    variable : number or np.array
+        current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
+        added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : 1d np.array
         determines the rate of integration based on current and prior values.  All elements are between 0 and 1
         (0 = no change; 1 = instantaneous change). If it has a single element, it applies to all elements of
-        `variable <Integrator.variable>`;  if it has more than n array, each element applies to the corresponding
-        element of `variable <Integrator.variable>`.
+        `variable <Integrator.variable>`;  if it has more than one element, each element applies to the 
+        corresponding element of `variable <Integrator.variable>`.
 
     weighting : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
         specifies type of integration:
@@ -2599,22 +2599,20 @@ class Integrator(IntegratorFunction): # ----------------------------------------
               (`Drift Diffusion Model
               <https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model>`_).
 
-    noise : float, list or 1d np.array
+    noise : float or 1d np.array
         specifies random value to be added in each call to `function <Integrator.function>`.
-        If it is a list or array, it must be the same length as `variable <Integrator.variable>` and all elements
-        must be floats between 0 and 1 (see `noise <Integrator.rate>` for details).
 
     time_step_size : float
         determines the timing precision of the integration process when `weighting <Integrator.weighting>` is set to
         DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
-    initializer : float, list or 1d np.array
+    initializer : float or 1d np.array
         determines the starting value for integration (i.e., the value to which `old_value <Integrator.old_value>`
         is set.  If it is assigned as a `runtime_param <LINK>` it resets `old_value <Integrator.old_value>` to the
-        specified value. <Integrator.variable>` (see `initializer <Integrator.initializer>` for details).
+        specified value (see `initializer <Integrator.initializer>` for details).
 
     old_value : 1d np.array : default variableClassDefault
-        stores previous value with `variable <Integrator.variable>` is integrated.
+        stores previous value with which `variable <Integrator.variable>` is integrated.
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -2744,7 +2742,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         ---------
 
         variable : number, list or np.array : default variableClassDefault
-           a single value or array to be transformed.
+           a single value or array of values to be integrated.
 
         params : Optional[Dict[param keyword, param value]]
             a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -2805,41 +2803,119 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         return value
 
-class DDMIntegrator(Integrator): # --------------------------------------------------------------------------------------
-    """Calculate an accumulated value for input variable using a the DDM accumulation method. The DDMIntegrator only allows for 'DIFFUSION' weighting, and requires the noise parameter to be a float, as it is used to construct the standard DDM Gaussian.  
 
-    Initialization arguments:
-     - params (dict): specifying:
-         + INITIALIZER (value): initial value to which to set self.oldValue (default: variableClassDefault)
-             - can be specified as a runtime parameter, which resets oldValue to one specified
-             Note: self.oldValue stores previous value
-        + drift_rate (DRIFT_RATE: float)
-        + noise (NOISE: float)
-        + time_step_size (TIME_STEP_SIZE: float)
-
-    Class attributes:
-    - oldValue (value): stores previous value with which value provided in variable is integrated
-
-    Integrator.function returns scalar result
+# FIX: SHOULD THIS EVEN ALLOW A WEIGHTING PARAM IF IT REQUIRES THAT IT BE DIFFUSION??
+class DDMIntegrator(Integrator): # -------------------------------------------------------------------------------------
     """
+    DDMIntegrator(                 \
+        variable_default=None,  \
+        rate=1.0,               \
+        noise=0.5,              \
+        time_step_size=1.0,     \
+        params=None,            \
+        owner=None,             \
+        prefs:is_pref_set=None, \
+        )
 
+    .. _DDMIntegrator:
+
+    Implement drift diffusion integration process.
+    It is a subclass of the `Integrator` Function that enforce use of the DIFFUSION `weighting <Integrator.weighting>`. 
+
+    Arguments
+    ---------
+
+    variable_default : number, list or np.array : default variableClassDefault
+        specifies a template for the value to be integrated;  if it is list or array, each element is independently 
+        integrated.
+
+    rate : float, list or 1d np.array : default 1.0
+        specifies the rate of integration (drift component of a drift diffusion process).  If it is a list or array, 
+        it must be the same length as `variable <DDMIntegrator.variable_default>` and all elements must be floats 
+        between 0 and 1 (see `rate <Integrator.rate>` for details).
+
+    noise : float, list or 1d np.array : default 0.0
+        specifies random value to be added in each call to `function <Integrator.function>` (corresponds to the
+        diffusion component of the drift diffusion process). If it is a list or array, it must be the same length as 
+        `variable <DDMIntegrator.variable>` and all elements must be floats between 0 and 1 
+        (see `noise <DDMIntegrator.rate>` for details).
+
+    time_step_size : float : default 0.0
+        determines the timing precision of the integration process when `weighting <Integrator.weighting>` is set to
+        DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
+
+    initializer float, list or 1d np.array : default 0.0
+        specifies starting value for integration.  If it is a list or array, it must be the same length as 
+        `variable_default <Integrator.variable_default>` (see `initializer <DDMIntegrator.initializer>` for details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        current input value some portion of which (determined by `rate <DDMIntegrator.rate>` that will be added to 
+        prior value.  If it is an array, each element is independently integrated.
+
+    rate : 1d np.array
+        determines the rate of integration based on current and prior values (corresponds to the drift component
+        of the drift diffusion process).  All elements are between 0 and 1 (0 = no change; 1 = instantaneous change). 
+        If it has a single element, it applies to all elements of `variable <Integrator.variable>`;  if it has more 
+        than one element, each element applies to the corresponding element of `variable <Integrator.variable>`.
+
+    noise : float or 1d np.array
+        determines the random value to be added in each call to `function <Integrator.function>` (corresponds to the
+        diffusion component of the drift diffusion process). 
+        
+    time_step_size : float
+        determines the timing precision of the integration process when `weighting <Integrator.weighting>` is set to
+        DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
+
+    initializer : float or 1d np.array
+        determines the starting value for integration (i.e., the value to which `old_value <Integrator.old_value>`
+        is set.  If it is assigned as a `runtime_param <LINK>` it resets `old_value <Integrator.old_value>` to the
+        specified value (see `initializer <Integrator.initializer>` for details).
+
+    old_value : 1d np.array : default variableClassDefault
+        stores previous value with which `variable <Integrator.variable>` is integrated.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    """
 
     componentName = DDM_INTEGRATOR_FUNCTION
 
     @tc.typecheck
     def __init__(self,
                  variable_default=None,
-                 weighting=DIFFUSION,
-                 params:tc.optional(dict)=None,
-                 prefs:is_pref_set=None,
-                 noise=0.5,
                  rate = 1.0,
+                 noise=0.5,
                  time_step_size = 1.0,
+                 params:tc.optional(dict)=None,
                  owner=None,
+                 prefs:is_pref_set=None,
                  context="DDMIntegrator Init"):
 
         # Assign here as default, for use in initialization of function
         self.old_value = self.paramClassDefaults[INITIALIZER]
+        weighting=DIFFUSION
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
@@ -2857,6 +2933,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
 
         # Reassign to kWInitializer in case default value was overridden
         self.old_value = [self.paramsCurrent[INITIALIZER]]
+
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set,
@@ -2871,17 +2948,12 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
 
         weighting = target_set[WEIGHTING]
         if (weighting != "diffusion"):
-            raise FunctionError("weighting parameter ({}) for {} must be diffusion. For alternate methods of accumulation, use the Integrator function".
+            raise FunctionError("weighting parameter ({}) for {} must be diffusion. "
+                                "For alternate methods of accumulation, use the Integrator function".
                                 format(weighting, self.name))
-
 
     
 
-#     # def keyword(self, keyword):
-#     #     return keyword
-
-# region DDM
-#
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
@@ -2897,33 +2969,104 @@ kwBogaczEtAl = "BogaczEtAl"
 kwNavarrosAndFuss = "NavarroAndFuss"
 
 
+# QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)
 class BogaczEtAl(IntegratorFunction): # --------------------------------------------------------------------------------
-    """Compute analytic solution to DDM process and return mean response time and accuracy.
+    """
+    BogaczEtAl(                                 \
+        variable_default=variableCLassDefault,  \
+        drift_rate=1.0,                         \
+        threshold=1.0,                          \
+        starting_point=0.0,                     \
+        t0=0.2                                  \
+        noise=0.5,                              \
+        params=None,                            \
+        owner=None,                             \
+        prefs=None                              \
+        )
 
-    Description:
-        generates mean response time (RT) and mean error rate (ER) as described in:
-            Bogacz, R., Brown, E., Moehlis, J., Holmes, P., & Cohen, J. D. (2006). The physics of optimal
-            decision making: a formal analysis of models of performance in two-alternative forced-choice
-            tasks.  Psychological review, 113(4), 700. (`PubMed entry <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_)
+    .. _BogaczEtAl:
 
-    Initialization arguments:
-        variable (float): set to self.value (== self.inputValue)
-        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + drift_rate (DRIFT_RATE: float)
-            + threshold (THRESHOLD: float)
-            + bias (kwDDM_Bias: float)
-            + noise (NOISE: float)
-            + t0 (NON_DECISION_TIME: float)
-        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
-        - context (str)
+    Return terminal value of decision variable, mean accuracy, and mean response time computed analytically for the 
+    drift diffusion process as described in `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_.
 
-        Returns the following values in self.value (2D np.array) and in
-            the value of the corresponding outputState in the self.outputStates dict:
-            - decision variable (float)
-            - mean error rate (float)
-            - mean RT (float)
-            - correct mean RT (float) - Navarro and Fuss only
-            - correct mean ER (float) - Navarro and Fuss only
+    Arguments
+    ---------
+
+    variable_default : number, list or np.array : default variableClassDefault
+        specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
+        independently for each element.
+
+    drift_rate : float, list or 1d np.array : default 1.0
+        specifies the drift_rate of the drift diffusion process.  If it is a list or array, 
+        it must be the same length as `variable_default <BogaczEtAl.variable_default>`.
+
+    threshold : float, list or 1d np.array : default 1.0
+        specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array, 
+        it must be the same length as `variable_default <BogaczEtAl.variable_default>`.
+
+    starting_point : float, list or 1d np.array : default 1.0
+        specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or 
+        array, it must be the same length as `variable_default <BogaczEtAl.variable_default>`.
+
+    noise : float, list or 1d np.array : default 0.0
+        specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
+        If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as 
+        `variable_default <BogaczEtAl.variable_default>` and all elements must be floats from 0 to 1. 
+        
+    t0 : float, list or 1d np.array : default 0.2
+        specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a 
+        list or array, it must be the same length as  `variable_default <BogaczEtAl.variable_default>` and all 
+        elements must be floats from 0 to 1.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or 1d np.array
+        current value of the decision variable.  If it is an array, each element is integrated independently.
+
+    drift_rate : float or 1d np.array
+        determines the drift component of the drift diffusion process.
+
+    threshold : float or 1d np.array
+        determines the threshold (boundary) of the drift diffusion process (i.e., at which the integration
+        process is assumed to terminate).
+
+    starting_point : float or 1d np.array
+        determines the initial value of the decision variable for the drift diffusion process.
+
+    noise : float or 1d np.array
+        determines the diffusion component of the drift diffusion process (used to specify the variance of a 
+        Gaussian random process).
+        
+    t0 : float or 1d np.array
+        determines the assumed non-decision time to determine the response time returned by the solution. 
+
+    bias : float or 1d np.array
+        normalized starting point:  
+        (`starting_point <BogaczEtAl.starting_point>` + `threshold <BogaczEtAl.threshold>`) / 
+        (2 * `threshold <BogaczEtAl.threshold>`)
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = kwBogaczEtAl
@@ -2964,23 +3107,39 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
-        """DDM function
+        """
+        Return: terminal value of decision variable, mean accuracy (error rate; ER) and mean response time (RT)
 
-        :var variable: (list)
-        :parameter params: (dict) with entries specifying:
-                        drift_rate...
+        Arguments
+        ---------
+
+        variable : ignored
+            uses value of `drift_rate`, `threshold`, `starting_point`, `noise` and `t0` parameters for calculation.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+        Decision variable, mean ER, mean RT : (float, float, float)
+
         """
 
         self._check_args(variable=variable, params=params, context=context)
 
-# FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
-        drift_rate = float(self.paramsCurrent[DRIFT_RATE])
-        threshold = float(self.paramsCurrent[THRESHOLD])
-        starting_point = float(self.paramsCurrent[STARTING_POINT])
-        noise = float(self.paramsCurrent[NOISE])
-        t0 = float(self.paramsCurrent[NON_DECISION_TIME])
+        drift_rate = float(self.drift_rate)
+        threshold = float(self.threshold)
+        starting_point = float(self.starting_point)
+        noise = float(self.noise)
+        t0 = float(self.t0)
 
-        bias = (starting_point + threshold) / (2 * threshold)
+        self.bias = bias = (starting_point + threshold) / (2 * threshold)
+
         # Prevents div by 0 issue below:
         if bias <= 0:
             bias = 1e-8
@@ -3042,33 +3201,108 @@ class NF_Results(AutoNumber):
     MEAN_CORRECT_VARIANCE = ()
     MEAN_CORRECT_SKEW_RT = ()
 
-class NavarroAndFuss(IntegratorFunction): # --------------------------------------------------------------------------------
-    """Compute analytic solution to distribution of DDM responses (mean and variance of response time and accuracy).
 
-    Description:
-        generates distributions of response time (RT) and error rate (ER) as described in:
-            Navarro, D. J., and Fuss, I. G. "Fast and accurate calculations for first-passage times in
-            Wiener diffusion models." Journal of Mathematical Psychology 53.4 (2009): 222-230.
-            (`ScienceDirect entry <http://www.sciencedirect.com/science/article/pii/S0022249609000200>`_)
+class NavarroAndFuss(IntegratorFunction): # ----------------------------------------------------------------------------
+    """
+    NavarroAndFuss(                             \
+        variable_default=variableCLassDefault,  \
+        drift_rate=1.0,                         \
+        threshold=1.0,                          \
+        starting_point=0.0,                     \
+        t0=0.2                                  \
+        noise=0.5,                              \
+        params=None,                            \
+        owner=None,                             \
+        prefs=None                              \
+        )
 
-    Initialization arguments:
-        variable (float): set to self.value (== self.inputValue)
-        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + drift_rate (DRIFT_RATE: float)
-            + threshold (THRESHOLD: float)
-            + bias (kwDDM_Bias: float)
-            + noise (NOISE: float)
-            + t0 (NON_DECISION_TIME: float)
-        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
-        - context (str)
+    .. _NavarroAndFuss:
 
-        Returns the following values in self.value (2D np.array) and in
-            the value of the corresponding outputState in the self.outputStates dict:
-            - decision variable (float)
-            - mean error rate (float)
-            - mean RT (float)
-            - correct mean RT (float) - Navarro and Fuss only
-            - correct mean ER (float) - Navarro and Fuss only
+    Return terminal value of decision variable, mean accuracy, mean response time (RT), correct RT mean, correct RT 
+    variance and correct RT skew computed analytically for the drift diffusion process (Wiener diffusion model)
+    as described in `Navarro and Fuss (2009) <http://www.sciencedirect.com/science/article/pii/S0022249609000200>`_.
+    
+    .. note::
+       Use of this Function requires that the MatLab engine is installed.
+
+    Arguments
+    ---------
+
+    variable_default : number, list or np.array : default variableClassDefault
+        specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
+        independently for each element.
+
+    drift_rate : float, list or 1d np.array : default 1.0
+        specifies the drift_rate of the drift diffusion process.  If it is a list or array, 
+        it must be the same length as `variable_default <BogaczEtAl.variable_default>`.
+
+    threshold : float, list or 1d np.array : default 1.0
+        specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array, 
+        it must be the same length as `variable_default <BogaczEtAl.variable_default>`.
+
+    starting_point : float, list or 1d np.array : default 1.0
+        specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or 
+        array, it must be the same length as `variable_default <BogaczEtAl.variable_default>`.
+
+    noise : float, list or 1d np.array : default 0.0
+        specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
+        If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as 
+        `variable_default <BogaczEtAl.variable_default>` and all elements must be floats from 0 to 1. 
+        
+    t0 : float, list or 1d np.array : default 0.2
+        specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a 
+        list or array, it must be the same length as  `variable_default <BogaczEtAl.variable_default>` and all 
+        elements must be floats from 0 to 1.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or 1d np.array
+        current value of the decision variable.  If it is an array, each element is integrated independently.
+
+    drift_rate : float or 1d np.array
+        determines the drift component of the drift diffusion process.
+
+    threshold : float or 1d np.array
+        determines the threshold (boundary) of the drift diffusion process (i.e., at which the integration
+        process is assumed to terminate).
+
+    starting_point : float or 1d np.array
+        determines the initial value of the decision variable for the drift diffusion process.
+
+    noise : float or 1d np.array
+        determines the diffusion component of the drift diffusion process (used to specify the variance of a 
+        Gaussian random process).
+        
+    t0 : float or 1d np.array
+        determines the assumed non-decision time to determine the response time returned by the solution. 
+
+    bias : float or 1d np.array
+        normalized starting point:  
+        (`starting_point <BogaczEtAl.starting_point>` + `threshold <BogaczEtAl.threshold>`) / 
+        (2 * `threshold <BogaczEtAl.threshold>`)
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+                
     """
 
     componentName = kwNavarrosAndFuss
@@ -3118,21 +3352,38 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
-        """DDM function
+        """
+        Return: terminal value of decision variable, mean accuracy (error rate; ER), mean response time (RT),
+        correct RT mean, correct RT variance and correct RT skew.  **Requires that the MatLab engine is installed.** 
 
-        :var variable: (list)
-        :parameter params: (dict) with entries specifying:
-                        drift_rate...
+        Arguments
+        ---------
+
+        variable : ignored
+            uses value of `drift_rate`, `threshold`, `starting_point`, `noise` and `t0` parameters for calculation.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+        Decision variable, mean ER, mean RT, correct RT mean, correct RT variance, correct RT skew : \
+        (float, float, float, float, float, float)
+
         """
 
         self._check_args(variable=variable, params=params, context=context)
 
-# FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
-        drift_rate = float(self.paramsCurrent[DRIFT_RATE])
-        threshold = float(self.paramsCurrent[THRESHOLD])
-        starting_point = float(self.paramsCurrent[STARTING_POINT])
-        noise = float(self.paramsCurrent[NOISE])
-        t0 = float(self.paramsCurrent[NON_DECISION_TIME])
+        drift_rate = float(self.drift_rate)
+        threshold = float(self.threshold)
+        starting_point = float(self.starting_point)
+        noise = float(self.noise)
+        t0 = float(self.t0)
 
         # print("\nimporting matlab...")
         # import matlab.engine
@@ -3141,7 +3392,6 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
         results = self.eng1.ddmSim(drift_rate, starting_point, threshold, noise, t0, 1, nargout=5)
 
         return results
-
 
 
 
@@ -3641,7 +3891,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
             Assume error is a single scalar value
             Assume weight matrix (for MappingProjection to error_source) is a diagonal matrix
                 (one weight for corresponding pairs of elements in the input and output arrays)
-            Adjust the weight corresponding to the chosen element of the output array, using error value and learning rate
+            Adjust the weight corresponding to  chosen element of the output array, using error value and learning rate
 
             Note: assume variable is a 2D np.array with three items (input, output, error)
                   for compatibility with other learning functions (and calls from LearningProjection)
@@ -3806,8 +4056,8 @@ class BackPropagation(LearningFunction):
         the learning rate used by the function.  If specified, it supercedes any learning_rate specified for the
         `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
         <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
-        which the `owner <BackPropagationowner>` belongs is used;  and, if that is `None`, then the learning_rate for the
-        system to which it belongs is used. If all are `None`, then the
+        which the `owner <BackPropagationowner>` belongs is used;  and, if that is `None`, then the learning_rate for 
+        the system to which it belongs is used. If all are `None`, then the
         `default_learning_rate <BackPropagation.default_learning_rate>` is used.
 
     default_learning_rate : float
@@ -3843,7 +4093,7 @@ class BackPropagation(LearningFunction):
                  # variable_default:tc.any(list, np.ndarray),
                  activation_derivative_fct :tc.optional(tc.any(function_type, method_type))=Logistic().derivative,
                  error_derivative_fct:tc.optional(tc.any(function_type, method_type))=Logistic().derivative,
-                 # error_matrix:tc.optional(tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection))=None,
+                 #error_matrix:tc.optional(tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection))=None,
                  error_matrix=None,
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
