@@ -2803,155 +2803,155 @@ class Integrator(
 
         return value
 
-
-# FIX: SHOULD THIS EVEN ALLOW A INTEGRATION_TYPE PARAM IF IT REQUIRES THAT IT BE DIFFUSION??
-class DDMIntegrator(
-    Integrator):  # -------------------------------------------------------------------------------------
-    """
-    DDMIntegrator(                 \
-        variable_default=None,  \
-        rate=1.0,               \
-        noise=0.5,              \
-        time_step_size=1.0,     \
-        params=None,            \
-        owner=None,             \
-        prefs:is_pref_set=None, \
-        )
-
-    .. _DDMIntegrator:
-
-    Implement drift diffusion integration process.
-    It is a subclass of the `Integrator` Function that enforce use of the DIFFUSION `integration_type <Integrator.integration_type>`.
-
-    Arguments
-    ---------
-
-    variable_default : number, list or np.array : default variableClassDefault
-        specifies a template for the value to be integrated;  if it is list or array, each element is independently
-        integrated.
-
-    rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration (drift component of a drift diffusion process).  If it is a list or array,
-        it must be the same length as `variable <DDMIntegrator.variable_default>` and all elements must be floats
-        between 0 and 1 (see `rate <Integrator.rate>` for details).
-
-    noise : float, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <Integrator.function>` (corresponds to the
-        diffusion component of the drift diffusion process). If it is a list or array, it must be the same length as
-        `variable <DDMIntegrator.variable>` and all elements must be floats between 0 and 1
-        (see `noise <DDMIntegrator.rate>` for details).
-
-    time_step_size : float : default 0.0
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
-        DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
-
-    initializer float, list or 1d np.array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `variable_default <Integrator.variable_default>` (see `initializer <DDMIntegrator.initializer>` for details).
-
-    params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-
-
-    Attributes
-    ----------
-
-    variable : number or np.array
-        current input value some portion of which (determined by `rate <DDMIntegrator.rate>` that will be added to
-        prior value.  If it is an array, each element is independently integrated.
-
-    rate : 1d np.array
-        determines the rate of integration based on current and prior values (corresponds to the drift component
-        of the drift diffusion process).  All elements are between 0 and 1 (0 = no change; 1 = instantaneous change).
-        If it has a single element, it applies to all elements of `variable <Integrator.variable>`;  if it has more
-        than one element, each element applies to the corresponding element of `variable <Integrator.variable>`.
-
-    noise : float or 1d np.array
-        determines the random value to be added in each call to `function <Integrator.function>` (corresponds to the
-        diffusion component of the drift diffusion process).
-
-    time_step_size : float
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
-        DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
-
-    initializer : float or 1d np.array
-        determines the starting value for integration (i.e., the value to which `old_value <Integrator.old_value>`
-        is set.  If it is assigned as a `runtime_param <LINK>` it resets `old_value <Integrator.old_value>` to the
-        specified value (see `initializer <Integrator.initializer>` for details).
-
-    old_value : 1d np.array : default variableClassDefault
-        stores previous value with which `variable <Integrator.variable>` is integrated.
-
-    owner : Mechanism
-        `component <Component>` to which the Function has been assigned.
-
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-
-    """
-
-    componentName = DDM_INTEGRATOR_FUNCTION
-
-    @tc.typecheck
-    def __init__(self,
-                 variable_default=None,
-                 rate=1.0,
-                 noise=0.5,
-                 time_step_size=1.0,
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None,
-                 context="DDMIntegrator Init"):
-
-        # Assign here as default, for use in initialization of function
-        self.old_value = self.paramClassDefaults[INITIALIZER]
-        integration_type = DIFFUSION
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(
-            integration_type=integration_type,
-            params=params,
-            noise=noise,
-            rate=rate,
-            time_step_size=time_step_size)
-
-        super().__init__(variable_default=variable_default,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-        # Reassign to kWInitializer in case default value was overridden
-        self.old_value = [self.paramsCurrent[INITIALIZER]]
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-
-        super()._validate_params(request_set=request_set,
-                                 target_set=target_set,
-                                 context=context)
-
-        noise = target_set[NOISE]
-
-        if (isinstance(noise, float) == False):
-            raise FunctionError("noise parameter ({}) for {} must be a float.".
-                                format(noise, self.name))
-
-        integration_type = target_set[INTEGRATION_TYPE]
-        if (integration_type != "diffusion"):
-            raise FunctionError("integration_type parameter ({}) for {} must be diffusion. "
-                                "For alternate methods of accumulation, use the Integrator function".
-                                format(integration_type, self.name))
+# Trying commenting out DDMIntegrator entirely and forcing the integration_type to be DIFFUSION in the DDM *mechanism*
+# # FIX: SHOULD THIS EVEN ALLOW A INTEGRATION_TYPE PARAM IF IT REQUIRES THAT IT BE DIFFUSION??
+# class DDMIntegrator(
+#     Integrator):  # -------------------------------------------------------------------------------------
+#     """
+#     DDMIntegrator(                 \
+#         variable_default=None,  \
+#         rate=1.0,               \
+#         noise=0.5,              \
+#         time_step_size=1.0,     \
+#         params=None,            \
+#         owner=None,             \
+#         prefs:is_pref_set=None, \
+#         )
+#
+#     .. _DDMIntegrator:
+#
+#     Implement drift diffusion integration process.
+#     It is a subclass of the `Integrator` Function that enforce use of the DIFFUSION `integration_type <Integrator.integration_type>`.
+#
+#     Arguments
+#     ---------
+#
+#     variable_default : number, list or np.array : default variableClassDefault
+#         specifies a template for the value to be integrated;  if it is list or array, each element is independently
+#         integrated.
+#
+#     rate : float, list or 1d np.array : default 1.0
+#         specifies the rate of integration (drift component of a drift diffusion process).  If it is a list or array,
+#         it must be the same length as `variable <DDMIntegrator.variable_default>` and all elements must be floats
+#         between 0 and 1 (see `rate <Integrator.rate>` for details).
+#
+#     noise : float, list or 1d np.array : default 0.0
+#         specifies random value to be added in each call to `function <Integrator.function>` (corresponds to the
+#         diffusion component of the drift diffusion process). If it is a list or array, it must be the same length as
+#         `variable <DDMIntegrator.variable>` and all elements must be floats between 0 and 1
+#         (see `noise <DDMIntegrator.rate>` for details).
+#
+#     time_step_size : float : default 0.0
+#         determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
+#         DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
+#
+#     initializer float, list or 1d np.array : default 0.0
+#         specifies starting value for integration.  If it is a list or array, it must be the same length as
+#         `variable_default <Integrator.variable_default>` (see `initializer <DDMIntegrator.initializer>` for details).
+#
+#     params : Optional[Dict[param keyword, param value]]
+#         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+#         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+#         arguments of the constructor.
+#
+#     owner : Component
+#         `component <Component>` to which to assign the Function.
+#
+#     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+#         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+#         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+#
+#
+#     Attributes
+#     ----------
+#
+#     variable : number or np.array
+#         current input value some portion of which (determined by `rate <DDMIntegrator.rate>` that will be added to
+#         prior value.  If it is an array, each element is independently integrated.
+#
+#     rate : 1d np.array
+#         determines the rate of integration based on current and prior values (corresponds to the drift component
+#         of the drift diffusion process).  All elements are between 0 and 1 (0 = no change; 1 = instantaneous change).
+#         If it has a single element, it applies to all elements of `variable <Integrator.variable>`;  if it has more
+#         than one element, each element applies to the corresponding element of `variable <Integrator.variable>`.
+#
+#     noise : float or 1d np.array
+#         determines the random value to be added in each call to `function <Integrator.function>` (corresponds to the
+#         diffusion component of the drift diffusion process).
+#
+#     time_step_size : float
+#         determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
+#         DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
+#
+#     initializer : float or 1d np.array
+#         determines the starting value for integration (i.e., the value to which `old_value <Integrator.old_value>`
+#         is set.  If it is assigned as a `runtime_param <LINK>` it resets `old_value <Integrator.old_value>` to the
+#         specified value (see `initializer <Integrator.initializer>` for details).
+#
+#     old_value : 1d np.array : default variableClassDefault
+#         stores previous value with which `variable <Integrator.variable>` is integrated.
+#
+#     owner : Mechanism
+#         `component <Component>` to which the Function has been assigned.
+#
+#     prefs : PreferenceSet or specification dict : Projection.classPreferences
+#         the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+#         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+#         (see :doc:`PreferenceSet <LINK>` for details).
+#
+#     """
+#
+#     componentName = DDM_INTEGRATOR_FUNCTION
+#
+#     @tc.typecheck
+#     def __init__(self,
+#                  variable_default=None,
+#                  rate=1.0,
+#                  noise=0.5,
+#                  time_step_size=1.0,
+#                  params: tc.optional(dict) = None,
+#                  owner=None,
+#                  prefs: is_pref_set = None,
+#                  context="DDMIntegrator Init"):
+#
+#         # Assign here as default, for use in initialization of function
+#         self.old_value = self.paramClassDefaults[INITIALIZER]
+#         integration_type = DIFFUSION
+#
+#         # Assign args to params and functionParams dicts (kwConstants must == arg names)
+#         params = self._assign_args_to_param_dicts(
+#             integration_type=integration_type,
+#             params=params,
+#             noise=noise,
+#             rate=rate,
+#             time_step_size=time_step_size)
+#
+#         super().__init__(variable_default=variable_default,
+#                          params=params,
+#                          owner=owner,
+#                          prefs=prefs,
+#                          context=context)
+#
+#         # Reassign to kWInitializer in case default value was overridden
+#         self.old_value = [self.paramsCurrent[INITIALIZER]]
+#
+#     def _validate_params(self, request_set, target_set=None, context=None):
+#
+#         super()._validate_params(request_set=request_set,
+#                                  target_set=target_set,
+#                                  context=context)
+#
+#         noise = target_set[NOISE]
+#
+#         if (isinstance(noise, float) == False):
+#             raise FunctionError("noise parameter ({}) for {} must be a float.".
+#                                 format(noise, self.name))
+#
+#         integration_type = target_set[INTEGRATION_TYPE]
+#         if (integration_type != "diffusion"):
+#             raise FunctionError("integration_type parameter ({}) for {} must be diffusion. "
+#                                 "For alternate methods of accumulation, use the Integrator function".
+#                                 format(integration_type, self.name))
 
 
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
