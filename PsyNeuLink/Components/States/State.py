@@ -373,8 +373,8 @@ class State_Base(State):
         if isinstance(owner, (Mechanism, Projection)):
             self.owner = owner
         else:
-            raise StateError("owner argument ({0}) for {1} must be a mechanism or projection".
-                                      format(owner, self.name))
+            raise StateError("\'owner\' argument ({0}) for {1} must be a mechanism or projection".
+                                      format(owner, name))
 
         register_category(entry=self,
                           base_class=State_Base,
@@ -1160,11 +1160,6 @@ class State_Base(State):
         #endregion
 
         #region AGGREGATE INPUT FROM PROJECTION_SPECS
-
-        #region Initialize aggregation
-        from PsyNeuLink.Components.Functions.Function import kwLinearCombinationInitializer
-        combined_values = kwLinearCombinationInitializer
-        #endregion
 
         #region Get type-specific params from PROJECTION_PARAMS
         mapping_params = merge_param_dicts(self.stateParams, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)

@@ -6,8 +6,8 @@ Processing Mechanisms
 
    TransferMechanism
    IntegratorMechanism
-   ObjectiveMechanism
    DDM
+   ObjectiveMechanism
 
 .. automodule:: ProcessingMechanism
    :members:

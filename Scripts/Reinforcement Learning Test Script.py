@@ -22,7 +22,10 @@ action_selection = TransferMechanism(default_input_value=[0,0,0],
 
 p = process(default_input_value=[0, 0, 0],
             pathway=[input_layer,action_selection],
-            learning=LearningProjection(learning_function=Reinforcement(learning_rate=.05)),
+            # learning=LearningProjection(learning_function=Reinforcement()),
+            # learning=LearningProjection(learning_function=Reinforcement(learning_rate=None)),
+            # learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.0)),
+            learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)),
             target=0)
 
 print ('reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
@@ -62,6 +65,7 @@ p.run(num_executions=10,
 input_list = {input_layer:[[1, 1, 1]]}
 
 s = system(processes=[p],
+           # learning_rate=0.05,
            targets=[0])
 
 s.run(num_executions=10,
