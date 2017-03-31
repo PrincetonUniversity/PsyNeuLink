@@ -737,15 +737,32 @@ class Component(object):
         #     self.__setattr__(arg, kwargs[arg])
 
 
-        # MODIFIED 3/30/17 NEW: [IMPLEMENT AUTO PROPERTY]
-        # QUESTION: SEEMS TO BE RETURNING PROPERTY RATHER THAN ITS VALUE??
-        # ERROR:
-        #    <class 'tuple'>: (<class 'typecheck.framework.InputParameterError'>, InputParameterError('__init__() has \
-        #    got an incompatible value for rate: <property object at 0x10b01fc28>',), None)
+        # MODIFIED 3/30/17 NEW: [IMPLEMENTS AUTO PROPERTY]
+        from PsyNeuLink.Components.Functions.Function import Function, Function_Base
         for arg_name, arg_value in kwargs.items():
-            # QUESTION: IF THE ATTRIBUTE EXISTS (I.E., THE BACKING FIELD IS ALREADY THERE) WILL IT LEAVE IT AS SUCH?
-            setattr(self, arg_name, make_property(arg_name, arg_value))
-            TEST = True
+
+
+            # # QUESTION: IF THE ATTRIBUTE EXISTS (I.E., THE BACKING FIELD IS ALREADY THERE) WILL IT LEAVE IT AS IS?
+            # #           WHAT ABOUT IF IT IS ALREADY A PROPERTY (SUCH AS MATRIX FOR A PROJECTION)
+            # # QUESTION:  OLD VERSION ASSIGNED ATTRIB TO INSTANCE;  CAN PROPERTY BE ASSIGNED TO INSTANCE?
+
+            # # VERSION THAT ASSIGNS TO INSTANCE RATHER THAN CLASS
+            # # PROBLEM: RETURNS PROPERTY RATHER THAN VALUE
+            # setattr(self, arg_name, make_property(arg_name, arg_value))
+
+            # # VERSION THAT ASSIGNS TO CLASS:
+            # # PROBLEM: FAILS TO PROPERLY INSTANTIATE FUNCTIONS FROM CLASSES (EVC ValueFunction)
+            # setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
+
+            # VERSION THAT ASSIGNS TO CLASS AND SKIPS FUNCTIONS
+            # # PROBLEM: MESSES UP IN RL SCRIPT:
+            # #          WHEN RUN ALONE:  MATRIX IS ALREADY A PROPERTY;  ASSIGNED KEYWORD RATHER THAN PARSED;
+            # #          WHEN RUN IN META SCRIPT:  ATTRIBS BLEED OVER TO OTHER CLASSES: GAIN -> Linear
+            if (isinstance(arg_value, Function_Base) or
+                    (inspect.isclass(arg_value) and issubclass(arg_value, Function_Base))):
+                self.__setattr__(arg_name, arg_value)
+            else:
+                setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
 
         # MODIFIED 3/30/17 END
 
