@@ -742,12 +742,14 @@ class Component(object):
         for arg_name, arg_value in kwargs.items():
 
 
+            # # PROBLEM: SEEMS PROPERTIES CAN'T BE PUT ON INSTANCES
             # # QUESTION: IF THE ATTRIBUTE EXISTS (I.E., THE BACKING FIELD IS ALREADY THERE) WILL IT LEAVE IT AS IS?
             # #           WHAT ABOUT IF IT IS ALREADY A PROPERTY (SUCH AS MATRIX FOR A PROJECTION)
             # # QUESTION:  OLD VERSION ASSIGNED ATTRIB TO INSTANCE;  CAN PROPERTY BE ASSIGNED TO INSTANCE?
 
             # VERSION THAT ASSIGNS TO INSTANCE RATHER THAN CLASS
-            # PROBLEM: RETURNS PROPERTY RATHER THAN VALUE - DOESN'T GET PAST TYPE CHECK!
+            # PROBLEM: RETURNS PROPERTY RATHER THAN VALUE -
+            #              DOESN'T GET PAST TYPE CHECK, AND CAN'T ACCESS ITS VALUE IN ShellClasses.parameter_spec()
             setattr(self, arg_name, make_property(arg_name, arg_value))
 
             # # VERSION THAT ASSIGNS TO CLASS:
