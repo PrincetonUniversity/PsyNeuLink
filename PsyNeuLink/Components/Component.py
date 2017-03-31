@@ -485,7 +485,7 @@ class Component(object):
 
         #region INSTANTIATE ATTRIBUTES AFTER FUNCTION
         # Stub for methods that need to be executed after instantiating function
-        #    (e.g., instantiate_outputState in Mechanism)
+        #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
         #endregion
 
@@ -741,36 +741,27 @@ class Component(object):
         from PsyNeuLink.Components.Functions.Function import Function, Function_Base
         for arg_name, arg_value in kwargs.items():
 
-            # self.__class__.mro(): ALL BASE CLASSES IN THE ORDER IT WILL LOOK FOR METHODS
-
-            # # PROBLEM: ??PROPERTIES CAN'T BE PUT ON INSTANCES
-            # # QUESTION: IF THE ATTRIBUTE EXISTS (I.E., THE BACKING FIELD IS ALREADY THERE) WILL IT LEAVE IT AS IS?
-            # #           WHAT ABOUT IF IT IS ALREADY A PROPERTY (SUCH AS MATRIX FOR A PROJECTION)
-            # # QUESTION:  OLD VERSION ASSIGNED ATTRIB TO INSTANCE;  CAN PROPERTY BE ASSIGNED TO INSTANCE?
-
-            # # VERSION THAT ASSIGNS TO INSTANCE RATHER THAN CLASS
-            # # PROBLEM: RETURNS PROPERTY RATHER THAN VALUE -
-            # #              DOESN'T GET PAST TYPE CHECK, AND CAN'T ACCESS ITS VALUE IN ShellClasses.parameter_spec()
-            # setattr(self, arg_name, make_property(arg_name, arg_value))
+            # # PROBLEM: PROPERTIES CAN'T BE PUT ON INSTANCES
 
             # # VERSION THAT ASSIGNS TO CLASS:
-            # # PROBLEM: FAILS TO PROPERLY INSTANTIATE FUNCTIONS FROM CLASSES (EVC ValueFunction)
-            # setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
+            # # PROBLEM: ISN'T HANDLING function_params
+            # # ??STILL A PROBLEM: FAILS TO PROPERLY INSTANTIATE FUNCTIONS FROM CLASSES (EVC ValueFunction)
+            if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
+                setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
+            setattr(self, '_'+arg_name, arg_value)
 
-            # VERSION THAT ASSIGNS TO CLASS AND SKIPS FUNCTIONS
-            # # PROBLEM: MESSES UP IN RL SCRIPT:
-            # #          WHEN RUN ALONE:  MATRIX IS ALREADY A PROPERTY;  ASSIGNED KEYWORD VALUE RATHER THAN PARSED;
-            # #          WHEN RUN IN META SCRIPT:  ATTRIBS BLEED OVER TO OTHER CLASSES: gain & bias -> Linear
-            if (isinstance(arg_value, Function_Base) or
-                    (inspect.isclass(arg_value) and issubclass(arg_value, Function_Base))):
-                self.__setattr__(arg_name, arg_value)
-            else:
-                # FIX: DO AS "ANY" ON ALL mro CLASSES
-                for x in self.__class__.mro():
-                    if not hasattr(x, arg_name):
-                        setattr(x, arg_name, make_property(arg_name, arg_value))
-                setattr(self, '_'+arg_name, arg_value)
-
+            # # VERSION THAT ASSIGNS TO CLASS AND SKIPS FUNCTIONS
+            # # # PROBLEM: MESSES UP IN RL SCRIPT:
+            # # #          WHEN RUN ALONE:  MATRIX IS ALREADY A PROPERTY;  ASSIGNED KEYWORD VALUE RATHER THAN PARSED;
+            # if (isinstance(arg_value, Function_Base) or
+            #         (inspect.isclass(arg_value) and issubclass(arg_value, Function_Base)) or
+            #         (isinstance(arg_value, function_type))):
+            #     self.__setattr__(arg_name, arg_value)
+            # else:
+            #     # Check whether property exists on any parent classabove self in the hierarchy (i.e., in mro):
+            #     if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
+            #         setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
+            #     setattr(self, '_'+arg_name, arg_value)
 
         # MODIFIED 3/30/17 END
 
