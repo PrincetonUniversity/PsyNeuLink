@@ -24,7 +24,8 @@ for script in scripts:
     file = open(script)
     print("\nRUNNING {}\n".format(script))
     # exec(file.read())
-    subprocess.check_output([sys.executable, script])
+    for line in subprocess.check_output([sys.executable, script]).splitlines():
+        print(str(line, 'utf-8'))
     file.close()
     print ("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
 
