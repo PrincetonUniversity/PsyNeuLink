@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Learning Mechanism" href="LearningMechanism.html"/>
-        <link rel="next" title="Control Mechanisms" href="ControlMechanism.html"/>
+        <link rel="next" title="Control Mechanism" href="ControlMechanism.html"/>
         <link rel="prev" title="Learning Mechanism" href="LearningMechanism.html"/> 
 
   
@@ -100,7 +100,7 @@
 <li class="toctree-l4"><a class="reference internal" href="LearningMechanism.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html">Control Mechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#creating-an-adaptivemechanism">Creating an AdaptiveMechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#structure">Structure</a></li>
@@ -172,61 +172,76 @@
 <span id="learningprojection"></span><h1>LearningProjection<a class="headerlink" href="#module-LearningProjection" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="learningprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A LearningProjection takes as its input the output of its <a class="reference internal" href="#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> &#8211;
-a <code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code>.  It uses this as an <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> to compute a <a class="reference internal" href="#LearningProjection.LearningProjection.weight_change_matrix" title="LearningProjection.LearningProjection.weight_change_matrix"><code class="xref any py py-attr docutils literal"><span class="pre">weight_change_matrix</span></code></a>
-that is assigned as the <a class="reference internal" href="#LearningProjection.LearningProjection.value" title="LearningProjection.LearningProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the LearningProjection.  This is used, in turn,
-by the LearningProjection&#8217;s <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> &#8211; a <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> for
-a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to modify its  <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter.  A LearningProjection can
-be assigned different <a class="reference internal" href="#learningprojection-function"><span class="std std-ref">functions</span></a> to implement different learning algorithms,
-which are associated with corresponding types of <code class="xref any docutils literal"><span class="pre">MonitoringMechanisms</span></code>.</p>
+<p>A LearningProjection is a subclass of <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> that projects from a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to the
+<code class="xref std std-keyword docutils literal"><span class="pre">MATRIX</span></code> <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, and modifies the value of the
+<a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of that MappingProjection.</p>
 </div>
 <div class="section" id="creating-a-learningprojection">
 <span id="learningprojection-creation"></span><h2>Creating a LearningProjection<a class="headerlink" href="#creating-a-learningprojection" title="Permalink to this headline">¶</a></h2>
-<p>Its <a class="reference internal" href="#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> (the source of its
-<a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>) must be a
-<code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code>, and its <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> must be the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a>
-of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.  When a LearningProjection is created, its full initialization is
-<span class="xref std std-ref">deferred</span> until its <a class="reference internal" href="#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and
-<a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This allows a LearningProjection to be created
-before its <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.sender" title="ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.receiver" title="ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a script), by calling its constructor
-without specifying its <code class="xref std std-keyword docutils literal"><span class="pre">sender</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">receiver</span></code> arguments.</p>
-<p>It is also possible to create a LearningProjection without ever specifying its <code class="xref std std-keyword docutils literal"><span class="pre">sender</span></code>.  In this case,
-when it is initialized, the type of <code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code> it requires will be inferred from
-context, and created when it is initialized (see <a class="reference internal" href="#learningprojection-structure"><span class="std std-ref">Structure</span></a> below).  In contrast, a
-LearningProjection&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">receiver</span></code> must be explicitly specified at some point.  Once that is done,
-for the LearningProjection to be operational, initializaton must be completed by calling its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code>
+<p>A LearningProjection can be created using any of the standard ways to <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">create a projection</span></a>,
+or by including it in a tuple that specifies the <a class="reference internal" href="MappingProjection.html#mapping-matrix-specification"><span class="std std-ref">matrix</span></a> parameter for a
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.  LearningProjections are also created automatically, along with the other
+<a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">components required for learning</span></a>, when learning is specified for a
+<a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a> or a <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>.</p>
+<p>If a LearningProjection is created using its constructor on its own, the <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.receiver" title="ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>
+argument must be specified.  If it is included in the <a class="reference internal" href="MappingProjection.html#mapping-matrix-specification"><span class="std std-ref">matrix specification</span></a> for a
+MappingProjection, the parameterState for the MappingProjection&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">MATRIX</span></code> will be assigned as the
+LearningProjection&#8217;s <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  If its <a class="reference internal" href="#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> is not
+specified, its assignment depends on the <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  If the receiver belongs to a
+MappingProjection that projects between two mechanisms that are both in the same <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a> or
+<a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>, then the LearningProjection&#8217;s <a class="reference internal" href="#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> is assigned
+to the <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-signal"><span class="std std-ref">LEARNING_SIGNAL</span></a> outputState of the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> for the
+MappingProjection. If there is none, it is <a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">created</span></a> along with any other components
+needed to implement learning for the MappingProjection (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">Learning Configurations</span></a>).</p>
+<p>When a LearningProjection is created, its full initialization is <span class="xref std std-ref">deferred</span> until its
+<a class="reference internal" href="#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This
+allows a LearningProjection to be created before its <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.sender" title="MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.receiver" title="MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them
+in a script), by calling its constructor without specifying its <code class="xref std std-keyword docutils literal"><span class="pre">sender</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">receiver</span></code> arguments.
+However, for the LearningProjection to be operational, initialization must be completed by calling its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code>
 method.  This is not necessary if learning has been specified for a <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>,
 <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a>, or as the <a class="reference internal" href="MappingProjection.html#mappingprojection-tuple-specification"><span class="std std-ref">projection</span></a> in the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a
 process &#8211; in those cases, deferred initialization is completed automatically.</p>
-<div class="section" id="automatic-creation">
-<span id="learningprojection-automatic-creation"></span><h3>Automatic creation<a class="headerlink" href="#automatic-creation" title="Permalink to this headline">¶</a></h3>
-</div>
 </div>
 <div class="section" id="structure">
-<span id="learningprojection-structure"></span><span id="learningmechanism-simple-learning-figure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="learningprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> of a LearningProjection is the
+<code class="xref any docutils literal"><span class="pre">LEARNING_SIGNAL</span></code> outputState of a LearningMechanism. Its
+<a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> is the <code class="xref any docutils literal"><span class="pre">MATRIX</span></code> parameterState of a MappingProjection,
+Its <a class="reference internal" href="#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">function</span> <span class="pre">simply</span> <span class="pre">conveys</span> <span class="pre">the</span> <span class="pre">`learning_signal</span></code></a> received from its
+<a class="reference internal" href="#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to the <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>, possibly modulated by
+the <a class="reference internal" href="#LearningProjection.LearningProjection.learning_rate" title="LearningProjection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a>.</p>
 </div>
 <div class="section" id="execution">
-<span id="learningprojection-execution"></span><span id="learningprojection-function"></span><span id="learningprojection-target-vs-terminal-figure"></span><span id="learningprojection-targets"></span><span id="learningprojection-monitoringmechanism"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="learningprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>A LearningProjection cannot be executed directly.  It is executed when its
+<a class="reference internal" href="#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a> is executed the MATRIX parameterState
+for the <a class="reference internal" href="#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a> is updated.  Note that these events only occur
+when the ProcessingMechanism to which the <a class="reference internal" href="#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a> projects is
+executed (see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of &#8220;lazy&#8221; updating). When the LearningProjection is
+executed, it gets the <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> from its <a class="reference internal" href="#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>
+and conveys this to its <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>, modified only by the <a class="reference internal" href="#LearningProjection.LearningProjection.learning_rate" title="LearningProjection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> if that is specified.  Additional attributes are described under
+<a class="reference internal" href="#learningprojection-class-reference"><span class="std std-ref">Class Reference</span></a> below.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="learningprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="LearningProjection.LearningProjection">
-<em class="property">class </em><code class="descclassname">LearningProjection.</code><code class="descname">LearningProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningProjection.LearningProjection" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">LearningProjection.</code><code class="descname">LearningProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>learning_function</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningProjection.LearningProjection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a projection that modifies the matrix parameter of a MappingProjection.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sender</strong> (<em>Optional[MonitoringMechanism or OutputState of one]</em>) &#8211; the source of the <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> for the LearningProjection. If it is not specified, one will be
-<a class="reference internal" href="#learningprojection-automatic-creation"><span class="std std-ref">automatically created</span></a> that is appropriate for the
+<li><strong>sender</strong> (<em>Optional[LearningMechanism or LEARNING_SIGNAL OutputState of one]</em>) &#8211; the source of the <a class="reference internal" href="Function.html#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> for the LearningProjection. If it is not specified, one will be
+<code class="xref any docutils literal"><span class="pre">automatically</span> <span class="pre">created</span></code> that is appropriate for the
 LearningProjection&#8217;s <code class="xref any docutils literal"><span class="pre">errorSource</span></code>.</li>
 <li><strong>receiver</strong> (Optional[MappingProjection or ParameterState for <code class="docutils literal"><span class="pre">matrix</span></code> parameter of one]) &#8211; the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> (or the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that owns it) for the
 <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> to be modified by the LearningProjection.</li>
-<li><strong>learning_rate</strong> (<em>Optional[float]</em>) &#8211; specifies a learning_rate for the LearningProjection, that will supercede any specified for the
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> from which it projects, of any <a class="reference internal" href="Process.html"><span class="doc">process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">system</span></a> to which that
-belongs (see <a class="reference internal" href="#"><span class="doc">learning_rate</span></a> for details).</li>
+<li><strong>learning_function</strong> (<em>Optional[LearningFunction or function] : default BackPropagation</em>) &#8211; specifies a function to be used for learning by the <code class="xref any docutils literal"><span class="pre">sender</span></code> (i.e., its
+<a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute).</li>
+<li><strong>learning_rate</strong> (<em>Optional[float]</em>) &#8211; if specified, it is applied mulitiplicatively to <a class="reference internal" href="#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> received from the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>
+from which it projects (see <a class="reference internal" href="#LearningProjection.LearningProjection.learning_rate" title="LearningProjection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for additional details).</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
 the projection&#8217;s default <a class="reference internal" href="#LearningProjection.LearningProjection.function" title="LearningProjection.LearningProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and parameter assignments.  Values specified
@@ -251,35 +266,36 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="LearningProjection.LearningProjection.sender">
 <code class="descname">sender</code><a class="headerlink" href="#LearningProjection.LearningProjection.sender" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OutputState of MonitoringMechanism</em> &#8211; source of <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>.</p>
+<dd><p><em>LEARNING_SIGNAL OutputState of a LearningMechanism</em> &#8211; source of <a class="reference internal" href="#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="LearningProjection.LearningProjection.receiver">
 <code class="descname">receiver</code><a class="headerlink" href="#LearningProjection.LearningProjection.receiver" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ParameterState of MappingProjection</em> &#8211; parameterState for the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of
-the <a class="reference internal" href="#LearningProjection.LearningProjection.mappingProjection" title="LearningProjection.LearningProjection.mappingProjection"><code class="xref any py py-attr docutils literal"><span class="pre">mappingProjection</span></code></a> to be modified by the LearningProjection.</p>
+<dd><p><em>MATRIX ParameterState of a MappingProjection</em> &#8211; parameterState for the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of
+the <a class="reference internal" href="#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a> to be modified by the LearningProjection.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="LearningProjection.LearningProjection.mappingProjection">
-<code class="descname">mappingProjection</code><a class="headerlink" href="#LearningProjection.LearningProjection.mappingProjection" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MappingProjection</em> &#8211; the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that owns the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> to which the
-LearningProjection projects (i.e., that owns its <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>).</p>
+<dt id="LearningProjection.LearningProjection.learned_projection">
+<code class="descname">learned_projection</code><a class="headerlink" href="#LearningProjection.LearningProjection.learned_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>MappingProjection</em> &#8211; the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to which LearningProjection projects, and to which its
+<code class="xref any docutils literal"><span class="pre">receiver</span> <span class="pre">&lt;LearningProjection.receiver</span></code> and the <a class="reference internal" href="MappingProjection.html"><span class="doc">matrix</span></a> parameter to be modified belong.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="LearningProjection.LearningProjection.variable">
 <code class="descname">variable</code><a class="headerlink" href="#LearningProjection.LearningProjection.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211;</p>
-<p>same as <a class="reference internal" href="#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>.</p>
+<dd><p><em>2d np.array</em> &#8211; same as <a class="reference internal" href="#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="LearningProjection.LearningProjection.learning_signal">
 <code class="descname">learning_signal</code><a class="headerlink" href="#LearningProjection.LearningProjection.learning_signal" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; matrix of parameter (weight) changes to convey to the matrix parameter of the LearningProjection&#8217;s
-<code class="xref any docutils literal"><span class="pre">receiver</span></code> (rows correspond to sender, columns to receiver).</p>
+<dd><p><em>2d np.array</em> &#8211; matrix of &#8220;weight&#8221; changes calculated by the LearningProjection&#8217;s <a class="reference internal" href="#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and
+used to modify the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of its <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>
+(i.e., the <a class="reference internal" href="#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a>). Rows correspond to sender,
+columns to receiver (i.e., the input and output of the MappingProjection, respectively).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -291,27 +307,32 @@ LearningProjection projects (i.e., that owns its <a class="reference internal" h
 <dl class="attribute">
 <dt id="LearningProjection.LearningProjection.weight_change_params">
 <code class="descname">weight_change_params</code><a class="headerlink" href="#LearningProjection.LearningProjection.weight_change_params" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>dict : default: see below</em> &#8211; specifies to <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> how the weight changes specified by the
-<a class="reference internal" href="#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> received from the LearningMechanism should be applied to its matrix parameter.
-It assumes that the MappingProjection.function of the receiver is a LinearCombination Function.
-By default it includes the following entries:  <code class="xref any docutils literal"><span class="pre">FUNCTION_PARAMS</span></code>: <code class="xref any docutils literal"><span class="pre">OPERATION</span></code>: <code class="xref any docutils literal"><span class="pre">SUM</span></code>,
-<code class="xref any docutils literal"><span class="pre">PARAMETER_MODULATION_OPERATION</span></code>: <code class="xref any docutils literal"><span class="pre">ModulationOperation.ADD</span></code>, <code class="xref any docutils literal"><span class="pre">PROJECTION_TYPE</span></code>: <code class="xref any docutils literal"><span class="pre">LEARNING_PROJECTION</span></code>.</p>
+<dd><p><em>dict : default: see below</em> &#8211; specifies to the <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> how the <a class="reference internal" href="#LearningProjection.LearningProjection.weight_change_matrix" title="LearningProjection.LearningProjection.weight_change_matrix"><code class="xref any py py-attr docutils literal"><span class="pre">weight_change_matrix</span></code></a> should be applied to the
+<code class="xref any docutils literal"><span class="pre">matrix</span></code>.  It assumes that the
+<code class="xref any docutils literal"><span class="pre">function</span></code> of the receiver is <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>.  By default it passes
+the following dictionary of specifications to the <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FUNCTION_PARAMS</span><span class="p">:</span> <span class="p">{</span><span class="n">OPERATION</span><span class="p">:</span> <span class="n">SUM</span><span class="p">,</span>
+                  <span class="n">PARAMETER_MODULATION_OPERATION</span><span class="p">:</span> <span class="n">ModulationOperation</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span>
+                  <span class="n">PROJECTION_TYPE</span><span class="p">:</span> <span class="n">LEARNING_PROJECTION</span><span class="p">}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="LearningProjection.LearningProjection.learning_rate">
 <code class="descname">learning_rate</code><a class="headerlink" href="#LearningProjection.LearningProjection.learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[float]</em> &#8211; determines the learning_rate for the LearningProjection.  If specified, it supercedes any specified for
-the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> from which it projects, of any <a class="reference internal" href="Process.html"><span class="doc">process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">system</span></a> to which that
-belongs (see <a class="reference internal" href="#"><span class="doc">learning_rate</span></a> for details).  If is <code class="xref any docutils literal"><span class="pre">None</span></code>, the learning_rate for the
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> will be used.</p>
+<dd><p><em>Optional[float]</em> &#8211; determines the <code class="xref std std-keyword docutils literal"><span class="pre">learning_rate</span></code> for the LearningProjection.  If specified, it is applied
+multiplicatively to the <a class="reference internal" href="#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> and thus can be used to
+modulate the learning rate in addition to (and on top of) the one specified for the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>,
+its <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or the process or system to which it belongs
+(see <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">learning_rate</span></a> of LearningMechanism for additional details).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="LearningProjection.LearningProjection.weight_change_matrix">
 <code class="descname">weight_change_matrix</code><a class="headerlink" href="#LearningProjection.LearningProjection.weight_change_matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; matrix of changes to be made to the <code class="xref any docutils literal"><span class="pre">mappingWeightMatrix</span></code> (rows correspond to sender, columns to receiver);
-same as <a class="reference internal" href="#LearningProjection.LearningProjection.value" title="LearningProjection.LearningProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
+<dd><p><em>2d np.array</em> &#8211; matrix of changes to be made to the <code class="xref any docutils literal"><span class="pre">mappingWeightMatrix</span></code>, after learning_rate has been applied to the
+<a class="reference internal" href="#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>; same as <a class="reference internal" href="#LearningProjection.LearningProjection.value" title="LearningProjection.LearningProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -350,7 +371,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="ControlMechanism.html" class="btn btn-neutral float-right" title="Control Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ControlMechanism.html" class="btn btn-neutral float-right" title="Control Mechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="LearningMechanism.html" class="btn btn-neutral" title="Learning Mechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

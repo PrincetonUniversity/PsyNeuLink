@@ -74,9 +74,14 @@ DEPRECATED:
     - brief description, with pointers to corresponding attribute for more detailed information.
 - Attributes:
     - first line of each is: "attribute name : type : default <value>""
-    - full description of all externally-accessible attributes, inclding use and constraints on values;
+    - full description of all externally-accessible attributes, including use and constraints on values;
     - organized as close as possible to order of specification in constructor, instantiation, and/or execution;
     - last two are always (in order) name and prefs (with boilerplate descriptions)
+- Commenting:
+    - Sections of the docstring can be commented out by preceding the section with "COMMENT:" and ending it with 
+    "COMMENT" (note the terminal colon in the first identifier and its absence in the second).
+    Material that is either technical in nature, features that are planned but not implemented, and features that are
+     implemented but either still in development or are not being supported should be commented out.
 
 ### MODULE ORGANIZATION:
 - License

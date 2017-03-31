@@ -194,7 +194,7 @@ and assign the result as their output.</p>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a></dt>
+<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a></dt>
 <dd><p class="first last">These monitor the output of other mechanisms for use in controlling the parameters of other mechanisms or their
 functions.</p>
 </dd>
@@ -256,13 +256,13 @@ necessarily the case that the <a class="reference internal" href="Keywords.html#
 </div></blockquote>
 <p id="system-full-fig"><strong>Components of a System</strong></p>
 <div class="figure" id="id1">
-<a class="reference internal image-reference" href="_images/System_full_fig.png"><img alt="Overview of major PsyNeuLink components" src="_images/System_full_fig.png" style="width: 8775.0px; height: 7625.25px;" /></a>
+<a class="reference internal image-reference" href="_images/System_full_fig.pdf"><img alt="Overview of major PsyNeuLink components" src="_images/System_full_fig.pdf" /></a>
 <p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> are shown, both belonging to the same <a class="reference internal" href="#"><span class="doc">system</span></a>.  Each process has a
 series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
 that converge on a common final ProcessingMechanism.  Each ProcessingMechanism is labeled with its designation in
-the system.  The <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism for both processes projects to a <code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code> that is used to drive
-<a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a> in Process B. It also projects to a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>
-that <a class="reference internal" href="ControlProjection.html"><span class="doc">controls</span></a> ProcessingMechanisms in both Processes A and B.  Note that the mechanisms and
+the system.  The <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism for both processes projects to an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that is used to
+drive <a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a> in Process B. It also projects to a separate ObjectiveMechanism that is used
+for control of ProcessingMechanisms in both Processes A and B.  Note that the mechanisms and
 projections responsible for learning and control belong to the system and can monitor and/or control mechanisms
 belonging to more than one process (as shown for control in this figure).</span></p>
 </div>
@@ -322,7 +322,7 @@ in sequence or mechanism format, one target must be provided for each <a class="
 <p class="first admonition-title">Note</p>
 <p class="last">A <a class="reference internal" href="Process.html#Process.Process_Base.targetMechanisms" title="Process.Process_Base.targetMechanisms"><code class="xref py py-data docutils literal"><span class="pre">targetMechanism</span></code></a> of a process is not necessarily a
 <code class="xref py py-data docutils literal"><span class="pre">targetMechanism</span></code> of the system to which it belongs
-(see <a class="reference internal" href="LearningProjection.html#learningprojection-targets"><span class="std std-ref">Execution</span></a>).</p>
+(see <span class="xref std std-ref">LearningProjection_Targets</span>).</p>
 </div>
 </div>
 <div class="section" id="control">
@@ -361,12 +361,12 @@ dictionary (see <a class="reference internal" href="Process.html"><span class="d
 <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>). The key for each entry is a mechanism object, and the value is a number,
 list or 1d np.array that must be compatible with the format of the first item of the mechanism&#8217;s value
 (i.e., mechanism.value[0]).</li>
-<li><strong>controller</strong> (<em>ControlMechanism : default DefaultController</em>) &#8211; specifies the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> used to monitor the value of the outputState(s) for mechanisms specified in
+<li><strong>controller</strong> (<em>ControlMechanism : default DefaultController</em>) &#8211; specifies the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> used to monitor the value of the outputState(s) for mechanisms specified in
 <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code>, and that specify the value of <code class="xref any docutils literal"><span class="pre">ControlProjections</span></code> in the system.</li>
 <li><strong>enable_controller</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; specifies whether the <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is executed during system execution.</li>
 <li><strong>monitor_for_control</strong> (<em>list of OutputState objects or specifications : default None</em>) &#8211; specifies the outputStates of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms in the system to be monitored by its <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>
 (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for specifying the <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> argument).</li>
-<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all mechanisms in the system (see <a class="reference internal" href="Process.html#Process.Process_Base.learning_rate" title="Process.Process_Base.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
+<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all mechanisms in the system (see <a class="reference internal" href="Function.html#Function.BackPropagation.learning_rate" title="Function.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
 information).</li>
 <li><strong>targets</strong> (<em>Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes</em>) &#8211; the values assigned to the TARGET input of each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism in the system (listed in its
 <a class="reference internal" href="Process.html#Process.Process_Base.targetMechanisms" title="Process.Process_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanisms</span></code></a> attribute).  There must be the same number of items as there are <a class="reference internal" href="Process.html#Process.Process_Base.targetMechanisms" title="Process.Process_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanisms</span></code></a>,
@@ -723,17 +723,53 @@ each execution.</p>
 
 <dl class="method">
 <dt id="System.System_Base.show_graph">
-<code class="descname">show_graph</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='BT'</em>, <em>projections='edges'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shows a graph of a system&#8217;s mechanisms and projections.
-Arguments
-output_fmt : output format can be either &#8216;pdf&#8217; or &#8216;jupyter&#8217;</p>
-<blockquote>
-<div>pdf will actually render and open a pdf
-jupyter will just return the graph to the output stream, ideal for working in jupyter notebooks</div></blockquote>
-<dl class="docutils">
-<dt>direction</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">can be used to set rank direction of graph</span><dd>possible inputs are BT, TB, LR, and RL</dd>
-</dl>
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='BT'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>output_fmt</strong> (<em>'jupyter' or 'pdf'</em>) &#8211; pdf to generate and open a pdf with the visualization,
+jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)</li>
+<li><strong>direction</strong> (<em>'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left</em>) &#8211; rank direction of graph</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Graphviz graph object if output_fmt is &#8216;jupyter&#8217;</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="System.System_Base.show_graph_with_learning">
+<code class="descname">show_graph_with_learning</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='BT'</em>, <em>learning_color='blue'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph_with_learning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>output_fmt</strong> (<em>'jupyter' or 'pdf'</em>) &#8211; pdf to generate and open a pdf with the visualization,
+jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)</li>
+<li><strong>direction</strong> (<em>'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left</em>) &#8211; rank direction of graph</li>
+<li><strong>learning_color</strong> (<em>default is 'blue', set to 'black' to turn off</em>) &#8211; determines color with which to highlight learning machinery</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Graphviz graph object if output_fmt is &#8216;jupyter&#8217;</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>

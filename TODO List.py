@@ -2,7 +2,11 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# HIGH LEVEL ISSUES:
+# Bryn:
+#  1) Programmatic creation of @property
+#  2) Plug & play
+
+# HIGH LEVEL / DESIGN / CONVENTION ISSUES:
 #   1) MANAGEMENT OF RETURN_VALUE FOR MECHANISMS (AS LIST VS. 2d NP.ARRAY)
 #   2) ASSIGNMENT AND NAMING OF FUNCTION_PARAMS FOR AN OBJECT;
 #      PROBLEMS:
@@ -13,6 +17,20 @@
 #        - RENAME ANY CONFLICTS WITH PREFIX "function_<param_name>" (E.G., function_learning_rate)
 #        - RENAME ALL FUNCTION_PARAMS WITH PREFIX "function_<param_name>"
 #        - DISALLOW CONFLICTING NAMES AND THROW EXCPETION WHEN THEY ARE DETECTED IN _instantiate_parameter_state()
+#        * MAKE @property ATTRIBUTES THAT POINT TO FUNCTION'S PARAM(S)
+#   3) MONITORING SPECIFICATION SYNTAX:  Restrict specification to ObjectiveMechanism and possibly ControlMechanism,
+#                                        or also allow "locally" on OutputStates, Mechanisms, Processes and Systems?
+#   4) SPECIFICATION OF LEARNING USING A PROJECTION SPEC VS. A DEDICATED KEYWORD (THAT ALLOWS FCT AND LEARNING_RATE)
+#          PRO:  CONSISTENT WITH CONTROL
+#          CON:  AKWARD TO HAVE TO GIVE THE PROJECTION THE FUNCTION AND LEARNING RATE THAT ARE PASSED TO LearningMech
+#   5) SHOULD ATTRIBUTES OF PARENT CLASSED BE DOCUMENTED ON CHILD CLASSES?
+#          (E.G., PREFS, NAME, FUNCTION, FUNCTON_PARAMS, USER_PARAMS, ETC.)
+#   6) SHOULD WE SUPPORT >2D VALUES (PASSED ALONG PROJECTIONS, USED AS STATE VALUES, ETC.; INPUTS TO TRANSFER FCT, ETC.)
+
+# TASKS:
+#  1) BREAK UP FUNCTION INTO SEPARATE MODULES
+#  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMLAR TO MatrixKeywords)
+
 
 
 # COMPOSITION IMPLEMENTATION NOTE:
@@ -24,7 +42,36 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)# FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
+# FIX: NAMING OF MAPPING PROJECTIONS
+# FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
+# FIX: DERIVATIVE FOR SoftMax Function
+# FIX: ADD owner ARG TO Function CONSTRUCTOR (DEFAULT = NONE)
+# FIX: SEARCH FOR AND PURGE: monitoringMechanism and monitoring_mechanism AND monitoring_mech
 # FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
+# FIX: GET STRAIGHT THE HANDLING OF learning_rate for:
+#                  LearningMechanism
+#                  its function
+#                  LearningProjection
+#                  Processs
+#                  System
+# IMPLEMENT: runtime_params FOR learning mechanisms in system (CURRENTLY ONLY SUPPORTS learning_rate);
+#            NEED TO IMPLEMENT SOME WAY OF SPECIFYING A LearningMechanism IN A mech_tuple,
+#            (SINCE LearningMechanisms ARE NOT CURRENTLY SPECIFIABLE IN A PROCESS' pathway ATTRIBUTE)
+#            [OR DOCUMENT THAT THIS IS NOT SUPPORTED]
+
+# IMPLEMENT:  MONITORED_OUTPUT_STATES param for Mechanism --
+#                  make this a general form of MONITOR_FOR_CONTROL, that can be used by ObjectiveMechanism
+#             [SEE `monitoring_status` in ObjectiveMechanism]
+# IMPLEMENT: MonitoredOutputStatesOption in string for MONITORED_VALUES specification of ObjectiveMechanism
+#
+# DOCUMENTATION:
+#    search for "specification dictionary" and replace with: `specification dictionary <Mechanism_Creation>`
+#
+# CONFIRM (IN ObjectiveMechanism):
+#         elif isinstance(monitored_value, InputState): [~616]
+#         if isinstance(state_spec, dict): [~753]
+#         if isinstance(state_spec, MonitoredOutputStatesOption): [~759]
 
 # FIX: LearningComponents CLASS:
 #           ADD GENERIC CHECK (FOLLOWING IMPLEMENTATION IN error_signal_mech) THAT CHECKS THAT ANY RETURNED VALUE
@@ -47,97 +94,6 @@
 #         if self.learning_rate:
 #             params.update({SLOPE:self.learning_rate})
 
-#
-# IMPLEMENT: LearningMechanism:
-#         CONFIRM:  ERROR DERIVATIVE SHOULD BE MULTIPLIED BY ERROR_OUTPUT IN BP
-#         TODO:
-#           • LearningMechanism:
-#             √ variable:
-#                  √ error_output
-#           • BP:
-#             √ params:
-#                  √ error_matrix param
-#                  √ error_derivative
-#             √ variable:
-#                  √ error_output
-#           • instantiate_learning_components:
-#             √ add lc.error_signal_mech
-#             √ add lc.error_signal_mech_output
-#             √ delete lc.error_objective_mech
-#             √ delete lc.error_objective_mech_out
-#             - is_target:
-#                 - instantiate ObjectiveMechanism
-#                   - SAMPLE input˚
-#                   - TARGET inputState:  TARGET
-#                   - error_projection MappingProjection: activation_mech -> ObjectiveMech SAMPLE
-#                   - MappingProjectoin from ObjecxtiveMechamism Output to LearningMechanism error_signal input
-#                 - LearningMechanism
-#                   - error_output inputState: [1...] (size of ??
-#                   - error_signal inputState: Projection from ObjectiveMechanism
-#                   - error_derivative:  Linear (but get from Process or System InputState)
-#                   - error_matrix: get from error_projection
-#              - NOT is_target:
-#                 - NO ObjectiveMechanism
-#                 - LearningMechanism
-#                   - add error_signal output
-#                   - error_output inputState: [1...] (size of ??
-#                   - error_signal inputState: Projection from error_learning_mech
-#                   - error_derivative:  get from error_mech_fct
-#                   - error_matrix: get from error_projection
-#                   - MappingProjection from error_learning_mech_error_signal output
-#
-#         PROCESS & SYSTEM:
-#           • Convert ProcessInputState and SystemInputState into Mechanisms with LinearFunction IDENTITY_FUNCTION
-#           • Use only one ObjectiveMechanism for all levels with the following args:#                 default_input_value[[ACTIVITY][ERROR]]
-#                 monitored_values: [[next_level.OutputState][next_level.objective_mechanism.OutputState]]
-#                 names: [[ACTIVITY][ERROR]]
-#                 function:  ErrorDerivative(variable, derivative)
-#                                variable[0] = activity
-#                                variable[1] = error_signal from next_level ObjectiveMechanism (target for TERMINAL)
-#                                derivative = next_level_derivative (1 for TERMINAL)
-#                 role:LEARNING
-#           • Use only one Learning mechanism with the following args:
-#                 variable[[INPUT][OUTPUT]]
-#                 error_source_derivative
-#                 next_level_derivative
-#                 next_level_matrix
-#                 function
-#             Initialize and assign args with the following WIZZARD:
-#         WIZZARD:
-#             Needs to know
-#                 error_source (Mechanism)
-#                     error_source_derivative (function)
-#                 next_level (Mechanism)
-#                     next_level_derivative (function)
-#                     next_level_matrix (ndarray) - for MappingProjection from error_source to next_level
-#             ObjectiveMechanism:
-#                 Initialize variable:
-#                       use next_level.outputState.valuee to initialize variable[ACTIVITY]
-#                       use outputState.value of next_level's objective_mechanism to initialize variable[ERROR]
-#                 Assign mapping projections:
-#                       nextLevel.outputState.value -> inputStates[ACTIVITY] of ObjectiveMechanism
-#                       nextLevel.objective_mechanism.outputState.value  -> inputStates[ERROR] of ObjectiveMechanism
-#                 NOTE: For TERMINAL mechanism:
-#                           next_level is Process or System InputState (function=Linear, so derivative =1), so that
-#                              next_level.outputState.value is the target, and
-#                              next_level's derivative = 1
-#                              next_level_matrix = IDENTITY_MATRIX (this should be imposed)
-#             LearningMechanism:
-#                 FIX: MAKE SURE, WHEN PROCESS OR SYSTEM ASSIGN PROJECTION TO TARGET OBJECTIVE MECHANISM,
-#                                 THEY ALSO UPDATE ITS derivative PARAM/ATTRIBUTE (GENERALLY THIS SHOULD BE LINEAR)
-#                 Initialize variable:
-#                       use mapping_projection.sender.value to initialize variable[INPUT]
-#                       use error_source_outputState.value to initialize variable[OUTPUT]
-#                 Assign error_source_derivative using function of error_source of mapping_projection (one being learned)
-#                 Assign error_derivative using function of next_level
-#                 Assign error_matrix as runtime_param using projection to next_level [ALT: ADD TO VARIABLE]
-#                 Assign mapping projections:
-#                       mapping_projection.sender -> inputStates[INPUT] of LearningMechanism
-#                       error_source.outputState -> inputStates[OUTPUT] of LearningMechanism
-#
-#             For TARGET MECHANISM:  Matrix is IDENTITY MATRIX??
-#             For TARGET MECHANISM:  derivative for ObjectiveMechanism IDENTITY FUNCTION
-#
 # FIX:
 #    0) Deal with function parameter assignment in update() of ParameterState
 #        - move assignment of function params (Lines 714 and 742 in ParameterState)
@@ -147,37 +103,27 @@
 #    1) Once function param assignment is fixed, add test that it is working to jenkins suite
 #          (i.e., that assigning a value to the attribute for the parameter on the object (e.g., mechanism)
 #                 changes its value for the Function
-#    2) Add learning rate param (including global default)
 #    3) For system vs. process learning:
 #           Figure out why calling update_state for the matrix ParameterState works,
 #                      but executing the LearningProjection to it does not
 #    4) ObjectiveMechanisms:  MODIFY TO:
 #                                d) Revise EVCMechanism._get_monitored_states() to NOT direclty assign weights
 #                                           and exponents, but rather assign
-#                                e) Document monitored_values and default_input_value (sets size of inputSTates)
 #                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
 #                                f) parse MonitoredOUtputStates specification for monitored_values arg
-#                                g) Fix EVC use of OBjectiveMechanism (needs to now call for Mapping Projection
-#                                h) Accomodate WeightedError in OjbectiveMechanism using standard LinearComb function:
-#                                            Matrix - IDENTITY MATRIX
-#                                            Derivative - Linear
-#          them where the ObjectiveMechanism is created (in its LinearFunction)
+#                                g) Fix EVC use of ObjectiveMechanism (needs to now call for Mapping Projection
 #     4.5): LearningMechanism:
-#              Name inputStates using input_state_names (or create them explicity using the values of variable?)
+#              Name inputStates using input_state_names (or create them explicitly using the values of variable?)
 #              Instantiate the MappingProjection from its ObjectiveMechanism
-#                            (as ObjectiveMechanism does, by calling modul function if not None)
+#                            (as ObjectiveMechanism does, by calling module function if not None)
 #              Need to change how learning function is specified, since no longer belongs in LearningProjection
 #                    use new keyword or tuple type for specification of Learning (instead of using LearningProjection)
 #              Re-implement instantiation of receiver and sender for LearningProjection (in case they are created
 #                    on their own)
 #     5) Purge DefaultMonitoringMechanism
-#     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
-#                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)
 #     7) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
 #     8) EVCMechanism:  add objective_mechanism arg (as per LearningMechanism)
 #     9) Reorganize:
-#          Move ControlMechanism, DefaultControlMechanism and EVCMechanism to AdaptiveMechanism (or ModulatoryMechanism)
-#          LearningProjection and ControlProjection under AdapativeProjection (or ModulatoryProjection)
 #            Add to _validate_params that their receivers are parameterStates
 #          MappingProjection under ProcessingProjection
 #            Add to _validate_params that receiver must be an inputState
@@ -187,7 +133,7 @@
 #     12) Return values immediately in lc.component helper methods (see error_matrix and error_mech for examples)
 #             then get rid of x = lc.error_matrix
 
-# DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
+# DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter (matrix);  no execution_id
 #
 # FIX: PUT ERROR HERE IF EVC AND/OR EVC_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
 #                 if EVC == EVC_max: (LINE 289 IN EVCAuxilliary)
@@ -244,8 +190,6 @@
 # √ TransferMechanism
 # √ MonitoringMechanism
 #   DefaultMonitoringMechanism
-# √ ComparatorMechanism
-# √ WeightedErrorMechanism
 # √ ControlMechanism
 #   DefaultControlMechanism
 # √ EVCMechanism
@@ -288,10 +232,6 @@
 #                        GIVE EXAMPLES.
 
 # DOCUMENT: EVCMechanism NOTES ON API FOR CUSTOM VERSIONS:
-
-
-# DOCUMENT:  UserDefinedFunction API:  wraps custom function, that can then be called using its function method;
-#                can take variable, params, time_scale, and context as params, along with any of its own
 
 #           FROM EVCMechanism.control_signal_grid_search:
 #             Gets controller as argument (along with any standard params specified in call)
@@ -2656,7 +2596,10 @@
 # FIX: name of Functions is being assigned to Type rather than subtype
 # FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix._validate_params IS OK
 #
-# IMPLEMENT BOTH FULL_CONNECTIVITY_MATRIX AND 2D np.array AND np.matrix OBJECTS
+# IMPLEMENT: UserDefinedFuction SHOULD INSTANTIATE ITS function's ARGS AS ATTRIBUTES AND ADD TO ITS user_params DICT
+# IMPLEMENT: LinearMatrix: REFACTOR kwReceiver PARAM AS output_template ARG
+# IMPLEMENT: BOTH FULL_CONNECTIVITY_MATRIX AND 2D np.array AND np.matrix OBJECTS
+# IMPLEMENT: Reduce: EXTEND TO MULTIDIMENSIONAL ARRAY ALONG ARBITRARY AXIS
 # IMPLEMENT:  Demos of Functions that plots each Function
 #                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
 # IMPLEMENT: Add scale to TransferFunction (but make sure it doesn't conflictf with or cause trouble for range)
