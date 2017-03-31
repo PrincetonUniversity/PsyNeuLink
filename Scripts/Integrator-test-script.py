@@ -19,15 +19,20 @@ if run_DDM_tests:
 
     print("DDM Test #2: Execute DDM with noise = NormalDist(mean=1.0, standard_dev = 0.5).function")
     print("(NOT Valid)")
-
-    try:
-        my_DDM2 = DDM(function=Integrator( integration_type=DIFFUSION, noise=NormalDist(mean=1.0, standard_dev=0.5).function),
-                      name='My_DDM2',
-                      time_scale=TimeScale.TIME_STEP
-                      )
-        my_DDM2.execute()
-    except FunctionError:
-        print("Passed")
+    my_DDM2 = DDM(
+        function=Integrator(integration_type=DIFFUSION, noise=NormalDist(mean=1.0, standard_dev=0.5).function),
+        name='My_DDM2',
+        time_scale=TimeScale.TIME_STEP
+        )
+    my_DDM2.execute()
+    # try:
+    #     my_DDM2 = DDM(function=Integrator( integration_type=DIFFUSION, noise=NormalDist(mean=1.0, standard_dev=0.5).function),
+    #                   name='My_DDM2',
+    #                   time_scale=TimeScale.TIME_STEP
+    #                   )
+    #     my_DDM2.execute()
+    # except FunctionError:
+    #     print("Passed")
 
     print("-------------------------------------------------")
 
