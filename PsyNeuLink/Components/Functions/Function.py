@@ -2679,9 +2679,10 @@ class Integrator(
             if isinstance(self.variable, (np.ndarray, list)):
                 if len(self.noise) != np.array(self.variable).size:
                     raise FunctionError("The length ({}) of the array specified for the noise parameter ({}) of {} "
-                                        "must match the length ({}) of the default input ({}). If noise is specified as an "
-                                        "array or list, it must be of the same size as the input.".format(len(self.noise),
-                                        self.noise, self.name, np.array(self.variable).size, self.variable))
+                                        "must match the length ({}) of the default input ({}). If noise is specified as"
+                                        " an array or list, it must be of the same size as the input."
+                                        .format(len(self.noise), self.noise, self.name, np.array(self.variable).size,
+                                                self.variable))
                 else:
                     # Noise is a list or array of functions
                     if callable(self.noise[0]):
@@ -2694,8 +2695,8 @@ class Integrator(
                         raise FunctionError("The elements of a noise list or array must be floats or functions.")
             # Variable is not a list/array
             else:
-                raise FunctionError("The noise parameter may only be a list or array if the "
-                                    "default input value is a list or array as well.")
+                raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
+                                    "default input value is also a list or array.".format(self.noise, self.name))
 
         elif callable(self.noise):
             self.noise_function = True
@@ -2710,6 +2711,11 @@ class Integrator(
             raise FunctionError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
                                 "array or list of functions.".format(self.noise, self.name))
 
+        if self.noise_function and self.integration_type == "diffusion":
+
+            raise FunctionError("Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
+                                " float. Noise parameter is used to construct the standard DDM noise distribution"
+                                .format(self.name))
 
     def _validate_params(self, request_set, target_set=None, context=None):
         # Handle list or array for rate specification
