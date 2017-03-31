@@ -737,12 +737,12 @@ class Component(object):
         #     self.__setattr__(arg, kwargs[arg])
 
 
-        # MODIFIED 3/30/17 NEW: [IMPLEMENTS AUTO PROPERTY]
+        # MODIFIED 3/30/17 NEW: [IMPLEMENTS AUTO_PROPERTY]
         from PsyNeuLink.Components.Functions.Function import Function, Function_Base
         for arg_name, arg_value in kwargs.items():
 
 
-            # # PROBLEM: SEEMS PROPERTIES CAN'T BE PUT ON INSTANCES
+            # # PROBLEM: ??PROPERTIES CAN'T BE PUT ON INSTANCES
             # # QUESTION: IF THE ATTRIBUTE EXISTS (I.E., THE BACKING FIELD IS ALREADY THERE) WILL IT LEAVE IT AS IS?
             # #           WHAT ABOUT IF IT IS ALREADY A PROPERTY (SUCH AS MATRIX FOR A PROJECTION)
             # # QUESTION:  OLD VERSION ASSIGNED ATTRIB TO INSTANCE;  CAN PROPERTY BE ASSIGNED TO INSTANCE?
