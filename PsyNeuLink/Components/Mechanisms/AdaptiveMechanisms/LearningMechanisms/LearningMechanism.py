@@ -127,7 +127,7 @@ respectively, as well as to its two outputStates, as described below.
 
 .. _LearningMechanism_OutputStates:
 
-OutputStates
+OutputStates b
 ~~~~~~~~~~~
 
 These receive the output of the LearningMechanism's `function <LearningMechanism.function>`:
