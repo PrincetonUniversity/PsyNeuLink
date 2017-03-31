@@ -2704,7 +2704,6 @@ class Integrator(
                 for i in self.variable:
                     new_noise.append(self.noise)
                 self.noise = new_noise
-                print(self.noise, " = self.noise")
         elif isinstance(self.noise, float):
             self.noise_function = False
         else:
@@ -2713,7 +2712,6 @@ class Integrator(
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        self._validate_noise()
         # Handle list or array for rate specification
         rate = request_set[RATE]
         if isinstance(rate, (list, np.ndarray)):
@@ -2743,7 +2741,7 @@ class Integrator(
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
-
+        self._validate_noise()
         noise = target_set[NOISE]
         time_step_size = target_set[TIME_STEP_SIZE]
 
@@ -2811,8 +2809,10 @@ class Integrator(
 
         # if noise is a function, execute it
         if self.noise_function:
-            # TBI: if self.noise is a list -- go through and execute each element!
-            noise = self.noise()
+            if isinstance(self.noise, (np.ndarray, list)):
+                noise = list(map(lambda x: x(), self.noise))
+            else:
+                noise = self.noise()
         else:
             noise = self.noise
 
@@ -2830,9 +2830,7 @@ class Integrator(
         elif integration_type is SIMPLE:
             value = old_value + (new_value * rate) + noise
         elif integration_type is ADAPTIVE:
-            print("self.noise = ", self.noise)
             value = (1 - rate) * old_value + rate * new_value + noise
-            print(value)
         elif integration_type is DIFFUSION:
             value = old_value + rate * old_value * time_step_size + np.sqrt(time_step_size * noise) * np.random.normal()
         else:
