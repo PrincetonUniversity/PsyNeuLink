@@ -1,5 +1,7 @@
 import numpy as np
 import random
+import subprocess
+import sys
 
 # Insures that runs are deterministic for use in Jenkins testing
 random.seed(0)
@@ -21,7 +23,8 @@ scripts =  [
 for script in scripts:
     file = open(script)
     print("\nRUNNING {}\n".format(script))
-    exec(file.read())
+    # exec(file.read())
+    subprocess.check_output([sys.executable, script])
     file.close()
     print ("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
 
