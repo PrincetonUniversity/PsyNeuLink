@@ -2745,18 +2745,6 @@ class Integrator(
         noise = target_set[NOISE]
         time_step_size = target_set[TIME_STEP_SIZE]
 
-        # Validate NOISE:
-        # If the noise is a float, continue; if it is function, set self.noise_function to True
-        # (flags noise to be executed before passing it to integrator )
-        # Otherwise, error
-        # if isinstance(noise, float):
-        #     self.noise_function = False
-        # elif callable(noise):
-        #     self.noise_function = True
-        # else:
-        #     raise FunctionError("noise parameter ({}) for {} must be a float or a function".
-        #                         format(noise, self.name))
-
         # Make sure initializer is compatible with variable
         try:
             if not iscompatible(target_set[INITIALIZER], self.variableClassDefault):

@@ -2,14 +2,14 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Globals.Keywords import *
 
-run_DDM_tests = False
-run_transfer_tests = True
+run_DDM_tests = True
+run_transfer_tests = False
 run_distribution_test = False
 
 if run_DDM_tests:
     print("DDM Test #1: Execute DDM with noise = 0.5")
 
-    my_DDM = DDM(function=DDMIntegrator(noise=0.5),
+    my_DDM = DDM(function=Integrator( integration_type = DIFFUSION, noise=0.5),
                 name='My_DDM',
                 time_scale=TimeScale.TIME_STEP
                 )
@@ -21,7 +21,7 @@ if run_DDM_tests:
     print("(NOT Valid)")
 
     try:
-        my_DDM2 = DDM(function=DDMIntegrator(noise=NormalDist(mean=1.0, standard_dev=0.5).function),
+        my_DDM2 = DDM(function=Integrator( integration_type=DIFFUSION, noise=NormalDist(mean=1.0, standard_dev=0.5).function),
                       name='My_DDM2',
                       time_scale=TimeScale.TIME_STEP
                       )
@@ -32,7 +32,7 @@ if run_DDM_tests:
     print("-------------------------------------------------")
 
     print("DDM Test #3: Execute DDM with noise not specified")
-    my_DDM3 = DDM(function=DDMIntegrator(),
+    my_DDM3 = DDM(function=Integrator( integration_type=DIFFUSION, ),
                   name='My_DDM3',
                   time_scale=TimeScale.TIME_STEP
                   )
@@ -43,7 +43,7 @@ if run_DDM_tests:
     print("DDM Test #4: Execute DDM with noise = NormalDist(mean=1.0, standard_dev = 0.5)")
     print("(NOT Valid)")
     try:
-        my_DDM4 = DDM(function=DDMIntegrator(noise=NormalDist(mean=1.0, standard_dev=0.5)),
+        my_DDM4 = DDM(function=Integrator( integration_type=DIFFUSION, noise=NormalDist(mean=1.0, standard_dev=0.5)),
                       name='My_DDM4',
                       time_scale=TimeScale.TIME_STEP
                       )
@@ -73,23 +73,18 @@ if run_DDM_tests:
     print("Passed")
     print("-------------------------------------------------")
 
-    print("DDM Test #7: Execute DDM with noise = 0.5, weighting=CONSTANT")
+    print("DDM Test #7: Execute DDM with noise = 0.5, integration_type=CONSTANT")
     print("(NOT Valid)")
 
     try:
-        my_DDM7 = DDM(function=DDMIntegrator(noise=0.5, weighting=CONSTANT),
+        my_DDM7 = DDM(function=Integrator(noise=0.5, integration_type=CONSTANT),
                       name='My_DDM7',
                       time_scale=TimeScale.TIME_STEP
                       )
         my_DDM7.execute()
-    except FunctionError:
+    except MechanismError:
         print("Passed")
 
-    my_DDM7 = DDM(function = DDMIntegrator(noise = 0.5, weighting = CONSTANT),
-                 name='My_DDM7',
-                 time_scale = TimeScale.TIME_STEP
-                 )
-    my_DDM7.execute()
     print("-------------------------------------------------")
 
 
