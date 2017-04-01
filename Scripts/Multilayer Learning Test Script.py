@@ -6,6 +6,7 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
+import ctypes
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 
