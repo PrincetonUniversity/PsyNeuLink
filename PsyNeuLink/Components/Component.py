@@ -736,32 +736,13 @@ class Component(object):
         # for arg in kwargs:
         #     self.__setattr__(arg, kwargs[arg])
 
-
         # MODIFIED 3/30/17 NEW: [IMPLEMENTS AUTO_PROPERTY]
         from PsyNeuLink.Components.Functions.Function import Function, Function_Base
         for arg_name, arg_value in kwargs.items():
-
-            # # PROBLEM: PROPERTIES CAN'T BE PUT ON INSTANCES
-
-            # # VERSION THAT ASSIGNS TO CLASS:
             # # PROBLEM: ISN'T HANDLING function_params
-            # # ??STILL A PROBLEM: FAILS TO PROPERLY INSTANTIATE FUNCTIONS FROM CLASSES (EVC ValueFunction)
             if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
                 setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
             setattr(self, '_'+arg_name, arg_value)
-
-            # # VERSION THAT ASSIGNS TO CLASS AND SKIPS FUNCTIONS
-            # # # PROBLEM: MESSES UP IN RL SCRIPT:
-            # # #          WHEN RUN ALONE:  MATRIX IS ALREADY A PROPERTY;  ASSIGNED KEYWORD VALUE RATHER THAN PARSED;
-            # if (isinstance(arg_value, Function_Base) or
-            #         (inspect.isclass(arg_value) and issubclass(arg_value, Function_Base)) or
-            #         (isinstance(arg_value, function_type))):
-            #     self.__setattr__(arg_name, arg_value)
-            # else:
-            #     # Check whether property exists on any parent classabove self in the hierarchy (i.e., in mro):
-            #     if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
-            #         setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
-            #     setattr(self, '_'+arg_name, arg_value)
 
         # MODIFIED 3/30/17 END
 
@@ -1979,74 +1960,3 @@ class Component(object):
         self.prefs.runtimeParamStickyAssignmentPref = setting
 
 COMPONENT_BASE_CLASS = Component
-
-# **********************************************************************************************************************
-
-# Autoprop Functions
-# per Bryn Keller
-
-defaults = {'foo':5, 'bar': ['hello', 'world']}
-
-docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
-        'bar': 'Bar none, the most important property'}
-
-
-# def make_property(name):
-# def make_property(name, default_value):d
-#     backing_field = '_' + name
-#
-#     def getter(self):
-#         if hasattr(self, backing_field):
-#             return getattr(self, backing_field)
-#         else:
-#             # return defaults[name]
-#             return default_value
-def make_property(name, default_value):
-    backing_field = '_' + name
-
-    def getter(self):
-        return getattr(self, backing_field)
-
-    def setter(self, val):
-        setattr(self, backing_field, val)
-
-    # QUESTION: THIS ASSIGNS, IN ONE STATEMENT, BOTH GETTER AND SETTER?
-    # Create the property
-    prop = property(getter).setter(setter)
-
-    # # Install some documentation
-    # prop.__doc__ = docs[name]
-    return prop
-
-
-# def autoprop(cls):
-#     for k, v in defaults.items():
-#         setattr(cls, k, make_property(k))
-#     return cls
-
-
-# Decorator automatically creates attributes for all params in user_params dict (by calling autoprop())
-# @autoprop
-# class Test:
-#     pass
-#
-# if __name__ == '__main__':
-#     t = Test()
-#     t2 = Test()
-#     print("Stored values in t", t.__dict__)
-#     print("Properties on t", dir(t))
-#     print("Check that default values are there by default")
-#     assert t.foo == 5
-#     assert t.bar == ['hello', 'world']
-#     print("Assign and check the assignment holds")
-#     t.foo = 20
-#     assert t.foo == 20
-#     print("Check that assignment on t didn't change the defaulting on t2 somehow")
-#     assert t2.foo == 5
-#     print("Check that changing the default changes the value on t2")
-#     defaults['foo'] = 27
-#     assert t2.foo == 27
-#     print("But t1 keeps the value it was assigned")
-#     assert t.foo == 20
-#     print(""""Note that 'help(Test.foo)' and help('Test.bar') will show
-#     the docs we installed are available in the help system""")
