@@ -54,7 +54,7 @@ z = process(default_input_value=[0, 0],
             learning=LearningProjection,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
-                   REPORT_OPUTPUT_PREF: True})
+                   REPORT_OUTPUT_PREF: True})
 
 for i in range(10):
 

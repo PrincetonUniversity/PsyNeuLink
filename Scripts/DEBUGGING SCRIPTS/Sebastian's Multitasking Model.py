@@ -103,7 +103,7 @@ TaskOutputProcess = process(
 
 # SYSTEM
 
-system_prefs = {REPORT_OPUTPUT_PREF: True,
+system_prefs = {REPORT_OUTPUT_PREF: True,
                 VERBOSE_PREF: False}
 
 

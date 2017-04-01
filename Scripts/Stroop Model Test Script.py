@@ -3,10 +3,10 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.System import *
 from PsyNeuLink.Globals.Keywords import *
 
-process_prefs = {REPORT_OPUTPUT_PREF: True,
+process_prefs = {REPORT_OUTPUT_PREF: True,
                  VERBOSE_PREF: False}
 
-system_prefs = {REPORT_OPUTPUT_PREF: True,
+system_prefs = {REPORT_OUTPUT_PREF: True,
                 VERBOSE_PREF: False}
 
 colors = TransferMechanism(default_input_value=[0,0],
