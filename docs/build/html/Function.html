@@ -398,7 +398,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="#Function.Reinforcement.function" title="Function.Reinforcement.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="#Function.Exponential.function" title="Function.Exponential.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -1376,7 +1376,8 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.BogaczEtAl.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Function.BogaczEtAl.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or 1d np.array</em> &#8211; current value of the decision variable.  If it is an array, each element is integrated independently.</p>
+<dd><p><em>number or 1d np.array</em> &#8211; holds initial value assigned to <code class="xref std std-keyword docutils literal"><span class="pre">variable_default</span></code> argument;
+ignored by <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1442,7 +1443,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>ignored</em>) &#8211; uses value of <a class="reference internal" href="#Function.BogaczEtAl.drift_rate" title="Function.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a>, <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, <a class="reference internal" href="#Function.BogaczEtAl.starting_point" title="Function.BogaczEtAl.starting_point"><code class="xref any py py-attr docutils literal"><span class="pre">starting_point</span></code></a>, <a class="reference internal" href="#Function.BogaczEtAl.noise" title="Function.BogaczEtAl.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <a class="reference internal" href="#Function.BogaczEtAl.t0" title="Function.BogaczEtAl.t0"><code class="xref any py py-attr docutils literal"><span class="pre">t0</span></code></a> parameters for calculation.</li>
+<li><strong>variable</strong> (<em>2d np.array</em>) &#8211; ignored.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1466,8 +1467,8 @@ arguments of the constructor.</li>
 <dt id="Function.NavarroAndFuss">
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>variable_default=variableCLassDefault</em>, <em>drift_rate=1.0</em>, <em>threshold=1.0</em>, <em>starting_point=0.0</em>, <em>t0=0.2                                          noise=0.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
 <dd><p id="navarroandfuss">Return terminal value of decision variable, mean accuracy, mean response time (RT), correct RT mean, correct RT
-variance and correct RT skew computed analytically for the drift diffusion process as described in
-<a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0022249609000200">Navarro and Fuss (2009)</a>.</p>
+variance and correct RT skew computed analytically for the drift diffusion process (Wiener diffusion model)
+as described in <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0022249609000200">Navarro and Fuss (2009)</a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Use of this Function requires that the MatLab engine is installed.</p>
@@ -1505,7 +1506,8 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.NavarroAndFuss.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Function.NavarroAndFuss.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or 1d np.array</em> &#8211; current value of the decision variable.  If it is an array, each element is integrated independently.</p>
+<dd><p><em>number or 1d np.array</em> &#8211; holds initial value assigned to <code class="xref std std-keyword docutils literal"><span class="pre">variable_default</span></code> argument;
+ignored by <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1517,7 +1519,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.NavarroAndFuss.threshold">
 <code class="descname">threshold</code><a class="headerlink" href="#Function.NavarroAndFuss.threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> &#8211; determines the threshold (boundary) of the drift diffusion process (i.e., at which the integration
+<dd><p><em>float or 1d np.array</em> &#8211; determines the threshold (bound) of the drift diffusion process (i.e., at which the integration
 process is assumed to terminate).</p>
 </dd></dl>
 
@@ -1537,7 +1539,7 @@ Gaussian random process).</p>
 <dl class="attribute">
 <dt id="Function.NavarroAndFuss.t0">
 <code class="descname">t0</code><a class="headerlink" href="#Function.NavarroAndFuss.t0" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d np.array</em> &#8211; determines the assumed non-decision time to determine the response time returned by the solution.</p>
+<dd><p><em>float or 1d np.array</em> &#8211; determines the non-decision time used to compute the solution.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1572,7 +1574,7 @@ correct RT mean, correct RT variance and correct RT skew.  <strong>Requires that
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>ignored</em>) &#8211; uses value of <a class="reference internal" href="#Function.NavarroAndFuss.drift_rate" title="Function.NavarroAndFuss.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a>, <a class="reference internal" href="#Function.NavarroAndFuss.threshold" title="Function.NavarroAndFuss.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, <a class="reference internal" href="#Function.NavarroAndFuss.starting_point" title="Function.NavarroAndFuss.starting_point"><code class="xref any py py-attr docutils literal"><span class="pre">starting_point</span></code></a>, <a class="reference internal" href="#Function.NavarroAndFuss.noise" title="Function.NavarroAndFuss.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <a class="reference internal" href="#Function.NavarroAndFuss.t0" title="Function.NavarroAndFuss.t0"><code class="xref any py py-attr docutils literal"><span class="pre">t0</span></code></a> parameters for calculation.</li>
+<li><strong>variable</strong> (<em>2d np.array</em>) &#8211; ignored.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>

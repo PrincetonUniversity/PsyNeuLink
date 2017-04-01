@@ -810,12 +810,16 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
     # Stimuli are inputs:
     #    validate that there is a one-to-one mapping of input entries to origin mechanisms in the process or system.
     if not is_target:
-        for mech in object.originMechanisms:
-            if not mech in stimuli:
-                raise RunError("Stimulus list is missing for origin mechanism {}".format(mech.name, object.name))
+        # Check that all of the mechanisms listed in the inputs dict are ORIGIN mechanisms in the object
         for mech in stimuli.keys():
             if not mech in object.originMechanisms.mechanisms:
-                raise RunError("{} is not an origin mechanism in {}".format(mech.name, object.name))
+                raise RunError("{} in inputs dict for {} is not one of its ORIGIN mechanisms".
+                               format(mech.name, object.name))
+        # Check that all of the ORIGIN mechanisms in the object are represented by entries in the inputs dict
+        for mech in object.originMechanisms:
+            if not mech in stimuli:
+                raise RunError("ORIGIN mechanism {} is missing from the inputs dict for ".
+                               format(mech.name, object.name))
 
     # Note: no need to order entries for inputs (as with targets, below) as that only matters for systems,
     #       and is handled where stimuli for a system are assigned to phases below
