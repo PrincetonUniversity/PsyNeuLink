@@ -1980,7 +1980,7 @@ def make_property(name, default_value):
 
     def setter(self, val):
         setattr(self, backing_field, val)
-        self.user_params[name] = val
+        # self.user_params[name] = val
 
     # Create the property
     prop = property(getter).setter(setter)
