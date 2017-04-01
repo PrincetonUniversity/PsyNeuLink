@@ -63,5 +63,5 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-install_requires=['toposort==1.4', 'numpy', 'typecheck-decorator'], #mpi4py only if MPI_IMPLEMENTATION becomes True
+install_requires=['toposort==1.4', 'numpy', 'typecheck-decorator==1.2'], #mpi4py only if MPI_IMPLEMENTATION becomes True
 )
