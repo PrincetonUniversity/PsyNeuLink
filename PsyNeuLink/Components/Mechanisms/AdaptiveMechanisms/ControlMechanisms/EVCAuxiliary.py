@@ -55,6 +55,7 @@ class EVCAuxiliaryFunction(Function_Base):
                  function,
                  variable=None,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
 
@@ -64,6 +65,7 @@ class EVCAuxiliaryFunction(Function_Base):
 
         super().__init__(variable_default=variable,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -119,9 +121,11 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                  variable_default=None,
                  params=None,
                  function=None,
+                 owner=None,
                  context=None):
         function = function or self.function
         super().__init__(function=function,
+                         owner=owner,
                          context=self.componentName+INITIALIZING)
 
     def function(self, **kwargs):

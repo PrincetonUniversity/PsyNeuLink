@@ -47,17 +47,20 @@ MappingProjections are also generated automatically in the following circumstanc
 appropriate to the circumstance:
 
   * by a `process <Process>`, when two adjacent mechanisms in its `pathway` do not already have a projection assigned
-    between them; `AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines the appropriate matrix by
-    context;
+    between them (`AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines the appropriate matrix by
+    context);
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from outputStates listed in its
-    `monitored_output_states <ControlMechanism.ControlMechanism_Base.monitored_output_states>` attribute to assigned
-    inputStates in the `ControlMechanism <ControlMechanism_Creation>`); an `IDENTITY_MATRIX` is used for each;
+  * by an `ObjectiveMechanism`, from each outputState listed in its `monitored_values` attribute to the corresponding
+    inputState of the ObjectiveMechanism (`AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines
+    the appropriate matrix by context).
   ..
-  * by a `LearningProjection`, from a mechanism that is the source of an error signal to a `MonitoringMechanism`
-    that is used to evaluate that error and generate a learning signal from it
-    (see `LearningProjection<LearningProjection_Automatic_Creation>`); the matrix used depends on the
-    `function <LearningProjection.LearningProjection.function>` parameter of the LearningProjection.
+  * by a `ControlMechanism <ControlMechanism>`, from the ObjectiveMechanism that provides it with the outcome of the
+    outputStates that it monitors, and from those outputStates (listed in its
+    `monitored_output_states <ControlMechanism.ControlMechanism_Base.monitored_output_states>` attribute) to
+    the ObjectiveMechanism (an `IDENTITY_MATRIX` is used for all of these);
+  ..
+  * by a `LearningMechanism`, between it and the other components required to implement learning
+    (see `LearningMechanism_Learning_Configurations` for details);
 
 .. _Mapping_Matrix_Specification:
 
@@ -277,6 +280,10 @@ class MappingProjection(Projection_Base):
         matrix used by `function <MappingProjection.function>` to transform input from the
         `sender <MappingProjection.sender>` to the value provided to the `receiver <MappingProjection.receiver>`.
 
+    has_learning_projection : bool : False
+        identifies whether the MappingProjection's `MATRIX` `parameterState <ParameterState>` has been assigned a
+        `LearningProjection`.
+
     name : str : default MappingProjection-<index>
         the name of the MappingProjection.
         Specified in the `name` argument of the constructor for the projection;
@@ -320,7 +327,7 @@ class MappingProjection(Projection_Base):
                                                  param_modulation_operation=param_modulation_operation,
                                                  params=params)
 
-        self.monitoringMechanism = None
+        self.learning_mechanism = None
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         # if sender is NotImplemented or receiver is NotImplemented:
@@ -344,6 +351,8 @@ class MappingProjection(Projection_Base):
                                       name=name,
                                       prefs=prefs,
                                       context=self)
+
+        self.has_learning_projection = False
 
     def _instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
@@ -449,13 +458,8 @@ class MappingProjection(Projection_Base):
 
         # FIX: NEED TO EXECUTE PROJECTIONS TO PARAMS HERE (PER update_parameter_state FOR A MECHANISM)
 
-        # # MODIFIED 12/21/16 OLD:
-        # # Check whether weights changed
-        # if self.monitoringMechanism and self.monitoringMechanism.summed_error_signal:
-        # MODIFIED 12/21/16 NEW:
         # Check whether error_signal has changed
-        if self.monitoringMechanism and self.monitoringMechanism.status == CHANGED:
-        # MODIFIED 12/21/16 END
+        if self.learning_mechanism and self.learning_mechanism.status == CHANGED:
 
             # Assume that if monitoringMechanism attribute is assigned,
             #    both a LearningProjection and parameterState[MATRIX] to receive it have been instantiated
@@ -474,6 +478,11 @@ class MappingProjection(Projection_Base):
             # Update MATRIX
             self.matrix = matrix_parameter_state.value
             # MODIFIED 2/21/17 END
+
+            # # TEST PRINT
+            # print("\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.matrix))
+            # # print("\n@@@ WEIGHTS CHANGED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
+
 
         return self.function(self.sender.value, params=params, context=context)
 

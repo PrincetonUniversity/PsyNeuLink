@@ -11,38 +11,131 @@
 
 """
 Example function:
-  * :class:`Contradiction`
+  * `ArgumentTherapy`
 
-Combination Components:
-  * :class:`LinearCombination`
+Combination Functions:
+  * `Reduce`
+  * `LinearCombination`
 
-TransferMechanism Components:
-  * :class:`Linear`
-  * :class:`Exponential`
-  * :class:`Logistic`
-  * :class:`SoftMax`
-  * :class:`LinearMatrix`
+TransferMechanism Functions:
+  * `Linear`
+  * `Exponential`
+  * `Logistic`
+  * `SoftMax`
+  * `LinearMatrix`
 
-Integrator Components:
-  * :class:`Integrator`
-  * :class:`BogaczEtAl`
-  * :class:`NavarroAndFuss`
+Integrator Functions:
+  * `Integrator`
+  * `BogaczEtAl`
+  * `NavarroAndFuss`
 
-Learning Components:
-  * :class:`Reinforcement`
-  * :class:`BackPropagation`
+Distribution Functions:
+  * `NormalDist`
+  * `ExponentialDist`
+  * `UniformDist`
+  * `GammaDist`
+  * `WaldDist`
+
+Learning Functions:
+  * `Reinforcement`
+  * `BackPropagation`
+
+.. _Function_Overview:
+
+Overview
+--------
+
+A Function is a `component <Component>` that "packages" a function (in its `function <Function_Base.function>` method)
+for use by PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function, and when that
+component is executed, that Function's `function <Function_Base.function` is executed.  The
+`function <Function_Base.function` can be any callable operation, although most commonly it is a mathematical operation
+(and, for those, almost always uses calls to numpy function).
+
+There are two reasons PsyNeuLink packages functions in a Function component. The first is to **manage parameters**.
+Parameters are attributes of a function that either remain stable over multiple calls to the
+function (e.g., the gain or bias of a logistic function, or the learning rate of a learning function);
+or, if they change, they do less frequently or under the control of different factors than the function's variable
+(i.e., its input).  As a consequence, it is useful to manage these separately from the function's variable,
+and not have to provide them every time the function is called.  To address this, every PsyNeuLink Function has a
+set of attributes corresponding to the parameters of the function, that can be specified at the time the Function is
+created (in arguments to its constructor), and can be modified independently of a call to its :keyword:`function`.
+Modifications can be directly (e.g., in a script), or by the operation of other PsyNeuLink components (e.g.,
+`AdaptiveMechanisms`).  The second to reason PsyNeuLink uses Functions is for  **modularity**. By providing a standard
+interface, any Function assigned to a components in PsyNeuLink can be replaced with other PsyNeuLink Functions, or with
+user-written custom functions (so long as they adhere to certain standards (the PsyNeuLink `Function API <LINK>`).
+
+.. _Function_Creation:
+
+Creating a Function
+-------------------
+
+A Function can be created directly by calling its constructor.  Functions are also created automatically whenever
+any other type of PsyNeuLink component is created (and its :keyword:`function` is not otherwise specified). The
+constructor for a Function has an argument for its `variable <Function_Base.variable>` and each of the parameters of
+its `function <Function_Base.function>`.  The `variable <Function_Base.variable>` argument is used both to format the
+input to the `function <Function_Base.function>`, and assign its default value.  The arguments for each parameter can
+be used to specify the default value for that parameter; the values can later be modified in various ways as described
+below.
+
+.. _Function_Structure:
+
+Structure
+---------
+
+Every Function has a `variable <Function_Base.variable>` that provides the input to its
+`function <Function_Base.function>` method.  It also has an attribute for each of the parameters of its `function
+<Function_Base.function>`.   If a Function has been assigned to another component, then it also has an `owner
+<Function_Base.owner>` attribute that refers to that component. Each of the Function's attributes is also assigned
+as an attribute of the `owner <Function_Base.owner>`, and those are each associated with with a
+`parameterState <ParameterState>` of the `owner <Function_Base.owner>`. Projections to those parameterStates can be
+used to modify the Function's parameters.
+
+COMMENT:
+.. _Function_Output_Type_Conversion:
+
+If the `function <Function_Base.function>` returns a single numeric value, and the Function's class implements
+FunctionOutputTypeConversion, then the type of value returned by its `function <Function>` can be specified using the
+`functionOutputType` attribute, by assigning it one of the following `FunctionOutputType` values:
+    * FunctionOutputType.RAW_NUMBER: return "exposed" number;
+    * FunctionOutputType.NP_1D_ARRAY: return 1d np.array
+    * FunctionOutputType.NP_2D_ARRAY: return 2d np.array.
+
+To implement FunctionOutputTypeConversion, the Function's kwFunctionOutputTypeConversion parameter must set to True,
+and function type conversion must be implemented by its `function <Function_Base.function>` method
+(see `Linear` for an example).
+COMMENT
+
+.. _Function_Execution:
+
+Execution
+---------
+
+Functions are not executable objects, but their `function <Function_Base.function>` can be called.   This can be done
+directly.  More commonly, however, they are called when their `owner <Function_Base.owner>` is executed.  The parameters
+of the `function <Function_Base.function>` can be modified when it is executed, by assigning a
+`parameter specification dictionary <Mechanism_Creation>` to the `Function.params` argument in the call to the
+`function <Function_Base.function>`.  For `mechanisms <Mechanism>`, this can also be done by specifying `runtime_params
+<Mechanism_Runtime_Parameters>` for the mechanism when it is `executed <Mechanism_Base.execute>`.
+
+Class Reference
+---------------
 
 """
 
-
-# __all__ = ['LinearCombination',
+# __all__ = ['Reduce',
+#            'LinearCombination',
 #            'Linear',
 #            'Exponential',
 #            'Logistic',
 #            'SoftMax',
 #            'Integrator',
 #            'LinearMatrix',
-#            'ReinforcementLearning',
+#            'NormalDist',
+#            'ExponentialDist',
+#            'UniformDist`',
+#            'GammaDist',
+#            'WaldDist',
+#            'Reinforcement',
 #            'BackPropagation',
 #            'FunctionError',
 #            "FunctionOutputType"]
@@ -141,82 +234,137 @@ def get_param_value_for_function(owner, function):
 
 
 class Function_Base(Function):
-    """Implement abstract class for Function category of Component class
+    """
+    Function_Base(           \
+         variable_default,   \
+         params=None,        \
+         owner=None,         \
+         name=None,          \
+         prefs=None          \
+    )
 
-    Description:
-        Function functions are ones used by other function categories;
-        They are defined here (on top of standard libraries) to provide a uniform interface for managing parameters
-         (including defaults)
-        NOTE:   the Function category definition serves primarily as a shell, and an interface to the Function class,
-                   to maintain consistency of structure with the other function categories;
-                it also insures implementation of .function for all Function Components
-                (as distinct from other Function subclasses, which can use a FUNCTION param
-                    to implement .function instead of doing so directly)
-                Function Components are the end of the recursive line: as such:
-                    they don't implement functionParams
-                    in general, don't bother implementing function, rather...
-                    they rely on Function.function which passes on the return value of .function
+    Implement abstract class for Function category of Component class
 
-    Instantiation:
-        A function can be instantiated in one of several ways:
-IMPLEMENTATION NOTE:  *** DOCUMENTATION
+    COMMENT:
+        Description:
+            Functions are used to "wrap" functions used used by other components;
+            They are defined here (on top of standard libraries) to provide a uniform interface for managing parameters
+             (including defaults)
+            NOTE:   the Function category definition serves primarily as a shell, and an interface to the Function class,
+                       to maintain consistency of structure with the other function categories;
+                    it also insures implementation of .function for all Function Components
+                    (as distinct from other Function subclasses, which can use a FUNCTION param
+                        to implement .function instead of doing so directly)
+                    Function Components are the end of the recursive line; as such:
+                        they don't implement functionParams
+                        in general, don't bother implementing function, rather...
+                        they rely on Function_Base.function which passes on the return value of .function
 
-    Variable and Parameters:
-IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
-        - Parameters can be assigned and/or changed individually or in sets, by:
-          - including them in the initialization call
-          - calling the _assign_defaults method (which changes their default values)
-          - including them in a call the function method (which changes their values for just for that call)
-        - Parameters must be specified in a params dictionary:
-          - the key for each entry should be the name of the parameter (used also to name associated projections)
-          - the value for each entry is the value of the parameter
+        Variable and Parameters:
+        IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
+            - Parameters can be assigned and/or changed individually or in sets, by:
+              - including them in the initialization call
+              - calling the _assign_defaults method (which changes their default values)
+              - including them in a call the function method (which changes their values for just for that call)
+            - Parameters must be specified in a params dictionary:
+              - the key for each entry should be the name of the parameter (used also to name associated projections)
+              - the value for each entry is the value of the parameter
 
-    Return values:
-        The functionOutputType can be used to specify type conversion for single-item return values:
-        - it can only be used for numbers or a single-number list; other values will generate an exception
-        - if self.functionOutputType is set to:
-            FunctionOutputType.RAW_NUMBER, return value is "exposed" as a number
-            FunctionOutputType.NP_1D_ARRAY, return value is 1d np.array
-            FunctionOutputType.NP_2D_ARRAY, return value is 2d np.array
-        - it must be enabled for a subclass by setting params[kwFunctionOutputTypeConversion] = True
-        - it must be implemented in the execute method of the subclass
-        - see Linear for an example
+        Return values:
+            The functionOutputType can be used to specify type conversion for single-item return values:
+            - it can only be used for numbers or a single-number list; other values will generate an exception
+            - if self.functionOutputType is set to:
+                FunctionOutputType.RAW_NUMBER, return value is "exposed" as a number
+                FunctionOutputType.NP_1D_ARRAY, return value is 1d np.array
+                FunctionOutputType.NP_2D_ARRAY, return value is 2d np.array
+            - it must be enabled for a subclass by setting params[kwFunctionOutputTypeConversion] = True
+            - it must be implemented in the execute method of the subclass
+            - see Linear for an example
 
-    MechanismRegistry:
-        All Function functions are registered in FunctionRegistry, which maintains a dict for each subclass,
-          a count for all instances of that type, and a dictionary of those instances
+        MechanismRegistry:
+            All Function functions are registered in FunctionRegistry, which maintains a dict for each subclass,
+              a count for all instances of that type, and a dictionary of those instances
 
-    Naming:
-        Function functions are named by their componentName attribute (usually = componentType)
+        Naming:
+            Function functions are named by their componentName attribute (usually = componentType)
 
-    Class attributes:
-        + componentCategory: kwComponentCategory
-        + className (str): kwMechanismFunctionCategory
-        + suffix (str): " <className>"
-        + registry (dict): FunctionRegistry
-        + classPreference (PreferenceSet): ComponentPreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + paramClassDefaults (dict): {kwFunctionOutputTypeConversion: :keyword:`False`}
+        Class attributes:
+            + componentCategory: kwComponentCategory
+            + className (str): kwMechanismFunctionCategory
+            + suffix (str): " <className>"
+            + registry (dict): FunctionRegistry
+            + classPreference (PreferenceSet): ComponentPreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
+            + paramClassDefaults (dict): {kwFunctionOutputTypeConversion: :keyword:`False`}
 
-    Class methods:
-        none
+        Class methods:
+            none
 
-    Instance attributes:
-        + componentType (str):  assigned by subclasses
-        + componentName (str):   assigned by subclasses
-        + variable (value) - used as input to function's execute method
-        + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
-        + paramsCurrent (dict) - set currently in effect
-        + value (value) - output of execute method
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ComponentPreferenceSet
+        Instance attributes:
+            + componentType (str):  assigned by subclasses
+            + componentName (str):   assigned by subclasses
+            + variable (value) - used as input to function's execute method
+            + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
+            + paramsCurrent (dict) - set currently in effect
+            + value (value) - output of execute method
+            + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
+            + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ComponentPreferenceSet
 
-    Instance methods:
-        The following method MUST be overridden by an implementation in the subclass:
-        - execute(variable, params)
-        The following can be implemented, to customize validation of the function variable and/or params:
-        - [_validate_variable(variable)]
-        - [_validate_params(request_set, target_set, context)]
+        Instance methods:
+            The following method MUST be overridden by an implementation in the subclass:
+            - execute(variable, params)
+            The following can be implemented, to customize validation of the function variable and/or params:
+            - [_validate_variable(variable)]
+            - [_validate_params(request_set, target_set, context)]
+    COMMENT
+
+    Arguments
+    ---------
+
+    variable : value : default variableClassDefault
+        specifies the format and a default value for the input to `function <Function>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable: value
+        format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
+        they are specified by the Function's :keyword:`variableClassDefault`.
+
+    function : function
+        called by the Function's `owner <Function_Base.owner>` when it is executed.
+
+    COMMENT:
+    functionOutputTypeConversion : Bool : False
+        specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
+
+    functionOutputType : FunctionOutputType : None
+        used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
+        must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
+        for details).
+    COMMENT
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentCategory = kwComponentCategory
@@ -240,6 +388,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
     def __init__(self,
                  variable_default,
                  params,
+                 owner = None,
                  name=None,
                  prefs=None,
                  context='Function_Base Init'):
@@ -265,15 +414,13 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                           registry=FunctionRegistry,
                           name=name,
                           context=context)
-
-        # This is assigned by owner in Function._instantiate_function()
-        self.owner = None
+        self.owner = owner
 
         super().__init__(variable_default=variable_default,
-                                           param_defaults=params,
-                                           name=name,
-                                           prefs=prefs,
-                                           context=context)
+                         param_defaults=params,
+                         name=name,
+                         prefs=prefs,
+                         context=context)
 
     def execute(self, variable=None, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
@@ -310,22 +457,83 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
+PROPENSITY = "PROPENSITY"
+PERTINACITY = "PERTINACITY"
 
-class Contradiction(Function_Base): # Example
-    """Example function for use as template for function construction
 
-    Iniialization arguments:
-     - variable (boolean or statement resolving to boolean)
-     - params (dict) specifying the:
-         + propensity (kwPropensity: a mode specifying the manner of responses (tendency to agree or disagree)
-         + pertinacity (kwPertinacity: the consistency with which the manner complies with the propensity
+class ArgumentTherapy(Function_Base):
+    """
+    ArgumentTherapy(                   \
+         variable,                     \
+         propensity=Manner.CONTRARIAN, \
+         pertinacity=10.0              \
+         params=None,                  \
+         owner=None,                   \
+         name=None,                    \
+         prefs=None                    \
+         )
 
-    Contradiction.function returns :keyword:`True` or :keyword:`False`
+    .. _ArgumentTherapist:
+
+    Return :keyword:`True` or :keyword:`False` according to the manner of the therapist.
+
+    Arguments
+    ---------
+
+    variable : boolean or statement that resolves to one : default variableClassDefault
+        assertion for which a therapeutic response will be offered.
+
+    propensity : Manner value : default Manner.CONTRARIAN
+        specifies preferred therapeutic manner
+
+    pertinacity : float : default 10.0
+        specifies therapeutic consistency
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : boolean
+        assertion to which a therapeutic response is made.
+
+    propensity : Manner value : default Manner.CONTRARIAN
+        determines therapeutic manner:  tendency to agree or disagree.
+
+    pertinacity : float : default 10.0
+        determines consistency with which the manner complies with the propensity.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     # Function componentName and type (defined at top of module)
-    componentName = CONTRADICTION_FUNCTION
+    componentName = ARGUMENT_THERAPY_FUNCTION
     componentType = EXAMPLE_FUNCTION_TYPE
+
+    classPreferences = {
+        kwPreferenceSetName: 'ExampleClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+
 
     # Variable class default
     # This is used both to type-cast the variable, and to initialize variableInstanceDefault
@@ -340,18 +548,30 @@ class Contradiction(Function_Base): # Example
     # Param class defaults
     # These are used both to type-cast the params, and as defaults if none are assigned
     #  in the initialization call or later (using either _assign_defaults or during a function call)
-    kwPropensity = "PROPENSITY"
-    kwPertinacity = "PERTINACITY"
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwPropensity: Manner.CONTRARIAN,
-                          kwPertinacity:  10,
-                          })
+    paramClassDefaults.update({kwFunctionOutputTypeConversion: True,
+                               PARAMETER_STATE_PARAMS: None
+                               # PROPENSITY: Manner.CONTRARIAN,
+                               # PERTINACITY:  10
+    })
+
+
 
     def __init__(self,
                  variable_default=variableClassDefault,
+                 propensity=10.0,
+                 pertincacity=Manner.CONTRARIAN,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(propensity=propensity,
+                                                  pertinacity=pertincacity,
+                                                  params=params)
+
         # This validates variable and/or params_list if assigned (using _validate_params method below),
         #    and assigns them to paramsCurrent and paramInstanceDefaults;
         #    otherwise, assigns paramClassDefaults to paramsCurrent and paramInstanceDefaults
@@ -360,46 +580,11 @@ class Contradiction(Function_Base): # Example
         #    * paramInstanceDefaults can be changed by calling assign_default
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
-    def function(self,
-                variable=None,
-                params=None,
-                time_scale=TimeScale.TRIAL,
-                context=None):
-        """Returns a boolean that is (or tends to be) the same as or opposite the one passed in
-
-        Returns :keyword:`True` or :keyword:`False`, that is either the same or opposite the statement passed in as the
-        variable
-        The propensity parameter must be set to be Manner.OBSEQUIOUS or Manner.CONTRARIAN, which
-            determines whether the response is (or tends to be) the same as or opposite to the statement
-        The pertinacity parameter determines the consistency with which the response conforms to the manner
-
-        :param variable: (boolean) Statement to probe
-        :param params: (dict) with entires specifying
-                       kwPropensity: Contradiction.Manner - contrarian or obsequious (default: CONTRARIAN)
-                       kwPertinacity: float - obstinate or equivocal (default: 10)
-        :return response: (boolean)
-        """
-        self._check_args(variable, params, context)
-
-        # Compute the function
-
-        # Use self.variable (rather than variable), as it has been validated (and default assigned, if necessary)
-        statement = self.variable
-        propensity = self.paramsCurrent[self.kwPropensity]
-        pertinacity = self.paramsCurrent[self.kwPertinacity]
-        whim = randint(-10, 10)
-
-        if propensity == self.Manner.OBSEQUIOUS:
-            return whim < pertinacity
-
-        elif propensity == self.Manner.CONTRARIAN:
-            return whim > pertinacity
-
-        else:
-            raise FunctionError("This should not happen if parameter_validation == True;  check its value")
+        self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
         """Validates variable and assigns validated values to self.variable
@@ -440,18 +625,18 @@ class Contradiction(Function_Base): # Example
             if param_name not in request_set.keys():
                 message += "{0} is not a valid parameter for {1}".format(param_name, self.name)
 
-            if param_name == self.kwPropensity:
-                if isinstance(param_value, Contradiction.Manner):
-                    # target_set[self.kwPropensity] = param_value
+            if param_name == PROPENSITY:
+                if isinstance(param_value, ArgumentTherapy.Manner):
+                    # target_set[self.PROPENSITY] = param_value
                     pass # This leaves param in request_set, clear to be assigned to target_set in call to super below
                 else:
                     message = "Propensity must be of type Example.Mode"
                 continue
 
             # Validate param
-            if param_name == self.kwPertinacity:
+            if param_name == PERTINACITY:
                 if isinstance(param_value, numbers.Number) and 0 <= param_value <= 10:
-                    # target_set[self.kwPertinacity] = param_value
+                    # target_set[PERTINACITY] = param_value
                     pass # This leaves param in request_set, clear to be assigned to target_set in call to super below
                 else:
                     message += "Pertinacity must be a number between 0 and 10"
@@ -462,6 +647,53 @@ class Contradiction(Function_Base): # Example
 
         super()._validate_params(request_set, target_set, context)
 
+    def function(self,
+                variable=None,
+                params=None,
+                time_scale=TimeScale.TRIAL,
+                context=None):
+        """
+        Returns a boolean that is (or tends to be) the same as or opposite the one passed in.
+
+        Arguments
+        ---------
+
+        variable : boolean : default variableClassDefault
+           an assertion to which a therapeutic response is made.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        therapeutic response : boolean
+
+        """
+        self._check_args(variable, params, context)
+
+        # Compute the function
+
+        # Use self.variable (rather than variable), as it has been validated (and default assigned, if necessary)
+        statement = self.variable
+        propensity = self.paramsCurrent[PROPENSITY]
+        pertinacity = self.paramsCurrent[PERTINACITY]
+        whim = randint(-10, 10)
+
+        if propensity == self.Manner.OBSEQUIOUS:
+            return whim < pertinacity
+
+        elif propensity == self.Manner.CONTRARIAN:
+            return whim > pertinacity
+
+        else:
+            raise FunctionError("This should not happen if parameter_validation == True;  check its value")
+
 
 #region ****************************************   FUNCTIONS   *********************************************************
 #endregion
@@ -470,12 +702,80 @@ class Contradiction(Function_Base): # Example
 #endregion
 
 class UserDefinedFunction(Function_Base):
-    """Implement user-defined function
+    """
+    Function_Base(           \
+         function,           \
+         variable=None,      \
+         params=None,        \
+         owner=None,         \
+         name=None,          \
+         prefs=None          \
+    )
 
-    Initialization arguments:
-     - variable
+    Implement user-defined Function.
 
-    Linear.function returns scalar result
+    This is used to "wrap" custom functions in the PsyNeuLink `Function API <LINK>`.
+    It is automatically invoked and applied to any function that is assigned to the `function <Component.function>`
+    attribute of a PsyNeuLink component (other than a Function itself).  The function can take any arguments and
+    return any values.  However, if UserDefinedFunction is used to create a custom version of another PsyNeuLink
+    `Function <Function>`, then it must conform to the requirements of that Function's type.
+
+    .. note::
+       Currently the arguments for the `function <UserDefinedFunction.function>` of a UserDefinedFunction are NOT
+       assigned as attributes of the UserDefinedFunction object or its owner, nor to its :keyword:`user_params` dict.
+
+    Arguments
+    ---------
+
+    function : function
+        specifies function to "wrap." It can be any function, take any arguments (including standard ones,
+        such as :keyword:`params` and :keyword:`context`) and return any value(s), so long as these are consistent
+        with the context in which the UserDefinedFunction will be used.
+
+    variable : value : default variableClassDefault
+        specifies the format and a default value for the input to `function <Function>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable: value
+        format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
+        they are specified by the Function's :keyword:`variableClassDefault`.
+
+    function : function
+        called by the Function's `owner <Function_Base.owner>` when it is executed.
+
+    COMMENT:
+    functionOutputTypeConversion : Bool : False
+        specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
+
+    functionOutputType : FunctionOutputType : None
+        used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
+        must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
+        for details).
+    COMMENT
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
     componentName = USER_DEFINED_FUNCTION
     componentType = USER_DEFINED_FUNCTION_TYPE
@@ -493,6 +793,7 @@ class UserDefinedFunction(Function_Base):
                  function,
                  variable=None,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -502,6 +803,7 @@ class UserDefinedFunction(Function_Base):
 
         super().__init__(variable_default=variable,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -510,12 +812,7 @@ class UserDefinedFunction(Function_Base):
         # IMPLEMENT: PARSE ARGUMENTS FOR user_defined_function AND ASSIGN TO user_params
 
     def function(self,
-                 # variable=None,
-                 # params=None,
-                 # time_scale=TimeScale.TRIAL,
-                 # context=None,
                  **kwargs):
-        # raise FunctionError("Function must be provided for {}".format(self.componentType))
         return self.user_defined_function(**kwargs)
 
 
@@ -531,21 +828,64 @@ class Reduce(CombinationFunction): # -------------------------------------------
 # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
 # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
 # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
-    """Combines an array of values into a single value
+    """
+    Reduce(                                     \
+         variable_default=variableClassDefault, \
+         operation=SUM,                         \
+         params=None,                           \
+         owner=None,                            \
+         prefs=None,                            \
+    )
 
-    Description:
-        Combine elements of an array in variable arg, using arithmetic operation determined by OPERATION.
-        Returns a scalar value.
+    .. _Reduce:
 
-    Initialization arguments:
-     - variable (list or np.ndarray of numbers): values to be combined;
-     - params (dict) can include:
-         + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
-              SUM: element-wise sum of the arrays in variable
-              PRODUCT: Hadamard Product of the arrays in variable
+    Combine values in each of one or more arrays into a single value for each array.
 
-    Reduce.function returns combined values:
-    - single scalar value
+    COMMENT:
+        IMPLEMENTATION NOTE: EXTEND TO MULTIDIMENSIONAL ARRAY ALONG ARBITRARY AXIS
+    COMMENT
+
+    Arguments
+    ---------
+
+    variable_default : list or np.array : default variableClassDefault
+        specifies a template for the value to be transformed and its default value;  all entries must be numeric.
+
+    operation : SUM or PRODUCT : default SUM
+        specifies whether to sum or multiply the elements in `variable <Reduce.function.variable>` of
+        `function <Reduce.function>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable_default : list or np.array
+        contains array(s) to be reduced.
+
+    operation : SUM or PRODUCT
+        determines whether elements of each array in `variable <Reduce.function.variable>` of
+        `function <Reduce.function>` are summmed or multiplied.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
     componentName = REDUCE_FUNCTION
 
@@ -559,6 +899,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
                  variable_default=variableClassDefault,
                  operation:tc.enum(SUM, PRODUCT)=SUM,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -568,11 +909,12 @@ class Reduce(CombinationFunction): # -------------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
     def _validate_variable(self, variable, context=None):
-        """Insure that all items of list or np.ndarray in variable are of the same length
+        """Insure that list or array is 1d and that all elements are numeric
 
         Args:
             variable:
@@ -589,14 +931,31 @@ class Reduce(CombinationFunction): # -------------------------------------------
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Combine a list or array of values
+        """
+        Returns a scalar value for each array in `variable <Reduce.variable>` that is either the sum or
+        product of the elements in that array.
 
-        Returns a scalar value
+        Arguments
+        ---------
 
-        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
-        :params: (dict) with entries specifying:
-                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
-        :return: (scalar)
+        variable : list or np.array : default variableClassDefault
+           a list or np.array of numeric values.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        Sum or product of arrays in variable : np.array
+            in an array that is one dimension less than `variable <Reduce.variable>`.
+
+
         """
 
         # Validate variable and assign to self.variable, and validate params
@@ -615,46 +974,170 @@ class Reduce(CombinationFunction): # -------------------------------------------
         return result
 
 
-kwLinearCombinationInitializer = "Initializer"
-
-
 class LinearCombination(CombinationFunction): # ------------------------------------------------------------------------
 # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
 # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
 # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
-    """Linearly combine arrays of values with optional weighting, offset, and/or scaling
+    """
+    LinearCombination(     \
+         variable_default, \
+         weights=None,     \
+         exponents=None,   \
+         scale=1.0,        \
+         offset=0.0,       \
+         operation=SUM,    \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
 
-    Description:
-        Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by OPERATION
-        Use optional WEIGHTING argument to weight contribution of each array to the combination
-        Use optional SCALE and OFFSET parameters to linearly transform the resulting array
-        Returns a list or 1D array of the same length as the individual ones in the variable
+    .. _LinearCombination:
 
-        Notes:
-        * If variable contains only a single array, it is simply linearly transformed using SCALE and OFFSET
-        * If there is more than one array in variable, they must all be of the same length
-        * WEIGHTS can be:
-            - 1D: each array in the variable is scaled by the corresponding element of WEIGHTS)
-            - 2D: each array in the variable is multiplied by (Hadamard Product) the corresponding array in kwWeight
+    Linearly combine arrays of values with optional weighting, exponentiation, scaling and/or offset.
 
-    Initialization arguments:
-     - variable (value, np.ndarray or list): values to be combined;
-         can be a list of lists, or a 1D or 2D np.array;  a 1D np.array is always returned
-         if it is a list, it must be a list of numbers, lists, or np.arrays
-         all items in the list or 2D np.array must be of equal length
-         the length of WEIGHTS (if provided) must equal the number of arrays (2nd dimension; default is 2)
-     - params (dict) can include:
-         + WEIGHTS (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1, 1])
-         + OFFSET (value): added to the result (after the arithmetic operation is applied; default is 0)
-         + SCALE (value): multiples the result (after combining elements; default: 1)
-         + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
-              SUM: element-wise sum of the arrays in variable
-              PRODUCT: Hadamard Product of the arrays in variable
+    Combines the arrays in the items of the `variable <LinearCombination.variable>` argument.  Each array can be
+    individually weighted and/or exponentiated; they can combined additively or multiplicatively; and the resulting
+    array can be multiplicatively transformed and/or additively offset.
 
-    LinearCombination.function returns combined values:
-    - single number if variable was a single number
-    - list of numbers if variable was list of numbers
-    - 1D np.array if variable was a single np.variable or np.ndarray
+    COMMENT:
+        Description:
+            Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by OPERATION
+            Use optional WEIGHTING argument to weight contribution of each array to the combination
+            Use optional SCALE and OFFSET parameters to linearly transform the resulting array
+            Returns a list or 1D array of the same length as the individual ones in the variable
+
+            Notes:
+            * If variable contains only a single array, it is simply linearly transformed using SCALE and OFFSET
+            * If there is more than one array in variable, they must all be of the same length
+            * WEIGHTS can be:
+                - 1D: each array in the variable is scaled by the corresponding element of WEIGHTS)
+                - 2D: each array in the variable is multiplied by (Hadamard Product) the corresponding array in kwWeight
+        Initialization arguments:
+         - variable (value, np.ndarray or list): values to be combined;
+             can be a list of lists, or a 1D or 2D np.array;  a 1D np.array is always returned
+             if it is a list, it must be a list of numbers, lists, or np.arrays
+             all items in the list or 2D np.array must be of equal length
+             the length of WEIGHTS (if provided) must equal the number of arrays (2nd dimension; default is 2)
+         - params (dict) can include:
+             + WEIGHTS (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1,1])
+             + OFFSET (value): added to the result (after the arithmetic operation is applied; default is 0)
+             + SCALE (value): multiples the result (after combining elements; default: 1)
+             + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
+                  SUM: element-wise sum of the arrays in variable
+                  PRODUCT: Hadamard Product of the arrays in variable
+
+        LinearCombination.function returns combined values:
+        - single number if variable was a single number
+        - list of numbers if variable was list of numbers
+        - 1D np.array if variable was a single np.variable or np.ndarray
+    COMMENT
+
+    Arguments
+    ---------
+
+    variable : 1d or 2d np.array : default variableClassDefault
+        specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
+
+    weights : 1d or 2d np.array
+        specifies values used to multiply the elements of each array in `variable  <LinearCombination.variable>`.
+        If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
+        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        and there must be the same number of items as there are in `variable <LinearCombination.variable>`
+        (see `weights <LinearCombination.weights>` for details)
+
+    exponents : 1d or 2d np.array
+        specifies values used to exponentiate the elements of each array in `variable  <LinearCombination.variable>`.
+        If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
+        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        and there must be the same number of items as there are in `variable <LinearCombination.variable>`
+        (see `exponents <LinearCombination.exponents>` for details)
+
+    scale : float
+        specifies a value by which to multiply each element of the output of `function <LinearCombination.function>`
+        (see `scale <LinearCombination.scale>` for details)
+
+    offset : float
+        specifies a value to add to each element of the output of `function <LinearCombination.function>`
+        (see `offset <LinearCombination.offset>` for details)
+
+    operation : SUM or PRODUCT
+        specifies whether the `function <LinearCombination.function>` takes the elementwise (Hadamarad)
+        sum or product of the arrays in `variable  <LinearCombination.variable>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 1d or 2d np.array
+        contains the arrays to be combined by `function <LinearCombination>`.  If it is 1d, the array is simply
+        linearly transformed by and `scale <LinearCombination.scale>` and `offset <LinearCombination.scale>`.
+        If it is 2d, the arrays (all of which must be of equal length) are weighted and/or exponentiated as
+        specified by `weights <LinearCombination.weights>` and/or `exponents <LinearCombination.exponents>`
+        and then combined as specified by `operation <LinearCombination.operation>`.
+
+    weights : 1d or 2d np.array
+        if it is 1d, each element is used to multiply all elements in the corresponding array of
+        `variable <LinearCombination.variable>`;    if it is 2d, then each array is multiplied elementwise
+        (i.e., the Hadamard Product is taken) with the corresponding array of `variable <LinearCombinations.variable>`.
+        All :keyword:`weights` are applied before any exponentiation (if it is specified).
+
+    exponents : 1d or 2d np.array
+        if it is 1d, each element is used to exponentiate the elements of the corresponding array of
+        `variable <LinearCombinations.variable>`;  if it is 2d, the element of each array is used to exponentiate
+        the correspnding element of the corresponding array of `variable <LinearCombination.variable>`.
+        In either case, exponentiating is applied after application of the `weights <LinearCombination.weights>`
+        (if any are specified).
+
+    scale : float
+        value is multiplied by each element of the array after applying the `operation <LinearCombination.operation>`
+        (see `scale <LinearCombination.scale>` for details);  this done before applying the
+        `offset <LinearCombination.offset>` (if it is specified).
+
+    offset : float
+        value is added to each element of the array after applying the `operation <LinearCombination.operation>`
+        and `scale <LinearCombination.scale>` (if it is specified).
+
+    operation : SUM or PRODUCT
+        determines whether the `function <LinearCombination.function>` takes the elementwise (Hadamard) sum or
+        product of the arrays in `variable  <LinearCombination.variable>`.
+
+    COMMENT:
+    function : function
+        applies the `weights <LinearCombination.weights>` and/or `exponents <LinearCombinations.weights>` to the
+        arrays in `variable <LinearCombination.variable>`, then takes their sum or product (as specified by
+        `operation <LinearCombination.operation>`), and finally applies `scale <LinearCombination.scale>` and/or
+        `offset <LinearCombination.offset>`.
+
+    functionOutputTypeConversion : Bool : False
+        specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
+
+    functionOutputType : FunctionOutputType : None
+        used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
+        must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
+        for details).
+    COMMENT
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = LINEAR_COMBINATION_FUNCTION
@@ -673,8 +1156,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 scale:parameter_spec=1.0,
-                 offset:parameter_spec=0.0,
                  # IMPLEMENTATION NOTE - these don't check whether every element of np.array is numerical:
                  # weights:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
                  # exponents:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
@@ -684,22 +1165,26 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  # MODIFIED 2/10/17 NEW:
                  weights=None,
                  exponents=None,
+                 scale:parameter_spec=1.0,
+                 offset:parameter_spec=0.0,
                  # MODIFIED 2/10/17 END
-                 operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
+                 operation:tc.enum(SUM, PRODUCT)=SUM,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(scale=scale,
-                                                 offset=offset,
-                                                 weights=weights,
-                                                 exponents=exponents,
-                                                 operation=operation,
-                                                 params=params)
+                                                  offset=offset,
+                                                  weights=weights,
+                                                  exponents=exponents,
+                                                  operation=operation,
+                                                  params=params)
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -769,39 +1254,37 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Linearly combine a list of values, and optionally offset and/or scale them
+        """
+        Apply `weights <LinearCombination.weights>` and/or `exponents <LinearCombinations.weights>` to the
+        arrays in `variable <LinearCombination.variable>`, then take their sum or product (as specified by
+        `operation <LinearCombination.operation>`), apply `scale <LinearCombination.scale>` and/or `offset
+        <LinearCombination.offset>`, and return the resulting array.
 
-# DOCUMENT:
-        Handles 1-D or 2-D arrays of numbers
-        Convert to np.array
-        All elements must be numeric
-        If linear (single number or 1-D array of numbers) just apply scale and offset
-        If 2D (array of arrays), apply exponents to each array
-        If 2D (array of arrays), apply weights to each array
-        Operators:  SUM AND PRODUCT
-        -------------------------------------------
-        OLD:
-        Variable must be a list of items:
-            - each item can be a number or a list of numbers
-        Corresponding elements of each item in variable are combined based on OPERATION param:
-            - SUM adds corresponding elements
-            - PRODUCT multiples corresponding elements
-        An initializer (kwLinearCombinationInitializer) can be provided as the first item in variable;
-            it will be populated with a number of elements equal to the second item,
-            each element of which is determined by OPERATION param:
-            - for SUM, initializer will be a list of 0's
-            - for PRODUCT, initializer will be a list of 1's
-        Returns a list of the same length as the items in variable,
-            each of which is the combination of their corresponding elements specified by OPERATION
+        COMMENT: [SHORTER VERSION]
+            Linearly combine multiple arrays, optionally weighted and/or exponentiated, and return optionally scaled
+            and/or offset array (see :ref:`above <LinearCombination>` for details of param specifications`).
+        COMMENT
 
-        :var variable: (list of numbers) - values to calculate (default: [0, 0]:
-        :params: (dict) with entries specifying:
-                           EXPONENTS (2D np.array): exponentiate each value in the variable array (default: none)
-                           WEIGHTS (2D np.array): multiply each value in the variable array (default: none):
-                           OFFSET (scalar) - additive constant (default: 0):
-                           SCALE: (scalar) - scaling factor (default: 1)
-                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
-        :return: (1D np.array)
+        Arguments
+        ---------
+
+        variable : 1d or 2d np.array : default variableClassDefault
+           a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        combined array : 1d np.array
+            the result of linearly combining the arrays in `variable <LinearCombination.variable>`.
+
         """
 
         # Validate variable and assign to self.variable, and validate params
@@ -850,136 +1333,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
 # FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
 
-class WeightedError(CombinationFunction):
-    """Calculate the contribution of each sender to the error signal based on the weight matrix
-
-    Description:
-
-    Initialization arguments:
-     - variable (1d np.array or list, 1d np.rarray or list): activity vector and error vector, respectively
-     - matrix (2d np.array or List(list))
-     - derivative (function or method)
-    WeightedError.function returns dot product of matrix and error * derivative of activity
-    Returns 1d np.array (error_signal)
-    """
-
-    componentName = WEIGHTED_ERROR_FUNCTION
-
-    classPreferences = {
-        kwPreferenceSetName: 'WeightedErrorCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
-    }
-
-    variableClassDefault = [[0], [0]]
-    # variableClassDefault_locked = True
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
-    from PsyNeuLink.Components.States.ParameterState import ParameterState
-    @tc.typecheck
-    def __init__(self,
-                 variable_default,
-                 matrix=None,
-                 # derivative:is_function_type,
-                 derivative=None,
-                 params=None,
-                 prefs:is_pref_set=None,
-                 context=componentName+INITIALIZING):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  derivative=derivative,
-                                                  params=params)
-
-        super().__init__(variable_default=variable_default,
-                         params=params,
-                         prefs=prefs,
-                         context=context)
-
-    def _validate_variable(self, variable, context=None):
-        """Insure that all items of list or np.ndarray in variable are of the same length
-
-        Args:
-            variable:
-            context:
-        """
-        super()._validate_variable(variable=variable, context=context)
-
-        # FIX: MAKE SURE VARIABLE ndim = 2
-        variable = np.array(variable)
-        # self.variable = np.atleast_2d(variable)
-
-        # variable must have two 1d items
-        if variable.shape[0] != 2:
-            raise FunctionError("variable for {} ({0}) must have two arrays (activity and error vectors)".
-                               format(self.__class__.__name__, variable))
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that dimensions of matrix are compatible with activity and error vectors in variable
-        """
-        super()._validate_params(request_set=request_set,
-                              target_set=target_set,
-                              context=context)
-
-        matrix = target_set[MATRIX].value
-
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if not isinstance(target_set[MATRIX], ParameterState):
-            raise FunctionError("\'matrix\' arg ({}) for {} must be a ParameterState".
-                                format(matrix, self.__class__.__name__))
-
-        try:
-            activity_len = len(self.variable[0])
-        except TypeError:
-            raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
-
-        try:
-            error_len = len(self.variable[1])
-        except TypeError:
-            raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
-
-        if activity_len != error_len:
-            raise FunctionError("length of activity vector ({}) and error vector ({}) in variable for {} must be equal".
-                format(activity_len, error_len, self.__class__.__name__))
-
-        if not isinstance(matrix, (np.ndarray, np.matrix)):
-            raise FunctionError("value of \'matrix\' arg ({}) for {} must be an ndarray nor matrix".
-                                format(matrix, self.__class__.__name__))
-
-        if matrix.ndim != 2:
-            raise FunctionError("\'matrix\' arg for {} must be 2d (it is {})".
-                               format(self.__class__.__name__, matrix.ndim))
-
-        cols = matrix.shape[1]
-        if  cols != error_len:
-            raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
-                                     " must equal length of error vector ({})".
-                                     format(cols,self.__class__.__name__,error_len))
-
-        if not isinstance(target_set['derivative'],(function_type, method_type)):
-            raise FunctionError("\'derivative\' arg ({}) for {} must be an ndarray nor matrix".
-                                format(matrix, self.__class__.__name__))
-
-
-    def function(self,
-                variable=None,
-                params=None,
-                time_scale=TimeScale.TRIAL,
-                context=None):
-
-        self._check_args(variable, params, context)
-
-        activity = self.variable[0]
-        error = self.variable[1]
-        matrix = self.matrix.value
-
-        activity_derivative = self.derivative(output=activity)
-        error_derivative = error * activity_derivative
-
-        return np.dot(matrix, error_derivative)
-
-
 #region ***********************************  TRANSFER FUNCTIONS  ***********************************************
 #endregion
 
@@ -988,27 +1341,79 @@ class TransferFunction(Function_Base):
 
 
 class Linear(TransferFunction): # --------------------------------------------------------------------------------------
-    """Calculate a linear transform of input variable (SLOPE, INTERCEPT)
+    """
+    Linear(                \
+         variable_default, \
+         slope=1.0,        \
+         intercept=0.0,    \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
 
-    Initialization arguments:
-     - variable (number): transformed by linear function: slope * variable + intercept
-     - params (dict): specifies
-         + slope (SLOPE: value) - slope (default: 1)
-         + intercept (INTERCEPT: value) - intercept (defaul: 0)
+    .. _Linear:
 
-    Linear.function returns scalar result
+    Linearly transform variable.
+
+    Note: default values for `slope` and `intercept` implement the IDENTITY_FUNCTION
+
+    Arguments
+    ---------
+
+    variable : number or np.array : default variableClassDefault
+        specifies a template for the value to be transformed.
+
+    slope : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>`.
+
+    intercept : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    slope : float
+        value by which each element of `variable <Linear.variable>` is multiplied before applying the
+        `intercept <Linear.intercept>` (if it is specified).
+
+    intercept : float
+        value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
+        (if it is specified).
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = LINEAR_FUNCTION
 
-    # MODIFIED 11/29/16 NEW:
     classPreferences = {
         kwPreferenceSetName: 'LinearClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
         kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
-    # MODIFIED 11/29/16 END
-
 
     variableClassDefault = [0]
 
@@ -1024,18 +1429,20 @@ class Linear(TransferFunction): # ----------------------------------------------
                  slope:parameter_spec=1.0,
                  intercept:parameter_spec=0.0,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(slope=slope,
-                                                 intercept=intercept,
-                                                 params=params)
+                                                  intercept=intercept,
+                                                  params=params)
 
         super().__init__(variable_default=variable_default,
-                                     params=params,
-                                     prefs=prefs,
-                                     context=context)
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
 
         self.functionOutputType = None
 
@@ -1044,13 +1451,28 @@ class Linear(TransferFunction): # ----------------------------------------------
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Calculate single value (defined by slope and intercept)
+        """
+        Return: `slope <Linear.slope>` * `variable <Linear.variable>` + `intercept <Linear.intercept>`.
 
-        :var variable: (number) - value to be "plotted" (default: 0
-        :parameter params: (dict) with entries specifying:
-                           SLOPE: number - slope (default: 1)
-                           INTERCEPT: number - intercept (default: 0)
-        :return number:
+        Arguments
+        ---------
+
+        variable : number or np.array : default variableClassDefault
+           a single value or array to be transformed.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        linear transformation of variable : number or np.array
+
         """
 
         self._check_args(variable, params, context)
@@ -1107,31 +1529,87 @@ class Linear(TransferFunction): # ----------------------------------------------
 
         return result
 
-    def derivative(self, output, input=None):
-        """Derivative of the softMax sigmoid function
+    def derivative(self, input=None, output=None):
         """
-        # FIX: ??CORRECT:
+        derivative()
+
+        Derivative of `function <Linear.function>`.
+
+        Returns
+        -------
+
+        derivative :  number
+            current value of `slope <Linear.slope>`.
+
+        """
+
         return self.slope
-        # raise FunctionError("Derivative not yet implemented for {}".format(self.componentName))
+
 
 class Exponential(TransferFunction): # ---------------------------------------------------------------------------------
-    """Calculate an exponential transform of input variable  (RATE, SCALE)
+    """
+    Exponential(           \
+         variable_default, \
+         scale=1.0,        \
+         rate=1.0,         \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
 
-    Initialization arguments:
-     - variable (number):
-         + scalar value to be transformed by exponential function: scale * e**(rate * x)
-     - params (dict): specifies
-         + rate (RATE: coeffiencent on variable in exponent (default: 1)
-         + scale (SCALE: coefficient on exponential (default: 1)
+    .. _Exponential:
 
-    Exponential.function returns scalar result
+    Exponentially transform variable.
+
+    Arguments
+    ---------
+
+    variable : number or np.array : default variableClassDefault
+        specifies a template for the value to be transformed.
+
+    rate : float : default 1.0
+        specifies a value by which to multiply `variable <Exponential.variable>` before exponentiation.
+
+    scale : float : default 1.0
+        specifies a value by which to multiply the exponentiated value of `variable <Exponential.variable>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    rate : float
+        value by which `variable <Exponential.variable>` is multiplied before exponentiation.
+
+    scale : float
+        value by which the exponentiated value is multipled.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = EXPONENTIAL_FUNCTION
-
-    # # Params
-    # RATE = "rate"
-    # SCALE = "scale"
 
     variableClassDefault = 0
 
@@ -1143,6 +1621,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                  rate:parameter_spec=1.0,
                  scale:parameter_spec=1.0,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName + INITIALIZING):
 
@@ -1152,23 +1631,38 @@ class Exponential(TransferFunction): # -----------------------------------------
                                                  params=params)
 
         super().__init__(variable_default=variable_default,
-                                          params=params,
-                                          prefs=prefs,
-                                          context=context)
-        TEST = True
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
 
     def function(self,
                 variable=None,
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Exponential function
+        """
+        Return: `scale <Exponential.scale>` * e**(`rate <Exponential.rate>` * `variable <Linear.variable>`).
 
-        :var variable: (number) - value to be exponentiated (default: 0
-        :parameter params: (dict) with entries specifying:
-                           RATE: number - rate (default: 1)
-                           SCALE: number - scale (default: 1)
-        :return number:
+        Arguments
+        ---------
+
+        variable : number or np.array : default variableClassDefault
+           a single value or array to be exponentiated.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        exponential transformation of variable : number or np.array
+
         """
 
         self._check_args(variable, params, context)
@@ -1179,25 +1673,86 @@ class Exponential(TransferFunction): # -----------------------------------------
 
         return scale * np.exp(rate * self.variable)
 
-    def derivative(self, output, input=None):
-        """Derivative of the softMax sigmoid function
+    def derivative(self, input, output=None):
         """
-        # FIX: ??CORRECT:
-        return output
-        # raise FunctionError("Derivative not yet implemented for {}".format(self.componentName))
+        derivative(input)
+
+        Derivative of `function <Exponential.function>`.
+
+        Returns
+        -------
+
+        derivative :  number
+            `rate <Exponential.rate>` * input.
+
+        """
+        return self.rate * input
 
 
 class Logistic(TransferFunction): # ------------------------------------------------------------------------------------
-    """Calculate the logistic transform of input variable  (GAIN, BIAS)
+    """
+    Logistic(              \
+         variable_default, \
+         gain=1.0,         \
+         bias=0.0,         \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
 
-    Initialization arguments:
-     - variable (number):
-         + scalar value to be transformed by logistic function: 1 / (1 + e**(gain*variable + bias))
-     - params (dict): specifies
-         + gain (GAIN): coeffiencent on exponent (default: 1)
-         + bias (BIAS): additive constant in exponent (default: 0)
+    .. _Logistic:
 
-    Logistic.function returns scalar result
+    Logistically transform variable.
+
+    Arguments
+    ---------
+
+    variable : number or np.array : default variableClassDefault
+        specifies a template for the value to be transformed.
+
+    gain : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>` before logistic transformation
+
+    bias : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `gain <Linear.gain>`
+        but before logistic transformation.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    gain : float
+        value by which each element of `variable <Logistic.variable>` is multiplied before applying the
+        `bias <Linear.bias>` (if it is specified).
+
+    bias : float
+        value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
+        (if it is specified).
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = LOGISTIC_FUNCTION
@@ -1213,6 +1768,7 @@ class Logistic(TransferFunction): # --------------------------------------------
                  gain:parameter_spec=1.0,
                  bias:parameter_spec=0.0,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context='Logistic Init'):
 
@@ -1223,6 +1779,7 @@ class Logistic(TransferFunction): # --------------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1231,45 +1788,121 @@ class Logistic(TransferFunction): # --------------------------------------------
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Logistic sigmoid function
+        """
+        Return: 1 / (1 + e**( (`gain <Logistic.gain>` * `variable <Logistic.variable>`) + `bias <Logistic.bias>`))
 
-        :var variable: (number) - value to be transformed by logistic function (default: 0)
-        :parameter params: (dict) with entries specifying:
-                           GAIN: number - gain (default: 1)
-                           BIAS: number - rate (default: 0)
-        :return number:
+        Arguments
+        ---------
+
+        variable : number or np.array : default variableClassDefault
+           a single value or array to be transformed.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        logistic transformation of variable : number or np.array
+
         """
 
         self._check_args(variable, params, context)
-
-        # Assign the params and return the result
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
         return 1 / (1 + np.exp(-(gain * self.variable) + bias))
 
     def derivative(self, output, input=None):
-        """Derivative of the logistic signmoid function
+        """
+        derivative(output)
+
+        Derivative of `function <Logistic.function>`.
+
+        Returns
+        -------
+
+        derivative :  number
+            output * (1 - output).
+
         """
         return output*(1-output)
 
 
 class SoftMax(TransferFunction): # -------------------------------------------------------------------------------------
-    """Calculate the softMax transform of input variable  (GAIN, BIAS)
+    """
+    SoftMax(               \
+         variable_default, \
+         gain=1.0,         \
+         output=ALL,       \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
 
-    Initialization arguments:
-     - variable (number):
-         + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
-     - params (dict): specifies
-         + gain (GAIN): coeffiencent on exponent (default: 1)
-         + output (OUTPUT_TYPE): determines how to populate the return array (default: ALL)
-             ALL: array each element of which is the softmax value of the elements in the input array
-             MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
-             MAX_INDICATOR: array with a one for the element with the maximum softmax value, and zeros elsewhere
-             PROB: probabilistially picks an element based on their softmax values to pass through; all others are zero
-         # + max (kwMax): only reports max value, all others set to 0 (default: :keyword:`False`)
+    .. _SoftMax:
 
-    SoftMax.function returns scalar result
+    SoftMax transform of variable.
+
+    Arguments
+    ---------
+
+    variable : 1d np.array : default variableClassDefault
+        specifies a template for the value to be transformed.
+
+    gain : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>` before softmax transformation.
+
+    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
+        specifies the format of array returned by `function <SoftMax.function>`
+        (see `output <SoftMax.output>` for details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 1d np.array
+        contains value to be transformed.
+
+    gain : float
+        value by which `variable <Logistic.variable>` is multiplied before the softmax transformation;  determines
+        the "sharpness" of the distribution.
+
+    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
+        determines how the softmax-transformed values of the elements in `variable <SoftMax.variable>` are reported
+        in the array returned by `function <SoftMax.funtion>`:
+            * **ALL**: array of all softmax-transformed values;
+            * **MAX_VAL**: softmax-transformed value for the element with the maximum such value, 0 for all others;
+            * **MAX_INDICATOR**: 1 for the element with the maximum softmax-transformed value, 0 for all others;
+            * **PROB**: probabilistically chosen element based on softmax-transformed values after normalizing sum of
+              values to 1, 0 for all others.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = SOFTMAX_FUNCTION
@@ -1284,6 +1917,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                  gain:parameter_spec=1.0,
                  output:tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB)=ALL,
                  params:tc.optional(dict)=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context='SoftMax Init'):
 
@@ -1294,6 +1928,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1302,13 +1937,30 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """SoftMax sigmoid function
+        """
+        Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
+        sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
+        filtered by `ouptput <SoftMax.output>` specification.
 
-        :var variable: (number) - value to be transformed by softMax function (default: 0)
-        :parameter params: (dict) with entries specifying:
-                           GAIN: number - gain (default: 1)
-                           BIAS: number - rate (default: 0)
-        :return number:
+        Arguments
+        ---------
+
+        variable : 1d np.array : default variableClassDefault
+           an array to be transformed.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        softmax transformation of variable : number or np.array
+
         """
 
         self._check_args(variable, params, context)
@@ -1327,7 +1979,6 @@ class SoftMax(TransferFunction): # ---------------------------------------------
 
         # For the element that is max of softmax, set it's value to its softmax value, set others to zero
         if output is MAX_VAL:
-            # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             sm = np.where(sm == max_value, max_value, 0)
 
@@ -1349,65 +2000,113 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         return sm
 
     def derivative(self, output, input=None):
-        """Derivative of the softMax sigmoid function
+        """
+        derivative(output)
+
+        Derivative of `function <SoftMax.function>`.
+
+        Returns
+        -------
+
+        derivative :  number
+            output - maximum value.
+
         """
         # FIX: ??CORRECT:
         indicator = self.function(input, params={MAX_VAL:True})
         return output - indicator
-        # raise FunctionError("Derivative not yet implemented for {}".format(self.componentName))
-
-
-def matrix_spec(m):
-    if m is None:
-        return True
-    if m in {IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
-        return True
-    if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
-        return True
-    return False
 
 
 class LinearMatrix(TransferFunction):  # -----------------------------------------------------------------------------------
-    """Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, MATRIX)
+    """
+    LinearMatrix(          \
+         variable_default, \
+         matrix=None,      \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
 
-    Use a weight matrix to convert a sender vector into a receiver vector:
-    - each row of the mapping corresponds to an element of the sender vector (outer index)
-    - each column of the mapping corresponds to an element of the receiver vector (inner index):
+    .. _LinearMatrix:
 
-    COMMENT:
-    XXXX CONVERT TO FIGURE:
-    ----------------------------------------------------------------------------------------------------------
-    MATRIX FORMAT
-                                     INDICES:
-                                 Receiver elements:
-                            0       1       2       3
-                        0  [0,0]   [0,1]   [0,2]   [0,3]
-    Sender elements:    1  [1,0]   [1,1]   [1,2]   [1,3]
-                        2  [2,0]   [2,1]   [2,2]   [2,3]
+    Matrix transform of variable:
 
-    matrix.shape => (sender/rows, receiver/cols)
+        `function <LinearMatrix.function>` returns dot product of `variable <LinearMatrix.variable>` and
+        `matrix <LinearMatrix.matrix>`.
 
-    ----------------------------------------------------------------------------------------------------------
-    ARRAY FORMAT
-                                                                        INDICES
-                                           [ [      Sender 0 (row0)      ], [       Sender 1 (row1)      ]... ]
-                                           [ [ rec0,  rec1,  rec2,  rec3 ], [ rec0,  rec1,  rec2,  rec3  ]... ]
-    matrix[senders/rows, receivers/cols]:  [ [ row0,  row0,  row0,  row0 ], [ row1,  row1,  row1,  row1  ]... ]
-                                           [ [ col0,  col1,  col2,  col3 ], [ col0,  col1,  col2,  col3  ]... ]
-                                           [ [[0,0], [0,1], [0,2], [0,3] ], [[1,0], [1,1], [1,2], [1,3] ]... ]
+    COMMENT:  [CONVERT TO FIGURE]
+        ----------------------------------------------------------------------------------------------------------
+        MATRIX FORMAT
+                                         INDICES:
+                                     Output elements:
+                              0       1       2       3
+                         0  [0,0]   [0,1]   [0,2]   [0,3]
+        Input elements:  1  [1,0]   [1,1]   [1,2]   [1,3]
+                         2  [2,0]   [2,1]   [2,2]   [2,3]
 
-    ----------------------------------------------------------------------------------------------------------
+        matrix.shape => (input/rows, output/cols)
+
+        ----------------------------------------------------------------------------------------------------------
+        ARRAY FORMAT
+                                                                            INDICES
+                                          [ [      Input 0 (row0)       ], [       Input 1 (row1)      ]... ]
+                                          [ [ out0,  out1,  out2,  out3 ], [ out0,  out1,  out2,  out3 ]... ]
+        matrix[input/rows, output/cols]:  [ [ row0,  row0,  row0,  row0 ], [ row1,  row1,  row1,  row1 ]... ]
+                                          [ [ col0,  col1,  col2,  col3 ], [ col0,  col1,  col2,  col3 ]... ]
+                                          [ [[0,0], [0,1], [0,2], [0,3] ], [[1,0], [1,1], [1,2], [1,3] ]... ]
+
+        ----------------------------------------------------------------------------------------------------------
     COMMENT
 
-    Initialization arguments:
-    - variable (2D np.ndarray containing exactly two sub-arrays:  sender and receiver vectors
-    - params (dict) specifying:
-         + filler (kwFillerValue: number) value used to initialize all entries in matrix (default: 0)
-         + identity (kwkwIdentityMapping: boolean): constructs identity matrix (default: :keyword:`False`)
 
-    Create a matrix in self.matrix that is used in calls to LinearMatrix.function.
+    Arguments
+    ---------
 
-    Returns sender 2D array linearly transformed by self.matrix
+    variable : list or 1d np.array : default variableClassDefault
+        specifies a template for the value to be transformed; length must equal the number of rows of `matrix
+        <LinearMatrix.matrix>`.
+
+    matrix : number, list, 1d or 2d np.ndarray, np.matrix, function, or matrix keyword : default IDENTITY_MATRIX
+        specifies matrix used to transform `variable <LinearMatrix.variable>`
+        (see `matrix <LinearMatrix.matrix>` for specification details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 1d np.array
+        contains value to be transformed.
+
+    matrix : 2d np.array
+        matrix used to transform `variable <LinearMatrix.variable>`.
+        Can be specified as any of the following:
+            * number - used as the filler value for all elements of the :keyword:`matrix` (call to np.fill);
+            * list of arrays, 2d np.array or np.matrix - assigned as the value of :keyword:`matrix`;
+            * matrix keyword - see `MatrixKeywords` for list of options.
+        Rows correspond to elements of the input array (outer index), and
+        columns correspond to elements of the output array (inner index).
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = LINEAR_MATRIX_FUNCTION
@@ -1418,26 +2117,23 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    def matrix_spec(m):
+        if m is None:
+            return True
+        if m in MATRIX_KEYWORD_VALUES:
+            return True
+        if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+            return True
+        return False
+
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
                  matrix:matrix_spec=None,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName + INITIALIZING):
-        """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
-
-        Variable = sender vector (list of numbers)
-
-        :param variable_default: (list) - list of numbers (default: [0]
-        :param params: (dict) with entries specifying:
-                                kwReceiver: value - list of numbers, determines width (cols) of matrix (defalut: [0])
-                                MATRIX: value - value used to initialize matrix;  can be one of the following:
-                                    + single number - used to fill self.matrix (default: DEFAULT_FILLER_VALUE)
-                                    + matrix - assigned to self.matrix
-                                    + kwIdentity - create identity matrix (diagonal elements = 1;  all others = 0)
-        :return none
-        """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
@@ -1448,6 +2144,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # super(LinearMatrix, self).__init__(variable_default=variable_default,
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1492,7 +2189,17 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
         sender_len = sender.size
 
-
+        # FIX: RELABEL sender -> input AND receiver -> output
+        # FIX: THIS NEEDS TO BE CLEANED UP:
+        #      - AT LEAST CHANGE THE NAME FROM kwReceiver TO output_template OR SOMETHING LIKE THAT
+        #      - MAKE ARG?  OR ADD OTHER PARAMS:  E.G., FILLER?
+        #      - OR REFACTOR TO INCLUDE AS MATRIX SPEC:
+        #                  IF MATRIX IS 1D, USE AS OUTPUT TEMPLATE
+        #                     IF ALL ITS VALUES ARE 1'S => FULL CONNECTIVITY MATRIX
+        #                     IF ALL ITS VALUES ARE 0'S => RANDOM CONNECTIVITY MATRIX
+        #                     NOTE:  NO NEED FOR IDENTITY MATRIX, AS THAT WOULD BE SQUARE SO NO NEED FOR OUTPUT TEMPLATE
+        #      - DOCUMENT WHEN DONE
+        # MODIFIED 3/26/17 OLD:
         # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
         # First try to get receiver from specification in params
         if kwReceiver in param_set:
@@ -1510,6 +2217,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 print ("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
                        format(sender_len))
             self.receiver = param_set[kwReceiver] = sender
+        # # MODIFIED 3/26/17 NEW:
+        # self.receiver = param_set[kwReceiver] = sender
+        # MODIFIED 3/26/17 END
 
         receiver_len = len(self.receiver)
 
@@ -1532,8 +2242,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if isinstance(param_value, numbers.Number):
                     continue
 
-# FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING_PROJECTION._instantiate_receiver)
-# FIX: IMPLEMENT RANDOM_CONNECTIVITY_MATRIX?
                 #np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
                 elif isinstance(param_value, (np.ndarray, np.matrix)):
                     # get dimensions specified by:
@@ -1542,29 +2250,26 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                     weight_matrix = np.matrix(param_value)
                     if 'U' in repr(weight_matrix.dtype):
-                        raise FunctionError("Non-numeric entry in MATRIX specification ({0})".format(param_value))
+                        raise FunctionError("Non-numeric entry in MATRIX specification ({}) for the {} function of {}".
+                            format(param_value), self.name, self.owner.name)
+
+                    if weight_matrix.ndim != 2:
+                        raise FunctionError("The matrix provided for the {} function of {} must be 2d (it is {}d".
+                            format(weight_matrix.ndim, self.name, self.owner.name))
 
                     matrix_rows = weight_matrix.shape[0]
                     matrix_cols = weight_matrix.shape[1]
 
                     # Check that number of rows equals length of sender vector (variable)
                     if matrix_rows != sender_len:
-                        raise FunctionError("The number of rows ({0}) of the matrix provided does not equal the "
-                                            "length ({1}) of the sender vector (variable)".
-                                            format(matrix_rows, sender_len))
-                    # MODIFIED 9/21/16:
-                    #  IF MATRIX IS SPECIFIED, NO NEED TO VALIDATE RECEIVER_LEN (AND MAY NOT EVEN KNOW IT YET)
-                    #  SINCE _instantiate_function() IS GENERALLY CALLED BEFORE _instantiate_receiver()
-                    # # Check that number of columns equals length of specified receiver vector (kwReceiver)
-                    # if matrix_cols != receiver_len:
-                    #     raise FunctionError("The number of columns ({}) of the matrix provided for {} "
-                    #                        "does not equal the length ({}) of the reciever vector (kwReceiver param)".
-                    #                         format(matrix_cols, self.name, receiver_len))
+                        raise FunctionError("The number of rows ({}) of the matrix provided for {} function of {} "
+                                            "does not equal the length ({}) of the sender vector (variable)".
+                                            format(matrix_rows, self.name, self.owner.name, sender_len))
 
                 # Auto, full or random connectivity matrix requested (using keyword):
                 # Note:  assume that these will be properly processed by caller
                 #        (e.g., MappingProjection._instantiate_receiver)
-                elif param_value in {AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
+                elif param_value in MATRIX_KEYWORD_VALUES:
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
@@ -1577,8 +2282,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         #            format(receiver_len, sender_len))
                         # # Set receiver to sender
                         # param_set[kwReceiver] = sender
-                        raise FunctionError("Identity matrix requested, but length of receiver ({0})"
-                                           " does not match length of sender ({1})".format(receiver_len, sender_len))
+                        raise FunctionError("Identity matrix requested for the {} function of {}, "
+                                            "but length of receiver ({}) does not match length of sender ({})".
+                                            format(self.name, self.owner.name, receiver_len, sender_len))
                     continue
 
                 # list used to describe matrix, so convert to 2D np.array and pass to validation of matrix below
@@ -1586,18 +2292,19 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     try:
                         param_value = np.atleast_2d(param_value)
                     except (ValueError, TypeError) as error_msg:
-                        raise FunctionError("Error in list specification ({0}) of matrix for {1}: {2})".
-                                           format(param_value, self.__class__.__name__, error_msg))
+                        raise FunctionError("Error in list specification ({}) of matrix for the {} function of {}: {})".
+                                           # format(param_value, self.__class__.__name__, error_msg))
+                                           format(param_value, self.name, self.owner.name, error_msg))
 
                 # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
                 elif isinstance(param_value, str):
                     try:
                         param_value = np.matrix(param_value)
                     except (ValueError, TypeError) as error_msg:
-                        raise FunctionError("Error in string specification ({0}) of matrix for {1}: {2})".
-                                           format(param_value, self.__class__.__name__, error_msg))
-
-                
+                        raise FunctionError("Error in string specification ({}) of the matrix "
+                                            "for the {} function of {}: {})".
+                                           # format(param_value, self.__class__.__name__, error_msg))
+                                           format(param_value, self.name, self.owner.name, error_msg))
 
                 # function so:
                 # - assume it uses random.rand()
@@ -1606,16 +2313,23 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 elif isinstance(param_value, function_type):
                     test = param_value(1,1)
                     if not isinstance(test, (np.ndarray, np.matrix)):
-                        raise FunctionError("A function is specified for matrix for {1}: {2}) "
-                                           "that returns a value ({}) that is neither a matrix nor array ".
-                               format(param_value, self.__class__.__name__, test))
+                        raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
+                                           "that returns a value ({}) that is neither a matrix nor an array".
+                                            # format(param_value, self.__class__.__name__, test))
+                                            format(self.name, self.owner.name, param_value, test))
 
                 else:
-                    raise FunctionError("Value of {0} param ({1}) must be a matrix, a number (for filler), "
-                                       "or a matrix keyword ({2}, {3})".
-                                        format(param_name, param_value, IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX))
+                    raise FunctionError("Value of {} param ({}) for the {} function of {} "
+                                        "must be a matrix, a number (for filler), or a matrix keyword ({})".
+                                        format(param_name,
+                                               param_value,
+                                               self.name,
+                                               self.owner.name,
+                                               MATRIX_KEYWORD_NAMES))
             else:
-                message += "Param {0} not recognized by {1} function".format(param_name, self.componentName)
+                message += "Unrecognized param ({}) specified for the {} function of {}".format(param_name,
+                                                                                                self.name,
+                                                                                                self.owner.name)
                 continue
 
         if message:
@@ -1647,9 +2361,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         try:
             receiver = self.receiver
         except:
-            raise FunctionError("Can't instantiate matrix specification ({}) for {} "
+            raise FunctionError("Can't instantiate matrix specification ({}) for the {} function of {} "
                                "since its receiver has not been specified".
-                               format(specification, self.__class__.__name__))
+                               format(specification, self.name, self.owner.name))
             # receiver = sender
         receiver_len = receiver.shape[0]
 
@@ -1657,9 +2371,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         # This should never happen (should have been picked up in validate_param or above)
         if matrix is None:
-            raise FunctionError("MATRIX param ({0}) must be a matrix, a function that returns one, "
-                               "a matrix specification keyword, or a number (filler)".
-                                format(specification))
+            raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function that returns "
+                                "one, a matrix specification keyword ({}), or a number (filler)".
+                                format(specification, self.name, self.owner.name, matrix_keywords))
         else:
             return matrix
 
@@ -1668,16 +2382,28 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Transforms variable vector using either self.matrix or specification in params
+        """
+        Return: `variable <LinearMatrix.variable>` • `matrix <LinearMatrix.matrix>`
 
-        :var variable: (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix
-        :parameter params: (dict) with entries specifying:
-                            MATRIX: value - used to override self.matrix implemented by __init__;  must be one of:
-                                                 + 2D matrix - two-item list, each of which is a list of numbers with
-                                                              length that matches the length of the vector in variable
-                                                 + kwIdentity - specifies use of identity matrix (dimensions of vector)
-                                                 + number - used to fill matrix of same dimensions as self.matrix
-        :return list of numbers: vector with length = width (number of columns, outer index) of matrix
+        Arguments
+        ---------
+        variable : list or 1d np.array
+            array to be transformed;  length must equal the number of rows of 'matrix <LinearMatrix.matrix>`.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        ---------
+
+        dot product of variable and matrix : 1d np.array
+            length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
+
         """
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
@@ -1687,9 +2413,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def keyword(self, keyword):
 
-        # # MODIFIED 10/29/16 OLD:
-        # matrix = get_matrix(keyword)
-        # MODIFIED 10/29/16 NEW:
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         rows = None
         cols = None
@@ -1697,10 +2420,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             rows = len(self.sender.value)
             cols = len(self.receiver.variable)
         matrix = get_matrix(keyword, rows, cols)
-        # MODIFIED 10/29/16 END
 
         if matrix is None:
-            raise FunctionError("Unrecognized keyword ({}) specified for LinearMatrix Function Function".format(keyword))
+            raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
+                                format(keyword, self.name, self.owner.name))
         else:
             return matrix
 
@@ -1737,8 +2460,8 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         elif specification.ndim < 2:
             return np.atleast_2d(specification)
         else:
-            raise FunctionError("Specification of np.array for matrix ({}) in {} was more than 2d".
-                               format(specification,self.name))
+            raise FunctionError("Specification of np.array for matrix ({}) is more than 2d".
+                               format(specification))
 
     if specification is AUTO_ASSIGN_MATRIX:
         if rows == cols:
@@ -1777,65 +2500,154 @@ class IntegratorFunction(Function_Base):
 
 
 class Integrator(IntegratorFunction): # --------------------------------------------------------------------------------------
-    """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
-
-    Initialization arguments:
-     - variable: new input value, to be combined with old value at rate and using method specified by params
-     - params (dict): specifying:
-         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
-             - must be same type and format as variable
-             - can be specified as a runtime parameter, which resets oldValue to one specified
-             Note: self.oldValue stores previous value with which new value is integrated
-         + RATE (value): rate of accumulation based on weighting of new vs. old value (default: 1)
-         + WEIGHTING (Weightings Enum): method of accumulation (default: CONSTANT):
-                CONSTANT -- returns old_value incremented by rate parameter (ignores input) with optional noise 
-                SIMPLE -- returns old_value incremented by rate * new_value with optional noise
-                ADAPTIVE -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter) with optional noise
-                                rate = 0:  no change (returns old_value)
-                                rate 1:    instantaneous change (returns new_value)
-                DIFFUSION -- returns old_value incremented by drift_rate * old_value * time_step_size and the standard DDM noise distribution 
-
-    Class attributes:
-    - oldValue (value): stores previous value with which value provided in variable is integrated
-
-    Integrator.function returns scalar result
     """
+    Integrator(                 \
+        variable_default=None,  \
+        rate=1.0,               \
+        weighting=CONSTANT,     \
+        noise=0.0,              \
+        time_step_size=1.0,     \
+        params=None,            \
+        owner=None,             \
+        prefs:is_pref_set=None, \
+        )
+
+    .. _Integrator:
+
+    Integrate current value of `variable <Integrator.variable>` with its prior value.
+
+    COMMENT:
+        Initialization arguments:
+         - variable: new input value, to be combined with old value at rate and using method specified by params
+         - params (dict): specifying:
+             + INITIALIZER (value): initial value to which to set self.oldValue (default: variableClassDefault)
+                 - must be same type and format as variable
+                 - can be specified as a runtime parameter, which resets oldValue to one specified
+                 Note: self.oldValue stores previous value with which new value is integrated
+             + RATE (value): rate of accumulation based on weighting of new vs. old value (default: 1)
+             + WEIGHTING (Weightings Enum): method of accumulation (default: CONSTANT):
+                    CONSTANT -- returns old_value incremented by rate parameter (ignores input) with optional noise
+                    SIMPLE -- returns old_value incremented by rate * new_value with optional noise
+                    ADAPTIVE -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter) with optional noise
+                                    rate = 0:  no change (returns old_value)
+                                    rate 1:    instantaneous change (returns new_value)
+                    DIFFUSION -- returns old_value incremented by drift_rate * old_value * time_step_size and the standard DDM noise distribution
+
+        Class attributes:
+        - oldValue (value): stores previous value with which value provided in variable is integrated
+    COMMENT
+
+    Arguments
+    ---------
+
+    variable_default : number, list or np.array : default variableClassDefault
+        specifies a template for the value to be integrated
+
+    rate : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>`.
+
+    weighting : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : CONSTANT
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    noise : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    time_step_size : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    initializer : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be transformed.
+
+    rate : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>`.
+
+    weighting : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    noise : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    time_step_size : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    initializer : float : default 0.0
+        specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    old_value
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    """
+
+    # FIX: MOVE INITIATLIZER TO ARGUMENT
 
     componentName = INTEGRATOR_FUNCTION
 
     variableClassDefault = [[0]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwInitializer: variableClassDefault})
+    # paramClassDefaults.update({INITIALIZER: variableClassDefault})
+    paramClassDefaults.update({})
 
     @tc.typecheck
     def __init__(self,
                  variable_default=None,
                  rate:parameter_spec=1.0,
                  weighting:tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION)=CONSTANT,
-                 params:tc.optional(dict)=None,
-                 prefs:is_pref_set=None,
                  noise=0.0,
-                 time_step_size = 1.0, 
+                 time_step_size = 1.0,
+                 initializer=variableClassDefault,
+                 params:tc.optional(dict)=None,
+                 owner=None,
+                 prefs:is_pref_set=None,
                  context="Integrator Init"):
 
-        # Assign here as default, for use in initialization of function
-        self.oldValue = self.paramClassDefaults[kwInitializer]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                 weighting=weighting,
-                                                 params=params,
-                                                 noise=noise,
-                                                 time_step_size=time_step_size)
+                                                  weighting=weighting,
+                                                  time_step_size=time_step_size,
+                                                  initializer=initializer,
+                                                  params=params,
+                                                  noise=noise,
+                                                  )
+
+        # Assign here as default, for use in initialization of function
+        self.old_value = self.paramClassDefaults[INITIALIZER]
 
         super().__init__(variable_default=variable_default,
-                                         params=params,
-                                         prefs=prefs,
-                                         context=context)
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.oldValue = [self.paramsCurrent[kwInitializer]]
+        self.old_value = self.initializer
 
 
         # self.noise = self.paramsCurrent[NOISE]
@@ -1893,9 +2705,9 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         # Make sure initializer is compatible with variable
         try:
-            if not iscompatible(target_set[kwInitializer],self.variableClassDefault):
-                raise FunctionError("kwInitializer param {0} for {1} must be same type as variable {2}".
-                                   format(target_set[kwInitializer],
+            if not iscompatible(target_set[INITIALIZER],self.variableClassDefault):
+                raise FunctionError("INITIALIZER param {0} for {1} must be same type as variable {2}".
+                                   format(target_set[INITIALIZER],
                                           self.__class__.__name__,
                                           self.variable))
         except KeyError:
@@ -1935,9 +2747,9 @@ class Integrator(IntegratorFunction): # ----------------------------------------
             noise = self.noise
 
         try:
-            old_value = params[kwInitializer]
+            old_value = params[INITIALIZER]
         except (TypeError, KeyError):
-            old_value = self.oldValue
+            old_value = self.old_value
 
         old_value = np.atleast_2d(old_value)
         new_value = self.variable
@@ -1957,8 +2769,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not INITIALIZING in context:
-            self.oldValue = value
+        if not context or not INITIALIZING in context:
+            self.old_value = value
 
         return value
 
@@ -1967,7 +2779,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
 
     Initialization arguments:
      - params (dict): specifying:
-         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
+         + INITIALIZER (value): initial value to which to set self.oldValue (default: variableClassDefault)
              - can be specified as a runtime parameter, which resets oldValue to one specified
              Note: self.oldValue stores previous value
         + drift_rate (DRIFT_RATE: float)
@@ -1992,10 +2804,11 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
                  noise=0.5,
                  rate = 1.0,
                  time_step_size = 1.0,
+                 owner=None,
                  context="DDMIntegrator Init"):
 
         # Assign here as default, for use in initialization of function
-        self.oldValue = self.paramClassDefaults[kwInitializer]
+        self.old_value = self.paramClassDefaults[INITIALIZER]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
@@ -2006,12 +2819,13 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
                                                  time_step_size=time_step_size)
 
         super().__init__(variable_default=variable_default,
-                                         params=params,
-                                         prefs=prefs,
-                                         context=context)
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.oldValue = [self.paramsCurrent[kwInitializer]]
+        self.old_value = [self.paramsCurrent[INITIALIZER]]
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set,
@@ -2096,6 +2910,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                  noise:parameter_spec=0.5,
                  t0:parameter_spec=.200,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context='Integrator Init'):
 
@@ -2109,6 +2924,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2239,6 +3055,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
                  noise:parameter_spec=0.5,
                  t0:parameter_spec=.200,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context='Integrator Init'):
 
@@ -2252,6 +3069,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2325,6 +3143,7 @@ class NormalDist(DistributionFunction):
                  mean = 0.0,
                  standard_dev = 1.0, 
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -2335,6 +3154,7 @@ class NormalDist(DistributionFunction):
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2378,6 +3198,7 @@ class ExponentialDist(DistributionFunction):
                  variable_default=variableClassDefault,
                  beta = 1.0,  
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -2387,6 +3208,7 @@ class ExponentialDist(DistributionFunction):
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2428,8 +3250,9 @@ class UniformDist(DistributionFunction):
     def __init__(self,
                  variable_default=variableClassDefault,
                  low = 0.0,
-                 high = 1.0, 
+                 high = 1.0,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -2440,6 +3263,7 @@ class UniformDist(DistributionFunction):
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2484,6 +3308,7 @@ class GammaDist(DistributionFunction):
                  scale = 1.0,  
                  shape = 1.0, 
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -2494,6 +3319,7 @@ class GammaDist(DistributionFunction):
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2538,6 +3364,7 @@ class WaldDist(DistributionFunction):
                  scale = 1.0,  
                  mean = 1.0, 
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
 
@@ -2548,6 +3375,7 @@ class WaldDist(DistributionFunction):
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2576,47 +3404,159 @@ class WaldDist(DistributionFunction):
 
 
 class LearningFunction(Function_Base):
+    """Abstract class of `Function` used for learning.
+
+    All LearningFunctions take three input values (specified in each of the three required items of the
+    `variable` argument), and return two output values.
+
+    Input values:
+       * input to the parameter being modified (variable[0]);
+       * output of the parameter being modified (variable[1]);
+       * error associated with the output (variable[2]).
+
+    Output values:
+       * learning_signal: modifications calculated by the function that attempt to reduce the error;
+       * error_signal: the error received, possibly modified by the function.
+
+    """
+
     componentType = LEARNING_FUNCTION_TYPE
 
 
-ACTIVATION_FUNCTION = 'activation_function'
-MATRIX_INPUT = 0
-ACTIVATION_OUTPUT = 1
-ACTIVATION_ERROR = 2
+LEARNING_ACTIVATION_FUNCTION = 'activation_function'
+LEARNING_ACTIVATION_INPUT = 0       # a(j)
+# MATRIX = 1             # w
+LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
+LEARNING_ERROR_OUTPUT = 2
 
 
 class Reinforcement(LearningFunction): # -------------------------------------------------------------------------------
-    """Calculate matrix of weight changes using the reinforcement (delta) learning rule
+    """
+    Reinforcement(                                       \
+        variable_default=variableClassDefault,           \
+        activation_function=SoftMax,                     \
+        learning_rate=None,                              \
+        params=None,                                     \
+        name=None,                                       \
+        prefs=None)
 
-    Reinforcement learning rule
-      [matrix]         [scalar]        [col array]
-    delta_weight =  learning rate   *     error
-      return     =  LEARNING_RATE  *  self.variable
+    Implements a function that calculates a diagonal matrix of weight changes using the reinforcement (delta)
+    learning rule.
 
-    Reinforcement.function:
-        variable must be a 1D np.array of error terms
-        assumes matrix to which errors are applied is the identity matrix
-            (i.e., set of "parallel" weights from input to output)
-        LEARNING_RATE param must be a float
-        returns matrix of weight changes
+    COMMENT:
+        Reinforcement learning rule
+          [matrix]         [scalar]        [col array]
+        delta_weight =  learning rate   *     error
+          return     =  LEARNING_RATE  *  self.variable
 
-    Initialization arguments:
-     - variable (list or np.array): must a single 1D np.array
-     - params (dict): specifies
-         + LEARNING_RATE: (float) - learning rate (default: 1.0)
+        Reinforcement.function:
+            variable must be a 1D np.array with three items (standard for learning functions)
+                note: only the LEARNING_ACTIVATION_OUTPUT and LEARNING_ERROR_OUTPUT items are used by RL
+            assumes matrix to which errors are applied is the identity matrix
+                (i.e., set of "parallel" weights from input to output)
+            LEARNING_RATE param must be a float
+            returns matrix of weight changes
+
+        Initialization arguments:
+         - variable (list or np.array): must a single 1D np.array
+         - params (dict): specifies
+             + LEARNING_RATE: (float) - learning rate (default: 1.0)
+    COMMENT
+
+    Arguments
+    ---------
+
+    variable : List or 2d np.array [length 3] : default variableClassDefault
+       template for the three items provided as the variable in the call to the `function <Reinforcement.function>`
+       (in order):
+       `activation_input <Reinforcement.activation_input>` (1d np.array),
+       `activation_output <Reinforcement.activation_output>` (1d np.array),
+       `error_signal <Reinforcement.error_signal>` (1d np.array).
+
+    activation_function : Function or function : SoftMax
+        specifies the function of the mechanism that generates `activation_output <Reinforcement.activation_output>`.
+
+    learning_rate : float : default default_learning_rate
+        supercedes any specification for the `process <Process>` and/or `system <System>` to which the function's
+        `owner <Function.owner>` belongs (see `learning_rate <Reinforcement.learning_rate>` for details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable: 2d np.array
+        specifies three values used as input to the `function <Reinforcement.function>`:
+       `activation_input <Reinforcement.activation_input>`,
+       `activation_output <Reinforcement.activation_output>`, and
+       `error_signal <Reinforcement.error_signal>`.
+
+    activation_input : 1d np.array
+        first item of `variable <Reinforcement.variable>`;  this is not used (it is implemented for consistency
+        with other `LearningFunctions <LearningFunction>`).
+
+    activation_output : 1d np.array
+        the output of the function for which the matrix being modified provides the input; must have a single non-zero
+        value (corresponding to the selected "action").
+
+    error_signal : 1d np.array
+        the error signal associated with the `activation_output <Reinforcement.activation_output>`; must be the same
+        length as `activation_output <Reinforcement.activation_output>` and must have a single non-zero value in the
+        same position as the one in `activation_output <Reinforcement.activation_output>`.
+
+    activation_function : Function or function : SoftMax
+        the function of the mechanism that generates `activation_output <Reinforcement.activation_output>`; must
+        return and array with a single non-zero value.
+
+    learning_rate : float
+        the learning rate used by the function.  If specified, it supercedes any learning_rate specified for the
+        `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
+        <Reinforcement.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
+        which the `owner <Reinforcement.owner>` belongs is used;  and, if that is `None`, then the learning_rate for the
+        system to which it belongs is used. If all are `None`, then the
+        `default_learning_rate <Reinforcement.default_learning_rate>` is used.
+
+    default_learning_rate : float
+        the value used for the `learning_rate <Reinforcement.learning_rate>` if it is not otherwise specified.
+
+    function : function
+         the function that computes the weight change matrix, and returns that along with the
+         `error_signal <Reinforcement.error_signal>` received.
+
+    owner : Mechanism
+        `mechanism <Mechanism>` to which the function belongs.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
     """
 
     componentName = RL_FUNCTION
 
     variableClassDefault = [[0],[0],[0]]
 
+    default_learning_rate = 0.05
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     def __init__(self,
                  variable_default=variableClassDefault,
                  activation_function:tc.any(SoftMax, tc.enum(SoftMax))=SoftMax, # Allow class or instance
-                 learning_rate:parameter_spec=1.0,
+                 learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
 
@@ -2627,6 +3567,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2640,18 +3581,22 @@ class Reinforcement(LearningFunction): # ---------------------------------------
             raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                 format(self.name, self.variable))
 
-        # FIX: GETS CALLED BY _check_args W/O KWINIT IN CONTEXT
-        if not INITIALIZING in context:
-            if np.count_nonzero(self.variable[ACTIVATION_OUTPUT]) != 1:
-                raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
-                                    "(if output mechanism being trained uses softmax,"
-                                    " its output arg may need to be set to to PROB)".
-                                    format(self.variable[ACTIVATION_OUTPUT], self.componentName))
-            if len(self.variable[ACTIVATION_ERROR]) != 1:
-                raise ComponentError("Error term ({}) for {} must be an array with a single element or a scalar value "
-                                    "(variable of ComparatorMechanism mechanism may need to be specified as an array of length 1)".
-                                    format(self.name, self.variable[ACTIVATION_ERROR]))
+        self.activation_input = self.variable[LEARNING_ACTIVATION_INPUT]
+        self.activation_output = self.variable[LEARNING_ACTIVATION_OUTPUT]
+        self.error_signal = self.variable[LEARNING_ERROR_OUTPUT]
 
+        if len(self.error_signal) != 1:
+            raise ComponentError("Error term for {} (the third item of its variable arg) must be an array with a "
+                                 "single element for {}".
+                                format(self.name, self.error_signal))
+
+        # Allow initializion with zero but not during a run (i.e., when called from check_args())
+        if not INITIALIZING in context:
+            if np.count_nonzero(self.activation_output) != 1:
+                raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
+                                     "(if output mechanism being trained uses softmax,"
+                                     " its \'output\' arg may need to be set to to PROB)".
+                                     format(self.variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
 
     def function(self,
                 variable=None,
@@ -2660,26 +3605,64 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                 context=None):
         """Calculate a matrix of weight changes from a single (scalar) error term
 
-        Assume output array has a single non-zero value chosen by the softmax function of the error_source
-        Assume error is a single scalar value
-        Assume weight matrix (for MappingProjection to error_source) is a diagonal matrix
-            (one weight for corresponding pairs of elements in the input and output arrays)
-        Adjust the weight corresponding to the chosen element of the output array, using error value and learning rate
+        COMMENT:
+            Assume output array has a single non-zero value chosen by the softmax function of the error_source
+            Assume error is a single scalar value
+            Assume weight matrix (for MappingProjection to error_source) is a diagonal matrix
+                (one weight for corresponding pairs of elements in the input and output arrays)
+            Adjust the weight corresponding to the chosen element of the output array, using error value and learning rate
 
-        Note: assume variable is a 2D np.array with three items (input, output, error)
-              for compatibility with other learning functions (and calls from LearningProjection)
+            Note: assume variable is a 2D np.array with three items (input, output, error)
+                  for compatibility with other learning functions (and calls from LearningProjection)
 
-        :var variable: 2D np.array with three items (input array, output array, error array)
-        :parameter params: (dict) with entry specifying:
-                           LEARNING_RATE: (float) - (default: 1)
-        :return matrix:
+        COMMENT
+
+        Arguments
+        ---------
+
+        variable : List or 2d np.array [length 3] : default variableClassDefault
+           must have three items that are the values for (in order):
+           `activation_input <Reinforcement.activation_input>` (not used),
+           `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value),
+           `error_signal <Reinforcement.error_signal>` (1d np.array).
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        diagonal weight change matrix : 2d np.array
+            has a single non-zero entry in the same row and column as the one in
+            `activation_output <Reinforcement.activation_output>` and `error_signal <Reinforcement.error_signal>`.
+
+        error signal : 1d np.array
+            same as value received in `error_signal <Reinforcement.error_signal>` argument.
         """
 
         self._check_args(variable=variable, params=params, context=context)
 
-        output = self.variable[ACTIVATION_OUTPUT]
-        error = self.variable[ACTIVATION_ERROR]
-        learning_rate = self.paramsCurrent[LEARNING_RATE]
+        output = self.activation_output
+        error = self.error_signal
+
+        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
+        #                      1) if no learning_rate is specified for the mechanism, need to assign None
+        #                          so that the process or system can see it is free to be assigned
+        #                      2) if neither the system nor the process assigns a value to the learning_rate,
+        #                          then need to assign it to the default value
+        # If learning_rate was not specified for instance or composition, use default value
+        if self.learning_rate is None:
+            learning_rate = self.default_learning_rate
+        else:
+            learning_rate = self.learning_rate
+        # # MODIFIED 3/22/17 NEWER:
+        # learning_rate = self.learning_rate
+        # MODIFIED 3/22/17 END
 
         # Assign error term to chosen item of output array
         error_array = (np.where(output, learning_rate * error, 0))
@@ -2687,55 +3670,166 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        return weight_change_matrix
+        # return:
+        # - weight_change_matrix and error_array
+        return [weight_change_matrix, error_array]
 
 
-class BackPropagation(LearningFunction): # ---------------------------------------------------------------------------------
-    """Calculate matrix of weight changes using the backpropagation (Generalized Delta Rule) learning algorithm
+# Argument names:
+ERROR_MATRIX = 'error_matrix'
+WT_MATRIX_SENDERS_DIM = 0
+WT_MATRIX_RECEIVERS_DIM = 1
 
-    Backpropagation learning algorithm (Generalized Delta Rule):
-      [matrix]         [scalar]       [row array]              [row array/ col array]                 [col array]
-    delta_weight =  learning rate   *    input      *            d(output)/d(input)                 *     error
-      return     =  LEARNING_RATE  *  variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
 
-    BackPropagation.function:
-        variable must be a list or np.array with three items:
-            - input (e.g, array of activities of sender units)
-            - output (array of activities of receiver units)
-            - error (array of errors for receiver units)
-        LEARNING_RATE param must be a float
-        kwTransferFunctionDerivative param must be a function reference for dReceiver/dSender
-        returns matrix of weight changes
+class BackPropagation(LearningFunction):
+    """
+    BackPropagation(                                     \
+        variable_default=variableClassDefault,           \
+        activation_derivative_fct=Logistic().derivative, \
+        error_derivative_fct=Logistic().derivative,      \
+        error_matrix=None,                               \
+        learning_rate=None,                              \
+        params=None,                                     \
+        name=None,                                       \
+        prefs=None)
 
-    Initialization arguments:
-     - variable (list or np.array): must have three 1D elements
-     - params (dict): specifies
-         + LEARNING_RATE: (float) - learning rate (default: 1.0)
-         + kwTransferFunctionDerivative - (function) derivative of TransferMechanism function (default: derivative of logistic)
+    Implements a function that calculate a matrix of weight changes using the backpropagation
+    (`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_) learning algorithm.
+
+    COMMENT:
+        Description:
+            Backpropagation learning algorithm (Generalized Delta Rule):
+              [matrix]         [scalar]     [row array]              [row array/ col array]                [col array]
+            delta_weight =  learning rate *   input      *            d(output)/d(input)                 *     error
+              return     =  LEARNING_RATE * variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
+
+    COMMENT
+
+    Arguments
+    ---------
+
+    variable : List or 2d np.array [length 3] : default variableClassDefault
+       specifies a template for the three items provided as the variable in the call to the
+       `function <BackPropagation.function>` (in order):
+       `activation_input <BackPropagation.activation_input>` (1d np.array),
+       `activation_output <BackPropagation.activation_output>` (1d np.array),
+       `error_signal <BackPropagation.error_signal>` (1d np.array).
+
+    activation_derivative : Function or function
+        specifies the derivative for the function of the mechanism that generates
+        `activation_output <BackPropagation.activation_output>`.
+
+    error_derivative : Function or function
+        specifies the derivative for the function of the mechanism that is the receiver of the
+        `error_matrix <BackPropagation.error_matrix>`.
+
+    error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
+        matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
+        If it is specified as a ParameterState it must be one for the `matrix <MappingProjection.matrix>`
+        parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
+        MATRIX parameterState.
+
+    learning_rate : float : default default_learning_rate
+        supercedes any specification for the `process <Process>` and/or `system <System>` to which the function's
+        `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable: 2d np.array
+        contains the three values used as input to the `function <BackPropagation.function>`:
+       `activation_input <BackPropagation.activation_input>`,
+       `activation_output <BackPropagation.activation_output>`, and
+       `error_signal <BackPropagation.error_signal>`.
+
+    activation_input : 1d np.array
+        the input to the matrix being modified; same as 1st item of `variable <BackPropagation.variable>.
+
+    activation_output : 1d np.array
+        the output of the function for which the matrix being modified provides the input;
+        same as 2nd item of `variable <BackPropagation.variable>.
+
+    error_signal : 1d np.array
+        the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
+        target (training signal) and the output of the last mechanism in the sequence;
+        same as 3rd item of `variable <BackPropagation.variable>.
+
+    error_matrix : 2d np.array or ParameterState
+        matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`;
+        if it is a `ParameterState`, it refers to the MATRIX parameterState of the `MappingProjection` being learned.
+
+    learning_rate : float
+        the learning rate used by the function.  If specified, it supercedes any learning_rate specified for the
+        `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
+        <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
+        which the `owner <BackPropagationowner>` belongs is used;  and, if that is `None`, then the learning_rate for the
+        system to which it belongs is used. If all are `None`, then the
+        `default_learning_rate <BackPropagation.default_learning_rate>` is used.
+
+    default_learning_rate : float
+        the value used for the `learning_rate <BackPropagation.learning_rate>` if it is not otherwise specified.
+
+    function : function
+         the function that computes the weight change matrix, and returns that along with the
+         `error_signal <BackPropagation.error_signal>` received, weighted by the contribution made by each element of
+         `activation_output <BackPropagation.activation_output>` as a function of the
+         `error_matrix <BackPropagation.error_matrix>`.
+
+    owner : Mechanism
+        `mechanism <Mechanism>` to which the function belongs.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
     """
 
     componentName = BACKPROPAGATION_FUNCTION
 
     variableClassDefault = [[0],[0],[0]]
 
+    default_learning_rate = 1.0
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 activation_function:tc.any(Logistic, tc.enum(Logistic))=Logistic, # Allow class or instance
-                 learning_rate:parameter_spec=1.0,
+                 # variable_default:tc.any(list, np.ndarray),
+                 activation_derivative_fct :tc.optional(tc.any(function_type, method_type))=Logistic().derivative,
+                 error_derivative_fct:tc.optional(tc.any(function_type, method_type))=Logistic().derivative,
+                 # error_matrix:tc.optional(tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection))=None,
+                 error_matrix=None,
+                 learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
+                 owner=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(activation_function=activation_function,
-                                                 learning_rate=learning_rate,
-                                                 params=params)
+        params = self._assign_args_to_param_dicts(activation_derivative_fct =activation_derivative_fct,
+                                                  error_derivative_fct=error_derivative_fct,
+                                                  error_matrix=error_matrix,
+                                                  learning_rate=learning_rate,
+                                                  params=params)
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -2746,44 +3840,186 @@ class BackPropagation(LearningFunction): # -------------------------------------
         super()._validate_variable(variable, context)
 
         if len(self.variable) != 3:
-            raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
+            raise ComponentError("Variable for {} ({}) must have three items: "
+                                 "activation_input, activation_output, and error_signal)".
                                 format(self.name, self.variable))
-        if len(self.variable[ACTIVATION_ERROR]) != len(self.variable[ACTIVATION_OUTPUT]):
-            raise ComponentError("Length of error term ({}) for {} must match length of the output array ({})".
-                                format(self.variable[ACTIVATION_ERROR], self.name, self.variable[ACTIVATION_OUTPUT]))
 
-    def _instantiate_function(self, context=None):
-        """Get derivative of activation function being used
+        self.activation_input = self.variable[LEARNING_ACTIVATION_INPUT]
+        self.activation_output = self.variable[LEARNING_ACTIVATION_OUTPUT]
+        self.error_signal = self.variable[LEARNING_ERROR_OUTPUT]
+
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate error_matrix param
+
+        `error_matrix` argument must be one of the following
+            - 2d list, np.ndarray or np.matrix
+            - ParameterState for one of the above
+            - MappingProjection with a parameterStates[MATRIX] for one of the above
+
+        Parse error_matrix specification and insure it is compatible with error_signal and activation_output
+
+        Insure that the length of the error_signal matches the number of cols (receiver elements) of error_matrix
+            (since it will be dot-producted to generate the weighted error signal)
+
+        Insure that length of activation_output matches the number of rows (sender elements) of error_matrix
+           (since it will be compared against the *result* of the dot product of the error_matrix and error_signal
+
+        Note: error_matrix is left in the form in which it was specified so that, if it is a ParameterState
+              or MappingProjection, its current value can be accessed at runtime (i.e., it can be used as a "pointer")
         """
-        self.derivativeFunction = self.paramsCurrent[ACTIVATION_FUNCTION].derivative
-        super()._instantiate_function(context=context)
+
+        # # MODIFIED 3/22/17 OLD:
+        # # This allows callers to specify None as learning_rate (e.g., _instantiate_learning_components)
+        # if request_set[LEARNING_RATE] is None:
+        #     request_set[LEARNING_RATE] = 1.0
+        # # request_set[LEARNING_RATE] = request_set[LEARNING_RATE] or 1.0
+        # # MODIFIED 3/22/17 END
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        # Validate error_matrix specification
+        try:
+            error_matrix = target_set[ERROR_MATRIX]
+        except KeyError:
+            raise FunctionError("PROGRAM ERROR:  No specification for {} in {}".
+                                format(ERROR_MATRIX, self.name))
+
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
+            raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
+                                          "MappingProjection".format(ERROR_MATRIX, self.name))
+
+        if isinstance(error_matrix, MappingProjection):
+            try:
+                error_matrix = error_matrix.parameterStates[MATRIX].value
+                param_type_string = "MappingProjection's ParameterState"
+            except KeyError:
+                raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
+                                    "paramaterState that has been assigned a 2d array or matrix".
+                                    format(ERROR_MATRIX, self.name, error_matrix.shape, MATRIX))
+
+        elif isinstance(error_matrix, ParameterState):
+            try:
+                error_matrix = error_matrix.value
+                param_type_string = "ParameterState"
+            except KeyError:
+                raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                                              "must be a 2d array or matrix".
+                                              format(MATRIX, ERROR_MATRIX, self.name, error_matrix.shape))
+
+        else:
+            param_type_string = "array or matrix"
+
+        error_matrix = np.array(error_matrix)
+        rows = error_matrix.shape[WT_MATRIX_SENDERS_DIM]
+        cols = error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]
+        activity_output_len = len(self.activation_output)
+        error_signal_len = len(self.error_signal)
+
+        if error_matrix.ndim != 2:
+            raise FunctionError("The value of the {} specified for the {} arg of {} ({}) must be a 2d array or matrix".
+                                          format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
+
+        # The length of the sender outputState.value (the error signal) must be the
+        #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
+
+        # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
+        if cols != error_signal_len:
+            raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
+                                "must match the length of the error signal ({}) it receives".
+                                format(cols, MATRIX, error_matrix.shape, self.name, cols))
+
+        # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
+        if rows!= activity_output_len:
+            raise FunctionError("The height (number of rows, {}) of \'{}\' arg specified for {} must match the "
+                                "length of the output {} of the activity vector being monitored ({})".
+                                format(rows, MATRIX, self.name, activity_output_len))
+
 
     def function(self,
                 variable=None,
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """Calculate and return a matrix of weight changes from an array of inputs, outputs and error terms
+        """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms
 
-        :var variable: (list or np.array) len = 3 (input, output, error)
-        :parameter params: (dict) with entries specifying:
-                           LEARNING_RATE: (float) - (default: 1)
-                           kwTransferFunctionDerivative (function) - derivative of function that generated values
-                                                                     (default: derivative of logistic function)
-        :return number:
+        Arguments
+        ---------
+
+        variable : List or 2d np.array [length 3] : default variableClassDefault
+           must have three items that are the values for (in order):
+           `activation_input <BackPropagation.activation_input>` (1d np.array),
+           `activation_output <BackPropagation.activation_output>` (1d np.array),
+           `error_signal <BackPropagation.error_signal>` (1d np.array).
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        weight change matrix : 2d np.array
+            the modifications to make to the matrix.
+
+        weighted error signal : 1d np.array
+            `error_signal <BackPropagation.error_signal>`, weighted by the contribution made by each element of
+            `activation_output <BackPropagation.activation_output>` as a function of
+            `error_matrix <BackPropagation.error_matrix>`.
+
         """
 
-        self._check_args(variable, params, context)
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        self._check_args(variable=variable, params=params, context=context)
+        if isinstance(self.error_matrix, ParameterState):
+            error_matrix = self.error_matrix.value
+        else:
+            error_matrix = self.error_matrix
 
-        input = np.array(self.variable[MATRIX_INPUT]).reshape(len(self.variable[MATRIX_INPUT]),1)  # make input a 1D row array
-        output = np.array(self.variable[ACTIVATION_OUTPUT]).reshape(1,len(self.variable[ACTIVATION_OUTPUT])) # make output a 1D column array
-        error = np.array(self.variable[ACTIVATION_ERROR]).reshape(1,len(self.variable[ACTIVATION_ERROR]))  # make error a 1D column array
-        learning_rate = self.paramsCurrent[LEARNING_RATE]
-        derivative = self.derivativeFunction(input=input, output=output)
+        # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
+        #                      1) if no learning_rate is specified for the mechanism, need to assign None
+        #                          so that the process or system can see it is free to be assigned
+        #                      2) if neither the system nor the process assigns a value to the learning_rate,
+        #                          then need to assign it to the default value
+        # If learning_rate was not specified for instance or composition, use default value
+        if self.learning_rate is None:
+            learning_rate = self.default_learning_rate
+        else:
+            learning_rate = self.learning_rate
 
-        weight_change_matrix = learning_rate * input * derivative * error
+        # make activation_input a 1D row array
+        activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
 
-        return weight_change_matrix
+        # Derivative of error with respect to output activity (contribution of each output unit to the error above)
+        dE_dA = np.dot(error_matrix, self.error_signal)
+
+        # Derivative of the output activity
+        dA_dW  = self.activation_derivative_fct(input=self.activation_input, output=self.activation_output)
+
+        # Chain rule to get the derivative of the error with respect to the weights
+        dE_dW = dE_dA * dA_dW
+
+        # Weight changes = delta rule (learning rate * activity * error)
+        weight_change_matrix = learning_rate * activation_input * dE_dW
+
+        # # TEST PRINT:
+        # if context and not 'INIT' in context:
+        #     print("\nBACKPROP for {}:\n    "
+        #           "-input: {}\n    "
+        #           "-error_signal (dE_DA): {}\n    "
+        #           "-derivative (dA_dW): {}\n    "
+        #           "-error_derivative (dE_dW): {}\n".
+        #           format(self.owner.name, self.activation_input, dE_dA, dA_dW ,dE_dW))
+
+        return [weight_change_matrix, dE_dW]
+
+
 
 #region *****************************************   OBJECTIVE FUNCTIONS ************************************************
 #endregion

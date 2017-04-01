@@ -235,7 +235,7 @@ can be omitted from a MechanismTuple (if the phase is omitted, the default value
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Irrespective of the format in which a mechanism is specified in a <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, it&#8217;s entry is
-converted internally to a MechanismTuple, and listed in the process&#8217; <a class="reference internal" href="System.html#System.System_Base.mechanisms" title="System.System_Base.mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">mechanisms</span></code></a> attribute.</p>
+converted internally to a MechanismTuple, and listed in the process&#8217; <a class="reference internal" href="#Process.Process_Base.mechanisms" title="Process.Process_Base.mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">mechanisms</span></code></a> attribute.</p>
 </div>
 <p>The same mechanism can appear more than once in a <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, as one means of generating a recurrent processing loop
 (another is to specify this in the projections &#8211; see below).</p>
@@ -333,7 +333,7 @@ which learning has been specified must be <a class="reference internal" href="Le
 below):</p>
 <blockquote>
 <div><ul class="simple">
-<li>a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a> used to evaluate the output of the projection&#8217;s <code class="xref any docutils literal"><span class="pre">receiver</span></code>
+<li>a <code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code> used to evaluate the output of the projection&#8217;s <code class="xref any docutils literal"><span class="pre">receiver</span></code>
 against a target value;</li>
 </ul>
 <ul class="simple">
@@ -425,7 +425,7 @@ function, which is compatible with BackPropagation:</p>
 <span id="process-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="Process.process">
-<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values=None</em>, <em>clamp_input=None</em>, <em>default_projection_matrix=None</em>, <em>learning=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values=None</em>, <em>clamp_input=None</em>, <em>default_projection_matrix=None</em>, <em>learning=None</em>, <em>learning_rate=None                                          target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory method for Process: returns an instance of Process.  If called with no arguments, returns an instance of
 Process with a single ref:<code class="xref any docutils literal"><span class="pre">DefaultMechanism</span></code>.  See <a class="reference internal" href="#"><span class="doc">Process</span></a> for class description.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -467,8 +467,11 @@ in a round of executions.</li>
 </li>
 <li><strong>default_projection_matrix</strong> (<em>keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,</em>) &#8211; the type of matrix used for default projections (see <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>).</li>
 <li><strong>learning</strong> (<em>Optional[LearningProjection spec]</em>) &#8211; implements <code class="xref any docutils literal"><span class="pre">learning</span></code> for all eligible projections in the process.</li>
-<li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; the value assigned to the <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> attribute of the
-<a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> to which the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of the process projects (used for <a class="reference internal" href="#process-learning"><span class="std std-ref">learning</span></a>). It must be the same length as the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism&#8217;s output.</li>
+<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all mechanisms in the process (see <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_rate" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
+information).</li>
+<li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; the value assigned as the TARGET input for the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to which the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of the
+process projects (and assigned as its <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism; used for <a class="reference internal" href="#process-learning"><span class="std std-ref">learning</span></a>).
+It must be the same length as the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism&#8217;s output.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can include any of the parameters above;
 the parameter&#8217;s name is used as the keyword for its entry. Values specified for parameters in the dictionary
 override any assigned to those parameters in arguments of the constructor.</li>
@@ -490,7 +493,7 @@ override any assigned to those parameters in arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Process.Process_Base">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values={}</em>, <em>clamp_input:=None</em>, <em>default_projection_matrix=DEFAULT_PROJECTION_MATRIX</em>, <em>learning=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values={}</em>, <em>clamp_input:=None</em>, <em>default_projection_matrix=DEFAULT_PROJECTION_MATRIX</em>, <em>learning=None</em>, <em>learning_rate=None                                          target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for Process.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -675,6 +678,16 @@ LearningProjections for all of the <a class="reference internal" href="MappingPr
 </dd></dl>
 
 <dl class="attribute">
+<dt id="Process.Process_Base.learning_rate">
+<code class="descname">learning_rate</code><a class="headerlink" href="#Process.Process_Base.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default None</em> &#8211; determines the learning rate for all mechanisms in the process.  This overrides any values set for the
+function of individual LearningProjections, and persists for all subsequent runs of the system.  If it is
+set to None, then the learning_rate is determined by the last value assigned to each LearningProjection
+(either directly, or following a run of any process or system to which the LearningProjection belongs and
+for which a learning_rate was set).</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="Process.Process_Base.results">
 <code class="descname">results</code><a class="headerlink" href="#Process.Process_Base.results" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[outputState.value]</em> &#8211; a list of return values from a sequence of executions of the process.</p>
@@ -711,7 +724,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
 
 <dl class="method">
 <dt id="Process.Process_Base.execute">
-<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>target=None</em>, <em>clock=&lt;PsyNeuLink.Globals.TimeScale.Clock object&gt;</em>, <em>time_scale=None</em>, <em>runtime_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base.execute" title="Permalink to this definition">¶</a></dt>
+<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>target=None</em>, <em>execution_id=None</em>, <em>clock=&lt;PsyNeuLink.Globals.TimeScale.Clock object&gt;</em>, <em>time_scale=None</em>, <em>runtime_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute the mechanisms specified in the process` <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> attribute.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

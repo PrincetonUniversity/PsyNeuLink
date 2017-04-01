@@ -613,14 +613,15 @@ class ParameterState(State_Base):
         # # MODIFIED 11/29/16 OLD:
         # if not self.name in self.owner.function_params.keys():
         # MODIFIED 11/29/16 NEW:
+        # If the parameter is not in either the owner's user_params dict or its function_params dict, throw exception
         if not self.name in self.owner.user_params.keys() and not self.name in self.owner.function_params.keys():
         # MODIFIED 11/29/16 END
             raise ParameterStateError("Name of requested parameterState ({}) does not refer to a valid parameter "
-                                      "of the function ({}) of its owner ({})".
+                                      "of the component ({}) or it function ({})".
                                       format(self.name,
                                              # self.owner.function_object.__class__.__name__,
-                                             self.owner.function_object.componentName,
-                                             self.owner.name))
+                                             self.owner.name,
+                                             self.owner.function_object.componentName))
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -869,16 +870,26 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                 continue
             # MODIFIED 2/22/17 NEW:
             # IMPLEMENTATION NOTE:
-            # The following is necssary since, if ANY parameters of a function are specified, entries are made
+            # The following is necessary since, if ANY parameters of a function are specified, entries are made
             #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values
-            #    will be set to None (and there may be any relevant paramClassDefaults or way to determine a deafult;
-            #    e.g., the length of the array for the weights or exponents params for LinearCombination).
-            #    Therefore, None will be passed as the cosntraint_value, which will cause validation of the
+            #    will be set to None (and there may not be any relevant paramClassDefaults or a way to determine a
+            #    default; e.g., the length of the array for the weights or exponents params for LinearCombination).
+            #    Therefore, None will be passed as the constraint_value, which will cause validation of the
             #    ParameterState's function (in _instantiate_function()) to fail.
             #  Current solution is to simply not instantiate a ParameterState for any function_param that has
-            #    not been expliclity specified
+            #    not been explicitly specified
             if function_param_value is None:
                 continue
+
+            if function_param_name in owner.user_params:
+                if inspect.isclass(owner.function):
+                    function_name = owner.function.__name__
+                else:
+                    function_name= owner.function.name
+                raise ParameterStateError("PROGRAM ERROR: the function ({}) of a component ({}) has a parameter ({}) "
+                                          "with the same name as a parameter of the component itself".
+                                          format(function_name, owner.name, function_param_name))
+
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
                                       state_name=function_param_name,

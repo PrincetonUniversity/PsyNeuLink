@@ -38,6 +38,7 @@ Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic(),
                         default_input_value = np.zeros((NOutputUnits,)))
 
+
 # WEIGHT MATRICES
 
 Stimulus_Hidden_Weights_Matrix = np.random.uniform(0, 0.1, (NInputUnits, NHiddenUnits))
