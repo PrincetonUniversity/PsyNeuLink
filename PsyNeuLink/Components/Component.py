@@ -110,7 +110,7 @@ class ParamsDict(UserDict):
             # If the owner has no such attribute, get from params dict entry
             return super().__getitem__(key)
         except:
-            TEST = True
+            pass
 
     def __setitem__(self, key, item):
 
@@ -465,7 +465,31 @@ class Component(object):
 
         #region SET CURRENT VALUES OF VARIABLE AND PARAMS
         self.variable = self.variableInstanceDefault
+
+        # MODIFIED 4/1/17 OLD:
         self.paramsCurrent = self.paramInstanceDefaults
+
+        # # MODIFIED 4/1/17 NEW:  QQQQQ
+        # from PsyNeuLink.Components.Functions.Function import Function_Base
+        # if isinstance(self, Function_Base):
+        #     self.paramsCurrent = self.paramInstanceDefaults
+        # #  For anything other than a Function, only assign values that are not already in paramsCurrent,
+        # #    because assigning to paramsCurrent:
+        # #    • assigns values to the property for each attribute created in _create_attributes_for_user_params)
+        # #    • that assignment calls the setter in make_property,
+        # #        which also assigns the value to the entry for the param in user_params
+        # #    • that will over-write any user-specified value (in an arg of the constructor)
+        # #        before it has a chance to be assigned (the _instantiate_xxx methods)
+        # else:
+        #     self.paramsCurrent = {}
+        #     for param_name, param_default in self.paramInstanceDefaults.items():
+        #         if param_name in self.user_params:
+        #             self.paramsCurrent[param_name] =  self.user_params[param_name] or param_default
+        #         else:
+        #             self.paramsCurrent[param_name] =  param_default
+
+        # MODIFIED 4/1/17 END
+
         self.runtime_params_in_use = False
         #endregion
 
@@ -485,7 +509,7 @@ class Component(object):
 
         #region INSTANTIATE ATTRIBUTES AFTER FUNCTION
         # Stub for methods that need to be executed after instantiating function
-        #    (e.g., instantiate_outputState in Mechanism)
+        #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
         #endregion
 
@@ -634,6 +658,10 @@ class Component(object):
                 # function arg is a class
                 if inspect.isclass(function):
                     params[FUNCTION] = function
+                    # Get copy of default params
+                    # IMPLEMENTATION NOTE: this is needed so that function_params gets included in user_params and
+                    #                      thereby gets instantiated as a property in _create_attributes_for_user_params
+                    params[FUNCTION_PARAMS] = function().user_params.copy()
                     continue
 
                 # function arg is not a class (presumably an object)
@@ -710,10 +738,21 @@ class Component(object):
         # Save user-accessible params
         self.user_params = params.copy()
 
+        # Cache a copy of the user-specified values;  this is to deal with the following:
+        #    • _create_attributes_for_user_params assigns properties to each param in user_params;
+        #    • the setter for those properties (in make_property) also assigns its value to its entry user_params;
+        #    • paramInstanceDefaults are assigned to paramsCurrent in Component.__init__ assigns
+        #    • since paramsCurrent is a ParamsDict, it assigns the values of its entries to the corresponding attributes
+        #         and the setter assigns those values to the user_params
+        #    • therefore, assignments of paramInstance defaults to paramsCurrent in __init__ overwrites the
+        #         the user-specified vaules (from the constructor args) in user_params
+        self.user_params_for_instantiation = params.copy()
+
         # Provide opportunity for subclasses to filter final set of params in class-specific way
         # Note:  this is done here to preserve identity of user-specified params assigned to user_params above
         self._filter_params(params)
 
+        # Create property on self for each parameter in user_params
         self._create_attributes_for_user_params(**self.user_params)
 
         # Return params only for args:
@@ -729,10 +768,12 @@ class Component(object):
 
     def _create_attributes_for_user_params(self, **kwargs):
 
-        # IMPLEMENTATION NOTE:  REFACTOR TO IMPLEMENT AS PROPERTIES, WITH GETTER AND SETTER METHODS
-        #                       USE self.assign_param FOR SETTER
-        for arg in kwargs:
-            self.__setattr__(arg, kwargs[arg])
+        from PsyNeuLink.Components.Functions.Function import Function, Function_Base
+        for arg_name, arg_value in kwargs.items():
+            if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
+                setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
+            setattr(self, '_'+arg_name, arg_value)
+
 
     def _check_args(self, variable, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params
@@ -1946,5 +1987,34 @@ class Component(object):
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
 
-
 COMPONENT_BASE_CLASS = Component
+
+
+# Autoprop
+# per Bryn Keller
+
+docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
+        'bar': 'Bar none, the most important property'}
+
+def make_property(name, default_value):
+    backing_field = '_' + name
+
+    def getter(self):
+        return getattr(self, backing_field)
+
+    def setter(self, val):
+
+        # FIX: USE self.assign_param TO MAKE ASSIGNMENT
+        setattr(self, backing_field, val)
+
+        # # FIX: THIS OVERWRITES user_params IN INITIALIZATION OF paramsCurrent  QQQQQ
+        # # Update user_params dict with new value
+        # self.user_params[name] = val
+
+
+    # Create the property
+    prop = property(getter).setter(setter)
+
+    # # Install some documentation
+    # prop.__doc__ = docs[name]
+    return prop

@@ -76,7 +76,7 @@ p = process(default_input_value=[0, 0],
             learning=LearningProjection,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
-                   REPORT_OPUTPUT_PREF: True})
+                   REPORT_OUTPUT_PREF: True})
 
 s = system(processes=[p],
            # controller=EVCMechanism,
@@ -85,7 +85,7 @@ s = system(processes=[p],
            # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
            # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
            prefs={VERBOSE_PREF: False,
-                  REPORT_OPUTPUT_PREF: True},
+                  REPORT_OUTPUT_PREF: True},
            name='Learning Test System')
 
 def print_header():

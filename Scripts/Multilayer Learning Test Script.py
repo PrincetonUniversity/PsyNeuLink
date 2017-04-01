@@ -18,11 +18,11 @@ Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           default_input_value = np.zeros((5,)))
 
 Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2',
-                          function=Logistic,
+                          function=Logistic(),
                           default_input_value = [0,0,0,0])
 
 Output_Layer = TransferMechanism(name='Output Layer',
-                        function=Logistic(),
+                        function=Logistic,
                         default_input_value = [0,0,0])
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
@@ -95,7 +95,7 @@ z = process(default_input_value=[0, 0],
             learning_rate=1.0,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
-                   REPORT_OPUTPUT_PREF: True})
+                   REPORT_OUTPUT_PREF: True})
 
 # Input_Weights.matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
 # Middle_Weights.matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
@@ -136,7 +136,6 @@ def show_target():
     print ('- Output:\n', Output_Layer.value)
     # print ('MSE: \n', Output_Layer.outputValue[0])
 
-
 if COMPOSITION is PROCESS:
     # z.execute()
 
@@ -161,14 +160,14 @@ elif COMPOSITION is SYSTEM:
     composition = x
 
     # x.show_graph_with_learning()
-    x.run(num_executions=10,
-          # inputs=stim_list,
-          # inputs=[[-1, 30],[2, 10]],
-          # targets=[[0, 0, 1],[0, 0, 1]],
-          inputs=stim_list,
-          targets=target_list,
-          call_before_trial=print_header,
-          call_after_trial=show_target)
+    results = x.run(num_executions=10,
+                    # inputs=stim_list,
+                    # inputs=[[-1, 30],[2, 10]],
+                    # targets=[[0, 0, 1],[0, 0, 1]],
+                    inputs=stim_list,
+                    targets=target_list,
+                    call_before_trial=print_header,
+                    call_after_trial=show_target)
 
 else:
     print ("Multilayer Learning Network NOT RUN")
