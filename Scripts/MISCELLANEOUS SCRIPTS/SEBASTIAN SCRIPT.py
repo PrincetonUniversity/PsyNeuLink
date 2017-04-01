@@ -61,7 +61,7 @@ stimulus_process = process(default_input_value=[0, 0, 0, 0],
             learning=LearningProjection,
             target=[0,0],
             prefs={VERBOSE_PREF: False,
-                   REPORT_OPUTPUT_PREF: True})
+                   REPORT_OUTPUT_PREF: True})
 
 taskHidden_process = process(default_input_value=[0, 0],
                              pathway=[Task_Layer,
@@ -76,7 +76,7 @@ taskOutput_process = process(default_input_value=[0, 0],
                              learning=LearningProjection,
                              target=np.zeros((2,)),
                              prefs={VERBOSE_PREF: False,
-                                    REPORT_OPUTPUT_PREF: False})
+                                    REPORT_OUTPUT_PREF: False})
 
 # System:
 multitaskingNet = system(processes=[stimulus_process, taskHidden_process, taskOutput_process],

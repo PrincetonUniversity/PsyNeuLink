@@ -48,7 +48,7 @@ z = process(name="TEST LEARNER",
             pathway=[Input_Layer, Learned_Weights, Output_Layer],
             learning=LEARNING_PROJECTION,
             prefs={VERBOSE_PREF: True,
-                   REPORT_OPUTPUT_PREF: True})
+                   REPORT_OUTPUT_PREF: True})
 
 
 # Learned_Weights.monitoringMechanism.target = [1,1]
