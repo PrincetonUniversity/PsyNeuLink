@@ -14,13 +14,13 @@ myMechanism = DDM(function=BogaczEtAl(drift_rate=.1,
                                       threshold=1.0,
                                       starting_point=0.0),
                   name='My_DDM',
-                  prefs={REPORT_OPUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)}
+                  prefs={REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)}
                   )
 
 
 # simple_ddm_process = process('Simple DDM Process')
 simple_ddm_process = process(pathway=[myMechanism],
-                             prefs={REPORT_OPUTPUT_PREF: True})
+                             prefs={REPORT_OUTPUT_PREF: True})
 simple_ddm_process.execute(1.0)
 
 print ('Decision variable: ', myMechanism.outputValue[0])

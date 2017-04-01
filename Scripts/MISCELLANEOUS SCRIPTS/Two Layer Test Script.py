@@ -36,7 +36,7 @@ my_process = process(default_input_value=[0, 0],
                      learning_rate=1.0,
                      target=[1],
                      prefs={VERBOSE_PREF: False,
-                            REPORT_OPUTPUT_PREF: True})
+                            REPORT_OUTPUT_PREF: True})
 
 stim_list = {Input_Layer:[[0, 0], [0, 1], [1, 0], [1, 1]]}
 target_list = {Output_Layer:[[0], [1], [1], [0]]}
@@ -86,11 +86,13 @@ elif COMPOSITION is SYSTEM:
     composition = x
 
     # x.show_graph_with_learning()
-    x.run(num_executions=100,
-          inputs=stim_list,
-          targets=target_list,
-          call_before_trial=print_header,
-          call_after_trial=show_target)
+    run_output = x.run(num_executions=10,
+                       inputs=stim_list,
+                       targets=target_list,
+                       call_before_trial=print_header,
+                       call_after_trial=show_target)
 
 else:
     print ("Multilayer Learning Network NOT RUN")
+
+TEST = True
