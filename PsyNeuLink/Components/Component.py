@@ -634,6 +634,10 @@ class Component(object):
                 # function arg is a class
                 if inspect.isclass(function):
                     params[FUNCTION] = function
+                    # Get copy of default params
+                    # IMPLEMENTATION NOTE:  this is needed so that function_params gets included in user_params and
+                    #                       thereby gets instantiated as a property _create_attributes_for_user_params
+                    params[FUNCTION_PARAMS] = function().user_params.copy()
                     continue
 
                 # function arg is not a class (presumably an object)
