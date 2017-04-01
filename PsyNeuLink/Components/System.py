@@ -1342,7 +1342,8 @@ class System_Base(System):
             build_dependency_sets_by_traversing_projections(first_mech)
 
         # MODIFIED 4/1/17 NEW:
-        # HACK TO LABEL TERMINAL MECH -- SHOULD HAVE BEEN HANDLED ABOVE
+        # HACK TO LABEL TERMINAL MECHS -- SHOULD HAVE BEEN HANDLED ABOVE
+        # LABELS ANY MECH AS A TARGET THAT PROJECTION TO AN ObjectiveMechanism WITH LEARNING AS ITS role
         for mech in self.mechanisms:
             for output_state in mech.outputStates.values():
                 for projection in output_state.sendsToProjections:
@@ -1410,31 +1411,10 @@ class System_Base(System):
                 if not mech_tuple.mechanism in self._control_mech_tuple:
                     self._control_mech_tuple.append(mech_tuple)
 
-        # # MODIFIED 3/12/17 OLD: [MOVED TO _instantiate_learning_graph]
-        # self._monitoring_mech_tuples = []
-        # self._target_mech_tuples = []
-        #
-        # for mech_tuple in self._all_mech_tuples:
-        #
-        #     mech = mech_tuple.mechanism
-        #
-        #     if isinstance(mech, ObjectiveMechanism) and (mech.role is LEARNING):
-        #         if not mech in self._monitoring_mech_tuples:
-        #             self._monitoring_mech_tuples.append(mech_tuple)
-        #         if mech.learning_role is TARGET and not mech in self._target_mech_tuples:
-        #             self._target_mech_tuples.append(mech_tuple)
-        # # MODIFIED 3/12/17 END
-
-
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
         self.terminalMechanisms = MechanismList(self, self._terminal_mech_tuples)
         self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mech_tuples)
         self.controlMechanism = MechanismList(self, self._control_mech_tuple)
-
-        # # MODIFIED 3/12/17 OLD: [MOVED TO _instantiate_learning_graph]
-        # self.monitoringMechanisms = MechanismList(self, self._monitoring_mech_tuples)
-        # self.targetMechanisms = MechanismList(self, self._target_mech_tuples)
-        # # MODIFIED 3/12/17 END
 
         try:
             self.execution_sets = list(toposort(self.executionGraph))
