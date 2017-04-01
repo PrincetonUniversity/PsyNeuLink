@@ -169,6 +169,8 @@ def parameter_spec(param):
     `True` if it is a legal parameter.
     `False` if it is not.
     """
+    # if isinstance(param, property):
+    #     param = ??
     # if is_numeric(param):
     if (isinstance(param, (numbers.Number,
                            np.ndarray,

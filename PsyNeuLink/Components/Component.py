@@ -485,7 +485,7 @@ class Component(object):
 
         #region INSTANTIATE ATTRIBUTES AFTER FUNCTION
         # Stub for methods that need to be executed after instantiating function
-        #    (e.g., instantiate_outputState in Mechanism)
+        #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
         #endregion
 
@@ -634,6 +634,10 @@ class Component(object):
                 # function arg is a class
                 if inspect.isclass(function):
                     params[FUNCTION] = function
+                    # Get copy of default params
+                    # IMPLEMENTATION NOTE:  this is needed so that function_params gets included in user_params and
+                    #                       thereby gets instantiated as a property _create_attributes_for_user_params
+                    params[FUNCTION_PARAMS] = function().user_params.copy()
                     continue
 
                 # function arg is not a class (presumably an object)
@@ -731,8 +735,21 @@ class Component(object):
 
         # IMPLEMENTATION NOTE:  REFACTOR TO IMPLEMENT AS PROPERTIES, WITH GETTER AND SETTER METHODS
         #                       USE self.assign_param FOR SETTER
-        for arg in kwargs:
-            self.__setattr__(arg, kwargs[arg])
+
+        # # MODIFIED 3/30/17 OLD:
+        # for arg in kwargs:
+        #     self.__setattr__(arg, kwargs[arg])
+
+        # MODIFIED 3/30/17 NEW: [IMPLEMENTS AUTO_PROPERTY]
+        from PsyNeuLink.Components.Functions.Function import Function, Function_Base
+        for arg_name, arg_value in kwargs.items():
+            # # PROBLEM: ISN'T HANDLING function_params
+            if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
+                setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
+            setattr(self, '_'+arg_name, arg_value)
+
+        # MODIFIED 3/30/17 END
+
 
     def _check_args(self, variable, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params
@@ -1946,5 +1963,28 @@ class Component(object):
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
 
-
 COMPONENT_BASE_CLASS = Component
+
+
+# Autoprop
+# per Bryn Keller
+
+docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
+        'bar': 'Bar none, the most important property'}
+
+def make_property(name, default_value):
+    backing_field = '_' + name
+
+    def getter(self):
+        return getattr(self, backing_field)
+
+    def setter(self, val):
+        setattr(self, backing_field, val)
+        # self.user_params[name] = val
+
+    # Create the property
+    prop = property(getter).setter(setter)
+
+    # # Install some documentation
+    # prop.__doc__ = docs[name]
+    return prop
