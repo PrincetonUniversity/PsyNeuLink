@@ -28,11 +28,6 @@ Output_Layer = TransferMechanism(name='Output Layer',
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
-Output_Layer.function_object.gain = 3
-# Output_Layer.function_object.user_params[GAIN] = 4
-
-# Output_Layer.function_object.assign_params(request_set={GAIN:4})
-
 Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
 Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
 Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
