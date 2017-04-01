@@ -56,6 +56,7 @@ OTHER
 * `is_matrix`
 * `underscore_to_camelCase`
 * `append_type_to_name`
+* `make_prop`
 
 """
 
@@ -527,5 +528,4 @@ def append_type_to_name(object, type=None):
         string = "\'" + name +  "\'" + ' ' + type.lower()
         # string = name + ' ' + type.lower()
     return string
-
 #endregion
