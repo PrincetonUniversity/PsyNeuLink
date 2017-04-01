@@ -5,10 +5,10 @@ from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 import numpy as np
 
-process_prefs = {REPORT_OPUTPUT_PREF: True,
+process_prefs = {REPORT_OUTPUT_PREF: True,
                  VERBOSE_PREF: False}
 
-system_prefs = {REPORT_OPUTPUT_PREF: True,
+system_prefs = {REPORT_OUTPUT_PREF: True,
                 VERBOSE_PREF: False}
 
 colors = TransferMechanism(default_input_value=[0,0],

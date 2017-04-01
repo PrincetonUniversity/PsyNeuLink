@@ -14,7 +14,7 @@ from PsyNeuLink.Globals.Utilities import ModulationOperation
 from PsyNeuLink.Globals.Preferences.PreferenceSet import *
 
 # Keypaths for preferences:
-REPORT_OPUTPUT_PREF = kpReportOutputPref = '_report_output_pref'
+REPORT_OUTPUT_PREF = kpReportOutputPref = '_report_output_pref'
 LOG_PREF = kpLogPref = '_log_pref'
 PARAM_VALIDATION_PREF = kpParamValidationPref = '_param_validation_pref'
 VERBOSE_PREF = kpVerbosePref = '_verbose_pref'
