@@ -1,12 +1,12 @@
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
-from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Components.System import system
+
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
@@ -109,8 +109,8 @@ target_list = {Output_Layer:[[0, 0, 1]]}
 
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-COMPOSITION = PROCESS
-# COMPOSITION = SYSTEM
+# COMPOSITION = PROCESS
+COMPOSITION = SYSTEM
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
@@ -125,15 +125,15 @@ def show_target():
     elif COMPOSITION is SYSTEM:
         i = composition.input
         t = composition.targetInputStates[0].value
-    print ('\n\nInput: {}\nTarget: {}\n'.format(i, t))
-    print ('\nActivity from old weights: \n')
+    print ('\nOLD WEIGHTS: \n')
+    print ('- Input Weights: \n', Input_Weights.matrix)
+    print ('- Middle Weights: \n', Middle_Weights.matrix)
+    print ('- Output Weights: \n', Output_Weights.matrix)
+    print ('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
+    print ('ACTIVITY FROM OLD WEIGHTS: \n')
     print ('- Middle 1: \n', Hidden_Layer_1.value)
     print ('- Middle 2: \n', Hidden_Layer_2.value)
     print ('- Output:\n', Output_Layer.value)
-    print ('\nNew weights: \n')
-    print ('\n- Input Weights: \n', Input_Weights.matrix)
-    print ('- Middle Weights: \n', Middle_Weights.matrix)
-    print ('- Output Weights: \n', Output_Weights.matrix)
     # print ('MSE: \n', Output_Layer.outputValue[0])
 
 
@@ -160,7 +160,7 @@ elif COMPOSITION is SYSTEM:
     x.reportOutputPref = True
     composition = x
 
-    # x.show_graph()
+    # x.show_graph_with_learning()
     x.run(num_executions=10,
           # inputs=stim_list,
           # inputs=[[-1, 30],[2, 10]],
@@ -172,5 +172,3 @@ elif COMPOSITION is SYSTEM:
 
 else:
     print ("Multilayer Learning Network NOT RUN")
-
-

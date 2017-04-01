@@ -9,9 +9,7 @@
 # ***********************************************  Init ****************************************************************
 
 from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
@@ -54,7 +52,7 @@ __all__ = ['System',
            'OUTPUT_STATES',
            'MAKE_DEFAULT_CONTROLLER',
            'MONITOR_FOR_CONTROL',
-           'kwInitializer',
+           'INITIALIZER',
            'WEIGHTS',
            'EXPONENTS',
            'OPERATION',

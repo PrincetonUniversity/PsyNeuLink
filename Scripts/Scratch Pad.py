@@ -8,26 +8,25 @@ class ScratchPadError(Exception):
 #
 #region DEBUG:
 
-from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+# from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Functions.Function import Linear
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
-from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
+# from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+# from PsyNeuLink.Components.Functions.Function import Logistic
+# from PsyNeuLink.Components.Process import process
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+# from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
+# from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+# from PsyNeuLink.Components.States.OutputState import OutputState
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 
-# #region TEST Linear WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-print (Linear([[1,1],[2,2]], slope=2).function([[1,1],[2,2]]))
-
-#endregion
+# #region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# print = Linear(variable=[[1,1],[2,2]])
 
 # #region TEST ASSIGNMENT OF PROJECTION TO PARAMETER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #

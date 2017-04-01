@@ -2,10 +2,98 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# Bryn:
+#  1) Programmatic creation of @property
+#  2) Plug & play
+
+# HIGH LEVEL / DESIGN / CONVENTION ISSUES:
+#   1) MANAGEMENT OF RETURN_VALUE FOR MECHANISMS (AS LIST VS. 2d NP.ARRAY)
+#   2) ASSIGNMENT AND NAMING OF FUNCTION_PARAMS FOR AN OBJECT;
+#      PROBLEMS:
+#        - CONFUSION AS TO OBJECT TO WHICH THEY BELONG (OBJECT ITSELF OR ITS FUNCTION_OBJECT)
+#        - NAMING CONFLICTS
+#      OPTIONS:
+#        - MAKE A SPECIAL CLASS, OR KEEP function_params DICT BUT DON'T ASSIGN AS PARAMS OF OBJECT?
+#        - RENAME ANY CONFLICTS WITH PREFIX "function_<param_name>" (E.G., function_learning_rate)
+#        - RENAME ALL FUNCTION_PARAMS WITH PREFIX "function_<param_name>"
+#        - DISALLOW CONFLICTING NAMES AND THROW EXCPETION WHEN THEY ARE DETECTED IN _instantiate_parameter_state()
+#        * MAKE @property ATTRIBUTES THAT POINT TO FUNCTION'S PARAM(S)
+#   3) MONITORING SPECIFICATION SYNTAX:  Restrict specification to ObjectiveMechanism and possibly ControlMechanism,
+#                                        or also allow "locally" on OutputStates, Mechanisms, Processes and Systems?
+#   4) SPECIFICATION OF LEARNING USING A PROJECTION SPEC VS. A DEDICATED KEYWORD (THAT ALLOWS FCT AND LEARNING_RATE)
+#          PRO:  CONSISTENT WITH CONTROL
+#          CON:  AKWARD TO HAVE TO GIVE THE PROJECTION THE FUNCTION AND LEARNING RATE THAT ARE PASSED TO LearningMech
+#   5) SHOULD ATTRIBUTES OF PARENT CLASSED BE DOCUMENTED ON CHILD CLASSES?
+#          (E.G., PREFS, NAME, FUNCTION, FUNCTON_PARAMS, USER_PARAMS, ETC.)
+
+
+# TASKS:
+#  1) BREAK UP FUNCTION INTO SEPARATE MODULES
+#  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMLAR TO MatrixKeywords)
+
+
+
+# COMPOSITION IMPLEMENTATION NOTE:
+#   add_projection_to and add_projection_from methods
+#   methods in LearningAuxilliary
+#   search for "Composition" in LearningProjection, LearningMechanism and LearningAuxlliary
+#   specification of ProcessingMechanism that should be associated with TARGET ObjectiveMechanism:
+#         one that either has either no outgoing projections, or none that receive LearningProjections
+#   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
+#   added attribute to Projections:  has_learning_projection
+
+# FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
+# FIX: NAMING OF MAPPING PROJECTIONS
+# FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
+# FIX: DERIVATIVE FOR SoftMax Function
+# FIX: ADD owner ARG TO Function CONSTRUCTOR (DEFAULT = NONE)
+# FIX: SEARCH FOR AND PURGE: monitoringMechanism and monitoring_mechanism AND monitoring_mech
+# FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
+# FIX: GET STRAIGHT THE HANDLING OF learning_rate for:
+#                  LearningMechanism
+#                  its function
+#                  LearningProjection
+#                  Processs
+#                  System
+# IMPLEMENT: runtime_params FOR learning mechanisms in system (CURRENTLY ONLY SUPPORTS learning_rate);
+#            NEED TO IMPLEMENT SOME WAY OF SPECIFYING A LearningMechanism IN A mech_tuple,
+#            (SINCE LearningMechanisms ARE NOT CURRENTLY SPECIFIABLE IN A PROCESS' pathway ATTRIBUTE)
+#            [OR DOCUMENT THAT THIS IS NOT SUPPORTED]
+
+# IMPLEMENT:  MONITORED_OUTPUT_STATES param for Mechanism --
+#                  make this a general form of MONITOR_FOR_CONTROL, that can be used by ObjectiveMechanism
+#             [SEE `monitoring_status` in ObjectiveMechanism]
+# IMPLEMENT: MonitoredOutputStatesOption in string for MONITORED_VALUES specification of ObjectiveMechanism
+#
+# DOCUMENTATION:
+#    search for "specification dictionary" and replace with: `specification dictionary <Mechanism_Creation>`
+#
+# CONFIRM (IN ObjectiveMechanism):
+#         elif isinstance(monitored_value, InputState): [~616]
+#         if isinstance(state_spec, dict): [~753]
+#         if isinstance(state_spec, MonitoredOutputStatesOption): [~759]
+
+# FIX: LearningComponents CLASS:
+#           ADD GENERIC CHECK (FOLLOWING IMPLEMENTATION IN error_signal_mech) THAT CHECKS THAT ANY RETURNED VALUE
+#               BELONGS TO AN OBJECT IN THE SAME PROCESS TO WHICH THE activation_mech BELONGS
+#           DOCUMENT THAT activation_mech IS THE "ROOT OBJECT" FOR THE CLASS (I.E., THE ONE FROM THE
+#               SEARCH/IDENTIFICATION OF ALL OBJECTS PROCEEDS
+
+# IMPLEMENT: WRITE PARSER THAT CONVERTS matrix.shape "(#, #, #)" INTO "(#x#x#)
+
+# FIX:  WHY DOES weights SPECIFICATION FOR LINEARCOMBINATION FUNCTION HAVE TO BE [[-1],[1]] RATHER THAN JUST [-1, 1]
+#
 # FIX:
 #   MAKE SURE THAT WHEREVER variableClassDefaults OR paramClassDefaults ARE CHANGED IT IS LEGIT
 #             I.E., THAT THIS BE OK FOR ALL OTHER INSTANCES OF THAT CLASS
 #             FOR EXAMPLE, IN assign_params_to_dicts, WHERE A DEFAULT IS SPECIFIED IN THE ARG RATHER THAN classDefaults
+#
+#
+# FIX: WHY DOESN"T THIS WORK: [ASSIGNMENT OF LEARNING_RATE TO SLOPE OF LEARNING FUNCTION]
+# FIX: HANDLE THIS AS runtime_param??
+#         if self.learning_rate:
+#             params.update({SLOPE:self.learning_rate})
+
 # FIX:
 #    0) Deal with function parameter assignment in update() of ParameterState
 #        - move assignment of function params (Lines 714 and 742 in ParameterState)
@@ -15,36 +103,37 @@
 #    1) Once function param assignment is fixed, add test that it is working to jenkins suite
 #          (i.e., that assigning a value to the attribute for the parameter on the object (e.g., mechanism)
 #                 changes its value for the Function
-#    2) Add learning rate param (including global default)
 #    3) For system vs. process learning:
 #           Figure out why calling update_state for the matrix ParameterState works,
 #                      but executing the LearningProjection to it does not
 #    4) ObjectiveMechanisms:  MODIFY TO:
 #                                d) Revise EVCMechanism._get_monitored_states() to NOT direclty assign weights
 #                                           and exponents, but rather assign
-#                                e) Document monitored_values and default_input_value (sets size of inputSTates)
 #                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
 #                                f) parse MonitoredOUtputStates specification for monitored_values arg
-#                                g) Fix EVC use of OBjectiveMechanism (needs to now call for Mapping Projection
-#                                h) Accomodate WeightedError in OjbectiveMechanism using standard LinearComb function:
-#                                            Matrix - IDENTITY MATRIX
-#                                            Derivative - Linear
-#          them where the ObjectiveMechanism is created (in its LinearFunction)
-#     5) Purge all MonitoringMechanism components and references (including DefaultMonitoringMechanism)
-#     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
-#                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)
+#                                g) Fix EVC use of ObjectiveMechanism (needs to now call for Mapping Projection
+#     4.5): LearningMechanism:
+#              Name inputStates using input_state_names (or create them explicitly using the values of variable?)
+#              Instantiate the MappingProjection from its ObjectiveMechanism
+#                            (as ObjectiveMechanism does, by calling module function if not None)
+#              Need to change how learning function is specified, since no longer belongs in LearningProjection
+#                    use new keyword or tuple type for specification of Learning (instead of using LearningProjection)
+#              Re-implement instantiation of receiver and sender for LearningProjection (in case they are created
+#                    on their own)
+#     5) Purge DefaultMonitoringMechanism
 #     7) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
-#     8) Make biases learnable
-#     9) DOCUMENT:
-#           - get rid of mention of tuple and MonitoredOutputStateOptions (they are specific to EVC -- document there)
-#           - explain
-#                  default_input_values: forces format of inputState variables (include example of RL comparator)
-#                  monitored_values:  specifies states or mechanisms to monitor, or creates "stubs"
-#                                     to be filled by LearningProjections or ControlProjections
-#                                     and uses value of specifiied outputState as template for inputState variable
-#                  can assign weights via function (include example using LinearCombination for Comparator)
+#     8) EVCMechanism:  add objective_mechanism arg (as per LearningMechanism)
+#     9) Reorganize:
+#            Add to _validate_params that their receivers are parameterStates
+#          MappingProjection under ProcessingProjection
+#            Add to _validate_params that receiver must be an inputState
+#     10) Get .status == CHANGED straight
+#     11) Change monitoringMechanism attribute of Projection to objectiveMechanism or something else?
+#                             or change assignment to LearningMechanism??
+#     12) Return values immediately in lc.component helper methods (see error_matrix and error_mech for examples)
+#             then get rid of x = lc.error_matrix
 
-# DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
+# DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter (matrix);  no execution_id
 #
 # FIX: PUT ERROR HERE IF EVC AND/OR EVC_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
 #                 if EVC == EVC_max: (LINE 289 IN EVCAuxilliary)
@@ -101,8 +190,6 @@
 # √ TransferMechanism
 # √ MonitoringMechanism
 #   DefaultMonitoringMechanism
-# √ ComparatorMechanism
-# √ WeightedErrorMechanism
 # √ ControlMechanism
 #   DefaultControlMechanism
 # √ EVCMechanism
@@ -145,10 +232,6 @@
 #                        GIVE EXAMPLES.
 
 # DOCUMENT: EVCMechanism NOTES ON API FOR CUSTOM VERSIONS:
-
-
-# DOCUMENT:  UserDefinedFunction API:  wraps custom function, that can then be called using its function method;
-#                can take variable, params, time_scale, and context as params, along with any of its own
 
 #           FROM EVCMechanism.control_signal_grid_search:
 #             Gets controller as argument (along with any standard params specified in call)
@@ -669,6 +752,11 @@
 # TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
 #
 # TEST warnings.warn
+
+# IMPLEMENT:  Replace class checking (isclass) with:
+#                if any(i in {None, Mechanism, OutputState, ObjectiveMechanism} for
+#                      i in {self.objective_mechanism, type(self.objective_mechanism)}):
+
 #
 # IMPLEMENT:  typecheck name arg in constructors to be a str
 #
@@ -1820,6 +1908,8 @@
 
 #region MECHANISM: -----------------------------------------------------------------------------------------------------------
 #
+# FIX: FORMATTING OF return_value IN Mechanism.execute (LINE 1322) AND OutputState._instantiate_output_states (LINE 573)
+#
 # FIX MonitorOutputStates ISSUES:
 #     FIX: GET RID OF MonitoredOutputStatesOption enum; just use keywords (also in documentation)
 #     IMPLEMENT: Replace monitored_output_states tuple format (outputState or mech, exp, weight) with
@@ -1865,6 +1955,8 @@
 #
 # - MODIFY add_projection
 #         IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
+# IMPLEMENT: WRITE METHOD TO MORE DEEPLY CHECK CHANGE OF .value STATUS FOR NON-NUMPY values
+#               (in Mechanism_Base.@status.setter, ~Line 1746)
 #
 # IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
@@ -2080,6 +2172,15 @@
 # IMPLEMENT: ``index`` attribute for InputState, paralleling outputState (and document accordingly)
 #
 # IMPLEMENT: OutputStates:
+#               _instantiate_output_states() (~Lines 587-602):
+#                          if the number of states in owner.paramsCurrent[OUTPUT_STATES] matches
+#                          the len of axis 0 of owner_value, then the default should be to increment
+#                          index for each state, assigining each item of owner_value to each outputState
+#                          (seems natural);  if the lengths are not equal, then can use current default
+#                          behavior which is to assign the value of all the outputStates to the first item
+#                          of owner_value
+#
+# IMPLEMENT: OutputStates:
     # COMMENT:
     #     OutputStates can also be added by using the :py:func:`assign_output_state <OutputState.assign_output_state>`.
     # COMMENT
@@ -2203,6 +2304,9 @@
 #
 # FIX: MAKE CONSISTENT HOW PROJECTIONS HANDLE VARIABLE, VALUE AND WHAT THEY RETURN
 #           ??IMPLEMENT A STANDARD FUNCTION ON SUPER THAT EXECUTES FUNCTION, SETS SELF.VALUE, AND RETURNS IT?
+#
+# - IMPLEMENT:  augment _add_projection_from and augment _add_projection_to methods to assign sender, receiver
+#                         and not just add to outputState/inputState
 #
 # - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT _instantiate_receiver
 #               (AS ControlProjection AND MappingProjection BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
@@ -2492,7 +2596,10 @@
 # FIX: name of Functions is being assigned to Type rather than subtype
 # FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix._validate_params IS OK
 #
-# IMPLEMENT BOTH FULL_CONNECTIVITY_MATRIX AND 2D np.array AND np.matrix OBJECTS
+# IMPLEMENT: UserDefinedFuction SHOULD INSTANTIATE ITS function's ARGS AS ATTRIBUTES AND ADD TO ITS user_params DICT
+# IMPLEMENT: LinearMatrix: REFACTOR kwReceiver PARAM AS output_template ARG
+# IMPLEMENT: BOTH FULL_CONNECTIVITY_MATRIX AND 2D np.array AND np.matrix OBJECTS
+# IMPLEMENT: Reduce: EXTEND TO MULTIDIMENSIONAL ARRAY ALONG ARBITRARY AXIS
 # IMPLEMENT:  Demos of Functions that plots each Function
 #                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
 # IMPLEMENT: Add scale to TransferFunction (but make sure it doesn't conflictf with or cause trouble for range)
