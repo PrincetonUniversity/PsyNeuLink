@@ -193,6 +193,7 @@ RUNNING Multilayer Learning Test Script.py
 - error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.834 -0.871 0.1
 
 'System_Base-1' completed ***********(time_step 0)
+- output for Output Layer: '0.834' '0.871' '0.9'
 
 - MSE: 0.488
 
@@ -240,6 +241,7 @@ ACTIVITY FROM OLD WEIGHTS:
 - error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.78 -0.833 0.0984
 
 'System_Base-1' completed ***********(time_step 1)
+- output for Output Layer: '0.78' '0.833' '0.902'
 
 - MSE: 0.437
 
@@ -287,6 +289,7 @@ ACTIVITY FROM OLD WEIGHTS:
 - error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.702 -0.777 0.0969
 
 'System_Base-1' completed ***********(time_step 2)
+- output for Output Layer: '0.702' '0.777' '0.903'
 
 - MSE: 0.369
 
@@ -334,6 +337,7 @@ ACTIVITY FROM OLD WEIGHTS:
 - error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.603 -0.7 0.0955
 
 'System_Base-1' completed ***********(time_step 3)
+- output for Output Layer: '0.603' '0.7' '0.905'
 
 - MSE: 0.287
 
@@ -381,6 +385,7 @@ ACTIVITY FROM OLD WEIGHTS:
 - error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.497 -0.6 0.0939
 
 'System_Base-1' completed ***********(time_step 4)
+- output for Output Layer: '0.497' '0.6' '0.906'
 
 - MSE: 0.205
 
@@ -428,6 +433,7 @@ ACTIVITY FROM OLD WEIGHTS:
 - error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.406 -0.495 0.0921
 
 'System_Base-1' completed ***********(time_step 5)
+- output for Output Layer: '0.406' '0.495' '0.908'
 
 - MSE: 0.139
 
@@ -475,6 +481,7 @@ ACTIVITY FROM OLD WEIGHTS:
 - error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.338 -0.404 0.0902
 
 'System_Base-1' completed ***********(time_step 6)
+- output for Output Layer: '0.338' '0.404' '0.91'
 
 - MSE: 0.0951
 
@@ -522,6 +529,7 @@ ACTIVITY FROM OLD WEIGHTS:
 - error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.289 -0.336 0.0883
 
 'System_Base-1' completed ***********(time_step 7)
+- output for Output Layer: '0.289' '0.336' '0.912'
 
 - MSE: 0.0681
 
@@ -569,6 +577,7 @@ ACTIVITY FROM OLD WEIGHTS:
 - error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.253 -0.288 0.0864
 
 'System_Base-1' completed ***********(time_step 8)
+- output for Output Layer: '0.253' '0.288' '0.914'
 
 - MSE: 0.0515
 
@@ -616,6 +625,7 @@ ACTIVITY FROM OLD WEIGHTS:
 - error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.227 -0.253 0.0846
 
 'System_Base-1' completed ***********(time_step 9)
+- output for Output Layer: '0.227' '0.253' '0.915'
 
 - MSE: 0.0408
 
@@ -1314,6 +1324,8 @@ RUNNING Stroop Model Learning Test Script.py
 - error for target 'Hidden-Output Weights ObjectiveMechanism' processingmechanism_base': 0.487 0.455
 
 'Stroop Model-1' system completed ***********(time_step 0)
+- output for Hidden: '0.119' '0.018'
+- output for Response-1: '0.513' '0.545'
 
 - MSE: 0.222
 
@@ -1353,6 +1365,8 @@ Word-Hidden:
 - error for target 'Hidden-Output Weights ObjectiveMechanism' processingmechanism_base': 0.467 0.337
 
 'Stroop Model-1' system completed ***********(time_step 1)
+- output for Hidden: '0.557' '0.0264'
+- output for Response-1: '0.533' '0.663'
 
 - MSE: 0.166
 
