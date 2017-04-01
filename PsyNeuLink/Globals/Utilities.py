@@ -529,26 +529,3 @@ def append_type_to_name(object, type=None):
         # string = name + ' ' + type.lower()
     return string
 #endregion
-
-
-# Autoprop
-# by Bryn Keller
-
-docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
-        'bar': 'Bar none, the most important property'}
-
-def make_property(name, default_value):
-    backing_field = '_' + name
-
-    def getter(self):
-        return getattr(self, backing_field)
-
-    def setter(self, val):
-        setattr(self, backing_field, val)
-
-    # Create the property
-    prop = property(getter).setter(setter)
-
-    # # Install some documentation
-    # prop.__doc__ = docs[name]
-    return prop
