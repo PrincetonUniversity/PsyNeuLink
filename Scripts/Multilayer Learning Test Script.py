@@ -136,7 +136,6 @@ def show_target():
     print ('- Output:\n', Output_Layer.value)
     # print ('MSE: \n', Output_Layer.outputValue[0])
 
-
 if COMPOSITION is PROCESS:
     # z.execute()
 
