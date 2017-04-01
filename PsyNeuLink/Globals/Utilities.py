@@ -56,6 +56,7 @@ OTHER
 * `is_matrix`
 * `underscore_to_camelCase`
 * `append_type_to_name`
+* `make_prop`
 
 """
 
