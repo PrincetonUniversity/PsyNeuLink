@@ -24,10 +24,10 @@ for script in scripts:
     file = open(script)
     print("\nRUNNING {}\n".format(script))
 
-    # EXECUTES ALL SCRIPTS IN META SCRIPT'S NAMESPACE:
+    # EXECUTES ALL SCRIPTS IN META SCRIPT'S NAMESPACE (INSURES ALL USE SAME random.seed):
     exec(file.read())
 
-    # # EXECUTES EACH SCRIPTS AS ITS OWN PROCESS (I.E., IN ITS OWN NAMESPACE):
+    # # EXECUTES EACH SCRIPT AS ITS OWN PROCESS (I.E., IN ITS OWN NAMESPACE):
     # for line in subprocess.check_output([sys.executable, script]).splitlines():
     #     print(str(line, 'utf-8'))
 
