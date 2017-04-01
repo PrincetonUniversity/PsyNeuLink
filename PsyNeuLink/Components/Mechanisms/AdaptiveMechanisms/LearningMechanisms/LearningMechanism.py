@@ -133,7 +133,7 @@ are assigned to the LearningMechanism's
 
 .. _LearningMechanism_OutputStates:
 
-OutputStates
+OutputStates b
 ~~~~~~~~~~~
 
 These receive the output of the LearningMechanism's `function <LearningMechanism.function>`:

@@ -42,7 +42,10 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
-# QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)# FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
+
+# FIX: USER_PARAMS SHOULD BE IMPLEMENTED AS A USER DICT CLASS THAT IS READ-ONLY
+# QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)#
+# FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
 # FIX: NAMING OF MAPPING PROJECTIONS
 # FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
 # FIX: DERIVATIVE FOR SoftMax Function

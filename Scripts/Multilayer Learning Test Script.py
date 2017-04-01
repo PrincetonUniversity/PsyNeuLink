@@ -22,7 +22,7 @@ Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2',
                           default_input_value = [0,0,0,0])
 
 Output_Layer = TransferMechanism(name='Output Layer',
-                        function=Logistic(),
+                        function=Logistic,
                         default_input_value = [0,0,0])
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
