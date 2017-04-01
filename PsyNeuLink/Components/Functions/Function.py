@@ -3035,7 +3035,8 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
     ----------
 
     variable : number or 1d np.array
-        current value of the decision variable.  If it is an array, each element is integrated independently.
+        holds initial value assigned to :keyword:`variable_default` argument;  
+        ignored by `function <BogaczEtal.function>`.
 
     drift_rate : float or 1d np.array
         determines the drift component of the drift diffusion process.
@@ -3113,8 +3114,8 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
         Arguments
         ---------
 
-        variable : ignored
-            uses value of `drift_rate`, `threshold`, `starting_point`, `noise` and `t0` parameters for calculation.
+        variable : 2d np.array
+            ignored.
 
         params : Optional[Dict[param keyword, param value]]
             a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -3271,13 +3272,14 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
     ----------
 
     variable : number or 1d np.array
-        current value of the decision variable.  If it is an array, each element is integrated independently.
+        holds initial value assigned to :keyword:`variable_default` argument;
+        ignored by `function <NovarroAndFuss.function>`.
 
     drift_rate : float or 1d np.array
         determines the drift component of the drift diffusion process.
 
     threshold : float or 1d np.array
-        determines the threshold (boundary) of the drift diffusion process (i.e., at which the integration
+        determines the threshold (bound) of the drift diffusion process (i.e., at which the integration
         process is assumed to terminate).
 
     starting_point : float or 1d np.array
@@ -3288,7 +3290,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
         Gaussian random process).
         
     t0 : float or 1d np.array
-        determines the assumed non-decision time to determine the response time returned by the solution. 
+        determines the non-decision time used to compute the solution. 
 
     bias : float or 1d np.array
         normalized starting point:  
@@ -3359,8 +3361,8 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
         Arguments
         ---------
 
-        variable : ignored
-            uses value of `drift_rate`, `threshold`, `starting_point`, `noise` and `t0` parameters for calculation.
+        variable : 2d np.array
+            ignored.
 
         params : Optional[Dict[param keyword, param value]]
             a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
