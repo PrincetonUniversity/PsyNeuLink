@@ -1341,6 +1341,19 @@ class System_Base(System):
 
             build_dependency_sets_by_traversing_projections(first_mech)
 
+        # MODIFIED 4/1/17 NEW:
+        # HACK TO LABEL TERMINAL MECH -- SHOULD HAVE BEEN HANDLED ABOVE
+        for mech in self.mechanisms:
+            for output_state in mech.outputStates.values():
+                for projection in output_state.sendsToProjections:
+                    receiver = projection.receiver.owner
+                    if isinstance(receiver, ObjectiveMechanism) and receiver.role == LEARNING:
+                        mech.systems[self] = TERMINAL
+                        break
+                if mech.systems[self] == TERMINAL:
+                    break
+        # MODIFIED 4/1/17 END
+
         # Print graph
         if self.verbosePref:
             warnings.warn("In the system graph for \'{}\':".format(self.name))
