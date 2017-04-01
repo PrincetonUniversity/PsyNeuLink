@@ -18,7 +18,7 @@ Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           default_input_value = np.zeros((5,)))
 
 Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2',
-                          function=Logistic,
+                          function=Logistic(),
                           default_input_value = [0,0,0,0])
 
 Output_Layer = TransferMechanism(name='Output Layer',
