@@ -1964,3 +1964,27 @@ class Component(object):
         self.prefs.runtimeParamStickyAssignmentPref = setting
 
 COMPONENT_BASE_CLASS = Component
+
+
+# Autoprop
+# per Bryn Keller
+
+docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
+        'bar': 'Bar none, the most important property'}
+
+def make_property(name, default_value):
+    backing_field = '_' + name
+
+    def getter(self):
+        return getattr(self, backing_field)
+
+    def setter(self, val):
+        setattr(self, backing_field, val)
+        self.user_params[name] = val
+
+    # Create the property
+    prop = property(getter).setter(setter)
+
+    # # Install some documentation
+    # prop.__doc__ = docs[name]
+    return prop

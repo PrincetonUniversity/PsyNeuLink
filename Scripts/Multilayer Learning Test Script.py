@@ -19,14 +19,19 @@ Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           default_input_value = np.zeros((5,)))
 
 Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2',
-                          function=Logistic,
+                          function=Logistic(),
                           default_input_value = [0,0,0,0])
 
 Output_Layer = TransferMechanism(name='Output Layer',
-                        function=Logistic(),
+                        function=Logistic,
                         default_input_value = [0,0,0])
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
+
+Output_Layer.function_object.gain = 3
+# Output_Layer.function_object.user_params[GAIN] = 4
+
+# Output_Layer.function_object.assign_params(request_set={GAIN:4})
 
 Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
 Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
