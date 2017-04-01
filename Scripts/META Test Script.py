@@ -23,11 +23,14 @@ scripts =  [
 for script in scripts:
     file = open(script)
     print("\nRUNNING {}\n".format(script))
+
     # EXECUTES ALL SCRIPTS IN META SCRIPT'S NAMESPACE:
     exec(file.read())
+
     # # EXECUTES EACH SCRIPTS AS ITS OWN PROCESS (I.E., IN ITS OWN NAMESPACE):
     # for line in subprocess.check_output([sys.executable, script]).splitlines():
     #     print(str(line, 'utf-8'))
+
     file.close()
     print ("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
 
