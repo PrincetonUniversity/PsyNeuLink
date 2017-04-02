@@ -2032,9 +2032,8 @@ def make_property(name, default_value):
         # FIX: USE self.assign_param TO MAKE ASSIGNMENT
         setattr(self, backing_field, val)
 
-        # # FIX: THIS OVERWRITES user_params IN INITIALIZATION OF paramsCurrent  QQQQQ
         # Update user_params dict with new value
-        # self.user_params[name] = val
+        self.user_params[name] = val
 
 
     # Create the property
