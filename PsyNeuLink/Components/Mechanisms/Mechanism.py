@@ -1694,11 +1694,14 @@ class Mechanism_Base(Mechanism):
                     continue
                 param_is_function = False
                 param_value = params[param_name]
-                if isinstance(param_value, Component):
+                if isinstance(param_value, Function):
                     param = param_value.name
                     param_is_function = True
-                elif isinstance(param_value, type(Component)):
+                elif isinstance(param_value, type(Function)):
                     param = param_value.__name__
+                    param_is_function = True
+                elif isinstance(param_value, (function_type, method_type)):
+                    param = param_value.__self__.__class__.__name__
                     param_is_function = True
                 else:
                     param = param_value
