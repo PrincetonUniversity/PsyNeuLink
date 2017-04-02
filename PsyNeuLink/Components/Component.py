@@ -487,8 +487,8 @@ class Component(object):
         #             self.paramsCurrent[param_name] =  self.user_params[param_name] or param_default
         #         else:
         #             self.paramsCurrent[param_name] =  param_default
-
-        # MODIFIED 4/1/17 END
+        #
+        # # MODIFIED 4/1/17 END
 
         self.runtime_params_in_use = False
         #endregion
@@ -689,7 +689,8 @@ class Component(object):
                         # Set it to the class (for compatibility with current implementation of _instantiate_function()
                         # and put its params in FUNCTION_PARAMS
                         params[FUNCTION] = function.__class__
-                        params[FUNCTION_PARAMS] = function.user_params.copy()
+                        # params[FUNCTION_PARAMS] = function.user_params.copy()
+                        params[FUNCTION_PARAMS] = function.user_params_for_instantiation.copy()
 
                     # It is a generic function
                     elif isfunction(function):
@@ -738,7 +739,7 @@ class Component(object):
         # Save user-accessible params
         self.user_params = params.copy()
 
-        # Cache a copy of the user-specified values;  this is to deal with the following:
+        # Cache a (deep) copy of the user-specified values;  this is to deal with the following:
         #    • _create_attributes_for_user_params assigns properties to each param in user_params;
         #    • the setter for those properties (in make_property) also assigns its value to its entry user_params;
         #    • paramInstanceDefaults are assigned to paramsCurrent in Component.__init__ assigns
@@ -746,7 +747,28 @@ class Component(object):
         #         and the setter assigns those values to the user_params
         #    • therefore, assignments of paramInstance defaults to paramsCurrent in __init__ overwrites the
         #         the user-specified vaules (from the constructor args) in user_params
-        self.user_params_for_instantiation = params.copy()
+        self.user_params_for_instantiation = {}
+        from collections import Iterable
+        for param_name, param_value in self.user_params.items():
+            if isinstance(param_value, (str, np.ndarray, tuple)):
+                self.user_params_for_instantiation[param_name] = param_value
+            elif isinstance(param_value, Iterable):
+                self.user_params_for_instantiation[param_name] = type(self.user_params[param_name])()
+                # DICT
+                if isinstance(param_value, dict):
+                    for k, v in param_value.items():
+                        self.user_params_for_instantiation[param_name][k] = v
+                # SET
+                elif isinstance(param_value, set):
+                    for i in param_value:
+                        self.user_params_for_instantiation[param_name].add(i)
+                # OTHER ITERABLE
+                else:
+                    for i in range(len(param_value)):
+                        self.user_params_for_instantiation[param_name].append(param_value[i])
+            else:
+                self.user_params_for_instantiation[param_name] = param_value
+
 
         # Provide opportunity for subclasses to filter final set of params in class-specific way
         # Note:  this is done here to preserve identity of user-specified params assigned to user_params above
@@ -1847,10 +1869,13 @@ class Component(object):
 
             # IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
             #             SEE learning_rate IN LearningMechanism FOR EXAMPLE
-            self.function_params = self.function_object.user_params
+            # # MODIFIED 4/1/17 OLD:
+            # self.function_params = self.function_object.user_params
+            # self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
+            # MODIFIED 4/1/17 NEW:
+            self.function_params = self.function_object.user_params_for_instantiation
             self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
-
-
+            # MODIFIED 4/1/17 END
 
     def _instantiate_attributes_after_function(self, context=None):
         pass
@@ -2007,9 +2032,8 @@ def make_property(name, default_value):
         # FIX: USE self.assign_param TO MAKE ASSIGNMENT
         setattr(self, backing_field, val)
 
-        # # FIX: THIS OVERWRITES user_params IN INITIALIZATION OF paramsCurrent  QQQQQ
-        # # Update user_params dict with new value
-        # self.user_params[name] = val
+        # Update user_params dict with new value
+        self.user_params[name] = val
 
 
     # Create the property

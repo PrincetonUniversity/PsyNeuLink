@@ -58,7 +58,7 @@ EVCMechanism's  `ControlSignals <ControlSignal>`.  Each ControlSignal is impleme
 `parameterStates <ParameterState>` for the parameters of the mechanisms and/or functions controlled by that
 ControlSignal.  In addition, a set of prediction mechanisms  are created that are used to keep a running average of
 inputs to the system over the course of multiple executions.   These averages are used to generate input to the
-system when the EVCMechanism simulates its exction in order to  evaluate its performance. Each of these specialized
+system when the EVCMechanism simulates its execution in order to  evaluate its performance. Each of these specialized
 components is described in the sections that follow.
 
 .. _EVCMechanism_Structure:
@@ -792,9 +792,11 @@ class EVCMechanism(ControlMechanism_Base):
             except KeyError:
                 prediction_mechanism_params = {}
 
-            # Add outputState with name based on originMechanism
-            output_state_name = origin_mech.name + '_' + PREDICTION_MECHANISM_OUTPUT
-            prediction_mechanism_params[OUTPUT_STATES] = [output_state_name]
+            # MODIFIED 4/1/17 OLD: [SUPERFLUOUS, AND TRIGGERS REPORTING OF OUTPUTSTATE WHICH IS UNECESSARY]
+            # # Add outputState with name based on originMechanism
+            # output_state_name = origin_mech.name + '_' + PREDICTION_MECHANISM_OUTPUT
+            # prediction_mechanism_params[OUTPUT_STATES] = [output_state_name]
+            # MODIFIED 4/1/17 END
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
