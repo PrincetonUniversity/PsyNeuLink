@@ -1628,9 +1628,7 @@ class Process_Base(Process):
             process_input_state = ProcessInputState(owner=self,
                                                     variable=process_input[i],
                                                     prefs=self.prefs)
-            # MODIFIED 2/17/17 OLD:
             self.processInputStates.append(process_input_state)
-            # MODIFIED 2/17/17 END
 
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
@@ -1638,7 +1636,10 @@ class Process_Base(Process):
         if num_process_inputs == num_mechanism_input_states:
             for i in range(num_mechanism_input_states):
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.inputState
-                if not iscompatible(process_input[i], mechanism.variable[i]):
+                # MODIFIED 4/3/17 NEW:
+                input_state_variable = list(mechanism.inputStates.values())[i].variable
+                # MODIFIED 4/3/17 END
+                if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                        "variable for corresponding inputState of {3}".
                                        format(i, process_input[i], self.name, mechanism.name))
