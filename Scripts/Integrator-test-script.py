@@ -226,22 +226,22 @@ if run_transfer_tests:
 
     print("-------------------------------------------------")
 
-    # print("Transfer Test #10: Execute Transfer with noise= list of len 2 of floats, input = float ")
-    # print("NOT Valid -- If noise is an array, it must match the shape of the default input value ")
-    # try:
-    #     my_Transfer_Test10 = TransferMechanism(name='my_Transfer_Test10',
-    #                             default_input_value = 0.0,
-    #                             function=Logistic(gain=0.1, bias=0.2),
-    #                             time_constant = 0.2,
-    #                             noise = [5.0, 5.0],
-    #                             time_scale=TimeScale.TIME_STEP
-    #                             )
-    #     print(my_Transfer_Test10.execute(1.0))
-    # except FunctionError as error_text:
-    #     print("Error Text: ",error_text)
-    #     print("Passed")
-    #
-    # print("")
+    print("Transfer Test #10: Execute Transfer with noise= list of len 2 of floats, input = float ")
+    print("NOT Valid -- If noise is an array, it must match the shape of the default input value ")
+    try:
+        my_Transfer_Test10 = TransferMechanism(name='my_Transfer_Test10',
+                                default_input_value = 0.0,
+                                function=Logistic(gain=0.1, bias=0.2),
+                                time_constant = 0.2,
+                                noise = [5.0, 5.0],
+                                time_scale=TimeScale.TIME_STEP
+                                )
+        print(my_Transfer_Test10.execute(1.0))
+    except FunctionError as error_text:
+        print("Error Text: ",error_text)
+        print("Passed")
+
+    print("")
 
     print("-------------------------------------------------")
 
@@ -259,6 +259,55 @@ if run_transfer_tests:
     except FunctionError as error_text:
         print("Error Text: ",error_text)
         print("Passed")
+
+    print("")
+
+    print("-------------------------------------------------")
+
+    print("Transfer Test #12: Execute Transfer with noise= list of len 3 of ints, inputs = list of len 3 of ints ")
+    print("NOT Valid -- Elements of noise array cannot be ints  ")
+    try:
+        my_Transfer_Test12 = TransferMechanism(name='my_Transfer_Test12',
+                                default_input_value = [0, 0, 0],
+                                function=Logistic(gain=0.1, bias=0.2),
+                                time_constant = 0.2,
+                                noise = [1,2,3],
+                                time_scale=TimeScale.TIME_STEP
+                                )
+        print(my_Transfer_Test12.execute([1,1,1]))
+    except FunctionError as error_text:
+        print("Error Text: ",error_text)
+        print("Passed")
+
+    print("")
+
+    print("-------------------------------------------------")
+
+    print("Transfer Test #13: Execute Transfer with noise= list of len 1 float, input = float ")
+    my_Transfer_Test13 = TransferMechanism(name='my_Transfer_Test13',
+                            default_input_value = 0.0,
+                            function=Logistic(gain=0.1, bias=0.2),
+                            time_constant = 0.2,
+                            noise = [1.0],
+                            time_scale=TimeScale.TIME_STEP
+                            )
+    print(my_Transfer_Test13.execute(1.0))
+    print("Passed")
+
+    print("")
+
+    print("-------------------------------------------------")
+
+    print("Transfer Test #14: Execute Transfer with noise= list of len 1 function, input = float ")
+    my_Transfer_Test14 = TransferMechanism(name='my_Transfer_Test14',
+                            default_input_value = 0.0,
+                            function=Logistic(gain=0.1, bias=0.2),
+                            time_constant = 0.2,
+                            noise = [NormalDist().function],
+                            time_scale=TimeScale.TIME_STEP
+                            )
+    print(my_Transfer_Test14.execute(1.0))
+    print("Passed")
 
     print("")
 
