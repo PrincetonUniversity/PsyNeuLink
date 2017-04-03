@@ -1760,6 +1760,9 @@ class System_Base(System):
         self.targetMechanisms = MechanismList(self, self._target_mech_tuples)
         # MODIFIED 3/12/17 END
 
+        # self.show_graph()
+        self.show_graph_with_learning()
+
         # Instantiate TargetInputStates
         self._instantiate_target_inputs()
 
