@@ -2678,10 +2678,14 @@ class Integrator(
             # Variable is a list/array
             if isinstance(self.variable, (np.ndarray, list)):
                 if len(self.noise) != np.array(self.variable).size:
+                    try:
+                        formatted_noise = list(map(lambda x: x.__qualname__, self.noise))
+                    except AttributeError:
+                        formatted_noise = self.noise
                     raise FunctionError("The length ({}) of the array specified for the noise parameter ({}) of {} "
                                         "must match the length ({}) of the default input ({}). If noise is specified as"
                                         " an array or list, it must be of the same size as the input."
-                                        .format(len(self.noise), self.noise, self.name, np.array(self.variable).size,
+                                        .format(len(self.noise), formatted_noise, self.name, np.array(self.variable).size,
                                                 self.variable))
                 else:
                     # Noise is a list or array of functions
