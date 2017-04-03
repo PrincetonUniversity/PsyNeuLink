@@ -2,8 +2,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Globals.Keywords import *
 
-run_DDM_tests = True
-run_transfer_tests = False
+run_DDM_tests = False
+run_transfer_tests = True
 run_distribution_test = False
 
 if run_DDM_tests:
@@ -94,8 +94,8 @@ if run_DDM_tests:
 
 
 if run_transfer_tests:
-    print("Transfer Test #1: Execute Transfer with noise = 5")
-    print("(NOT Valid)")
+    print("Transfer Test #1: Execute Transfer with noise = 5, input = list len 2")
+    print("(NOT Valid -- noise must be a float)")
 
 
     try:
@@ -107,39 +107,159 @@ if run_transfer_tests:
                                time_scale=TimeScale.TIME_STEP
                                )
         my_Transfer_Test.execute([1,2])
-    except FunctionError:
+    except FunctionError as error_text:
+        print("Error Text: ", error_text)
         print("Passed")
         print("")
 
     print("-------------------------------------------------")
 
-    print("Transfer Test #2: Execute Transfer with noise = 5.0")
+    print("Transfer Test #2: Execute Transfer with noise = 5.0, input = list len 2")
 
     my_Transfer_Test2 = TransferMechanism(name='my_Transfer_Test2',
-                            default_input_value = [0,0,0,0],
+                            default_input_value = [0,0],
                             function=Logistic(gain=0.1, bias=0.2),
-                            noise=NormalDist().function,
+                            noise=5.0,
                             time_constant = 0.1,
                             time_scale=TimeScale.TIME_STEP
                             )
-    my_Transfer_Test2.execute([1,1,1,1])
+    print(my_Transfer_Test2.execute([1,1]))
 
     print("Passed")
     print("")
 
     print("-------------------------------------------------")
 
-    print("Transfer Test #3: Execute Transfer with noise not specified")
+    print("Transfer Test #3: Execute Transfer with noise not specified, input = list len 5")
 
     my_Transfer_Test3 = TransferMechanism(name='my_Transfer_Test3',
                             default_input_value = [0,0,0,0,0],
-                            function=Logistic(gain=0.1, bias=0.2),
+                            function=Logistic(gain=1.0, bias=0.0),
                             time_constant = 0.2,
                             time_scale=TimeScale.TIME_STEP
                             )
-    my_Transfer_Test3.execute([10,20,30,40,50])
+    print(my_Transfer_Test3.execute([10,20,30,40,50]))
 
     print("Passed")
+    print("")
+
+    print("-------------------------------------------------")
+
+    print("Transfer Test #4: Execute Transfer with noise=list of floats len 5, input = list len 5 ")
+
+    my_Transfer_Test4 = TransferMechanism(name='my_Transfer_Test4',
+                            default_input_value = [0,0,0,0,0],
+                            function=Logistic(gain=0.1, bias=0.2),
+                            time_constant = 0.2,
+                            noise = [1.0,2.0,3.0,4.0,5.0],
+                            time_scale=TimeScale.TIME_STEP
+                            )
+    print(my_Transfer_Test4.execute([10,20,30,40,50]))
+
+    print("Passed")
+    print("")
+
+    print("-------------------------------------------------")
+
+    print("Transfer Test #5: Execute Transfer with noise=list of functions len 5, input = list len 5 ")
+
+    my_Transfer_Test5 = TransferMechanism(name='my_Transfer_Test5',
+                            default_input_value = [0,0,0,0,0],
+                            function=Logistic(gain=0.1, bias=0.2),
+                            time_constant = 0.2,
+                            noise = [NormalDist().function, UniformDist().function, ExponentialDist().function, WaldDist().function, GammaDist().function ],
+                            time_scale=TimeScale.TIME_STEP
+                            )
+    print(my_Transfer_Test5.execute([10,20,30,40,50]))
+
+    print("Passed")
+    print("")
+
+    print("-------------------------------------------------")
+
+    print("Transfer Test #6: Execute Transfer with noise=function, input = list len 5 ")
+
+    my_Transfer_Test6 = TransferMechanism(name='my_Transfer_Test6',
+                            default_input_value = [0,0,0,0,0],
+                            function=Logistic(gain=0.1, bias=0.2),
+                            time_constant = 0.2,
+                            noise = NormalDist().function,
+                            time_scale=TimeScale.TIME_STEP
+                            )
+    print(my_Transfer_Test6.execute([10,10,10,10,10]))
+
+    print("Passed")
+    print("")
+
+    print("-------------------------------------------------")
+
+
+    print("Transfer Test #8: Execute Transfer with noise=float, input = list len 5 ")
+
+    my_Transfer_Test8 = TransferMechanism(name='my_Transfer_Test8',
+                            default_input_value = [0,0,0,0,0],
+                            function=Logistic(gain=0.1, bias=0.2),
+                            time_constant = 0.2,
+                            noise = 5.0,
+                            time_scale=TimeScale.TIME_STEP
+                            )
+    print(my_Transfer_Test8.execute([10,10,10,10,10]))
+
+    print("Passed")
+    print("")
+
+    print("-------------------------------------------------")
+
+    print("Transfer Test #9: Execute Transfer with noise=float, input = float ")
+
+    my_Transfer_Test9 = TransferMechanism(name='my_Transfer_Test9',
+                            default_input_value = 0.0,
+                            function=Logistic(gain=0.1, bias=0.2),
+                            time_constant = 0.2,
+                            noise = 5.0,
+                            time_scale=TimeScale.TIME_STEP
+                            )
+    print(my_Transfer_Test9.execute(1.0))
+
+    print("Passed")
+    print("")
+
+    print("-------------------------------------------------")
+
+    # print("Transfer Test #10: Execute Transfer with noise= list of len 2 of floats, input = float ")
+    # print("NOT Valid -- If noise is an array, it must match the shape of the default input value ")
+    # try:
+    #     my_Transfer_Test10 = TransferMechanism(name='my_Transfer_Test10',
+    #                             default_input_value = 0.0,
+    #                             function=Logistic(gain=0.1, bias=0.2),
+    #                             time_constant = 0.2,
+    #                             noise = [5.0, 5.0],
+    #                             time_scale=TimeScale.TIME_STEP
+    #                             )
+    #     print(my_Transfer_Test10.execute(1.0))
+    # except FunctionError as error_text:
+    #     print("Error Text: ",error_text)
+    #     print("Passed")
+    #
+    # print("")
+
+    print("-------------------------------------------------")
+
+    print("Transfer Test #11: Execute Transfer with noise= list of len 2 of functions, input = float ")
+    print("NOT Valid -- If noise is an array, it must match the shape of the default input value ")
+    try:
+        my_Transfer_Test11 = TransferMechanism(name='my_Transfer_Test11',
+                                default_input_value = 0.0,
+                                function=Logistic(gain=0.1, bias=0.2),
+                                time_constant = 0.2,
+                                noise = [NormalDist().function, UniformDist().function],
+                                time_scale=TimeScale.TIME_STEP
+                                )
+        print(my_Transfer_Test11.execute(1.0))
+    except FunctionError as error_text:
+        print("Error Text: ",error_text)
+        print("Passed")
+
     print("")
 
     print("-------------------------------------------------")
