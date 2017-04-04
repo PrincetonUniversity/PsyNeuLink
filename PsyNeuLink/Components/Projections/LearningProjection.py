@@ -422,7 +422,7 @@ class LearningProjection(Projection_Base):
         super()._instantiate_sender(context=context)
 
     def _instantiate_receiver(self, context=None):
-        """Validate that receiver has been assigned and is compatiable with the output of function
+        """Validate that receiver has been assigned and is compatible with the output of function
 
         Notes:
         * _validate_params verifies that receiver is a parameterState for the matrix parameter of a MappingProjection.
@@ -432,7 +432,7 @@ class LearningProjection(Projection_Base):
 
         super()._instantiate_receiver(context=context)
 
-        # Insure that the learning_signal is compatible format with the receiver's weight matrix
+        # Insure that the learning_signal is compatible with the receiver's weight matrix
         if not iscompatible(self.value, self.receiver.variable):
             raise LearningProjectionError("The learning_signal of {} ({}) is not compatible with the matrix of "
                                           "the MappingProjection ({}) to which it is being assigned ({})".
