@@ -351,7 +351,7 @@ class DDM(ProcessingMechanism_Base):
             + paramNames (dict): names as above
         Class methods
         -------------
-            None
+            - plot() : generates a dynamic plot of the DDM
         MechanismRegistry
         -----------------
             All instances of DDM are registered in MechanismRegistry, which maintains an entry for the subclass,
@@ -368,8 +368,9 @@ class DDM(ProcessingMechanism_Base):
     function : IntegratorFunction : default BogaczEtAl
         specifies the analytic solution to use for the decision process if `time_scale <DDM.time_scale>` is set to
         `TimeScale.TRIAL`; can be `BogaczEtAl` or `NavarroAndFuss` (note:  the latter requires that the MatLab engine
-        is installed). If `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, `function <DDM.function>` is
-        automatically assigned to `Integrator`.
+        is installed). If `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, `function <DDM.function>` must
+        be `Integrator` with an 'integration_type <Integrator.integration_type>' of DIFFUSION, and the mechanism
+        will return the result of one time step.
     time_scale :  TimeScale : default TimeScale.TRIAL
         specifies whether the mechanism is executed on the time_step or trial time scale.
         This must be set to `TimeScale.TRIAL` to use one of the analytic solutions specified by
@@ -397,14 +398,15 @@ class DDM(ProcessingMechanism_Base):
         the input to mechanism's execute method.  Serves as the "stimulus" component of the drift rate.
     function :  IntegratorFunction : default BogaczEtAl
         the function used to compute the outcome of the decision process when `time_scale <DDM.time_scale>` is
-        `TimeScale.TRIAL`.  If `time_scale <DDM.time_scale>` is `TimeScale.TIME_STEP`, `function <DDM.function>`
-        is automatically assigned to `Integrator`, and used to compute the decision process by stepwise integration
-        of the decision variable (one step per `CentralClock.time_step`).
+        `TimeScale.TRIAL`.  If `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, `function <DDM.function>`
+        must be `Integrator` with an 'integration_type <Integrator.integration_type>' of DIFFUSION, and the mechanism
+        will return the result of one time step.
     function_params : Dict[str, value]
         contains one entry for each parameter of the mechanism's function.
         The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
     value : 2d np.array[array(float64),array(float64),array(float64),array(float64)]
         result of executing DDM `function <DDM.function>`; same items as `outputValue <DDM.outputValue>`.
+    plot :
     COMMENT:
         CORRECTED:
         value : 1d np.array
@@ -529,9 +531,6 @@ class DDM(ProcessingMechanism_Base):
                                                   plot_threshold = plot_threshold,
                                                   params=params,
                                                   )
-        if time_scale == TimeScale.TIME_STEP:
-            self.get_axes_function = Integrator(integration_type = DIFFUSION, rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function
-            self.plot_function = Integrator(integration_type = DIFFUSION, rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
@@ -600,12 +599,25 @@ class DDM(ProcessingMechanism_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
         functions = {BogaczEtAl, NavarroAndFuss, Integrator}
         if not target_set[FUNCTION] in functions:
             function_names = list (function.componentName for function in functions)
             raise DDMError("{} param of {} must be one of the following functions: {}".
                            format(FUNCTION, self.name, function_names))
+        if self.timeScale == TimeScale.TRIAL:
+            if target_set[FUNCTION] == Integrator:
+                raise DDMError("In TRIAL mode, the {} param of {} cannot be Integrator. Please choose an analytic "
+                               "solution for the function param: BogaczEtAl or NavarroAndFuss.".
+                               format(FUNCTION, self.name))
+        else:
+            if target_set[FUNCTION] != Integrator:
+                raise DDMError("In TIME_STEP mode, the {} param of {} must be Integrator with DIFFUSION integration.".
+                               format(FUNCTION, self.name))
+            else:
+                self.get_axes_function = Integrator(integration_type=DIFFUSION, rate=self.function_params['rate'],
+                                                    noise=self.function_params['noise'], context='plot').function
+                self.plot_function = Integrator(integration_type=DIFFUSION, rate=self.function_params['rate'],
+                                                noise=self.function_params['noise'], context='plot').function
 
         if not isinstance(target_set[FUNCTION], NavarroAndFuss):
             # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
@@ -622,6 +634,8 @@ class DDM(ProcessingMechanism_Base):
             if not threshold >= 0:
                 raise DDMError("{} param of {} ({}) must be >= zero".
                                format(THRESHOLD, self.name, threshold))
+
+
 
     def _instantiate_attributes_before_function(self, context=None):
         """Delete params not in use, call super.instantiate_execute_method

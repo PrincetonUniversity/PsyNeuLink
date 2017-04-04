@@ -2501,7 +2501,7 @@ class IntegratorFunction(Function_Base):
 
 
 # FIX: IF RATE HAS TO BE BETWEEN 0 AND 1, VALIDATE_VARIABLE ACCORDINGLY
-# SEARCH & REPLACE: old_value -> previous_value
+# SEARCH & REPLACE: previous_value -> previous_value
 
 # • why does integrator return a 2d array?
 # • does rate have to be between 0 and 1 (if so, validate_variable)
@@ -2546,10 +2546,9 @@ class Integrator(
     integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
         specifies type of integration (see `integration_type <Integrator.integration_type>` for details).
 
-    noise : float, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <Integrator.function>`.
-        If it is a list or array, it must be the same length as `variable <Integrator.variable_default>` and all
-        elements must be floats between 0 and 1.
+    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+        specifies random value to be added in each call to `function <Integrator.function>`. (see
+        `noise <Integrator.noise>` for details).
 
     time_step_size : float : default 0.0
         determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
@@ -2587,33 +2586,45 @@ class Integrator(
 
     integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
         specifies type of integration:
-            * **CONSTANT**: `old_value <Integrator.old_value>` + `rate <Integrator.rate>` + `noise <Integrator.noise>`
+            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` + `noise <Integrator.noise>`
               (ignores `variable <Integrator.variable>`);
-            * **SIMPLE**: `old_value <Integrator.old_value>` + `rate <Integrator.rate>` *
+            * **SIMPLE**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` *
               `variable <variable.Integrator.variable>` + `noise <Integrator.noise>`;
             * **ADAPTIVE**: (1-`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
-              (`rate <Integrator.rate>` * `old_value <Integrator.old_value>`) + `noise <Integrator.noise>`
+              (`rate <Integrator.rate>` * `previous_value <Integrator.previous_value>`) + `noise <Integrator.noise>`
               (`Weiner filter <https://en.wikipedia.org/wiki/Wiener_filter>`_ or
               `Delta rule <https://en.wikipedia.org/wiki/Delta_rule>`_);
-            * **DIFFUSION**: `old_value <Integrator.old_value>` +
-              (`rate <Integrator.rate>` * `old_value` * `time_step_size <Integrator.time_step_size>`) +
+            * **DIFFUSION**: `previous_value <Integrator.previous_value>` +
+              (`rate <Integrator.rate>` * `previous_value` * `time_step_size <Integrator.time_step_size>`) +
               √(`time_step_size <Integrator.time_step_size>` * `noise <Integrator.noise>` * Gaussian(0,1))
               (`Drift Diffusion Model
               <https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model>`_).
 
-    noise : float or 1d np.array
+    noise : float, function, list, or 1d np.array
         specifies random value to be added in each call to `function <Integrator.function>`.
 
+        If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`.If noise is
+        specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
+        noise will be applied to each variable element. In the case of a noise function, this means that the function
+        will be executed separately for each variable element.
+
+        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
+        value will be used to construct the standard DDM probability distribution. For all other types of integration,
+        in order to generate random noise, we recommend that you instead select a probability distribution function
+        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
+        list or array of these), then the noise will simply be an offset that remains the same across all executions.
+
     time_step_size : float
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
-        DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
+        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
+        is set to DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
     initializer : float or 1d np.array
-        determines the starting value for integration (i.e., the value to which `old_value <Integrator.old_value>`
-        is set.  If it is assigned as a `runtime_param <LINK>` it resets `old_value <Integrator.old_value>` to the
+        determines the starting value for integration (i.e., the value to which `previous_value <Integrator.previous_value>`
+        is set.  If it is assigned as a `runtime_param <LINK>` it resets `previous_value <Integrator.previous_value>` to the
         specified value (see `initializer <Integrator.initializer>` for details).
 
-    old_value : 1d np.array : default variableClassDefault
+    previous_value : 1d np.array : default variableClassDefault
         stores previous value with which `variable <Integrator.variable>` is integrated.
 
     owner : Mechanism
@@ -2657,7 +2668,7 @@ class Integrator(
                                                   )
 
         # Assign here as default, for use in initialization of function
-        self.old_value = self.paramClassDefaults[INITIALIZER]
+        self.previous_value = self.paramClassDefaults[INITIALIZER]
 
         super().__init__(variable_default=variable_default,
                          params=params,
@@ -2665,7 +2676,7 @@ class Integrator(
                          prefs=prefs,
                          context=context)
         # Reassign to kWInitializer in case default value was overridden
-        self.old_value = self.initializer
+        self.previous_value = self.initializer
 
 
         # self.noise = self.paramsCurrent[NOISE]
@@ -2771,8 +2782,8 @@ class Integrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: some fraction of `variable <Linear.slope>` combined with some fraction of `old_value
-        <Integrator.old_value>` (see `integration_type <Integrator.integration_type>`).
+        Return: some fraction of `variable <Linear.slope>` combined with some fraction of `previous_value
+        <Integrator.previous_value>` (see `integration_type <Integrator.integration_type>`).
 
         Arguments
         ---------
@@ -2815,22 +2826,22 @@ class Integrator(
             noise = self.noise
 
         try:
-            old_value = params[INITIALIZER]
+            previous_value = params[INITIALIZER]
         except (TypeError, KeyError):
-            old_value = self.old_value
+            previous_value = self.previous_value
 
-        old_value = np.atleast_2d(old_value)
+        previous_value = np.atleast_2d(previous_value)
         new_value = self.variable
 
         # Compute function based on integration_type param
         if integration_type is CONSTANT:
-            value = old_value + rate + noise
+            value = previous_value + rate + noise
         elif integration_type is SIMPLE:
-            value = old_value + (new_value * rate) + noise
+            value = previous_value + (new_value * rate) + noise
         elif integration_type is ADAPTIVE:
-            value = (1 - rate) * old_value + rate * new_value + noise
+            value = (1 - rate) * previous_value + rate * new_value + noise
         elif integration_type is DIFFUSION:
-            value = old_value + rate * old_value * time_step_size + np.sqrt(time_step_size * noise) * np.random.normal()
+            value = previous_value + rate * previous_value * time_step_size + np.sqrt(time_step_size * noise) * np.random.normal()
         else:
             value = new_value
 
@@ -2838,7 +2849,7 @@ class Integrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.old_value = value
+            self.previous_value = value
 
         return value
 
@@ -2923,11 +2934,11 @@ class Integrator(
 #         DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 #
 #     initializer : float or 1d np.array
-#         determines the starting value for integration (i.e., the value to which `old_value <Integrator.old_value>`
-#         is set.  If it is assigned as a `runtime_param <LINK>` it resets `old_value <Integrator.old_value>` to the
+#         determines the starting value for integration (i.e., the value to which `previous_value <Integrator.previous_value>`
+#         is set.  If it is assigned as a `runtime_param <LINK>` it resets `previous_value <Integrator.previous_value>` to the
 #         specified value (see `initializer <Integrator.initializer>` for details).
 #
-#     old_value : 1d np.array : default variableClassDefault
+#     previous_value : 1d np.array : default variableClassDefault
 #         stores previous value with which `variable <Integrator.variable>` is integrated.
 #
 #     owner : Mechanism
@@ -2954,7 +2965,7 @@ class Integrator(
 #                  context="DDMIntegrator Init"):
 #
 #         # Assign here as default, for use in initialization of function
-#         self.old_value = self.paramClassDefaults[INITIALIZER]
+#         self.previous_value = self.paramClassDefaults[INITIALIZER]
 #         integration_type = DIFFUSION
 #
 #         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -2972,7 +2983,7 @@ class Integrator(
 #                          context=context)
 #
 #         # Reassign to kWInitializer in case default value was overridden
-#         self.old_value = [self.paramsCurrent[INITIALIZER]]
+#         self.previous_value = [self.paramsCurrent[INITIALIZER]]
 #
 #     def _validate_params(self, request_set, target_set=None, context=None):
 #
