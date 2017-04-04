@@ -571,6 +571,7 @@ class Mechanism_Base(Mechanism):
             - adjust(params, context)
                 modifies specified mechanism params (by calling Function._assign_defaults)
                 returns output
+            - plot(): generates a plot of the mechanism's function using the specified parameter values
 
         MechanismRegistry
         -----------------

@@ -2,8 +2,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Globals.Keywords import *
 
-run_DDM_tests = False
-run_transfer_tests = True
+run_DDM_tests = True
+run_transfer_tests = False
 run_distribution_test = False
 
 if run_DDM_tests:
@@ -13,26 +13,27 @@ if run_DDM_tests:
                 name='My_DDM',
                 time_scale=TimeScale.TIME_STEP
                 )
+    # my_DDM.plot()
     my_DDM.execute()
 
     print("-------------------------------------------------")
 
     print("DDM Test #2: Execute DDM with noise = NormalDist(mean=1.0, standard_dev = 0.5).function")
     print("(NOT Valid)")
-    my_DDM2 = DDM(
-        function=Integrator(integration_type=DIFFUSION, noise=NormalDist(mean=1.0, standard_dev=0.5).function),
-        name='My_DDM2',
-        time_scale=TimeScale.TIME_STEP
-        )
-    my_DDM2.execute()
-    # try:
-    #     my_DDM2 = DDM(function=Integrator( integration_type=DIFFUSION, noise=NormalDist(mean=1.0, standard_dev=0.5).function),
-    #                   name='My_DDM2',
-    #                   time_scale=TimeScale.TIME_STEP
-    #                   )
-    #     my_DDM2.execute()
-    # except FunctionError:
-    #     print("Passed")
+    # my_DDM2 = DDM(
+    #     function=Integrator(integration_type=DIFFUSION, noise=NormalDist(mean=1.0, standard_dev=0.5).function),
+    #     name='My_DDM2',
+    #     time_scale=TimeScale.TIME_STEP
+    #     )
+    # my_DDM2.execute()
+    try:
+        my_DDM2 = DDM(function=Integrator( integration_type=DIFFUSION, noise=NormalDist(mean=1.0, standard_dev=0.5).function),
+                      name='My_DDM2',
+                      time_scale=TimeScale.TIME_STEP
+                      )
+        my_DDM2.execute()
+    except FunctionError:
+        print("Passed")
 
     print("-------------------------------------------------")
 
@@ -72,7 +73,6 @@ if run_DDM_tests:
                                       threshold=30.0),
                   name='MY_DDM6'
                   )
-
     my_DDM6.execute([[10]])
 
     print("Passed")
@@ -138,6 +138,7 @@ if run_transfer_tests:
                             time_constant = 0.2,
                             time_scale=TimeScale.TIME_STEP
                             )
+
     print(my_Transfer_Test3.execute([10,20,30,40,50]))
 
     print("Passed")
