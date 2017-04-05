@@ -1761,7 +1761,7 @@ class System_Base(System):
         # MODIFIED 3/12/17 END
 
         # self.show_graph()
-        self.show_graph_with_learning()
+        # self.show_graph_with_learning()
 
         # Instantiate TargetInputStates
         self._instantiate_target_inputs()
