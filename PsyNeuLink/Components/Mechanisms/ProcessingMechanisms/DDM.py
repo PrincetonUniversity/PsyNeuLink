@@ -548,7 +548,7 @@ class DDM(ProcessingMechanism_Base):
                                   prefs=prefs,
                                   # context=context)
                                   context=self)
-    def plot(self):
+    def plot(self, threshold = 10.0):
         import matplotlib.pyplot as plt
         plt.ion()
 
@@ -558,7 +558,6 @@ class DDM(ProcessingMechanism_Base):
 
         result_check = 0
         time_check = 0
-        threshold = 10.0
 
         while abs(result_check) < threshold:
             time_check += 1
@@ -581,7 +580,7 @@ class DDM(ProcessingMechanism_Base):
             time += 1
             result = self.plot_function(context='plot')
             plt.plot(time, float(result), '-o', color='r', ms=2.5)
-            plt.pause(0.001)
+            plt.pause(0.01)
 
         plt.pause(10000)
 
