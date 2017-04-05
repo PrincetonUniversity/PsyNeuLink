@@ -135,6 +135,7 @@ from PsyNeuLink.Components.Functions.Function import Function, function_type, me
 from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, Reinforcement, BackPropagation
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import ACTIVATION_INPUT,\
     ACTIVATION_OUTPUT, ERROR_SIGNAL
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism, \
@@ -268,13 +269,27 @@ def _instantiate_learning_components(learning_projection, context=None):
     #                       instantiated, identified by the mechanism that projects to it.  However, the latter
     #                       may also belong to more than one process, so would have to sort that out.  Current
     #                       implementation doesn't have to worry about that.
+
+    # if activation_mech has outgoing projections
     if (lc.activation_mech_output.sendsToProjections and
-            not any(isinstance(projection.receiver.owner , ProcessingMechanism_Base) and
-                        any(process in projection.receiver.owner.processes
-                            for process in lc.activation_mech_input.owner.processes)
-                    for projection in lc.activation_mech_output.sendsToProjections)):
+            # if the ProcessingMechanisms to which activation_mech projects do not belong to any of the same processes
+            # to which the mechanisms that project to activation_mech belong, then it should be treated as a TERMINAL
+            # and is_target should be set to True
+            not any(
+                        # isinstance(projection.receiver.owner, ProcessingMechanism_Base) and
+
+                        # if it projects to an ObjectiveMechanism that is NOT used for learning,
+                        # then activation_mech should not be considered TERMINAL (and is_target should not be True)
+                        (isinstance(projection.receiver.owner, ProcessingMechanism_Base)
+                                    and not (isinstance(projection.receiver.owner, ObjectiveMechanism) and
+                                                        projection.receiver.owner.role == LEARNING)) and
+
+                        any(                   # processes of ProcessingMechanisms to which activation_mech projects
+                                    process in projection.receiver.owner.processes
+                                                   # processes of mechanism that project to activation_mech
+                                    for process in lc.activation_mech_input.owner.processes)
+                        for projection in lc.activation_mech_output.sendsToProjections)):
         is_target = True
-        # FIX: ALLOW ASSIGNMENT OF
 
     else:
 
@@ -353,7 +368,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     # IMPLEMENTATION NOTE:
     #      THESE SHOULD BE MOVED (ALONG WITH THE SPECIFICATION FOR LEARNING) TO A DEDICATED LEARNING SPEC
-    #      RATHER THAN USING A LearningProjection
+    #      FOR PROCESS AND SYSTEM, RATHER THAN USING A LearningProjection
     # Get function used for learning and the learning_rate from their specification in the LearningProjection
     learning_function = learning_projection.learning_function
     learning_rate = learning_projection.learning_rate

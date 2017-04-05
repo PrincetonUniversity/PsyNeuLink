@@ -74,7 +74,7 @@ three_layer_net = system(processes=[input_via_hidden_process,
                          prefs={VERBOSE_PREF: False,
                                 REPORT_OUTPUT_PREF: True})
 
-three_layer_net.show_graph()
+three_layer_net.show_graph_with_learning()
 
 input_list = {input_layer:[[0, 0], [0, 1], [1, 0], [1, 1]]}
 target_list = {output_layer:[[0], [1], [1], [0]]}
