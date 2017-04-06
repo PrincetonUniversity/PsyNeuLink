@@ -406,7 +406,7 @@ class DDM(ProcessingMechanism_Base):
         The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
     value : 2d np.array[array(float64),array(float64),array(float64),array(float64)]
         result of executing DDM `function <DDM.function>`; same items as `outputValue <DDM.outputValue>`.
-    plot :
+
     COMMENT:
         CORRECTED:
         value : 1d np.array
@@ -549,6 +549,23 @@ class DDM(ProcessingMechanism_Base):
                                   # context=context)
                                   context=self)
     def plot(self, threshold = 10.0):
+        """
+        Generate a dynamic plot of the DDM integrating over time towards a threshold
+
+        Arguments
+        ---------
+
+        threshold: float: default 10.0
+             specify the threshold at which the DDM will stop integrating
+
+        Returns
+        -------
+        mechanism's function plot : Matplotlib window
+            Matplotlib window of the mechanism's function plotting dynamically over time with specified parameters
+            towards a specified threshold
+
+        """
+
         import matplotlib.pyplot as plt
         plt.ion()
 

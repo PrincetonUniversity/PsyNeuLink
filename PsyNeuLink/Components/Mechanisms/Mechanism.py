@@ -865,15 +865,39 @@ class Mechanism_Base(Mechanism):
         self.processes = {}
         self.systems = {}
     def plot(self,x_range = None):
+        """
+        Generate a plot of the mechanism's function using the specified parameter values. See (see
+        `DDM.plot <DDM.plot>` for details of the animated DDM plot).
+
+        Arguments
+        ---------
+
+        x_range: List
+             specify the range over which the function should be plotted. x_range must be provides as a list containing
+             two floats: lowest value of x and highest value of x.  Default values depend on the mechanism's function.
+
+            - Logistic Function: default x_range = [-5.0, 5.0]
+            - Exponential Function: default x_range = [0.1, 5.0]
+            - All Other Functions: default x_range = [-10.0, 10.0]
+
+
+
+        Returns
+        -------
+        mechanism's function plot : Matplotlib window
+            Matplotlib window of the mechanism's function plotted with specified parameters over the specified x_range
+
+        """
+
         import matplotlib.pyplot as plt
 
         if not x_range:
             if "Logistic" in str(self.function):
-                x_range= [-5,5]
+                x_range= [-5.0, 5.0]
             elif "Exponential" in str(self.function):
-                x_range = [0.1, 5]
+                x_range = [0.1, 5.0]
             else:
-                x_range = [-10, 10]
+                x_range = [-10.0, 10.0]
         x_space = np.linspace(x_range[0],x_range[1])
         plt.plot(x_space, self.function(x_space), lw=3.0, c='r')
         plt.show()
