@@ -116,6 +116,7 @@ mySystem.controller.reportOutputPref = False
 
 # mySystem.run(inputs=trial_list,
 # # mySystem.run(inputs=reversed_trial_list,
+
 mySystem.run(inputs=stim_list_dict,
              call_before_trial=show_trial_header,
              # call_after_time_step=show_results
