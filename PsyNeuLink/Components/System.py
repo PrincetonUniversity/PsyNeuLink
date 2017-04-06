@@ -2589,22 +2589,19 @@ class System_Base(System):
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
     def show_graph(self, output_fmt='pdf', direction = 'BT'):
-        """Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections
+        """Generate simple visualization of execution graph, showing dimensions
 
         Arguments
         ---------
 
         output_fmt : 'jupyter' or 'pdf'
-            pdf to generate and open a pdf with the visualization,
-            jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
+            'pdf' will generate and open a pdf with the visualization,
+
+            'jupyter' will simply return graphviz graph the object (ideal for working in jupyter/ipython notebooks)
 
         direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
             rank direction of graph
 
-        Returns
-        -------
-
-        Graphviz graph object if output_fmt is 'jupyter'
 
         """
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
@@ -2652,11 +2649,12 @@ class System_Base(System):
         elif output_fmt == 'jupyter':
             return G
 
-    def show_graph_with_learning(self, output_fmt='pdf', direction = 'BT', learning_color='blue'):
-        """Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections
+    def show_graph_with_learning(self, output_fmt='pdf', direction = 'BT', learning_color='green'):
+        """Generate visualization of interconnections between all mechanisms and projections, including all learning machinery
 
         Arguments
         ---------
+
         output_fmt : 'jupyter' or 'pdf'
             pdf to generate and open a pdf with the visualization,
             jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
@@ -2664,8 +2662,7 @@ class System_Base(System):
         direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
             rank direction of graph
 
-        learning_color : default is 'blue', set to 'black' to turn off
-            determines color with which to highlight learning machinery
+        learning_color : determines with what color to draw all the learning machinery
 
         Returns
         -------
@@ -2681,13 +2678,13 @@ class System_Base(System):
 
         system_graph = self.graph
         learning_graph=self.learningGraph
-        
+
         # build graph and configure visualisation settings
         G = gv.Digraph(engine = "dot", 
                        node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'}, 
                        edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
                        graph_attr = {"rankdir" : direction} )
-        
+
         # work with system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
@@ -2706,35 +2703,46 @@ class System_Base(System):
                 for proj in projs:
                     if proj.receiver.owner == rcvr[0]:
                         edge_name = proj.name
-                        draw_node = not proj.has_learning_projection
+                        draw_node = proj.has_learning_projection
                 edge_label = edge_name
                 #### CHANGE MADE HERE ###
-                if draw_node:
-                    G.edge(sndr_label, rcvr_label, label = edge_label)
+                # if rcvr is learning mechanism, draw arrow with learning color
+                if isinstance(rcvr[0], LearningMechanism) or isinstance(rcvr[0], ObjectiveMechanism):
+                    arrow_color=learning_color
                 else:
+                    arrow_color="black"
+                if not draw_node:
+                    G.edge(sndr_label, rcvr_label, label = edge_label, color=arrow_color)
+                else:
+
                     G.node(sndr_label, shape="oval")
                     G.node(edge_label, shape="diamond")
                     G.node(rcvr_label, shape="oval")
                     G.edge(sndr_label, edge_label, arrowhead='none')
                     G.edge(edge_label, rcvr_label)
                 #### CHANGE MADE HERE ###
-                    
+
         rcvrs = list(learning_graph.keys())
-        
+
         for rcvr in rcvrs:
                 # if rcvr is projection
                 if isinstance(rcvr, MappingProjection):
                     # for each sndr of rcvr
                     sndrs = learning_graph[rcvr]
                     for sndr in sndrs:
-                        G.edge(sndr.name, rcvr.name)
+                        edge_label = rcvr.parameterStates['matrix'].receivesFromProjections[0].name
+                        G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
                 else:
                     sndrs = learning_graph[rcvr]
                     for sndr in sndrs:
+                        projs = sndr.outputState.sendsToProjections
+                        for proj in projs:
+                            if proj.receiver.owner == rcvr:
+                                edge_name = proj.name
                         G.node(rcvr.name, color=learning_color)
                         G.node(sndr.name, color=learning_color)
-                        G.edge(sndr.name, rcvr.name, color=learning_color)
-                
+                        G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
+
         if   output_fmt == 'pdf':
             G.view(self.name.replace(" ", "-"), cleanup=True)
         elif output_fmt == 'jupyter':
