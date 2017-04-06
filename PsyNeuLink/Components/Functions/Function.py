@@ -2522,6 +2522,7 @@ class Integrator(
         integration_type=CONSTANT,     \
         noise=0.0,              \
         time_step_size=1.0,     \
+        initializer,     \
         params=None,            \
         owner=None,             \
         prefs=None,             \
@@ -2540,8 +2541,7 @@ class Integrator(
 
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <Integrator.variable_default>` and all elements must be floats between 0 and 1
-        (see `rate <Integrator.rate>` for details).
+        `variable <Integrator.variable_default>` (see `rate <Integrator.rate>` for details).
 
     integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
         specifies type of integration (see `integration_type <Integrator.integration_type>` for details).
@@ -2578,11 +2578,11 @@ class Integrator(
         current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
         added to the prior value;  if it is an array, each element is independently integrated.
 
-    rate : 1d np.array
-        determines the rate of integration based on current and prior values.  All elements are between 0 and 1
-        (0 = no change; 1 = instantaneous change). If it has a single element, it applies to all elements of
-        `variable <Integrator.variable>`;  if it has more than one element, each element applies to the
-        corresponding element of `variable <Integrator.variable>`.
+    rate : float or 1d np.array
+        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
+        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
+        applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
+        applies to the corresponding element of `variable <Integrator.variable>`.
 
     integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
         specifies type of integration:
@@ -2603,7 +2603,7 @@ class Integrator(
     noise : float, function, list, or 1d np.array
         specifies random value to be added in each call to `function <Integrator.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`.If noise is
+        If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If noise is
         specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
         will be executed separately for each variable element.
@@ -2619,10 +2619,14 @@ class Integrator(
         determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
         is set to DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
-    initializer : float or 1d np.array
+    initializer : float , function list, or 1d np.array
         determines the starting value for integration (i.e., the value to which `previous_value <Integrator.previous_value>`
-        is set.  If it is assigned as a `runtime_param <LINK>` it resets `previous_value <Integrator.previous_value>` to the
-        specified value (see `initializer <Integrator.initializer>` for details).
+        is set.
+
+        If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
+        initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
+        array, initializer will be applied to each variable element. In the case of an initializer function, this means
+        that the function will be executed separately for each variable element.
 
     previous_value : 1d np.array : default variableClassDefault
         stores previous value with which `variable <Integrator.variable>` is integrated.
@@ -3453,16 +3457,65 @@ class DistributionFunction(Function_Base):
 
 
 class NormalDist(DistributionFunction):
-    """Return a random sample from a normal distribution.
+    """
+    NormalDist(                      \
+             mean=0.0,             \
+             standard_dev=1.0,             \
+             params=None,           \
+             owner=None,            \
+             prefs=None             \
+             )
 
-    Description:
-        Draws samples from a normal distribution of the specified mean and variance using numpy.random.normal
+    .. _NormalDist:
 
-    Initialization arguments:
-        - mean (float)
-        - standard_dev (float)
+    Return a random sample from a normal distribution using numpy.random.normal
+
+    Arguments
+    ---------
+
+    mean : float : default 0.0
+        The mean or center of the normal distribution
+
+    standard_dev : float : default 1.0
+        Standard deviation of the normal distribution
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    mean : float : default 0.0
+        The mean or center of the normal distribution
+
+    standard_dev : float : default 1.0
+        Standard deviation of the normal distribution
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
 
     """
+
     componentName = NORMAL_DIST_FUNCTION
 
     variableClassDefault = [0]
@@ -3508,13 +3561,55 @@ class NormalDist(DistributionFunction):
 
 
 class ExponentialDist(DistributionFunction):
-    """Return a random sample from an exponential distribution.
+    """
+    ExponentialDist(                      \
+             beta=1.0,             \
+             params=None,           \
+             owner=None,            \
+             prefs=None             \
+             )
 
-    Description:
-        Draws samples from an exponential distribution of the specified beta using numpy.random.exponential
+    .. _ExponentialDist:
 
-    Initialization arguments:
-        - beta (float)
+    Return a random sample from a exponential distribution using numpy.random.exponential
+
+    Arguments
+    ---------
+
+    beta : float : default 1.0
+        The scale parameter of the exponential distribution
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    beta : float : default 1.0
+        The scale parameter of the exponential distribution
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
 
     """
     componentName = EXPONENTIAL_DIST_FUNCTION
@@ -3559,14 +3654,62 @@ class ExponentialDist(DistributionFunction):
 
 
 class UniformDist(DistributionFunction):
-    """Return a random sample from a uniform distribution.
+    """
+    UniformDist(                      \
+             low=0.0,             \
+             high=1.0,             \
+             params=None,           \
+             owner=None,            \
+             prefs=None             \
+             )
 
-    Description:
-        Draws samples from a uniform distribution of the specified low and high values using numpy.random.uniform
+    .. _UniformDist:
 
-    Initialization arguments:
-        - low (float)
-        - high (float)
+    Return a random sample from a uniform distribution using numpy.random.uniform
+
+    Arguments
+    ---------
+
+    low : float : default 0.0
+        Lower bound of the uniform distribution
+
+    high : float : default 1.0
+        Upper bound of the uniform distribution
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    low : float : default 0.0
+        Lower bound of the uniform distribution
+
+    high : float : default 1.0
+        Upper bound of the uniform distribution
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
 
     """
     componentName = UNIFORM_DIST_FUNCTION
@@ -3614,16 +3757,65 @@ class UniformDist(DistributionFunction):
 
 
 class GammaDist(DistributionFunction):
-    """Return a random sample from a gamma distribution.
+    """
+    GammaDist(\
+             scale=1.0,\
+             shape=1.0,\
+             params=None,\
+             owner=None,\
+             prefs=None\
+             )
 
-    Description:
-        Draws samples from a gamma distribution of the specified mean and variance using numpy.random.gamma
+    .. _GammaDist:
 
-    Initialization arguments:
-        - scale (float)
-        - shape (float)
+    Return a random sample from a gamma distribution using numpy.random.gamma
+
+    Arguments
+    ---------
+
+    scale : float : default 1.0
+        The shape of the gamma distribution. Should be greater than zero.
+
+    shape : float : default 1.0
+        The scale of the gamma distribution. Should be greater than zero.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    scale : float : default 1.0
+        The shape of the gamma distribution. Should be greater than zero.
+
+    shape : float : default 1.0
+        The scale of the gamma distribution. Should be greater than zero.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
 
     """
+
     componentName = GAMMA_DIST_FUNCTION
 
     variableClassDefault = [0]
@@ -3669,16 +3861,65 @@ class GammaDist(DistributionFunction):
 
 
 class WaldDist(DistributionFunction):
-    """Return a random sample from a wald distribution.
-
-    Description:
-        Draws samples from a wald distribution of the specified mean and variance using numpy.random.wald
-
-    Initialization arguments:
-        - mean (float)
-        - scale (float)
-
     """
+     WaldDist(\
+              scale=1.0,\
+              mean=1.0,\
+              params=None,\
+              owner=None,\
+              prefs=None\
+              )
+
+     .. _WaldDist:
+
+     Return a random sample from a wald distribution using numpy.random.wald
+
+     Arguments
+     ---------
+
+     scale : float : default 1.0
+         Scale parameter of the wald distribution. Should be greater than zero.
+
+     mean : float : default 1.0
+         Mean of the wald distribution. Should be greater than or equal to zero.
+
+     params : Optional[Dict[param keyword, param value]]
+         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+         arguments of the constructor.
+
+     owner : Component
+         `component <Component>` to which to assign the Function.
+
+     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+     Attributes
+     ----------
+
+     scale : float : default 1.0
+         Scale parameter of the wald distribution. Should be greater than zero.
+
+     mean : float : default 1.0
+         Mean of the wald distribution. Should be greater than or equal to zero.
+
+     params : Optional[Dict[param keyword, param value]]
+         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+         arguments of the constructor.
+
+     owner : Component
+         `component <Component>` to which to assign the Function.
+
+     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+     """
+
     componentName = GAMMA_DIST_FUNCTION
 
     variableClassDefault = [0]
