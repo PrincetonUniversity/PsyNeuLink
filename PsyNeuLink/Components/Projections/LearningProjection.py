@@ -404,7 +404,7 @@ class LearningProjection(Projection_Base):
         """Instantiate LearningMechanism
         """
 
-        # LearningMechanism was not specified or it was specified by class,
+        # LearningMechanism was specified by class or was not specified,
         #    so call composition for "automatic" instantiation of a LearningMechanism
         # Note: this also instantiates an ObjectiveMechanism if necessary and assigns it the necessary projections
         if not isinstance(self.sender, (OutputState, LearningMechanism)):

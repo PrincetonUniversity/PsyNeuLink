@@ -50,7 +50,7 @@ input_via_hidden_process = process(default_input_value=[0, 0],
                                    learning=LEARNING,
                                    learning_rate=1.0,
                                    target=[1],
-                                   # name='INPUT TO HIDDEN PROCESS',
+                                   name='PROCESS WITH HIDDEN',
                                    prefs={VERBOSE_PREF: False,
                                           REPORT_OUTPUT_PREF: False})
 
@@ -61,7 +61,7 @@ input_direct_to_output_process = process(default_input_value=[0, 0],
                                           learning=LEARNING,
                                           learning_rate=1.0,
                                           target=[1],
-                                          # name='HIDDEN TO OUTPUT PROCESS',
+                                          name='INPUT TO OUTPUT PROCESS',
                                           prefs={VERBOSE_PREF: False,
                                                  REPORT_OUTPUT_PREF: False})
 
