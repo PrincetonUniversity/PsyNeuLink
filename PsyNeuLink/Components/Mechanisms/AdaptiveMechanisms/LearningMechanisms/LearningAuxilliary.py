@@ -500,7 +500,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                      function=LinearCombination(weights=[[-1], [1]]),
                                                      role=LEARNING,
                                                      params=object_mech_params,
-                                                     name=lc.activation_mech_projection.name + " " + OBJECTIVE_MECHANISM)
+                                                     name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM)
 
             objective_mechanism.learning_role = TARGET
 
@@ -549,12 +549,14 @@ def _instantiate_learning_components(learning_projection, context=None):
     # Assign MappingProjection from activation_mech_input to LearningMechanism's ACTIVATION_INPUT inputState
     MappingProjection(sender=lc.activation_mech_input,
                       receiver=learning_mechanism.inputStates[ACTIVATION_INPUT],
-                      matrix=IDENTITY_MATRIX)
+                      matrix=IDENTITY_MATRIX,
+                      name = lc.activation_mech_input.owner.name + ' to ' + ACTIVATION_INPUT)
 
     # Assign MappingProjection from activation_mech_output to LearningMechanism's ACTIVATION_OUTPUT inputState
     MappingProjection(sender=lc.activation_mech_output,
                       receiver=learning_mechanism.inputStates[ACTIVATION_OUTPUT],
-                      matrix=IDENTITY_MATRIX)
+                      matrix=IDENTITY_MATRIX,
+                      name = lc.activation_mech_output.owner.name + ' to ' + ACTIVATION_OUTPUT)
 
     # Assign learning_mechanism as sender of learning_projection and return
     # Note: learning_projection still has to be assigned to the learning_mechanism's outputState;
