@@ -5,10 +5,10 @@ from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 import numpy as np
 
-process_prefs = {REPORT_OPUTPUT_PREF: True,
+process_prefs = {REPORT_OUTPUT_PREF: True,
                  VERBOSE_PREF: False}
 
-system_prefs = {REPORT_OPUTPUT_PREF: True,
+system_prefs = {REPORT_OUTPUT_PREF: True,
                 VERBOSE_PREF: False}
 
 colors = TransferMechanism(default_input_value=[0,0],
@@ -68,6 +68,8 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
                   targets=[0,0],
                   name='Stroop Model',
                   prefs=system_prefs)
+
+# mySystem.show_graph_with_learning()
 
 def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial)

@@ -792,12 +792,7 @@ class DDM(ProcessingMechanism_Base):
             # print ("control signal: {}\n".format(self.parameterStates[DRIFT_RATE].value))
 
             # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
-            # MODIFIED 11/21/16 OLD:
-            # drift_rate = float((self.inputState.value * self.parameterStates[DRIFT_RATE].value))
-            # # MODIFIED 11/21/16 NEW:
             drift_rate = float((self.variable * self.parameterStates[DRIFT_RATE].value))
-
-            # MODIFIED 11/21/16 END
 
             starting_point = float(self.parameterStates[STARTING_POINT].value)
             threshold = float(self.parameterStates[THRESHOLD].value)
@@ -808,30 +803,9 @@ class DDM(ProcessingMechanism_Base):
                                            STARTING_POINT:starting_point,
                                            THRESHOLD:threshold,
                                            NOISE:noise,
-                                           NON_DECISION_TIME:t0})
+                                           NON_DECISION_TIME:t0},
+                                   context=context)
 
-            # # MODIFIED 12/7/16 OLD:
-            # # Assign outputValue
-            # if isinstance(self.function.__self__, BogaczEtAl):
-            #     self.outputValue[DDM_Output.RESPONSE_TIME.value], self.outputValue[DDM_Output.P_LOWER_MEAN.value] = result
-            #     self.outputValue[DDM_Output.P_UPPER_MEAN.value] = 1 - self.outputValue[DDM_Output.P_LOWER_MEAN.value]
-            #
-            # elif isinstance(self.function.__self__, NavarroAndFuss):
-            #     self.outputValue[DDM_Output.RESPONSE_TIME.value] = result[NF_Results.MEAN_DT.value]
-            #     self.outputValue[DDM_Output.P_LOWER_MEAN.value] = result[NF_Results.MEAN_ER.value]
-            #     self.outputValue[DDM_Output.P_UPPER_MEAN.value] = 1 - result[NF_Results.MEAN_ER.value]
-            #     self.outputValue[DDM_Output.RT_CORRECT_MEAN.value] = result[NF_Results.MEAN_CORRECT_RT.value]
-            #     self.outputValue[DDM_Output.RT_CORRECT_VARIANCE.value] = result[NF_Results.MEAN_CORRECT_VARIANCE.value]
-            #     # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
-            #
-            # # Convert ER to decision variable:
-            # if random() < self.outputValue[DDM_Output.P_LOWER_MEAN.value]:
-            #     self.outputValue[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
-            # else:
-            #     self.outputValue[DDM_Output.DECISION_VARIABLE.value] = threshold
-            #
-            # return self.outputValue
-            # MODIFIED 12/7/16 NEW:
             if isinstance(self.function.__self__, BogaczEtAl):
                 return_value = np.array([[0.0],[0.0],[0.0],[0.0]])
                 return_value[DDM_Output.RESPONSE_TIME.value], return_value[DDM_Output.P_LOWER_MEAN.value] = result
@@ -853,7 +827,6 @@ class DDM(ProcessingMechanism_Base):
                 return_value[DDM_Output.DECISION_VARIABLE.value] = threshold
 
             return return_value
-            # MODIFIED 12/7/16 END
 
         else:
             raise MechanismError("time_scale not specified for DDM")

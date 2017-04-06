@@ -93,7 +93,7 @@ z = process(default_input_value=[0, 0],
             learning=LEARNING,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
-                   REPORT_OPUTPUT_PREF: True})
+                   REPORT_OUTPUT_PREF: True})
 
 # Input_Weights.matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
 # Middle_Weights.matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
