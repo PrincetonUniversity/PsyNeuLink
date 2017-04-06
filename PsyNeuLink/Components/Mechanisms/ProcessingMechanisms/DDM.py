@@ -519,7 +519,6 @@ class DDM(ProcessingMechanism_Base):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  name=None,
-                 plot_threshold=None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs:is_pref_set=None,
                  # context=None):
@@ -528,7 +527,6 @@ class DDM(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   time_scale=time_scale,
-                                                  plot_threshold = plot_threshold,
                                                   params=params,
                                                   )
 
@@ -719,28 +717,7 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
             if self.function_params['integration_type'] == 'diffusion':
-                if (self.plot_threshold != None) and (INITIALIZING not in context):
-                    import matplotlib.pyplot as plt
-                    plt.ion()
-                    axes = plt.gca()
-                    axes.set_ylim([-1.25 * self.plot_threshold, 1.25 * self.plot_threshold])
-                    plt.axhline(y=self.plot_threshold, linewidth=1, color='k', linestyle='dashed')
-                    plt.axhline(y=-self.plot_threshold, linewidth=1, color='k', linestyle='dashed')
-                    plt.plot()
-
-                    result = 0
-                    time = 0
-                    while abs(result) < self.plot_threshold:
-                        time += 1
-                        result = self.function(context=context)
-                        plt.plot(time, float(result), '-o', color='r', ms=5)
-                        plt.pause(0.05)
-
-                    plt.pause(5)
-
-                else:
-                    result = self.function(context=context)
-
+                result = self.function(context=context)
                 return np.array([result,[0.0],[0.0],[0.0]])
             else:
                 raise MechanismError("Invalid integration_type: '{}'. For the DDM mechanism, integration_type must be set"
