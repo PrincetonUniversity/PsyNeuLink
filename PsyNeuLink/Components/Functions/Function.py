@@ -2619,7 +2619,7 @@ class Integrator(
         determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
         is set to DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
-    initializer : float , function list, or 1d np.array
+    initializer : 1d np.array or list
         determines the starting value for integration (i.e., the value to which `previous_value <Integrator.previous_value>`
         is set.
 
@@ -2737,13 +2737,14 @@ class Integrator(
                                 .format(self.name))
 
     def _validate_initializer(self):
+        print(self.initializer, " = SELF.INITIALIZER")
         # Initializer is a list or array
         if isinstance(self.initializer[0], (np.ndarray, list)):
             # Variable is a list/array
             if isinstance(self.variable, (np.ndarray, list)):
                 if len(self.initializer[0]) != np.array(self.variable).size:
                     try:
-                        formatted_initializer = list(map(lambda x: x.__qualname__, self.initializer))
+                        formatted_initializer = list(map(lambda x: x.__qualname__, self.initializer[0]))
                     except AttributeError:
                         formatted_initializer = self.initializer[0]
                     raise FunctionError("The length ({}) of the array specified for the initializer parameter ({}) of {} "
@@ -2759,7 +2760,7 @@ class Integrator(
        # Variable is not a list/array
             else:
                 raise FunctionError("The initializer parameter ({}) for {} may only be a list or array if the "
-                                    "default input value is also a list or array.".format(self.initializer, self.name))
+                                    "default input value is also a list or array.".format(self.initializer[0], self.name))
 
         elif callable(self.initializer[0]):
             self.initializer_function = True
@@ -2817,7 +2818,7 @@ class Integrator(
                         "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
                         "1.0 when integration_type is set to ADAPTIVE.".format(self.rate, self.name))
 
-        self._validate_initializer()
+        # self._validate_initializer()
         self._validate_noise()
         noise = target_set[NOISE]
         time_step_size = target_set[TIME_STEP_SIZE]
