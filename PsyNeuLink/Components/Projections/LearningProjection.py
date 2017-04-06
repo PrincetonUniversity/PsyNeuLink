@@ -404,7 +404,7 @@ class LearningProjection(Projection_Base):
         """Instantiate LearningMechanism
         """
 
-        # LearningMechanism was not specified or it was specified by class,
+        # LearningMechanism was specified by class or was not specified,
         #    so call composition for "automatic" instantiation of a LearningMechanism
         # Note: this also instantiates an ObjectiveMechanism if necessary and assigns it the necessary projections
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
@@ -422,7 +422,7 @@ class LearningProjection(Projection_Base):
         super()._instantiate_sender(context=context)
 
     def _instantiate_receiver(self, context=None):
-        """Validate that receiver has been assigned and is compatiable with the output of function
+        """Validate that receiver has been assigned and is compatible with the output of function
 
         Notes:
         * _validate_params verifies that receiver is a parameterState for the matrix parameter of a MappingProjection.
@@ -432,7 +432,7 @@ class LearningProjection(Projection_Base):
 
         super()._instantiate_receiver(context=context)
 
-        # Insure that the learning_signal is compatible format with the receiver's weight matrix
+        # Insure that the learning_signal is compatible with the receiver's weight matrix
         if not iscompatible(self.value, self.receiver.variable):
             raise LearningProjectionError("The learning_signal of {} ({}) is not compatible with the matrix of "
                                           "the MappingProjection ({}) to which it is being assigned ({})".

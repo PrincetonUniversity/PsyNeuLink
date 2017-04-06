@@ -734,4 +734,7 @@ def _is_value_spec(spec):
 # IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
 def _instantiate_monitoring_projection(sender, receiver, matrix=DEFAULT_MATRIX):
     from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-    MappingProjection(sender=sender, receiver=receiver, matrix=matrix)
+    MappingProjection(sender=sender,
+                      receiver=receiver,
+                      matrix=matrix,
+                      name = sender.owner.name + ' to ' + SAMPLE)

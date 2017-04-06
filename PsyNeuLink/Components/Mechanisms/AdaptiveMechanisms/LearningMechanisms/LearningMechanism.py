@@ -763,4 +763,5 @@ def _instantiate_error_signal_projection(sender, receiver):
 
     return MappingProjection(sender=sender,
                              receiver=receiver,
-                             matrix=IDENTITY_MATRIX)
+                             matrix=IDENTITY_MATRIX,
+                             name = sender.owner.name + ERROR_SIGNAL)

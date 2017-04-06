@@ -69,6 +69,8 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
                   name='Stroop Model',
                   prefs=system_prefs)
 
+# mySystem.show_graph_with_learning()
+
 def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial)
 
