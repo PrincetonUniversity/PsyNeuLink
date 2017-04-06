@@ -2655,7 +2655,7 @@ class System_Base(System):
         elif output_fmt == 'jupyter':
             return G
 
-    def show_graph_with_learning(self, output_fmt='pdf', direction = 'BT', learning_color='blue'):
+    def show_graph_with_learning(self, output_fmt='pdf', direction = 'BT', learning_color='green'):
         """Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections
 
         Arguments
