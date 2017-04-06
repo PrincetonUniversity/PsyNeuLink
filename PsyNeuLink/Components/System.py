@@ -2589,22 +2589,19 @@ class System_Base(System):
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
     def show_graph(self, output_fmt='pdf', direction = 'BT'):
-        """Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections
+        """Generate simple visualization of execution graph, showing dimensions
 
         Arguments
         ---------
 
         output_fmt : 'jupyter' or 'pdf'
-            pdf to generate and open a pdf with the visualization,
-            jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
+            'pdf' will generate and open a pdf with the visualization,
+
+            'jupyter' will simply return graphviz graph the object (ideal for working in jupyter/ipython notebooks)
 
         direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
             rank direction of graph
 
-        Returns
-        -------
-
-        Graphviz graph object if output_fmt is 'jupyter'
 
         """
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
@@ -2652,7 +2649,27 @@ class System_Base(System):
         elif output_fmt == 'jupyter':
             return G
 
-    def show_graph_with_learning_next(self, output_fmt='jupyter', direction = 'BT', learning_color='green'):
+    def show_graph_with_learning(self, output_fmt='pdf', direction = 'BT', learning_color='green'):
+        """Generate visualization of interconnections between all mechanisms and projections, including all learning machinery
+
+        Arguments
+        ---------
+
+        output_fmt : 'jupyter' or 'pdf'
+            pdf to generate and open a pdf with the visualization,
+            jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
+
+        direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
+            rank direction of graph
+
+        learning_color : determines with what color to draw all the learning machinery
+
+        Returns
+        -------
+
+        Graphviz graph object if output_fmt is 'jupyter'
+
+        """
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
