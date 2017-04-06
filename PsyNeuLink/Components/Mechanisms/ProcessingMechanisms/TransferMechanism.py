@@ -435,7 +435,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             if not range[0] < range[1]:
                 raise TransferError("The first item of the range parameter ({}) must be less than the second".
                                     format(range, self.name))
-        self.integrator_function = Integrator(variable_default = self.variable, integration_type=ADAPTIVE, rate=self.time_constant, noise=self.noise)
+        self.integrator_function = Integrator(variable_default = self.variable, initializer=self.variable, integration_type=ADAPTIVE, rate=self.time_constant, noise=self.noise)
 
     def _instantiate_parameter_states(self, context=None):
 
