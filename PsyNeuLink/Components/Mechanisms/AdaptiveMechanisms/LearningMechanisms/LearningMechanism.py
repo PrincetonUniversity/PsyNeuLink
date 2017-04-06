@@ -133,7 +133,7 @@ are assigned to the LearningMechanism's
 
 .. _LearningMechanism_OutputStates:
 
-OutputStates
+OutputStates b
 ~~~~~~~~~~~
 
 These receive the output of the LearningMechanism's `function <LearningMechanism.function>`:
@@ -763,4 +763,5 @@ def _instantiate_error_signal_projection(sender, receiver):
 
     return MappingProjection(sender=sender,
                              receiver=receiver,
-                             matrix=IDENTITY_MATRIX)
+                             matrix=IDENTITY_MATRIX,
+                             name = sender.owner.name + ERROR_SIGNAL)

@@ -24,6 +24,66 @@ from PsyNeuLink.Components.Functions.Function import Linear
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 
 
+#region TEST AUTO_PROP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+defaults = {'foo':5, 'bar': ['hello', 'world']}
+
+docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
+        'bar': 'Bar none, the most important property'}
+
+
+def make_property(name):
+    backing_field = '_' + name
+
+    def getter(self):
+        if hasattr(self, backing_field):
+            return getattr(self, backing_field)
+        else:
+            return defaults[name]
+
+    def setter(self, val):
+        setattr(self, backing_field, val)
+
+    # Create the property
+    prop = property(getter).setter(setter)
+
+    # Install some documentation
+    prop.__doc__ = docs[name]
+    return prop
+
+
+def autoprop(cls):
+    for k, v in defaults.items():
+        setattr(cls, k, make_property(k))
+    return cls
+
+
+@autoprop
+class Test:
+    pass
+
+if __name__ == '__main__':
+    t = Test()
+    t2 = Test()
+    print("Stored values in t", t.__dict__)
+    print("Properties on t", dir(t))
+    print("Check that default values are there by default")
+    assert t.foo == 5
+    assert t.bar == ['hello', 'world']
+    print("Assign and check the assignment holds")
+    t.foo = 20
+    assert t.foo == 20
+    print("Check that assignment on t didn't change the defaulting on t2 somehow")
+    assert t2.foo == 5
+    print("Check that changing the default changes the value on t2")
+    defaults['foo'] = 27
+    assert t2.foo == 27
+    print("But t1 keeps the value it was assigned")
+    assert t.foo == 20
+    print(""""Note that 'help(Test.foo)' and help('Test.bar') will show 
+    the docs we installed are available in the help system""")
+#endregion
+
 # #region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # print = Linear(variable=[[1,1],[2,2]])

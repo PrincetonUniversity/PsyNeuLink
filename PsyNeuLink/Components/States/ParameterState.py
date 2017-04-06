@@ -798,8 +798,15 @@ def _instantiate_parameter_states(owner, context=None):
 
     # Instantiate parameterState for each param in user_params (including all params in function_params dict),
     #     using its value as the state_spec
-    for param_name, param_value in owner.user_params.items():
+    # MODIFIED 4/1/17 OLD:
+    # for param_name, param_value in owner.user_params.items():
+    # MODIFIED 4/1/17 NEW:  [USE user_params_for_instantation SINCE user_params MAY HAVE BEEN OVERWRITTEN
+    #                        WHEN DEFAULTS WERE ASSIGNED TO paramsCurrent in Component.__init__
+    #                        WHICH WILL ASSIGN VALUES TO THE PROPRETIES OF EACH PARAM THAT, IN TURN, WILL
+    #                        UPDATE THEIR VALUES IN USER_PARAMS
+    for param_name, param_value in owner.user_params_for_instantiation.items():
         _instantiate_parameter_state(owner, param_name, param_value, context=context)
+    # MODIFIED 4/1/17 END
 
 
 def _instantiate_parameter_state(owner, param_name, param_value, context):
