@@ -2707,7 +2707,7 @@ class System_Base(System):
                 edge_label = edge_name
                 #### CHANGE MADE HERE ###
                 # if rcvr is learning mechanism, draw arrow with learning color
-                if isinstance(rcvr[0], LearningMechanism):
+                if isinstance(rcvr[0], LearningMechanism) or isinstance(rcvr[0], ObjectiveMechanism):
                     arrow_color=learning_color
                 else:
                     arrow_color="black"
