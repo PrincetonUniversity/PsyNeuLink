@@ -7,9 +7,9 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
 
-# import random
-# random.seed(0)
-# np.random.seed(0)
+import random
+random.seed(0)
+np.random.seed(0)
 
 # Preferences:
 DDM_prefs = ComponentPreferenceSet(
@@ -70,7 +70,6 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()
-# mySystem.show_graph()
 
 # Specify stimuli for run:
 # #   two ways to do so:
@@ -119,5 +118,6 @@ mySystem.controller.reportOutputPref = False
 # # mySystem.run(inputs=reversed_trial_list,
 mySystem.run(inputs=stim_list_dict,
              call_before_trial=show_trial_header,
-             call_after_time_step=show_results
+             # call_after_time_step=show_results
+             call_after_trial=show_results
              )
