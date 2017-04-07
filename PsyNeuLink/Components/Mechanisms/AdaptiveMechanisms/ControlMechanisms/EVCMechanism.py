@@ -940,17 +940,17 @@ class EVCMechanism(ControlMechanism_Base):
             # MODIFIED 2/22/17: [DEPRECATED -- weights and exponents should be specified as params of the function]
             if isinstance(item, tuple):
                 if len(item) != 3:
-                    raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
+                    raise EVCError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
                                          "has {2} items;  it should be 3".
-                                         format(item, self.name, len(state_spec)))
+                                         format(item, self.name, len(item)))
                 if not isinstance(item[1], numbers.Number):
-                    raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
+                    raise EVCError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
                                          "must be a number".
-                                         format(item, self.name, state_spec[0]))
+                                         format(item[1], self.name))
                 if not isinstance(item[2], numbers.Number):
-                    raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
+                    raise EVCError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
                                          "must be a number".
-                                         format(item, self.name, state_spec[0]))
+                                         format(item[0], self.name))
                 # Set state_spec to the output_state item for validation below
                 item = item[0]
             # MODIFIED 2/22/17 END
@@ -1278,7 +1278,8 @@ class EVCMechanism(ControlMechanism_Base):
         self._update_predicted_input()
         # self.system._cache_state()
 
-        #region CONSTRUCT SEARCH SPACE
+        # CONSTRUCT SEARCH SPACE
+
         control_signal_sample_lists = []
         control_signals = self.controlSignals
 
@@ -1294,15 +1295,19 @@ class EVCMechanism(ControlMechanism_Base):
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
         self.controlSignalSearchSpace = \
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
-        #endregion
+
+        # EXECUTE SEARCH
+
+        # IMPLEMENTATION NOTE:
+        # self.system._store_system_state()
 
         allocation_policy = self.function(controller=self,
                                           variable=variable,
                                           runtime_params=runtime_params,
                                           time_scale=time_scale,
                                           context=context)
-
-        # self.system._restore_state()
+        # IMPLEMENTATION NOTE:
+        # self.system._restore_system_state()
 
         return allocation_policy
 

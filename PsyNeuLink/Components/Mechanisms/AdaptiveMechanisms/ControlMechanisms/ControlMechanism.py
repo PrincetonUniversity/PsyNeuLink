@@ -358,6 +358,7 @@ class ControlMechanism_Base(Mechanism_Base):
         for item in to_be_deleted_outputStates:
             del DefaultController.outputStates[item.name]
 
+
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """Add outputState and assign as sender to requesting ControlProjection
 
@@ -392,7 +393,8 @@ class ControlMechanism_Base(Mechanism_Base):
             output_state_index = len(self.outputStates)
         except AttributeError:
             output_state_index = 0
-        output_state_name = projection.receiver.name + '_ControlSignal'
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
+        output_state_name = projection.receiver.name + '_' + ControlSignal.__name__
         output_state_value = self.allocation_policy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal

@@ -68,8 +68,8 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   name='EVC Test System')
 
 # Show characteristics of system:
-mySystem.show()
-mySystem.controller.show()
+# mySystem.show()
+# mySystem.controller.show()
 
 # Specify stimuli for run:
 # #   two ways to do so:
@@ -82,8 +82,12 @@ mySystem.controller.show()
 # # stim_list_dict = {Input:[0.5, 0.123],
 # #               Reward:[20, 20]}
 
-stim_list_dict = {Input:[0.5, 0.123],
-                  Reward:[20, 20]}
+# stim_list_dict = {Input:[0.5, 0.123],
+#                   Reward:[20, 20]}
+
+stim_list_dict = {Input:[0.5],
+                  Reward:[20]}
+
 
 # #   - as a list of trials;
 # #     each item in the list contains the stimuli for a given trial,
