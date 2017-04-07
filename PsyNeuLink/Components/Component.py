@@ -13,45 +13,159 @@
 
 **[DOCUMENTATION STILL UNDER CONSTRUCTION]**
 
+.. _Component_Overview:
+
+Overview
+--------
+
+Component is the base class for all of the objects used to create compositions (`processes <Process>` or 
+`systems <System>`) in PsyNeuLink.  It defines a common set of attributes possessed, and methods used by all 
+component objects.
+
+.. _Component_Creation:
+
+Creating a Component
+--------------------
+
+A Component is never created directly.  However, its __init__ method is always called when a subclass is instantiated;
+that, in turn, calls a standard set of methods (listed `below <Component_Methods>`) as part of the initialization 
+procedure.
+
+.. _Component_Structure:
+
+Component Structure
+-------------------
+
+.. _Component_Attributes:
+
+Component Attributes
+~~~~~~~~~~~~~~~~~~~~
+
+Every component has the following set of core attributes that govern its operation:
+
+.. _Component_Variable:
+
+* `variable <Component.variable>` - the value of this is used as the input to its `function <Component.function>`.  
+  Specification of the variable in the constructor for a component determines both its format (e.g., whether it's value 
+  is numeric, its dimensionality and shape if it is an array, etc.) as well as its default value (the value used when 
+  the component is executed and no input is provided). 
+
+.. _Component_Function:
+
+* `function <Component.function>` - this determines the computation that a component carries out.  Typically, 
+  this is a PsyNeuLink `Function <Function>` (itself a PsyNeuLink component, although the `function` of a `Function` 
+  is always a method or Python function).  All components have a default function (that uses a default set of 
+  parameters), that is used if the function is not specified.  The `function <Component.function>` and/or its parameters 
+  can be specified in the `function <Component.function>` argument of the constructor for the component using one of the 
+  following: 
+
+    * **class** - this will create a default instance of the specified subclass, using default values for its 
+      parameters.   
+    ..    
+    * `Function` - this can be either a existing `Function` object or a constructor for one.  This will be used as a
+      template to create a `Function` object for the component.  That will be assigned as the `function_object`  
+      attribute of the component, its :keyword:`function` will be assigned as the 'function <Component.function>` 
+      attribute of the component, and its parameters will be assigned as the `function_params` attribute of the
+      component.
+    
+      ..note::
+        In the current implementation of PsyNeuLink, if a `Function <Function>` object (or the constructor for one) is 
+        used to specify the `function <Component.function>` attribute of a component, the object specified (or created)
+        is used to specify the attributes of the componet, but is not assigned itself to the component.  This is so 
+        that `Functions <Function>` can be used as templates for more than one component, without being assigned
+        simultaneously to multiple components.
+    
+  A `function <Component.function>` can also be specified in an entry of a 
+  `parameter specification dictionary <Mechanism_Creation>`  
+      
+    
+
+    * using the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary for the ``params`` argument of the object,
+      as in the example below::
+    
+         EXAMPLE HERE
+    
+    EXPLAIN ABOUT "HARDCODED" FUNCTIONS (ONLY ONE STANDARD ONE SUPPORTED, ITS PARAMS APPEAR AS ARGUMENTS FOR THE OBJECT
+    IN ITS CONSTRUCTOR) VS. THOSE FOR WHICH THE FUNCTION IS AN ARGUMENT (SEVERAL POSSIBLE FUNCTIONS TO CHOOSE FROM,
+    THE ARGUMENTS OF WHICH MAY VARY, AND THUS MUST BE SPECIFID WITHIN ITS CONSTRUCTOR OR THE PARAMS DICT), AS EXPLAINED
+    BELOW.
+    
+    Accordingly, parameters of a :keyword:`function` can be specified in two ways:
+    
+    * in the **constructor** for the function (when this is used as the value of a ``function`` argument of the object,
+      as in the example below::
+    
+        my_mechanism = SomeMechanism(function=SomeFunction(SOME_PARAM=1, SOME_OTHER_PARAM=2)
+    
+    * in the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary used for the ``params`` argument of the object,
+      as in the example below::
+    
+        my_mechanism = SomeMechanism(function=SomeFunction
+                                     params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
+    
+    - ??WHY EVER USE FUNCTION AND FUNCTION_PARAMS:  TO CUSTOMIZE/OVERRIDE HARD-CODED FUNCTIONS OR THEIR PARAMETERS
+    - SEE :ref:`ParameterState_Specifying_Parameters` for details of parameter specification.
+
+* **function_object**
+
+.. _Component_Function_Object:
+    
+    Function Object
+    ^^^^^^^^^^^^^^^    
+    STUFF HERE
+
+* **user_params**
+* **value**
+* **name**
+* **params**
+* **prefs**
+
+.. _Component_Methods:
+
+Component Methods
+~~~~~~~~~~~~~~~~~
+
+There are two categories 
+
+.. _Component_Initialization_Methods:
+
+Initialization Methods
+^^^^^^^^^^^^^^^^^^^^^^
+
+These methods can be overridden by the subclass to customize the initialization process, but should always call the
+corresponding method of the component (using ``super``) to insure full initialization.
+
+_validate_variable
+_validation_params
+_validate_function
+_assign_defaults
+_instantiate_attributes_before_function
+_instantiate_function
+_instantiate_attributes_after_function
+
+.. _Component_Callable_Methods:
+
+Callable Methods
+^^^^^^^^^^^^^^^^
+
+initialize
+assign_params
+reset_params
+execute
+
+.. _Component_Execution:
+
+Execution
+~~~~~~~~~
+
+.. _Component_Class_Reference:
+
+Calls the ``execute`` method of the subclass that, in turn, calls its ``function``.
+
+Class Reference
+---------------
 
 COMMENT:
-.. _Component_Specifying_Functions_and_Parameters:
-
-Specifying Functions and Their Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In general, the function of an object can be specified in two ways:
-* using its constructor as the value of the object's ``function`` argument, as in the example below::
-
-     EXAMPLE HERE
-
-* using the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary for the ``params`` argument of the object,
-  as in the example below::
-
-     EXAMPLE HERE
-
-EXPLAIN ABOUT "HARDCODED" FUNCTIONS (ONLY ONE STANDARD ONE SUPPORTED, ITS PARAMS APPEAR AS ARGUMENTS FOR THE OBJECT
-IN ITS CONSTRUCTOR) VS. THOSE FOR WHICH THE FUNCTION IS AN ARGUMENT (SEVERAL POSSIBLE FUNCTIONS TO CHOOSE FROM,
-THE ARGUMENTS OF WHICH MAY VARY, AND THUS MUST BE SPECIFID WITHIN ITS CONSTRUCTOR OR THE PARAMS DICT), AS EXPLAINED
-BELOW.
-
-Accordingly, parameters of a :keyword:`function` can be specified in two ways:
-
-* in the **constructor** for the function (when this is used as the value of a ``function`` argument of the object,
-  as in the example below::
-
-    my_mechanism = SomeMechanism(function=SomeFunction(SOME_PARAM=1, SOME_OTHER_PARAM=2)
-
-* in the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary used for the ``params`` argument of the object,
-  as in the example below::
-
-    my_mechanism = SomeMechanism(function=SomeFunction
-                                 params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
-
-- ??WHY EVER USE FUNCTION AND FUNCTION_PARAMS:  TO CUSTOMIZE/OVERRIDE HARD-CODED FUNCTIONS OR THEIR PARAMETERS
-- SEE :ref:`ParameterState_Specifying_Parameters` for details of parameter specification.
-COMMENT
-
 
 This module defines the Component abstract class
 
@@ -69,6 +183,7 @@ It also contains:
             ControlProjection
             LearningProjection
     Function
+COMMENT
 
 """
 
@@ -307,7 +422,7 @@ class Component(object):
                  name=None,
                  prefs=None,
                  context=None):
-        """Assign system-level default preferences, enforce required, validate and instantiate params and execute method
+        """Assign default preferences; enforce required params; validate and instantiate params and execute method
 
         Initialization arguments:
         - variable_default (anything): establishes type for the variable, used for validation

@@ -85,6 +85,7 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Mechanisms</a><ul>
@@ -257,13 +258,13 @@ and <a class="reference internal" href="OutputState.html#outputstates-creation">
 specified by the mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute.  Every type of mechanism has at least one
 (primary) function, and some have additional (auxiliary) ones (for example, the <code class="xref any docutils literal"><span class="pre">EVCMechanism</span></code>).
 Mechanism functions are generally from the PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> class.  Most mechanisms allow their function to be
-specified, using the <a class="reference internal" href="Function.html#Function.Exponential.function" title="Function.Exponential.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> argument of the mechanism&#8217;s contructor.  The function can be specified using the name of
+specified, using the <a class="reference internal" href="Function.html#Function.SoftMax.function" title="Function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> argument of the mechanism&#8217;s contructor.  The function can be specified using the name of
 <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> class, or its constructor (including arguments that specify its parameters).  For example, the
 <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> can be specified to be the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Notice that the parameters of the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> (in this case, <a class="reference internal" href="Function.html#Function.SoftMax.gain" title="Function.SoftMax.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> and <a class="reference internal" href="Function.html#Function.NavarroAndFuss.bias" title="Function.NavarroAndFuss.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a>) can be specified by including
+<p>Notice that the parameters of the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> (in this case, <a class="reference internal" href="Function.html#Function.Logistic.gain" title="Function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> and <a class="reference internal" href="Function.html#Function.Logistic.bias" title="Function.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a>) can be specified by including
 them in its constructor.  Some mechanisms support only a single function.  In that case, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>
 argument is not available in the mechanism&#8217;s constructor, but it does include arguments for the function&#8217;s
 parameters.  For example, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a <code class="xref any docutils literal"><span class="pre">ComparatorMechanism</span></code> is always the <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function,
@@ -429,7 +430,7 @@ for the system to which the mechanism belongs (see <a class="reference internal"
 <span id="mechanism-role-in-processes-and-systems"></span><h3>Role in Processes and Systems<a class="headerlink" href="#role-in-processes-and-systems" title="Permalink to this headline">¶</a></h3>
 <p>Mechanisms that are part of one or more processes are assigned designations that indicate the
 <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">role</span></a> they play in those processes, and similarly for <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">role</span></a> they play in
-any systems to which they belong. These designations are listed in the mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.processes" title="Mechanism.Mechanism_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> and <a class="reference internal" href="Process.html#Process.Process_Base.systems" title="Process.Process_Base.systems"><code class="xref any py py-attr docutils literal"><span class="pre">systems</span></code></a>
+any systems to which they belong. These designations are listed in the mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.processes" title="Mechanism.Mechanism_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> and <a class="reference internal" href="#Mechanism.Mechanism_Base.systems" title="Mechanism.Mechanism_Base.systems"><code class="xref any py py-attr docutils literal"><span class="pre">systems</span></code></a>
 attributes, respectively.  Any mechanism designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> receives a projection to its primary inputState from
 the process(es) to which it belongs.  Accordingly, when the process (or system of which the process is a part) is
 executed, those mechainsms receive the input provided to the process (or system).  The <a class="reference internal" href="#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a> of any mechanism designated as the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism for a process is assigned as
@@ -665,6 +666,34 @@ a default is assigned by <code class="xref any docutils literal"><span class="pr
 Specified in the <a class="reference internal" href="#Mechanism.Mechanism_Base.prefs" title="Mechanism.Mechanism_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the mechanism;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Mechanism.Mechanism_Base.plot">
+<code class="descname">plot</code><span class="sig-paren">(</span><em>x_range=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a plot of the mechanism&#8217;s function using the specified parameter values. See (see
+<a class="reference internal" href="DDM.html#DDM.DDM.plot" title="DDM.DDM.plot"><code class="xref any py py-meth docutils literal"><span class="pre">DDM.plot</span></code></a> for details of the animated DDM plot).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x_range</strong> (<em>List</em>) &#8211; <dl class="docutils">
+<dt>specify the range over which the function should be plotted. x_range must be provides as a list containing</dt>
+<dd>two floats: lowest value of x and highest value of x.  Default values depend on the mechanism&#8217;s function.</dd>
+</dl>
+<ul class="simple">
+<li>Logistic Function: default x_range = [-5.0, 5.0]</li>
+<li>Exponential Function: default x_range = [0.1, 5.0]</li>
+<li>All Other Functions: default x_range = [-10.0, 10.0]</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>mechanism&#8217;s function plot</strong> &#8211; Matplotlib window of the mechanism&#8217;s function plotted with specified parameters over the specified x_range</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Matplotlib window</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
