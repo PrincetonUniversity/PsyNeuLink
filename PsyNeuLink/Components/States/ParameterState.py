@@ -800,10 +800,11 @@ def _instantiate_parameter_states(owner, context=None):
     #     using its value as the state_spec
     # MODIFIED 4/1/17 OLD:
     # for param_name, param_value in owner.user_params.items():
-    # MODIFIED 4/1/17 NEW:  [USE user_params_for_instantation SINCE user_params MAY HAVE BEEN OVERWRITTEN
-    #                        WHEN DEFAULTS WERE ASSIGNED TO paramsCurrent in Component.__init__
-    #                        WHICH WILL ASSIGN VALUES TO THE PROPRETIES OF EACH PARAM THAT, IN TURN, WILL
-    #                        UPDATE THEIR VALUES IN USER_PARAMS
+    # MODIFIED 4/1/17 NEW:
+    # IMPLEMENTATION NOTE:  Use user_params_for_instantiation since user_params may have been overwritten
+    #                       when defaults were assigned to paramsCurrent in Component.__init__,
+    #                       (since that will assign values to the properties of each param;
+    #                       and that, in turn, will overwrite their current values with the defaults from paramsCurrent)
     for param_name, param_value in owner.user_params_for_instantiation.items():
         _instantiate_parameter_state(owner, param_name, param_value, context=context)
     # MODIFIED 4/1/17 END

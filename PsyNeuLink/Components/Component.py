@@ -72,6 +72,7 @@ It also contains:
 
 """
 
+from collections import OrderedDict
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 
@@ -637,11 +638,15 @@ class Component(object):
                 continue
 
         # ASSIGN ARG VALUES TO params dicts
-        params = {}       # this is for final params that will be returned
-        params_arg = {}   # this captures any values specified in a params arg, that are used to override arg values
+
+        # IMPLEMENTATION NOTE:  Use OrderedDicts for params (as well as user_params and user_param_for_instantiation)
+        #                       to insure a consistent order of retrieval (e.g., EVC ControlSignalGridSearch);
+        params = OrderedDict() # this is for final params that will be returned;
+        params_arg = {}        # this captures values specified in a params arg, that are used to override arg values
         ignore_FUNCTION_PARAMS = False
 
-        for arg in kwargs:
+        # Sort kwargs so that params are entered in params OrderedDict in a consistent (alphabetical) order
+        for arg in sorted(list(kwargs.keys())):
 
             # Put any values (presumably in a dict) passed in the "params" arg in params_arg
             if arg is kwParams:
@@ -747,7 +752,8 @@ class Component(object):
         #         and the setter assigns those values to the user_params
         #    • therefore, assignments of paramInstance defaults to paramsCurrent in __init__ overwrites the
         #         the user-specified vaules (from the constructor args) in user_params
-        self.user_params_for_instantiation = {}
+        self.user_params_for_instantiation = OrderedDict()
+        # self.user_params_for_instantiation = {}
         from collections import Iterable
         for param_name, param_value in self.user_params.items():
             if isinstance(param_value, (str, np.ndarray, tuple)):
@@ -768,6 +774,8 @@ class Component(object):
                         self.user_params_for_instantiation[param_name].append(param_value[i])
             else:
                 self.user_params_for_instantiation[param_name] = param_value
+
+        TEST = True
 
 
         # Provide opportunity for subclasses to filter final set of params in class-specific way
