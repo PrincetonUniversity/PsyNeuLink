@@ -31,6 +31,14 @@ OUTCOME = 'outcome'
 COSTS = 'costs'
 
 
+class EVCAuxiliaryError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
+
+
 class EVCAuxiliaryFunction(Function_Base):
     """Base class for EVC auxiliary functions
     """
@@ -161,7 +169,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         try:
             controller = kwargs[CONTROLLER]
         except KeyError:
-            raise EVCError("Call to ControlSignalGridSearch() missing controller argument")
+            raise EVCAuxiliaryError("Call to ControlSignalGridSearch() missing controller argument")
         try:
             variable = kwargs[VARIABLE]
         except KeyError:
@@ -255,6 +263,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             EVC_values = np.array([])
             EVC_policies = np.array([[]])
 
+            # # TEST PRINT:
+            # print("\nEVC SIMULATION\n")
+
             for allocation_vector in controller.controlSignalSearchSpace[start:end,:]:
             # for iter in range(rank, len(controller.controlSignalSearchSpace), size):
             #     allocation_vector = controller.controlSignalSearchSpace[iter,:]:
@@ -323,13 +334,13 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
                     controller.EVC_values = EVC_values
                     controller.EVC_policies = EVC_policies
-            # # TEST PRINT:
-            # import re
-            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
-            #       format(re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[0])),
-            #              re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[1])),
-            #              re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[2]))),
-            #       flush=True)
+            # TEST PRINT:
+            import re
+            print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
+                  format(re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[0])),
+                         re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[1])),
+                         re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[2]))),
+                  flush=True)
 
             # FROM MIKE ANDERSON (ALTERNTATIVE TO allgather:  REDUCE USING A FUNCTION OVER LOCAL VERSION)
             # a = np.random.random()
@@ -363,7 +374,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         #endregion
 
-        # TEST PRINT:
+        # # TEST PRINT:
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(controller.outputState.value))
 
         #region ASSIGN AND RETURN allocation_policy
@@ -392,6 +403,11 @@ def _compute_EVC(args):
     """
 
     ctlr, allocation_vector, runtime_params, time_scale, context = args
+
+    # # TEST PRINT:
+    # print("Allocation vector: {}\nPredicted input: {}".
+    #       format(allocation_vector, [mech.outputState.value for mech in ctlr.predictedInput]),
+    #       flush=True)
 
     ctlr.run_simulation(inputs=ctlr.predictedInput,
                         allocation_vector=allocation_vector,

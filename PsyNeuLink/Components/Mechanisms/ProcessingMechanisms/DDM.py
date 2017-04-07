@@ -507,21 +507,21 @@ class DDM(ProcessingMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_input_value: object = None,
                  # function:tc.enum(type(BogaczEtAl), type(NavarroAndFuss))=BogaczEtAl(drift_rate=1.0,
-                 function=BogaczEtAl(drift_rate=1.0,
-                                     starting_point=0.0,
-                                     threshold=1.0,
-                                     noise=0.5, 
-                                     t0=.200),
-                 params=None,
-                 time_scale=TimeScale.TRIAL,
-                 name=None,
-                 plot_threshold=None,
+                 function: object = BogaczEtAl(drift_rate=1.0,
+                                               starting_point=0.0,
+                                               threshold=1.0,
+                                               noise=0.5,
+                                               t0=.200),
+                 params: object = None,
+                 time_scale: object = TimeScale.TRIAL,
+                 name: object = None,
+                 plot_threshold: object = None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
-                 prefs:is_pref_set=None,
+                 prefs: object = None,
                  # context=None):
-                 context=componentType+INITIALIZING):
+                 context: object = componentType + INITIALIZING) -> object:
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -721,9 +721,10 @@ class DDM(ProcessingMechanism_Base):
             # self.outputValue = [None] * len(self.paramsCurrent[OUTPUT_STATES])
 
             # # TEST PRINT:
-            # print ("\nDDM RUN")
-            # print ("stimulus: {}".format(self.inputState.value))
-            # print ("control signal: {}\n".format(self.parameterStates[DRIFT_RATE].value))
+            # print("\nDDM RUN")
+            # print("stimulus: {}".format(self.inputState.value))
+            # print("drift_rate control signal: {}".format(self.parameterStates[DRIFT_RATE].value))
+            # print("threshold control signal: {}".format(self.parameterStates[THRESHOLD].value))
 
             # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
             drift_rate = float((self.variable * self.parameterStates[DRIFT_RATE].value))
@@ -759,6 +760,9 @@ class DDM(ProcessingMechanism_Base):
                 return_value[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[DDM_Output.DECISION_VARIABLE.value] = threshold
+
+            # # TEST PRINT:
+            # print("DDM return_value: {}".format(return_value[0]))
 
             return return_value
 
