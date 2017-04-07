@@ -1502,6 +1502,9 @@ class Component(object):
                         target_set[param_name] = param_value
                     else:
                         target_set[param_name] = param_value.copy()
+            # MODIFIED 4/3/17 KM adding list/array parameter for noise
+            elif isinstance(param_value, (list, np.ndarray)):
+                target_set[param_name] = param_value
 
             # If param is a function_type, allow any other function_type
             # MODIFIED 1/9/16 NEW:
