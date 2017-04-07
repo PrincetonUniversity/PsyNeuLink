@@ -64,9 +64,9 @@ EVCMechanism-1
 - input:  0.5
 - params:
 	function: BogaczEtAl
-		drift_rate: 1.0
+		drift_rate: 0.5
 		noise: 0.5
-		starting_point: 0
+		starting_point: 0.0
 		t0: 0.45
 		threshold: 1.0
 	plot_threshold: None
@@ -77,37 +77,27 @@ EVCMechanism-1
 - input:  0.5
 - params:
 	function: Integrator
-		initializer: 0
+		initializer: array([0])
 		noise: 0.0
 		rate: 0.5
 		time_step_size: 1.0
 		weighting: apaptive
 	monitor_for_control: None
-	output_states: 'Input_PredictionMechanismOutput'
 - output: 0.25
-
-RESULTS (time step 0): 
-	Drift rate control signal (from EVC): 1.0
-	Threshold control signal (from EVC): 1.0
-	DDM_decision_variable: 1.0
-	DDM_probability_lowerBound: 0.018
-	DDM_probability_upperBound: 0.982
-	DDM_response_time: 2.38
 
 'Reward_PredictionMechanism'  executed:
 - input:  20.0
 - params:
 	function: Integrator
-		initializer: 0
+		initializer: array([0])
 		noise: 0.0
 		rate: 0.5
 		time_step_size: 1.0
 		weighting: apaptive
 	monitor_for_control: None
-	output_states: 'Reward_PredictionMechanismOutput'
 - output: 10.0
 
-RESULTS (time step 1): 
+RESULTS (time step 2): 
 	Drift rate control signal (from EVC): 1.0
 	Threshold control signal (from EVC): 1.0000000000000002
 	DDM_decision_variable: 1.0
@@ -121,50 +111,40 @@ RESULTS (time step 1):
 - input:  0.123
 - params:
 	function: BogaczEtAl
-		drift_rate: 1.0
+		drift_rate: 0.0123
 		noise: 0.5
-		starting_point: 0
+		starting_point: 0.0
 		t0: 0.45
-		threshold: 1.0
+		threshold: 1.0000000000000002
 	plot_threshold: None
 	time_scale: TimeScale.TRIAL
-- output: 0.1
+- output: 1.0
 
 'Input_PredictionMechanism'  executed:
 - input:  0.123
 - params:
 	function: Integrator
-		initializer: 0
+		initializer: array([0])
 		noise: 0.0
 		rate: 0.5
 		time_step_size: 1.0
 		weighting: apaptive
 	monitor_for_control: None
-	output_states: 'Input_PredictionMechanismOutput'
 - output: 0.186
-
-RESULTS (time step 2): 
-	Drift rate control signal (from EVC): 0.1
-	Threshold control signal (from EVC): 0.1
-	DDM_decision_variable: 0.1
-	DDM_probability_lowerBound: 0.498
-	DDM_probability_upperBound: 0.502
-	DDM_response_time: 0.49
 
 'Reward_PredictionMechanism'  executed:
 - input:  20.0
 - params:
 	function: Integrator
-		initializer: 0
+		initializer: array([0])
 		noise: 0.0
 		rate: 0.5
 		time_step_size: 1.0
 		weighting: apaptive
 	monitor_for_control: None
-	output_states: 'Reward_PredictionMechanismOutput'
 - output: 15.0
 
-RESULTS (time step 3): 
+RESULTS (time step 4): 
 	Drift rate control signal (from EVC): 1.0
 	Threshold control signal (from EVC): 1.0000000000000002
 	DDM_decision_variable: 1.0
@@ -186,11 +166,11 @@ RUNNING Multilayer Learning Test Script.py
 - input: [[[-1, 30]]]
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Layer ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
 - input: [ -1.  30.]
 
 'System_Base-1' learning completed:
-- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.834 -0.871 0.1
+- error for target 'Output Layer ObjectiveMechanism' processingmechanism_base': -0.834 -0.871 0.1
 
 'System_Base-1' completed ***********(time_step 0)
 - output for Output Layer: '0.834' '0.871' '0.9'
@@ -234,11 +214,11 @@ ACTIVITY FROM OLD WEIGHTS:
 'System_Base-1' executing ********** (time_step 1) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Layer ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
 - input: [ -1.  30.]
 
 'System_Base-1' learning completed:
-- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.78 -0.833 0.0984
+- error for target 'Output Layer ObjectiveMechanism' processingmechanism_base': -0.78 -0.833 0.0984
 
 'System_Base-1' completed ***********(time_step 1)
 - output for Output Layer: '0.78' '0.833' '0.902'
@@ -282,11 +262,11 @@ ACTIVITY FROM OLD WEIGHTS:
 'System_Base-1' executing ********** (time_step 2) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Layer ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
 - input: [ -1.  30.]
 
 'System_Base-1' learning completed:
-- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.702 -0.777 0.0969
+- error for target 'Output Layer ObjectiveMechanism' processingmechanism_base': -0.702 -0.777 0.0969
 
 'System_Base-1' completed ***********(time_step 2)
 - output for Output Layer: '0.702' '0.777' '0.903'
@@ -330,11 +310,11 @@ ACTIVITY FROM OLD WEIGHTS:
 'System_Base-1' executing ********** (time_step 3) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Layer ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
 - input: [ -1.  30.]
 
 'System_Base-1' learning completed:
-- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.603 -0.7 0.0955
+- error for target 'Output Layer ObjectiveMechanism' processingmechanism_base': -0.603 -0.7 0.0955
 
 'System_Base-1' completed ***********(time_step 3)
 - output for Output Layer: '0.603' '0.7' '0.905'
@@ -378,11 +358,11 @@ ACTIVITY FROM OLD WEIGHTS:
 'System_Base-1' executing ********** (time_step 4) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Layer ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
 - input: [ -1.  30.]
 
 'System_Base-1' learning completed:
-- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.497 -0.6 0.0939
+- error for target 'Output Layer ObjectiveMechanism' processingmechanism_base': -0.497 -0.6 0.0939
 
 'System_Base-1' completed ***********(time_step 4)
 - output for Output Layer: '0.497' '0.6' '0.906'
@@ -426,11 +406,11 @@ ACTIVITY FROM OLD WEIGHTS:
 'System_Base-1' executing ********** (time_step 5) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Layer ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
 - input: [ -1.  30.]
 
 'System_Base-1' learning completed:
-- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.406 -0.495 0.0921
+- error for target 'Output Layer ObjectiveMechanism' processingmechanism_base': -0.406 -0.495 0.0921
 
 'System_Base-1' completed ***********(time_step 5)
 - output for Output Layer: '0.406' '0.495' '0.908'
@@ -474,11 +454,11 @@ ACTIVITY FROM OLD WEIGHTS:
 'System_Base-1' executing ********** (time_step 6) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Layer ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
 - input: [ -1.  30.]
 
 'System_Base-1' learning completed:
-- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.338 -0.404 0.0902
+- error for target 'Output Layer ObjectiveMechanism' processingmechanism_base': -0.338 -0.404 0.0902
 
 'System_Base-1' completed ***********(time_step 6)
 - output for Output Layer: '0.338' '0.404' '0.91'
@@ -522,11 +502,11 @@ ACTIVITY FROM OLD WEIGHTS:
 'System_Base-1' executing ********** (time_step 7) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Layer ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
 - input: [ -1.  30.]
 
 'System_Base-1' learning completed:
-- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.289 -0.336 0.0883
+- error for target 'Output Layer ObjectiveMechanism' processingmechanism_base': -0.289 -0.336 0.0883
 
 'System_Base-1' completed ***********(time_step 7)
 - output for Output Layer: '0.289' '0.336' '0.912'
@@ -570,11 +550,11 @@ ACTIVITY FROM OLD WEIGHTS:
 'System_Base-1' executing ********** (time_step 8) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Layer ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
 - input: [ -1.  30.]
 
 'System_Base-1' learning completed:
-- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.253 -0.288 0.0864
+- error for target 'Output Layer ObjectiveMechanism' processingmechanism_base': -0.253 -0.288 0.0864
 
 'System_Base-1' completed ***********(time_step 8)
 - output for Output Layer: '0.253' '0.288' '0.914'
@@ -618,11 +598,11 @@ ACTIVITY FROM OLD WEIGHTS:
 'System_Base-1' executing ********** (time_step 9) 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Layer ObjectiveMechanism' 'Output Weights LearningMechanism' 'Middle Weights LearningMechanism' 'Input Weights LearningMechanism']
 - input: [ -1.  30.]
 
 'System_Base-1' learning completed:
-- error for target 'Output Weights ObjectiveMechanism' processingmechanism_base': -0.227 -0.253 0.0846
+- error for target 'Output Layer ObjectiveMechanism' processingmechanism_base': -0.227 -0.253 0.0846
 
 'System_Base-1' completed ***********(time_step 9)
 - output for Output Layer: '0.227' '0.253' '0.915'
@@ -888,7 +868,7 @@ Preference:                           Base Value:                         Curren
 - input:  40.0
 - params:
 	function: BogaczEtAl
-		drift_rate: 1.0
+		drift_rate: 40.0
 		noise: 0.5
 		starting_point: 0.0
 		t0: 0.2
@@ -901,7 +881,7 @@ Preference:                           Base Value:                         Curren
 - input:  10.0
 - params:
 	function: BogaczEtAl
-		drift_rate: 2.0
+		drift_rate: 20.0
 		noise: 0.5
 		starting_point: 0.0
 		t0: 0.2
@@ -914,7 +894,7 @@ Preference:                           Base Value:                         Curren
 - input:  20.0
 - params:
 	function: BogaczEtAl
-		drift_rate: 3.0
+		drift_rate: 60.0
 		noise: 0.5
 		starting_point: 0.0
 		t0: 0.2
@@ -938,7 +918,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -955,7 +935,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -972,7 +952,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -989,7 +969,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1006,7 +986,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1023,7 +1003,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1040,7 +1020,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1057,7 +1037,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1074,7 +1054,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1091,7 +1071,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1108,7 +1088,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1125,7 +1105,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1142,7 +1122,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1159,7 +1139,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1176,7 +1156,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1193,7 +1173,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1210,7 +1190,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1227,7 +1207,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1244,7 +1224,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'MappingProjection-25 ObjectiveMechanism' 'MappingProjection-25 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1261,7 +1241,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'MappingProjection-30 ObjectiveMechanism' 'MappingProjection-30 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1284,7 +1264,7 @@ RUNNING Stroop Model Learning Test Script.py
 
 
 ''Color Naming-1' process' executing with:
-- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Hidden-Output Weights ObjectiveMechanism' 'Hidden-Output Weights LearningMechanism' 'Color-Hidden Weights LearningMechanism']
+- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Response-1 ObjectiveMechanism' 'Hidden-Output Weights LearningMechanism' 'Color-Hidden Weights LearningMechanism']
 - input: [[0 0]]
 
 ''Color Naming-1' process' completed:
@@ -1297,7 +1277,7 @@ RUNNING Stroop Model Learning Test Script.py
 
 
 ''Word Reading-1' process' executing with:
-- pathway: ['Words-1' 'Hidden' 'Word-Hidden Weights ObjectiveMechanism' 'Word-Hidden Weights LearningMechanism']
+- pathway: ['Words-1' 'Hidden' 'Hidden ObjectiveMechanism' 'Word-Hidden Weights LearningMechanism']
 - input: [[0 0]]
 
 ''Word Reading-1' process' completed:
@@ -1313,15 +1293,15 @@ RUNNING Stroop Model Learning Test Script.py
 - inputs: [[[1, 1]], [[-2, -2]]]
 
 ''Color Naming-1' process' executing with:
-- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Hidden-Output Weights ObjectiveMechanism' 'Hidden-Output Weights LearningMechanism' 'Color-Hidden Weights LearningMechanism']
+- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Response-1 ObjectiveMechanism' 'Hidden-Output Weights LearningMechanism' 'Color-Hidden Weights LearningMechanism']
 - input: [ 1.  1.]
 
 ''Word Reading-1' process' executing with:
-- pathway: ['Words-1' 'Hidden' 'Word-Hidden Weights ObjectiveMechanism' 'Word-Hidden Weights LearningMechanism']
+- pathway: ['Words-1' 'Hidden' 'Hidden ObjectiveMechanism' 'Word-Hidden Weights LearningMechanism']
 - input: [-2. -2.]
 
 'Stroop Model-1' learning completed:
-- error for target 'Hidden-Output Weights ObjectiveMechanism' processingmechanism_base': 0.487 0.455
+- error for target 'Response-1 ObjectiveMechanism' processingmechanism_base': 0.487 0.455
 
 'Stroop Model-1' system completed ***********(time_step 0)
 - output for Hidden: '0.119' '0.018'
@@ -1354,15 +1334,15 @@ Word-Hidden:
 'Stroop Model-1' system executing ********** (time_step 1) 
 
 ''Color Naming-1' process' executing with:
-- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Hidden-Output Weights ObjectiveMechanism' 'Hidden-Output Weights LearningMechanism' 'Color-Hidden Weights LearningMechanism']
+- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Response-1 ObjectiveMechanism' 'Hidden-Output Weights LearningMechanism' 'Color-Hidden Weights LearningMechanism']
 - input: [ 1.  1.]
 
 ''Word Reading-1' process' executing with:
-- pathway: ['Words-1' 'Hidden' 'Word-Hidden Weights ObjectiveMechanism' 'Word-Hidden Weights LearningMechanism']
+- pathway: ['Words-1' 'Hidden' 'Hidden ObjectiveMechanism' 'Word-Hidden Weights LearningMechanism']
 - input: [-2. -2.]
 
 'Stroop Model-1' learning completed:
-- error for target 'Hidden-Output Weights ObjectiveMechanism' processingmechanism_base': 0.467 0.337
+- error for target 'Response-1 ObjectiveMechanism' processingmechanism_base': 0.467 0.337
 
 'Stroop Model-1' system completed ***********(time_step 1)
 - output for Hidden: '0.557' '0.0264'
@@ -1409,7 +1389,7 @@ RUNNING Mixed NN & DDM script.py
 	function: Linear
 		intercept: 0.0
 		slope: 1.0
-	initial_value: None
+	initial_value: 0 0
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
 - output: -1.0 2.0
@@ -1420,7 +1400,7 @@ RUNNING Mixed NN & DDM script.py
 	function: Logistic
 		bias: 0
 		gain: 1.0
-	initial_value: None
+	initial_value:  0.  0.  0.  0.  0.
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
 - output: 0.611 0.685 0.789 0.793 0.525
@@ -1429,11 +1409,11 @@ RUNNING Mixed NN & DDM script.py
 - input:  3.4
 - params:
 	function: BogaczEtAl
-		drift_rate: 0.5
+		drift_rate: 1.7017263757169907
 		noise: 0.5
 		starting_point: 0.0
 		t0: 0.2
-		threshold: 1
+		threshold: 1.0
 	plot_threshold: None
 	time_scale: TimeScale.TRIAL
 - output: 1.0
@@ -1459,7 +1439,7 @@ RUNNING Mixed NN & DDM script.py
 	function: Linear
 		intercept: 0.0
 		slope: 1.0
-	initial_value: None
+	initial_value: 0 0
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
 - output: 2.0 3.0
@@ -1470,7 +1450,7 @@ RUNNING Mixed NN & DDM script.py
 	function: Logistic
 		bias: 0
 		gain: 1.0
-	initial_value: None
+	initial_value:  0.  0.  0.  0.  0.
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
 - output: 0.967 0.941 0.981 0.889 0.91
@@ -1479,11 +1459,11 @@ RUNNING Mixed NN & DDM script.py
 - input:  4.69
 - params:
 	function: BogaczEtAl
-		drift_rate: 0.5
+		drift_rate: 2.34428625074652
 		noise: 0.5
 		starting_point: 0.0
 		t0: 0.2
-		threshold: 1
+		threshold: 1.0
 	plot_threshold: None
 	time_scale: TimeScale.TRIAL
 - output: 1.0
@@ -1509,7 +1489,7 @@ RUNNING Mixed NN & DDM script.py
 	function: Linear
 		intercept: 0.0
 		slope: 1.0
-	initial_value: None
+	initial_value: 0 0
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
 - output: 5.0 5.0
@@ -1520,7 +1500,7 @@ RUNNING Mixed NN & DDM script.py
 	function: Logistic
 		bias: 0
 		gain: 1.0
-	initial_value: None
+	initial_value:  0.  0.  0.  0.  0.
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
 - output: 0.999 0.995 0.999 0.971 0.993
@@ -1529,11 +1509,11 @@ RUNNING Mixed NN & DDM script.py
 - input:  4.96
 - params:
 	function: BogaczEtAl
-		drift_rate: 0.5
+		drift_rate: 2.4785640328906515
 		noise: 0.5
 		starting_point: 0.0
 		t0: 0.2
-		threshold: 1
+		threshold: 1.0
 	plot_threshold: None
 	time_scale: TimeScale.TRIAL
 - output: 1.0
