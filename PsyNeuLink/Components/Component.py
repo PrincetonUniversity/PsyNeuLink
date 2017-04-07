@@ -775,9 +775,6 @@ class Component(object):
             else:
                 self.user_params_for_instantiation[param_name] = param_value
 
-        TEST = True
-
-
         # Provide opportunity for subclasses to filter final set of params in class-specific way
         # Note:  this is done here to preserve identity of user-specified params assigned to user_params above
         self._filter_params(params)
