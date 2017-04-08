@@ -51,28 +51,35 @@ Every component has the following set of core attributes that govern its operati
 .. _Component_Function:
 
 * **function** - the `function <Component.function>` attribute determines the computation that a component carries out.  
-  Typically, it is the `function <Function.function>` of a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink 
-  component).  All components have a default function (with a default set of parameters), that is used if the 
-  `function <Component.function>` is not otherwise specified.  The `function <Component.function>` can be specified in 
-  the `function <Component.function>` argument of the constructor for the component using one of the following: 
+  It is always a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink component).
+  
+  .. note::
+     The `function <Component.function>` of a component can be assigned either a `Function <Function>` object or any
+     other callable object in python.  If the latter is assigned, it will be "wrapped" in a `UserDefinedFunction`.  
+  
+  All components have a default `function <Component.function>` (with a default set of parameters), that is used if it 
+  is not otherwise specified.  The `function <Component.function>` can be specified in the 
+  function argument of the constructor for the component, using one of the following: 
 
-    * **class** - this will create a default instance of the specified subclass, using default values for its 
-      parameters, as in the following example::   
+    * **class** - this must be a subclass of `Function <Function>`, as in the following example::   
 
         my_component = SomeComponent(function=SomeFunction)
-
-    * **Function** - this can be either an existing `Function` object or a constructor for one.  This will be used as a
-      template to create a `Function` object that is assigned to the `function_object` attribute of the component, 
-      its `function <Function.function>` will be assigned as the 'function <Component.function>` attribute of the 
-      component, and its parameters will be assigned as the `function_params` attribute of the component, as in the
-      following examples::
       
+      This will create a default instance of the specified subclass, using default values for its parameters. 
+    |
+    * **Function** - this can be either an existing `Function <Function>` object or the constructor for one, as in the
+      following examples:
+            
         my_component = SomeComponent(function=SomeFunction)
         
         or
         
         some_function = SomeFunction(some_param=1)
         my_component = SomeComponent(some_function)
+        
+      The specified Function will be used as a template to create a new Function object that is assigned to the 
+      `function_object` attribute of the component, the `function <Function.function>` of which will be assigned as  
+      the 'function <Component.function>` attribute of the component.
     
       .. note::
       
@@ -89,40 +96,63 @@ Every component has the following set of core attributes that govern its operati
 
         my_component = SomeComponent(params={FUNCTION:SomeFunction(some_param=1)})
 
-* **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters for
-  for the component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and its
-  value the value of that parameter.  These can be specified when the component is created in one of the following ways:
+* **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters 
+  for the component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and
+  its value the value of that parameter.  This dictionary is read-only.  The parameters for the 
+  `function_params <Component.function>` can be specified when the component is created in one of the following ways:
   
   * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>` argument,
     as in the following example::
 
         my_component = SomeComponent(function=SomeFunction(some_param=1, some_param=2)
 
-  * in an argument of the **component's constructor** -- if all of the allowable functions for a component share some 
-    or all of their parameters in common, the shared paramters may appear as arguments in the constructor of the 
-    component itself.
+  * in an argument of the **component's constructor** -- if all of the allowable functions for a component's
+    `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear 
+    as arguments in the constructor of the component itself, which can be used to set their values.
 
   * in an entry of a `parameter specification dictionary <Mechanism_Creation>` assigned to the 
-    `params <Component.params>` argument of the constructor for the component, with the keyword FUNCTION_PARAMS as its 
-    key, and a dictionary containing the parameters as its value.  The key for each entry in the FUNCTION_PARAMS 
-    dictionary mst be the name of a parameter, and its value the parameter's value, as in the example below::
+    `params <Component.params>` argument of the constructor for the component.  The entry must use the keyword 
+    FUNCTION_PARAMS as its key, and its value must be a dictionary containing the parameters and their values.
+    The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the 
+    parameter's value, as in the example below::
     
         my_component = SomeComponent(function=SomeFunction
                                      params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
 
-  See `ParameterState_Specifying_Parameters` for details of parameter specification.
+  The parameters for a `function <Component.function>` can be modified after it has been created, by assigning the 
+  new value to the corresponding attribute of the component's `function_object`. 
+  
+  COMMENT:       
+      See `ParameterState_Specifying_Parameters` for details of parameter specification.
+  COMMENT
 
 .. _Component_Function_Object:
 
-* `function_object` - this refers to the `Function` assigned to the component; its `function <Function.function>`
-  is assigned to the `function <Component>` attribute of the component.
+* **function_object** - the `function_object` attribute refers to the `Function` assigned to the component; its 
+  `function <Function.function>` is assigned to the `function <Component>` attribute of the component.  The parameters
+  of the Function can be modified by assigning values to the attributes corresponding to those parameters, as in the
+  example below::
+    
+        my_component = SomeComponent(function=SomeFunction(some_param=1))
+        
+        Change some_param as follows:
 
-* `user_params`
+        my_component.function_object.some_param=2
 
-* `value <Component.value>` - 
+* **user_params** - the `user_params` attribute contains a dictionary of all of the user-modifiable attributes for the
+  the component.  This dictionary is read-only.  Changes to the value of an attribute must be made by referencing it
+  directly.
 
-* **name**
+* **value** - the `value <Component.value>` attribute contains the result (return value) of the component's 
+  `function <Component.function>` after that is called.     
+
+* **name** - the `name <Component.name>` attribute contains the name 
+  EXPLAIN DEFAULT NAMING PROCEDURE HERE.
+
+COMMENT:
 * **params**
+COMMENT
+
 * **prefs**
 
 .. _Component_Methods:
