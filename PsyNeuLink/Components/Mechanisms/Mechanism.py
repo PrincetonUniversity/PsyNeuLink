@@ -75,7 +75,7 @@ above, or using one of the following:
           this can contain any of the standard parameters for instantiating a mechanism
           (see `Mechanism_Parameters`) or ones specific to a particular type of mechanism
           (see documentation for the subclass).  The key must be the name of the argument used to specify
-          the parameter in the mechanism's constructor, and the value a legal value for that parameter.
+          the parameter in the mechanism's constructor, and the value must be a legal value for that parameter.
           The parameter values specified will be used to instantiate the mechanism.  These can be overridden
           during execution by specifying `Mechanism_Runtime_Parameters`, either when calling the mechanism's
           `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method, or where it is

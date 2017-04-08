@@ -9,9 +9,7 @@
 # ********************************************** Component  ************************************************************
 
 
-"""  COMPONENT MODULE
-
-**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
+"""
 
 .. _Component_Overview:
 
@@ -53,9 +51,8 @@ Every component has the following set of core attributes that govern its operati
 .. _Component_Function:
 
 * `function <Component.function>` - this determines the computation that a component carries out.  Typically, 
-  it is the `function <Function.function>` of a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink component, 
-  although the `function <Function.function>` of a `Function <Function>` object is always a method or Python function 
-  (it can't be "turtles" all the way down).  All components have a default function (with a default set of parameters), 
+  it is the `function <Function.function>` of a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink component).  
+  All components have a default function (with a default set of parameters), 
   that is used if the `function <Component.function>` is not otherwise specified.  The `function <Component.function>` 
   can be specified in the `function <Component.function>` argument of the constructor for the component using one of 
   the following: 
@@ -77,18 +74,14 @@ Every component has the following set of core attributes that govern its operati
         
         some_function = SomeFunction(some_param=1)
         my_component = SomeComponent(some_function)
-      
     
-      ..note::
+      .. note::
+      
         In the current implementation of PsyNeuLink, if a `Function <Function>` object (or the constructor for one) is 
         used to specify the `function <Component.function>` attribute of a component, the Function object specified (or 
         created) is used to determine attributes of the Function object created for and assigned to the component, but  
         is not *itself* assigned to the component.  This is so that `Functions <Function>` can be used as templates for 
         more than one component, without being assigned simultaneously to multiple components.
-
-    Following are examples of `function <Component.function>` specifications using the two formats above::
-          
-        my_component = SomeComponent(function=SomeFunction)
 
   A `function <Component.function>` can also be specified in an entry of a 
   `parameter specification dictionary <Mechanism_Creation>` assigned to the `params <Component.params>` argument of the 
@@ -98,21 +91,21 @@ Every component has the following set of core attributes that govern its operati
         my_component = SomeComponent(params={FUNCTION:SomeFunction(some_param=1)})
 
 * `function_param <Component.function>` - Parameters for the `function <Component.function>` of a component can also be 
-  specified in one of two ways:
+  specified in one of several ways:
   
   * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>` argument,
-    as in the following example:
+    as in the following example::
 
-        my_component = SomeComponent(function=SomeFunction(SOME_PARAM=1, SOME_OTHER_PARAM=2)
+        my_component = SomeComponent(function=SomeFunction(some_param=1, some_param=2)
 
   * in an argument of the **component's constructor** -- if all of the allowable functions for a component share some 
-  or all of their parameters in common, the shared paramters may --- for convenience -- appear as arguments in the 
-  constructor of the component itself.
+    or all of their parameters in common, the shared paramters may appear as arguments in the constructor of the 
+    component itself.
 
   * in an entry of a `parameter specification dictionary <Mechanism_Creation>` assigned to the 
-  `params <Component.params>` argument of the constructor for the component, with the keyword FUNCTION_PARAMS as its 
-  key, and a dictionary containing the parameters as its value.  The key for each entry in that dictionary should be 
-  the name of the paramter, and its value the parameter's value, as in the example below::
+    `params <Component.params>` argument of the constructor for the component, with the keyword FUNCTION_PARAMS as its 
+    key, and a dictionary containing the parameters as its value.  The key for each entry in the FUNCTION_PARAMS 
+    dictionary mst be the name of a parameter, and its value the parameter's value, as in the example below::
     
         my_component = SomeComponent(function=SomeFunction
                                      params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
