@@ -146,14 +146,18 @@ Every component has the following set of core attributes that govern its operati
 * **value** - the `value <Component.value>` attribute contains the result (return value) of the component's 
   `function <Component.function>` after that is called.     
 
-* **name** - the `name <Component.name>` attribute contains the name 
-  EXPLAIN DEFAULT NAMING PROCEDURE HERE.
+* **name** - the `name <Component.name>` attribute contains the name assigned to the component when it was created.  
+  If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for 
+  conventions used in assigning default names and handling of duplicate names).
+
+* **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the component when
+  it was created.  If it was not specified, a default is assigned using `classPreferences` defined in __init__.py
+  Each individual preference is accessible as an attribute of the component, the name of which is the name of the
+  preference (see `PreferenceSet <LINK>` for details).  
 
 COMMENT:
-* **params**
+* **log**
 COMMENT
-
-* **prefs**
 
 .. _Component_Methods:
 
@@ -2077,7 +2081,6 @@ class Component(object):
     @user_params.setter
     def user_params(self, new_params):
         self._user_params = new_params
-        TEST = True
 
     @property
     def paramsCurrent(self):
