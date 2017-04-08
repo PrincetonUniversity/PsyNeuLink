@@ -885,9 +885,9 @@ class Component(object):
         #    • therefore, assignments of paramInstance defaults to paramsCurrent in __init__ overwrites the
         #         the user-specified vaules (from the constructor args) in user_params
         self.user_params_for_instantiation = OrderedDict()
-        # self.user_params_for_instantiation = {}
         from collections import Iterable
-        for param_name, param_value in self.user_params.items():
+        for param_name in self.user_params.keys():
+            param_value = self.user_params[param_name]
             if isinstance(param_value, (str, np.ndarray, tuple)):
                 self.user_params_for_instantiation[param_name] = param_value
             elif isinstance(param_value, Iterable):
