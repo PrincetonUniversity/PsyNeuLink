@@ -53,69 +53,81 @@ Every component has the following set of core attributes that govern its operati
 .. _Component_Function:
 
 * `function <Component.function>` - this determines the computation that a component carries out.  Typically, 
-  this is a PsyNeuLink `Function <Function>` (itself a PsyNeuLink component, although the `function` of a `Function` 
-  is always a method or Python function).  All components have a default function (that uses a default set of 
-  parameters), that is used if the function is not specified.  The `function <Component.function>` and/or its parameters 
-  can be specified in the `function <Component.function>` argument of the constructor for the component using one of the 
-  following: 
+  it is the `function <Function.function>` of a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink component, 
+  although the `function <Function.function>` of a `Function <Function>` object is always a method or Python function 
+  (it can't be "turtles" all the way down).  All components have a default function (with a default set of parameters), 
+  that is used if the `function <Component.function>` is not otherwise specified.  The `function <Component.function>` 
+  can be specified in the `function <Component.function>` argument of the constructor for the component using one of 
+  the following: 
 
     * **class** - this will create a default instance of the specified subclass, using default values for its 
-      parameters.   
-    ..    
+      parameters, as in the following example::   
+
+        my_component = SomeComponent(function=SomeFunction)
+
     * `Function` - this can be either a existing `Function` object or a constructor for one.  This will be used as a
-      template to create a `Function` object for the component.  That will be assigned as the `function_object`  
-      attribute of the component, its :keyword:`function` will be assigned as the 'function <Component.function>` 
-      attribute of the component, and its parameters will be assigned as the `function_params` attribute of the
-      component.
+      template to create a `Function` object that is assigned to the `function_object` attribute of the component, 
+      its `function <Function.function>` will be assigned as the 'function <Component.function>` attribute of the 
+      component, and its parameters will be assigned as the `function_params` attribute of the component, as in the
+      following examples::
+      
+        my_component = SomeComponent(function=SomeFunction)
+        
+        or
+        
+        some_function = SomeFunction(some_param=1)
+        my_component = SomeComponent(some_function)
+      
     
       ..note::
         In the current implementation of PsyNeuLink, if a `Function <Function>` object (or the constructor for one) is 
-        used to specify the `function <Component.function>` attribute of a component, the object specified (or created)
-        is used to specify the attributes of the componet, but is not assigned itself to the component.  This is so 
-        that `Functions <Function>` can be used as templates for more than one component, without being assigned
-        simultaneously to multiple components.
-    
+        used to specify the `function <Component.function>` attribute of a component, the Function object specified (or 
+        created) is used to determine attributes of the Function object created for and assigned to the component, but  
+        is not *itself* assigned to the component.  This is so that `Functions <Function>` can be used as templates for 
+        more than one component, without being assigned simultaneously to multiple components.
+
+    Following are examples of `function <Component.function>` specifications using the two formats above::
+          
+        my_component = SomeComponent(function=SomeFunction)
+
   A `function <Component.function>` can also be specified in an entry of a 
-  `parameter specification dictionary <Mechanism_Creation>`  
-      
-    
+  `parameter specification dictionary <Mechanism_Creation>` assigned to the `params <Component.params>` argument of the 
+  constructor for the component, with the keyword FUNCTION as its key, and one of the specifications above as its 
+  value, as in the following example::  
 
-    * using the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary for the ``params`` argument of the object,
-      as in the example below::
+        my_component = SomeComponent(params={FUNCTION:SomeFunction(some_param=1)})
+
+* `function_param <Component.function>` - Parameters for the `function <Component.function>` of a component can also be 
+  specified in one of two ways:
+  
+  * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>` argument,
+    as in the following example:
+
+        my_component = SomeComponent(function=SomeFunction(SOME_PARAM=1, SOME_OTHER_PARAM=2)
+
+  * in an argument of the **component's constructor** -- if all of the allowable functions for a component share some 
+  or all of their parameters in common, the shared paramters may --- for convenience -- appear as arguments in the 
+  constructor of the component itself.
+
+  * in an entry of a `parameter specification dictionary <Mechanism_Creation>` assigned to the 
+  `params <Component.params>` argument of the constructor for the component, with the keyword FUNCTION_PARAMS as its 
+  key, and a dictionary containing the parameters as its value.  The key for each entry in that dictionary should be 
+  the name of the paramter, and its value the parameter's value, as in the example below::
     
-         EXAMPLE HERE
-    
-    EXPLAIN ABOUT "HARDCODED" FUNCTIONS (ONLY ONE STANDARD ONE SUPPORTED, ITS PARAMS APPEAR AS ARGUMENTS FOR THE OBJECT
-    IN ITS CONSTRUCTOR) VS. THOSE FOR WHICH THE FUNCTION IS AN ARGUMENT (SEVERAL POSSIBLE FUNCTIONS TO CHOOSE FROM,
-    THE ARGUMENTS OF WHICH MAY VARY, AND THUS MUST BE SPECIFID WITHIN ITS CONSTRUCTOR OR THE PARAMS DICT), AS EXPLAINED
-    BELOW.
-    
-    Accordingly, parameters of a :keyword:`function` can be specified in two ways:
-    
-    * in the **constructor** for the function (when this is used as the value of a ``function`` argument of the object,
-      as in the example below::
-    
-        my_mechanism = SomeMechanism(function=SomeFunction(SOME_PARAM=1, SOME_OTHER_PARAM=2)
-    
-    * in the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary used for the ``params`` argument of the object,
-      as in the example below::
-    
-        my_mechanism = SomeMechanism(function=SomeFunction
+        my_component = SomeComponent(function=SomeFunction
                                      params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
-    
-    - ??WHY EVER USE FUNCTION AND FUNCTION_PARAMS:  TO CUSTOMIZE/OVERRIDE HARD-CODED FUNCTIONS OR THEIR PARAMETERS
-    - SEE :ref:`ParameterState_Specifying_Parameters` for details of parameter specification.
 
-* **function_object**
+  See `ParameterState_Specifying_Parameters` for details of parameter specification.
 
 .. _Component_Function_Object:
-    
-    Function Object
-    ^^^^^^^^^^^^^^^    
-    STUFF HERE
 
-* **user_params**
-* **value**
+* `function_object` - this refers to the `Function` assigned to the component; its `function <Function.function>`
+  is assigned to the `function <Component>` attribute of the component.
+
+* `user_params`
+
+* `value <Component.value>` - 
+
 * **name**
 * **params**
 * **prefs**
@@ -196,7 +208,6 @@ class ResetMode(Enum):
     INSTANCE_TO_CLASS = 1
     ALL_TO_CLASS_DEFAULTS = 2
 
-# MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
 # Prototype for implementing params as objects rather than dicts
 # class Params(object):
 #     def __init__(self, **kwargs):
@@ -234,10 +245,8 @@ class ParamsDict(UserDict):
         # super().__setitem__(key, item)
 
         setattr(self.owner, key, item)
-        TEST = True
     # # ORIG:
     #     self.data[key] = item
-# MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
 
 parameter_keywords = set()
 
@@ -582,29 +591,7 @@ class Component(object):
         #region SET CURRENT VALUES OF VARIABLE AND PARAMS
         self.variable = self.variableInstanceDefault
 
-        # MODIFIED 4/1/17 OLD:
         self.paramsCurrent = self.paramInstanceDefaults
-
-        # # MODIFIED 4/1/17 NEW:  QQQQQ
-        # from PsyNeuLink.Components.Functions.Function import Function_Base
-        # if isinstance(self, Function_Base):
-        #     self.paramsCurrent = self.paramInstanceDefaults
-        # #  For anything other than a Function, only assign values that are not already in paramsCurrent,
-        # #    because assigning to paramsCurrent:
-        # #    • assigns values to the property for each attribute created in _create_attributes_for_user_params)
-        # #    • that assignment calls the setter in make_property,
-        # #        which also assigns the value to the entry for the param in user_params
-        # #    • that will over-write any user-specified value (in an arg of the constructor)
-        # #        before it has a chance to be assigned (the _instantiate_xxx methods)
-        # else:
-        #     self.paramsCurrent = {}
-        #     for param_name, param_default in self.paramInstanceDefaults.items():
-        #         if param_name in self.user_params:
-        #             self.paramsCurrent[param_name] =  self.user_params[param_name] or param_default
-        #         else:
-        #             self.paramsCurrent[param_name] =  param_default
-        #
-        # # MODIFIED 4/1/17 END
 
         self.runtime_params_in_use = False
         #endregion
