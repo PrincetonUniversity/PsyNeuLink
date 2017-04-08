@@ -26,11 +26,25 @@
 #   5) SHOULD ATTRIBUTES OF PARENT CLASSED BE DOCUMENTED ON CHILD CLASSES?
 #          (E.G., PREFS, NAME, FUNCTION, FUNCTON_PARAMS, USER_PARAMS, ETC.)
 #   6) SHOULD WE SUPPORT >2D VALUES (PASSED ALONG PROJECTIONS, USED AS STATE VALUES, ETC.; INPUTS TO TRANSFER FCT, ETC.)
+#   7) DOCUMENTATION: SHOULD WE INCLUDE COMPONENT ATTRIBUTES IN DOCSTRING FOR SUBCLASSES (E.G., params, prefs, etc.)
+#   8) DOCUMENTATION: SHOULD EXAMPLES BE GENERIC (SEE COMPONENT FUNCTION) OR SPECIFIC (USING ACTUAL PSYNEULINK OBJECTS)
+#   9) DOCUMENTATION: INCLUDE EXAMPLES "INLINE" OR IN THEIR OWN SECTION AT THE END?
 
 # TASKS:
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
-#  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMLAR TO MatrixKeywords)
-
+#  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMILAR TO MatrixKeywords)
+#  3) IMPLEMENT gating projections
+#  4) IMPLEMENT ABC
+# 4a) IMPLEMENT Swap execute (on Mechanism) and _execute (on its subclasses)
+#  5) IMPLEMENT Compilation / paralleliztion of execution
+#  6) IMPLEMENT Recurrent layer / KWTA??
+#  7) IMPLEMENT TD learning
+#  8) IMPLEMENT CLS / NMPH
+#  9) IMPLEMENT Conflict (energy / entropy)
+# 10) IMPLEMENT TensorFLow wrapper
+# 11) IMPLEMENT Production System model (using scheduler??)
+# 12) IMPLEMENT LEABRA
+# 13) IMPLEMENT Model fitting
 
 
 # COMPOSITION IMPLEMENTATION NOTE:
@@ -42,7 +56,10 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
-
+# FIX: MOVE setattr OUT OF make_property AND HAVE make_property TAKE IT AS AN ARG
+# FIX: TREAT FUNCTION_PARAMS THE SAME AS USER_PARAMS:  MAKE IT READ-ONLY:
+#   https://gist.github.com/nduhamel/748954
+#   http://stackoverflow.com/questions/19022868/how-to-make-dictionary-read-only-in-python
 # FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)
 # FIX: MAKE USER_PARAMS READ-ONLY
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)#
