@@ -43,26 +43,25 @@ Every component has the following set of core attributes that govern its operati
 
 .. _Component_Variable:
 
-* `variable <Component.variable>` - the value of this is used as the input to its `function <Component.function>`.  
-  Specification of the variable in the constructor for a component determines both its format (e.g., whether it's value 
-  is numeric, its dimensionality and shape if it is an array, etc.) as well as its default value (the value used when 
-  the component is executed and no input is provided). 
+* **variable** - the value of the `variable <Component.variable>` attribute is used as the input to its 
+  `function <Component.function>`.  Specification of the variable in the constructor for a component determines both 
+  its format (e.g., whether it's value is numeric, its dimensionality and shape if it is an array, etc.) as well as 
+  its default value (the value used when the component is executed and no input is provided). 
 
 .. _Component_Function:
 
-* `function <Component.function>` - this determines the computation that a component carries out.  Typically, 
-  it is the `function <Function.function>` of a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink component).  
-  All components have a default function (with a default set of parameters), 
-  that is used if the `function <Component.function>` is not otherwise specified.  The `function <Component.function>` 
-  can be specified in the `function <Component.function>` argument of the constructor for the component using one of 
-  the following: 
+* **function** - the `function <Component.function>` attribute determines the computation that a component carries out.  
+  Typically, it is the `function <Function.function>` of a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink 
+  component).  All components have a default function (with a default set of parameters), that is used if the 
+  `function <Component.function>` is not otherwise specified.  The `function <Component.function>` can be specified in 
+  the `function <Component.function>` argument of the constructor for the component using one of the following: 
 
     * **class** - this will create a default instance of the specified subclass, using default values for its 
       parameters, as in the following example::   
 
         my_component = SomeComponent(function=SomeFunction)
 
-    * `Function` - this can be either a existing `Function` object or a constructor for one.  This will be used as a
+    * **Function** - this can be either an existing `Function` object or a constructor for one.  This will be used as a
       template to create a `Function` object that is assigned to the `function_object` attribute of the component, 
       its `function <Function.function>` will be assigned as the 'function <Component.function>` attribute of the 
       component, and its parameters will be assigned as the `function_params` attribute of the component, as in the
@@ -90,8 +89,9 @@ Every component has the following set of core attributes that govern its operati
 
         my_component = SomeComponent(params={FUNCTION:SomeFunction(some_param=1)})
 
-* `function_param <Component.function>` - Parameters for the `function <Component.function>` of a component can also be 
-  specified in one of several ways:
+* **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters for
+  for the component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and its
+  value the value of that parameter.  These can be specified when the component is created in one of the following ways:
   
   * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>` argument,
     as in the following example::
@@ -2137,6 +2137,11 @@ def make_property(name, default_value):
 
         # Update user_params dict with new value
         self.user_params[name] = val
+
+        # If component is a Function and has an owner, update function_params dict for owner
+        from PsyNeuLink.Components.Functions.Function import Function_Base
+        if isinstance(self, Function_Base) and self.owner:
+            self.owner.function_params[name] = val
 
 
     # Create the property
