@@ -83,7 +83,10 @@ Structure
 ---------
 
 Every Function has a `variable <Function_Base.variable>` that provides the input to its
-`function <Function_Base.function>` method.  It also has an attribute for each of the parameters of its `function
+`function <Function_Base.function>` method.  It's core attribute is its `function <Function_Base.function>` attribute,
+that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or 
+method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be 
+"turtles" all the way down!).  A Function also has an attribute for each of the parameters of its `function
 <Function_Base.function>`.   If a Function has been assigned to another component, then it also has an `owner
 <Function_Base.owner>` attribute that refers to that component. Each of the Function's attributes is also assigned
 as an attribute of the `owner <Function_Base.owner>`, and those are each associated with with a

@@ -75,7 +75,7 @@ above, or using one of the following:
           this can contain any of the standard parameters for instantiating a mechanism
           (see `Mechanism_Parameters`) or ones specific to a particular type of mechanism
           (see documentation for the subclass).  The key must be the name of the argument used to specify
-          the parameter in the mechanism's constructor, and the value a legal value for that parameter.
+          the parameter in the mechanism's constructor, and the value must be a legal value for that parameter.
           The parameter values specified will be used to instantiate the mechanism.  These can be overridden
           during execution by specifying `Mechanism_Runtime_Parameters`, either when calling the mechanism's
           `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method, or where it is
@@ -291,9 +291,9 @@ constructor, or with the mechanism's `assign_params` method, using the following
       |
       .. note::
          Some Mechanism subclasses include the function parameters as arguments in mechanism's constructor,
-         any values specified in the `FUNCTION__PARAMS` entry of a parameter specification dictionary for the
-         mechanism take precedence over values assigned to parameter-specific arguments in its (or its function's)
-         constructor.
+         any values specified in the `FUNCTION__PARAMS` entry of a 
+         `parameter specification dictionary <Mechanism_Creation>` for the mechanism take precedence over values 
+         assigned to parameter-specific arguments in its (or its function's) constructor.
 
     * `OUTPUT_STATES` - specifies specialized outputStates required by a mechanism subclass
       (see :ref:`OutputStates_Creation` for details of specification).
