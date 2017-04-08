@@ -823,7 +823,6 @@ class Component(object):
                         # Set it to the class (for compatibility with current implementation of _instantiate_function()
                         # and put its params in FUNCTION_PARAMS
                         params[FUNCTION] = function.__class__
-                        # params[FUNCTION_PARAMS] = function.user_params.copy()
                         params[FUNCTION_PARAMS] = function.user_params_for_instantiation.copy()
 
                     # It is a generic function
@@ -871,7 +870,11 @@ class Component(object):
             params.update(params_arg)
 
         # Save user-accessible params
-        self.user_params = params.copy()
+        # self.user_params = params.copy()
+        self.user_params = ReadOnlyOrderedDict(name='user_params')
+        for param_name in params.keys():
+            self.user_params.__additem__(param_name, params[param_name])
+
 
         # Cache a (deep) copy of the user-specified values;  this is to deal with the following:
         #    • _create_attributes_for_user_params assigns properties to each param in user_params;
@@ -1305,8 +1308,12 @@ class Component(object):
         self.paramInstanceDefaults.update(validated_set)
         self.paramsCurrent = self.paramInstanceDefaults
 
+
+        # 4/8/17 FIX: THIS SHOULD NOW ASSIGN TO PARAMS DIRECTLY:
         for param_name, param_value in validated_set.items():
-            self.user_params[param_name]=param_value
+            # setattr(self, param_name, param_value)
+            # self.user_params[param_name]=param_value
+            self.user_params.__additem__(param_name, param_value)
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
         # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
@@ -2169,7 +2176,7 @@ def make_property(name, default_value):
         setattr(self, backing_field, val)
 
         # Update user_params dict with new value
-        self.user_params[name] = val
+        self.user_params.__additem__(name, val)
 
         # If component is a Function and has an owner, update function_params dict for owner
         from PsyNeuLink.Components.Functions.Function import Function_Base

@@ -552,3 +552,5 @@ class ReadOnlyOrderedDict(UserDict):
         self._ordered_keys.append(key)
     def keys(self):
         return self._ordered_keys
+    def copy(self):
+        return self.data.copy()
