@@ -56,7 +56,7 @@ OTHER
 * `is_matrix`
 * `underscore_to_camelCase`
 * `append_type_to_name`
-* `make_prop`
+* `ReadOnlyOrderedDict`
 
 """
 
@@ -529,3 +529,26 @@ def append_type_to_name(object, type=None):
         # string = name + ' ' + type.lower()
     return string
 #endregion
+
+
+from collections import UserDict, OrderedDict
+class ReadOnlyOrderedDict(UserDict):
+    def __init__(self, dict=None, name=None, **kwargs):
+        self.name = name or self.__class__.__name__
+        UserDict.__init__(self, dict, **kwargs)
+        self._ordered_keys = []
+    def __setitem__(self, key, item):
+        raise UtilitiesError("{} is read-only".format(self.name))
+    def __delitem__(self, key):
+        raise UtilitiesError("{} is read-only".format(self.name))
+    def clear(self):
+        raise UtilitiesError("{} is read-only".format(self.name))
+    def pop(self, key, *args):
+        raise UtilitiesError("{} is read-only".format(self.name))
+    def popitem(self):
+        raise UtilitiesError("{} is read-only".format(self.name))
+    def __additem__(self, key, value):
+        self.data[key] = value
+        self._ordered_keys.append(key)
+    def keys(self):
+        return self._ordered_keys
