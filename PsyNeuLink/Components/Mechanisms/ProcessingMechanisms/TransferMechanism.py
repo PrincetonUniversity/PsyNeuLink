@@ -444,7 +444,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if ((isinstance(self.function, Logistic) or
                  (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
                 not list(self.range)):
-            self.user_params[RANGE] = np.array([0,1])
+            self.range = np.array([0,1])
 
         super()._instantiate_parameter_states(context=context)
 

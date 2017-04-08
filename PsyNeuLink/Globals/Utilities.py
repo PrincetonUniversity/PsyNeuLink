@@ -549,7 +549,8 @@ class ReadOnlyOrderedDict(UserDict):
         raise UtilitiesError("{} is read-only".format(self.name))
     def __additem__(self, key, value):
         self.data[key] = value
-        self._ordered_keys.append(key)
+        if not key in self._ordered_keys:
+            self._ordered_keys.append(key)
     def keys(self):
         return self._ordered_keys
     def copy(self):
