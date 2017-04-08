@@ -84,12 +84,14 @@ class ReadOnlyOrderedDict(UserDict):
         raise TypeError
     def __additem__(self, key, value):
         self.data[key] = value
-        self._ordered_keys.append(key)
+        if not key in self._ordered_keys:
+            self._ordered_keys.append(key)
     def keys(self):
         return self._ordered_keys
 
 x = ReadOnlyOrderedDict()
 x.__additem__('hello',1)
+x.__additem__('hello',2)
 x.__additem__('goodbye',2)
 print(x.keys())
 for key in x.keys():

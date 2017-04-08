@@ -1311,9 +1311,9 @@ class Component(object):
 
         # 4/8/17 FIX: THIS SHOULD NOW ASSIGN TO PARAMS DIRECTLY:
         for param_name, param_value in validated_set.items():
-            # setattr(self, param_name, param_value)
+            setattr(self, param_name, param_value)
             # self.user_params[param_name]=param_value
-            self.user_params.__additem__(param_name, param_value)
+            # self.user_params.__additem__(param_name, param_value)
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
         # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
