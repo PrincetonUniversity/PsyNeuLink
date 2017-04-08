@@ -98,20 +98,11 @@ def show_trial_header():
 def show_results():
     import re
     results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
-    print('\nRESULTS (time step {}): [RANDOM: {}]'.format(CentralClock.time_step, np.random.random()))
-    print ('\tDrift rate control signal (from EVC):'
-           '\n\t\tDecision.parameterState: {}'
-           '\n\t\tControlSignal: {}'
-           '\n\t\tControlProjection: {}'.
+    print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
+    print ('\tDrift rate control signal (from EVC): {}'.
            # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
-           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value)))),
-                  mySystem.controller.outputStates['drift_rate_ControlSignal'].value,
-                  Decision.parameterStates[DRIFT_RATE].receivesFromProjections[0].value
-                  ))
-    print ('\tThreshold control signal (from EVC):'
-           '\n\t\tDecision.parameterState: {}'
-           '\n\t\tControlSignal: {}'
-           '\n\t\tControlProjection: {}'.
+           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value))))))
+    print ('\tThreshold control signal (from EVC): {}'.
            format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[THRESHOLD].value))),
                   mySystem.controller.outputStates['threshold_ControlSignal'].value,
                   Decision.parameterStates[THRESHOLD].receivesFromProjections[0].value
