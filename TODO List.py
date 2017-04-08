@@ -54,7 +54,10 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
-
+# FIX: MOVE setattr OUT OF make_property AND HAVE make_property TAKE IT AS AN ARG
+# FIX: TREAT FUNCTION_PARAMS THE SAME AS USER_PARAMS:  MAKE IT READ-ONLY:
+#   https://gist.github.com/nduhamel/748954
+#   http://stackoverflow.com/questions/19022868/how-to-make-dictionary-read-only-in-python
 # FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)
 # FIX: MAKE USER_PARAMS READ-ONLY
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)#
