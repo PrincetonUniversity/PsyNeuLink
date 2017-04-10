@@ -251,6 +251,13 @@ class ParamsDict(UserDict):
         self.owner = owner
         if dict:
             self.update(dict)
+        # MODIFIED 4/10/17 NEW: REPLACE FUNCTION_PARAMS WITH READONLYDICT
+        if FUNCTION_PARAMS in dict:
+            self[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+            for param_name in dict[FUNCTION_PARAMS]:
+                self[FUNCTION_PARAMS].__additem__(param_name, dict[FUNCTION_PARAMS][param_name])
+            TEST = True
+        # MODIFIED 4/10/17 END
 
     def __getitem__(self, key):
 
@@ -795,7 +802,14 @@ class Component(object):
                     # Get copy of default params
                     # IMPLEMENTATION NOTE: this is needed so that function_params gets included in user_params and
                     #                      thereby gets instantiated as a property in _create_attributes_for_user_params
+                    # MODIFIED 4/9/17 OLD:
+                    # FIX: MAKE FUNCTION_PARAMS A ReadOnlyDict AS PER ELSE BELOW
                     params[FUNCTION_PARAMS] = function().user_params.copy()
+                    # MODIFIED 4/9/17 NEW:
+                    params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+                    for param_name in function().user_params:
+                        params[FUNCTION_PARAMS].__additem__(param_name, function().user_params[param_name])
+                    # MODIFIED 4/9/17 END
                     continue
 
                 # function arg is not a class (presumably an object)
@@ -821,9 +835,12 @@ class Component(object):
                     #                       TO ALLOW Function SPECIFICATION (VS. ONLY CLASS)
                     if isinstance(function, Function):
                         # Set it to the class (for compatibility with current implementation of _instantiate_function()
-                        # and put its params in FUNCTION_PARAMS
                         params[FUNCTION] = function.__class__
-                        params[FUNCTION_PARAMS] = function.user_params_for_instantiation.copy()
+                        # Create ReadOnlyDict for FUNCTION_PARAMS and copy function's params into it
+                        params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+                        for param_name in function.user_params_for_instantiation:
+                            params[FUNCTION_PARAMS].__additem__(param_name,
+                                                                function.user_params_for_instantiation[param_name])
 
                     # It is a generic function
                     elif isfunction(function):
@@ -844,11 +861,14 @@ class Component(object):
 
                 # If function was instantiated object, FUNCTION_PARAMS came from it, so ignore additional specification
                 if ignore_FUNCTION_PARAMS:
-                    TEST = True
-                    if TEST:
-                        pass
                     continue
+                # MODIFIED 4/9/17 OLD:
                 params[FUNCTION_PARAMS] = kwargs[arg]
+                # MODIFIED 4/9/17 NEW:
+                params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+                for param_name in kwargs[arg]:
+                    params[FUNCTION_PARAMS].__additem__(param_name,kwargs[arg][param_name])
+                # MODIFIED 4/9/17 END
 
             # For standard params, assign arg and its default value to paramClassDefaults
             else:
@@ -871,7 +891,7 @@ class Component(object):
 
         # Save user-accessible params
         # self.user_params = params.copy()
-        self.user_params = ReadOnlyOrderedDict(name='user_params')
+        self.user_params = ReadOnlyOrderedDict(name=USER_PARAMS)
         for param_name in params.keys():
             self.user_params.__additem__(param_name, params[param_name])
 
@@ -896,6 +916,9 @@ class Component(object):
                 if isinstance(param_value, dict):
                     for k, v in param_value.items():
                         self.user_params_for_instantiation[param_name][k] = v
+                elif isinstance(param_value, ReadOnlyOrderedDict):
+                    for k, v in param_value.items():
+                        self.user_params_for_instantiation[param_name].__additem__(k,v)
                 # SET
                 elif isinstance(param_value, set):
                     for i in param_value:
@@ -1246,7 +1269,7 @@ class Component(object):
                     # function not yet defined, so allow FUNCTION_PARAMS)
                     except UnboundLocalError:
                         pass
-                # FIX: MAY NEED TO ALSO ALLOW assign_default_kwFunctionParams FOR COMMAND_LINE IN CONTEXT
+                # FIX: MAY NEED TO ALSO ALLOW assign_default_FUNCTION_PARAMS FOR COMMAND_LINE IN CONTEXT
                 # MODIFIED 11/30/16 END
 
                 if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
@@ -1578,8 +1601,8 @@ class Component(object):
                 #    - re-instate once paramClassDefaults includes type lists (as per requiredClassParams)
                 if isinstance(param_value, dict):
 
-                    # If assign_default_kwFunctionParams is False, it means that function's class is
-                    #     compatiable but different from the one in paramClassDefaults;
+                    # If assign_default_FUNCTION_PARAMS is False, it means that function's class is
+                    #     compatible but different from the one in paramClassDefaults;
                     #     therefore, FUNCTION_PARAMS will not match paramClassDefaults;
                     #     instead, check that functionParams are compatible with the function's default params
                     if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
@@ -1587,7 +1610,7 @@ class Component(object):
                         try:
                             function = request_set[FUNCTION]
                         except KeyError:
-                            # If no function is specified, self.assign_default_kwFunctionParams should be True
+                            # If no function is specified, self.assign_default_FUNCTION_PARAMS should be True
                             # (see _assign_defaults above)
                             raise ComponentError("PROGRAM ERROR: No function params for {} so should be able to "
                                                 "validate {}".format(self.name, FUNCTION_PARAMS))

@@ -245,11 +245,7 @@ def iscompatible(candidate, reference=None, **kargs):
     else:
         match_type = type(reference)
         # If length specification is non-zero (i.e., use length) and reference is an object for which len is defined:
-        # # MODIFIED 10/28/16 OLD:
-        # if kargs[kwCompatibilityLength] and isinstance(reference, (list, tuple, dict)):
-        # MODIFIED 10/28/16 NEW:
         if kargs[kwCompatibilityLength] and isinstance(reference, (list, tuple, dict, np.ndarray)):
-        # MODIFIED 10/28/16 END
             match_length = len(reference)
         else:
             match_length = 0
@@ -268,18 +264,15 @@ def iscompatible(candidate, reference=None, **kargs):
     # IMPLEMENTATION NOTE:
     #   modified to allow numeric type mismatches (e.g., int and float;
     #   should be added as option in future (i.e., to disallow it)
-    # if isinstance(candidate, match_type):
     if (isinstance(candidate, match_type) or
             (isinstance(candidate, (list, np.ndarray)) and (issubclass(match_type, (list, np.ndarray)))) or
             (isinstance(candidate, numbers.Number) and issubclass(match_type,numbers.Number)) or
-            # MODIFIED 9/20/16 NEW:
+            # IMPLEMENTATION NOTE: Allow UserDict types to match dict (make this an option in the future)
+            (isinstance(candidate, UserDict) and match_type is dict) or
             # IMPLEMENTATION NOTE: This is needed when kwCompatiblityType is not specified
             #                      and so match_type==list as default
             (isinstance(candidate, numbers.Number) and issubclass(match_type,list)) or
-                # MODIFIED 10/28/16 NEW:
                 (isinstance(candidate, np.ndarray) and issubclass(match_type,list))
-                # MODIFIED 10/28/16 END
-            # MODIFIED 9/20/16 END
         ):
 
         # Check compatibility of enum's

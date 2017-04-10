@@ -56,6 +56,7 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: 4/9/17 FIX: MAKE FUNCTION_PARAMS A ReadOnlyDict AS PER ELSE BELOW
 # FIX: MOVE setattr OUT OF make_property AND HAVE make_property TAKE IT AS AN ARG
 # FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)#
