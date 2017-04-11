@@ -2048,19 +2048,12 @@ class Component(object):
             # # MODIFIED 4/1/17 OLD:
             # self.function_params = self.function_object.user_params
             # self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
-            # # MODIFIED 4/1/17 NEW:
-            # self.function_params = self.function_object.user_params_for_instantiation
-            # self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
             # MODIFIED 4/8/17 NEWER:
-            # self.function_params = ReadOnlyOrderedDict(dict=self.function_object.user_params_for_instantiation,
-            #                                            name='function_params')
-            # self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_object.user_params_for_instantiation
             self.function_params = ReadOnlyOrderedDict(name='function_params')
             for param_name in self.function_object.user_params_for_instantiation.keys():
                 self.function_params.__additem__(param_name,
                                                  self.function_object.user_params_for_instantiation[param_name])
             self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
-            TEST = True
             # MODIFIED 4/1/17 END
 
     def _instantiate_attributes_after_function(self, context=None):
