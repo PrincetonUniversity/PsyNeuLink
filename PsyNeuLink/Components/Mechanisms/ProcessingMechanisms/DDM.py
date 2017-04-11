@@ -600,6 +600,11 @@ class DDM(ProcessingMechanism_Base):
                                   # context=context)
                                   context=self)
 
+        # # TEST PRINT
+        # print("\n{} user_params:".format(self.name))
+        # for param in self.user_params.keys():
+        #     print("\t{}: {}".format(param, self.user_params[param]))
+
     def plot(self, threshold = 10.0):
         """
         Generate a dynamic plot of the DDM integrating over time towards a threshold.
