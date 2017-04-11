@@ -56,15 +56,18 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: Component: IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
+#                 SEE learning_rate IN LearningMechanism FOR EXAMPLE
+
+# FIX: Mechanism: THIS SHOULD STILL ALLOW PARAMS AT TOP LEVEL
+# FIX: Mechanism: THIS NEEDS TO LOOK RECURSIVELY INSIDE EACH STATE_PARAMS DICT IF IT IS TO CHECK PARAM NAMES
+#      ~Line 1396 (WHICH IT APPEARS TO BE TRYING TO DO)
+
+# FIX: 4/9/17 FIX: MAKE FUNCTION_PARAMS A ReadOnlyDict AS PER ELSE BELOW
 # FIX: MOVE setattr OUT OF make_property AND HAVE make_property TAKE IT AS AN ARG
-# FIX: TREAT FUNCTION_PARAMS THE SAME AS USER_PARAMS:  MAKE IT READ-ONLY:
-#   https://gist.github.com/nduhamel/748954
-#   http://stackoverflow.com/questions/19022868/how-to-make-dictionary-read-only-in-python
 # FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)
-# FIX: MAKE USER_PARAMS READ-ONLY
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)#
 # FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
-# FIX: NAMING OF MAPPING PROJECTIONS
 # FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
 # FIX: DERIVATIVE FOR SoftMax Function
 # FIX: ADD owner ARG TO Function CONSTRUCTOR (DEFAULT = NONE)
@@ -200,17 +203,16 @@
 # FIX: Can't specify parameter as ControlProjection (StroopEVCforDST)
 
 # DOCUMENTATION COMPLETION/CLEAN-UP:
-#   Function
+#   Component
+# √ Function
 # √ System
 # √ Process
 # √ Mechanism
-#   ProcessingMechanism
+# √ ProcessingMechanism
 #   DefaultProcessingMechanism
 # √ DDM
 # √ IntegratorMechanism
 # √ TransferMechanism
-# √ MonitoringMechanism
-#   DefaultMonitoringMechanism
 # √ ControlMechanism
 #   DefaultControlMechanism
 # √ EVCMechanism

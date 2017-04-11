@@ -251,6 +251,13 @@ class ParamsDict(UserDict):
         self.owner = owner
         if dict:
             self.update(dict)
+        # MODIFIED 4/10/17 NEW: REPLACE FUNCTION_PARAMS WITH READONLYDICT
+        if FUNCTION_PARAMS in dict:
+            self[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+            for param_name in sorted(list(dict[FUNCTION_PARAMS].keys())):
+                self[FUNCTION_PARAMS].__additem__(param_name, dict[FUNCTION_PARAMS][param_name])
+            TEST = True
+        # MODIFIED 4/10/17 END
 
     def __getitem__(self, key):
 
@@ -795,7 +802,14 @@ class Component(object):
                     # Get copy of default params
                     # IMPLEMENTATION NOTE: this is needed so that function_params gets included in user_params and
                     #                      thereby gets instantiated as a property in _create_attributes_for_user_params
+                    # MODIFIED 4/9/17 OLD:
+                    # FIX: MAKE FUNCTION_PARAMS A ReadOnlyDict AS PER ELSE BELOW
                     params[FUNCTION_PARAMS] = function().user_params.copy()
+                    # MODIFIED 4/9/17 NEW:
+                    params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+                    for param_name in sorted(list(function().user_params.keys())):
+                        params[FUNCTION_PARAMS].__additem__(param_name, function().user_params[param_name])
+                    # MODIFIED 4/9/17 END
                     continue
 
                 # function arg is not a class (presumably an object)
@@ -818,12 +832,15 @@ class Component(object):
 
                     # It is a PsyNeuLink Function
                     # IMPLEMENTATION NOTE:  REPLACE THIS WITH "CONTINUE" ONCE _instantiate_function IS REFACTORED TO
-                    #                       TO ALLOW Function SPECIFICATkION (VS. ONLY CLASS)
+                    #                       TO ALLOW Function SPECIFICATION (VS. ONLY CLASS)
                     if isinstance(function, Function):
                         # Set it to the class (for compatibility with current implementation of _instantiate_function()
-                        # and put its params in FUNCTION_PARAMS
                         params[FUNCTION] = function.__class__
-                        params[FUNCTION_PARAMS] = function.user_params_for_instantiation.copy()
+                        # Create ReadOnlyDict for FUNCTION_PARAMS and copy function's params into it
+                        params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+                        for param_name in sorted(list(function.user_params_for_instantiation.keys())):
+                            params[FUNCTION_PARAMS].__additem__(param_name,
+                                                                function.user_params_for_instantiation[param_name])
 
                     # It is a generic function
                     elif isfunction(function):
@@ -844,11 +861,14 @@ class Component(object):
 
                 # If function was instantiated object, FUNCTION_PARAMS came from it, so ignore additional specification
                 if ignore_FUNCTION_PARAMS:
-                    TEST = True
-                    if TEST:
-                        pass
                     continue
-                params[FUNCTION_PARAMS] = kwargs[arg]
+                # # MODIFIED 4/9/17 OLD:
+                # params[FUNCTION_PARAMS] = kwargs[arg]
+                # MODIFIED 4/9/17 NEW:
+                params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+                for param_name in sorted(list(kwargs[arg].keys())):
+                    params[FUNCTION_PARAMS].__additem__(param_name,kwargs[arg][param_name])
+                # MODIFIED 4/9/17 END
 
             # For standard params, assign arg and its default value to paramClassDefaults
             else:
@@ -858,12 +878,21 @@ class Component(object):
         if params_arg:
 
             try:
-                params[FUNCTION_PARAMS].update(params_arg[FUNCTION_PARAMS])
-                # This is needed so that when params is updated below,
-                #     it updates with the full and updated params[FUNCTION_PARAMS] (i.e, a complete set)
-                #     and not just whichever ones were in params_arg[FUNCTION_PARAMS]
+                # Update params[FUNCTION_PARAMS] with any from param_arg[FUNCTION_PARAMS] (specified in the constructor)
+                for param_name in params_arg[FUNCTION_PARAMS].keys():
+                    params[FUNCTION_PARAMS].__additem__(param_name, params_arg[FUNCTION_PARAMS][param_name])
+                # Convert params_arg[FUNCTION_PARAMS] to ReadOnlyOrderedDict and update it with params[FUNCTION_PARAMS];
+                #    this is needed so that when params is updated below,
+                #    it updates with the full and updated params[FUNCTION_PARAMS] (i.e, a complete set, from above)
+                #    and not just whichever ones were in params_arg[FUNCTION_PARAMS]
                 #    (i.e., if the user just specified a subset)
-                params_arg[FUNCTION_PARAMS].update(params[FUNCTION_PARAMS])
+                if isinstance(params_arg[FUNCTION_PARAMS], dict):
+                    function_params = params_arg[FUNCTION_PARAMS]
+                    params_arg[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+                    for param_name in sorted(list(function_params.keys())):
+                        params_arg[FUNCTION_PARAMS].__additem__(param_name, function_params[param_name])
+                for param_name in sorted(list(params[FUNCTION_PARAMS].keys())):
+                    params_arg[FUNCTION_PARAMS].__additem__(param_name, params[FUNCTION_PARAMS][param_name])
             except KeyError:
                 pass
 
@@ -871,8 +900,8 @@ class Component(object):
 
         # Save user-accessible params
         # self.user_params = params.copy()
-        self.user_params = ReadOnlyOrderedDict(name='user_params')
-        for param_name in params.keys():
+        self.user_params = ReadOnlyOrderedDict(name=USER_PARAMS)
+        for param_name in sorted(list(params.keys())):
             self.user_params.__additem__(param_name, params[param_name])
 
 
@@ -896,6 +925,9 @@ class Component(object):
                 if isinstance(param_value, dict):
                     for k, v in param_value.items():
                         self.user_params_for_instantiation[param_name][k] = v
+                elif isinstance(param_value, ReadOnlyOrderedDict):
+                    for k in sorted(list(param_value.keys())):
+                        self.user_params_for_instantiation[param_name].__additem__(k,param_value[k])
                 # SET
                 elif isinstance(param_value, set):
                     for i in param_value:
@@ -1246,7 +1278,7 @@ class Component(object):
                     # function not yet defined, so allow FUNCTION_PARAMS)
                     except UnboundLocalError:
                         pass
-                # FIX: MAY NEED TO ALSO ALLOW assign_default_kwFunctionParams FOR COMMAND_LINE IN CONTEXT
+                # FIX: MAY NEED TO ALSO ALLOW assign_default_FUNCTION_PARAMS FOR COMMAND_LINE IN CONTEXT
                 # MODIFIED 11/30/16 END
 
                 if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
@@ -1578,8 +1610,8 @@ class Component(object):
                 #    - re-instate once paramClassDefaults includes type lists (as per requiredClassParams)
                 if isinstance(param_value, dict):
 
-                    # If assign_default_kwFunctionParams is False, it means that function's class is
-                    #     compatiable but different from the one in paramClassDefaults;
+                    # If assign_default_FUNCTION_PARAMS is False, it means that function's class is
+                    #     compatible but different from the one in paramClassDefaults;
                     #     therefore, FUNCTION_PARAMS will not match paramClassDefaults;
                     #     instead, check that functionParams are compatible with the function's default params
                     if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
@@ -1587,7 +1619,7 @@ class Component(object):
                         try:
                             function = request_set[FUNCTION]
                         except KeyError:
-                            # If no function is specified, self.assign_default_kwFunctionParams should be True
+                            # If no function is specified, self.assign_default_FUNCTION_PARAMS should be True
                             # (see _assign_defaults above)
                             raise ComponentError("PROGRAM ERROR: No function params for {} so should be able to "
                                                 "validate {}".format(self.name, FUNCTION_PARAMS))
@@ -2016,8 +2048,11 @@ class Component(object):
             # # MODIFIED 4/1/17 OLD:
             # self.function_params = self.function_object.user_params
             # self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
-            # MODIFIED 4/1/17 NEW:
-            self.function_params = self.function_object.user_params_for_instantiation
+            # MODIFIED 4/8/17 NEWER:
+            self.function_params = ReadOnlyOrderedDict(name='function_params')
+            for param_name in sorted(list(self.function_object.user_params_for_instantiation.keys())):
+                self.function_params.__additem__(param_name,
+                                                 self.function_object.user_params_for_instantiation[param_name])
             self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
             # MODIFIED 4/1/17 END
 
@@ -2181,7 +2216,7 @@ def make_property(name, default_value):
         # If component is a Function and has an owner, update function_params dict for owner
         from PsyNeuLink.Components.Functions.Function import Function_Base
         if isinstance(self, Function_Base) and self.owner:
-            self.owner.function_params[name] = val
+            self.owner.function_params.__additem__(name, val)
 
 
     # Create the property

@@ -599,6 +599,7 @@ class DDM(ProcessingMechanism_Base):
                                   prefs=prefs,
                                   # context=context)
                                   context=self)
+
     def plot(self, threshold = 10.0):
         """
         Generate a dynamic plot of the DDM integrating over time towards a threshold.

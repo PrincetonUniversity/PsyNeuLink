@@ -530,7 +530,16 @@ class MappingProjection(Projection_Base):
                        (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
                             issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection)))
               ):
-            self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1])
+            # # MODIFIED 4/8/17 OLD:
+            # self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1])
+            # MODIFIED 4/8/17 NEW:
+            self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX,
+                                                            (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]))
+            # MODIFIED 4/8/17 END
 
         else:
-            self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = value
+            # # MODIFIED 4/8/17 OLD:
+            # self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = value
+            # MODIFIED 4/8/17 NEW:
+            self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX, value)
+            # MODIFIED 4/8/17 END
