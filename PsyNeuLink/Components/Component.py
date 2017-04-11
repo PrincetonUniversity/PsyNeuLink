@@ -915,7 +915,7 @@ class Component(object):
         #         the user-specified vaules (from the constructor args) in user_params
         self.user_params_for_instantiation = OrderedDict()
         from collections import Iterable
-        for param_name in self.user_params.keys():
+        for param_name in sorted(list(self.user_params.keys())):
             param_value = self.user_params[param_name]
             if isinstance(param_value, (str, np.ndarray, tuple)):
                 self.user_params_for_instantiation[param_name] = param_value
