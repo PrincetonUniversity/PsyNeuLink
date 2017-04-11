@@ -1602,6 +1602,7 @@ class Component(object):
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
+
             if iscompatible(param_value, self.paramClassDefaults[param_name], **{kwCompatibilityLength:0}):
                 # If param is a dict, check that entry exists in paramClassDefaults
                 # IMPLEMENTATION NOTE:
@@ -1676,8 +1677,7 @@ class Component(object):
                     else:
                         target_set[param_name] = param_value.copy()
             # MODIFIED 4/3/17 KM adding list/array parameter for noise
-            elif isinstance(param_value, (list, np.ndarray)):
-                target_set[param_name] = param_value
+
 
             # If param is a function_type, allow any other function_type
             # MODIFIED 1/9/16 NEW:
