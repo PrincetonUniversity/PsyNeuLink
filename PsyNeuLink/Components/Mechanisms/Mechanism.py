@@ -1429,15 +1429,6 @@ class Mechanism_Base(Mechanism):
                             raise MechanismError("{} entry in runtime_params for {} "
                                                  "contains an unrecognized parameter: {}".
                                                  format(state_key, self.name, param_name))
-                        # # FIX: ALTERNATIVE:  make_property allows for dicts (assuming they are from the outside)
-                        # # Convert function_params to ReadOnlyOrderedDict (for consistency of subsequent processing)
-                        # if param_name is FUNCTION_PARAMS and isinstance(state_dict[param_name], dict):
-                        #     function_params = state_dict[FUNCTION_PARAMS]
-                        #     state_dict[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
-                        #     for fct_param_name in function_params.keys():
-                        #         state_dict[FUNCTION_PARAMS].__additem__(fct_param_name, function_params[fct_param_name])
-
-
                 # MODIFIED 4/10/17 END
 
         #endregion
