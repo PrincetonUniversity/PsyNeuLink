@@ -872,7 +872,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         return
 
     if param_name is FUNCTION_PARAMS:
-        for function_param_name, function_param_value in param_value.items():
+        for function_param_name in param_value.keys():
+            function_param_value = param_value[function_param_name]
             # Assignment of ParameterState for Component objects, function or method are not currently supported
             if isinstance(function_param_value, (function_type, method_type, Component)):
                 continue
