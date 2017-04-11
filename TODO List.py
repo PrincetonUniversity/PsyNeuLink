@@ -56,6 +56,12 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: Component: IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
+#                 SEE learning_rate IN LearningMechanism FOR EXAMPLE
+
+# FIX: Mechanism: THIS NEEDS TO LOOK RECURSIVELY INSIDE EACH STATE_PARAMS DICT IF IT IS TO CHECK PARAM NAMES
+#      ~Line 1396 (WHICH IT APPEARS TO BE TRYING TO DO)
+
 # FIX: 4/9/17 FIX: MAKE FUNCTION_PARAMS A ReadOnlyDict AS PER ELSE BELOW
 # FIX: MOVE setattr OUT OF make_property AND HAVE make_property TAKE IT AS AN ARG
 # FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)

@@ -254,7 +254,7 @@ class ParamsDict(UserDict):
         # MODIFIED 4/10/17 NEW: REPLACE FUNCTION_PARAMS WITH READONLYDICT
         if FUNCTION_PARAMS in dict:
             self[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
-            for param_name in dict[FUNCTION_PARAMS]:
+            for param_name in dict[FUNCTION_PARAMS].keys():
                 self[FUNCTION_PARAMS].__additem__(param_name, dict[FUNCTION_PARAMS][param_name])
             TEST = True
         # MODIFIED 4/10/17 END
@@ -807,7 +807,7 @@ class Component(object):
                     params[FUNCTION_PARAMS] = function().user_params.copy()
                     # MODIFIED 4/9/17 NEW:
                     params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
-                    for param_name in function().user_params:
+                    for param_name in function().user_params.keys():
                         params[FUNCTION_PARAMS].__additem__(param_name, function().user_params[param_name])
                     # MODIFIED 4/9/17 END
                     continue
@@ -838,7 +838,7 @@ class Component(object):
                         params[FUNCTION] = function.__class__
                         # Create ReadOnlyDict for FUNCTION_PARAMS and copy function's params into it
                         params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
-                        for param_name in function.user_params_for_instantiation:
+                        for param_name in function.user_params_for_instantiation.keys():
                             params[FUNCTION_PARAMS].__additem__(param_name,
                                                                 function.user_params_for_instantiation[param_name])
 
@@ -862,11 +862,11 @@ class Component(object):
                 # If function was instantiated object, FUNCTION_PARAMS came from it, so ignore additional specification
                 if ignore_FUNCTION_PARAMS:
                     continue
-                # MODIFIED 4/9/17 OLD:
-                params[FUNCTION_PARAMS] = kwargs[arg]
+                # # MODIFIED 4/9/17 OLD:
+                # params[FUNCTION_PARAMS] = kwargs[arg]
                 # MODIFIED 4/9/17 NEW:
                 params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
-                for param_name in kwargs[arg]:
+                for param_name in kwargs[arg].keys():
                     params[FUNCTION_PARAMS].__additem__(param_name,kwargs[arg][param_name])
                 # MODIFIED 4/9/17 END
 
@@ -878,12 +878,21 @@ class Component(object):
         if params_arg:
 
             try:
-                params[FUNCTION_PARAMS].update(params_arg[FUNCTION_PARAMS])
-                # This is needed so that when params is updated below,
-                #     it updates with the full and updated params[FUNCTION_PARAMS] (i.e, a complete set)
-                #     and not just whichever ones were in params_arg[FUNCTION_PARAMS]
+                # Update params[FUNCTION_PARAMS] with any from param_arg[FUNCTION_PARAMS] (specified in the constructor)
+                for param_name in params_arg[FUNCTION_PARAMS].keys():
+                    params[FUNCTION_PARAMS].__additem__(param_name, params_arg[FUNCTION_PARAMS][param_name])
+                # Convert params_arg[FUNCTION_PARAMS] to ReadOnlyOrderedDict and update it with params[FUNCTION_PARAMS];
+                #    this is needed so that when params is updated below,
+                #    it updates with the full and updated params[FUNCTION_PARAMS] (i.e, a complete set, from above)
+                #    and not just whichever ones were in params_arg[FUNCTION_PARAMS]
                 #    (i.e., if the user just specified a subset)
-                params_arg[FUNCTION_PARAMS].update(params[FUNCTION_PARAMS])
+                if isinstance(params_arg[FUNCTION_PARAMS], dict):
+                    function_params = params_arg[FUNCTION_PARAMS]
+                    params_arg[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+                    for param_name in sorted(list(function_params.keys())):
+                        params_arg[FUNCTION_PARAMS].__additem__(param_name, function_params[param_name])
+                for param_name in params[FUNCTION_PARAMS].keys():
+                    params_arg[FUNCTION_PARAMS].__additem__(param_name, params[FUNCTION_PARAMS][param_name])
             except KeyError:
                 pass
 
@@ -917,8 +926,8 @@ class Component(object):
                     for k, v in param_value.items():
                         self.user_params_for_instantiation[param_name][k] = v
                 elif isinstance(param_value, ReadOnlyOrderedDict):
-                    for k, v in param_value.items():
-                        self.user_params_for_instantiation[param_name].__additem__(k,v)
+                    for k in param_value.keys():
+                        self.user_params_for_instantiation[param_name].__additem__(k,param_value[k])
                 # SET
                 elif isinstance(param_value, set):
                     for i in param_value:
@@ -2045,12 +2054,12 @@ class Component(object):
             # MODIFIED 4/8/17 NEWER:
             # self.function_params = ReadOnlyOrderedDict(dict=self.function_object.user_params_for_instantiation,
             #                                            name='function_params')
-            self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_object.user_params_for_instantiation
+            # self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_object.user_params_for_instantiation
             self.function_params = ReadOnlyOrderedDict(name='function_params')
             for param_name in self.function_object.user_params_for_instantiation.keys():
                 self.function_params.__additem__(param_name,
                                                  self.function_object.user_params_for_instantiation[param_name])
-            # self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
+            self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
             TEST = True
             # MODIFIED 4/1/17 END
 
