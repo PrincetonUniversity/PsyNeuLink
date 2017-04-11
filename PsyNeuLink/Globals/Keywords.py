@@ -246,6 +246,7 @@ INPUTS_DIM = 3
 COMPONENT_INIT = 'Function.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
 DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
+USER_PARAMS = 'user_params' # Params available to user for inspection in user_params dict
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
 

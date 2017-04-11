@@ -1391,16 +1391,46 @@ class Mechanism_Base(Mechanism):
         # Insure that param set is for a States:
         if self.prefs.paramValidationPref:
             if runtime_params:
-                # runtime_params can have entries with any of these keys
-                #     (each of which should be for a params dictionary for the corresponding state type)
+
+                # # MODIFIED 4/10/17 OLD:
+                # # FIX: THIS NEEDS TO LOOK RECURSIVELY INSIDE EACH STATE_PARAMS DICT IF IT IS TO CHECK PARAM NAMES
+                # #      (WHICH IT APPEARS TO BE TRYING TO DO)
+                # # runtime_params can have entries with any of these keys
+                # #     (each of which should be for a params dictionary for the corresponding state type)
+                # state_keys = [INPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, OUTPUT_STATE_PARAMS]
+                # # runtime_params can also have entries for the mechanism's params or its function's params
+                # # param_names = list({**self.user_params, **self.user_params[FUNCTION_PARAMS]}.keys())
+                # param_names = list({**self.user_params, **self.function_params})
+                # # all of the entries in runtime_params must be one of the above
+                # if not all(key in state_keys + param_names for key in runtime_params):
+                #         raise MechanismError("There is an invalid specification for a runtime parameter of {}".
+                #                              format(self.name))
+
+                # MODIFIED 4/10/17 NEW:
+                # runtime_params can have entries with any of the state keys
+                #    each of which should be for a params dictionary for the corresponding state type,
+                #    and each of can only contain parameters relevant to the mechanism
+                # FIX: THIS SHOULD STILL ALLOW PARAMS AT TOP LEVEL
                 state_keys = [INPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, OUTPUT_STATE_PARAMS]
-                # runtime_params can also have entries for the mechanism's params or its function's params
-                # param_names = list({**self.user_params, **self.user_params[FUNCTION_PARAMS]}.keys())
                 param_names = list({**self.user_params, **self.function_params})
-                # all of the entries in runtime_params must be one of the above
                 if not all(key in state_keys + param_names for key in runtime_params):
                         raise MechanismError("There is an invalid specification for a runtime parameter of {}".
                                              format(self.name))
+                for state_key in runtime_params:
+                    if not state_key in state_keys:
+                        raise MechanismError("runtime_params dict for {} contains an unrecognized key: {}".
+                                             format(self.name, state_key))
+                    state_dict = runtime_params[state_key]
+                    if not isinstance(state_dict, dict):
+                        raise MechanismError("runtime_params entry for {} is not a dict".
+                                             format(self.name, state_key))
+                    for param_name in state_dict:
+                        if not param_name in param_names:
+                            raise MechanismError("{} entry in runtime_params for {} "
+                                                 "contains an unrecognized parameter: {}".
+                                                 format(state_key, self.name, param_name))
+                # MODIFIED 4/10/17 END
+
         #endregion
 
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
