@@ -1205,10 +1205,10 @@ class EVCMechanism(ControlMechanism_Base):
         # MODIFIED 4/11/17 NEW:
         self.controlSignals = [self.outputStates[state_name] for state_name in self.outputStates.keys()]
         # MODIFIED 4/11/17 END
-        # TEST PRINT
-        print("\n{}.controlSignals: ".format(self.name))
-        for control_signal in self.controlSignals:
-            print("{}".format(control_signal.name))
+        # # TEST PRINT
+        # print("\n{}.controlSignals: ".format(self.name))
+        # for control_signal in self.controlSignals:
+        #     print("{}".format(control_signal.name))
 
     def _instantiate_function(self, context=None):
         super()._instantiate_function(context=context)
