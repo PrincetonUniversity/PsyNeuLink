@@ -337,6 +337,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
+        NOISE: None,
         INPUT_STATES: None,
         OUTPUT_STATES:[
             {NAME:TRANSFER_RESULT},
