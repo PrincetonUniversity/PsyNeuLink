@@ -259,6 +259,7 @@ from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, Proces
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
+from PsyNeuLink.Globals.TimeScale import TimeScale
 
 # ProcessRegistry ------------------------------------------------------------------------------------------------------
 
@@ -1844,6 +1845,7 @@ class System_Base(System):
                 execution_id=None,
                 clock=CentralClock,
                 time_scale=None,
+                termination_conditions={ts: None for ts in TimeScale},
                 # time_scale=TimeScale.TRIAL
                 context=None):
         """Execute mechanisms in system at specified :ref:`phases <System_Execution_Phase>` in order \
@@ -1964,7 +1966,7 @@ class System_Base(System):
         # sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
-        self._execute_processing(clock=clock, context=context)
+        self._execute_processing(clock=clock, termination_conditions=termination_conditions, context=context)
         #endregion
 
         # region EXECUTE LEARNING FOR EACH PROCESS
@@ -2001,56 +2003,56 @@ class System_Base(System):
 
         return self.terminalMechanisms.outputStateValues
 
-    def _execute_processing(self, clock=CentralClock, context=None):
+    def _execute_processing(self, clock=CentralClock, termination_conditions={ts: None for ts in TimeScale}, context=None):
     # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
         # Execute each Mechanism in self.executionList, in the order listed during its phase
-        for mechanism in self.scheduler.yield_mech():
+        for next_execution_set in self.scheduler.run(termination_conds=termination_conditions):
+            for mechanism in next_execution_set:
+                # mechanism, params, phase_spec = self.executionList[i]
+                from pprint import pprint
+                origin = True
+                if origin:
+                    print(mechanism.execute(
+                                      # clock=clock,
+                                      # time_scale=self.timeScale,
+                                      # time_scale=time_scale,
+                                      # runtime_params=params,
+                                      # context=context +
+                                      #         "| mechanism: " + mechanism.name +
+                                      #         " [in processes: " + str(process_names) + "]"
+                                     ))
 
-            # mechanism, params, phase_spec = self.executionList[i]
-            from pprint import pprint
-            origin = True
-            if origin:
-                print(mechanism.execute(
-                                  # clock=clock,
-                                  # time_scale=self.timeScale,
-                                  # time_scale=time_scale,
-                                  # runtime_params=params,
-                                  # context=context +
-                                  #         "| mechanism: " + mechanism.name +
-                                  #         " [in processes: " + str(process_names) + "]"
-                                 ))
 
+                print("============================================================================================================================================================================")
+                    #
+                    # if self._report_system_output and  self._report_process_output:
 
-            print("============================================================================================================================================================================")
-                #
-                # if self._report_system_output and  self._report_process_output:
+                        # REPORT COMPLETION OF PROCESS IF ORIGIN:
+                        # Report initiation of process(es) for which mechanism is an ORIGIN
+                        # Sort for consistency of reporting:
+                        # processes = list(mechanism.processes.keys())
+                        # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                        # for process in process_keys_sorted:
+                        #     if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
+                        #         process._report_process_initiation(input=mechanism.inputValue[0])
 
-                    # REPORT COMPLETION OF PROCESS IF ORIGIN:
-                    # Report initiation of process(es) for which mechanism is an ORIGIN
-                    # Sort for consistency of reporting:
-                    # processes = list(mechanism.processes.keys())
-                    # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                    # for process in process_keys_sorted:
-                    #     if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
-                    #         process._report_process_initiation(input=mechanism.inputValue[0])
+                        # REPORT COMPLETION OF PROCESS IF TERMINAL:
+                        # Report completion of process(es) for which mechanism is a TERMINAL
+                        # Sort for consistency of reporting:
+                        # processes = list(mechanism.processes.keys())
+                        # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                        # for process in process_keys_sorted:
+                        #     if process.learning and process._learning_enabled:
+                        #         continue
+                        #     if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
+                        #         process._report_process_completion()
 
-                    # REPORT COMPLETION OF PROCESS IF TERMINAL:
-                    # Report completion of process(es) for which mechanism is a TERMINAL
-                    # Sort for consistency of reporting:
-                    # processes = list(mechanism.processes.keys())
-                    # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                    # for process in process_keys_sorted:
-                    #     if process.learning and process._learning_enabled:
-                    #         continue
-                    #     if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
-                    #         process._report_process_completion()
-
-            # if not i:
-            #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
-            #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
-            #     # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
-            #     self.variable = convert_to_np_array(self.input, 2) * 0
-            # i += 1
+                # if not i:
+                #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
+                #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
+                #     # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
+                #     self.variable = convert_to_np_array(self.input, 2) * 0
+                # i += 1
 
     def _execute_learning(self, clock=CentralClock, context=None):
         # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
@@ -2608,18 +2610,18 @@ class System_Base(System):
         """
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-        
+
         import graphviz as gv
 
         system_graph = self.graph
         learning_graph=self.learningGraph
-        
+
         # build graph and configure visualisation settings
-        G = gv.Digraph(engine = "dot", 
-                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'}, 
+        G = gv.Digraph(engine = "dot",
+                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'},
                        edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
                        graph_attr = {"rankdir" : direction} )
-        
+
         # work with system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
@@ -2629,14 +2631,14 @@ class System_Base(System):
             rcvr_name = rcvr[0].name
             rcvr_shape = rcvr[0].variable.shape[1]
             rcvr_label = " {} ({}) ".format(rcvr_name, rcvr_shape)
-            
+
             # loop through senders
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
                 sndr_name = sndr[0].name
                 sndr_shape = sndr[0].variable.shape[1]
                 sndr_label = " {} ({}) ".format(sndr_name, sndr_shape)
-                
+
                 # find edge name
                 projs = sndr[0].outputState.sendsToProjections
                 for proj in projs:
@@ -2645,7 +2647,7 @@ class System_Base(System):
                         edge_shape = proj.matrix.shape
                 edge_label = " {} {} ".format(edge_name, edge_shape)
                 G.edge(sndr_label, rcvr_label, label = edge_label)
-                
+
         if   output_fmt == 'pdf':
             G.view(self.name.replace(" ", "-"), cleanup=True)
         elif output_fmt == 'jupyter':
@@ -2682,8 +2684,8 @@ class System_Base(System):
         learning_graph=self.learningGraph
 
         # build graph and configure visualisation settings
-        G = gv.Digraph(engine = "dot", 
-                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'}, 
+        G = gv.Digraph(engine = "dot",
+                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'},
                        edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
                        graph_attr = {"rankdir" : direction} )
 
