@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -44,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -84,7 +87,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
@@ -122,8 +128,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -132,23 +140,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Projections</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Projections</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/Projection.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/Projection.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -169,37 +194,34 @@
 <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a> of one mechanism (its <code class="xref any docutils literal"><span class="pre">sender</span></code>), and does whatever conversion is
 needed to transmit that information to the <a class="reference internal" href="InputState.html"><span class="doc">inputState</span></a> of another mechanism (its
 <code class="xref any docutils literal"><span class="pre">receiver</span></code>).  There are three types of projections that serve difference purposes:</p>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></dt>
-<dd><p class="first last">These take the output of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>, convert this by convolving it with
+<dd>These take the output of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>, convert this by convolving it with
 the projection&#8217;s <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter, and transmit the result as
 input to another ProcessingMechanism.  Typically, MappingProjections are used to connect mechanisms in the
-<a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.</p>
-</dd>
+<code class="xref any docutils literal"><span class="pre">pathway</span></code> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.</dd>
 </dl>
 </li>
 </ul>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd><p class="first last">These take an <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.allocation" title="ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> specification, usually the ouptput
+<dd>These take an <code class="xref any docutils literal"><span class="pre">allocation</span></code> specification, usually the ouptput
 of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, and transmit this to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of
 a ProcessingMechanism which uses this to modulate a parameter of the mechanism or its function.
-ControlProjections are typically used in the context of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
-</dd>
+ControlProjections are typically used in the context of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</dd>
 </dl>
 </li>
 </ul>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
-<dd><p class="first last">These take an <code class="xref any docutils literal"><span class="pre">error_signal</span></code>,&nbsp;usually the output of a
+<dd>These take an <code class="xref any docutils literal"><span class="pre">error_signal</span></code>,&nbsp;usually the output of a
 <code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code>, and transmit this to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> which uses this to modify its <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
-parameter. LearningProjections are used when learning has been specified for a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a>
-or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>.</p>
-</dd>
+parameter. LearningProjections are used when learning has been specified for a <code class="xref any docutils literal"><span class="pre">process</span></code>
+or <code class="xref any docutils literal"><span class="pre">system</span></code>.</dd>
 </dl>
 </li>
 </ul>
@@ -212,7 +234,7 @@ are <a class="reference internal" href="#projection-automatic-creation"><span cl
 <div class="section" id="in-context-specification">
 <span id="projection-in-context-specification"></span><h3>In Context Specification<a class="headerlink" href="#in-context-specification" title="Permalink to this headline">¶</a></h3>
 <p>Projections can be specified in a number of places where they are required or permitted, for example in the
-specification of a <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> for a <a class="reference internal" href="Process.html"><span class="doc">process</span></a>, where the value of a parameter is specified
+specification of a <code class="xref any docutils literal"><span class="pre">pathway</span></code> for a <a class="reference internal" href="Process.html"><span class="doc">process</span></a>, where the value of a parameter is specified
 (e.g., to assign a ControlProjection) or where a MappingProjection is specified  (to assign it a LearningProjection).
 Any of the following can be used to specify a projection in context:</p>
 <blockquote>
@@ -278,9 +300,9 @@ projection (see documentation for subclass).</li>
 <div class="section" id="automatic-creation">
 <span id="projection-automatic-creation"></span><h3>Automatic creation<a class="headerlink" href="#automatic-creation" title="Permalink to this headline">¶</a></h3>
 <p>Under some circumstances PsyNeuLink will automatically create a projection. For example, a <a class="reference internal" href="Process.html"><span class="doc">process</span></a>
-automatically generates a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> between adjacent mechanisms in its <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> if none is specified;
-and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> are automatically generated when <a class="reference internal" href="Process.html#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> is specified for a
-<a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>.  Creating a <a class="reference internal" href="State.html"><span class="doc">state</span></a> will also
+automatically generates a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> between adjacent mechanisms in its <code class="xref any docutils literal"><span class="pre">pathway</span></code> if none is specified;
+and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> are automatically generated when <code class="xref any docutils literal"><span class="pre">learning</span></code> is specified for a
+<code class="xref any docutils literal"><span class="pre">process</span></code> or <code class="xref any docutils literal"><span class="pre">system</span></code>.  Creating a <a class="reference internal" href="State.html"><span class="doc">state</span></a> will also
 automatically generate a projection and a mechanism as the projection&#8217;s <code class="xref any docutils literal"><span class="pre">sender</span></code> if none is
 specified in the constructor for the state (the type of projection and mechanism depend on the type of state &#8211; see
 <code class="xref any docutils literal"><span class="pre">state</span> <span class="pre">subclasses</span></code> for details).</p>
@@ -316,7 +338,7 @@ is used, and its <a class="reference internal" href="OutputState.html#outputstat
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>: if the projection&#8217;s <code class="xref any docutils literal"><span class="pre">receiver</span></code> belongs to a system, then the system&#8217;s
-<a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is used as the mechanism for the <code class="xref any docutils literal"><span class="pre">sender</span> <span class="pre">&lt;Projection.sender&gt;.</span>&#160; <span class="pre">Otherwise,</span> <span class="pre">the</span> <span class="pre">`DefaultControlMechanism</span></code>
+<code class="xref any docutils literal"><span class="pre">controller</span></code> is used as the mechanism for the <code class="xref any docutils literal"><span class="pre">sender</span> <span class="pre">&lt;Projection.sender&gt;.</span>&#160; <span class="pre">Otherwise,</span> <span class="pre">the</span> <span class="pre">`DefaultControlMechanism</span></code>
 is used.  In either case, an outputState is added to the ControlMechanism and assigned as the
 projection&#8217;s <code class="xref any docutils literal"><span class="pre">sender</span></code>.</li>
 </ul>
@@ -366,15 +388,18 @@ from its <code class="xref any docutils literal"><span class="pre">sender</span>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="MappingProjection.html" class="btn btn-neutral float-right" title="MappingProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="MappingProjection.html" class="btn btn-neutral float-right" title="MappingProjection" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="OutputState.html" class="btn btn-neutral" title="OutputState" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="OutputState.html" class="btn btn-neutral" title="OutputState" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -408,7 +433,8 @@ from its <code class="xref any docutils literal"><span class="pre">sender</span>
             VERSION:'0.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

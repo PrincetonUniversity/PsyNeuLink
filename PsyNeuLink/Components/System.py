@@ -265,6 +265,7 @@ from PsyNeuLink.Globals.Registry import register_category
 defaultInstanceCount = 0 # Number of default instances (used to index name)
 
 # inspect() keywords
+SCHEDULER = "scheduler"
 PROCESSES = 'processes'
 MECHANISMS = 'mechanisms'
 ORIGIN_MECHANISMS = 'origin_mechanisms'
@@ -311,6 +312,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism im
 @tc.typecheck
 def system(default_input_value=None,
            processes:list=[],
+           scheduler = None,
            initial_values:dict={},
            controller=SystemDefaultControlMechanism,
            enable_controller:bool=False,
@@ -439,6 +441,7 @@ def system(default_input_value=None,
     return System_Base(default_input_value=default_input_value,
                        processes=processes,
                        controller=controller,
+                       scheduler= scheduler,
                        initial_values=initial_values,
                        enable_controller=enable_controller,
                        monitor_for_control=monitor_for_control,
@@ -746,6 +749,7 @@ class System_Base(System):
                  targets=None,
                  params=None,
                  name=None,
+                 scheduler = None,
                  prefs:is_pref_set=None,
                  context=None):
 
@@ -772,6 +776,7 @@ class System_Base(System):
         self.targets = None
         self.current_targets = None
         self.learning = False
+        self.scheduler = scheduler
 
         register_category(entry=self,
                           base_class=System_Base,
@@ -1879,7 +1884,9 @@ class System_Base(System):
             Each item is a 2d array that contains arrays for each outputState.value of each TERMINAL mechanism
 
         """
-
+        for i in self.scheduler.yield_mech():
+            print(i.execute())
+        print("DONE")
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
 

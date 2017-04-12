@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -85,7 +88,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
@@ -126,8 +132,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -136,25 +144,42 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
           <li><a href="State.html">States</a> &raquo;</li>
-      
-    <li>ParameterState</li>
+        
+      <li>ParameterState</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/ParameterState.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/ParameterState.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -206,7 +231,7 @@ Each parameterState is created using the specification of the parameter for whic
 (see <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for additional details).</li>
 </ul>
 <ul class="simple">
-<li>In a <strong>parameter dictionary</strong> used to specify the <code class="xref any docutils literal"><span class="pre">params</span></code> argument in the constructor for the object to which
+<li>In a <strong>parameter dictionary</strong> used to specify the <a class="reference internal" href="Function.html#Function.NormalDist.params" title="Function.NormalDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument in the constructor for the object to which
 the parameter belongs. The entry for each parameter must use the keyword for the parameter as its key,
 and the parameter&#8217;s specification as its value (see <a class="reference internal" href="#parameterstate-specification-examples"><span class="std std-ref">examples</span></a> below).
 Parameters for an object&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> must be specified in an entry with the key
@@ -281,7 +306,7 @@ each of which is specified using a different format:</p>
 </div>
 <p>The first parameter of the mechanism&#8217;s function (<code class="docutils literal"><span class="pre">param_a</span></code>) is assigned a value directly; the second (<code class="docutils literal"><span class="pre">param_b</span></code>) is
 assigned a value and a ControlProjection; the third (<code class="docutils literal"><span class="pre">param_c</span></code>) is assigned a value and a
-<a class="reference internal" href="ControlProjection.html#controlprojection-structure"><span class="std std-ref">ControlProjection with a specified function</span></a>; and the fourth (<code class="docutils literal"><span class="pre">param_d</span></code>) is
+<code class="xref any docutils literal"><span class="pre">ControlProjection</span> <span class="pre">with</span> <span class="pre">a</span> <span class="pre">specified</span> <span class="pre">function</span></code>; and the fourth (<code class="docutils literal"><span class="pre">param_d</span></code>) is
 assigned just a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> (the default value for the parameter will be used).</p>
 <p>In the following example, a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created, and its
 <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter is assigned a random weight matrix (using a
@@ -346,7 +371,7 @@ result of the parameterState&#8217;s <a class="reference internal" href="#Parame
 </ul>
 <p>The value of a parameter of a mechanism or projection is accessible as an attribute with the corresponding name
 (e.g., myMechanism.&lt;param_name&gt;.  The value of a parameter of a <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> is accessible from the
-<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function_params" title="Mechanism.Mechanism_Base.function_params"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> attribute of the mechanism or projection to which the function belongs;  this is a dictionary with
+<a class="reference internal" href="DDM.html#DDM.DDM.function_params" title="DDM.DDM.function_params"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> attribute of the mechanism or projection to which the function belongs;  this is a dictionary with
 entries for each of the function&#8217;s parameters. Each of the function&#8217;s parameters can be referenced using a key that is
 the name of the parameter (e.g., <code class="docutils literal"><span class="pre">myMech.function_object.&lt;param_name&gt;</span></code>).  Parameter attributes of mechanisms,
 projections, and their functions accessed in these ways are read-only.  To re-assign the value of a parameter,
@@ -418,26 +443,26 @@ projection, or function.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<em>Mechanism or Projection</em>) &#8211; the <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> or <a class="reference internal" href="Projection.html"><span class="doc">projection</span></a> to which to which the parameterState belongs; it must
+<li><strong>owner</strong> (<a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em> or </em><a class="reference internal" href="Projection.html#module-Projection" title="Projection"><em>Projection</em></a>) &#8211; the <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> or <a class="reference internal" href="Projection.html"><span class="doc">projection</span></a> to which to which the parameterState belongs; it must
 be specified or determinable from the context in which the parameterState is created. The owner of a
 parameterState for the parameter of a <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> should be specified as the mechanism or projection
 to which the function belongs.</li>
-<li><strong>reference_value</strong> (<em>number, list or np.ndarray</em>) &#8211; specifies the default value of the parameter for which the parameterState is responsible.</li>
-<li><strong>value</strong> (<em>number, list or np.ndarray</em>) &#8211; specifies the template for the parametersState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (since a parameterState&#8217;s
+<li><strong>reference_value</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) &#8211; specifies the default value of the parameter for which the parameterState is responsible.</li>
+<li><strong>value</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) &#8211; specifies the template for the parametersState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (since a parameterState&#8217;s
 <a class="reference internal" href="#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attributes must have the same format
 (number and type of elements).</li>
-<li><strong>function</strong> (<em>Function or method : default LinearCombination(operation=SUM)</em>) &#8211; specifies the function used to aggregate the values of the projections received by the parameterState.
+<li><strong>function</strong> (<a class="reference internal" href="Function.html#module-Function" title="Function"><em>Function</em></a><em> or </em><em>method : default LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em><em></em>) &#8211; specifies the function used to aggregate the values of the projections received by the parameterState.
 It must produce a result that has the same format (number and type of elements) as its input.</li>
 <li><strong>parameter_modulation_operation</strong> (<em>ModulationOperation : default ModulationOperation.MULTIPLY</em>) &#8211; specifies the operation by which the values of the projections received by the parameterState are used
 to modify its <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref any py py-attr docutils literal"><span class="pre">baseValue</span></code></a> before assigning it as the value of the parameter for
 which the parameterState is responsible.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em></em><em>]</em><em></em>) &#8211; a <a class="reference internal" href="#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the parameterState or its function, and/or a custom function and its parameters.  Values specified for
 parameters in the dictionary override any assigned to those parameters in arguments of the constructor.</li>
 <li><strong>name</strong> (<em>str : default InputState-&lt;index&gt;</em>) &#8211; a string used for the name of the inputState.
 If not is specified, a default is assigned by StateRegistry of the mechanism to which the inputState belongs
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : State.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the inputState.
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><em>PreferenceSet</em><em> or </em><em>specification dict : State.classPreferences</em><em>]</em><em></em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the inputState.
 If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</li>
 </ul>
@@ -530,15 +555,18 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="OutputState.html" class="btn btn-neutral float-right" title="OutputState" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="OutputState.html" class="btn btn-neutral float-right" title="OutputState" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="InputState.html" class="btn btn-neutral" title="InputState" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="InputState.html" class="btn btn-neutral" title="InputState" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -572,7 +600,8 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
             VERSION:'0.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
