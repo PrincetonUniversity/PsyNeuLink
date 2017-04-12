@@ -235,7 +235,6 @@ def iscompatible(candidate, reference=None, **kargs):
         kargs[kwCompatibilityNumeric] = True
         # number_only = True
 
-
     # If reference is not provided, assign local_variables to arg values (provided or default)
     if reference is None:
         match_type = kargs[kwCompatibilityType]

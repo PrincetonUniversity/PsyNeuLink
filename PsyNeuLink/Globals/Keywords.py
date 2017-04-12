@@ -349,6 +349,7 @@ WALD_DIST_FUNCTION = "Wald Distribution"
 #region ----------------------------------------------    SYSTEM   ----------------------------------------------------
 
 SYSTEM = "System"
+SCHEDULER = "scheduler"
 SYSTEM_INIT = 'System.__init__'
 DEFAULT_SYSTEM = "DefaultSystem"
 CONTROLLER = "controller"
