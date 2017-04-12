@@ -802,14 +802,9 @@ class Component(object):
                     # Get copy of default params
                     # IMPLEMENTATION NOTE: this is needed so that function_params gets included in user_params and
                     #                      thereby gets instantiated as a property in _create_attributes_for_user_params
-                    # MODIFIED 4/9/17 OLD:
-                    # FIX: MAKE FUNCTION_PARAMS A ReadOnlyDict AS PER ELSE BELOW
-                    params[FUNCTION_PARAMS] = function().user_params.copy()
-                    # MODIFIED 4/9/17 NEW:
                     params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
                     for param_name in sorted(list(function().user_params.keys())):
                         params[FUNCTION_PARAMS].__additem__(param_name, function().user_params[param_name])
-                    # MODIFIED 4/9/17 END
                     continue
 
                 # function arg is not a class (presumably an object)
