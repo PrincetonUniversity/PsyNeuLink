@@ -1884,9 +1884,7 @@ class System_Base(System):
             Each item is a 2d array that contains arrays for each outputState.value of each TERMINAL mechanism
 
         """
-        for i in self.scheduler.yield_mech():
-            print(i.execute())
-        print("DONE")
+
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
 
@@ -2006,56 +2004,49 @@ class System_Base(System):
     def _execute_processing(self, clock=CentralClock, context=None):
     # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
         # Execute each Mechanism in self.executionList, in the order listed during its phase
-        for i in range(len(self.executionList)):
+        for mechanism in self.scheduler.yield_mech():
 
-            mechanism, params, phase_spec = self.executionList[i]
+            # mechanism, params, phase_spec = self.executionList[i]
 
-            # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
-# FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
-            if phase_spec == (clock.time_step % self.numPhases):
-                # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+            mechanism.execute(
+                              # clock=clock,
+                              # time_scale=self.timeScale,
+                              # time_scale=time_scale,
+                              # runtime_params=params,
+                              # context=context +
+                              #         "| mechanism: " + mechanism.name +
+                              #         " [in processes: " + str(process_names) + "]"
+                             )
 
-                processes = list(mechanism.processes.keys())
-                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                process_names = list(p.name for p in process_keys_sorted)
-
-                mechanism.execute(clock=clock,
-                                  time_scale=self.timeScale,
-                                  # time_scale=time_scale,
-                                  runtime_params=params,
-                                  context=context +
-                                          "| mechanism: " + mechanism.name +
-                                          " [in processes: " + str(process_names) + "]")
-
-
-                if self._report_system_output and  self._report_process_output:
+                #
+                # if self._report_system_output and  self._report_process_output:
 
                     # REPORT COMPLETION OF PROCESS IF ORIGIN:
                     # Report initiation of process(es) for which mechanism is an ORIGIN
                     # Sort for consistency of reporting:
-                    processes = list(mechanism.processes.keys())
-                    process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                    for process in process_keys_sorted:
-                        if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
-                            process._report_process_initiation(input=mechanism.inputValue[0])
+                    # processes = list(mechanism.processes.keys())
+                    # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                    # for process in process_keys_sorted:
+                    #     if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
+                    #         process._report_process_initiation(input=mechanism.inputValue[0])
 
                     # REPORT COMPLETION OF PROCESS IF TERMINAL:
                     # Report completion of process(es) for which mechanism is a TERMINAL
                     # Sort for consistency of reporting:
-                    processes = list(mechanism.processes.keys())
-                    process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                    for process in process_keys_sorted:
-                        if process.learning and process._learning_enabled:
-                            continue
-                        if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
-                            process._report_process_completion()
+                    # processes = list(mechanism.processes.keys())
+                    # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                    # for process in process_keys_sorted:
+                    #     if process.learning and process._learning_enabled:
+                    #         continue
+                    #     if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
+                    #         process._report_process_completion()
 
-            if not i:
-                # Zero input to first mechanism after first run (in case it is repeated in the pathway)
-                # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
-                # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
-                self.variable = convert_to_np_array(self.input, 2) * 0
-            i += 1
+            # if not i:
+            #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
+            #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
+            #     # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
+            #     self.variable = convert_to_np_array(self.input, 2) * 0
+            # i += 1
 
     def _execute_learning(self, clock=CentralClock, context=None):
         # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
