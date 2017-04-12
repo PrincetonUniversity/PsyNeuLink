@@ -2007,17 +2007,21 @@ class System_Base(System):
         for mechanism in self.scheduler.yield_mech():
 
             # mechanism, params, phase_spec = self.executionList[i]
+            from pprint import pprint
+            origin = True
+            if origin:
+                print(mechanism.execute(
+                                  # clock=clock,
+                                  # time_scale=self.timeScale,
+                                  # time_scale=time_scale,
+                                  # runtime_params=params,
+                                  # context=context +
+                                  #         "| mechanism: " + mechanism.name +
+                                  #         " [in processes: " + str(process_names) + "]"
+                                 ))
 
-            mechanism.execute(
-                              # clock=clock,
-                              # time_scale=self.timeScale,
-                              # time_scale=time_scale,
-                              # runtime_params=params,
-                              # context=context +
-                              #         "| mechanism: " + mechanism.name +
-                              #         " [in processes: " + str(process_names) + "]"
-                             )
 
+            print("============================================================================================================================================================================")
                 #
                 # if self._report_system_output and  self._report_process_output:
 
