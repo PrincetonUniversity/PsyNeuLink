@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -42,6 +44,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -82,7 +85,10 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
@@ -103,8 +109,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -113,23 +121,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Utilities</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Utilities</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/Utilities.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/Utilities.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -197,7 +222,7 @@ are not constrained to be used by PsyNeuLink objects</dd>
 <li><code class="xref any docutils literal"><span class="pre">is_matrix</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">underscore_to_camelCase</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">append_type_to_name</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">make_prop</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">ReadOnlyOrderedDict</span></code></li>
 </ul>
 <dl class="class">
 <dt id="Utilities.ModulationOperation">
@@ -270,25 +295,22 @@ if kwCompatibilityNumeric is <code class="xref std std-keyword docutils literal"
 </ul>
 </dd>
 <dt>kwCompatibilityLength (&#8220;length&#8221;):&lt;int&gt;  (default: 0):    (spec local_variable: match_length)</dt>
-<dd><ul class="first">
+<dd><ul class="first simple">
 <li><dl class="first docutils">
 <dt>if kwCompatibilityLength is absent:</dt>
-<dd><p class="first last">if reference is absent, candidate can be of any length
-if reference is provided, candidate must match reference length</p>
-</dd>
+<dd>if reference is absent, candidate can be of any length
+if reference is provided, candidate must match reference length</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>if kwCompatibilityLength = 0:</dt>
-<dd><p class="first last">candidate can be any length, irrespective of the reference or its length</p>
-</dd>
+<dd>candidate can be any length, irrespective of the reference or its length</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>if kwCompatibilityLength &gt; 0:</dt>
-<dd><p class="first last">if reference is provided, candidate must be same length as reference
-if reference is omitted, length of candidate must equal value of kwLength</p>
-</dd>
+<dd>if reference is provided, candidate must be same length as reference
+if reference is omitted, length of candidate must equal value of kwLength</dd>
 </dl>
 </li>
 </ul>
@@ -429,6 +451,9 @@ it, an exception is raised when a missing attribute is encountered.</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -462,7 +487,8 @@ it, an exception is raised when a missing attribute is encountered.</p>
             VERSION:'0.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
