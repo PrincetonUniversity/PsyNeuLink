@@ -14,8 +14,11 @@ class TimeScale(Enum):
     """Values used to specify ``time_scale`` argument for mechanisms, processes, and systems.
     """
     TIME_STEP = 0
-    TRIAL = 1
-    BOUNDS = 2 # Used for type checking where TimeScale value is passed
+    PASS = 1
+    TRIAL = 2
+    RUN = 3
+    LIFE = 4
+    BOUNDS = 5 # Used for type checking where TimeScale value is passed
 
 
 class Clock:
