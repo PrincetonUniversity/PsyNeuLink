@@ -187,8 +187,8 @@ above.  The `figure <Run_Sequence_Format_Fig>` below shows examples.
     *Lists:* if there is more than one round, then the outermost level of the list is used for the sequence of
     executions.  If there is only one `ORIGIN` mechanism and it has only one inputState (the most common
     case), then a single sublist is used for the input of each round.  If the `ORIGIN` mechanism has more
-    than one inputState, then the entry for each round is a sublist of the inputStates, each entry of which is a 
-    sublist containing the input for that inputState.  If there is more than one mechanism, but none have more than 
+    than one inputState, then the entry for each round is a sublist of the inputStates, each entry of which is a
+    sublist containing the input for that inputState.  If there is more than one mechanism, but none have more than
     one inputState, then a sublist is used for each mechanism in each round, within which a sublist is used for the
     input for that mechanism.  If there is more than one mechanism, and any have more than one inputState,
     then a sublist is used for each mechanism for each round, within which a sublist is used for each
@@ -399,6 +399,7 @@ def run(object,
         call_after_time_step:tc.optional(function_type)=None,
         clock=CentralClock,
         time_scale:tc.optional(tc.enum(TimeScale.TRIAL, TimeScale.TIME_STEP))=None,
+        termination_conditions=None,
         context=None):
     """run(                         \
     inputs,                      \
@@ -636,6 +637,7 @@ def run(object,
                                     execution_id=execution_id,
                                     clock=clock,
                                     time_scale=time_scale,
+                                    termination_conditions=termination_conditions,
                                     context=context)
 
             if call_after_time_step:
@@ -1252,7 +1254,7 @@ def _get_obect_type(object):
         return SYSTEM
     else:
         raise RunError("{} type not supported by Run module".format(object.__class__.__name__))
-    
+
 
 import uuid
 def _get_unique_id():
