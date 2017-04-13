@@ -290,23 +290,32 @@ class ResetMode(Enum):
 #    (until params are fully implemented as objects)
 from collections import UserDict
 class ParamsDict(UserDict):
+    """Create, set and get attribute of owner for each key in dict
+    
+    Creates and maintains an interface to attributes of a component via a dict:
+        - any assignment to an entry of the dict creates or updates the value of the attribute with the name of the key
+        - any query retrieves the value of the attribute with the name of the key
+    Dict itself is maintained in self.data
+    
+    Notes:  
+    * This provides functionality similar to the __dict__ attribute of a python object, 
+        but is restricted to the attributes relevant to its role as a PsyNeuLink component.
+    * It insures that any instantiation of a function_params attribute is a ReadOnlyOrderedDict
+     
+    """
+
     def __init__(self, owner, dict=None):
         super().__init__()
         self.owner = owner
         if dict:
             self.update(dict)
-        # MODIFIED 4/10/17 NEW: REPLACE FUNCTION_PARAMS WITH READONLYDICT
+        # if there is a function_params entry in the dict, ensure its entry is created as a ReadOnlyOrderedDict
         if FUNCTION_PARAMS in dict:
             self[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
             for param_name in sorted(list(dict[FUNCTION_PARAMS].keys())):
                 self[FUNCTION_PARAMS].__additem__(param_name, dict[FUNCTION_PARAMS][param_name])
-            TEST = True
-        # MODIFIED 4/10/17 END
 
     def __getitem__(self, key):
-
-        # # WORKS:
-        # return super().__getitem__(key)
 
         try:
             # Try to retrieve from attribute of owner object
@@ -314,17 +323,24 @@ class ParamsDict(UserDict):
         except AttributeError:
             # If the owner has no such attribute, get from params dict entry
             return super().__getitem__(key)
-        except:
-            pass
 
     def __setitem__(self, key, item):
 
-        # # WORKS:
-        # super().__setitem__(key, item)
+        # if key is function_params, make sure it creates a ReadOnlyOrderedDict for the value of the entry
+        if key is FUNCTION_PARAMS:
+            if not isinstance(item, (dict, UserDict)):
+                raise ComponentError("Attempt to assign non-dict ({}) to {} attribute of {}".
+                                     format(item, FUNCTION_PARAMS, self.owner.name))
+            function_params = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
+            for param_name in sorted(list(item.keys())):
+                function_params.__additem__(param_name, item[param_name])
+            item = function_params
 
+        # keep local dict of entries
+        super().__setitem__(key, item)
+        # assign value to attrib
         setattr(self.owner, key, item)
-    # # ORIG:
-    #     self.data[key] = item
+
 
 parameter_keywords = set()
 
