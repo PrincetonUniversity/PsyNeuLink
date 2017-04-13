@@ -2650,7 +2650,9 @@ class Integrator(
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: variableClassDefault})
-    paramClassDefaults.update({})
+    paramClassDefaults.update({
+        NOISE: None
+    })
 
     @tc.typecheck
     def __init__(self,
