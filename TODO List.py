@@ -56,6 +56,7 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
 # FIX: Component: IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
 #                 SEE learning_rate IN LearningMechanism FOR EXAMPLE
 
@@ -618,7 +619,7 @@
 #      - need to make sure all parses of function can now handle this
 #      - instantiation of parameterStates needs to extract any params specified as args and/or in a params dict
 # - add @property for all params, so they can be addressed directly as attributes
-#      setter method should call _assign_defaults
+#      setter method should call _instantiate_defaults
 #
 
 #endregion
@@ -960,7 +961,7 @@
     # *  params can be set in the standard way for any Function subclass:
     #     - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
     #          and used for paramsCurrent unless and until the latter are changed in a function call
-    #     - paramInstanceDefaults can be later modified using _assign_defaults
+    #     - paramInstanceDefaults can be later modified using _instantiate_defaults
     #     - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
 
 # FIX: Figures: need higher rez
@@ -1592,7 +1593,7 @@
 #
 #  _validate_function:
 #
-# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using _assign_defaults),
+# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using _instantiate_defaults),
 # FIX:                  that function_params are changed too
 #
 # FIX / IMPLEMENT: "MODIFIED RUNTIME_PARAMS":
@@ -1604,7 +1605,7 @@
 #
 # FIX: _validate_params ALWAYS ALLOW PARAMETER_STATE_PARAMS TO PASS
 # FIX: get rid of is_numeric_or_none; replace throughout with tc.optional(is_numeric)
-# FIX: implement _assign_defaults where flagged
+# FIX: implement _instantiate_defaults where flagged
 #
 # QUESTION: is it possible to specify a function param in a params dict if the arguments appear in the __init__
 #           method?  And, in either case, does specifying function params in a params dict overrided the value
@@ -1941,7 +1942,7 @@
 #
 # FIX!!: CONSOLIDATE _instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module
 # FIX:     Function IN Projection:  (_instantiate_attributes_before_function() and _instantiate_parameter_states())
-# FIX:     ?? SHOULD THIS USE _assign_defaults ??
+# FIX:     ?? SHOULD THIS USE _instantiate_defaults ??
 #
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 #          #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
@@ -2440,7 +2441,7 @@
 # FIX: change errorSignal -> error_signal (but must be sure not to interfere / get confused with existing error_signal)
 # FIX: MAKE SURE LEARNING PROJECTIONS ON PROCESS ARE ALWAYS ADDED AS COPIES
 # FIX: [LearningProjection]:
-                # FIX: ?? SHOULD THIS USE _assign_defaults:
+                # FIX: ?? SHOULD THIS USE _instantiate_defaults:
                 # self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING_PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 # FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningProjection:

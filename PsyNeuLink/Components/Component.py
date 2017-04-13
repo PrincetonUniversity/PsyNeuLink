@@ -119,8 +119,11 @@ Every component has the following set of core attributes that govern its operati
         my_component = SomeComponent(function=SomeFunction
                                      params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
 
-  The parameters for a `function <Component.function>` can be modified after it has been created, by assigning the 
-  new value to the corresponding attribute of the component's `function_object`. 
+  The parameters for a `function <Component.function>` can be modified after it has been created by assigning the 
+  new value to the corresponding attribute of the component's `function_object`; for example, if the name of the
+  parameter is mole, it can be modified as follows::
+  
+        my_component.function_object.mole = 6.0221409
   
   COMMENT:       
       See `ParameterState_Specifying_Parameters` for details of parameter specification.
@@ -130,21 +133,17 @@ Every component has the following set of core attributes that govern its operati
 
 * **function_object** - the `function_object` attribute refers to the `Function` assigned to the component; its 
   `function <Function.function>` is assigned to the `function <Component>` attribute of the component.  The parameters
-  of the Function can be modified by assigning values to the attributes corresponding to those parameters, as in the
-  example below::
-    
-        my_component = SomeComponent(function=SomeFunction(some_param=1))
-        
-        Change some_param as follows:
+  of the Function can be modified by assigning values to the attributes corresponding to those parameters (see
+  `function_params` above).
 
-        my_component.function_object.some_param=2
+.. _Component_User_Params:
 
 * **user_params** - the `user_params` attribute contains a dictionary of all of the user-modifiable attributes for the
-  the component.  This dictionary is read-only.  Changes to the value of an attribute must be made by referencing it
-  directly.
+  the component.  This dictionary is read-only.  Changes to the value of an attribute must be made by assigning a 
+  value to it directly.
 
 * **value** - the `value <Component.value>` attribute contains the result (return value) of the component's 
-  `function <Component.function>` after that is called.     
+  `function <Component.function>` after the function is called.     
 
 * **name** - the `name <Component.name>` attribute contains the name assigned to the component when it was created.  
   If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for 
@@ -164,7 +163,12 @@ COMMENT
 Component Methods
 ~~~~~~~~~~~~~~~~~
 
-There are two categories 
+There are two sets of methods that belong to every component: one set that is called when it is initialized; and 
+another set that can be called to perform various operations common to all components.  Each of these is described 
+briefly below.  All of these methods can be overridden by subclasses to implement customized operations, however   
+it is strongly recommended that the method be called on super() at some point, so that the standard operations are 
+carried out.  Whether customization operations should be performed before or after the call to super is discussed in 
+the descriptions below where relevant. 
 
 .. _Component_Initialization_Methods:
 
@@ -172,12 +176,31 @@ Initialization Methods
 ^^^^^^^^^^^^^^^^^^^^^^
 
 These methods can be overridden by the subclass to customize the initialization process, but should always call the
-corresponding method of the component (using ``super``) to insure full initialization.
+corresponding method of the Component base class (using ``super``) to insure full initialization.  There are two
+categories of initializion methods:  validation and instantiation.  
 
-_validate_variable
-_validation_params
-_validate_function
-_assign_defaults
+
+.. _Component_Validation_Methods:
+
+* **Validation methods** perform a strictly *syntactic* check, to determine if a value being validated conforms 
+to the format expected for it by the component (i.e., the type of the value and, if it is iterable, the type its 
+elements and/or its length).  The value itself is not checked in any other way (e.g., whether it equals a particular 
+value or falls in a specified range).  If the validation fails, and exception is raised.  Validation methods never 
+make changes the actual value of an attribute, but they may change its format (e.g., from a list to an ndarray) to
+comply with requirements of the component.
+
+  * `_validate_variable <Component._validate_variable>` validates the value provided to the
+    keyword:`variable` argument in the constructor for the component.  If it is overridden, customized validation
+    should generally performed *prior* to the call to super(), to allow final processing by the Component base class. 
+    
+  * `_validate_params <Component._validate_params>` validates the value of any parameters specified in the constructor
+    for the component (whether they are made directly in the argument for a parameter, or in a 
+    `parameter specification dictionary <Mechanism_Creation>`.  If it is overridden by a subclass, customized validation
+    should generally be performed *after* the call to super().
+
+* **Instantiate methods** create, assign, and/or perform *semantic* checks on the values of component attributes.   
+
+_instantiate_defaults
 _instantiate_attributes_before_function
 _instantiate_function
 _instantiate_attributes_after_function
@@ -353,7 +376,7 @@ class Component(object):
         The component can be called with a params argument, which should contain entries for one or more of its params;
             - those values will be assigned to paramsCurrent at run time (overriding previous values in paramsCurrent)
             - if the component is called without a variable and/or params argument, it uses paramInstanceDefaults
-        The instance defaults can be assigned at initialization or using the _assign_defaults class method;
+        The instance defaults can be assigned at initialization or using the _instantiate_defaults class method;
             - if instance defaults are not assigned on initialization, the corresponding class defaults are assigned
         Parameters can be REQUIRED to be in paramClassDefaults (for which there is no default value to assign)
             - for all classes, by listing the name and type in requiredParamClassDefaultTypes dict of the Function class
@@ -400,7 +423,7 @@ class Component(object):
     Class methods:
         - _validate_variable(variable)
         - _validate_params(request_set, target_set, context)
-        - _assign_defaults(variable, request_set, assign_missing, target_set, default_set=None
+        - _instantiate_defaults(variable, request_set, assign_missing, target_set, default_set=None
         - reset_params()
         - _check_args(variable, params)
         - _assign_args_to_param_dicts(params, param_names, function_param_names)
@@ -613,7 +636,7 @@ class Component(object):
         #region ASSIGN DEFAULTS
         # Validate the set passed in and assign to paramInstanceDefaults
         # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
-        self._assign_defaults(variable=variable_default,
+        self._instantiate_defaults(variable=variable_default,
                              request_set=param_defaults, # requested set
                              assign_missing=True,        # assign missing params from classPreferences to instanceDefaults
                              target_set=self.paramInstanceDefaults, # destination set to which params are being assigned
@@ -1051,7 +1074,7 @@ class Component(object):
             self._validate_params(request_set=params, target_set=target_set, context=context)
 
 
-    def _assign_defaults(self,
+    def _instantiate_defaults(self,
                         variable=None,
                         request_set=None,
                         assign_missing=True,
@@ -1311,7 +1334,7 @@ class Component(object):
     def assign_params(self, request_set:tc.optional(dict)=None):
         """Validates specified params, adds them TO paramsInstanceDefaults, and instantiates any if necessary
 
-        Call _assign_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
+        Call _instantiate_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
         Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
         Instantiate any items in request set that require it (i.e., function or states).
 
@@ -1327,7 +1350,7 @@ class Component(object):
         import copy
         validated_set = {}
 
-        self._assign_defaults(request_set=request_set,
+        self._instantiate_defaults(request_set=request_set,
                              target_set=validated_set,
                              # assign_missing=False,
                              context=context)
@@ -1615,7 +1638,7 @@ class Component(object):
                             function = request_set[FUNCTION]
                         except KeyError:
                             # If no function is specified, self.assign_default_FUNCTION_PARAMS should be True
-                            # (see _assign_defaults above)
+                            # (see _instantiate_defaults above)
                             raise ComponentError("PROGRAM ERROR: No function params for {} so should be able to "
                                                 "validate {}".format(self.name, FUNCTION_PARAMS))
                         else:

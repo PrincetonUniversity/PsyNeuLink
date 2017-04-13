@@ -1021,7 +1021,7 @@ class System_Base(System):
             # If process item is a Process object, assign process_input as default
             if isinstance(process, Process):
                 if process_input is not None:
-                    process._assign_defaults(variable=process_input, context=context)
+                    process._instantiate_defaults(variable=process_input, context=context)
                 # If learning_rate is specified for system but not for process, then apply to process
                 # # MODIFIED 3/21/17 OLD:
                 # if self.learning_rate and not process.learning_rate:
