@@ -21,7 +21,7 @@ mechanism2 = TransferMechanism(name='my_Transfer2',
 
                                )
 
-print(mechanism2.execute(100), " = mech2 independently")
+print(mechanism2.execute(200), " = mech2 independently")
 
 mechanism3 = TransferMechanism(name='my_Transfer3',
                                default_input_value=[0],
@@ -30,6 +30,7 @@ mechanism3 = TransferMechanism(name='my_Transfer3',
 
                                )
 
+print(mechanism3.execute(600), " = mech3 independently")
 
 mechanism4 = TransferMechanism(name='my_Transfer4',
                                default_input_value=[0],
@@ -37,14 +38,17 @@ mechanism4 = TransferMechanism(name='my_Transfer4',
                                time_constant=0.0
 
                                )
-print(mechanism3.execute(200), " = mech3 independently")
+print(mechanism4.execute(1800), " = mech4 independently")
 
 mechanism5 = TransferMechanism(name='my_Transfer5',
                                default_input_value=[0],
-                               function=Linear(),
+                               function=Linear(slope=2.0),
                                time_constant=0.0
 
                                )
+
+print(mechanism5.execute(3600), " = mech5 independently")
+
 path = [mechanism1, mechanism2, mechanism3, mechanism4, mechanism5]
 process1 = process(default_input_value=[100],
                  params={PATHWAY:path},
