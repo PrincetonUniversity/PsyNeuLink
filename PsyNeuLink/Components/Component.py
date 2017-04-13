@@ -2247,7 +2247,7 @@ def make_property(name, default_value):
     def setter(self, val):
 
         if self.paramValidationPref:
-            self.assign_params(request_set={backing_field:val})
+            self.assign_params(request_set={backing_field[1:]:val})
         else:
             setattr(self, backing_field, val)
 
