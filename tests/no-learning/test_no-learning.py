@@ -10,7 +10,6 @@ from PsyNeuLink.Components.Projections.LearningProjection import LearningProject
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.TimeScale import TimeScale
-from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.scheduling.condition import AfterNCalls
 
 logger = logging.getLogger(__name__)
@@ -117,9 +116,6 @@ class TestNoLearning:
         # x.show_graph_with_learning()
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(Output_Layer, 1)}
-        sched = Scheduler(system=x)
-        x.scheduler = sched
-
         results = x.run(num_executions=10,
                         # inputs=stim_list,
                         # inputs=[[-1, 30],[2, 10]],
