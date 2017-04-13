@@ -12,7 +12,7 @@ mechanism1 = TransferMechanism(name='my_Transfer1',
                        time_constant =0.0
 
                        )
-print(mechanism1.execute(100)," = mech1 independently")
+print(mechanism1.execute(100)," = value of executing mechanism1 independently with input of 100")
 
 mechanism2 = TransferMechanism(name='my_Transfer2',
                                default_input_value=[0],
@@ -21,23 +21,24 @@ mechanism2 = TransferMechanism(name='my_Transfer2',
 
                                )
 
-print(mechanism2.execute(100), " = mech2 independently")
+print(mechanism2.execute(100)," = value of executing mechanism2 independently with input of 100")
 
 mechanism3 = TransferMechanism(name='my_Transfer3',
                                default_input_value=[0],
-                               function=Linear(slope=3.0),
+                               function=Linear(slope=2.0),
                                time_constant=0.0
 
                                )
-
+print(mechanism3.execute(200)," = value of executing mechanism3 independently with input of 200")
 
 mechanism4 = TransferMechanism(name='my_Transfer4',
                                default_input_value=[0],
-                               function=Linear(slope=3.0),
+                               function=Linear(slope=2.0),
                                time_constant=0.0
 
                                )
-print(mechanism3.execute(200), " = mech3 independently")
+print(mechanism4.execute(400)," = value of executing mechanism4 independently with input of 400")
+
 
 mechanism5 = TransferMechanism(name='my_Transfer5',
                                default_input_value=[0],
@@ -45,6 +46,9 @@ mechanism5 = TransferMechanism(name='my_Transfer5',
                                time_constant=0.0
 
                                )
+
+print(mechanism5.execute(800)," = value of executing mechanism5 independently with input of 800")
+
 path = [mechanism1, mechanism2, mechanism3, mechanism4, mechanism5]
 process1 = process(default_input_value=[100],
                  params={PATHWAY:path},
@@ -53,4 +57,4 @@ process1 = process(default_input_value=[100],
 
 system1 = system(processes=[process1], scheduler= mechanismGenerator(path))
 
-print(system1.execute([[100]]))
+print(system1.execute([[100]]), " = value of executing system with input of 100")
