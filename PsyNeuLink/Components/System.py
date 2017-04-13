@@ -2010,11 +2010,12 @@ class System_Base(System):
         for next_execution_set in self.scheduler.run(termination_conds=termination_conditions):
             for mechanism in next_execution_set:
                 # mechanism, params, phase_spec = self.executionList[i]
+                params = self._allMechanisms._get_tuple_for_mech(mechanism).params
                 mechanism.execute(
                                     # clock=clock,
                                     # time_scale=self.timeScale,
                                     # time_scale=time_scale,
-                                    # runtime_params=params,
+                                    runtime_params=params,
                                     context = context
                                     )
 
@@ -2123,6 +2124,7 @@ class System_Base(System):
             call_after_time_step=None,
             clock=CentralClock,
             time_scale=None,
+            termination_conditions=None,
             context=None):
         """Run a sequence of executions
 
@@ -2194,6 +2196,7 @@ class System_Base(System):
                    call_before_time_step=call_before_time_step,
                    call_after_time_step=call_after_time_step,
                    time_scale=time_scale,
+                   termination_conditions=termination_conditions,
                    clock=clock,
                    context=context)
 
