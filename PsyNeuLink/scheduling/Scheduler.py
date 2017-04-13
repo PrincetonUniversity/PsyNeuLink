@@ -3,7 +3,7 @@ import logging
 from toposort import toposort
 
 from PsyNeuLink.Globals.TimeScale import TimeScale
-from PsyNeuLink.scheduling.condition import ConditionSet, Never
+from PsyNeuLink.scheduling.condition import Always, ConditionSet, Never
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +157,6 @@ class Scheduler(object):
             while (
                     cur_index_consideration_queue < len(self.consideration_queue)
                     and not termination_conds[TimeScale.TRIAL].is_satisfied()
-                    and not termination_conds[TimeScale.RUN].is_satisfied()
                     ):
                 cur_time_step_exec = set()
                 cur_consideration_set = self.consideration_queue[cur_index_consideration_queue]
