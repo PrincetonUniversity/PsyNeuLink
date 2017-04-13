@@ -1947,6 +1947,7 @@ class System_Base(System):
                     system_input_state = next(projection.sender for projection in input_state.receivesFromProjections
                                               if isinstance(projection.sender, SystemInputState))
                     if system_input_state:
+                        print("SYSTEM_INPUT_STATE.VALUE", system_input_state.value)
                         system_input_state.value = input[i][j]
                     else:
                         raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
@@ -2009,50 +2010,13 @@ class System_Base(System):
         for next_execution_set in self.scheduler.run(termination_conds=termination_conditions):
             for mechanism in next_execution_set:
                 # mechanism, params, phase_spec = self.executionList[i]
-                from pprint import pprint
-                origin = True
-                if origin:
-                    print(mechanism.execute(
-                                      # clock=clock,
-                                      # time_scale=self.timeScale,
-                                      # time_scale=time_scale,
-                                      # runtime_params=params,
-                                      # context=context +
-                                      #         "| mechanism: " + mechanism.name +
-                                      #         " [in processes: " + str(process_names) + "]"
-                                     ))
-
-
-                print("============================================================================================================================================================================")
-                    #
-                    # if self._report_system_output and  self._report_process_output:
-
-                        # REPORT COMPLETION OF PROCESS IF ORIGIN:
-                        # Report initiation of process(es) for which mechanism is an ORIGIN
-                        # Sort for consistency of reporting:
-                        # processes = list(mechanism.processes.keys())
-                        # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                        # for process in process_keys_sorted:
-                        #     if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
-                        #         process._report_process_initiation(input=mechanism.inputValue[0])
-
-                        # REPORT COMPLETION OF PROCESS IF TERMINAL:
-                        # Report completion of process(es) for which mechanism is a TERMINAL
-                        # Sort for consistency of reporting:
-                        # processes = list(mechanism.processes.keys())
-                        # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                        # for process in process_keys_sorted:
-                        #     if process.learning and process._learning_enabled:
-                        #         continue
-                        #     if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
-                        #         process._report_process_completion()
-
-                # if not i:
-                #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
-                #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
-                #     # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
-                #     self.variable = convert_to_np_array(self.input, 2) * 0
-                # i += 1
+                mechanism.execute(
+                                    # clock=clock,
+                                    # time_scale=self.timeScale,
+                                    # time_scale=time_scale,
+                                    # runtime_params=params,
+                                    context = context
+                                    )
 
     def _execute_learning(self, clock=CentralClock, context=None):
         # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
