@@ -260,6 +260,7 @@ from PsyNeuLink.Components.Projections.LearningProjection import LearningProject
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.scheduling.Scheduler import Scheduler
 
 # ProcessRegistry ------------------------------------------------------------------------------------------------------
 
@@ -2007,6 +2008,8 @@ class System_Base(System):
     def _execute_processing(self, clock=CentralClock, termination_conditions={ts: None for ts in TimeScale}, context=None):
     # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
         # Execute each Mechanism in self.executionList, in the order listed during its phase
+        if self.scheduler is None:
+            raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, must be initialized before execution'.format(self.name))
         for next_execution_set in self.scheduler.run(termination_conds=termination_conditions):
             for mechanism in next_execution_set:
                 # mechanism, params, phase_spec = self.executionList[i]
@@ -2183,6 +2186,9 @@ class System_Base(System):
             list of the OutputValue for each `TERMINAL` mechanism of the system returned for each execution.
 
         """
+        if self.scheduler is None:
+            self.scheduler = Scheduler(system=self)
+
         from PsyNeuLink.Globals.Run import run
         return run(self,
                    inputs=inputs,
