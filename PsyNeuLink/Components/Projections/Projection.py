@@ -684,7 +684,7 @@ class Projection_Base(Projection):
                              self.sender.function.__class__.__name__,
                              self.sender.owner.name))
             # - reassign self.variable to sender.value
-            self._assign_defaults(variable=self.sender.value, context=context)
+            self._instantiate_defaults(variable=self.sender.value, context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         self._instantiate_receiver(context=context)
