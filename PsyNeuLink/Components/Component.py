@@ -131,24 +131,31 @@ Every component has the following set of core attributes that govern its operati
 
 .. _Component_Function_Object:
 
-* **function_object** - the `function_object` attribute refers to the `Function` assigned to the component; its 
-  `function <Function.function>` is assigned to the `function <Component>` attribute of the component.  The parameters
-  of the Function can be modified by assigning values to the attributes corresponding to those parameters (see
-  `function_params` above).
+* **function_object** - the `function_object` attribute refers to the `Function <Function>` assigned to the component; 
+  its `function <Function.function>` is assigned to the `function <Component>` attribute of the component.  The 
+  parameters of the Function can be modified by assigning values to the attributes corresponding to those parameters 
+  (see `function_params` above).
 
 .. _Component_User_Params:
 
 * **user_params** - the `user_params` attribute contains a dictionary of all of the user-modifiable attributes for the
   the component.  This dictionary is read-only.  Changes to the value of an attribute must be made by assigning a 
-  value to it directly.
+  value to the attribute directly.
+..  
+COMMENT:
+  INCLUDE IN DEVELOPERS' MANUAL
+    * **paramClassDefaults**
+    
+    * **paramInstanceDefaults**
+COMMENT
 
 * **value** - the `value <Component.value>` attribute contains the result (return value) of the component's 
   `function <Component.function>` after the function is called.     
-
+..
 * **name** - the `name <Component.name>` attribute contains the name assigned to the component when it was created.  
   If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for 
   conventions used in assigning default names and handling of duplicate names).
-
+..
 * **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the component when
   it was created.  If it was not specified, a default is assigned using `classPreferences` defined in __init__.py
   Each individual preference is accessible as an attribute of the component, the name of which is the name of the
@@ -158,74 +165,88 @@ COMMENT:
 * **log**
 COMMENT
 
-.. _Component_Methods:
 
-Component Methods
-~~~~~~~~~~~~~~~~~
-
-There are two sets of methods that belong to every component: one set that is called when it is initialized; and 
-another set that can be called to perform various operations common to all components.  Each of these is described 
-briefly below.  All of these methods can be overridden by subclasses to implement customized operations, however   
-it is strongly recommended that the method be called on super() at some point, so that the standard operations are 
-carried out.  Whether customization operations should be performed before or after the call to super is discussed in 
-the descriptions below where relevant. 
-
-.. _Component_Initialization_Methods:
-
-Initialization Methods
-^^^^^^^^^^^^^^^^^^^^^^
-
-These methods can be overridden by the subclass to customize the initialization process, but should always call the
-corresponding method of the Component base class (using ``super``) to insure full initialization.  There are two
-categories of initializion methods:  validation and instantiation.  
-
-
-.. _Component_Validation_Methods:
-
-* **Validation methods** perform a strictly *syntactic* check, to determine if a value being validated conforms 
-to the format expected for it by the component (i.e., the type of the value and, if it is iterable, the type its 
-elements and/or its length).  The value itself is not checked in any other way (e.g., whether it equals a particular 
-value or falls in a specified range).  If the validation fails, and exception is raised.  Validation methods never 
-make changes the actual value of an attribute, but they may change its format (e.g., from a list to an ndarray) to
-comply with requirements of the component.
-
-  * `_validate_variable <Component._validate_variable>` validates the value provided to the
-    keyword:`variable` argument in the constructor for the component.  If it is overridden, customized validation
-    should generally performed *prior* to the call to super(), to allow final processing by the Component base class. 
+COMMENT:
+   INCLUDE IN DEVELOPERS' MANUAL
+      
+    .. _Component_Methods:
     
-  * `_validate_params <Component._validate_params>` validates the value of any parameters specified in the constructor
-    for the component (whether they are made directly in the argument for a parameter, or in a 
-    `parameter specification dictionary <Mechanism_Creation>`.  If it is overridden by a subclass, customized validation
-    should generally be performed *after* the call to super().
-
-* **Instantiate methods** create, assign, and/or perform *semantic* checks on the values of component attributes.   
-
-_instantiate_defaults
-_instantiate_attributes_before_function
-_instantiate_function
-_instantiate_attributes_after_function
-
-.. _Component_Callable_Methods:
-
-Callable Methods
-^^^^^^^^^^^^^^^^
-
-initialize
-assign_params
-reset_params
-execute
+    Component Methods
+    ~~~~~~~~~~~~~~~~~
+    
+    There are two sets of methods that belong to every component: one set that is called when it is initialized; and 
+    another set that can be called to perform various operations common to all components.  Each of these is described 
+    briefly below.  All of these methods can be overridden by subclasses to implement customized operations, however   
+    it is strongly recommended that the method be called on super() at some point, so that the standard operations are 
+    carried out.  Whether customization operations should be performed before or after the call to super is discussed in 
+    the descriptions below where relevant. 
+    
+    .. _Component_Initialization_Methods:
+    
+    Initialization Methods
+    ^^^^^^^^^^^^^^^^^^^^^^
+    
+    These methods can be overridden by the subclass to customize the initialization process, but should always call the
+    corresponding method of the Component base class (using ``super``) to insure full initialization.  There are two
+    categories of initializion methods:  validation and instantiation.  
+    
+    
+    .. _Component_Validation_Methods:
+    
+    * **Validation methods** perform a strictly *syntactic* check, to determine if a value being validated conforms 
+    to the format expected for it by the component (i.e., the type of the value and, if it is iterable, the type its 
+    elements and/or its length).  The value itself is not checked in any other way (e.g., whether it equals a particular 
+    value or falls in a specified range).  If the validation fails, and exception is raised.  Validation methods never 
+    make changes the actual value of an attribute, but they may change its format (e.g., from a list to an ndarray) to
+    comply with requirements of the component.
+    
+      * `_validate_variable <Component._validate_variable>` validates the value provided to the keyword:`variable` 
+        argument in the constructor for the component.  If it is overridden, customized validation should generally 
+        performed *prior* to the call to super(), to allow final processing by the Component base class. 
+        
+      * `_validate_params <Component._validate_params>` validates the value of any parameters specified in the 
+        constructor for the component (whether they are made directly in the argument for a parameter, or in a 
+        `parameter specification dictionary <Mechanism_Creation>`.  If it is overridden by a subclass, customized 
+        validation should generally be performed *after* the call to super().
+    
+    * **Instantiation methods** create, assign, and/or perform *semantic* checks on the values of component attributes.  
+      Semantic checks may include value and/or range checks, as well as checks of formatting and/or value 
+      compatibility with other attributes of the component and/or the attributes of other components (for example, the
+      _instantiate_function method checks that the input of the component's `function <Comonent.function>` is compatible 
+      with its `variable <Component.variable>`).
+    
+      * `_instantiate_defaults <Component._instantiate_defaults>` first calls the validation methods, and then  
+        assigns the default values for all of the attributes of the instance of the component being created.
+        
+        _instantiate_attributes_before_function
+        _instantiate_function
+        _instantiate_attributes_after_function
+    
+    .. _Component_Callable_Methods:
+    
+    Callable Methods
+    ^^^^^^^^^^^^^^^^
+    
+    initialize
+    assign_params
+    reset_params
+    execute
+COMMENT
 
 .. _Component_Execution:
 
 Execution
 ~~~~~~~~~
 
-.. _Component_Class_Reference:
+Calls the :keyword:`execute` method of the subclass that, in turn, calls its :keyword:`function`.
 
-Calls the ``execute`` method of the subclass that, in turn, calls its ``function``.
-
-Class Reference
----------------
+COMMENT:
+   INCLUDE IN DEVELOPERS' MANUAL
+    .. _Component_Class_Reference:
+    
+    Class Reference
+    ---------------
+COMMENT
 
 COMMENT:
 
@@ -1332,7 +1353,7 @@ class Component(object):
 
     @tc.typecheck
     def assign_params(self, request_set:tc.optional(dict)=None):
-        """Validates specified params, adds them TO paramsInstanceDefaults, and instantiates any if necessary
+        """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
 
         Call _instantiate_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
         Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
