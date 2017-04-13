@@ -2246,8 +2246,11 @@ def make_property(name, default_value):
 
     def setter(self, val):
 
-        # FIX: USE self.assign_param TO MAKE ASSIGNMENT
-        setattr(self, backing_field, val)
+        if self.paramValidationPref:
+            self.assign_params(request_set={backing_field:val})
+        else:
+            setattr(self, backing_field, val)
+
 
         # Update user_params dict with new value
         self.user_params.__additem__(name, val)
