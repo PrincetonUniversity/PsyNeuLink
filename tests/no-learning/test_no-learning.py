@@ -1,4 +1,5 @@
 import logging
+import numpy
 
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
@@ -126,3 +127,9 @@ class TestNoLearning:
                         inputs=stim_list,
                         termination_conditions=term_conds
         )
+
+        expected_Output_Layer_output = [numpy.array([ 0.8344837, 0.87072018, 0.89997433]), numpy.array(0.8683927358195268), numpy.array(0.0007175454706347559)]
+
+        assert len(expected_Output_Layer_output) == len(Output_Layer.outputValue) == 3
+        for i in range(len(expected_Output_Layer_output)):
+            assert numpy.allclose(expected_Output_Layer_output[i], Output_Layer.outputValue[i])
