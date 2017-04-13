@@ -290,6 +290,9 @@ class ResetMode(Enum):
 #    (until params are fully implemented as objects)
 from collections import UserDict
 class ParamsDict(UserDict):
+    """
+    
+    """
     def __init__(self, owner, dict=None):
         super().__init__()
         self.owner = owner
@@ -2246,11 +2249,13 @@ def make_property(name, default_value):
 
     def setter(self, val):
 
-        if self.paramValidationPref:
+        # if self.paramValidationPref and hasattr(self, backing_field):
+        if self.paramValidationPref and hasattr(self, 'paramsCurrent'):
             self.assign_params(request_set={backing_field[1:]:val})
         else:
             setattr(self, backing_field, val)
 
+        # setattr(self, backing_field, val)
 
         # Update user_params dict with new value
         self.user_params.__additem__(name, val)
