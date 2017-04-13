@@ -753,6 +753,7 @@ class System_Base(System):
                  prefs:is_pref_set=None,
                  context=None):
 
+
         processes = processes or []
         monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
@@ -800,6 +801,7 @@ class System_Base(System):
 
         # Controller is DefaultControlMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
+
         if self.paramsCurrent[CONTROLLER] is DefaultControlMechanism:
             # Get DefaultController from MechanismRegistry
             from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
@@ -1127,6 +1129,7 @@ class System_Base(System):
         self._processList = ProcessList(self, self.process_tuples)
         self.processes = self._processList.processes
 
+
     def _instantiate_graph(self, context=None):
         """Construct graph (full) and executionGraph (acyclic) of system
 
@@ -1167,7 +1170,7 @@ class System_Base(System):
 
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(sender_mech):
-
+            print(self._all_mech_tuples, " = MECH TUPLES")
             # If sender is an ObjectiveMechanism being used for learning or control, or a LearningMechanism,
             # Assign as MONITORING and move on
             if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role) or
@@ -2007,14 +2010,29 @@ class System_Base(System):
         # Execute each Mechanism in self.executionList, in the order listed during its phase
         for mechanism in self.scheduler.yield_mech():
 
-            # mechanism, params, phase_spec = self.executionList[i]
-            mechanism.execute(
-                                # clock=clock,
-                                # time_scale=self.timeScale,
-                                # time_scale=time_scale,
-                                # runtime_params=params,
-                                context = context
-                                )
+            if isinstance(mechanism, tuple):
+                rt_params = None
+                for p in self.processes:
+                    
+                    if mechanism in list(p.runtime_params_dict.keys()):
+
+                        rt_params = p.runtime_params_dict[mechanism]
+
+                mechanism[0].execute(
+                                    # clock=clock,
+                                    # time_scale=self.timeScale,
+                                    # time_scale=time_scale,
+                                    runtime_params=rt_params,
+                                    context = context
+                                    )
+            else:
+                mechanism.execute(
+                    # clock=clock,
+                    # time_scale=self.timeScale,
+                    # time_scale=time_scale,
+                    # runtime_params=params
+                    context=context
+                )
 
     def _execute_learning(self, clock=CentralClock, context=None):
         # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
