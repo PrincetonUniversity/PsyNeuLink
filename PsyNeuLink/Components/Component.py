@@ -2104,7 +2104,7 @@ class Component(object):
             # self.function_params = self.function_object.user_params
             # self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
             # MODIFIED 4/8/17 NEWER:
-            self.function_params = ReadOnlyOrderedDict(name='function_params')
+            # self.function_params = ReadOnlyOrderedDict(name='function_params')
             for param_name in sorted(list(self.function_object.user_params_for_instantiation.keys())):
                 self.function_params.__additem__(param_name,
                                                  self.function_object.user_params_for_instantiation[param_name])
