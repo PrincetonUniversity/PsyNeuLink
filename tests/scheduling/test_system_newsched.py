@@ -1,15 +1,17 @@
 import logging
+import numpy
 
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DDM_PROBABILITY_UPPER_THRESHOLD
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic, BogaczEtAl
+from PsyNeuLink.Components.Functions.Function import Linear, Logistic, BogaczEtAl, Integrator
 from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.scheduling.condition import *
-
+from PsyNeuLink.Globals.Keywords import CONSTANT
 
 logger = logging.getLogger(__name__)
 
@@ -73,3 +75,205 @@ class TestInit:
         ]
 
         assert sched.consideration_queue == expected_consideration_queue
+
+
+class TestLinear:
+    def test_one_run_twice(self):
+        A = IntegratorMechanism(
+            name='A',
+            default_input_value = [0],
+            function=Integrator(
+                rate=.5,
+                integration_type=CONSTANT
+            )
+        )
+
+        p = process(
+            default_input_value = [0],
+            pathway = [A],
+            name = 'p'
+        )
+
+        s = system(
+            processes=[p],
+            name = 's'
+        )
+
+        term_conds = {TimeScale.TRIAL: AfterNCalls(A, 2)}
+        stim_list = {A: [[1]]}
+
+        results = s.run(
+            inputs=stim_list,
+            termination_conditions=term_conds
+        )
+
+        terminal_mech = A
+        expected_output = [
+            numpy.array([1.]),
+        ]
+
+        for i in range(len(expected_output)):
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.outputValue[i])
+
+    def test_two_AAB(self):
+        A = IntegratorMechanism(
+            name='A',
+            default_input_value = [0],
+            function=Integrator(
+                rate=.5,
+                integration_type=CONSTANT
+            )
+        )
+
+        B = TransferMechanism(
+            name='B',
+            default_input_value = [0],
+            function=Linear(slope=2.0),
+        )
+
+        p = process(
+            default_input_value = [0],
+            pathway = [A, B],
+            name = 'p'
+        )
+
+        s = system(
+            processes=[p],
+            name = 's'
+        )
+
+        term_conds = {TimeScale.TRIAL: AfterNCalls(B, 1)}
+        stim_list = {A: [[1]]}
+
+        sched = Scheduler(system=s)
+        sched.condition_set.add_condition(B, EveryNCalls(A, 2))
+        s.scheduler = sched
+
+        results = s.run(
+            inputs=stim_list,
+            termination_conditions=term_conds
+        )
+
+        terminal_mech = B
+        expected_output = [
+            numpy.array([2.]),
+        ]
+
+        for i in range(len(expected_output)):
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.outputValue[i])
+
+    def test_two_ABB(self):
+        A = TransferMechanism(
+            name='A',
+            default_input_value = [0],
+            function=Linear(slope=2.0),
+        )
+
+        B = IntegratorMechanism(
+            name='B',
+            default_input_value = [0],
+            function=Integrator(
+                rate=.5,
+                integration_type=CONSTANT
+            )
+        )
+
+        p = process(
+            default_input_value = [0],
+            pathway = [A, B],
+            name = 'p'
+        )
+
+        s = system(
+            processes=[p],
+            name = 's'
+        )
+
+        term_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
+        stim_list = {A: [[1]]}
+
+        sched = Scheduler(system=s)
+        sched.condition_set.add_condition(A, Any(AtPass(0), AfterNCalls(B, 2)))
+        sched.condition_set.add_condition(B, Any(JustRan(A), JustRan(B)))
+        s.scheduler = sched
+
+        results = s.run(
+            inputs=stim_list,
+            termination_conditions=term_conds
+        )
+
+        terminal_mech = B
+        expected_output = [
+            numpy.array([3.]),
+        ]
+
+        import code
+        code.interact(local=locals())
+
+        for i in range(len(expected_output)):
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.outputValue[i])
+
+    def test_three_ABAC(self):
+        A = IntegratorMechanism(
+            name='A',
+            default_input_value = [0],
+            function=Integrator(
+                rate=.5,
+                integration_type=CONSTANT
+            )
+        )
+
+        B = TransferMechanism(
+            name='B',
+            default_input_value = [0],
+            function=Linear(slope=2.0),
+        )
+        C = TransferMechanism(
+            name='C',
+            default_input_value = [0],
+            function=Linear(slope=2.0),
+        )
+
+        p = process(
+            default_input_value = [0],
+            pathway = [A, B],
+            name = 'p'
+        )
+
+        q = process(
+            default_input_value = [0],
+            pathway = [A, C],
+            name = 'q'
+        )
+
+        s = system(
+            processes=[p, q],
+            name = 's'
+        )
+
+        term_conds = {TimeScale.TRIAL: AfterNCalls(C, 1)}
+        stim_list = {A: [[1]]}
+
+        sched = Scheduler(system=s)
+        sched.condition_set.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(C, 1)))
+        sched.condition_set.add_condition(C, EveryNCalls(A, 2))
+        s.scheduler = sched
+
+        results = s.run(
+            inputs=stim_list,
+            termination_conditions=term_conds
+        )
+
+        terminal_mechs = [B, C]
+        expected_output = [
+            [
+                numpy.array([1.]),
+            ],
+            [
+                numpy.array([2.]),
+            ],
+        ]
+
+        for mech in terminal_mechs:
+            for i in range(len(expected_output)):
+                numpy.testing.assert_allclose(expected_output[i], mech.outputValue[i])
