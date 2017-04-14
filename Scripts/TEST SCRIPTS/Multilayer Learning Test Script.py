@@ -159,7 +159,7 @@ elif COMPOSITION is SYSTEM:
     x.reportOutputPref = True
     composition = x
 
-    # x.show_graph_with_learning()
+    x.show_graph_with_learning()
     results = x.run(num_executions=10,
                     # inputs=stim_list,
                     # inputs=[[-1, 30],[2, 10]],
