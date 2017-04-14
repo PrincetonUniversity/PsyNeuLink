@@ -755,6 +755,7 @@ class System_Base(System):
                  prefs:is_pref_set=None,
                  context=None):
 
+
         processes = processes or []
         monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
@@ -802,6 +803,7 @@ class System_Base(System):
 
         # Controller is DefaultControlMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
+
         if self.paramsCurrent[CONTROLLER] is DefaultControlMechanism:
             # Get DefaultController from MechanismRegistry
             from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
@@ -1129,6 +1131,7 @@ class System_Base(System):
         self._processList = ProcessList(self, self.process_tuples)
         self.processes = self._processList.processes
 
+
     def _instantiate_graph(self, context=None):
         """Construct graph (full) and executionGraph (acyclic) of system
 
@@ -1169,7 +1172,7 @@ class System_Base(System):
 
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(sender_mech):
-
+            print(self._all_mech_tuples, " = MECH TUPLES")
             # If sender is an ObjectiveMechanism being used for learning or control, or a LearningMechanism,
             # Assign as MONITORING and move on
             if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role) or
@@ -2008,19 +2011,25 @@ class System_Base(System):
     def _execute_processing(self, clock=CentralClock, termination_conditions={ts: None for ts in TimeScale}, context=None):
     # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
         # Execute each Mechanism in self.executionList, in the order listed during its phase
+
         if self.scheduler is None:
             raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, must be initialized before execution'.format(self.name))
         for next_execution_set in self.scheduler.run(termination_conds=termination_conditions):
             for mechanism in next_execution_set:
-                # mechanism, params, phase_spec = self.executionList[i]
-                params = self._allMechanisms._get_tuple_for_mech(mechanism).params
+                for p in self.processes:
+                    try:
+                        rt_params = p.runtime_params_dict[mechanism]
+                    except:
+                        rt_params = None
+
                 mechanism.execute(
                                     # clock=clock,
                                     # time_scale=self.timeScale,
                                     # time_scale=time_scale,
-                                    runtime_params=params,
+                                    runtime_params=rt_params,
                                     context = context
                                     )
+
 
     def _execute_learning(self, clock=CentralClock, context=None):
         # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
