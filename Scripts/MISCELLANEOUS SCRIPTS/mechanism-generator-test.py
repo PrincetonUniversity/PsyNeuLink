@@ -14,7 +14,7 @@ mechanism1 = TransferMechanism(name='my_Transfer1',
                        params= {NOISE: 25.0}
 
                        )
-print(mechanism1.execute(100)," = value of executing mechanism1 independently with input of 100")
+# print(mechanism1.execute(100)," = value of executing mechanism1 independently with input of 100")
 
 mechanism2 = TransferMechanism(name='my_Transfer2',
                                default_input_value=[0],
@@ -23,7 +23,7 @@ mechanism2 = TransferMechanism(name='my_Transfer2',
 
                                )
 
-print(mechanism2.execute(125)," = value of executing mechanism2 independently with input of 100")
+# print(mechanism2.execute(125)," = value of executing mechanism2 independently with input of 100")
 
 mechanism3 = TransferMechanism(name='my_Transfer3',
                                default_input_value=[0],
@@ -31,7 +31,7 @@ mechanism3 = TransferMechanism(name='my_Transfer3',
                                time_constant=0.0
 
                                )
-print(mechanism3.execute(250)," = value of executing mechanism3 independently with input of 200")
+# print(mechanism3.execute(250)," = value of executing mechanism3 independently with input of 200")
 
 mechanism4 = TransferMechanism(name='my_Transfer4',
                                default_input_value=[0],
@@ -39,7 +39,7 @@ mechanism4 = TransferMechanism(name='my_Transfer4',
                                time_constant=0.0
 
                                )
-print(mechanism4.execute(500)," = value of executing mechanism4 independently with input of 400")
+# print(mechanism4.execute(500)," = value of executing mechanism4 independently with input of 400")
 
 
 mechanism5 = TransferMechanism(name='my_Transfer5',
@@ -49,8 +49,11 @@ mechanism5 = TransferMechanism(name='my_Transfer5',
 
                                )
 
-print(mechanism5.execute(1000)," = value of executing mechanism5 independently with input of 800")
-mech1tuple = mechanism1, {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{SLOPE:10.0}}}
+# print(mechanism5.execute(1000)," = value of executing mechanism5 independently with input of 800")
+
+mech1tuple = mechanism1, {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{SLOPE:10.0, INTERCEPT: 15.0}}}
+mech2tuple = mechanism2, {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{SLOPE:50.0, INTERCEPT: 45.0}}}
+
 path = [mech1tuple, mechanism2, mechanism3, mechanism4, mechanism5]
 process1 = process(default_input_value=[100],
                  params={PATHWAY:path},

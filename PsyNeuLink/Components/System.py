@@ -2011,13 +2011,19 @@ class System_Base(System):
         for mechanism in self.scheduler.yield_mech():
 
             if isinstance(mechanism, tuple):
-                rt_params = None
+
                 for p in self.processes:
-                    
-                    if mechanism in list(p.runtime_params_dict.keys()):
 
-                        rt_params = p.runtime_params_dict[mechanism]
+                    try:
+                        rt_params = p.runtime_params_dict[mechanism[0]]
 
+
+                    except:
+                        rt_params = None
+
+                    print("MECHANISM = ", mechanism[0])
+                    print("RT PARAMS DICT = ", p.runtime_params_dict)
+                    print("VALUE = ", p.runtime_params_dict[mechanism[0]])
                 mechanism[0].execute(
                                     # clock=clock,
                                     # time_scale=self.timeScale,
