@@ -20,6 +20,11 @@ Functions
 	          NavarroAndFuss,
               LearningFunction,
               Reinforcement,
-	          BackPropagation
+	          BackPropagation,
+              NormalDist,
+              ExponentialDist,
+              UniformDist,
+              GammaDist,
+              WaldDist,
 ..
     :exclude-members: function

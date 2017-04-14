@@ -23,7 +23,6 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 # Mechanisms:
 Input = TransferMechanism(name='Input',
                  # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
-
                  )
 Reward = TransferMechanism(name='Reward',
                  # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
@@ -69,8 +68,8 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   name='EVC Test System')
 
 # Show characteristics of system:
-mySystem.show()
-mySystem.controller.show()
+# mySystem.show()
+# mySystem.controller.show()
 
 # Specify stimuli for run:
 # #   two ways to do so:
@@ -83,8 +82,12 @@ mySystem.controller.show()
 # # stim_list_dict = {Input:[0.5, 0.123],
 # #               Reward:[20, 20]}
 
-stim_list_dict = {Input:[0.5, 0.123],
-                  Reward:[20, 20]}
+# stim_list_dict = {Input:[0.5, 0.123],
+#                   Reward:[20, 20]}
+
+stim_list_dict = {Input:[0.5],
+                  Reward:[20]}
+
 
 # #   - as a list of trials;
 # #     each item in the list contains the stimuli for a given trial,
@@ -99,11 +102,21 @@ def show_trial_header():
 def show_results():
     import re
     results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
-    print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
-    print ('\tDrift rate control signal (from EVC): {}'.
+    # print('\nRESULTS (time step {}): [RANDOM: {}]'.format(CentralClock.time_step, np.random.random()))
+    print('\nRESULTS (time step {}): [RANDOM: {}]'.format(CentralClock.time_step, np.random.random()))
+    print ('\tDrift rate control signal (from EVC):'
+           '\n\t\tDecision.parameterState: {}'
+           '\n\t\tControlSignal: {}'
+           '\n\t\tControlProjection: {}'.
            # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
-           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value))))))
-    print ('\tThreshold control signal (from EVC): {}'.
+           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value)))),
+                  mySystem.controller.outputStates['drift_rate_ControlSignal'].value,
+                  Decision.parameterStates[DRIFT_RATE].receivesFromProjections[0].value
+                  ))
+    print ('\tThreshold control signal (from EVC):'
+           '\n\t\tDecision.parameterState: {}'
+           '\n\t\tControlSignal: {}'
+           '\n\t\tControlProjection: {}'.
            format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[THRESHOLD].value))),
                   mySystem.controller.outputStates['threshold_ControlSignal'].value,
                   Decision.parameterStates[THRESHOLD].receivesFromProjections[0].value
