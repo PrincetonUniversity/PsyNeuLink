@@ -28,7 +28,7 @@ An IntegratorMechanism can be created directly by calling its constructor, or us
 argument.  Its function is specified in the :keyword:`function` argument, which can be parameterized by calling its
 constructor with parameter values::
 
-    my_time_averaging_mechanism = IntegratorMechanism(function=Integrator(weighting=ADAPTIVE, rate=0.5))
+    my_time_averaging_mechanism = IntegratorMechanism(function=Integrator(integration_type=ADAPTIVE, rate=0.5))
 
 .. _IntegratorMechanism_Structure
 
@@ -39,7 +39,7 @@ An IntegratorMechanism has a single `inputState <InputState>`, the `value <Input
 used as the  `variable <IntegratorMechanism.variable>` for its `function <IntegratorMechanism.function>`.   The
 :keyword:`default_input_value` argument specifies the format of its input (i.e., whether it is a single scalar or an
 array), as well as the value to use if none is provided when mechanism is executed.  The default for
-`function <IntegratorMechanism.function>` is `Integrator(weighting=ADAPTIVE, rate=0.5)`. However, a custom function can
+`function <IntegratorMechanism.function>` is `Integrator(integration_type=ADAPTIVE, rate=0.5)`. However, a custom function can
 also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric values as its input,
 and returns a value of the same type and format.  The mechanism has a single `outputState <OutputState>, the `value
 <OutputState.OutputState.value>` of which is assigned the result of  the call to the mechanism's
@@ -83,7 +83,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     """
     IntegratorMechanism(                            \
     default_input_value=None,                               \
-    function=Integrator(weighting=ADAPTIVE, rate=0.5), \
+    function=Integrator(integration_type=ADAPTIVE, rate=0.5), \
     time_scale=TimeScale.TRIAL,                             \
     params=None,                                            \
     name=None,                                              \
@@ -154,7 +154,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     variable : value: default
         the input to mechanism's ``function``.
 
-    time_scale :  TimeScale : defaul tTimeScale.TRIAL
+    time_scale :  TimeScale : defaultTimeScale.TRIAL
         specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
 
     name : str : default IntegratorMechanism-<index>
@@ -197,7 +197,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=None,
                  function=Integrator(rate=0.5,
-                                     weighting=ADAPTIVE),
+                                     integration_type=ADAPTIVE),
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,

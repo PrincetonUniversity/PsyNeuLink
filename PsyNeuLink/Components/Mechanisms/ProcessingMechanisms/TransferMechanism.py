@@ -337,6 +337,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
+        NOISE: None,
         INPUT_STATES: None,
         OUTPUT_STATES:[
             {NAME:TRANSFER_RESULT},
@@ -378,9 +379,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   time_scale=time_scale,
                                                   range=range,
                                                   params=params)
-
-        self.integrator_function = Integrator(weighting=ADAPTIVE, rate=self.time_constant, noise = self.noise)
-
         if default_input_value is None:
             default_input_value = Transfer_DEFAULT_BIAS
 
@@ -417,11 +415,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError("The format of the initial_value parameter for {} ({}) must match its input ({})".
                                     format(append_type_to_name(self), initial_value, self.variable[0]))
 
-        # Validate NOISE:
-        noise = target_set[NOISE]
-        if (isinstance(noise, float) == False) and (callable(noise) == False):
-            raise TransferError("noise parameter ({}) for {} must be a float or a function".
-                                format(noise, self.name))
+        # # Validate NOISE:
+        # noise = target_set[NOISE]
+        # if (isinstance(noise, float) == False) and (callable(noise) == False):
+        #     raise TransferError("noise parameter ({}) for {} must be a float or a function".
+        #                         format(noise, self.name))
 
         # Validate TIME_CONSTANT:
         time_constant = target_set[TIME_CONSTANT]
@@ -438,6 +436,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             if not range[0] < range[1]:
                 raise TransferError("The first item of the range parameter ({}) must be less than the second".
                                     format(range, self.name))
+        self.integrator_function = Integrator(variable_default = self.variable, initializer=self.variable, integration_type=ADAPTIVE, rate=self.time_constant, noise=self.noise)
 
     def _instantiate_parameter_states(self, context=None):
 
@@ -446,7 +445,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if ((isinstance(self.function, Logistic) or
                  (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
                 not list(self.range)):
-            self.user_params[RANGE] = np.array([0,1])
+            self.range = np.array([0,1])
 
         super()._instantiate_parameter_states(context=context)
 

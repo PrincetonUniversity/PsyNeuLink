@@ -285,6 +285,7 @@ Contributors
 .. toctree::
    :hidden:
 
+   Component
    System
    Process
    Mechanism

@@ -246,6 +246,7 @@ INPUTS_DIM = 3
 COMPONENT_INIT = 'Function.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
 DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
+USER_PARAMS = 'user_params' # Params available to user for inspection in user_params dict
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
 
@@ -329,7 +330,6 @@ EXPONENTIAL_FUNCTION = "Exponential"
 LOGISTIC_FUNCTION = "Logistic"
 SOFTMAX_FUNCTION = 'SoftMax'
 INTEGRATOR_FUNCTION = "Integrator"
-DDM_INTEGRATOR_FUNCTION = "DDMIntegrator"
 LINEAR_MATRIX_FUNCTION = "Linear Matrix"
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
 RL_FUNCTION = 'Reinforcement Learning Algorithm'
@@ -521,7 +521,7 @@ BETA = 'beta'
 
 SHAPE = 'shape'
 
-WEIGHTING = "weighting"
+INTEGRATION_TYPE = "integration_type"
 
 OUTPUT_TYPE = 'output'
 ALL = 'all'
@@ -538,7 +538,7 @@ OFFSET = "offset"
 LINEAR = 'linear'
 CONSTANT = 'constant'
 SIMPLE = 'scaled'
-ADAPTIVE = 'apaptive'
+ADAPTIVE = 'adaptive'
 DIFFUSION = 'diffusion'
 
 #endregion
