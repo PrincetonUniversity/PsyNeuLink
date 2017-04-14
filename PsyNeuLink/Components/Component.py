@@ -1387,10 +1387,7 @@ class Component(object):
         pref_buffer = self.paramValidationPref
         self.paramValidationPref = False
 
-        # FIX: ??ARE THESE REDUNDANT
         self.paramsCurrent.update(validated_set)
-        for param_name, param_value in validated_set.items():
-            setattr(self, param_name, param_value)
 
         self.paramValidationPref = pref_buffer
 
