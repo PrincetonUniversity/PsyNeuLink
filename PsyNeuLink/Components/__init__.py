@@ -16,11 +16,17 @@
 #            'LEARNING_PROJECTION']
 
 import inspect
+import logging
 
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Registry import register_category
 
 kwInitPy = '__init__.py'
+
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 class InitError(Exception):
     def __init__(self, error_value):

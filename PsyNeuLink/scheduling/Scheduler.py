@@ -211,7 +211,7 @@ class Scheduler(object):
                 self._increment_time(TimeScale.TIME_STEP)
 
             # can execute the execution_list here
-            logger.debug(' '.join([str(x) for x in self.execution_list]))
+            logger.debug('Execution list: [{0}]'.format(' '.join([str(x) for x in self.execution_list])))
             self._increment_time(TimeScale.PASS)
 
         self._increment_time(TimeScale.TRIAL)

@@ -246,6 +246,8 @@ Class Reference
 
 import math
 import re
+import logging
+
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
 from collections import OrderedDict
 from collections import UserList, Iterable
@@ -261,6 +263,8 @@ from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.scheduling.Scheduler import Scheduler
+
+logger = logging.getLogger(__name__)
 
 # ProcessRegistry ------------------------------------------------------------------------------------------------------
 
@@ -1172,7 +1176,7 @@ class System_Base(System):
 
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(sender_mech):
-            print(self._all_mech_tuples, " = MECH TUPLES")
+            logger.debug("{0} = MECH TUPLES".format(self._all_mech_tuples))
             # If sender is an ObjectiveMechanism being used for learning or control, or a LearningMechanism,
             # Assign as MONITORING and move on
             if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role) or
@@ -2015,7 +2019,9 @@ class System_Base(System):
         if self.scheduler is None:
             raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, must be initialized before execution'.format(self.name))
         for next_execution_set in self.scheduler.run(termination_conds=termination_conditions):
+            logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             for mechanism in next_execution_set:
+                logger.debug('\tRunning mechanism {0}'.format(mechanism))
                 for p in self.processes:
                     try:
                         rt_params = p.runtime_params_dict[mechanism]
@@ -2029,7 +2035,6 @@ class System_Base(System):
                                     runtime_params=rt_params,
                                     context = context
                                     )
-
 
     def _execute_learning(self, clock=CentralClock, context=None):
         # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
