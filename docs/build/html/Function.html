@@ -178,11 +178,11 @@
 </dd>
 <dt>Distribution Functions:</dt>
 <dd><ul class="first last simple">
-<li><code class="xref any docutils literal"><span class="pre">NormalDist</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">ExponentialDist</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">UniformDist</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">GammaDist</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">WaldDist</span></code></li>
+<li><a class="reference internal" href="#Function.NormalDist" title="Function.NormalDist"><code class="xref any py py-class docutils literal"><span class="pre">NormalDist</span></code></a></li>
+<li><a class="reference internal" href="#Function.ExponentialDist" title="Function.ExponentialDist"><code class="xref any py py-class docutils literal"><span class="pre">ExponentialDist</span></code></a></li>
+<li><a class="reference internal" href="#Function.UniformDist" title="Function.UniformDist"><code class="xref any py py-class docutils literal"><span class="pre">UniformDist</span></code></a></li>
+<li><a class="reference internal" href="#Function.GammaDist" title="Function.GammaDist"><code class="xref any py py-class docutils literal"><span class="pre">GammaDist</span></code></a></li>
+<li><a class="reference internal" href="#Function.WaldDist" title="Function.WaldDist"><code class="xref any py py-class docutils literal"><span class="pre">WaldDist</span></code></a></li>
 </ul>
 </dd>
 <dt>Learning Functions:</dt>
@@ -402,7 +402,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="#Function.Exponential.function" title="Function.Exponential.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="#Function.Linear.function" title="Function.Linear.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -1565,7 +1565,7 @@ Gaussian random process).</p>
 <dt>owner</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">Mechanism</span><dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</dd>
 <dt>prefs</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.LinearMatrix.prefs" title="Function.LinearMatrix.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+ <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.WaldDist.prefs" title="Function.WaldDist.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</dd>
 </dl>
@@ -1600,11 +1600,289 @@ arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="class">
+<dt id="Function.NormalDist">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NormalDist</code><span class="sig-paren">(</span><em>mean=0.0</em>, <em>standard_dev=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NormalDist" title="Permalink to this definition">¶</a></dt>
+<dd><p id="normaldist">Return a random sample from a normal distribution using numpy.random.normal</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mean</strong> (<em>float : default 0.0</em>) &#8211; The mean or center of the normal distribution</li>
+<li><strong>standard_dev</strong> (<em>float : default 1.0</em>) &#8211; Standard deviation of the normal distribution</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.NormalDist.mean">
+<code class="descname">mean</code><a class="headerlink" href="#Function.NormalDist.mean" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> &#8211; The mean or center of the normal distribution</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NormalDist.standard_dev">
+<code class="descname">standard_dev</code><a class="headerlink" href="#Function.NormalDist.standard_dev" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; Standard deviation of the normal distribution</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NormalDist.params">
+<code class="descname">params</code><a class="headerlink" href="#Function.NormalDist.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Dict[param keyword, param value]]</em> &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NormalDist.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.NormalDist.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NormalDist.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.NormalDist.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.ExponentialDist">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">ExponentialDist</code><span class="sig-paren">(</span><em>beta=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.ExponentialDist" title="Permalink to this definition">¶</a></dt>
+<dd><p id="exponentialdist">Return a random sample from a exponential distribution using numpy.random.exponential</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>beta</strong> (<em>float : default 1.0</em>) &#8211; The scale parameter of the exponential distribution</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.ExponentialDist.beta">
+<code class="descname">beta</code><a class="headerlink" href="#Function.ExponentialDist.beta" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; The scale parameter of the exponential distribution</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.ExponentialDist.params">
+<code class="descname">params</code><a class="headerlink" href="#Function.ExponentialDist.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Dict[param keyword, param value]]</em> &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.ExponentialDist.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.ExponentialDist.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.ExponentialDist.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.ExponentialDist.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.UniformDist">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">UniformDist</code><span class="sig-paren">(</span><em>low=0.0</em>, <em>high=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.UniformDist" title="Permalink to this definition">¶</a></dt>
+<dd><p id="uniformdist">Return a random sample from a uniform distribution using numpy.random.uniform</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>low</strong> (<em>float : default 0.0</em>) &#8211; Lower bound of the uniform distribution</li>
+<li><strong>high</strong> (<em>float : default 1.0</em>) &#8211; Upper bound of the uniform distribution</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.UniformDist.low">
+<code class="descname">low</code><a class="headerlink" href="#Function.UniformDist.low" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> &#8211; Lower bound of the uniform distribution</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.UniformDist.high">
+<code class="descname">high</code><a class="headerlink" href="#Function.UniformDist.high" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; Upper bound of the uniform distribution</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.UniformDist.params">
+<code class="descname">params</code><a class="headerlink" href="#Function.UniformDist.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Dict[param keyword, param value]]</em> &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.UniformDist.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.UniformDist.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.UniformDist.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.UniformDist.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.GammaDist">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">GammaDist</code><span class="sig-paren">(</span><em>scale=1.0</em>, <em>shape=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.GammaDist" title="Permalink to this definition">¶</a></dt>
+<dd><p id="gammadist">Return a random sample from a gamma distribution using numpy.random.gamma</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>scale</strong> (<em>float : default 1.0</em>) &#8211; The shape of the gamma distribution. Should be greater than zero.</li>
+<li><strong>shape</strong> (<em>float : default 1.0</em>) &#8211; The scale of the gamma distribution. Should be greater than zero.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.GammaDist.scale">
+<code class="descname">scale</code><a class="headerlink" href="#Function.GammaDist.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; The shape of the gamma distribution. Should be greater than zero.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.GammaDist.shape">
+<code class="descname">shape</code><a class="headerlink" href="#Function.GammaDist.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; The scale of the gamma distribution. Should be greater than zero.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.GammaDist.params">
+<code class="descname">params</code><a class="headerlink" href="#Function.GammaDist.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Dict[param keyword, param value]]</em> &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.GammaDist.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.GammaDist.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.GammaDist.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.GammaDist.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.WaldDist">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">WaldDist</code><span class="sig-paren">(</span><em>scale=1.0</em>, <em>mean=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.WaldDist" title="Permalink to this definition">¶</a></dt>
+<dd><p id="walddist">Return a random sample from a wald distribution using numpy.random.wald</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>scale</strong> (<em>float : default 1.0</em>) &#8211; Scale parameter of the wald distribution. Should be greater than zero.</li>
+<li><strong>mean</strong> (<em>float : default 1.0</em>) &#8211; Mean of the wald distribution. Should be greater than or equal to zero.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.WaldDist.scale">
+<code class="descname">scale</code><a class="headerlink" href="#Function.WaldDist.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; Scale parameter of the wald distribution. Should be greater than zero.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.WaldDist.mean">
+<code class="descname">mean</code><a class="headerlink" href="#Function.WaldDist.mean" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; Mean of the wald distribution. Should be greater than or equal to zero.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.WaldDist.params">
+<code class="descname">params</code><a class="headerlink" href="#Function.WaldDist.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Dict[param keyword, param value]]</em> &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.WaldDist.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.WaldDist.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.WaldDist.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.WaldDist.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="Function.LearningFunction">
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="#Function.BogaczEtAl.variable" title="Function.BogaczEtAl.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
