@@ -84,6 +84,7 @@ class Condition(object):
         self._owner = value
 
     def is_satisfied(self):
+        logger.debug('Condition ({0}) using scheduler {1}'.format(type(self).__name__, self.scheduler))
         has_args = len(self.args) > 0
         has_kwargs = len(self.kwargs) > 0
 
