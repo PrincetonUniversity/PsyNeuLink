@@ -56,6 +56,8 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# IMPLEMENT: error threshold / criterion for ending learning
+# DOCUMENTATION: FUNCTION_PARAMS in runtime_params example
 # FIX: Stroop Model Test Script: Process -> System
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
 # FIX: Component: IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
