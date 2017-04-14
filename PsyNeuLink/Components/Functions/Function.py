@@ -2893,7 +2893,7 @@ class Integrator(
         elif integration_type is ADAPTIVE:
             value = (1 - rate) * previous_value + rate * new_value + noise
         elif integration_type is DIFFUSION:
-            value = previous_value + rate * previous_value * time_step_size + np.sqrt(time_step_size * noise) * np.random.normal()
+            value = previous_value + rate * new_value * time_step_size + np.sqrt(time_step_size * noise) * np.random.normal()
         else:
             value = new_value
 
