@@ -1355,7 +1355,7 @@ class Component(object):
 
 
     @tc.typecheck
-    def assign_params(self, request_set:tc.optional(dict)=None):
+    def assign_params(self, request_set:tc.optional(dict)=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
 
         Call _instantiate_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
@@ -1364,7 +1364,7 @@ class Component(object):
 
         """
         from PsyNeuLink.Components.Functions.Function import Function
-        context=COMMAND_LINE
+        context = context or COMMAND_LINE
 
         if not request_set:
             if self.verbosePref:
@@ -1380,7 +1380,11 @@ class Component(object):
                              context=context)
 
         self.paramInstanceDefaults.update(validated_set)
-        self.paramsCurrent = self.paramInstanceDefaults
+        # # MODIFIED 4/13/17 OLD:
+        # self.paramsCurrent = self.paramInstanceDefaults
+        # MODIFIED 4/13/17 NEW:
+        self.paramsCurrent.update(validated_set)
+        # MODIFIED 4/13/17 END
 
 
         # 4/8/17 FIX: THIS SHOULD NOW ASSIGN TO PARAMS DIRECTLY:
