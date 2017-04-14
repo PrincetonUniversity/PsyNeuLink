@@ -1368,7 +1368,7 @@ class Component(object):
 
 
     @tc.typecheck
-    def assign_params(self, request_set:tc.optional(dict)=None):
+    def assign_params(self, request_set:tc.optional(dict)=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
 
         Call _instantiate_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
@@ -1377,7 +1377,7 @@ class Component(object):
 
         """
         from PsyNeuLink.Components.Functions.Function import Function
-        context=COMMAND_LINE
+        context = context or COMMAND_LINE
 
         if not request_set:
             if self.verbosePref:
@@ -1393,14 +1393,12 @@ class Component(object):
                              context=context)
 
         self.paramInstanceDefaults.update(validated_set)
-        self.paramsCurrent = self.paramInstanceDefaults
 
-
-        # 4/8/17 FIX: THIS SHOULD NOW ASSIGN TO PARAMS DIRECTLY:
-        for param_name, param_value in validated_set.items():
-            setattr(self, param_name, param_value)
-            # self.user_params[param_name]=param_value
-            # self.user_params.__additem__(param_name, param_value)
+        self.paramsCurrent.update(validated_set)
+        # MODIFIED 4/13/17 OLD: [REDUNDANT WITH ABOVE]
+        # for param_name, param_value in validated_set.items():
+        #     setattr(self, param_name, param_value)
+        # MODIFIED 4/13/17 END
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
         # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
