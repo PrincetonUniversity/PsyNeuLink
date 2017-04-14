@@ -3,8 +3,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Globals.Keywords import *
 
 run_DDM_tests = True
-run_transfer_tests = True
-run_distribution_test = True
+run_transfer_tests = False
+run_distribution_test = False
 
 if run_DDM_tests:
     print("DDM Test #1: Execute DDM with noise = 0.5")
@@ -13,7 +13,7 @@ if run_DDM_tests:
                 name='My_DDM',
                 time_scale=TimeScale.TIME_STEP
                 )
-    # my_DDM.plot()
+    my_DDM.plot()
     my_DDM.execute()
 
     print("-------------------------------------------------")
