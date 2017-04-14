@@ -95,6 +95,7 @@ ComponentDefaultPrefDicts = {
 def is_pref(pref):
     return pref in ComponentPreferenceSetPrefs
 
+
 def is_pref_set(pref):
     if pref is None:
         return True
@@ -335,7 +336,7 @@ class ComponentPreferenceSet(PreferenceSet):
         :return:
         """
         # If the level of the object is below the Preference level,
-        #    recursively calls base (super) classes to get preference at specified level
+        #    recursively call base (super) classes to get preference at specified level
         return self.get_pref_setting_for_level(kpParamValidationPref, self._param_validation_pref.level)[0]
 
 

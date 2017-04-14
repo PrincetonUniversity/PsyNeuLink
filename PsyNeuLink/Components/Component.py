@@ -344,6 +344,12 @@ class ParamsDict(UserDict):
 
 parameter_keywords = set()
 
+# suppress_validation_preference_set = ComponentPreferenceSet(prefs = {
+#     kpParamValidationPref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
+#     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
+#     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
+
+
 # Used as templates for requiredParamClassDefaultTypes for COMPONENT:
 class Params(object):
     def __init__(self, **kwargs):
@@ -358,6 +364,7 @@ def dummy_function():
     pass
 method_type = type(dummy_class().dummy_method)
 function_type = type(dummy_function)
+
 
 class ComponentLog(IntEnum):
     NONE            = 0
@@ -508,7 +515,6 @@ class Component(object):
 
     # Determines whether variableClassDefault can be changed (to match an variable in __init__ method)
     variableClassDefault_locked = False
-
 
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
@@ -1397,12 +1403,20 @@ class Component(object):
         # Turn off paramValidationPref to prevent recursive loop
         #     (since setter for attrib of param calls assign_params if validationPref is True)
         #     and no need to validate, since that has already been done above (in _instantiate_defaults)
-        pref_buffer = self.paramValidationPref
-        self.paramValidationPref = False
+
+        pref_buffer = self.prefs._param_validation_pref
+        self.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+        # pref_buffer = self.prefs
+        # self.prefs = suppress_validation_preference_set
+        # self.prefs = ComponentPreferenceSet(prefs = {
+        #     kpParamValidationPref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
+        #     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
+        #     kpReportOutputPref: PreferenceEntry(False,PreferenceLevel.INSTANCE)})
 
         self.paramsCurrent.update(validated_set)
 
         self.paramValidationPref = pref_buffer
+        # self.prefs = pref_buffer
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
         # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
