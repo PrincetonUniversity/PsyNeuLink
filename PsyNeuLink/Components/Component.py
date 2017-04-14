@@ -1404,7 +1404,6 @@ class Component(object):
 
         self.paramValidationPref = pref_buffer
 
-
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
         # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
         # FIX: SAME FOR FUNCTIONS THAT NEED TO BE "WRAPPED"
@@ -2107,7 +2106,7 @@ class Component(object):
             # self.function_params = self.function_object.user_params
             # self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
             # MODIFIED 4/8/17 NEWER:
-            self.function_params = ReadOnlyOrderedDict(name='function_params')
+            # self.function_params = ReadOnlyOrderedDict(name='function_params')
             for param_name in sorted(list(self.function_object.user_params_for_instantiation.keys())):
                 self.function_params.__additem__(param_name,
                                                  self.function_object.user_params_for_instantiation[param_name])
