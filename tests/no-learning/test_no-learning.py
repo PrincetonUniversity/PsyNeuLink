@@ -124,8 +124,8 @@ class TestNoLearning:
                         termination_conditions=term_conds
         )
 
+        # list consisting of Output_Layer's OutputState, [result, mean, variance]
         expected_Output_Layer_output = [numpy.array([ 0.8344837, 0.87072018, 0.89997433]), numpy.array(0.8683927358195268), numpy.array(0.0007175454706347559)]
 
         assert len(expected_Output_Layer_output) == len(Output_Layer.outputValue) == 3
-        for i in range(len(expected_Output_Layer_output)):
-            assert numpy.allclose(expected_Output_Layer_output[i], Output_Layer.outputValue[i])
+        assert all([numpy.allclose(expected_Output_Layer_output[i], Output_Layer.outputValue[i]) for i in range(len(expected_Output_Layer_output))])
