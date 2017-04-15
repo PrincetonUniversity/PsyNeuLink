@@ -56,6 +56,13 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# DOCUMENTATION:  Now that attribute assignment calls:
+#                         _assign_params, which in turn calls _instantiate_params, which in turn calls _validate_params
+#                         _validate params may only get a subset of the params for a component
+#                         therefore, it can't be used to insure that a give param has been implemented,
+#                              only that its value is a syntactically legal one.
+#                         enforcement of assignment should be done using required_params
+
 # IMPLEMENT: error threshold / criterion for ending learning
 # DOCUMENTATION: FUNCTION_PARAMS in runtime_params example
 # FIX: Stroop Model Test Script: Process -> System
