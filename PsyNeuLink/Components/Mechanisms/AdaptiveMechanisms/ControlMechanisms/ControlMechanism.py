@@ -412,11 +412,11 @@ class ControlMechanism_Base(Mechanism_Base):
             self.outputStates = OrderedDict({output_state_name:state})
             self.outputState = self.outputStates[output_state_name]
 
-        # Add ControlProjection to list of outputState's outgoing projections
-        state.sendsToProjections.append(projection)
-
         # Add index assignment to outputState
         state.index = output_state_index
+
+        # Add ControlProjection to list of outputState's outgoing projections
+        state.sendsToProjections.append(projection)
 
         # Add ControlProjection to ControlMechanism's list of ControlProjections
         try:
