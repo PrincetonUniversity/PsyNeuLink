@@ -818,7 +818,17 @@ class Process_Base(Process):
     # MODIFIED 10/2/16 END
 
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
+    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL,
+                               '_execution_id': None,
+                               PATHWAY: None,
+                               'input':[],
+                               'processInputStates': [],
+                               'targets': None,
+                               'targetInputStates': [],
+                               'systems': [],
+                               '_phaseSpecMax': 0,
+                               '_isControllerProcess': False
+                               })
 
     default_pathway = [Mechanism_Base.defaultMechanism]
 
@@ -846,17 +856,7 @@ class Process_Base(Process):
                                                   learning_rate=learning_rate,
                                                   target=target,
                                                   params=params)
-
         self.function = self.execute
-        self._execution_id = None
-        self.pathway = None
-        self.input = []
-        self.processInputStates = []
-        self.targets = None
-        self.targetInputStates = []
-        self.systems = []
-        self._phaseSpecMax = 0
-        self._isControllerProcess = False
 
         register_category(entry=self,
                           base_class=Process_Base,
