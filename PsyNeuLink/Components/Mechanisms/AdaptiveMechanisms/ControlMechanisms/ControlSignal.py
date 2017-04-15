@@ -547,11 +547,7 @@ class ControlSignal(OutputState):
                 raise ControlSignalError("{} is not a valid cost function for {}".
                                          format(cost_function, cost_function_name))
 
-            # MODIFIED 1/23/17 OLD:
-            # setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function)
-            # MODIFIED 1/23/17 NEW:
-            setattr(self,  cost_function_name, cost_function)
-            # MODIFIED 1/23/17 END
+            self.paramsCurrent[cost_function_name] = cost_function
 
         self.controlSignalCostOptions = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
 
