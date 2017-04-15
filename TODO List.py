@@ -56,6 +56,9 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX:                  assignment of ControlSignal (OutputState) index attribute
+# FIX:                     before allocation size has been determined (in make_prop->assign_params)
+
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
 # FIX: Component: IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
 #                 SEE learning_rate IN LearningMechanism FOR EXAMPLE
