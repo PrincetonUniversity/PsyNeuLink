@@ -847,15 +847,11 @@ class Process_Base(Process):
                                                   target=target,
                                                   params=params)
 
+        self.function = self.execute
         self._execution_id = None
         self.pathway = None
-        # # MODIFIED 2/17/17 OLD:
-        # self.input = None
-        # MODIFIED 2/17/17 NEW:
         self.input = []
-        # MODIFIED 2/17/17 END
         self.processInputStates = []
-        self.function = self.execute
         self.targets = None
         self.targetInputStates = []
         self.systems = []
