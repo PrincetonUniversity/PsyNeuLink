@@ -637,7 +637,7 @@ class DDM(ProcessingMechanism_Base):
 
         while abs(result_check) < threshold:
             time_check += 1
-            result_check = self.get_axes_function(context='plot')
+            result_check = self.get_axes_function(self.variable, context='plot')
 
         # Re-set random seed for the real run
         np.random.seed(seed_value)
@@ -654,7 +654,7 @@ class DDM(ProcessingMechanism_Base):
         time = 0
         while abs(result) < threshold:
             time += 1
-            result = self.plot_function(context='plot')
+            result = self.plot_function(self.variable, context='plot')
             plt.plot(time, float(result), '-o', color='r', ms=2.5)
             plt.pause(0.01)
 
@@ -788,7 +788,7 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
             if self.function_params['integration_type'] == 'diffusion':
-                result = self.function(context=context)
+                result = self.function(self.variable, context=context)
                 return np.array([result,[0.0],[0.0],[0.0]])
             else:
                 raise MechanismError("Invalid integration_type: '{}'. For the DDM mechanism, integration_type must be set"

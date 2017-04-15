@@ -516,6 +516,7 @@ class Component(object):
     # Determines whether variableClassDefault can be changed (to match an variable in __init__ method)
     variableClassDefault_locked = False
 
+
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
     # *  entry values here do NOT implement the param; they are simply used as type specs for checking (in __init__)
