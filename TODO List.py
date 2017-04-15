@@ -68,6 +68,9 @@
 # IMPLEMENT: error threshold / criterion for ending learning
 # DOCUMENTATION: FUNCTION_PARAMS in runtime_params example
 # FIX: Stroop Model Test Script: Process -> System
+# FIX:                  assignment of ControlSignal (OutputState) index attribute
+# FIX:                     before allocation size has been determined (in make_prop->assign_params)
+
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
 # FIX: Component: IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
 #                 SEE learning_rate IN LearningMechanism FOR EXAMPLE
