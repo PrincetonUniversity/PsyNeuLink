@@ -1837,7 +1837,7 @@ class Component(object):
                                       format(FUNCTION,
                                              self.paramsCurrent[FUNCTION],
                                              param_set, function))
-                self.paramsCurrent[FUNCTION] = function
+                        self.paramsCurrent[FUNCTION] = function
 
             # FUNCTION was not valid, so try to assign self.function to it;
             else:
