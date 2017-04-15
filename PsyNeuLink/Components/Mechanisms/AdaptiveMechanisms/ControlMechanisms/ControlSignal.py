@@ -596,16 +596,22 @@ class ControlSignal(OutputState):
         Computes new intensity and cost attributes from allocation
 
         Use self.function to assign intensity
-            - if ignoreIntensityFunction is set (for effiency, if the the execute method it is the identity function):
+            - if ignoreIntensityFunction is set (for efficiency, if the execute method it is the identity function):
                 ignore self.function
                 pass allocation (input to controlSignal) along as its output
         Update cost
+        Assign intensity to value of ControlSignal (done in setter property for value)
 
         :parameter allocation: (single item list, [0-1])
         :return: (intensity)
         """
 
-        super(OutputState, self).update(params=params, time_scale=time_scale, context=context)
+
+        # MODIFIED 4/15/17 OLD: [NOT SURE WHY, BUT THIS SKIPPED OutputState.update() WHICH CALLS self.calculate()
+        # super(OutputState, self).update(params=params, time_scale=time_scale, context=context)
+        # MODIFIED 4/15/17 NEW: [THIS GOES THROUGH OutputState.update() WHICH CALLS self.calculate()
+        super().update(params=params, time_scale=time_scale, context=context)
+        # MODIFIED 4/15/17 END
 
         # store previous state
         self.last_allocation = self.allocation
@@ -640,24 +646,6 @@ class ControlSignal(OutputState):
         # compute cost(s)
         new_cost = intensity_cost = adjustment_cost = duration_cost = 0
 
-        # # MODIFIED 1/23/17 OLD:
-        # if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
-        #     intensity_cost = self.intensity_cost = self.intensityCostFunction(self.intensity)
-        #     if self.prefs.verbosePref:
-        #         print("++ Used intensity cost")
-        #
-        # if self.controlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
-        #     adjustment_cost = self.adjustment_cost = self.adjustmentCostFunction(intensity_change)
-        #     if self.prefs.verbosePref:
-        #         print("++ Used adjustment cost")
-        #
-        # if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
-        #     duration_cost = self.duration_cost = self.durationCostFunction([self.last_duration_cost, new_cost])
-        #     if self.prefs.verbosePref:
-        #         print("++ Used duration cost")
-        #
-        # new_cost = self.costCombinationFunction([float(intensity_cost), adjustment_cost, duration_cost])
-        # MODIFIED 1/23/17 NEW:
         if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
             intensity_cost = self.intensity_cost = self.intensity_cost_function(self.intensity)
             if self.prefs.verbosePref:
@@ -674,7 +662,6 @@ class ControlSignal(OutputState):
                 print("++ Used duration cost")
 
         new_cost = self.cost_combination_function([float(intensity_cost), adjustment_cost, duration_cost])
-        # MODIFIED 1/23/17 END
 
         if new_cost < 0:
             new_cost = 0
@@ -735,7 +722,9 @@ class ControlSignal(OutputState):
                                                                             float(self.cost))
     #endregion
 
-        self.value = self.intensity
+        # # MODIFIED 4/15/17 OLD: [REDUNDANT WITH ASSIGNMENT IN PROPERTY]
+        # self.value = self.intensity
+        # MODIFIED 4/15/17 END
 
     @property
     def allocation_samples(self):
