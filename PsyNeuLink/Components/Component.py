@@ -1189,7 +1189,7 @@ class Component(object):
 
 
         # VALIDATE VARIABLE (if not called from assign_params)
-        if not COMMAND_LINE in context:
+        if not any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
             # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
             self._validate_variable(variable, context=context)
             if variable is None:
@@ -1228,7 +1228,7 @@ class Component(object):
         #   as those are the only ones that should be modifiable
         #   (and are included paramClassDefaults, which will be tested in validate_params)
         if default_set is None:
-            if COMMAND_LINE in context:
+            if any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
                 default_set = {}
                 for param_name in request_set:
                     default_set[param_name] = self.paramInstanceDefaults[param_name]
@@ -1373,8 +1373,7 @@ class Component(object):
             # Variable passed validation, so assign as instance_default
 
 
-    @tc.typecheck
-    def assign_params(self, request_set:tc.optional(dict)=None, context=None):
+    def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
 
         Call _instantiate_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
@@ -1382,8 +1381,15 @@ class Component(object):
         Instantiate any items in request set that require it (i.e., function or states).
 
         """
-        from PsyNeuLink.Components.Functions.Function import Function
         context = context or COMMAND_LINE
+
+        self._assign_params(request_set=request_set, context=context)
+
+
+    @tc.typecheck
+    def _assign_params(self, request_set:tc.optional(dict)=None, context=None):
+
+        from PsyNeuLink.Components.Functions.Function import Function
 
         if not request_set:
             if self.verbosePref:
@@ -1394,9 +1400,13 @@ class Component(object):
         validated_set = {}
 
         self._instantiate_defaults(request_set=request_set,
-                             target_set=validated_set,
-                             # assign_missing=False,
-                             context=context)
+                                   target_set=validated_set,
+                                   # # MODIFIED 4/14/17 OLD:
+                                   # assign_missing=False,
+                                   # MODIFIED 4/14/17 NEW:
+                                   assign_missing=False,
+                                   # MODIFIED 4/14/17 END
+                                   context=context)
 
         self.paramInstanceDefaults.update(validated_set)
 
@@ -2280,7 +2290,8 @@ def make_property(name, default_value):
 
         # if self.paramValidationPref and hasattr(self, backing_field):
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            self.assign_params(request_set={backing_field[1:]:val})
+            self._assign_params(request_set={backing_field[1:]:val},
+                                context='ATTRIBUTE_SETTER')
         else:
             setattr(self, backing_field, val)
 
