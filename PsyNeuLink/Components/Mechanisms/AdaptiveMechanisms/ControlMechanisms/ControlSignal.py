@@ -472,13 +472,14 @@ class ControlSignal(OutputState):
             #     DURATION_COST_FUNCTION and COST_COMBINATION_FUNCTION must accept an array
             #     others must accept a scalar
             #     all must return a scalar
-            elif isinstance(cost_function, function_type):
-                if cost_function_name in {DURATION_COST_FUNCTION, COST_COMBINATION_FUNCTION}:
+            elif isinstance(cost_function, (function_type, method_type)):
+                if cost_function_name in COST_COMBINATION_FUNCTION:
                     test_value = [1, 1]
                 else:
                     test_value = 1
                 try:
-                    if not is_numeric(cost_function(test_value)):
+                    result = cost_function(test_value)
+                    if not (is_numeric(result) or is_numeric(np.asscalar(result))):
                         raise ControlSignalError("Function assigned to {} ({}) must return a scalar".
                                                  format(cost_function_name, cost_function))
                 except:
@@ -513,12 +514,12 @@ class ControlSignal(OutputState):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # ControlProjection Cost Functions
-        # for cost_function_name in costFunctionNames:
         for cost_function_name in [item for item in target_set if item in costFunctionNames]:
             cost_function = target_set[cost_function_name]
             if not cost_function:
                 continue
-            if (not isinstance(cost_function, (Function, function_type)) and not issubclass(cost_function, Function)):
+            if ((not isinstance(cost_function, (Function, function_type, method_type)) and
+                     not issubclass(cost_function, Function))):
                 raise ControlSignalError("{0} not a valid Function".format(cost_function))
 
     def _instantiate_attributes_before_function(self, context=None):
@@ -547,11 +548,7 @@ class ControlSignal(OutputState):
                 raise ControlSignalError("{} is not a valid cost function for {}".
                                          format(cost_function, cost_function_name))
 
-            # MODIFIED 1/23/17 OLD:
-            # setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function)
-            # MODIFIED 1/23/17 NEW:
-            setattr(self,  cost_function_name, cost_function)
-            # MODIFIED 1/23/17 END
+            self.paramsCurrent[cost_function_name] = cost_function
 
         self.controlSignalCostOptions = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
 
