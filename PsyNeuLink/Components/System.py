@@ -734,13 +734,13 @@ class System_Base(System):
     paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL,
                                'outputStates': {},
                                '_phaseSpecMax': 0,
-                                'stimulusInputStates': [],
-                                'inputs': [],
-                                'current_input': None,
-                                'targetInputStates': [],
-                                'targets': None,
-                                'current_targets': None,
-                                'learning': False
+                               'stimulusInputStates': [],
+                               'inputs': [],
+                               'current_input': None,
+                               'targetInputStates': [],
+                               'targets': None,
+                               'current_targets': None,
+                               'learning': False
                                })
 
     @tc.typecheck
