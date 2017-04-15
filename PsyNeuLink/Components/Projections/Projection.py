@@ -524,7 +524,7 @@ class Projection_Base(Projection):
             sender_param = target_set[PROJECTION_SENDER]
         except KeyError:
             # This should never happen, since PROJECTION_SENDER is a required param
-            raise ProjectionError("Program error: required param {0} missing in {1}".
+            raise ProjectionError("Program error: required param \'{0}\' missing in {1}".
                                   format(PROJECTION_SENDER, self.name))
 
         # PROJECTION_SENDER is either an instance or class of Mechanism or State:
