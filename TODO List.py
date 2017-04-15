@@ -58,10 +58,12 @@
 
 # DOCUMENTATION:  Now that attribute assignment calls:
 #                         _assign_params, which in turn calls _instantiate_params, which in turn calls _validate_params
-#                         _validate params may only get a subset of the params for a component
-#                         therefore, it can't be used to insure that a give param has been implemented,
-#                              only that its value is a syntactically legal one.
-#                         enforcement of assignment should be done using required_params
+#                             therefore _validate params may only get a subset of the params for a component
+#                                in which case it can't be used to insure that a give param has been implemented,
+#                                only that its value is a syntactically legal one.
+#                                enforcement of assignment should be done using required_params
+#                         in general, _validate_params should now check that the parameter being validated
+#                             is in the target_set
 
 # IMPLEMENT: error threshold / criterion for ending learning
 # DOCUMENTATION: FUNCTION_PARAMS in runtime_params example
