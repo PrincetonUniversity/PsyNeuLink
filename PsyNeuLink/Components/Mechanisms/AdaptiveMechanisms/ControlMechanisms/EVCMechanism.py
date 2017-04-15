@@ -697,6 +697,7 @@ class EVCMechanism(ControlMechanism_Base):
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({MAKE_DEFAULT_CONTROLLER: True,
+                               'allocation_policy': None,
                                PARAMETER_STATES: False})
 
     @tc.typecheck
@@ -741,6 +742,10 @@ class EVCMechanism(ControlMechanism_Base):
                                            name=name,
                                            prefs=prefs,
                                            context=self)
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def _instantiate_input_states(self, context=None):
         """Instantiate inputState and MappingProjections for list of Mechanisms and/or States to be monitored
@@ -1190,22 +1195,20 @@ class EVCMechanism(ControlMechanism_Base):
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """
         """
-        try:
-            self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
-        except AttributeError:
-            # self.allocation_policy = np.atleast_2d(defaultControlAllocation)
-            self.allocation_policy = np.array(defaultControlAllocation)
 
-        # Call super to instantiate outputStates
+        if self.allocation_policy is None:
+            self.allocation_policy = np.array(defaultControlAllocation)
+        else:
+            self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
+
+        # Call super to instantiate ControlSignal outputStates
         super()._instantiate_control_projection(projection=projection,
                                                 params=params,
                                                 context=context)
 
-        # # MODIFIED 4/11/17 OLD:
-        # self.controlSignals = list(self.outputStates.values())
-        # MODIFIED 4/11/17 NEW:
+        # Assign controlSignals in the order they are stored of OutputStates
         self.controlSignals = [self.outputStates[state_name] for state_name in self.outputStates.keys()]
-        # MODIFIED 4/11/17 END
+
         # # TEST PRINT
         # print("\n{}.controlSignals: ".format(self.name))
         # for control_signal in self.controlSignals:

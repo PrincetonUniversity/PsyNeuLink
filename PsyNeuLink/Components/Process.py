@@ -874,6 +874,7 @@ class Process_Base(Process):
                                            prefs=prefs,
                                            context=context)
 
+
     def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
