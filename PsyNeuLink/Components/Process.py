@@ -253,7 +253,7 @@ default value of 0)::
 
     mechanism_1 = TransferMechanism()
     mechanism_2 = DDM()
-    some_params = {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{THRESHOLD:2,NOISE:0.1}}}
+    some_params = {PARAMETER_STATE_PARAMS:{THRESHOLD:2,NOISE:0.1}}
     my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
 
 *Default projection specification:*  The `pathway` for this process uses default projection specifications; as a
