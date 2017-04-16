@@ -472,13 +472,14 @@ class ControlSignal(OutputState):
             #     DURATION_COST_FUNCTION and COST_COMBINATION_FUNCTION must accept an array
             #     others must accept a scalar
             #     all must return a scalar
-            elif isinstance(cost_function, function_type):
-                if cost_function_name in {DURATION_COST_FUNCTION, COST_COMBINATION_FUNCTION}:
+            elif isinstance(cost_function, (function_type, method_type)):
+                if cost_function_name in COST_COMBINATION_FUNCTION:
                     test_value = [1, 1]
                 else:
                     test_value = 1
                 try:
-                    if not is_numeric(cost_function(test_value)):
+                    result = cost_function(test_value)
+                    if not (is_numeric(result) or is_numeric(np.asscalar(result))):
                         raise ControlSignalError("Function assigned to {} ({}) must return a scalar".
                                                  format(cost_function_name, cost_function))
                 except:
@@ -510,15 +511,26 @@ class ControlSignal(OutputState):
                                              "a list or 1D np.array of numbers".
                                          format(allocation_samples, self.name))
 
+        # # If allocation_policy has been assigned, set self.value to it so it reflects the number of  controlSignals;
+        # #    this is necessary, since function is not fully executed during initialization (in _instantiate_function)
+        # #    it returns default_allocation policy which has only a singel item,
+        # #    however validation of indices for outputStates requires that proper number of items be in self.value
+        # # FIX: SHOULD VALIDATE THAT FUNCTION INDEED RETURNS A VALUE WITH LENGTH = # ControlSignals
+        try:
+            self.owner.value = self.owner.allocation_policy
+        except AttributeError:
+            pass
+
+
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # ControlProjection Cost Functions
-        # for cost_function_name in costFunctionNames:
         for cost_function_name in [item for item in target_set if item in costFunctionNames]:
             cost_function = target_set[cost_function_name]
             if not cost_function:
                 continue
-            if (not isinstance(cost_function, (Function, function_type)) and not issubclass(cost_function, Function)):
+            if ((not isinstance(cost_function, (Function, function_type, method_type)) and
+                     not issubclass(cost_function, Function))):
                 raise ControlSignalError("{0} not a valid Function".format(cost_function))
 
     def _instantiate_attributes_before_function(self, context=None):
@@ -547,11 +559,7 @@ class ControlSignal(OutputState):
                 raise ControlSignalError("{} is not a valid cost function for {}".
                                          format(cost_function, cost_function_name))
 
-            # MODIFIED 1/23/17 OLD:
-            # setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function)
-            # MODIFIED 1/23/17 NEW:
-            setattr(self,  cost_function_name, cost_function)
-            # MODIFIED 1/23/17 END
+            self.paramsCurrent[cost_function_name] = cost_function
 
         self.controlSignalCostOptions = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
 
@@ -600,16 +608,22 @@ class ControlSignal(OutputState):
         Computes new intensity and cost attributes from allocation
 
         Use self.function to assign intensity
-            - if ignoreIntensityFunction is set (for effiency, if the the execute method it is the identity function):
+            - if ignoreIntensityFunction is set (for efficiency, if the execute method it is the identity function):
                 ignore self.function
                 pass allocation (input to controlSignal) along as its output
         Update cost
+        Assign intensity to value of ControlSignal (done in setter property for value)
 
         :parameter allocation: (single item list, [0-1])
         :return: (intensity)
         """
 
-        super(OutputState, self).update(params=params, time_scale=time_scale, context=context)
+
+        # MODIFIED 4/15/17 OLD: [NOT SURE WHY, BUT THIS SKIPPED OutputState.update() WHICH CALLS self.calculate()
+        # super(OutputState, self).update(params=params, time_scale=time_scale, context=context)
+        # MODIFIED 4/15/17 NEW: [THIS GOES THROUGH OutputState.update() WHICH CALLS self.calculate()
+        super().update(params=params, time_scale=time_scale, context=context)
+        # MODIFIED 4/15/17 END
 
         # store previous state
         self.last_allocation = self.allocation
@@ -644,24 +658,6 @@ class ControlSignal(OutputState):
         # compute cost(s)
         new_cost = intensity_cost = adjustment_cost = duration_cost = 0
 
-        # # MODIFIED 1/23/17 OLD:
-        # if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
-        #     intensity_cost = self.intensity_cost = self.intensityCostFunction(self.intensity)
-        #     if self.prefs.verbosePref:
-        #         print("++ Used intensity cost")
-        #
-        # if self.controlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
-        #     adjustment_cost = self.adjustment_cost = self.adjustmentCostFunction(intensity_change)
-        #     if self.prefs.verbosePref:
-        #         print("++ Used adjustment cost")
-        #
-        # if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
-        #     duration_cost = self.duration_cost = self.durationCostFunction([self.last_duration_cost, new_cost])
-        #     if self.prefs.verbosePref:
-        #         print("++ Used duration cost")
-        #
-        # new_cost = self.costCombinationFunction([float(intensity_cost), adjustment_cost, duration_cost])
-        # MODIFIED 1/23/17 NEW:
         if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
             intensity_cost = self.intensity_cost = self.intensity_cost_function(self.intensity)
             if self.prefs.verbosePref:
@@ -678,7 +674,6 @@ class ControlSignal(OutputState):
                 print("++ Used duration cost")
 
         new_cost = self.cost_combination_function([float(intensity_cost), adjustment_cost, duration_cost])
-        # MODIFIED 1/23/17 END
 
         if new_cost < 0:
             new_cost = 0
@@ -739,7 +734,9 @@ class ControlSignal(OutputState):
                                                                             float(self.cost))
     #endregion
 
-        self.value = self.intensity
+        # # MODIFIED 4/15/17 OLD: [REDUNDANT WITH ASSIGNMENT IN PROPERTY]
+        # self.value = self.intensity
+        # MODIFIED 4/15/17 END
 
     @property
     def allocation_samples(self):

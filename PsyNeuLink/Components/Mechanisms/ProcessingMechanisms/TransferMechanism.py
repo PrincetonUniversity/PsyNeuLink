@@ -395,25 +395,34 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        transfer_function = target_set[FUNCTION]
-        if isinstance(transfer_function, Component):
-            transfer_function_class = transfer_function.__class__
-            transfer_function_name = transfer_function.__class__.__name__
-        elif isclass(transfer_function):
-            transfer_function_class = transfer_function
-            transfer_function_name = transfer_function.__name__
-
         # Validate FUNCTION
-        if not transfer_function_class.componentType is TRANFER_FUNCTION_TYPE:
-            raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
-                                format(transfer_function_name, self.name, TRANFER_FUNCTION_TYPE))
+        if FUNCTION in target_set:
+            transfer_function = target_set[FUNCTION]
+            # FUNCTION is a Function
+            if isinstance(transfer_function, Component):
+                transfer_function_class = transfer_function.__class__
+                transfer_function_name = transfer_function.__class__.__name__
+            # FUNCTION is a function or method
+            elif isinstance(transfer_function, (function_type, method_type)):
+                transfer_function_class = transfer_function.__self__.__class__
+                transfer_function_name = transfer_function.__self__.__class__.__name__
+            # FUNCTION is a class
+            elif isclass(transfer_function):
+                transfer_function_class = transfer_function
+                transfer_function_name = transfer_function.__name__
+
+            if not transfer_function_class.componentType is TRANFER_FUNCTION_TYPE:
+                raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
+                                    format(transfer_function_name, self.name, TRANFER_FUNCTION_TYPE))
 
         # Validate INITIAL_VALUE
-        initial_value = target_set[INITIAL_VALUE]
-        if initial_value:
-            if not iscompatible(initial_value, self.variable[0]):
-                raise TransferError("The format of the initial_value parameter for {} ({}) must match its input ({})".
-                                    format(append_type_to_name(self), initial_value, self.variable[0]))
+        if INITIAL_VALUE in target_set:
+            initial_value = target_set[INITIAL_VALUE]
+            if initial_value is not None:
+                if not iscompatible(initial_value, self.variable):
+                    raise TransferError("The format of the initial_value parameter for {} ({}) "
+                                        "must match its input ({})".
+                                        format(append_type_to_name(self), initial_value, self.variable[0]))
 
         # # Validate NOISE:
         # noise = target_set[NOISE]
@@ -422,21 +431,31 @@ class TransferMechanism(ProcessingMechanism_Base):
         #                         format(noise, self.name))
 
         # Validate TIME_CONSTANT:
-        time_constant = target_set[TIME_CONSTANT]
-        if not (isinstance(time_constant, float) and time_constant>=0 and time_constant<=1):
-            raise TransferError("time_constant parameter ({}) for {} must be a float between 0 and 1".
-                                format(time_constant, self.name))
+        if TIME_CONSTANT in target_set:
+            time_constant = target_set[TIME_CONSTANT]
+            if not (isinstance(time_constant, float) and time_constant>=0 and time_constant<=1):
+                raise TransferError("time_constant parameter ({}) for {} must be a float between 0 and 1".
+                                    format(time_constant, self.name))
 
         # Validate RANGE:
-        range = target_set[RANGE]
-        if range:
-            if not (isinstance(range, tuple) and len(range)==2 and all(isinstance(i, numbers.Number) for i in range)):
-                raise TransferError("range parameter ({}) for {} must be a tuple with two numbers".
-                                    format(range, self.name))
-            if not range[0] < range[1]:
-                raise TransferError("The first item of the range parameter ({}) must be less than the second".
-                                    format(range, self.name))
-        self.integrator_function = Integrator(variable_default = self.variable, initializer=self.variable, integration_type=ADAPTIVE, rate=self.time_constant, noise=self.noise)
+        if RANGE in target_set:
+            range = target_set[RANGE]
+            if range:
+                if not (isinstance(range, tuple) and len(range)==2 and all(isinstance(i, numbers.Number) for i in range)):
+                    raise TransferError("range parameter ({}) for {} must be a tuple with two numbers".
+                                        format(range, self.name))
+                if not range[0] < range[1]:
+                    raise TransferError("The first item of the range parameter ({}) must be less than the second".
+                                        format(range, self.name))
+
+        if context is COMMAND_LINE:
+            return
+
+        self.integrator_function = Integrator(variable_default = self.variable,
+                                              initializer=self.variable,
+                                              integration_type=ADAPTIVE,
+                                              rate=self.time_constant,
+                                              noise=self.noise)
 
     def _instantiate_parameter_states(self, context=None):
 

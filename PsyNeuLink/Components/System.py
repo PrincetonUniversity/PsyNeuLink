@@ -731,7 +731,17 @@ class System_Base(System):
     variableClassDefault = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
+    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL,
+                               'outputStates': {},
+                               '_phaseSpecMax': 0,
+                               'stimulusInputStates': [],
+                               'inputs': [],
+                               'current_input': None,
+                               'targetInputStates': [],
+                               'targets': None,
+                               'current_targets': None,
+                               'learning': False
+                               })
 
     @tc.typecheck
     def __init__(self,
@@ -763,15 +773,6 @@ class System_Base(System):
                                                   params=params)
 
         self.function = self.execute
-        self.outputStates = {}
-        self._phaseSpecMax = 0
-        self.stimulusInputStates = []
-        self.inputs = []
-        self.current_input = None
-        self.targetInputStates = []
-        self.targets = None
-        self.current_targets = None
-        self.learning = False
 
         register_category(entry=self,
                           base_class=System_Base,

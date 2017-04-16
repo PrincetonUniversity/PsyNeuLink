@@ -1240,9 +1240,9 @@ class LinearCombination(
                                  target_set=target_set,
                                  context=context)
 
-        if target_set[WEIGHTS] is not None:
+        if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-        if target_set[EXPONENTS] is not None:
+        if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
 
             # if not operation:
@@ -2781,31 +2781,33 @@ class Integrator(
                                 "array or list of functions.".format(self.initializer[0], self.name))
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        # Handle list or array for rate specification
-        rate = request_set[RATE]
-        if isinstance(rate, (list, np.ndarray)):
-            if len(rate) != np.array(self.variable).size:
-                # If the variable was not specified, then reformat it to match rate specification
-                #    and assign variableClassDefault accordingly
-                # Note: this situation can arise when the rate is parameterized (e.g., as an array)
-                #       in the Integrator's constructor, where that is used as a specification for a function parameter
-                #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
-                #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
-                #       the object itself, thus does not see the array specification for the input.
-                if self._variable_not_specified:
-                    self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
-                    if self.verbosePref:
-                        warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} must "
-                                      "match the length ({}) of the default input ({});  the default input has been "
-                                      "updated to match".
-                                      format(len(rate), rate, self.name, np.array(self.variable).size), self.variable)
-                else:
-                    raise FunctionError("The length ({}) of the array specified for the rate parameter ({}) of {} "
-                                        "must match the length ({}) of the default input ({})".
-                                        format(len(rate), rate, self.name, np.array(self.variable).size, self.variable))
 
-            self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+        # Handle list or array for rate specification
+        if RATE in request_set:
+            rate = request_set[RATE]
+            if isinstance(rate, (list, np.ndarray)):
+                if len(rate) != np.array(self.variable).size:
+                    # If the variable was not specified, then reformat it to match rate specification
+                    #    and assign variableClassDefault accordingly
+                    # Note: this situation can arise when the rate is parameterized (e.g., as an array)
+                    #       in the Integrator's constructor, where that is used as a specification for a function parameter
+                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
+                    #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
+                    #       the object itself, thus does not see the array specification for the input.
+                    if self._variable_not_specified:
+                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
+                        if self.verbosePref:
+                            warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} must "
+                                          "match the length ({}) of the default input ({});  the default input has been "
+                                          "updated to match".
+                                          format(len(rate), rate, self.name, np.array(self.variable).size), self.variable)
+                    else:
+                        raise FunctionError("The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                            "must match the length ({}) of the default input ({})".
+                                            format(len(rate), rate, self.name, np.array(self.variable).size, self.variable))
+
+                self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -2824,9 +2826,13 @@ class Integrator(
                         "1.0 when integration_type is set to ADAPTIVE.".format(self.rate, self.name))
 
         # self._validate_initializer()
-        self._validate_noise()
-        noise = target_set[NOISE]
-        time_step_size = target_set[TIME_STEP_SIZE]
+
+        if NOISE in target_set:
+            self._validate_noise()
+            noise = target_set[NOISE]
+
+        if TIME_STEP_SIZE in target_set:
+            time_step_size = target_set[TIME_STEP_SIZE]
 
     def function(self,
                  variable=None,
@@ -4495,63 +4501,62 @@ class BackPropagation(LearningFunction):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Validate error_matrix specification
-        try:
+        if ERROR_MATRIX in target_set:
+
             error_matrix = target_set[ERROR_MATRIX]
-        except KeyError:
-            raise FunctionError("PROGRAM ERROR:  No specification for {} in {}".
-                                format(ERROR_MATRIX, self.name))
 
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-        if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
-            raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
-                                "MappingProjection".format(ERROR_MATRIX, self.name))
+            from PsyNeuLink.Components.States.ParameterState import ParameterState
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
+                raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
+                                    "MappingProjection".format(ERROR_MATRIX, self.name))
 
-        if isinstance(error_matrix, MappingProjection):
-            try:
-                error_matrix = error_matrix.parameterStates[MATRIX].value
-                param_type_string = "MappingProjection's ParameterState"
-            except KeyError:
-                raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
-                                    "paramaterState that has been assigned a 2d array or matrix".
-                                    format(ERROR_MATRIX, self.name, error_matrix.shape, MATRIX))
+            if isinstance(error_matrix, MappingProjection):
+                try:
+                    error_matrix = error_matrix.parameterStates[MATRIX].value
+                    param_type_string = "MappingProjection's ParameterState"
+                except KeyError:
+                    raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
+                                        "paramaterState that has been assigned a 2d array or matrix".
+                                        format(ERROR_MATRIX, self.name, error_matrix.shape, MATRIX))
 
-        elif isinstance(error_matrix, ParameterState):
-            try:
-                error_matrix = error_matrix.value
-                param_type_string = "ParameterState"
-            except KeyError:
-                raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+            elif isinstance(error_matrix, ParameterState):
+                try:
+                    error_matrix = error_matrix.value
+                    param_type_string = "ParameterState"
+                except KeyError:
+                    raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                                        "must be a 2d array or matrix".
+                                        format(MATRIX, ERROR_MATRIX, self.name, error_matrix.shape))
+
+            else:
+                param_type_string = "array or matrix"
+
+            error_matrix = np.array(error_matrix)
+            rows = error_matrix.shape[WT_MATRIX_SENDERS_DIM]
+            cols = error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]
+            activity_output_len = len(self.activation_output)
+            error_signal_len = len(self.error_signal)
+
+            if error_matrix.ndim != 2:
+                raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
                                     "must be a 2d array or matrix".
-                                    format(MATRIX, ERROR_MATRIX, self.name, error_matrix.shape))
+                                    format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
 
-        else:
-            param_type_string = "array or matrix"
+            # The length of the sender outputState.value (the error signal) must be the
+            #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
 
-        error_matrix = np.array(error_matrix)
-        rows = error_matrix.shape[WT_MATRIX_SENDERS_DIM]
-        cols = error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]
-        activity_output_len = len(self.activation_output)
-        error_signal_len = len(self.error_signal)
+            # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
+            if cols != error_signal_len:
+                raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
+                                    "must match the length of the error signal ({}) it receives".
+                                    format(cols, MATRIX, error_matrix.shape, self.name, cols))
 
-        if error_matrix.ndim != 2:
-            raise FunctionError("The value of the {} specified for the {} arg of {} ({}) must be a 2d array or matrix".
-                                format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
-
-        # The length of the sender outputState.value (the error signal) must be the
-        #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
-
-        # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
-        if cols != error_signal_len:
-            raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
-                                "must match the length of the error signal ({}) it receives".
-                                format(cols, MATRIX, error_matrix.shape, self.name, cols))
-
-        # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
-        if rows != activity_output_len:
-            raise FunctionError("The height (number of rows, {}) of \'{}\' arg specified for {} must match the "
-                                "length of the output {} of the activity vector being monitored ({})".
-                                format(rows, MATRIX, self.name, activity_output_len))
+            # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
+            if rows != activity_output_len:
+                raise FunctionError("The height (number of rows, {}) of \'{}\' arg specified for {} must match the "
+                                    "length of the output {} of the activity vector being monitored ({})".
+                                    format(rows, MATRIX, self.name, activity_output_len))
 
     def function(self,
                  variable=None,

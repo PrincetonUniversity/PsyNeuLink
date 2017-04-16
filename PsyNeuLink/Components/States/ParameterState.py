@@ -720,7 +720,8 @@ class ParameterState(State_Base):
         if self.name in self.owner.function_params and not 'matrix' in self.name:
         #     setattr(self.owner.function.__self__, self.name, self.value)
             param_type = type(getattr(self.owner.function.__self__, self.name))
-            setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
+            # setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
+            self.owner.function.__self__.paramsCurrent[self.name] = type_match(self.value, param_type)
 
         #region APPLY RUNTIME PARAM VALUES
         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
