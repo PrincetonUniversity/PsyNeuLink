@@ -1449,7 +1449,6 @@ class Component(object):
                  for param_value in validated_set.values()):
             self._instantiate_attributes_before_function()
 
-
         # If object is a Mechanism or MappingProjection, instantiate ParameterState for param if required
         #    (States don't have ParameterStates)
         from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
@@ -1460,10 +1459,11 @@ class Component(object):
             #               but this may cause it to ignore FUNCTION_PARAMS when FUNCTION has changed
             from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_state
             for param_name in validated_set_param_names:
-                _instantiate_parameter_state(owner=self,
-                                             param_name=param_name,
-                                             param_value=validated_set[param_name],
-                                             context=context)
+                if not param_name in self.user_params_for_instantiation:
+                    _instantiate_parameter_state(owner=self,
+                                                 param_name=param_name,
+                                                 param_value=validated_set[param_name],
+                                                 context=context)
 
         # If the object's function is being assigned, and it is a class, instantiate it as a Function object
         if FUNCTION in validated_set and inspect.isclass(self.function):
