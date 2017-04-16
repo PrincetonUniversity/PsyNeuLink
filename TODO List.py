@@ -56,6 +56,24 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# DOCUMENTATION:  Now that attribute assignment calls:
+#                         _assign_params, which in turn calls _instantiate_params, which in turn calls _validate_params
+#                             therefore _validate params may only get a subset of the params for a component
+#                                in which case it can't be used to insure that a give param has been implemented,
+#                                only that its value is a syntactically legal one.
+#                                enforcement of assignment should be done using required_params
+#                         in general, _validate_params should now check that the parameter being validated
+#                             is in the target_set
+
+# DOCUMENTATION: Component._validate_params:  if testing before call to super, use request_set
+#                                             if testing after call to super, use target_set
+
+# IMPLEMENT: error threshold / criterion for ending learning
+# DOCUMENTATION: FUNCTION_PARAMS in runtime_params example
+# FIX: Stroop Model Test Script: Process -> System
+# FIX:                  assignment of ControlSignal (OutputState) index attribute
+# FIX:                     before allocation size has been determined (in make_prop->assign_params)
+
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
 # FIX: Component: IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
 #                 SEE learning_rate IN LearningMechanism FOR EXAMPLE

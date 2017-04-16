@@ -675,29 +675,39 @@ class DDM(ProcessingMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
         functions = {BogaczEtAl, NavarroAndFuss, Integrator}
-        if not target_set[FUNCTION] in functions:
-            function_names = list (function.componentName for function in functions)
-            raise DDMError("{} param of {} must be one of the following functions: {}".
-                           format(FUNCTION, self.name, function_names))
-        if self.timeScale == TimeScale.TRIAL:
-            if target_set[FUNCTION] == Integrator:
-                raise DDMError("In TRIAL mode, the {} param of {} cannot be Integrator. Please choose an analytic "
-                               "solution for the function param: BogaczEtAl or NavarroAndFuss.".
-                               format(FUNCTION, self.name))
-        else:
-            if target_set[FUNCTION] != Integrator:
-                raise DDMError("In TIME_STEP mode, the {} param of {} must be Integrator with DIFFUSION integration.".
-                               format(FUNCTION, self.name))
-            else:
-                self.get_axes_function = Integrator(integration_type=DIFFUSION, rate=self.function_params['rate'],
-                                                    noise=self.function_params['noise'], context='plot').function
-                self.plot_function = Integrator(integration_type=DIFFUSION, rate=self.function_params['rate'],
-                                                noise=self.function_params['noise'], context='plot').function
 
-        if not isinstance(target_set[FUNCTION], NavarroAndFuss):
-            # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
-            del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_VARIANCE.value]
-            del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_MEAN.value]
+        if FUNCTION in target_set:
+            # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
+            #   get the Function to which it belongs
+            function = target_set[FUNCTION]
+            if isinstance(function, method_type):
+                function = function.__self__.__class__
+
+            if not function in functions:
+                function_names = [function.componentName for function in functions]
+                raise DDMError("{} param of {} must be one of the following functions: {}".
+                               format(FUNCTION, self.name, function_names))
+
+            if self.timeScale == TimeScale.TRIAL:
+                if function == Integrator:
+                    raise DDMError("In TRIAL mode, the {} param of {} cannot be Integrator. Please choose an analytic "
+                                   "solution for the function param: BogaczEtAl or NavarroAndFuss.".
+                                   format(FUNCTION, self.name))
+            else:
+                if function != Integrator:
+                    raise DDMError("In TIME_STEP mode, the {} param of {} "
+                                   "must be Integrator with DIFFUSION integration.".
+                                   format(FUNCTION, self.name))
+                else:
+                    self.get_axes_function = Integrator(integration_type=DIFFUSION, rate=self.function_params['rate'],
+                                                        noise=self.function_params['noise'], context='plot').function
+                    self.plot_function = Integrator(integration_type=DIFFUSION, rate=self.function_params['rate'],
+                                                    noise=self.function_params['noise'], context='plot').function
+
+            if not isinstance(function, NavarroAndFuss) and OUTPUT_STATES in target_set:
+                # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
+                del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_VARIANCE.value]
+                del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_MEAN.value]
 
         try:
             threshold = target_set[FUNCTION_PARAMS][THRESHOLD]
