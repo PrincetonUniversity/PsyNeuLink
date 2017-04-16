@@ -1081,7 +1081,6 @@ class Component(object):
         # If params have been passed, treat as runtime params and assign to paramsCurrent
         #   (relabel params as runtime_params for clarity)
         runtime_params = params
-
         if runtime_params and runtime_params is not None:
             for param_name in self.user_params:
                 # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
@@ -1097,8 +1096,14 @@ class Component(object):
                 #    this insures that any params that were assigned as runtime on last execution are reset here
                 #    (unless they have been assigned another runtime value)
                 elif not self.runtimeParamStickyAssignmentPref:
+                    if param_name is FUNCTION_PARAMS:
+                        for function_param in self.function_object.user_params:
+                            self.function_object.paramsCurrent[function_param] = \
+                                self.function_object.paramInstanceDefaults[function_param]
+                        continue
                     self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
             self.runtime_params_in_use = True
+
         # Otherwise, reset paramsCurrent to paramInstanceDefaults
         elif self.runtime_params_in_use and not self.runtimeParamStickyAssignmentPref:
             # Can't do the following since function could still be a class ref rather than abound method (see below)
@@ -1110,7 +1115,13 @@ class Component(object):
                 #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
                 if param_name is FUNCTION:
                     continue
+                if param_name is FUNCTION_PARAMS:
+                    for function_param in self.function_object.user_params:
+                        self.function_object.paramsCurrent[function_param] = \
+                            self.function_object.paramInstanceDefaults[function_param]
+                    continue
                 self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
+
             self.runtime_params_in_use = False
 
         # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
