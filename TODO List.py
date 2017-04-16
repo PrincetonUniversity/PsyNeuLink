@@ -65,6 +65,9 @@
 #                         in general, _validate_params should now check that the parameter being validated
 #                             is in the target_set
 
+# DOCUMENTATION: Component._validate_params:  if testing before call to super, use request_set
+#                                             if testing after call to super, use target_set
+
 # IMPLEMENT: error threshold / criterion for ending learning
 # DOCUMENTATION: FUNCTION_PARAMS in runtime_params example
 # FIX: Stroop Model Test Script: Process -> System
