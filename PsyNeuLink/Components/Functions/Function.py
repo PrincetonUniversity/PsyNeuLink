@@ -4501,63 +4501,62 @@ class BackPropagation(LearningFunction):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Validate error_matrix specification
-        try:
+        if ERROR_MATRIX in target_set:
+
             error_matrix = target_set[ERROR_MATRIX]
-        except KeyError:
-            raise FunctionError("PROGRAM ERROR:  No specification for {} in {}".
-                                format(ERROR_MATRIX, self.name))
 
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-        if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
-            raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
-                                "MappingProjection".format(ERROR_MATRIX, self.name))
+            from PsyNeuLink.Components.States.ParameterState import ParameterState
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
+                raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
+                                    "MappingProjection".format(ERROR_MATRIX, self.name))
 
-        if isinstance(error_matrix, MappingProjection):
-            try:
-                error_matrix = error_matrix.parameterStates[MATRIX].value
-                param_type_string = "MappingProjection's ParameterState"
-            except KeyError:
-                raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
-                                    "paramaterState that has been assigned a 2d array or matrix".
-                                    format(ERROR_MATRIX, self.name, error_matrix.shape, MATRIX))
+            if isinstance(error_matrix, MappingProjection):
+                try:
+                    error_matrix = error_matrix.parameterStates[MATRIX].value
+                    param_type_string = "MappingProjection's ParameterState"
+                except KeyError:
+                    raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
+                                        "paramaterState that has been assigned a 2d array or matrix".
+                                        format(ERROR_MATRIX, self.name, error_matrix.shape, MATRIX))
 
-        elif isinstance(error_matrix, ParameterState):
-            try:
-                error_matrix = error_matrix.value
-                param_type_string = "ParameterState"
-            except KeyError:
-                raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+            elif isinstance(error_matrix, ParameterState):
+                try:
+                    error_matrix = error_matrix.value
+                    param_type_string = "ParameterState"
+                except KeyError:
+                    raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                                        "must be a 2d array or matrix".
+                                        format(MATRIX, ERROR_MATRIX, self.name, error_matrix.shape))
+
+            else:
+                param_type_string = "array or matrix"
+
+            error_matrix = np.array(error_matrix)
+            rows = error_matrix.shape[WT_MATRIX_SENDERS_DIM]
+            cols = error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]
+            activity_output_len = len(self.activation_output)
+            error_signal_len = len(self.error_signal)
+
+            if error_matrix.ndim != 2:
+                raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
                                     "must be a 2d array or matrix".
-                                    format(MATRIX, ERROR_MATRIX, self.name, error_matrix.shape))
+                                    format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
 
-        else:
-            param_type_string = "array or matrix"
+            # The length of the sender outputState.value (the error signal) must be the
+            #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
 
-        error_matrix = np.array(error_matrix)
-        rows = error_matrix.shape[WT_MATRIX_SENDERS_DIM]
-        cols = error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]
-        activity_output_len = len(self.activation_output)
-        error_signal_len = len(self.error_signal)
+            # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
+            if cols != error_signal_len:
+                raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
+                                    "must match the length of the error signal ({}) it receives".
+                                    format(cols, MATRIX, error_matrix.shape, self.name, cols))
 
-        if error_matrix.ndim != 2:
-            raise FunctionError("The value of the {} specified for the {} arg of {} ({}) must be a 2d array or matrix".
-                                format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
-
-        # The length of the sender outputState.value (the error signal) must be the
-        #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
-
-        # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
-        if cols != error_signal_len:
-            raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
-                                "must match the length of the error signal ({}) it receives".
-                                format(cols, MATRIX, error_matrix.shape, self.name, cols))
-
-        # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
-        if rows != activity_output_len:
-            raise FunctionError("The height (number of rows, {}) of \'{}\' arg specified for {} must match the "
-                                "length of the output {} of the activity vector being monitored ({})".
-                                format(rows, MATRIX, self.name, activity_output_len))
+            # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
+            if rows != activity_output_len:
+                raise FunctionError("The height (number of rows, {}) of \'{}\' arg specified for {} must match the "
+                                    "length of the output {} of the activity vector being monitored ({})".
+                                    format(rows, MATRIX, self.name, activity_output_len))
 
     def function(self,
                  variable=None,

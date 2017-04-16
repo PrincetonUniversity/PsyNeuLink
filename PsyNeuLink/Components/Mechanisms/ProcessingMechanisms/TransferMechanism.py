@@ -418,9 +418,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set:
             initial_value = target_set[INITIAL_VALUE]
-            if initial_value:
-                if not iscompatible(initial_value, self.variable[0]):
-                    raise TransferError("The format of the initial_value parameter for {} ({}) must match its input ({})".
+            if initial_value is not None:
+                if not iscompatible(initial_value, self.variable):
+                    raise TransferError("The format of the initial_value parameter for {} ({}) "
+                                        "must match its input ({})".
                                         format(append_type_to_name(self), initial_value, self.variable[0]))
 
         # # Validate NOISE:
