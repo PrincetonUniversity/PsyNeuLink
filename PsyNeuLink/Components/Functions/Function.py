@@ -1240,9 +1240,9 @@ class LinearCombination(
                                  target_set=target_set,
                                  context=context)
 
-        if target_set[WEIGHTS] is not None:
+        if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-        if target_set[EXPONENTS] is not None:
+        if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
 
             # if not operation:
@@ -2781,31 +2781,33 @@ class Integrator(
                                 "array or list of functions.".format(self.initializer[0], self.name))
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        # Handle list or array for rate specification
-        rate = request_set[RATE]
-        if isinstance(rate, (list, np.ndarray)):
-            if len(rate) != np.array(self.variable).size:
-                # If the variable was not specified, then reformat it to match rate specification
-                #    and assign variableClassDefault accordingly
-                # Note: this situation can arise when the rate is parameterized (e.g., as an array)
-                #       in the Integrator's constructor, where that is used as a specification for a function parameter
-                #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
-                #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
-                #       the object itself, thus does not see the array specification for the input.
-                if self._variable_not_specified:
-                    self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
-                    if self.verbosePref:
-                        warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} must "
-                                      "match the length ({}) of the default input ({});  the default input has been "
-                                      "updated to match".
-                                      format(len(rate), rate, self.name, np.array(self.variable).size), self.variable)
-                else:
-                    raise FunctionError("The length ({}) of the array specified for the rate parameter ({}) of {} "
-                                        "must match the length ({}) of the default input ({})".
-                                        format(len(rate), rate, self.name, np.array(self.variable).size, self.variable))
 
-            self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+        # Handle list or array for rate specification
+        if RATE in request_set:
+            rate = request_set[RATE]
+            if isinstance(rate, (list, np.ndarray)):
+                if len(rate) != np.array(self.variable).size:
+                    # If the variable was not specified, then reformat it to match rate specification
+                    #    and assign variableClassDefault accordingly
+                    # Note: this situation can arise when the rate is parameterized (e.g., as an array)
+                    #       in the Integrator's constructor, where that is used as a specification for a function parameter
+                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
+                    #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
+                    #       the object itself, thus does not see the array specification for the input.
+                    if self._variable_not_specified:
+                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
+                        if self.verbosePref:
+                            warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} must "
+                                          "match the length ({}) of the default input ({});  the default input has been "
+                                          "updated to match".
+                                          format(len(rate), rate, self.name, np.array(self.variable).size), self.variable)
+                    else:
+                        raise FunctionError("The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                            "must match the length ({}) of the default input ({})".
+                                            format(len(rate), rate, self.name, np.array(self.variable).size, self.variable))
+
+                self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -2824,9 +2826,13 @@ class Integrator(
                         "1.0 when integration_type is set to ADAPTIVE.".format(self.rate, self.name))
 
         # self._validate_initializer()
-        self._validate_noise()
-        noise = target_set[NOISE]
-        time_step_size = target_set[TIME_STEP_SIZE]
+
+        if NOISE in target_set:
+            self._validate_noise()
+            noise = target_set[NOISE]
+
+        if TIME_STEP_SIZE in target_set:
+            time_step_size = target_set[TIME_STEP_SIZE]
 
     def function(self,
                  variable=None,
