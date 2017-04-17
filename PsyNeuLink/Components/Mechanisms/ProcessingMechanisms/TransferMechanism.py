@@ -346,8 +346,12 @@ class TransferMechanism(ProcessingMechanism_Base):
              CALCULATE:lambda x: np.mean(x)},
 
             {NAME:TRANSFER_VARIANCE,
-             CALCULATE:lambda x: np.var(x)}
-        ]})
+             CALCULATE:lambda x: np.var(x)}],
+
+        INTEGRATOR_FUNCTION: Integrator()
+                                                  # name=Integrator.componentName + '_for_' + self.name
+
+        })
 
     paramNames = paramClassDefaults.keys()
 
@@ -472,14 +476,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         #       WHEN ASSIGNED (I.E., IN CALL TO _validate_params())
 
         self.initial_value = self.initial_value or self.variableInstanceDefault
-
-        self.integrator_function = Integrator(variable_default = self.variable,
-                                              initializer=self.variable,
-                                              integration_type=ADAPTIVE,
-                                              rate=self.time_constant,
-                                              noise=self.noise,
-                                              # name=Integrator.componentName + '_for_' + self.name
-                                              )
 
     def _execute(self,
                 variable=None,
