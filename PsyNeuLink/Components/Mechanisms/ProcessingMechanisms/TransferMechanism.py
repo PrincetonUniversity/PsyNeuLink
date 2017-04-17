@@ -430,11 +430,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: WHY IS THIS COMMENTED OUT? - ALLOW IT TO BE VALIDATED BY INTEGRATOR FUNCTION?
         # # Validate NOISE:
-        # if NOISE in target_set:
-        #     noise = target_set[NOISE]
-        #     if (isinstance(noise, float) == False) and (callable(noise) == False):
-        #         raise TransferError("noise parameter ({}) for {} must be a float or a function".
-        #                             format(noise, self.name))
+        if NOISE in target_set:
+            self._validate_noise(target_set[NOISE])
 
         TEST = True
 
@@ -455,6 +452,50 @@ class TransferMechanism(ProcessingMechanism_Base):
                 if not range[0] < range[1]:
                     raise TransferError("The first item of the range parameter ({}) must be less than the second".
                                         format(range, self.name))
+
+
+    def _validate_noise(self, noise):
+        # Noise is a list or array
+        if isinstance(noise, (np.ndarray, list)):
+            # Variable is a list/array
+            if isinstance(self.variable, (np.ndarray, list)):
+                if len(noise) != np.array(self.variable).size:
+                    try:
+                        formatted_noise = list(map(lambda x: x.__qualname__, noise))
+                    except AttributeError:
+                        formatted_noise = noise
+                    raise MechanismError("The length ({}) of the array specified for the noise parameter ({}) of {} "
+                                        "must match the length ({}) of the default input ({}). If noise is specified as"
+                                        " an array or list, it must be of the same size as the input."
+                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
+                                                self.variable))
+                else:
+                    # Noise is a list or array of functions
+                    if callable(noise[0]):
+                        self.noise_function = True
+                    # Noise is a list or array of floats
+                    elif isinstance(noise[0], float):
+                        self.noise_function = False
+                    # Noise is a list or array of invalid elements
+                    else:
+                        raise MechanismError("The elements of a noise list or array must be floats or functions.")
+            # Variable is not a list/array
+            else:
+                raise MechanismError("The noise parameter ({}) for {} may only be a list or array if the "
+                                    "default input value is also a list or array.".format(noise, self.name))
+
+        elif callable(noise):
+            self.noise_function = True
+            if isinstance(self.variable, (np.ndarray, list)):
+                new_noise = []
+                for i in self.variable:
+                    new_noise.append(self.noise)
+                noise = new_noise
+        elif isinstance(noise, float):
+            self.noise_function = False
+        else:
+            raise MechanismError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
+                                "array or list of functions.".format(noise, self.name))
 
     def _instantiate_parameter_states(self, context=None):
 
@@ -552,6 +593,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                               context=context)
 
         elif time_scale is TimeScale.TRIAL:
+
+            if self.noise_function:
+                if isinstance(noise, (list, np.ndarray)):
+                    new_noise = []
+                    for n in noise:
+                        new_noise.append(n())
+                    noise = new_noise
+                else:
+                    noise = noise()
+
             current_input = self.inputState.value + noise
         else:
             raise MechanismError("time_scale not specified for TransferMechanism")
