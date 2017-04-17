@@ -424,11 +424,15 @@ class TransferMechanism(ProcessingMechanism_Base):
                                         "must match its input ({})".
                                         format(append_type_to_name(self), initial_value, self.variable[0]))
 
+        # FIX: WHY IS THIS COMMENTED OUT? - ALLOW IT TO BE VALIDATED BY INTEGRATOR FUNCTION?
         # # Validate NOISE:
-        # noise = target_set[NOISE]
-        # if (isinstance(noise, float) == False) and (callable(noise) == False):
-        #     raise TransferError("noise parameter ({}) for {} must be a float or a function".
-        #                         format(noise, self.name))
+        # if NOISE in target_set:
+        #     noise = target_set[NOISE]
+        #     if (isinstance(noise, float) == False) and (callable(noise) == False):
+        #         raise TransferError("noise parameter ({}) for {} must be a float or a function".
+        #                             format(noise, self.name))
+
+        TEST = True
 
         # Validate TIME_CONSTANT:
         if TIME_CONSTANT in target_set:
@@ -448,15 +452,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                     raise TransferError("The first item of the range parameter ({}) must be less than the second".
                                         format(range, self.name))
 
-        if context is COMMAND_LINE:
-            return
-
-        self.integrator_function = Integrator(variable_default = self.variable,
-                                              initializer=self.variable,
-                                              integration_type=ADAPTIVE,
-                                              rate=self.time_constant,
-                                              noise=self.noise)
-
     def _instantiate_parameter_states(self, context=None):
 
         from PsyNeuLink.Components.Functions.Function import Logistic
@@ -470,9 +465,21 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _instantiate_attributes_before_function(self, context=None):
 
+        super()._instantiate_attributes_before_function(context=context)
+
+        # FIX: THESE SHOULD PROBABLY BE IN paramClassDefaults
+        #      BOTH IN PRINCIPLE, AND ALSO SO THAT THEY (INCLUDING INTEGRATOR PARAMS) CAN BE VALIDATED
+        #       WHEN ASSIGNED (I.E., IN CALL TO _validate_params())
+
         self.initial_value = self.initial_value or self.variableInstanceDefault
 
-        super()._instantiate_attributes_before_function(context=context)
+        self.integrator_function = Integrator(variable_default = self.variable,
+                                              initializer=self.variable,
+                                              integration_type=ADAPTIVE,
+                                              rate=self.time_constant,
+                                              noise=self.noise,
+                                              # name=Integrator.componentName + '_for_' + self.name
+                                              )
 
     def _execute(self,
                 variable=None,
