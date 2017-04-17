@@ -2688,8 +2688,6 @@ class Integrator(
         self.previous_value = self.initializer
 
 
-        # self.noise = self.paramsCurrent[NOISE]
-
     def _validate_params(self, request_set, target_set=None, context=None):
 
         # Handle list or array for rate specification
@@ -2739,35 +2737,34 @@ class Integrator(
 
         if NOISE in target_set:
             # FIX: SHOULDN'T THIS PASS target_set[NOISE] to _validate_noise() rather than use self.noise?
-            self._validate_noise()
-            noise = target_set[NOISE]
+            self._validate_noise(target_set[NOISE])
 
         if TIME_STEP_SIZE in target_set:
             time_step_size = target_set[TIME_STEP_SIZE]
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
-    def _validate_noise(self):
+    def _validate_noise(self, noise):
         # Noise is a list or array
-        if isinstance(self.noise, (np.ndarray, list)):
+        if isinstance(noise, (np.ndarray, list)):
             # Variable is a list/array
             if isinstance(self.variable, (np.ndarray, list)):
-                if len(self.noise) != np.array(self.variable).size:
+                if len(noise) != np.array(self.variable).size:
                     try:
-                        formatted_noise = list(map(lambda x: x.__qualname__, self.noise))
+                        formatted_noise = list(map(lambda x: x.__qualname__, noise))
                     except AttributeError:
-                        formatted_noise = self.noise
+                        formatted_noise = noise
                     raise FunctionError("The length ({}) of the array specified for the noise parameter ({}) of {} "
                                         "must match the length ({}) of the default input ({}). If noise is specified as"
                                         " an array or list, it must be of the same size as the input."
-                                        .format(len(self.noise), formatted_noise, self.name, np.array(self.variable).size,
+                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
                                                 self.variable))
                 else:
                     # Noise is a list or array of functions
-                    if callable(self.noise[0]):
+                    if callable(noise[0]):
                         self.noise_function = True
                     # Noise is a list or array of floats
-                    elif isinstance(self.noise[0], float):
+                    elif isinstance(noise[0], float):
                         self.noise_function = False
                     # Noise is a list or array of invalid elements
                     else:
@@ -2775,20 +2772,20 @@ class Integrator(
             # Variable is not a list/array
             else:
                 raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
-                                    "default input value is also a list or array.".format(self.noise, self.name))
+                                    "default input value is also a list or array.".format(noise, self.name))
 
-        elif callable(self.noise):
+        elif callable(noise):
             self.noise_function = True
             if isinstance(self.variable, (np.ndarray, list)):
                 new_noise = []
                 for i in self.variable:
                     new_noise.append(self.noise)
-                self.noise = new_noise
-        elif isinstance(self.noise, float):
+                noise = new_noise
+        elif isinstance(noise, float):
             self.noise_function = False
         else:
             raise FunctionError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
-                                "array or list of functions.".format(self.noise, self.name))
+                                "array or list of functions.".format(noise, self.name))
 
         if self.noise_function and self.integration_type == "diffusion":
 
@@ -2796,24 +2793,23 @@ class Integrator(
                                 " float. Noise parameter is used to construct the standard DDM noise distribution"
                                 .format(self.name))
 
-    def _validate_initializer(self):
-        print(self.initializer, " = SELF.INITIALIZER")
+    def _validate_initializer(self, initializer):
         # Initializer is a list or array
-        if isinstance(self.initializer[0], (np.ndarray, list)):
+        if isinstance(initializer[0], (np.ndarray, list)):
             # Variable is a list/array
             if isinstance(self.variable, (np.ndarray, list)):
-                if len(self.initializer[0]) != np.array(self.variable).size:
+                if len(initializer[0]) != np.array(self.variable).size:
                     try:
-                        formatted_initializer = list(map(lambda x: x.__qualname__, self.initializer[0]))
+                        formatted_initializer = list(map(lambda x: x.__qualname__, initializer[0]))
                     except AttributeError:
-                        formatted_initializer = self.initializer[0]
+                        formatted_initializer = initializer[0]
                     raise FunctionError("The length ({}) of the array specified for the initializer parameter ({}) of {} "
                                         "must match the length ({}) of the default input ({}). If initializer is specified as"
                                         " an array or list, it must be of the same size as the input."
-                                        .format(len(self.initializer[0]), formatted_initializer, self.name, np.array(self.variable).size,
+                                        .format(len(initializer[0]), formatted_initializer, self.name, np.array(self.variable).size,
                                                 self.variable))
                 else:
-                    if callable(self.initializer[0][0]):
+                    if callable(initializer[0][0]):
                         self.initializer_function = True
                     # Initializer is a list or array of floats
 
@@ -2822,18 +2818,18 @@ class Integrator(
                 raise FunctionError("The initializer parameter ({}) for {} may only be a list or array if the "
                                     "default input value is also a list or array.".format(self.initializer[0], self.name))
 
-        elif callable(self.initializer[0]):
+        elif callable(initializer[0]):
             self.initializer_function = True
             if isinstance(self.variable, (np.ndarray, list)):
                 new_initializer = []
                 for i in self.variable:
-                    new_initializer.append(self.initializer[0])
-                self.initializer[0] = new_initializer
-        elif isinstance(self.initializer[0], float):
-            self.initializer_function = False
+                    new_initializer.append(initializer[0])
+                initializer[0] = new_initializer
+        elif isinstance(initializer[0], float):
+            initializer_function = False
         else:
             raise FunctionError("initializer parameter ({}) for {} must be a number, function, array or list of floats, or "
-                                "array or list of functions.".format(self.initializer[0], self.name))
+                                "array or list of functions.".format(initializer[0], self.name))
 
     def function(self,
                  variable=None,
