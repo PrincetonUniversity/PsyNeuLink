@@ -509,6 +509,8 @@ SCALE = 'scale'
 NOISE = 'noise'
 
 DRIFT_RATE = 'drift_rate'
+INTEGRATOR_FUNCTION = 'integrator_function'
+INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
 
 MEAN = 'mean'
@@ -520,8 +522,6 @@ HIGH = 'high'
 BETA = 'beta'
 
 SHAPE = 'shape'
-
-INTEGRATION_TYPE = "integration_type"
 
 OUTPUT_TYPE = 'output'
 ALL = 'all'
