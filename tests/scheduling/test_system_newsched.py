@@ -474,6 +474,84 @@ class TestBranching:
             for i in range(len(expected_output[m])):
                 numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].outputValue[i])
 
+    def test_three_integrators(self):
+        A = IntegratorMechanism(
+            name='A',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        B = IntegratorMechanism(
+            name='B',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        C = IntegratorMechanism(
+            name='C',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        p = process(
+            default_input_value = [0],
+            pathway = [A, C],
+            name = 'p'
+        )
+
+        q = process(
+            default_input_value = [0],
+            pathway = [B, C],
+            name = 'q'
+        )
+
+        s = system(
+            processes=[p, q],
+            name = 's'
+        )
+
+        term_conds = {TimeScale.TRIAL: AfterNCalls(C, 2)}
+        stim_list = {A: [[1]], B: [[1]]}
+
+        sched = Scheduler(system=s)
+        sched.add_condition(B, EveryNCalls(A, 2))
+        sched.add_condition(C, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
+        s.scheduler = sched
+
+        results = s.run(
+            inputs=stim_list,
+            termination_conditions=term_conds
+        )
+
+        mechs = [A, B, C]
+        expected_output = [
+            [
+                numpy.array([2.]),
+            ],
+            [
+                numpy.array([1.]),
+            ],
+            [
+                numpy.array([4.]),
+            ],
+        ]
+
+        # import code
+        # code.interact(local=locals())
+
+        for m in range(len(mechs)):
+            for i in range(len(expected_output[m])):
+                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].outputValue[i])
+
     def test_four_ABBCD(self):
         A = TransferMechanism(
             name='A',
