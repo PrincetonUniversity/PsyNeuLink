@@ -92,6 +92,28 @@ class Scheduler(object):
             self.times[time_scale][ts] = 0
 
     ################################################################################
+    # Wrapper methods
+    #   to allow the user to ignore the ConditionSet internals
+    ################################################################################
+    def __contains__(self, item):
+        return self.condition_set.__contains__(item)
+
+    def add_condition(self, owner, condition):
+        '''
+        :param: self:
+        :param owner: the :keyword:`Component` that is dependent on the :param conditions:
+        :param conditions: a :keyword:`Condition` (including All or Any)
+        '''
+        self.condition_set.add_condition(owner, condition)
+
+    def add_condition_set(self, conditions):
+        '''
+        :param: self:
+        :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to :keyword:`Condition`s, can be added later with :keyword:`add_condition`
+        '''
+        self.condition_set.add_condition_set(conditions)
+
+    ################################################################################
     # Validation methods
     #   to provide the user with info if they do something odd
     ################################################################################
