@@ -2793,7 +2793,7 @@ class Integrator(
                                 " float. Noise parameter is used to construct the standard DDM noise distribution"
                                 .format(self.name))
 
-    def _validate_initializer(initializer):
+    def _validate_initializer(self, initializer):
         # Initializer is a list or array
         if isinstance(initializer[0], (np.ndarray, list)):
             # Variable is a list/array

@@ -349,7 +349,6 @@ class TransferMechanism(ProcessingMechanism_Base):
              CALCULATE:lambda x: np.var(x)}],
 
         INTEGRATOR_FUNCTION: Integrator()
-                                                  # name=Integrator.componentName + '_for_' + self.name
 
         })
 
@@ -589,8 +588,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update according to time-scale of integration
         if time_scale is TimeScale.TIME_STEP:
             current_input = self.integrator_function.function(self.inputState.value,
-                                                              params = {NOISE: noise, RATE: time_constant},
-                                                              context=context)
+                                                              params = {INITIALIZER: self.previous_input,
+                                                                        NOISE: noise,
+                                                                        RATE: time_constant,
+                                                                        INTEGRATION_TYPE: ADAPTIVE},
+                                                              context=context
+                                                            # name=Integrator.componentName + '_for_' + self.name
+                                                             )
 
         elif time_scale is TimeScale.TRIAL:
 
