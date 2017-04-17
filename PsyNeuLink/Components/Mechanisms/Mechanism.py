@@ -141,7 +141,7 @@ Any function (primary or auxiliary) used by a mechanism can be customized by ass
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
 mechanism's default for that function. A user-defined function can be assigned using the mechanism's `assign_params`
 method (the safest means) or by assigning it directly to the corresponding attribute of the mechanism (for its
-primary funtion, its `function <Mechanism_Base.function>` attribute).
+primary function, its `function <Mechanism_Base.function>` attribute).
 
 COMMENT:
     When a custom function is specified,

@@ -98,8 +98,11 @@ Every component has the following set of core attributes that govern its operati
 
 * **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters 
   for the component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and
-  its value the value of that parameter.  This dictionary is read-only.  The parameters for the 
-  `function_params <Component.function>` can be specified when the component is created in one of the following ways:
+  its value the value of that parameter.  This dictionary is read-only. Changes to the value of the function's 
+  parameters must be made by assigning a value to the corresponding attribute of the component's 
+  `function_object <Component.function_object>` attribute (e.g., myMechanism.function_object.my_parameter), 
+  or in a FUNCTION_PARAMS dict using its `assign_params` method.  The parameters for the function can be specified 
+  when the component is created in one of the following ways:
   
   * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>` argument,
     as in the following example::
@@ -118,29 +121,22 @@ Every component has the following set of core attributes that govern its operati
     
         my_component = SomeComponent(function=SomeFunction
                                      params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
-
-  The parameters for a `function <Component.function>` can be modified after it has been created by assigning the 
-  new value to the corresponding attribute of the component's `function_object`; for example, if the name of the
-  parameter is mole, it can be modified as follows::
   
-        my_component.function_object.mole = 6.0221409
-  
-  COMMENT:       
-      See `ParameterState_Specifying_Parameters` for details of parameter specification.
-  COMMENT
+  See `ParameterState_Specifying_Parameters` for details concerning different ways in which the value of a parameter
+  can be specified.
 
 .. _Component_Function_Object:
 
 * **function_object** - the `function_object` attribute refers to the `Function <Function>` assigned to the component; 
-  its `function <Function.function>` is assigned to the `function <Component>` attribute of the component.  The 
-  parameters of the Function can be modified by assigning values to the attributes corresponding to those parameters 
-  (see `function_params` above).
+  The Function's `function <Function.function>` is assigned to the `function <Component>` attribute of the 
+  component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to 
+  those parameters (see `function_params <Component.function_params>` above).
 
 .. _Component_User_Params:
 
 * **user_params** - the `user_params` attribute contains a dictionary of all of the user-modifiable attributes for the
   the component.  This dictionary is read-only.  Changes to the value of an attribute must be made by assigning a 
-  value to the attribute directly.
+  value to the attribute directly, or using the component's `assign_params` method.
 ..  
 COMMENT:
   INCLUDE IN DEVELOPERS' MANUAL
@@ -165,14 +161,14 @@ COMMENT:
 * **log**
 COMMENT
 
+      
+.. _Component_Methods:
+
+Component Methods
+~~~~~~~~~~~~~~~~~
 
 COMMENT:
    INCLUDE IN DEVELOPERS' MANUAL
-      
-    .. _Component_Methods:
-    
-    Component Methods
-    ~~~~~~~~~~~~~~~~~
     
     There are two sets of methods that belong to every component: one set that is called when it is initialized; and 
     another set that can be called to perform various operations common to all components.  Each of these is described 
@@ -228,10 +224,19 @@ COMMENT:
     ^^^^^^^^^^^^^^^^
     
     initialize
-    assign_params
-    reset_params
-    execute
 COMMENT
+
+.. _Component_Assign_Params:
+
+* **assign_params** - the `assign_params` method is used to assign the value of one or more parameters of a 
+  component.  Each parameter is specified as an entry in a dict in the :keyword:`request_set` argument;  
+  parameters for the component's function are specified as entries in a FUNCTION_PARAMS dict within 
+  :keyword:`request_set` dict.   
+
+* **reset_params** - the `reset_params` method is used to reset the value of all user_params to their default
+  (paramClass
+execute
+
 
 .. _Component_Execution:
 
@@ -691,8 +696,10 @@ class Component(object):
 
         #region SET CURRENT VALUES OF VARIABLE AND PARAMS
         self.variable = self.variableInstanceDefault
+        # self.variable = self.variableInstanceDefault.copy()
 
-        self.paramsCurrent = self.paramInstanceDefaults
+        # self.paramsCurrent = self.paramInstanceDefaults
+        self.paramsCurrent = self.paramInstanceDefaults.copy()
 
         self.runtime_params_in_use = False
         #endregion
@@ -1485,7 +1492,7 @@ class Component(object):
 
 
 
-    def reset_params(self, mode):
+    def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
         """Reset current and/or instance defaults
 
         If called with:
@@ -1496,11 +1503,23 @@ class Component(object):
         :param mode: (ResetMode) - determines which params are reset
         :return none:
         """
+        # if not isinstance(mode, ResetMode):
+        #     raise ComponentError("Must be called with a valid ResetMode")
+        #
         if not isinstance(mode, ResetMode):
-            raise ComponentError("Must be called with a valid ResetMode")
+            warnings.warn("No ResetMode specified for reset_params; CURRENT_TO_INSTANCE_DEFAULTS will be used")
 
         if mode == ResetMode.CURRENT_TO_INSTANCE_DEFAULTS:
-            self.params_current = self.paramInstanceDefaults.copy()
+            for param in self.paramsCurrent:
+                # if param is FUNCTION_PARAMS:
+                #     for function_param in param:
+                #         self.paramsCurrent[FUNCTION_PARAMS].__additem__(
+                #                 function_param,
+                #                 self.paramInstanceDefaults[FUNCTION_PARAMS][
+                #                     function_param])
+                #     continue
+                self.paramsCurrent[param] = self.paramInstanceDefaults[param]
+            # self.params_current = self.paramInstanceDefaults.copy()
         elif mode == ResetMode.INSTANCE_TO_CLASS:
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
         elif mode == ResetMode.ALL_TO_CLASS_DEFAULTS:
