@@ -207,8 +207,8 @@ class TestLinear:
             numpy.array([3.]),
         ]
 
-        import code
-        code.interact(local=locals())
+        # import code
+        # code.interact(local=locals())
 
         for i in range(len(expected_output)):
             numpy.testing.assert_allclose(expected_output[i], terminal_mech.outputValue[i])
@@ -255,7 +255,7 @@ class TestLinear:
         stim_list = {A: [[1]]}
 
         sched = Scheduler(system=s)
-        sched.condition_set.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(C, 1)))
+        sched.condition_set.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
         sched.condition_set.add_condition(C, EveryNCalls(A, 2))
         s.scheduler = sched
 
@@ -274,6 +274,6 @@ class TestLinear:
             ],
         ]
 
-        for mech in terminal_mechs:
-            for i in range(len(expected_output)):
-                numpy.testing.assert_allclose(expected_output[i], mech.outputValue[i])
+        for m in range(len(terminal_mechs)):
+            for i in range(len(expected_output[m])):
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].outputValue[i])
