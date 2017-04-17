@@ -346,8 +346,11 @@ class TransferMechanism(ProcessingMechanism_Base):
              CALCULATE:lambda x: np.mean(x)},
 
             {NAME:TRANSFER_VARIANCE,
-             CALCULATE:lambda x: np.var(x)}
-        ]})
+             CALCULATE:lambda x: np.var(x)}],
+
+        INTEGRATOR_FUNCTION: Integrator()
+
+        })
 
     paramNames = paramClassDefaults.keys()
 
@@ -426,11 +429,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: WHY IS THIS COMMENTED OUT? - ALLOW IT TO BE VALIDATED BY INTEGRATOR FUNCTION?
         # # Validate NOISE:
-        # if NOISE in target_set:
-        #     noise = target_set[NOISE]
-        #     if (isinstance(noise, float) == False) and (callable(noise) == False):
-        #         raise TransferError("noise parameter ({}) for {} must be a float or a function".
-        #                             format(noise, self.name))
+        if NOISE in target_set:
+            self._validate_noise(target_set[NOISE])
 
         TEST = True
 
@@ -452,6 +452,50 @@ class TransferMechanism(ProcessingMechanism_Base):
                     raise TransferError("The first item of the range parameter ({}) must be less than the second".
                                         format(range, self.name))
 
+
+    def _validate_noise(self, noise):
+        # Noise is a list or array
+        if isinstance(noise, (np.ndarray, list)):
+            # Variable is a list/array
+            if isinstance(self.variable, (np.ndarray, list)):
+                if len(noise) != np.array(self.variable).size:
+                    try:
+                        formatted_noise = list(map(lambda x: x.__qualname__, noise))
+                    except AttributeError:
+                        formatted_noise = noise
+                    raise MechanismError("The length ({}) of the array specified for the noise parameter ({}) of {} "
+                                        "must match the length ({}) of the default input ({}). If noise is specified as"
+                                        " an array or list, it must be of the same size as the input."
+                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
+                                                self.variable))
+                else:
+                    # Noise is a list or array of functions
+                    if callable(noise[0]):
+                        self.noise_function = True
+                    # Noise is a list or array of floats
+                    elif isinstance(noise[0], float):
+                        self.noise_function = False
+                    # Noise is a list or array of invalid elements
+                    else:
+                        raise MechanismError("The elements of a noise list or array must be floats or functions.")
+            # Variable is not a list/array
+            else:
+                raise MechanismError("The noise parameter ({}) for {} may only be a list or array if the "
+                                    "default input value is also a list or array.".format(noise, self.name))
+
+        elif callable(noise):
+            self.noise_function = True
+            if isinstance(self.variable, (np.ndarray, list)):
+                new_noise = []
+                for i in self.variable:
+                    new_noise.append(self.noise)
+                noise = new_noise
+        elif isinstance(noise, float):
+            self.noise_function = False
+        else:
+            raise MechanismError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
+                                "array or list of functions.".format(noise, self.name))
+
     def _instantiate_parameter_states(self, context=None):
 
         from PsyNeuLink.Components.Functions.Function import Logistic
@@ -472,14 +516,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         #       WHEN ASSIGNED (I.E., IN CALL TO _validate_params())
 
         self.initial_value = self.initial_value or self.variableInstanceDefault
-
-        self.integrator_function = Integrator(variable_default = self.variable,
-                                              initializer=self.variable,
-                                              integration_type=ADAPTIVE,
-                                              rate=self.time_constant,
-                                              noise=self.noise,
-                                              # name=Integrator.componentName + '_for_' + self.name
-                                              )
 
     def _execute(self,
                 variable=None,
@@ -552,10 +588,25 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update according to time-scale of integration
         if time_scale is TimeScale.TIME_STEP:
             current_input = self.integrator_function.function(self.inputState.value,
-                                                              params = {NOISE: noise, RATE: time_constant},
-                                                              context=context)
+                                                              params = {INITIALIZER: self.previous_input,
+                                                                        NOISE: noise,
+                                                                        RATE: time_constant,
+                                                                        INTEGRATION_TYPE: ADAPTIVE},
+                                                              context=context
+                                                            # name=Integrator.componentName + '_for_' + self.name
+                                                             )
 
         elif time_scale is TimeScale.TRIAL:
+
+            if self.noise_function:
+                if isinstance(noise, (list, np.ndarray)):
+                    new_noise = []
+                    for n in noise:
+                        new_noise.append(n())
+                    noise = new_noise
+                else:
+                    noise = noise()
+
             current_input = self.inputState.value + noise
         else:
             raise MechanismError("time_scale not specified for TransferMechanism")
