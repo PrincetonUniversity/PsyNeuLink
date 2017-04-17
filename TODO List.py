@@ -26,9 +26,11 @@
 #   5) SHOULD ATTRIBUTES OF PARENT CLASSED BE DOCUMENTED ON CHILD CLASSES?
 #          (E.G., PREFS, NAME, FUNCTION, FUNCTON_PARAMS, USER_PARAMS, ETC.)
 #   6) SHOULD WE SUPPORT >2D VALUES (PASSED ALONG PROJECTIONS, USED AS STATE VALUES, ETC.; INPUTS TO TRANSFER FCT, ETC.)
-#   7) DOCUMENTATION: SHOULD WE INCLUDE COMPONENT ATTRIBUTES IN DOCSTRING FOR SUBCLASSES (E.G., params, prefs, etc.)
-#   8) DOCUMENTATION: SHOULD EXAMPLES BE GENERIC (SEE COMPONENT FUNCTION) OR SPECIFIC (USING ACTUAL PSYNEULINK OBJECTS)
-#   9) DOCUMENTATION: INCLUDE EXAMPLES "INLINE" OR IN THEIR OWN SECTION AT THE END?
+#   7) SHOULD OVERRIDE OF ATTRIBUTE SETTERS BE @PROPERTY IN CLASS DEFINITION, OR SETTER PASSED TO make_property?
+#   8) DOCUMENTATION: SHOULD WE INCLUDE COMPONENT ATTRIBUTES IN DOCSTRING FOR SUBCLASSES (E.G., params, prefs, etc.)
+#   9) DOCUMENTATION: SHOULD EXAMPLES BE GENERIC (SEE COMPONENT FUNCTION) OR SPECIFIC (USING ACTUAL PSYNEULINK OBJECTS)
+#  10) DOCUMENTATION: INCLUDE EXAMPLES "INLINE" OR IN THEIR OWN SECTION AT THE END?
+#  11) SHOULD COMPONENT NAMES HAVE SPACES OF UNDERSCORES?
 
 # TASKS:
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
@@ -56,6 +58,11 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
+# FIX: WHY IS NOISE COMMENTED OUT IN TransferMechanism._validate_params()??
+# FIX: TransferMechanism:  MOVED INSTANTATION OF INTEGRATOR TO _instantiate_attributes_before_function
+#       PROBLEM:  ASSIGNMENT OF NOISE DOES GET PASSED TO INTEGRATOR FUNCTION
+
 # DOCUMENTATION:  Now that attribute assignment calls:
 #                         _assign_params, which in turn calls _instantiate_params, which in turn calls _validate_params
 #                             therefore _validate params may only get a subset of the params for a component
@@ -67,6 +74,8 @@
 
 # DOCUMENTATION: Component._validate_params:  if testing before call to super, use request_set
 #                                             if testing after call to super, use target_set
+
+# DOCUMENTATION: RESTORE runtime_params DOCUMENTATION
 
 # IMPLEMENT: error threshold / criterion for ending learning
 # DOCUMENTATION: FUNCTION_PARAMS in runtime_params example

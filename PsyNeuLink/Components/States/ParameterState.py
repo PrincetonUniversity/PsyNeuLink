@@ -42,7 +42,7 @@ Specifying Parameters
 
 Parameters can be specified in one of several places:
 
-    * In an **argument for the parameter** in the constructor for the `mechanism <Mechanism>` or
+    * In the **argument for the parameter** in the constructor for the `mechanism <Mechanism>` or
       `function <Mechanism.Mechanism_Base.function>` to which the parameter belongs
       (see :ref:`Component_Specifying_Functions_and_Parameters` for additional details).
     ..
@@ -232,13 +232,14 @@ parameter for which it is responsible (as shown in the `figure <ParameterState_F
   which multiples the parameterState's `baseValue <ParameterState.baseValue>` by the aggregated value of the
   result of the parameterState's `function <ParameterState.function>` to determine the value of the parameter.
 
-The value of a parameter of a mechanism or projection is accessible as an attribute with the corresponding name
-(e.g., myMechanism.<param_name>.  The value of a parameter of a :keyword:`function` is accessible from the
-`function_params` attribute of the mechanism or projection to which the function belongs;  this is a dictionary with
-entries for each of the function's parameters. Each of the function's parameters can be referenced using a key that is
-the name of the parameter (e.g., ``myMech.function_object.<param_name>``).  Parameter attributes of mechanisms,
-projections, and their functions accessed in these ways are read-only.  To re-assign the value of a parameter,
-use the `assign_params` method of the mechanism or projection to which the parameter of function belongs.
+All of the user-modifiable parameters of a component are listed in its `user_params <Component.user_params>` attribute, 
+which is a read-only dictionary with an entry for each parameter.  The parameters of a component can be 
+modified individually by assigning a value to the corresponding attribute, or in groups using the component's 
+`assign_params <Component.assign_params>` method.  The parameters for a component's `function <Component.function>` 
+are listed in its `function_params <Component.function_params>` attribute, which is a read-only dictionary with an 
+entry for each of its function's parameter.  The parameters of a component's function can be modified by
+assigning a value to the corresponding attribute of the component's `function_object <Component.function_object>` 
+attribute (e.g., myMechanism.function_object.my_parameter), or in a FUNCTION_PARAMS dict in `assign_params`.  
 
 .. _ParameterState_Figure:
 
