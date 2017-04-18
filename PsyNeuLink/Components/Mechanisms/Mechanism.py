@@ -1413,6 +1413,7 @@ class Mechanism_Base(Mechanism):
 
         #endregion
 
+        # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
         self._check_args(variable=self.inputValue,
                         params=runtime_params,
