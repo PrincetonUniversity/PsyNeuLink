@@ -317,7 +317,6 @@ class ControlSignalCostOptions(IntEnum):
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
-
 ALLOCATION_POLICY = 'allocation_policy'
 CONTROL_SIGNAL_COST_OPTIONS = 'controlSignalCostOptions'
 
@@ -721,6 +720,7 @@ class EVCMechanism(ControlMechanism_Base):
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
 
+        # This is done here to hide it from IDE (where it would show if default assignment for arg in constructor)
         prediction_mechanism_params = prediction_mechanism_params or {MONITOR_FOR_CONTROL:None}
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)

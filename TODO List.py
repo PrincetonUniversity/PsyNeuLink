@@ -63,6 +63,7 @@
 # FIX: TransferMechanism:  MOVED INSTANTATION OF INTEGRATOR TO _instantiate_attributes_before_function
 #       PROBLEM:  ASSIGNMENT OF NOISE DOES GET PASSED TO INTEGRATOR FUNCTION
 
+# DOCUMENTATION:  assign_args_to_params_dicts should be used for any attributes for which parameterStates can be created
 # DOCUMENTATION:  Now that attribute assignment calls:
 #                         _assign_params, which in turn calls _instantiate_params, which in turn calls _validate_params
 #                             therefore _validate params may only get a subset of the params for a component

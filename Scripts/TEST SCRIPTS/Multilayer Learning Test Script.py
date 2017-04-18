@@ -18,9 +18,8 @@ Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           default_input_value = np.zeros((5,)))
 
 Hidden_Layer_1.function_object.gain = 33
-Hidden_Layer_1.noise = 3
-Hidden_Layer_1.integrator_function.noise = 55
-
+Hidden_Layer_1.noise = .3
+# Hidden_Layer_1.integrator_function.noise = 55
 Hidden_Layer_1.reset_params(ResetMode.CURRENT_TO_INSTANCE_DEFAULTS)
 
 Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2',
