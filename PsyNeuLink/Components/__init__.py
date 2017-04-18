@@ -24,7 +24,7 @@ from PsyNeuLink.Globals.Registry import register_category
 kwInitPy = '__init__.py'
 
 logging.basicConfig(
-    level=logging.WARNING,
+    level=logging.ERROR,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
