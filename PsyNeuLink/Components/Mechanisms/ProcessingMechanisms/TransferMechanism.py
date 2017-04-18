@@ -6,7 +6,6 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 # NOTES:
-#  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
 #  * NOW THAT NOISE AND TIME_CONSTANT ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
@@ -350,7 +349,7 @@ class TransferMechanism(ProcessingMechanism_Base):
              CALCULATE:lambda x: np.mean(x)},
             {NAME:TRANSFER_VARIANCE,
              CALCULATE:lambda x: np.var(x)}],
-        # INTEGRATOR_FUNCTION: Integrator()
+        INTEGRATOR_FUNCTION: Integrator()
         })
 
     paramNames = paramClassDefaults.keys()
@@ -385,16 +384,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   params=params)
         if default_input_value is None:
             default_input_value = Transfer_DEFAULT_BIAS
-
-        # IMPLEMENTATION NOTE: This has to be assigned here rather than in paramClassDefaults (above)
-        #                      since paramClassDefaults are not assigned as attributes until
-        #                      paramsCurrent is asssigned (in Component.__init__() [LINE 702]);
-        #                      but values for noise and time_constant are also assigned there as well,
-        #                      the order is not guaranteed, they may be assigned before integrator_function
-        #                      has been created as an attribute
-        # FIX:  MAKE paramInstanceDefaults AN OrderedDict, AND ASSIGN paramCLassDefaults to IT BEFORE user_params?
-        #       (IN _instantiate_defaults) -- TRIED BUT NOT WORKING YET
-        self.integrator_function = Integrator()
 
         super(TransferMechanism, self).__init__(variable=default_input_value,
                                                 params=params,
