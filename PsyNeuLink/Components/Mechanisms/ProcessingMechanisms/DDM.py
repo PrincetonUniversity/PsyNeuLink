@@ -567,15 +567,17 @@ class DDM(ProcessingMechanism_Base):
                  function=BogaczEtAl(drift_rate=1.0,
                                      starting_point=0.0,
                                      threshold=1.0,
-                                     noise=0.5, 
+                                     noise=0.5,
                                      t0=.200),
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  name=None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs:is_pref_set=None,
-                 # context=None):
-                 context=componentType+INITIALIZING):
+                 initial_point=0,
+                 thresh=0,
+                 context=componentType+INITIALIZING
+    ):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -586,12 +588,14 @@ class DDM(ProcessingMechanism_Base):
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
         if default_input_value is None:
-          try: 
+          try:
             default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
-          except: 
+          except:
 
             default_input_value = 0.0
-            
+
+        self.starting_point = initial_point
+        self.threshold = thresh
 
         super(DDM, self).__init__(variable=default_input_value,
                                   params=params,
@@ -767,7 +771,7 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        # PLACEHOLDER for a time_step_size parameter when time_step_mode/scheduling is implemented: 
+        # PLACEHOLDER for a time_step_size parameter when time_step_mode/scheduling is implemented:
         time_step_size = 1.0
 
         if variable is None or np.isnan(variable):
@@ -779,6 +783,10 @@ class DDM(ProcessingMechanism_Base):
         if self.timeScale == TimeScale.TIME_STEP:
             if self.function_params['integration_type'] == 'diffusion':
                 result = self.function(context=context)
+
+                if abs(result - self.starting_point) >= self.threshold:
+                     self.is_finished = True
+
                 return np.array([result,[0.0],[0.0],[0.0]])
             else:
                 raise MechanismError("Invalid integration_type: '{}'. For the DDM mechanism, integration_type must be set"
@@ -786,7 +794,6 @@ class DDM(ProcessingMechanism_Base):
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif self.timeScale == TimeScale.TRIAL:
-
             # # Get length of self.outputValue from OUTPUT_STATES
             # # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             # #       is run (to evaluate self.outputValue) before outputStates have been instantiated

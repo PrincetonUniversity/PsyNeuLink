@@ -335,7 +335,7 @@ BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
 RL_FUNCTION = 'Reinforcement Learning Algorithm'
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative'
 
-#Distribution functions 
+#Distribution functions
 
 NORMAL_DIST_FUNCTION = "Normal Distribution"
 UNIFORM_DIST_FUNCTION = "Uniform Distribution"
@@ -422,6 +422,10 @@ kwMechanismAdjustFunction = "MECHANISM ADJUST FUNCTION"
 kwMechanismInterrogateFunction = "MECHANISM INTERROGATE FUNCTION"
 kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 # TBI: kwMechanismAccuracyFunction = "MECHANISM ACCURACY FUNCTION"
+
+#DDM
+kwThreshold = 'thresh'
+kwInitialPoint = 'initial_point'
 #endregion
 
 
