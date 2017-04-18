@@ -85,32 +85,12 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="State.html">States</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">ParameterState</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-a-parameterstate">Creating a ParameterState</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#specifying-parameters">Specifying Parameters</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
@@ -201,12 +181,12 @@ Each parameterState is created using the specification of the parameter for whic
 <p>Parameters can be specified in one of several places:</p>
 <blockquote>
 <div><ul class="simple">
-<li>In an <strong>argument for the parameter</strong> in the constructor for the <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> or
+<li>In the <strong>argument for the parameter</strong> in the constructor for the <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> or
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to which the parameter belongs
 (see <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for additional details).</li>
 </ul>
 <ul class="simple">
-<li>In a <strong>parameter dictionary</strong> used to specify the <code class="xref any docutils literal"><span class="pre">params</span></code> argument in the constructor for the object to which
+<li>In a <strong>parameter dictionary</strong> used to specify the <a class="reference internal" href="Function.html#Function.GammaDist.params" title="Function.GammaDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument in the constructor for the object to which
 the parameter belongs. The entry for each parameter must use the keyword for the parameter as its key,
 and the parameter&#8217;s specification as its value (see <a class="reference internal" href="#parameterstate-specification-examples"><span class="std std-ref">examples</span></a> below).
 Parameters for an object&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> must be specified in an entry with the key
@@ -344,13 +324,14 @@ or in its <code class="xref std std-keyword docutils literal"><span class="pre">
 which multiples the parameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref any py py-attr docutils literal"><span class="pre">baseValue</span></code></a> by the aggregated value of the
 result of the parameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine the value of the parameter.</li>
 </ul>
-<p>The value of a parameter of a mechanism or projection is accessible as an attribute with the corresponding name
-(e.g., myMechanism.&lt;param_name&gt;.  The value of a parameter of a <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> is accessible from the
-<a class="reference internal" href="DDM.html#DDM.DDM.function_params" title="DDM.DDM.function_params"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> attribute of the mechanism or projection to which the function belongs;  this is a dictionary with
-entries for each of the function&#8217;s parameters. Each of the function&#8217;s parameters can be referenced using a key that is
-the name of the parameter (e.g., <code class="docutils literal"><span class="pre">myMech.function_object.&lt;param_name&gt;</span></code>).  Parameter attributes of mechanisms,
-projections, and their functions accessed in these ways are read-only.  To re-assign the value of a parameter,
-use the <code class="xref any docutils literal"><span class="pre">assign_params</span></code> method of the mechanism or projection to which the parameter of function belongs.</p>
+<p>All of the user-modifiable parameters of a component are listed in its <code class="xref any docutils literal"><span class="pre">user_params</span></code> attribute,
+which is a read-only dictionary with an entry for each parameter.  The parameters of a component can be
+modified individually by assigning a value to the corresponding attribute, or in groups using the component&#8217;s
+<code class="xref any docutils literal"><span class="pre">assign_params</span></code> method.  The parameters for a component&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>
+are listed in its <code class="xref any docutils literal"><span class="pre">function_params</span></code> attribute, which is a read-only dictionary with an
+entry for each of its function&#8217;s parameter.  The parameters of a component&#8217;s function can be modified by
+assigning a value to the corresponding attribute of the component&#8217;s <code class="xref any docutils literal"><span class="pre">function_object</span></code>
+attribute (e.g., myMechanism.function_object.my_parameter), or in a FUNCTION_PARAMS dict in <code class="xref any docutils literal"><span class="pre">assign_params</span></code>.</p>
 <p id="parameterstate-figure">The figure below shows how the specifications for a parameter are combined by its parameterState to determine the
 parameter&#8217;s value.</p>
 <blockquote>

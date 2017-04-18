@@ -141,7 +141,7 @@ Any function (primary or auxiliary) used by a mechanism can be customized by ass
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
 mechanism's default for that function. A user-defined function can be assigned using the mechanism's `assign_params`
 method (the safest means) or by assigning it directly to the corresponding attribute of the mechanism (for its
-primary funtion, its `function <Mechanism_Base.function>` attribute).
+primary function, its `function <Mechanism_Base.function>` attribute).
 
 COMMENT:
     When a custom function is specified,
@@ -1015,7 +1015,7 @@ class Mechanism_Base(Mechanism):
         try:
             param_value = params[TIME_SCALE]
         except KeyError:
-            if COMMAND_LINE in context:
+            if any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
                 pass
             else:
                 self.timeScale = timeScaleSystemDefault
@@ -1038,7 +1038,7 @@ class Mechanism_Base(Mechanism):
             param_value = params[INPUT_STATES]
 
         except KeyError:
-            if COMMAND_LINE in context:
+            if any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
                 pass
             else:
                 # INPUT_STATES not specified:
@@ -1087,7 +1087,7 @@ class Mechanism_Base(Mechanism):
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            if COMMAND_LINE in context:
+            if any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
                 pass
             elif self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
@@ -1130,7 +1130,7 @@ class Mechanism_Base(Mechanism):
             param_value = params[OUTPUT_STATES]
 
         except KeyError:
-            if COMMAND_LINE in context:
+            if any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
                 pass
             else:
                 # OUTPUT_STATES not specified:
@@ -1413,6 +1413,7 @@ class Mechanism_Base(Mechanism):
 
         #endregion
 
+        # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
         self._check_args(variable=self.inputValue,
                         params=runtime_params,

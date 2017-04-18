@@ -5,6 +5,11 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
+# NOTES:
+#  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
+#  * NOW THAT NOISE AND TIME_CONSTANT ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
+#      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
+#  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
 # ********************************************  TransferMechanism ******************************************************
 
@@ -332,22 +337,20 @@ class TransferMechanism(ProcessingMechanism_Base):
     variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input)
                                                  #  to be compatible with Transfer_DEFAULT_BIAS
 
-
     # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
-        NOISE: None,
+        # NOISE: None,
         INPUT_STATES: None,
         OUTPUT_STATES:[
             {NAME:TRANSFER_RESULT},
-
             {NAME:TRANSFER_MEAN,
              CALCULATE:lambda x: np.mean(x)},
-
             {NAME:TRANSFER_VARIANCE,
-             CALCULATE:lambda x: np.var(x)}
-        ]})
+             CALCULATE:lambda x: np.var(x)}],
+        INTEGRATOR_FUNCTION: Integrator()
+        })
 
     paramNames = paramClassDefaults.keys()
 
@@ -383,10 +386,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             default_input_value = Transfer_DEFAULT_BIAS
 
         super(TransferMechanism, self).__init__(variable=default_input_value,
-                                       params=params,
-                                       name=name,
-                                       prefs=prefs,
-                                       context=self)
+                                                params=params,
+                                                name=name,
+                                                prefs=prefs,
+                                                context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and mechanism params
@@ -395,48 +398,101 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        transfer_function = target_set[FUNCTION]
-        if isinstance(transfer_function, Component):
-            transfer_function_class = transfer_function.__class__
-            transfer_function_name = transfer_function.__class__.__name__
-        elif isclass(transfer_function):
-            transfer_function_class = transfer_function
-            transfer_function_name = transfer_function.__name__
-
         # Validate FUNCTION
-        if not transfer_function_class.componentType is TRANFER_FUNCTION_TYPE:
-            raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
-                                format(transfer_function_name, self.name, TRANFER_FUNCTION_TYPE))
+        if FUNCTION in target_set:
+            transfer_function = target_set[FUNCTION]
+            # FUNCTION is a Function
+            if isinstance(transfer_function, Component):
+                transfer_function_class = transfer_function.__class__
+                transfer_function_name = transfer_function.__class__.__name__
+            # FUNCTION is a function or method
+            elif isinstance(transfer_function, (function_type, method_type)):
+                transfer_function_class = transfer_function.__self__.__class__
+                transfer_function_name = transfer_function.__self__.__class__.__name__
+            # FUNCTION is a class
+            elif isclass(transfer_function):
+                transfer_function_class = transfer_function
+                transfer_function_name = transfer_function.__name__
+
+            if not transfer_function_class.componentType is TRANFER_FUNCTION_TYPE:
+                raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
+                                    format(transfer_function_name, self.name, TRANFER_FUNCTION_TYPE))
 
         # Validate INITIAL_VALUE
-        initial_value = target_set[INITIAL_VALUE]
-        if initial_value:
-            if not iscompatible(initial_value, self.variable[0]):
-                raise TransferError("The format of the initial_value parameter for {} ({}) must match its input ({})".
-                                    format(append_type_to_name(self), initial_value, self.variable[0]))
+        if INITIAL_VALUE in target_set:
+            initial_value = target_set[INITIAL_VALUE]
+            if initial_value is not None:
+                if not iscompatible(initial_value, self.variable):
+                    raise TransferError("The format of the initial_value parameter for {} ({}) "
+                                        "must match its input ({})".
+                                        format(append_type_to_name(self), initial_value, self.variable[0]))
 
-        # # Validate NOISE:
-        # noise = target_set[NOISE]
-        # if (isinstance(noise, float) == False) and (callable(noise) == False):
-        #     raise TransferError("noise parameter ({}) for {} must be a float or a function".
-        #                         format(noise, self.name))
+        # FIX: SHOULD THIS (AND TIME_CONSTANT) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
+        # Validate NOISE:
+        if NOISE in target_set:
+            self._validate_noise(target_set[NOISE])
 
         # Validate TIME_CONSTANT:
-        time_constant = target_set[TIME_CONSTANT]
-        if not (isinstance(time_constant, float) and time_constant>=0 and time_constant<=1):
-            raise TransferError("time_constant parameter ({}) for {} must be a float between 0 and 1".
-                                format(time_constant, self.name))
+        if TIME_CONSTANT in target_set:
+            time_constant = target_set[TIME_CONSTANT]
+            if not (isinstance(time_constant, float) and time_constant>=0 and time_constant<=1):
+                raise TransferError("time_constant parameter ({}) for {} must be a float between 0 and 1".
+                                    format(time_constant, self.name))
 
         # Validate RANGE:
-        range = target_set[RANGE]
-        if range:
-            if not (isinstance(range, tuple) and len(range)==2 and all(isinstance(i, numbers.Number) for i in range)):
-                raise TransferError("range parameter ({}) for {} must be a tuple with two numbers".
-                                    format(range, self.name))
-            if not range[0] < range[1]:
-                raise TransferError("The first item of the range parameter ({}) must be less than the second".
-                                    format(range, self.name))
-        self.integrator_function = Integrator(variable_default = self.variable, initializer=self.variable, integration_type=ADAPTIVE, rate=self.time_constant, noise=self.noise)
+        if RANGE in target_set:
+            range = target_set[RANGE]
+            if range:
+                if not (isinstance(range, tuple) and len(range)==2 and all(isinstance(i, numbers.Number) for i in range)):
+                    raise TransferError("range parameter ({}) for {} must be a tuple with two numbers".
+                                        format(range, self.name))
+                if not range[0] < range[1]:
+                    raise TransferError("The first item of the range parameter ({}) must be less than the second".
+                                        format(range, self.name))
+
+
+    def _validate_noise(self, noise):
+        # Noise is a list or array
+        if isinstance(noise, (np.ndarray, list)):
+            # Variable is a list/array
+            if isinstance(self.variable, (np.ndarray, list)):
+                if len(noise) != np.array(self.variable).size:
+                    try:
+                        formatted_noise = list(map(lambda x: x.__qualname__, noise))
+                    except AttributeError:
+                        formatted_noise = noise
+                    raise MechanismError("The length ({}) of the array specified for the noise parameter ({}) of {} "
+                                        "must match the length ({}) of the default input ({}). If noise is specified as"
+                                        " an array or list, it must be of the same size as the input."
+                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
+                                                self.variable))
+                else:
+                    # Noise is a list or array of functions
+                    if callable(noise[0]):
+                        self.noise_function = True
+                    # Noise is a list or array of floats
+                    elif isinstance(noise[0], float):
+                        self.noise_function = False
+                    # Noise is a list or array of invalid elements
+                    else:
+                        raise MechanismError("The elements of a noise list or array must be floats or functions.")
+            # Variable is not a list/array
+            else:
+                raise MechanismError("The noise parameter ({}) for {} may only be a list or array if the "
+                                    "default input value is also a list or array.".format(noise, self.name))
+
+        elif callable(noise):
+            self.noise_function = True
+            if isinstance(self.variable, (np.ndarray, list)):
+                new_noise = []
+                for i in self.variable:
+                    new_noise.append(self.noise)
+                noise = new_noise
+        elif isinstance(noise, float):
+            self.noise_function = False
+        else:
+            raise MechanismError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
+                                "array or list of functions.".format(noise, self.name))
 
     def _instantiate_parameter_states(self, context=None):
 
@@ -451,9 +507,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _instantiate_attributes_before_function(self, context=None):
 
-        self.initial_value = self.initial_value or self.variableInstanceDefault
-
         super()._instantiate_attributes_before_function(context=context)
+
+        self.initial_value = self.initial_value or self.variableInstanceDefault
 
     def _execute(self,
                 variable=None,
@@ -497,6 +553,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
+        # FIX: ??CALL check_args()??
+
         # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.variable to initialize state of input
@@ -509,8 +567,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         time_scale = self.time_scale
 
         #region ASSIGN PARAMETER VALUES
-        # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
-
 
         time_constant = self.time_constant
         range = self.range
@@ -522,14 +578,30 @@ class TransferMechanism(ProcessingMechanism_Base):
         #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
         # FIX: NOT UPDATING self.previous_input CORRECTLY
+        # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
 
         # Update according to time-scale of integration
         if time_scale is TimeScale.TIME_STEP:
             current_input = self.integrator_function.function(self.inputState.value,
-                                                              params = {NOISE: noise, RATE: time_constant},
-                                                              context=context)
+                                                              params = {INITIALIZER: self.previous_input,
+                                                                        NOISE: noise,
+                                                                        RATE: time_constant,
+                                                                        INTEGRATION_TYPE: ADAPTIVE},
+                                                              context=context
+                                                            # name=Integrator.componentName + '_for_' + self.name
+                                                             )
 
         elif time_scale is TimeScale.TRIAL:
+
+            if self.noise_function:
+                if isinstance(noise, (list, np.ndarray)):
+                    new_noise = []
+                    for n in noise:
+                        new_noise.append(n())
+                    noise = new_noise
+                else:
+                    noise = noise()
+
             current_input = self.inputState.value + noise
         else:
             raise MechanismError("time_scale not specified for TransferMechanism")
@@ -546,9 +618,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             output_vector[maxCapIndices] = np.max(range)
 
         return output_vector
-
         #endregion
-
 
     def _report_mechanism_execution(self, input, params, output):
         """Override super to report previous_input rather than input, and selected params
@@ -579,6 +649,24 @@ class TransferMechanism(ProcessingMechanism_Base):
         return self._range
 
 
-    @ range.setter
+    @range.setter
     def range(self, value):
         self._range = value
+
+    # MODIFIED 4/17/17 NEW:
+    @property
+    def noise (self):
+        return self.integrator_function.noise
+
+    @noise.setter
+    def noise(self, value):
+        self.integrator_function.noise = value
+
+    @property
+    def time_constant(self):
+        return self.integrator_function.rate
+
+    @time_constant.setter
+    def time_constant(self, value):
+        self.integrator_function.rate = value
+    # # MODIFIED 4/17/17 END
