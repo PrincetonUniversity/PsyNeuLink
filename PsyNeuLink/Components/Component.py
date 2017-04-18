@@ -1025,8 +1025,14 @@ class Component(object):
         #    these will be validated whenever they are assigned a new value
         self._create_attributes_for_params(make_as_properties=True, **self.user_params)
 
-        # Create attribute on self for each parameter in paramClassDefaults:
-        #    these will NOT be validated when they are assigned a value
+        # Create attribute on self for each parameter in paramClassDefaults not in user_params:
+        #    these will NOT be validated when they are assigned a value.
+        # IMPLEMENTATION NOTE:
+        #    These must be created here, so that attributes in user_params that need to can reference them
+        #    (e.g., TransferMechanism noise property references noise param of integrator_function,
+        #           which is declared in paramClassDefaults);
+        #    previously these were created when paramsCurrent is assigned (in __init__());  however because
+        #    the order is not guaranteed, the user_param may be assigned before one from paramClassDefaults
         params_class_defaults_only = dict(item for item in self.paramClassDefaults.items()
                                           if not any(hasattr(parent_class, item[0])
                                                      for parent_class in self.__class__.mro()))
