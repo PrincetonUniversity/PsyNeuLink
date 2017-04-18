@@ -58,6 +58,12 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+#
+# FIX: 3 re-initializations crashes process and syste (also mechanism?)
+# FIX: EVC
+#        - costs vector EVCAuxiliary are not re-initailizaing with each simulation run
+#
+
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
 # FIX: WHY IS NOISE COMMENTED OUT IN TransferMechanism._validate_params()??
 # FIX: TransferMechanism:  MOVED INSTANTATION OF INTEGRATOR TO _instantiate_attributes_before_function

@@ -25,7 +25,7 @@ component objects.
 Creating a Component
 --------------------
 
-A Component is never created directly.  However, its __init__ method is always called when a subclass is instantiated;
+A Component is never created directly.  However, its __init__() method is always called when a subclass is instantiated;
 that, in turn, calls a standard set of methods (listed `below <Component_Methods>`) as part of the initialization 
 procedure.
 
