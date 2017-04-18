@@ -42,7 +42,7 @@ Specifying Parameters
 
 Parameters can be specified in one of several places:
 
-    * In an **argument for the parameter** in the constructor for the `mechanism <Mechanism>` or
+    * In the **argument for the parameter** in the constructor for the `mechanism <Mechanism>` or
       `function <Mechanism.Mechanism_Base.function>` to which the parameter belongs
       (see :ref:`Component_Specifying_Functions_and_Parameters` for additional details).
     ..
@@ -232,13 +232,14 @@ parameter for which it is responsible (as shown in the `figure <ParameterState_F
   which multiples the parameterState's `baseValue <ParameterState.baseValue>` by the aggregated value of the
   result of the parameterState's `function <ParameterState.function>` to determine the value of the parameter.
 
-The value of a parameter of a mechanism or projection is accessible as an attribute with the corresponding name
-(e.g., myMechanism.<param_name>.  The value of a parameter of a :keyword:`function` is accessible from the
-`function_params` attribute of the mechanism or projection to which the function belongs;  this is a dictionary with
-entries for each of the function's parameters. Each of the function's parameters can be referenced using a key that is
-the name of the parameter (e.g., ``myMech.function_object.<param_name>``).  Parameter attributes of mechanisms,
-projections, and their functions accessed in these ways are read-only.  To re-assign the value of a parameter,
-use the `assign_params` method of the mechanism or projection to which the parameter of function belongs.
+All of the user-modifiable parameters of a component are listed in its `user_params <Component.user_params>` attribute, 
+which is a read-only dictionary with an entry for each parameter.  The parameters of a component can be 
+modified individually by assigning a value to the corresponding attribute, or in groups using the component's 
+`assign_params <Component.assign_params>` method.  The parameters for a component's `function <Component.function>` 
+are listed in its `function_params <Component.function_params>` attribute, which is a read-only dictionary with an 
+entry for each of its function's parameter.  The parameters of a component's function can be modified by
+assigning a value to the corresponding attribute of the component's `function_object <Component.function_object>` 
+attribute (e.g., myMechanism.function_object.my_parameter), or in a FUNCTION_PARAMS dict in `assign_params`.  
 
 .. _ParameterState_Figure:
 
@@ -720,7 +721,8 @@ class ParameterState(State_Base):
         if self.name in self.owner.function_params and not 'matrix' in self.name:
         #     setattr(self.owner.function.__self__, self.name, self.value)
             param_type = type(getattr(self.owner.function.__self__, self.name))
-            setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
+            # setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
+            self.owner.function.__self__.paramsCurrent[self.name] = type_match(self.value, param_type)
 
         #region APPLY RUNTIME PARAM VALUES
         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
@@ -800,10 +802,11 @@ def _instantiate_parameter_states(owner, context=None):
     #     using its value as the state_spec
     # MODIFIED 4/1/17 OLD:
     # for param_name, param_value in owner.user_params.items():
-    # MODIFIED 4/1/17 NEW:  [USE user_params_for_instantation SINCE user_params MAY HAVE BEEN OVERWRITTEN
-    #                        WHEN DEFAULTS WERE ASSIGNED TO paramsCurrent in Component.__init__
-    #                        WHICH WILL ASSIGN VALUES TO THE PROPRETIES OF EACH PARAM THAT, IN TURN, WILL
-    #                        UPDATE THEIR VALUES IN USER_PARAMS
+    # MODIFIED 4/1/17 NEW:
+    # IMPLEMENTATION NOTE:  Use user_params_for_instantiation since user_params may have been overwritten
+    #                       when defaults were assigned to paramsCurrent in Component.__init__,
+    #                       (since that will assign values to the properties of each param;
+    #                       and that, in turn, will overwrite their current values with the defaults from paramsCurrent)
     for param_name, param_value in owner.user_params_for_instantiation.items():
         _instantiate_parameter_state(owner, param_name, param_value, context=context)
     # MODIFIED 4/1/17 END
@@ -837,7 +840,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     if is_numeric(param_value) and not isinstance(param_value, bool):
         pass
     # Only allow a FUNCTION_PARAMS dict
-    elif isinstance(param_value, dict) and param_name is FUNCTION_PARAMS:
+    elif isinstance(param_value, ReadOnlyOrderedDict) and param_name is FUNCTION_PARAMS:
         pass
     # Allow ControlProjection, LearningProjection
     elif isinstance(param_value, Projection):
@@ -871,7 +874,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         return
 
     if param_name is FUNCTION_PARAMS:
-        for function_param_name, function_param_value in param_value.items():
+        for function_param_name in param_value.keys():
+            function_param_value = param_value[function_param_name]
             # Assignment of ParameterState for Component objects, function or method are not currently supported
             if isinstance(function_param_value, (function_type, method_type, Component)):
                 continue

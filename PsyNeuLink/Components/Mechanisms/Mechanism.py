@@ -75,7 +75,7 @@ above, or using one of the following:
           this can contain any of the standard parameters for instantiating a mechanism
           (see `Mechanism_Parameters`) or ones specific to a particular type of mechanism
           (see documentation for the subclass).  The key must be the name of the argument used to specify
-          the parameter in the mechanism's constructor, and the value a legal value for that parameter.
+          the parameter in the mechanism's constructor, and the value must be a legal value for that parameter.
           The parameter values specified will be used to instantiate the mechanism.  These can be overridden
           during execution by specifying `Mechanism_Runtime_Parameters`, either when calling the mechanism's
           `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method, or where it is
@@ -141,7 +141,7 @@ Any function (primary or auxiliary) used by a mechanism can be customized by ass
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
 mechanism's default for that function. A user-defined function can be assigned using the mechanism's `assign_params`
 method (the safest means) or by assigning it directly to the corresponding attribute of the mechanism (for its
-primary funtion, its `function <Mechanism_Base.function>` attribute).
+primary function, its `function <Mechanism_Base.function>` attribute).
 
 COMMENT:
     When a custom function is specified,
@@ -291,9 +291,9 @@ constructor, or with the mechanism's `assign_params` method, using the following
       |
       .. note::
          Some Mechanism subclasses include the function parameters as arguments in mechanism's constructor,
-         any values specified in the `FUNCTION__PARAMS` entry of a parameter specification dictionary for the
-         mechanism take precedence over values assigned to parameter-specific arguments in its (or its function's)
-         constructor.
+         any values specified in the `FUNCTION__PARAMS` entry of a 
+         `parameter specification dictionary <Mechanism_Creation>` for the mechanism take precedence over values 
+         assigned to parameter-specific arguments in its (or its function's) constructor.
 
     * `OUTPUT_STATES` - specifies specialized outputStates required by a mechanism subclass
       (see :ref:`OutputStates_Creation` for details of specification).
@@ -569,8 +569,9 @@ class Mechanism_Base(Mechanism):
                 updates input, param values, executes <subclass>.function, returns outputState.value
             - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
             - adjust(params, context)
-                modifies specified mechanism params (by calling Function._assign_defaults)
+                modifies specified mechanism params (by calling Function._instantiate_defaults)
                 returns output
+            - plot(): generates a plot of the mechanism's function using the specified parameter values
 
         MechanismRegistry
         -----------------
@@ -863,15 +864,42 @@ class Mechanism_Base(Mechanism):
         self.phaseSpec = None
         self.processes = {}
         self.systems = {}
-    def plot(self):
+    def plot(self,x_range = None):
+        """
+        Generate a plot of the mechanism's function using the specified parameter values. See (see
+        `DDM.plot <DDM.plot>` for details of the animated DDM plot).
+
+        Arguments
+        ---------
+
+        x_range: List
+             specify the range over which the function should be plotted. x_range must be provides as a list containing
+             two floats: lowest value of x and highest value of x.  Default values depend on the mechanism's function.
+
+            - Logistic Function: default x_range = [-5.0, 5.0]
+            - Exponential Function: default x_range = [0.1, 5.0]
+            - All Other Functions: default x_range = [-10.0, 10.0]
+
+
+
+        Returns
+        -------
+        mechanism's function plot : Matplotlib window
+            Matplotlib window of the mechanism's function plotted with specified parameters over the specified x_range
+
+        """
+
         import matplotlib.pyplot as plt
-        if "Logistic" in str(self.function):
-            x= np.linspace(-5,5)
-        elif "Exponential" in str(self.function):
-            x = np.linspace(0.1, 5)
-        else:
-            x = np.linspace(-10, 10)
-        plt.plot(x, self.function(x), lw=3.0, c='r')
+
+        if not x_range:
+            if "Logistic" in str(self.function):
+                x_range= [-5.0, 5.0]
+            elif "Exponential" in str(self.function):
+                x_range = [0.1, 5.0]
+            else:
+                x_range = [-10.0, 10.0]
+        x_space = np.linspace(x_range[0],x_range[1])
+        plt.plot(x_space, self.function(x_space), lw=3.0, c='r')
         plt.show()
     def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
@@ -987,7 +1015,7 @@ class Mechanism_Base(Mechanism):
         try:
             param_value = params[TIME_SCALE]
         except KeyError:
-            if COMMAND_LINE in context:
+            if any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
                 pass
             else:
                 self.timeScale = timeScaleSystemDefault
@@ -1010,7 +1038,7 @@ class Mechanism_Base(Mechanism):
             param_value = params[INPUT_STATES]
 
         except KeyError:
-            if COMMAND_LINE in context:
+            if any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
                 pass
             else:
                 # INPUT_STATES not specified:
@@ -1059,7 +1087,7 @@ class Mechanism_Base(Mechanism):
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            if COMMAND_LINE in context:
+            if any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
                 pass
             elif self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
@@ -1102,7 +1130,7 @@ class Mechanism_Base(Mechanism):
             param_value = params[OUTPUT_STATES]
 
         except KeyError:
-            if COMMAND_LINE in context:
+            if any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
                 pass
             else:
                 # OUTPUT_STATES not specified:
@@ -1363,18 +1391,29 @@ class Mechanism_Base(Mechanism):
         # Insure that param set is for a States:
         if self.prefs.paramValidationPref:
             if runtime_params:
-                # runtime_params can have entries with any of these keys
-                #     (each of which should be for a params dictionary for the corresponding state type)
+                # runtime_params can have entries for any of the the mechanism's params, or
+                #    one or more state keys, each of which should be for a params dictionary for the corresponding
+                #    state type, and each of can contain only parameters relevant to that state
                 state_keys = [INPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, OUTPUT_STATE_PARAMS]
-                # runtime_params can also have entries for the mechanism's params or its function's params
-                # param_names = list({**self.user_params, **self.user_params[FUNCTION_PARAMS]}.keys())
                 param_names = list({**self.user_params, **self.function_params})
-                # all of the entries in runtime_params must be one of the above
                 if not all(key in state_keys + param_names for key in runtime_params):
                         raise MechanismError("There is an invalid specification for a runtime parameter of {}".
                                              format(self.name))
+                # for state_key in runtime_params:
+                for state_key in [entry for entry in runtime_params if entry in state_keys]:
+                    state_dict = runtime_params[state_key]
+                    if not isinstance(state_dict, dict):
+                        raise MechanismError("runtime_params entry for {} is not a dict".
+                                             format(self.name, state_key))
+                    for param_name in state_dict:
+                        if not param_name in param_names:
+                            raise MechanismError("{} entry in runtime_params for {} "
+                                                 "contains an unrecognized parameter: {}".
+                                                 format(state_key, self.name, param_name))
+
         #endregion
 
+        # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
         self._check_args(variable=self.inputValue,
                         params=runtime_params,
@@ -1737,7 +1776,7 @@ class Mechanism_Base(Mechanism):
     #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
     #     """
     #
-    #     self._assign_defaults(self.inputState, params)
+    #     self._instantiate_defaults(self.inputState, params)
     # # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
     #     return self.outputState.value
 

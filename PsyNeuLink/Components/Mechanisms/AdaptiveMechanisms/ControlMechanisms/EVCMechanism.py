@@ -317,10 +317,10 @@ class ControlSignalCostOptions(IntEnum):
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
-# ControlProjection Function Names
-
+ALLOCATION_POLICY = 'allocation_policy'
 CONTROL_SIGNAL_COST_OPTIONS = 'controlSignalCostOptions'
 
+# ControlProjection Function Names
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
 ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
 DURATION_COST_FUNCTION = 'duration_cost_function'
@@ -697,6 +697,7 @@ class EVCMechanism(ControlMechanism_Base):
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({MAKE_DEFAULT_CONTROLLER: True,
+                               ALLOCATION_POLICY: None,
                                PARAMETER_STATES: False})
 
     @tc.typecheck
@@ -719,6 +720,7 @@ class EVCMechanism(ControlMechanism_Base):
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
 
+        # This is done here to hide it from IDE (where it would show if default assignment for arg in constructor)
         prediction_mechanism_params = prediction_mechanism_params or {MONITOR_FOR_CONTROL:None}
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -741,6 +743,10 @@ class EVCMechanism(ControlMechanism_Base):
                                            name=name,
                                            prefs=prefs,
                                            context=self)
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def _instantiate_input_states(self, context=None):
         """Instantiate inputState and MappingProjections for list of Mechanisms and/or States to be monitored
@@ -940,17 +946,17 @@ class EVCMechanism(ControlMechanism_Base):
             # MODIFIED 2/22/17: [DEPRECATED -- weights and exponents should be specified as params of the function]
             if isinstance(item, tuple):
                 if len(item) != 3:
-                    raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
+                    raise EVCError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
                                          "has {2} items;  it should be 3".
-                                         format(item, self.name, len(state_spec)))
+                                         format(item, self.name, len(item)))
                 if not isinstance(item[1], numbers.Number):
-                    raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
+                    raise EVCError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
                                          "must be a number".
-                                         format(item, self.name, state_spec[0]))
+                                         format(item[1], self.name))
                 if not isinstance(item[2], numbers.Number):
-                    raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
+                    raise EVCError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
                                          "must be a number".
-                                         format(item, self.name, state_spec[0]))
+                                         format(item[0], self.name))
                 # Set state_spec to the output_state item for validation below
                 item = item[0]
             # MODIFIED 2/22/17 END
@@ -1156,8 +1162,9 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Assign weights and exponents to corresponding attributes of default OUTCOME_FUNCTION
         # Note: done here (rather than in call to outcome_function in value_function) for efficiency
-        self.paramsCurrent[OUTCOME_FUNCTION].assign_params(request_set={WEIGHTS:weights,
-                                                                        EXPONENTS:exponents})
+        self.paramsCurrent[OUTCOME_FUNCTION]._assign_params(request_set={WEIGHTS:weights,
+                                                                         EXPONENTS:exponents},
+                                                            context=context)
 
         # Assign weights and exponents to monitor_for_control_weights_and_exponents attribute
         #    (so that it is accessible to custom functions)
@@ -1189,18 +1196,24 @@ class EVCMechanism(ControlMechanism_Base):
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """
         """
-        try:
-            self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
-        except AttributeError:
-            # self.allocation_policy = np.atleast_2d(defaultControlAllocation)
-            self.allocation_policy = np.array(defaultControlAllocation)
 
-        # Call super to instantiate outputStates
+        if self.allocation_policy is None:
+            self.allocation_policy = np.array(defaultControlAllocation)
+        else:
+            self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
+
+        # Call super to instantiate ControlSignal outputStates
         super()._instantiate_control_projection(projection=projection,
                                                 params=params,
                                                 context=context)
 
-        self.controlSignals = list(self.outputStates.values())
+        # Assign controlSignals in the order they are stored of OutputStates
+        self.controlSignals = [self.outputStates[state_name] for state_name in self.outputStates.keys()]
+
+        # # TEST PRINT
+        # print("\n{}.controlSignals: ".format(self.name))
+        # for control_signal in self.controlSignals:
+        #     print("{}".format(control_signal.name))
 
     def _instantiate_function(self, context=None):
         super()._instantiate_function(context=context)
@@ -1278,7 +1291,8 @@ class EVCMechanism(ControlMechanism_Base):
         self._update_predicted_input()
         # self.system._cache_state()
 
-        #region CONSTRUCT SEARCH SPACE
+        # CONSTRUCT SEARCH SPACE
+
         control_signal_sample_lists = []
         control_signals = self.controlSignals
 
@@ -1294,15 +1308,19 @@ class EVCMechanism(ControlMechanism_Base):
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
         self.controlSignalSearchSpace = \
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
-        #endregion
+
+        # EXECUTE SEARCH
+
+        # IMPLEMENTATION NOTE:
+        # self.system._store_system_state()
 
         allocation_policy = self.function(controller=self,
                                           variable=variable,
                                           runtime_params=runtime_params,
                                           time_scale=time_scale,
                                           context=context)
-
-        # self.system._restore_state()
+        # IMPLEMENTATION NOTE:
+        # self.system._restore_system_state()
 
         return allocation_policy
 
