@@ -317,10 +317,10 @@ class ControlSignalCostOptions(IntEnum):
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
-# ControlProjection Function Names
-
+ALLOCATION_POLICY = 'allocation_policy'
 CONTROL_SIGNAL_COST_OPTIONS = 'controlSignalCostOptions'
 
+# ControlProjection Function Names
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
 ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
 DURATION_COST_FUNCTION = 'duration_cost_function'
@@ -697,7 +697,7 @@ class EVCMechanism(ControlMechanism_Base):
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({MAKE_DEFAULT_CONTROLLER: True,
-                               'allocation_policy': None,
+                               ALLOCATION_POLICY: None,
                                PARAMETER_STATES: False})
 
     @tc.typecheck
@@ -720,6 +720,7 @@ class EVCMechanism(ControlMechanism_Base):
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
 
+        # This is done here to hide it from IDE (where it would show if default assignment for arg in constructor)
         prediction_mechanism_params = prediction_mechanism_params or {MONITOR_FOR_CONTROL:None}
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)

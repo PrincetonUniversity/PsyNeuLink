@@ -5,6 +5,11 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
+# NOTES:
+#  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
+#  * NOW THAT NOISE AND TIME_CONSTANT ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
+#      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
+#  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
 # ********************************************  TransferMechanism ******************************************************
 
@@ -332,24 +337,19 @@ class TransferMechanism(ProcessingMechanism_Base):
     variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input)
                                                  #  to be compatible with Transfer_DEFAULT_BIAS
 
-
     # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
-        NOISE: None,
+        # NOISE: None,
         INPUT_STATES: None,
         OUTPUT_STATES:[
             {NAME:TRANSFER_RESULT},
-
             {NAME:TRANSFER_MEAN,
              CALCULATE:lambda x: np.mean(x)},
-
             {NAME:TRANSFER_VARIANCE,
              CALCULATE:lambda x: np.var(x)}],
-
         INTEGRATOR_FUNCTION: Integrator()
-
         })
 
     paramNames = paramClassDefaults.keys()
@@ -386,10 +386,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             default_input_value = Transfer_DEFAULT_BIAS
 
         super(TransferMechanism, self).__init__(variable=default_input_value,
-                                       params=params,
-                                       name=name,
-                                       prefs=prefs,
-                                       context=self)
+                                                params=params,
+                                                name=name,
+                                                prefs=prefs,
+                                                context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and mechanism params
@@ -427,12 +427,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                                         "must match its input ({})".
                                         format(append_type_to_name(self), initial_value, self.variable[0]))
 
-        # FIX: WHY IS THIS COMMENTED OUT? - ALLOW IT TO BE VALIDATED BY INTEGRATOR FUNCTION?
-        # # Validate NOISE:
+        # FIX: SHOULD THIS (AND TIME_CONSTANT) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
+        # Validate NOISE:
         if NOISE in target_set:
             self._validate_noise(target_set[NOISE])
-
-        TEST = True
 
         # Validate TIME_CONSTANT:
         if TIME_CONSTANT in target_set:
@@ -511,10 +509,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._instantiate_attributes_before_function(context=context)
 
-        # FIX: THESE SHOULD PROBABLY BE IN paramClassDefaults
-        #      BOTH IN PRINCIPLE, AND ALSO SO THAT THEY (INCLUDING INTEGRATOR PARAMS) CAN BE VALIDATED
-        #       WHEN ASSIGNED (I.E., IN CALL TO _validate_params())
-
         self.initial_value = self.initial_value or self.variableInstanceDefault
 
     def _execute(self,
@@ -559,6 +553,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
+        # FIX: ??CALL check_args()??
+
         # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.variable to initialize state of input
@@ -571,8 +567,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         time_scale = self.time_scale
 
         #region ASSIGN PARAMETER VALUES
-        # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
-
 
         time_constant = self.time_constant
         range = self.range
@@ -584,6 +578,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
         # FIX: NOT UPDATING self.previous_input CORRECTLY
+        # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
 
         # Update according to time-scale of integration
         if time_scale is TimeScale.TIME_STEP:
@@ -623,9 +618,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             output_vector[maxCapIndices] = np.max(range)
 
         return output_vector
-
         #endregion
-
 
     def _report_mechanism_execution(self, input, params, output):
         """Override super to report previous_input rather than input, and selected params
@@ -656,6 +649,24 @@ class TransferMechanism(ProcessingMechanism_Base):
         return self._range
 
 
-    @ range.setter
+    @range.setter
     def range(self, value):
         self._range = value
+
+    # MODIFIED 4/17/17 NEW:
+    @property
+    def noise (self):
+        return self.integrator_function.noise
+
+    @noise.setter
+    def noise(self, value):
+        self.integrator_function.noise = value
+
+    @property
+    def time_constant(self):
+        return self.integrator_function.rate
+
+    @time_constant.setter
+    def time_constant(self, value):
+        self.integrator_function.rate = value
+    # # MODIFIED 4/17/17 END
