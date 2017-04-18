@@ -528,7 +528,7 @@ class Component(object):
     # * kwComponentCategory (below) is used as placemarker for Component.Function class; replaced in __init__ below
     #              (can't reference own class directly class block)
     requiredParamClassDefaultTypes = {}
-    paramClassDefaults = {}
+    paramClassDefaults = {AUTO_DEPENDENT: False}
     #endregion
 
     def __init__(self,

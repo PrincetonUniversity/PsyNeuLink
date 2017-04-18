@@ -2239,6 +2239,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if param_name is kwFunctionOutputTypeConversion:
                 continue
 
+            if param_name is AUTO_DEPENDENT:
+                continue
+
             # Matrix specification param
             elif param_name == MATRIX:
 
@@ -2676,6 +2679,7 @@ class Integrator(
                                                   noise=noise,
                                                   )
 
+
         # Assign here as default, for use in initialization of function
         self.previous_value = self.paramClassDefaults[INITIALIZER]
 
@@ -2684,8 +2688,19 @@ class Integrator(
                          owner=owner,
                          prefs=prefs,
                          context=context)
+
         # Reassign to kWInitializer in case default value was overridden
         self.previous_value = self.initializer
+
+        # Flag as AUTO_DEPENDENT
+        self.auto_dependent = True
+        while owner is not None:
+            try:
+                owner = self.owner
+                owner.auto_dependent = True
+
+            except AttributeError:
+                owner_exists = None
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
