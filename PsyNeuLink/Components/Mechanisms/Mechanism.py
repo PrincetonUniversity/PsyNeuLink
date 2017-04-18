@@ -291,8 +291,8 @@ constructor, or with the mechanism's `assign_params` method, using the following
       |
       .. note::
          Some Mechanism subclasses include the function parameters as arguments in mechanism's constructor,
-         any values specified in the `FUNCTION__PARAMS` entry of a 
-         `parameter specification dictionary <Mechanism_Creation>` for the mechanism take precedence over values 
+         any values specified in the `FUNCTION__PARAMS` entry of a
+         `parameter specification dictionary <Mechanism_Creation>` for the mechanism take precedence over values
          assigned to parameter-specific arguments in its (or its function's) constructor.
 
     * `OUTPUT_STATES` - specifies specialized outputStates required by a mechanism subclass
@@ -795,6 +795,7 @@ class Mechanism_Base(Mechanism):
 # IMPLEMENT **args (PER State)
 
         self._execution_id = None
+        self.is_finished = False
 
         # Register with MechanismRegistry or create one
         if not context is kwValidate:
