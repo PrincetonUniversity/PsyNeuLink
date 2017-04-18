@@ -255,8 +255,8 @@ class Function_Base(Function):
             Functions are used to "wrap" functions used used by other components;
             They are defined here (on top of standard libraries) to provide a uniform interface for managing parameters
              (including defaults)
-            NOTE:   the Function category definition serves primarily as a shell, and an interface to the Function class,
-                       to maintain consistency of structure with the other function categories;
+            NOTE:   the Function category definition serves primarily as a shell, and as an interface to the Function 
+                       class, to maintain consistency of structure with the other function categories;
                     it also insures implementation of .function for all Function Components
                     (as distinct from other Function subclasses, which can use a FUNCTION param
                         to implement .function instead of doing so directly)
@@ -697,10 +697,10 @@ class ArgumentTherapy(Function_Base):
             raise FunctionError("This should not happen if parameter_validation == True;  check its value")
 
 
-# region ****************************************   FUNCTIONS   *********************************************************
+# region ****************************************   FUNCTIONS   ********************************************************
 # endregion
 
-# region **********************************  USER-DEFINED FUNCTION  *****************************************************
+# region **********************************  USER-DEFINED FUNCTION  ****************************************************
 # endregion
 
 class UserDefinedFunction(Function_Base):
@@ -817,7 +817,7 @@ class UserDefinedFunction(Function_Base):
         return self.user_defined_function(**kwargs)
 
 
-# region **********************************  COMBINATION FUNCTIONS  *****************************************************
+# region **********************************  COMBINATION FUNCTIONS  ****************************************************
 # endregion
 
 
@@ -1248,7 +1248,8 @@ class LinearCombination(
             # if not operation:
             #     raise FunctionError("Operation param missing")
             # if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
-            #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".format(operation))
+            #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
+            #     format(operation))
 
     def function(self,
                  variable=None,
@@ -2496,7 +2497,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     return None
 
 
-# region ***********************************  INTEGRATOR FUNCTIONS ******************************************************
+# region ***********************************  INTEGRATOR FUNCTIONS *****************************************************
 
 #  Integrator
 #  DDM_BogaczEtAl
@@ -2557,8 +2558,8 @@ class Integrator(
         `noise <Integrator.noise>` for details).
 
     time_step_size : float : default 0.0
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
-        DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
+        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` 
+        is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -2592,8 +2593,8 @@ class Integrator(
 
     integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
         specifies type of integration:
-            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` + `noise <Integrator.noise>`
-              (ignores `variable <Integrator.variable>`);
+            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` + 
+              `noise <Integrator.noise>` (ignores `variable <Integrator.variable>`);
             * **SIMPLE**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` *
               `variable <variable.Integrator.variable>` + `noise <Integrator.noise>`;
             * **ADAPTIVE**: (1-`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
@@ -2626,8 +2627,8 @@ class Integrator(
         is set to DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
     initializer : 1d np.array or list
-        determines the starting value for integration (i.e., the value to which `previous_value <Integrator.previous_value>`
-        is set.
+        determines the starting value for integration (i.e., the value to which 
+        `previous_value <Integrator.previous_value>` is set.
 
         If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
         initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
@@ -2692,16 +2693,15 @@ class Integrator(
         # Reassign to kWInitializer in case default value was overridden
         self.previous_value = self.initializer
 
-        # Flag as AUTO_DEPENDENT
+        # Flag self as AUTO_DEPENDENT and any its owners up the hierarchy
         self.auto_dependent = True
         while owner is not None:
             try:
-                owner = self.owner
                 owner.auto_dependent = True
+                owner = self.owner.owner
 
             except AttributeError:
-                owner_exists = None
-
+                owner = None
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -2712,8 +2712,8 @@ class Integrator(
                 if len(rate) != np.array(self.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign variableClassDefault accordingly
-                    # Note: this situation can arise when the rate is parameterized (e.g., as an array)
-                    #       in the Integrator's constructor, where that is used as a specification for a function parameter
+                    # Note: this situation can arise when the rate is parameterized (e.g., as an array) in the
+                    #       Integrator's constructor, where that is used as a specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                     #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
@@ -2721,14 +2721,22 @@ class Integrator(
                     if self._variable_not_specified:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
-                            warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} must "
-                                          "match the length ({}) of the default input ({});  the default input has been "
-                                          "updated to match".
-                                          format(len(rate), rate, self.name, np.array(self.variable).size), self.variable)
+                            warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                          "must match the length ({}) of the default input ({});  "
+                                          "the default input has been updated to match".
+                                          format(len(rate),
+                                                 rate,
+                                                 self.name,
+                                                 np.array(self.variable).size),
+                                          self.variable)
                     else:
                         raise FunctionError("The length ({}) of the array specified for the rate parameter ({}) of {} "
                                             "must match the length ({}) of the default input ({})".
-                                            format(len(rate), rate, self.name, np.array(self.variable).size, self.variable))
+                                            format(len(rate),
+                                                   rate,
+                                                   self.name,
+                                                   np.array(self.variable).size,
+                                                   self.variable))
 
                 self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
@@ -2740,8 +2748,9 @@ class Integrator(
             if isinstance(self.rate, (list, np.ndarray)):
                 for r in self.rate:
                     if r < 0.0 or r > 1.0:
-                        raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                                            "1.0 when integration_type is set to ADAPTIVE.".format(self.rate, self.name))
+                        raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
+                                            "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+                                            format(self.rate, self.name))
             else:
                 if self.rate < 0.0 or self.rate > 1.0:
                     raise FunctionError(
@@ -2818,10 +2827,13 @@ class Integrator(
                         formatted_initializer = list(map(lambda x: x.__qualname__, initializer[0]))
                     except AttributeError:
                         formatted_initializer = initializer[0]
-                    raise FunctionError("The length ({}) of the array specified for the initializer parameter ({}) of {} "
-                                        "must match the length ({}) of the default input ({}). If initializer is specified as"
-                                        " an array or list, it must be of the same size as the input."
-                                        .format(len(initializer[0]), formatted_initializer, self.name, np.array(self.variable).size,
+                    raise FunctionError("The length ({}) of the array specified for the initializer parameter "
+                                        "({}) of {} must match the length ({}) of the default input ({}). "
+                                        "If initializer is specified as an array or list, "
+                                        "it must be of the same size as the input."
+                                        .format(len(initializer[0]),
+                                                formatted_initializer,
+                                                self.name, np.array(self.variable).size,
                                                 self.variable))
                 else:
                     if callable(initializer[0][0]):
@@ -2831,7 +2843,8 @@ class Integrator(
        # Variable is not a list/array
             else:
                 raise FunctionError("The initializer parameter ({}) for {} may only be a list or array if the "
-                                    "default input value is also a list or array.".format(self.initializer[0], self.name))
+                                    "default input value is also a list or array.".
+                                    format(self.initializer[0], self.name))
 
         elif callable(initializer[0]):
             self.initializer_function = True
@@ -2843,8 +2856,9 @@ class Integrator(
         elif isinstance(initializer[0], float):
             initializer_function = False
         else:
-            raise FunctionError("initializer parameter ({}) for {} must be a number, function, array or list of floats, or "
-                                "array or list of functions.".format(initializer[0], self.name))
+            raise FunctionError("initializer parameter ({}) for {} must be a number, function, "
+                                "array or list of floats, or array or list of functions.".
+                                format(initializer[0], self.name))
 
     def function(self,
                  variable=None,
@@ -2941,7 +2955,8 @@ class Integrator(
 #     .. _DDMIntegrator:
 #
 #     Implement drift diffusion integration process.
-#     It is a subclass of the `Integrator` Function that enforce use of the DIFFUSION `integration_type <Integrator.integration_type>`.
+#     It is a subclass of the `Integrator` Function that enforces use of the DIFFUSION `integration_type
+#     <Integrator.integration_type>`.
 #
 #     Arguments
 #     ---------
@@ -2962,7 +2977,8 @@ class Integrator(
 #         (see `noise <DDMIntegrator.rate>` for details).
 #
 #     time_step_size : float : default 0.0
-#         determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
+#         determines the timing precision of the integration process when
+#         `integration_type <Integrator.integration_type>` is set to
 #         DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
 #
 #     initializer float, list or 1d np.array : default 0.0
@@ -3000,13 +3016,15 @@ class Integrator(
 #         diffusion component of the drift diffusion process).
 #
 #     time_step_size : float
-#         determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
-#         DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
+#         determines the timing precision of the integration process when
+#         `integration_type <Integrator.integration_type>` is set to DIFFUSION
+#         (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 #
 #     initializer : float or 1d np.array
-#         determines the starting value for integration (i.e., the value to which `previous_value <Integrator.previous_value>`
-#         is set.  If it is assigned as a `runtime_param <LINK>` it resets `previous_value <Integrator.previous_value>` to the
-#         specified value (see `initializer <Integrator.initializer>` for details).
+#         determines the starting value for integration (i.e., the value to which
+#         `previous_value <Integrator.previous_value>`
+#         is set.  If it is assigned as a `runtime_param <LINK>` it resets `previous_value <Integrator.previous_value>`
+#         to the specified value (see `initializer <Integrator.initializer>` for details).
 #
 #     previous_value : 1d np.array : default variableClassDefault
 #         stores previous value with which `variable <Integrator.variable>` is integrated.
@@ -3283,8 +3301,8 @@ class BogaczEtAl(
             is_neg_drift = drift_rate < 0
             bias_adj = (is_neg_drift == 1) * (1 - bias) + (is_neg_drift == 0) * bias
             y0tilde = ((noise ** 2) / 2) * np.log(bias_adj / (1 - bias_adj))
-            if abs(y0tilde) > threshold:    y0tilde = -1 * (is_neg_drift == 1) * threshold + (
-                                                                                             is_neg_drift == 0) * threshold
+            if abs(y0tilde) > threshold:
+                y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
             x0tilde = y0tilde / drift_rate_normed
 
             import warnings
@@ -3520,7 +3538,7 @@ class NavarroAndFuss(
         return results
 
 
-# region ************************************   DISTRIBUTION FUNCTIONS   ************************************************
+# region ************************************   DISTRIBUTION FUNCTIONS   ***********************************************
 
 class DistributionFunction(Function_Base):
     componentType = DIST_FUNCTION_TYPE
@@ -4036,7 +4054,7 @@ class WaldDist(DistributionFunction):
 
 # endregion
 
-# region **************************************   LEARNING FUNCTIONS ****************************************************
+# region **************************************   LEARNING FUNCTIONS ***************************************************
 
 
 class LearningFunction(Function_Base):
@@ -4448,7 +4466,6 @@ class BackPropagation(LearningFunction):
                  # variable_default:tc.any(list, np.ndarray),
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  error_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
-                 # error_matrix:tc.optional(tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection))=None,
                  error_matrix=None,
                  learning_rate: tc.optional(parameter_spec) = None,
                  params=None,
@@ -4651,8 +4668,8 @@ class BackPropagation(LearningFunction):
 
         return [weight_change_matrix, dE_dW]
 
-# region *****************************************   OBJECTIVE FUNCTIONS ************************************************
+# region *****************************************   OBJECTIVE FUNCTIONS ***********************************************
 # endregion
 # TBI
 
-# region  *****************************************   REGISTER FUNCTIONS ************************************************
+# region  *****************************************   REGISTER FUNCTIONS ***********************************************
