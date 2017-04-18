@@ -253,7 +253,7 @@ default value of 0)::
 
     mechanism_1 = TransferMechanism()
     mechanism_2 = DDM()
-    some_params = {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{THRESHOLD:2,NOISE:0.1}}}
+    some_params = {PARAMETER_STATE_PARAMS:{THRESHOLD:2,NOISE:0.1}}
     my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
 
 *Default projection specification:*  The `pathway` for this process uses default projection specifications; as a
@@ -818,7 +818,17 @@ class Process_Base(Process):
     # MODIFIED 10/2/16 END
 
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
+    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL,
+                               '_execution_id': None,
+                               PATHWAY: None,
+                               'input':[],
+                               'processInputStates': [],
+                               'targets': None,
+                               'targetInputStates': [],
+                               'systems': [],
+                               '_phaseSpecMax': 0,
+                               '_isControllerProcess': False
+                               })
 
     default_pathway = [Mechanism_Base.defaultMechanism]
 
@@ -846,21 +856,7 @@ class Process_Base(Process):
                                                   learning_rate=learning_rate,
                                                   target=target,
                                                   params=params)
-
-        self._execution_id = None
-        self.pathway = None
-        # # MODIFIED 2/17/17 OLD:
-        # self.input = None
-        # MODIFIED 2/17/17 NEW:
-        self.input = []
-        # MODIFIED 2/17/17 END
-        self.processInputStates = []
         self.function = self.execute
-        self.targets = None
-        self.targetInputStates = []
-        self.systems = []
-        self._phaseSpecMax = 0
-        self._isControllerProcess = False
 
         register_category(entry=self,
                           base_class=Process_Base,
@@ -877,6 +873,7 @@ class Process_Base(Process):
                                            name=self.name,
                                            prefs=prefs,
                                            context=context)
+
 
     def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state

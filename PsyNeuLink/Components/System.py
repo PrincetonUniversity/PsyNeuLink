@@ -731,7 +731,17 @@ class System_Base(System):
     variableClassDefault = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
+    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL,
+                               'outputStates': {},
+                               '_phaseSpecMax': 0,
+                               'stimulusInputStates': [],
+                               'inputs': [],
+                               'current_input': None,
+                               'targetInputStates': [],
+                               'targets': None,
+                               'current_targets': None,
+                               'learning': False
+                               })
 
     @tc.typecheck
     def __init__(self,
@@ -763,15 +773,6 @@ class System_Base(System):
                                                   params=params)
 
         self.function = self.execute
-        self.outputStates = {}
-        self._phaseSpecMax = 0
-        self.stimulusInputStates = []
-        self.inputs = []
-        self.current_input = None
-        self.targetInputStates = []
-        self.targets = None
-        self.current_targets = None
-        self.learning = False
 
         register_category(entry=self,
                           base_class=System_Base,
@@ -1021,7 +1022,7 @@ class System_Base(System):
             # If process item is a Process object, assign process_input as default
             if isinstance(process, Process):
                 if process_input is not None:
-                    process._assign_defaults(variable=process_input, context=context)
+                    process._instantiate_defaults(variable=process_input, context=context)
                 # If learning_rate is specified for system but not for process, then apply to process
                 # # MODIFIED 3/21/17 OLD:
                 # if self.learning_rate and not process.learning_rate:

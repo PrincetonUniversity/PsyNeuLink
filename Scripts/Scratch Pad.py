@@ -23,66 +23,174 @@ from PsyNeuLink.Components.Functions.Function import Linear
 # from PsyNeuLink.Components.States.OutputState import OutputState
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 
+#region TEST ReadOnlyOrderedDict
 
-#region TEST AUTO_PROP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+from collections import UserDict, OrderedDict
 
-defaults = {'foo':5, 'bar': ['hello', 'world']}
+# class ReadOnlyOrderedDict(OrderedDict):
+#     def __init__(self, dict=None, **kwargs):
+#         UserDict.__init__(self, dict, **kwargs)
+#         self._ordered_keys = []
+#         for key in list(dict.keys()):
+#             self._ordered_keys.append(key)
+#         TEST = True
+#     def __setitem__(self, key, item):
+#         raise TypeError
+#     def __delitem__(self, key):
+#         raise TypeError
+#     def clear(self):
+#         raise TypeError
+#     def pop(self, key, *args):
+#         raise TypeError
+#     def popitem(self):
+#         raise TypeError
+#
+#     def update(self, dict=None):
+#         if dict is None:
+#             pass
+#         elif isinstance(dict, UserDict):
+#             self.data = dict.data
+#         elif isinstance(dict, type({})):
+#             self.data = dict
+#         else:
+#             raise TypeError
+#
+#     def okeys(self):
+#         return self._ordered_keys
+#
+#     # def __setitem__(self, key, value):
+#     #     self.data[key] = item
+#     #     self._ordered_keys.append(key)
+#
+# x = ReadOnlyOrderedDict(OrderedDict({'hello':1, 'goodbye':2}))
+# print(x.okeys())
 
-docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
-        'bar': 'Bar none, the most important property'}
 
+# Ordered UserDict
+class ReadOnlyOrderedDict(UserDict):
+    def __init__(self, dict=None, name=None, **kwargs):
+        self.name = name or self.__class__.__name__
+        UserDict.__init__(self, dict, **kwargs)
+        self._ordered_keys = []
+    def __setitem__(self, key, item):
+        raise ScratchPadError("{} is read-only".format(self.name))
+    def __delitem__(self, key):
+        raise TypeError
+    def clear(self):
+        raise TypeError
+    def pop(self, key, *args):
+        raise TypeError
+    def popitem(self):
+        raise TypeError
+    def __additem__(self, key, value):
+        self.data[key] = value
+        if not key in self._ordered_keys:
+            self._ordered_keys.append(key)
+    def keys(self):
+        return self._ordered_keys
 
-def make_property(name):
-    backing_field = '_' + name
+x = ReadOnlyOrderedDict()
+x.__additem__('hello',1)
+x.__additem__('hello',2)
+x.__additem__('goodbye',2)
+print(x.keys())
+for key in x.keys():
+    print(x[key])
+# x['new item']=3
 
-    def getter(self):
-        if hasattr(self, backing_field):
-            return getattr(self, backing_field)
-        else:
-            return defaults[name]
+# # ReadOnly UserDict
+# class ReadOnlyOrderedDict(OrderedDict):
+# 	def __setitem__(self, key, item): raise TypeError
+# 	def __delitem__(self, key): raise TypeError
+# 	def clear(self): raise TypeError
+# 	def pop(self, key, *args): raise TypeError
+# 	def popitem(self): raise TypeError
+# 	def __additem__(selfself, key, item):
+#
+#
+# 	def update(self, dict=None):
+# 		if dict is None:
+# 			pass
+# 		elif isinstance(dict, UserDict):
+# 			self.data = dict.data
+# 		elif isinstance(dict, type({})):
+# 			self.data = dict
+# 		else:
+# 			raise TypeError
+#
+# x = ReadOnlyDict({'hello':1, 'goodbye':2})
+# print(list(x.keys()))
+# # x['new'] = 4
+#
+#
+# # ReadOnly UserDict
+# x = ReadOnlyDict()
+# x['hello'] = 1
+# x['goodbye'] = 2
+# print(list(x.keys()))
+#
 
-    def setter(self, val):
-        setattr(self, backing_field, val)
-
-    # Create the property
-    prop = property(getter).setter(setter)
-
-    # Install some documentation
-    prop.__doc__ = docs[name]
-    return prop
-
-
-def autoprop(cls):
-    for k, v in defaults.items():
-        setattr(cls, k, make_property(k))
-    return cls
-
-
-@autoprop
-class Test:
-    pass
-
-if __name__ == '__main__':
-    t = Test()
-    t2 = Test()
-    print("Stored values in t", t.__dict__)
-    print("Properties on t", dir(t))
-    print("Check that default values are there by default")
-    assert t.foo == 5
-    assert t.bar == ['hello', 'world']
-    print("Assign and check the assignment holds")
-    t.foo = 20
-    assert t.foo == 20
-    print("Check that assignment on t didn't change the defaulting on t2 somehow")
-    assert t2.foo == 5
-    print("Check that changing the default changes the value on t2")
-    defaults['foo'] = 27
-    assert t2.foo == 27
-    print("But t1 keeps the value it was assigned")
-    assert t.foo == 20
-    print(""""Note that 'help(Test.foo)' and help('Test.bar') will show 
-    the docs we installed are available in the help system""")
 #endregion
+
+# #region TEST AUTO_PROP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# defaults = {'foo':5, 'bar': ['hello', 'world']}
+#
+# docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
+#         'bar': 'Bar none, the most important property'}
+#
+#
+# def make_property(name):
+#     backing_field = '_' + name
+#
+#     def getter(self):
+#         if hasattr(self, backing_field):
+#             return getattr(self, backing_field)
+#         else:
+#             return defaults[name]
+#
+#     def setter(self, val):
+#         setattr(self, backing_field, val)
+#
+#     # Create the property
+#     prop = property(getter).setter(setter)
+#
+#     # Install some documentation
+#     prop.__doc__ = docs[name]
+#     return prop
+#
+#
+# def autoprop(cls):
+#     for k, v in defaults.items():
+#         setattr(cls, k, make_property(k))
+#     return cls
+#
+#
+# @autoprop
+# class Test:
+#     pass
+#
+# if __name__ == '__main__':
+#     t = Test()
+#     t2 = Test()
+#     print("Stored values in t", t.__dict__)
+#     print("Properties on t", dir(t))
+#     print("Check that default values are there by default")
+#     assert t.foo == 5
+#     assert t.bar == ['hello', 'world']
+#     print("Assign and check the assignment holds")
+#     t.foo = 20
+#     assert t.foo == 20
+#     print("Check that assignment on t didn't change the defaulting on t2 somehow")
+#     assert t2.foo == 5
+#     print("Check that changing the default changes the value on t2")
+#     defaults['foo'] = 27
+#     assert t2.foo == 27
+#     print("But t1 keeps the value it was assigned")
+#     assert t.foo == 20
+#     print(""""Note that 'help(Test.foo)' and help('Test.bar') will show
+#     the docs we installed are available in the help system""")
+# #endregion
 
 # #region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #

@@ -246,6 +246,7 @@ INPUTS_DIM = 3
 COMPONENT_INIT = 'Function.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
 DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
+USER_PARAMS = 'user_params' # Params available to user for inspection in user_params dict
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
 
@@ -329,7 +330,6 @@ EXPONENTIAL_FUNCTION = "Exponential"
 LOGISTIC_FUNCTION = "Logistic"
 SOFTMAX_FUNCTION = 'SoftMax'
 INTEGRATOR_FUNCTION = "Integrator"
-DDM_INTEGRATOR_FUNCTION = "DDMIntegrator"
 LINEAR_MATRIX_FUNCTION = "Linear Matrix"
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
 RL_FUNCTION = 'Reinforcement Learning Algorithm'
@@ -477,10 +477,10 @@ PROJECTION_PARAMS = "ProjectionParams"
 MAPPING_PROJECTION_PARAMS = "MappingProjectionParams"
 CONTROL_PROJECTION_PARAMS = "ControlProjectionParams"
 LEARNING_PROJECTION_PARAMS = 'LearningProjectionParams'
-PROJECTION_SENDER = 'projectionSender'
+PROJECTION_SENDER = 'projection_sender'
 kwSenderArg = 'sender'
-PROJECTION_SENDER_VALUE =  "projectionSenderValue"
-kwProjectionReceiver = 'ProjectionReceiver'
+PROJECTION_SENDER_VALUE =  "projection_sender_value"
+kwProjectionReceiver = 'projection_receiver'
 kwReceiverArg = 'receiver'
 # kpLog = "ProjectionLog"
 MONITOR_FOR_LEARNING = 'monitor_for_learning'
@@ -509,6 +509,8 @@ SCALE = 'scale'
 NOISE = 'noise'
 
 DRIFT_RATE = 'drift_rate'
+INTEGRATOR_FUNCTION = 'integrator_function'
+INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
 
 MEAN = 'mean'
@@ -520,8 +522,6 @@ HIGH = 'high'
 BETA = 'beta'
 
 SHAPE = 'shape'
-
-WEIGHTING = "weighting"
 
 OUTPUT_TYPE = 'output'
 ALL = 'all'
@@ -538,7 +538,7 @@ OFFSET = "offset"
 LINEAR = 'linear'
 CONSTANT = 'constant'
 SIMPLE = 'scaled'
-ADAPTIVE = 'apaptive'
+ADAPTIVE = 'adaptive'
 DIFFUSION = 'diffusion'
 
 #endregion

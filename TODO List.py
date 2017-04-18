@@ -26,11 +26,27 @@
 #   5) SHOULD ATTRIBUTES OF PARENT CLASSED BE DOCUMENTED ON CHILD CLASSES?
 #          (E.G., PREFS, NAME, FUNCTION, FUNCTON_PARAMS, USER_PARAMS, ETC.)
 #   6) SHOULD WE SUPPORT >2D VALUES (PASSED ALONG PROJECTIONS, USED AS STATE VALUES, ETC.; INPUTS TO TRANSFER FCT, ETC.)
+#   7) SHOULD OVERRIDE OF ATTRIBUTE SETTERS BE @PROPERTY IN CLASS DEFINITION, OR SETTER PASSED TO make_property?
+#   8) DOCUMENTATION: SHOULD WE INCLUDE COMPONENT ATTRIBUTES IN DOCSTRING FOR SUBCLASSES (E.G., params, prefs, etc.)
+#   9) DOCUMENTATION: SHOULD EXAMPLES BE GENERIC (SEE COMPONENT FUNCTION) OR SPECIFIC (USING ACTUAL PSYNEULINK OBJECTS)
+#  10) DOCUMENTATION: INCLUDE EXAMPLES "INLINE" OR IN THEIR OWN SECTION AT THE END?
+#  11) SHOULD COMPONENT NAMES HAVE SPACES OF UNDERSCORES?
 
 # TASKS:
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
-#  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMLAR TO MatrixKeywords)
-
+#  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMILAR TO MatrixKeywords)
+#  3) IMPLEMENT gating projections
+#  4) IMPLEMENT ABC
+# 4a) IMPLEMENT Swap execute (on Mechanism) and _execute (on its subclasses)
+#  5) IMPLEMENT Compilation / paralleliztion of execution
+#  6) IMPLEMENT Recurrent layer / KWTA??
+#  7) IMPLEMENT TD learning
+#  8) IMPLEMENT CLS / NMPH
+#  9) IMPLEMENT Conflict (energy / entropy)
+# 10) IMPLEMENT TensorFLow wrapper
+# 11) IMPLEMENT Production System model (using scheduler??)
+# 12) IMPLEMENT LEABRA
+# 13) IMPLEMENT Model fitting
 
 
 # COMPOSITION IMPLEMENTATION NOTE:
@@ -42,12 +58,41 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
+# FIX: WHY IS NOISE COMMENTED OUT IN TransferMechanism._validate_params()??
+# FIX: TransferMechanism:  MOVED INSTANTATION OF INTEGRATOR TO _instantiate_attributes_before_function
+#       PROBLEM:  ASSIGNMENT OF NOISE DOES GET PASSED TO INTEGRATOR FUNCTION
 
+# DOCUMENTATION: items in paramClassDefaults are created as attributes (not properties), and are thus not validated
+#                    when assignments are made to them;  items in user_params are created as properties, and are
+#                    validated (via assign_params) when assignments are made to them.
+# DOCUMENTATION:  assign_args_to_params_dicts should be used for any attributes for which parameterStates can be created
+# DOCUMENTATION:  Now that attribute assignment calls:
+#                         _assign_params, which in turn calls _instantiate_params, which in turn calls _validate_params
+#                             therefore _validate params may only get a subset of the params for a component
+#                                in which case it can't be used to insure that a give param has been implemented,
+#                                only that its value is a syntactically legal one.
+#                                enforcement of assignment should be done using required_params
+#                         in general, _validate_params should now check that the parameter being validated
+#                             is in the target_set
+
+# DOCUMENTATION: Component._validate_params:  if testing before call to super, use request_set
+#                                             if testing after call to super, use target_set
+
+# DOCUMENTATION: RESTORE runtime_params DOCUMENTATION
+
+# IMPLEMENT: error threshold / criterion for ending learning
+# DOCUMENTATION: FUNCTION_PARAMS in runtime_params example
+# FIX: Stroop Model Test Script: Process -> System
+
+# DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
+# FIX: Component: IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
+#                 SEE learning_rate IN LearningMechanism FOR EXAMPLE
+
+# FIX: MOVE setattr OUT OF make_property AND HAVE make_property TAKE IT AS AN ARG
 # FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)
-# FIX: MAKE USER_PARAMS READ-ONLY
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)#
 # FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
-# FIX: NAMING OF MAPPING PROJECTIONS
 # FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
 # FIX: DERIVATIVE FOR SoftMax Function
 # FIX: ADD owner ARG TO Function CONSTRUCTOR (DEFAULT = NONE)
@@ -183,17 +228,16 @@
 # FIX: Can't specify parameter as ControlProjection (StroopEVCforDST)
 
 # DOCUMENTATION COMPLETION/CLEAN-UP:
-#   Function
+#   Component
+# √ Function
 # √ System
 # √ Process
 # √ Mechanism
-#   ProcessingMechanism
+# √ ProcessingMechanism
 #   DefaultProcessingMechanism
 # √ DDM
 # √ IntegratorMechanism
 # √ TransferMechanism
-# √ MonitoringMechanism
-#   DefaultMonitoringMechanism
 # √ ControlMechanism
 #   DefaultControlMechanism
 # √ EVCMechanism
@@ -604,7 +648,7 @@
 #      - need to make sure all parses of function can now handle this
 #      - instantiation of parameterStates needs to extract any params specified as args and/or in a params dict
 # - add @property for all params, so they can be addressed directly as attributes
-#      setter method should call _assign_defaults
+#      setter method should call _instantiate_defaults
 #
 
 #endregion
@@ -946,7 +990,7 @@
     # *  params can be set in the standard way for any Function subclass:
     #     - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
     #          and used for paramsCurrent unless and until the latter are changed in a function call
-    #     - paramInstanceDefaults can be later modified using _assign_defaults
+    #     - paramInstanceDefaults can be later modified using _instantiate_defaults
     #     - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
 
 # FIX: Figures: need higher rez
@@ -1578,7 +1622,7 @@
 #
 #  _validate_function:
 #
-# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using _assign_defaults),
+# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using _instantiate_defaults),
 # FIX:                  that function_params are changed too
 #
 # FIX / IMPLEMENT: "MODIFIED RUNTIME_PARAMS":
@@ -1590,7 +1634,7 @@
 #
 # FIX: _validate_params ALWAYS ALLOW PARAMETER_STATE_PARAMS TO PASS
 # FIX: get rid of is_numeric_or_none; replace throughout with tc.optional(is_numeric)
-# FIX: implement _assign_defaults where flagged
+# FIX: implement _instantiate_defaults where flagged
 #
 # QUESTION: is it possible to specify a function param in a params dict if the arguments appear in the __init__
 #           method?  And, in either case, does specifying function params in a params dict overrided the value
@@ -1927,7 +1971,7 @@
 #
 # FIX!!: CONSOLIDATE _instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module
 # FIX:     Function IN Projection:  (_instantiate_attributes_before_function() and _instantiate_parameter_states())
-# FIX:     ?? SHOULD THIS USE _assign_defaults ??
+# FIX:     ?? SHOULD THIS USE _instantiate_defaults ??
 #
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 #          #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
@@ -2426,7 +2470,7 @@
 # FIX: change errorSignal -> error_signal (but must be sure not to interfere / get confused with existing error_signal)
 # FIX: MAKE SURE LEARNING PROJECTIONS ON PROCESS ARE ALWAYS ADDED AS COPIES
 # FIX: [LearningProjection]:
-                # FIX: ?? SHOULD THIS USE _assign_defaults:
+                # FIX: ?? SHOULD THIS USE _instantiate_defaults:
                 # self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING_PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 # FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningProjection:
