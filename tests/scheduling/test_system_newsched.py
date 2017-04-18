@@ -467,9 +467,6 @@ class TestBranching:
             ],
         ]
 
-        # import code
-        # code.interact(local=locals())
-
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
                 numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].outputValue[i])
@@ -545,9 +542,6 @@ class TestBranching:
             ],
         ]
 
-        # import code
-        # code.interact(local=locals())
-
         for m in range(len(mechs)):
             for i in range(len(expected_output[m])):
                 numpy.testing.assert_allclose(expected_output[m][i], mechs[m].outputValue[i])
@@ -621,12 +615,110 @@ class TestBranching:
             ],
         ]
 
-        # import code
-        # code.interact(local=locals())
-
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
                 numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].outputValue[i])
+
+    def test_four_integrators_mixed(self):
+        A = IntegratorMechanism(
+            name='A',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        B = IntegratorMechanism(
+            name='B',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        C = IntegratorMechanism(
+            name='C',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        D = IntegratorMechanism(
+            name='D',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        p = process(
+            default_input_value = [0],
+            pathway = [A, C],
+            name = 'p'
+        )
+
+        p1 = process(
+            default_input_value = [0],
+            pathway = [A, D],
+            name = 'p1'
+        )
+
+        q = process(
+            default_input_value = [0],
+            pathway = [B, C],
+            name = 'q'
+        )
+
+        q1 = process(
+            default_input_value = [0],
+            pathway = [B, D],
+            name = 'q1'
+        )
+
+        s = system(
+            processes=[p, p1, q, q1],
+            name = 's'
+        )
+
+        term_conds = {TimeScale.TRIAL: All(AfterNCalls(C, 1), AfterNCalls(D, 1))}
+        stim_list = {A: [[1]], B: [[1]]}
+
+        sched = Scheduler(system=s)
+        sched.add_condition(B, EveryNCalls(A, 2))
+        sched.add_condition(C, EveryNCalls(A, 1))
+        sched.add_condition(D, EveryNCalls(B, 1))
+        s.scheduler = sched
+
+        results = s.run(
+            inputs=stim_list,
+            termination_conditions=term_conds
+        )
+
+        mechs = [A, B, C, D]
+        expected_output = [
+            [
+                numpy.array([2.]),
+            ],
+            [
+                numpy.array([1.]),
+            ],
+            [
+                numpy.array([4.]),
+            ],
+            [
+                numpy.array([3.]),
+            ],
+        ]
+
+        for m in range(len(mechs)):
+            for i in range(len(expected_output[m])):
+                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].outputValue[i])
+
 
     def test_five_ABABCDE(self):
         A = TransferMechanism(
@@ -703,9 +795,168 @@ class TestBranching:
             ],
         ]
 
-        # import code
-        # code.interact(local=locals())
-
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
                 numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].outputValue[i])
+
+    #
+    #   A  B
+    #   |\/|
+    #   C  D
+    #   |\/|
+    #   E  F
+    #
+    def test_six_integrators_threelayer_mixed(self):
+        A = IntegratorMechanism(
+            name='A',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        B = IntegratorMechanism(
+            name='B',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        C = IntegratorMechanism(
+            name='C',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        D = IntegratorMechanism(
+            name='D',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        E = IntegratorMechanism(
+            name='E',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        F = IntegratorMechanism(
+            name='F',
+            default_input_value = [0],
+            function=Integrator(
+                rate=1,
+                integration_type=SIMPLE
+            )
+        )
+
+        p = [
+            process(
+                default_input_value = [0],
+                pathway = [A, C, E],
+                name = 'p'
+            ),
+            process(
+                default_input_value = [0],
+                pathway = [A, C, F],
+                name = 'p1'
+            ),
+            process(
+                default_input_value = [0],
+                pathway = [A, D, E],
+                name = 'p2'
+            ),
+            process(
+                default_input_value = [0],
+                pathway = [A, D, F],
+                name = 'p3'
+            ),
+            process(
+                default_input_value = [0],
+                pathway = [B, C, E],
+                name = 'q'
+            ),
+            process(
+                default_input_value = [0],
+                pathway = [B, C, F],
+                name = 'q1'
+            ),
+            process(
+                default_input_value = [0],
+                pathway = [B, D, E],
+                name = 'q2'
+            ),
+            process(
+                default_input_value = [0],
+                pathway = [B, D, F],
+                name = 'q3'
+            )
+        ]
+
+        s = system(
+            processes=p,
+            name = 's'
+        )
+
+        term_conds = {TimeScale.TRIAL: All(AfterNCalls(E, 1), AfterNCalls(F, 1))}
+        stim_list = {A: [[1]], B: [[1]]}
+
+        sched = Scheduler(system=s)
+        sched.add_condition(B, EveryNCalls(A, 2))
+        sched.add_condition(C, EveryNCalls(A, 1))
+        sched.add_condition(D, EveryNCalls(B, 1))
+        sched.add_condition(E, EveryNCalls(C, 1))
+        sched.add_condition(F, EveryNCalls(D, 2))
+        s.scheduler = sched
+
+        results = s.run(
+            inputs=stim_list,
+            termination_conditions=term_conds
+        )
+
+        # Intermediate time steps
+        #
+        #     0   1   2   3
+        #
+        # A   1   2   3   4
+        # B       1       2
+        # C   1   4   8   14
+        # D       3       9
+        # E   1   8   19  42
+        # F               23
+        #
+        expected_output = {
+            A: [
+                numpy.array([4.]),
+            ],
+            B: [
+                numpy.array([2.]),
+            ],
+            C: [
+                numpy.array([14.]),
+            ],
+            D: [
+                numpy.array([9.]),
+            ],
+            E: [
+                numpy.array([42.]),
+            ],
+            F: [
+                numpy.array([23.]),
+            ],
+        }
+
+        for m in expected_output:
+            for i in range(len(expected_output[m])):
+                numpy.testing.assert_allclose(expected_output[m][i], m.outputValue[i])
