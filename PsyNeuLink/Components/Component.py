@@ -1021,18 +1021,16 @@ class Component(object):
         # Note:  this is done here to preserve identity of user-specified params assigned to user_params above
         self._filter_params(params)
 
-        # Create property on self for each parameter in user_params
-        # MODIFIED 4/17/17 OLD:
-        self._create_attributes_for_params(**self.user_params)
-        # # MODIFIED 4/17/17 NEW:
-        # from PsyNeuLink.Components.Functions.Function import Function
-        # if isinstance(self, Function):
-        #     self._create_attributes_for_params(**self.user_params)
-        # else:
-        #     all_params = self.paramClassDefaults.copy()
-        #     all_params.update(self.user_params)
-        #     self._create_attributes_for_params(**all_params)
-        # MODIFIED 4/17/17 END
+        # Create property on self for each parameter in user_params:
+        #    these will be validated whenever they are assigned a new value
+        self._create_attributes_for_params(make_as_properties=True, **self.user_params)
+
+        # Create attribute on self for each parameter in paramClassDefaults:
+        #    these will NOT be validated when they are assigned a value
+        params_class_defaults_only = dict(item for item in self.paramClassDefaults.items()
+                                          if not any(hasattr(parent_class, item[0])
+                                                     for parent_class in self.__class__.mro()))
+        self._create_attributes_for_params(make_as_properties=False, **params_class_defaults_only)
 
         # Return params only for args:
         return params
@@ -1045,7 +1043,7 @@ class Component(object):
         """
         pass
 
-    def _create_attributes_for_params(self, **kwargs):
+    def _create_attributes_for_params(self, make_as_properties=False, **kwargs):
         """Create property on parent class of object for all attributes passed in kwargs dict.
          
         If attribute or property already exists, do nothing.
@@ -1053,10 +1051,15 @@ class Component(object):
             and assign value provided in kwargs as its default value. 
         """
 
-        for arg_name, arg_value in kwargs.items():
-            if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
-                setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
-            setattr(self, '_'+arg_name, arg_value)
+        if make_as_properties:
+            for arg_name, arg_value in kwargs.items():
+                if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
+                    setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
+                setattr(self, '_'+arg_name, arg_value)
+        else:
+            for arg_name, arg_value in kwargs.items():
+                setattr(self, arg_name, arg_value)
+
 
     def _check_args(self, variable, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params.
