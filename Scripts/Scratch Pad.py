@@ -24,9 +24,12 @@ class ScratchPadError(Exception):
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 from PsyNeuLink.Components.Process import Process, Process_Base, process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
+from PsyNeuLink.Components.System import system, System, System_Base
 
 #region TEST Multipe Initis
 
+# # WORKS:
 # my_process = process()
 # print(my_process.name)
 # my_process = process()
@@ -36,14 +39,21 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 # my_process = process()
 # print(my_process.name)
 
-# my_process = Process_Base()
-# print(my_process.name)
-# my_process = Process_Base()
-# print(my_process.name)
-# my_process = Process_Base()
-# print(my_process.name)
-# my_process = Process_Base()
-# print(my_process.name)
+# my_process = Process()
+
+my_process = Process_Base()
+print(my_process.name)
+my_process = Process_Base()
+print(my_process.name)
+
+# my_mech = mechanism()
+# my_mech = Mechanism()
+# my_mech = Mechanism_Base()
+
+# my_sys = system()  # <- WORKS
+# my_sys = System(variable_default=None, param_defaults=None)
+# my_sys = System_Base()
+
 
 #endregion
 
