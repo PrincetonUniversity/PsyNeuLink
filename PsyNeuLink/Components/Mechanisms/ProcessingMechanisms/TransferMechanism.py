@@ -349,7 +349,7 @@ class TransferMechanism(ProcessingMechanism_Base):
              CALCULATE:lambda x: np.mean(x)},
             {NAME:TRANSFER_VARIANCE,
              CALCULATE:lambda x: np.var(x)}],
-        INTEGRATOR_FUNCTION: Integrator
+        # INTEGRATOR_FUNCTION: Integrator
         })
 
     paramNames = paramClassDefaults.keys()
@@ -384,6 +384,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   params=params)
         if default_input_value is None:
             default_input_value = Transfer_DEFAULT_BIAS
+
+        self.integrator_function = Integrator()
 
         super(TransferMechanism, self).__init__(variable=default_input_value,
                                                 params=params,
