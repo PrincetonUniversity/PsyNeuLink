@@ -1417,8 +1417,14 @@ class EVCMechanism(ControlMechanism_Base):
         self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
         # Get cost of each controlSignal
-        for control_signal in self.controlSignals:
-            self.controlSignalCosts = np.append(self.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
+        # # MODIFIED 4/18/17 OLD:
+        # for control_signal in self.controlSignals:
+            # self.controlSignalCosts = np.append(self.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
+        # MODIFIED 4/18/17 NEW:
+        for i in range(len(self.controlSignals)):
+            self.controlSignalCosts[i] = self.controlSignals[i].cost
+        # MODIFIED 4/18/17 END
+
 
     # The following implementation of function attributes as properties insures that even if user sets the value of a
     #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.

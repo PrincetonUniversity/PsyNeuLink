@@ -701,16 +701,6 @@ class Component(object):
 
         # self.paramsCurrent = self.paramInstanceDefaults
         self.paramsCurrent = self.paramInstanceDefaults.copy()
-        # MODIFIED 4/17/17 NEW:
-        # # Assign params to paramsCurrent in the order they were assigned in assign_args_to_param_dicts.
-        # #    IMPLEMENTATION NOTE:
-        # #    This is to insure that attributes are created for paramClassDefault entires before those in user_params,
-        # #    as attributes in user_params may refer (as properties) to ones in paramClassDefaults
-        # #    (for example, if user_params contains attributes of functions specified in paramClassDefaults,
-        # #     as in the case of the noise parameter of a TransferMechanism, that refers to its integrator_function)
-        # for param in self.paramInstanceDefaults.keys():
-        #     self.paramsCurrent[param] = self.paramInstanceDefaults[param]
-        # MODIFIED 4/17/17 END
 
         self.runtime_params_in_use = False
         #endregion
@@ -1396,38 +1386,24 @@ class Component(object):
                         # MODIFIED 11/29/16 END
                         request_set[param_name].setdefault(dict_entry_name, dict_entry_value)
 
-
-
         # VALIDATE PARAMS
 
         # if request_set has been passed or created then validate and, if OK, assign params to target_set
         if request_set:
-
             # MODIFIED 4/18/17 NEW:
-            # For params that are a ParamValueProjection or 2-item tuple, extract the value for validation below
+            # For params that are a ParamValueProjection or 2-item tuple, extract the value
+            #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
+            #    which is used it instantiate the specified projections)
             # IMPLEMENTATION NOTE:  Do this here rather than in _validate_params, as it needs to be done before
-            #                       any override of _validate_params, which (should not, but may) process params
+            #                       any override of _validate_params, which (should not, but) may process params
             #                       before calling super()._validate_params
             from PsyNeuLink.Components.ShellClasses import ParamValueProjection
-            from PsyNeuLink.Components.Functions.Function import Function_Base
-            extracted_params = {}
             for param_name, param_value in request_set.items():
                 if isinstance(param_value, (ParamValueProjection, tuple)):
-                    # Don't bother keeping tuple for Function, as they are not allowed to have projections
-                    if not isinstance(self, Function_Base):
-                        extracted_params[param_name] = request_set[param_name]
                     param_value = self._get_param_value_from_tuple(param_value)
                     request_set[param_name] = param_value
             # MODIFIED 4/18/17 END NEW
-
             self._validate_params(request_set, target_set, context=context)
-
-            # MODIFIED 4/18/17 NEW:
-            # Reinstate the tuples w/ values that were extracted
-            target_set.update(extracted_params)
-            TEST = True
-            # MODIFIED 4/18/17 END NEW
-
 
     def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
