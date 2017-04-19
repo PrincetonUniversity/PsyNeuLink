@@ -109,7 +109,7 @@ RESULTS (time step 2):
 - input:  0.123
 - params:
 	function: BogaczEtAl
-		drift_rate: 0.0123
+		drift_rate: 0.08610000000000001
 		noise: 0.5
 		starting_point: 0.0
 		t0: 0.45
