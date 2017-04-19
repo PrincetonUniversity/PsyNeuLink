@@ -384,6 +384,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   params=params)
         if default_input_value is None:
             default_input_value = Transfer_DEFAULT_BIAS
+        self.integrator_function=None
 
         super(TransferMechanism, self).__init__(variable=default_input_value,
                                                 params=params,
@@ -589,15 +590,27 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Update according to time-scale of integration
         if time_scale is TimeScale.TIME_STEP:
-            self.integrator_function = Integrator()
+
+            if not self.integrator_function:
+
+                self.integrator_function = Integrator(
+                                            self.inputState.value,
+                                            initializer = self.previous_input,
+                                            integration_type= ADAPTIVE,
+                                            noise = self.noise,
+                                            rate = self.time_constant
+                                            )
+
             current_input = self.integrator_function.execute(self.inputState.value,
-                                                             params={INITIALIZER:self.previous_input,
-                                                                     INTEGRATION_TYPE: ADAPTIVE,
-                                                                     NOISE: self.noise,
-                                                                     RATE: self.time_constant}
-                                                              # context=context
-                                                            # name=Integrator.componentName + '_for_' + self.name
+                                                        # Should we handle runtime params?
+                                                             # params={INITIALIZER: self.previous_input,
+                                                             #         INTEGRATION_TYPE: ADAPTIVE,
+                                                             #         NOISE: self.noise,
+                                                             #         RATE: self.time_constant}
+                                                             # context=context
+                                                             # name=Integrator.componentName + '_for_' + self.name
                                                              )
+
 
         elif time_scale is TimeScale.TRIAL:
 
@@ -656,29 +669,29 @@ class TransferMechanism(ProcessingMechanism_Base):
     #     """
     #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for TransferMechanism
     #
-    # @property
-    # def range(self):
-    #     return self._range
-    #
-    #
-    # @range.setter
-    # def range(self, value):
-    #     self._range = value
-    #
-    # # MODIFIED 4/17/17 NEW:
-    # @property
-    # def noise (self):
-    #     return self.integrator_function.noise
-    #
-    # @noise.setter
-    # def noise(self, value):
-    #     self.integrator_function.noise = value
-    #
-    # @property
-    # def time_constant(self):
-    #     return self.integrator_function.rate
-    #
-    # @time_constant.setter
-    # def time_constant(self, value):
-    #     self.integrator_function.rate = value
-    # # # MODIFIED 4/17/17 END
+    @property
+    def range(self):
+        return self._range
+
+
+    @range.setter
+    def range(self, value):
+        self._range = value
+
+    # MODIFIED 4/17/17 NEW:
+    @property
+    def noise (self):
+        return self._noise
+
+    @noise.setter
+    def noise(self, value):
+        self._noise = value
+
+    @property
+    def time_constant(self):
+        return self._time_constant
+
+    @time_constant.setter
+    def time_constant(self, value):
+        self._time_constant = value
+    # # MODIFIED 4/17/17 END
