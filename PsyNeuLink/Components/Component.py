@@ -1838,7 +1838,7 @@ class Component(object):
         if isinstance(param_spec, ParamValueProjection):
             value =  param_spec.value
         elif (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION} or
+                (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING} or
                      isinstance(param_spec[1], Projection) or
                      (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
               ):
