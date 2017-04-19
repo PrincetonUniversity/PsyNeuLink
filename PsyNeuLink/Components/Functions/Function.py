@@ -2693,15 +2693,7 @@ class Integrator(
         # Reassign to kWInitializer in case default value was overridden
         self.previous_value = self.initializer
 
-        # Flag self as AUTO_DEPENDENT and any its owners up the hierarchy
         self.auto_dependent = True
-        while owner is not None:
-            try:
-                owner.auto_dependent = True
-                owner = self.owner.owner
-
-            except AttributeError:
-                owner = None
 
     def _validate_params(self, request_set, target_set=None, context=None):
 

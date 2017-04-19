@@ -528,7 +528,7 @@ class Component(object):
     # * kwComponentCategory (below) is used as placemarker for Component.Function class; replaced in __init__ below
     #              (can't reference own class directly class block)
     requiredParamClassDefaultTypes = {}
-    paramClassDefaults = {AUTO_DEPENDENT: False}
+    paramClassDefaults = {}
     #endregion
 
     def __init__(self,
@@ -569,6 +569,8 @@ class Component(object):
         # These insure that subclass values are preserved, while allowing them to be referred to below
         self.variableInstanceDefault = None
         self.paramInstanceDefaults = {}
+
+        self._auto_dependent = False
 
         # self.componentName = self.componentType
         try:
@@ -788,7 +790,7 @@ class Component(object):
         default = lambda val : list(sig.parameters.values())[list(sig.parameters.keys()).index(val)].default
 
         def parse_arg(arg):
-            # Resolves the string value of any args that use keywords as their name
+            # Resolve the string value of any args that use keywords as their name
             try:
                 name = eval(arg)
             except NameError:
@@ -1398,10 +1400,27 @@ class Component(object):
 
         # VALIDATE PARAMS
 
-        # if request_set has been passed or created then validate and, if OK, assign to targets
+        # if request_set has been passed or created then validate and, if OK, assign params to target_set
         if request_set:
+
+            # MODIFIED 4/18/17 NEW:
+            # For params that are a ParamValueProjection or 2-item tuple, extract the value for validation below
+            from PsyNeuLink.Components.ShellClasses import ParamValueProjection
+            extracted_params = {}
+            for param_name, param_value in request_set.items():
+                if isinstance(param_value, (ParamValueProjection, tuple)):
+                    extracted_params[param_name] = request_set[param_name]
+                    param_value = self._get_param_value_from_tuple(param_value)
+                    request_set[param_name] = param_value
+            # MODIFIED 4/18/17 END NEW
+
             self._validate_params(request_set, target_set, context=context)
-            # Variable passed validation, so assign as instance_default
+
+            # MODIFIED 4/18/17 NEW:
+            # Reinstate the tuples w/ values that were extracted
+            target_set.update(extracted_params)
+            TEST = True
+            # MODIFIED 4/18/17 END NEW
 
 
     def assign_params(self, request_set=None, context=None):
@@ -1718,19 +1737,11 @@ class Component(object):
                     target_set[param_name] = param_value()
                     continue
 
-            # Value is a ParamValueProjection or 2-item tuple, so extract its value for validation below
-            if isinstance(param_value, (ParamValueProjection, tuple)):
-                param_value = self._get_param_value_from_tuple(param_value)
-
-            # MODIFIED 12/11/16 OLD:  NO LONGER NEED AS "LISTIFICATION" NOW OCCURS IN assign_args_to_param_dicts
-            # # If it is a state specification for a mechanism with a single item, convert to list format
-            # if param_name in {INPUT_STATES, OUTPUT_STATES}:
-            #     from PsyNeuLink.Components.States.State import State_Base
-            #     if (isinstance(param_value, (str, State_Base, dict)) or
-            #             is_numeric(param_value) or
-            #             (inspect.isclass(param_value) and issubclass(param_value, State_Base))):
-            #         param_value = [param_value]
-            #         # request_set[param_name] = [param_value]
+            # # MODIFIED 4/18/17 OLD:
+            # # Value is a ParamValueProjection or 2-item tuple extract its value for validation below
+            # if isinstance(param_value, (ParamValueProjection, tuple)):
+            #     param_value = self._get_param_value_from_tuple(param_value)
+            # MODIFIED 4/18/17 END
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
@@ -1837,12 +1848,16 @@ class Component(object):
 
         if isinstance(param_spec, ParamValueProjection):
             value =  param_spec.value
+
+        # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
         elif (isinstance(param_spec, tuple) and len(param_spec) is 2 and
                 (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION} or
                      isinstance(param_spec[1], Projection) or
                      (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
               ):
             value =  param_spec[0]
+
+        # Otherwise, just return the tuple
         else:
             value = param_spec
 
@@ -2326,6 +2341,23 @@ class Component(object):
     @runtimeParamStickyAssignmentPref.setter
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
+
+    @property
+    def auto_dependent(self):
+        return self._auto_dependent
+
+    @auto_dependent.setter
+    def auto_dependent(self, value):
+        """Assign auto_dependent status to component and any of its owners up the hierarchy
+        """
+        owner = self
+        while owner is not None:
+            try:
+                owner._auto_dependent = value
+                owner = self.owner.owner
+
+            except AttributeError:
+                owner = None
 
 COMPONENT_BASE_CLASS = Component
 
