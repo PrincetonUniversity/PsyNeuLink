@@ -1419,7 +1419,7 @@ class EVCMechanism(ControlMechanism_Base):
         # Get cost of each controlSignal
         for control_signal in self.controlSignals:
             self.controlSignalCosts = np.append(self.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
-
+M
     # The following implementation of function attributes as properties insures that even if user sets the value of a
     #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.
     # This is done to insure they can be called by value_function in the same way as the defaults
