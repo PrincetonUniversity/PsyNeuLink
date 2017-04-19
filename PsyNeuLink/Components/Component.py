@@ -1823,12 +1823,11 @@ class Component(object):
 
 
             # If param is a function_type, allow any other function_type
-            # MODIFIED 1/9/16 NEW:
             elif callable(param_value):
                 target_set[param_name] = param_value
-            # MODIFIED 1/9/16 END
             elif callable(param_value.function):
                 target_set[param_name] = param_value
+
             # Parameter is not a valid type
             else:
                 if type(self.paramClassDefaults[param_name]) is type:
