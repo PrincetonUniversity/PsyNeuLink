@@ -574,7 +574,6 @@ class DDM(ProcessingMechanism_Base):
                  name=None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs:is_pref_set=None,
-                 initial_point=0,
                  thresh=0,
                  context=componentType+INITIALIZING
     ):
@@ -594,7 +593,6 @@ class DDM(ProcessingMechanism_Base):
 
             default_input_value = 0.0
 
-        self.starting_point = initial_point
         self.threshold = thresh
 
         super(DDM, self).__init__(variable=default_input_value,
@@ -782,9 +780,9 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
             if self.function_params['integration_type'] == 'diffusion':
-                result = self.function(context=context)
-
-                if abs(result - self.starting_point) >= self.threshold:
+                result = self.function(self.variable, context=context)
+                print(result)
+                if abs(result) >= self.threshold:
                      self.is_finished = True
 
                 return np.array([result,[0.0],[0.0],[0.0]])
