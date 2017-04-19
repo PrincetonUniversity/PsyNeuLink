@@ -508,6 +508,7 @@ RATE = 'rate'
 SCALE = 'scale'
 NOISE = 'noise'
 
+AUTO_DEPENDENT='auto_dependent'
 DRIFT_RATE = 'drift_rate'
 INTEGRATOR_FUNCTION = 'integrator_function'
 INTEGRATION_TYPE = "integration_type"
