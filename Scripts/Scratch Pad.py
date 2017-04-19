@@ -10,7 +10,7 @@ class ScratchPadError(Exception):
 
 # from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Functions.Function import Linear
+# from PsyNeuLink.Components.Functions.Function import Linear
 # from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 # from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 # from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
@@ -22,20 +22,82 @@ from PsyNeuLink.Components.Functions.Function import Linear
 # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 # from PsyNeuLink.Components.States.OutputState import OutputState
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
+from PsyNeuLink.Components.Process import Process, Process_Base, process
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 
-#region TEST ReadOnlyOrderedDict
+#region TEST Multipe Initis
 
-from collections import UserDict, OrderedDict
+# my_process = process()
+# print(my_process.name)
+# my_process = process()
+# print(my_process.name)
+# my_process = process()
+# print(my_process.name)
+# my_process = process()
+# print(my_process.name)
 
-# class ReadOnlyOrderedDict(OrderedDict):
-#     def __init__(self, dict=None, **kwargs):
+# my_process = Process_Base()
+# print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
+
+#endregion
+
+# #region TEST ReadOnlyOrderedDict
+#
+# from collections import UserDict, OrderedDict
+#
+# # class ReadOnlyOrderedDict(OrderedDict):
+# #     def __init__(self, dict=None, **kwargs):
+# #         UserDict.__init__(self, dict, **kwargs)
+# #         self._ordered_keys = []
+# #         for key in list(dict.keys()):
+# #             self._ordered_keys.append(key)
+# #         TEST = True
+# #     def __setitem__(self, key, item):
+# #         raise TypeError
+# #     def __delitem__(self, key):
+# #         raise TypeError
+# #     def clear(self):
+# #         raise TypeError
+# #     def pop(self, key, *args):
+# #         raise TypeError
+# #     def popitem(self):
+# #         raise TypeError
+# #
+# #     def update(self, dict=None):
+# #         if dict is None:
+# #             pass
+# #         elif isinstance(dict, UserDict):
+# #             self.data = dict.data
+# #         elif isinstance(dict, type({})):
+# #             self.data = dict
+# #         else:
+# #             raise TypeError
+# #
+# #     def okeys(self):
+# #         return self._ordered_keys
+# #
+# #     # def __setitem__(self, key, value):
+# #     #     self.data[key] = item
+# #     #     self._ordered_keys.append(key)
+# #
+# # x = ReadOnlyOrderedDict(OrderedDict({'hello':1, 'goodbye':2}))
+# # print(x.okeys())
+#
+#
+# # Ordered UserDict
+# class ReadOnlyOrderedDict(UserDict):
+#     def __init__(self, dict=None, name=None, **kwargs):
+#         self.name = name or self.__class__.__name__
 #         UserDict.__init__(self, dict, **kwargs)
 #         self._ordered_keys = []
-#         for key in list(dict.keys()):
-#             self._ordered_keys.append(key)
-#         TEST = True
 #     def __setitem__(self, key, item):
-#         raise TypeError
+#         raise ScratchPadError("{} is read-only".format(self.name))
 #     def __delitem__(self, key):
 #         raise TypeError
 #     def clear(self):
@@ -44,91 +106,53 @@ from collections import UserDict, OrderedDict
 #         raise TypeError
 #     def popitem(self):
 #         raise TypeError
-#
-#     def update(self, dict=None):
-#         if dict is None:
-#             pass
-#         elif isinstance(dict, UserDict):
-#             self.data = dict.data
-#         elif isinstance(dict, type({})):
-#             self.data = dict
-#         else:
-#             raise TypeError
-#
-#     def okeys(self):
+#     def __additem__(self, key, value):
+#         self.data[key] = value
+#         if not key in self._ordered_keys:
+#             self._ordered_keys.append(key)
+#     def keys(self):
 #         return self._ordered_keys
 #
-#     # def __setitem__(self, key, value):
-#     #     self.data[key] = item
-#     #     self._ordered_keys.append(key)
+# x = ReadOnlyOrderedDict()
+# x.__additem__('hello',1)
+# x.__additem__('hello',2)
+# x.__additem__('goodbye',2)
+# print(x.keys())
+# for key in x.keys():
+#     print(x[key])
+# # x['new item']=3
 #
-# x = ReadOnlyOrderedDict(OrderedDict({'hello':1, 'goodbye':2}))
-# print(x.okeys())
-
-
-# Ordered UserDict
-class ReadOnlyOrderedDict(UserDict):
-    def __init__(self, dict=None, name=None, **kwargs):
-        self.name = name or self.__class__.__name__
-        UserDict.__init__(self, dict, **kwargs)
-        self._ordered_keys = []
-    def __setitem__(self, key, item):
-        raise ScratchPadError("{} is read-only".format(self.name))
-    def __delitem__(self, key):
-        raise TypeError
-    def clear(self):
-        raise TypeError
-    def pop(self, key, *args):
-        raise TypeError
-    def popitem(self):
-        raise TypeError
-    def __additem__(self, key, value):
-        self.data[key] = value
-        if not key in self._ordered_keys:
-            self._ordered_keys.append(key)
-    def keys(self):
-        return self._ordered_keys
-
-x = ReadOnlyOrderedDict()
-x.__additem__('hello',1)
-x.__additem__('hello',2)
-x.__additem__('goodbye',2)
-print(x.keys())
-for key in x.keys():
-    print(x[key])
-# x['new item']=3
-
-# # ReadOnly UserDict
-# class ReadOnlyOrderedDict(OrderedDict):
-# 	def __setitem__(self, key, item): raise TypeError
-# 	def __delitem__(self, key): raise TypeError
-# 	def clear(self): raise TypeError
-# 	def pop(self, key, *args): raise TypeError
-# 	def popitem(self): raise TypeError
-# 	def __additem__(selfself, key, item):
-#
-#
-# 	def update(self, dict=None):
-# 		if dict is None:
-# 			pass
-# 		elif isinstance(dict, UserDict):
-# 			self.data = dict.data
-# 		elif isinstance(dict, type({})):
-# 			self.data = dict
-# 		else:
-# 			raise TypeError
-#
-# x = ReadOnlyDict({'hello':1, 'goodbye':2})
-# print(list(x.keys()))
-# # x['new'] = 4
-#
-#
-# # ReadOnly UserDict
-# x = ReadOnlyDict()
-# x['hello'] = 1
-# x['goodbye'] = 2
-# print(list(x.keys()))
-#
+# # # ReadOnly UserDict
+# # class ReadOnlyOrderedDict(OrderedDict):
+# # 	def __setitem__(self, key, item): raise TypeError
+# # 	def __delitem__(self, key): raise TypeError
+# # 	def clear(self): raise TypeError
+# # 	def pop(self, key, *args): raise TypeError
+# # 	def popitem(self): raise TypeError
+# # 	def __additem__(selfself, key, item):
+# #
+# #
+# # 	def update(self, dict=None):
+# # 		if dict is None:
+# # 			pass
+# # 		elif isinstance(dict, UserDict):
+# # 			self.data = dict.data
+# # 		elif isinstance(dict, type({})):
+# # 			self.data = dict
+# # 		else:
+# # 			raise TypeError
+# #
+# # x = ReadOnlyDict({'hello':1, 'goodbye':2})
+# # print(list(x.keys()))
+# # # x['new'] = 4
+# #
+# #
+# # # ReadOnly UserDict
+# # x = ReadOnlyDict()
+# # x['hello'] = 1
+# # x['goodbye'] = 2
+# # print(list(x.keys()))
+# #
 
 #endregion
 
