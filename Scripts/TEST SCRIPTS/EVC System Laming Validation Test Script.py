@@ -55,14 +55,15 @@ RewardProcess = process(
     prefs = process_prefs,
     name = 'RewardProcess')
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-TEST_INTEGRATOR_MECH_A = IntegratorMechanism()
-TEST_INTEGRATOR_MECH_B = IntegratorMechanism()
-TEST_TRANSFER_MECH_A = TransferMechanism(range=((0,1), CONTROL))
-print(id(TEST_TRANSFER_MECH_A.integrator_function))
-TEST_TRANSFER_MECH_B = TransferMechanism()
-print(id(TEST_TRANSFER_MECH_A.integrator_function))
-print(id(TEST_TRANSFER_MECH_B.integrator_function))
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+# TEST_INTEGRATOR_MECH_A = IntegratorMechanism()
+# TEST_INTEGRATOR_MECH_B = IntegratorMechanism()
+TEST_TRANSFER_MECH_A = TransferMechanism(noise=(0.1, CONTROL),
+                                         name = 'TEST TRANSFER MECH A')
+# print(id(TEST_TRANSFER_MECH_A.integrator_function))
+# TEST_TRANSFER_MECH_B = TransferMechanism()
+# print(id(TEST_TRANSFER_MECH_A.integrator_function))
+# print(id(TEST_TRANSFER_MECH_B.integrator_function))
 
 
 # System:

@@ -500,7 +500,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # If function is a logistic, and range has not been specified, bound it between 0 and 1
         if ((isinstance(self.function, Logistic) or
                  (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
-                not list(self.range)):
+                self.range is None):
             self.range = (0,1)
 
         super()._instantiate_parameter_states(context=context)
