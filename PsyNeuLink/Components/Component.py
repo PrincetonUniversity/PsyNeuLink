@@ -1405,11 +1405,17 @@ class Component(object):
 
             # MODIFIED 4/18/17 NEW:
             # For params that are a ParamValueProjection or 2-item tuple, extract the value for validation below
+            # IMPLEMENTATION NOTE:  Do this here rather than in _validate_params, as it needs to be done before
+            #                       any override of _validate_params, which (should not, but may) process params
+            #                       before calling super()._validate_params
             from PsyNeuLink.Components.ShellClasses import ParamValueProjection
+            from PsyNeuLink.Components.Functions.Function import Function_Base
             extracted_params = {}
             for param_name, param_value in request_set.items():
                 if isinstance(param_value, (ParamValueProjection, tuple)):
-                    extracted_params[param_name] = request_set[param_name]
+                    # Don't bother keeping tuple for Function, as they are not allowed to have projections
+                    if not isinstance(self, Function_Base):
+                        extracted_params[param_name] = request_set[param_name]
                     param_value = self._get_param_value_from_tuple(param_value)
                     request_set[param_name] = param_value
             # MODIFIED 4/18/17 END NEW
@@ -1720,18 +1726,12 @@ class Component(object):
                 and not param_name is FUNCTION):
                 param_value = self.paramClassDefaults[param_name]
 
-            # If self is a Function:
-            #    if param is a tuple, get its value (since Functions can't take projection specifications)
-            #    if param is a class ref for function, instantiate it as the function
+            # If self is a Function and param is a class ref for function, instantiate it as the function
             from PsyNeuLink.Components.Functions.Function import Function_Base
             from PsyNeuLink.Components.ShellClasses import ParamValueProjection
-            if isinstance(self, Function_Base):
-                if isinstance(param_value, (ParamValueProjection, tuple)):
-                    # Get value and assign to param_value for compatibility check below
-                    param_value = self._get_param_value_from_tuple(param_value)
-                # Value is a class (presumably a Function), so instantiate it as value
-                elif (inspect.isclass(param_value) and
-                          issubclass(param_value, self.paramClassDefaults[param_name])):
+            if (isinstance(self, Function_Base) and
+                    inspect.isclass(param_value) and
+                    issubclass(param_value, self.paramClassDefaults[param_name])):
                     # Assign instance to target and move on
                     #  (compatiblity check no longer needed and can't handle function)
                     target_set[param_name] = param_value()
@@ -1850,7 +1850,7 @@ class Component(object):
 
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
         elif (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION} or
+                (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING} or
                      isinstance(param_spec[1], Projection) or
                      (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
               ):
