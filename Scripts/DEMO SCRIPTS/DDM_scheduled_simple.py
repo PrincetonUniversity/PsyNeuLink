@@ -16,7 +16,7 @@ process_prefs = {
 o = TransferMechanism(
     name='origin',
     default_input_value = [0],
-    function=Linear(slope=1.0),
+    function=Linear(slope=.5),
 )
 
 ddm = DDM(
@@ -24,16 +24,15 @@ ddm = DDM(
         integration_type = DIFFUSION,
         noise=0.5
     ),
-    name='myddm',
+    name='ddm',
     time_scale=TimeScale.TIME_STEP,
-    initial_point=0,
     thresh=10
 )
 
 term = TransferMechanism(
     name='terminal',
     default_input_value = [0],
-    function=Linear(slope=1.0),
+    function=Linear(slope=2.0),
 )
 
 p = process(

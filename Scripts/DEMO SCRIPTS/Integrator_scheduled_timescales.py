@@ -2,10 +2,9 @@ from PsyNeuLink.Components.System import *
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-
 from PsyNeuLink.Components.Functions.Function import Linear, Integrator
 from PsyNeuLink.scheduling.Scheduler import Scheduler
-from PsyNeuLink.scheduling.condition import *
+from PsyNeuLink.scheduling.condition import AfterNCalls, Any, AtPass, EveryNCalls
 
 process_prefs = {
     REPORT_OUTPUT_PREF: True,
@@ -16,6 +15,7 @@ A = TransferMechanism(
     name='A',
     default_input_value = [0],
     function=Linear(slope=2.0),
+    prefs={REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)}
 )
 
 B = IntegratorMechanism(
@@ -40,6 +40,7 @@ D = TransferMechanism(
     name='D',
     default_input_value = [0],
     function=Linear(slope=1.0),
+    prefs={REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)}
 )
 
 p = process(
