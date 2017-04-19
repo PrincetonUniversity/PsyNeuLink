@@ -42,6 +42,7 @@ p = process(
     prefs=process_prefs
 )
 
+# origin → DDM → terminal
 s = system(
     processes=[p],
     name='s',
@@ -50,6 +51,7 @@ s = system(
 stim_list = {o: [[1]]}
 
 s.scheduler = Scheduler(system=s)
+# origin and ddm have default condition of Always - run at every chance
 s.scheduler.add_condition(term, WhenFinished(ddm))
 
 term_conds = {TimeScale.TRIAL: AfterNCalls(term, 1)}

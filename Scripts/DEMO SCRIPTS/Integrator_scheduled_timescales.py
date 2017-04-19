@@ -56,6 +56,11 @@ q = process(
     prefs=process_prefs
 )
 
+#   A
+#  ↙︎ ↘︎
+# B   C
+#  ↘︎ ↙︎
+#   D
 s = system(
     processes=[p, q],
     name = 's'
@@ -65,6 +70,7 @@ stim_list = {A: [[1]]}
 
 s.scheduler = Scheduler(system=s)
 s.scheduler.add_condition(A, Any(AtPass(0), EveryNCalls(D, 1)))
+# B has default condition of Always - run at every chance
 s.scheduler.add_condition(C, EveryNCalls(B, 5))
 s.scheduler.add_condition(D, EveryNCalls(C, 1))
 
