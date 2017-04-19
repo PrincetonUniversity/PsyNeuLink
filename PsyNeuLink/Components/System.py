@@ -1955,7 +1955,7 @@ class System_Base(System):
                     system_input_state = next(projection.sender for projection in input_state.receivesFromProjections
                                               if isinstance(projection.sender, SystemInputState))
                     if system_input_state:
-                        print("SYSTEM_INPUT_STATE.VALUE", system_input_state.value)
+                        # print("SYSTEM_INPUT_STATE.VALUE", system_input_state.value)
                         system_input_state.value = input[i][j]
                     else:
                         raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
