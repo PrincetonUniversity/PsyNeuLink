@@ -860,12 +860,14 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             return
     # Allow tuples (could be spec that includes a projection or ModulationOperation)
     elif isinstance(param_value, tuple):
+        # # MODIFIED 4/18/17 NEW:
+        # # FIX: EXTRACT VALUE HERE (AS IN Component.__init__?? [4/18/17]
+        # param_value = owner._get_param_value_from_tuple(param_value)
+        # # MODIFIED 4/18/17 END
         pass
     # Allow if it is a keyword for a parameter
     elif isinstance(param_value, str) and param_value in parameter_keywords:
         pass
-    # elif param_value is NotImplemented:
-    #     return
     # Exclude function (see docstring above)
     elif param_name is FUNCTION:
         return
@@ -879,7 +881,6 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             # Assignment of ParameterState for Component objects, function or method are not currently supported
             if isinstance(function_param_value, (function_type, method_type, Component)):
                 continue
-            # MODIFIED 2/22/17 NEW:
             # IMPLEMENTATION NOTE:
             # The following is necessary since, if ANY parameters of a function are specified, entries are made
             #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values

@@ -1805,10 +1805,11 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function._instantiate_function()
     PARAM_SPEC = 0
     PROJECTION_SPEC = 1
-    #region 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
+    #region
+    # 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
-    #    projection specification (MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION or class ref to one of those), allow it
-    #       (though should use ParamValueProjection)
+    #    projection specification (MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL or LEARNING,
+    #    or class ref to one of those), allow it (though should use ParamValueProjection)
     # - check that first item matches constraint_value and assign to state_variable
     # - assign second item as projection to STATE_PARAMS:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
