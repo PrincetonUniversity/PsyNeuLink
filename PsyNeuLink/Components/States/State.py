@@ -1818,7 +1818,11 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #      since it could just be a numeric tuple used for the variable of a state;
     #      could check string against ProjectionRegistry (as done in _parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
-            (state_spec[PROJECTION_SPEC] in {MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION} or
+            (state_spec[PROJECTION_SPEC] in {MAPPING_PROJECTION,
+                                             CONTROL_PROJECTION,
+                                             LEARNING_PROJECTION,
+                                             CONTROL,
+                                             LEARNING} or
                  isinstance(state_spec[PROJECTION_SPEC], Projection) or
                  (inspect.isclass(state_spec[PROJECTION_SPEC]) and issubclass(state_spec[PROJECTION_SPEC], Projection)))
         ):
