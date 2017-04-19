@@ -385,8 +385,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         if default_input_value is None:
             default_input_value = Transfer_DEFAULT_BIAS
 
-        self.integrator_function = Integrator()
-
         super(TransferMechanism, self).__init__(variable=default_input_value,
                                                 params=params,
                                                 name=name,
@@ -451,6 +449,13 @@ class TransferMechanism(ProcessingMechanism_Base):
                 if not range[0] < range[1]:
                     raise TransferError("The first item of the range parameter ({}) must be less than the second".
                                         format(range, self.name))
+
+        # self.integrator_function = Integrator(
+        #     # variable_default=self.default_input_value,
+        #                                       initializer = self.variable,
+        #                                       noise = self.noise,
+        #                                       rate = self.time_constant,
+        #                                       integration_type= ADAPTIVE)
 
 
     def _validate_noise(self, noise):
@@ -584,12 +589,13 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Update according to time-scale of integration
         if time_scale is TimeScale.TIME_STEP:
-            current_input = self.integrator_function.function(self.inputState.value,
-                                                              params = {INITIALIZER: self.previous_input,
-                                                                        NOISE: noise,
-                                                                        RATE: time_constant,
-                                                                        INTEGRATION_TYPE: ADAPTIVE},
-                                                              context=context
+            self.integrator_function = Integrator()
+            current_input = self.integrator_function.execute(self.inputState.value,
+                                                             params={INITIALIZER:self.previous_input,
+                                                                     INTEGRATION_TYPE: ADAPTIVE,
+                                                                     NOISE: self.noise,
+                                                                     RATE: self.time_constant}
+                                                              # context=context
                                                             # name=Integrator.componentName + '_for_' + self.name
                                                              )
 
@@ -649,30 +655,30 @@ class TransferMechanism(ProcessingMechanism_Base):
     #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
     #     """
     #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for TransferMechanism
-
-    @property
-    def range(self):
-        return self._range
-
-
-    @range.setter
-    def range(self, value):
-        self._range = value
-
-    # MODIFIED 4/17/17 NEW:
-    @property
-    def noise (self):
-        return self.integrator_function.noise
-
-    @noise.setter
-    def noise(self, value):
-        self.integrator_function.noise = value
-
-    @property
-    def time_constant(self):
-        return self.integrator_function.rate
-
-    @time_constant.setter
-    def time_constant(self, value):
-        self.integrator_function.rate = value
-    # # MODIFIED 4/17/17 END
+    #
+    # @property
+    # def range(self):
+    #     return self._range
+    #
+    #
+    # @range.setter
+    # def range(self, value):
+    #     self._range = value
+    #
+    # # MODIFIED 4/17/17 NEW:
+    # @property
+    # def noise (self):
+    #     return self.integrator_function.noise
+    #
+    # @noise.setter
+    # def noise(self, value):
+    #     self.integrator_function.noise = value
+    #
+    # @property
+    # def time_constant(self):
+    #     return self.integrator_function.rate
+    #
+    # @time_constant.setter
+    # def time_constant(self, value):
+    #     self.integrator_function.rate = value
+    # # # MODIFIED 4/17/17 END
