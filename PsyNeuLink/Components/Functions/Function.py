@@ -84,8 +84,8 @@ Structure
 
 Every Function has a `variable <Function_Base.variable>` that provides the input to its
 `function <Function_Base.function>` method.  It's core attribute is its `function <Function_Base.function>` attribute,
-that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or 
-method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be 
+that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or
+method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be
 "turtles" all the way down!).  A Function also has an attribute for each of the parameters of its `function
 <Function_Base.function>`.   If a Function has been assigned to another component, then it also has an `owner
 <Function_Base.owner>` attribute that refers to that component. Each of the Function's attributes is also assigned
@@ -2893,7 +2893,7 @@ class Integrator(
         elif integration_type is ADAPTIVE:
             value = (1 - rate) * previous_value + rate * new_value + noise
         elif integration_type is DIFFUSION:
-            value = previous_value + rate * previous_value * time_step_size + np.sqrt(time_step_size * noise) * np.random.normal()
+            value = previous_value + rate * new_value * time_step_size + np.sqrt(time_step_size * noise) * np.random.normal()
         else:
             value = new_value
 
@@ -3138,7 +3138,7 @@ class BogaczEtAl(
     ----------
 
     variable : number or 1d np.array
-        holds initial value assigned to :keyword:`variable_default` argument;  
+        holds initial value assigned to :keyword:`variable_default` argument;
         ignored by `function <BogaczEtal.function>`.
 
     drift_rate : float or 1d np.array
@@ -3156,7 +3156,7 @@ class BogaczEtAl(
         Gaussian random process).
 
     t0 : float or 1d np.array
-        determines the assumed non-decision time to determine the response time returned by the solution. 
+        determines the assumed non-decision time to determine the response time returned by the solution.
 
     bias : float or 1d np.array
         normalized starting point:
