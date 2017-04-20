@@ -1,3 +1,5 @@
+import logging
+
 from PsyNeuLink.Components.System import *
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
@@ -6,8 +8,10 @@ from PsyNeuLink.Components.Functions.Function import Linear, Integrator
 from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.scheduling.condition import AfterNCalls, Any, AtPass, EveryNCalls
 
+logger = logging.getLogger(__name__)
+
 process_prefs = {
-    REPORT_OUTPUT_PREF: True,
+    REPORT_OUTPUT_PREF: False,
     VERBOSE_PREF: False
 }
 
@@ -15,7 +19,7 @@ A = TransferMechanism(
     name='A',
     default_input_value = [0],
     function=Linear(slope=2.0),
-    prefs={REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)}
+    prefs={REPORT_OUTPUT_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE)}
 )
 
 B = IntegratorMechanism(
@@ -24,7 +28,8 @@ B = IntegratorMechanism(
     function=Integrator(
         rate=.5,
         integration_type=SIMPLE
-    )
+    ),
+    prefs={REPORT_OUTPUT_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE)}
 )
 
 C = IntegratorMechanism(
@@ -33,14 +38,15 @@ C = IntegratorMechanism(
     function=Integrator(
         rate=.5,
         integration_type=SIMPLE
-    )
+    ),
+    prefs={REPORT_OUTPUT_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE)}
 )
 
 D = TransferMechanism(
     name='D',
     default_input_value = [0],
     function=Linear(slope=1.0),
-    prefs={REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)}
+    prefs={REPORT_OUTPUT_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE)}
 )
 
 p = process(
@@ -80,4 +86,5 @@ results = s.run(
     inputs=stim_list,
     termination_conditions=term_conds
 )
-print(results)
+logger.info('Executed in order: {0}'.format(s.scheduler.execution_list))
+logger.info('System result: {0}'.format(results))

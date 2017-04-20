@@ -1,3 +1,5 @@
+import logging
+
 from PsyNeuLink.Components.System import *
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
@@ -7,6 +9,8 @@ from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.scheduling.condition import AfterNCalls, WhenFinished
 from PsyNeuLink.Globals.Keywords import DIFFUSION
 from PsyNeuLink.Globals.TimeScale import TimeScale
+
+logger = logging.getLogger(__name__)
 
 process_prefs = {
     REPORT_OUTPUT_PREF: True,
@@ -60,4 +64,4 @@ results = s.run(
     inputs=stim_list,
     termination_conditions=term_conds
 )
-print(results)
+logger.info('System result: {0}'.format(results))

@@ -322,10 +322,13 @@ After each execution of the mechanism:
 Class Reference
 ---------------
 """
+import logging
 
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import *
+
+logger = logging.getLogger(__name__)
 
 # DDM outputs (used to create and name outputStates):
 DDM_DECISION_VARIABLE = "DDM_decision_variable"
@@ -783,7 +786,8 @@ class DDM(ProcessingMechanism_Base):
                 result = self.function(self.variable, context=context)
                 print(result)
                 if abs(result) >= self.threshold:
-                     self.is_finished = True
+                    logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
+                    self.is_finished = True
 
                 return np.array([result,[0.0],[0.0],[0.0]])
             else:
