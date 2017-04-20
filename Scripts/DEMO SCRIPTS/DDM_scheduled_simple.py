@@ -1,12 +1,16 @@
+import logging
+
 from PsyNeuLink.Components.System import *
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Functions.Function import Linear, Integrator
 from PsyNeuLink.scheduling.Scheduler import Scheduler
-from PsyNeuLink.scheduling.condition import AfterNCalls, WhenFinished
+from PsyNeuLink.scheduling.condition import AfterNCalls, AtPass, WhenFinished
 from PsyNeuLink.Globals.Keywords import DIFFUSION
 from PsyNeuLink.Globals.TimeScale import TimeScale
+
+logger = logging.getLogger(__name__)
 
 process_prefs = {
     REPORT_OUTPUT_PREF: True,
@@ -51,7 +55,8 @@ s = system(
 stim_list = {o: [[1]]}
 
 s.scheduler = Scheduler(system=s)
-# origin and ddm have default condition of Always - run at every chance
+s.scheduler.add_condition(o, AtPass(0))
+# ddm has default condition of Always - run at every chance
 s.scheduler.add_condition(term, WhenFinished(ddm))
 
 term_conds = {TimeScale.TRIAL: AfterNCalls(term, 1)}
@@ -60,4 +65,4 @@ results = s.run(
     inputs=stim_list,
     termination_conditions=term_conds
 )
-print(results)
+logger.info('System result: {0}'.format(results))

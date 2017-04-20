@@ -389,12 +389,15 @@ Class Reference
 
 """
 
+import logging
+
 from collections import OrderedDict
 from inspect import isclass
 
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 
+logger = logging.getLogger(__name__)
 MechanismRegistry = {}
 
 class MonitoredOutputStatesOption(AutoNumber):
@@ -1386,7 +1389,6 @@ class Mechanism_Base(Mechanism):
                                              time_scale=time_scale,
                                              context=context)
                 return np.atleast_2d(return_value)
-
 
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
