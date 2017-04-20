@@ -784,6 +784,7 @@ class System_Base(System):
         self.current_targets = None
         self.learning = False
         self.scheduler = scheduler
+        self.scheduler_learning = None
 
         register_category(entry=self,
                           base_class=System_Base,
@@ -2018,6 +2019,7 @@ class System_Base(System):
 
         if self.scheduler is None:
             raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, must be initialized before execution'.format(self.name))
+        logger.debug('{0}.scheduler termination conditions: {1}'.format(self, termination_conditions))
         for next_execution_set in self.scheduler.run(termination_conds=termination_conditions):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             for mechanism in next_execution_set:
@@ -2043,6 +2045,8 @@ class System_Base(System):
         #    (i.e., after execution of the pathways, but before learning)
         # Note:  this accomodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
+        # import code
+        # code.interact(local=locals())
         if isinstance(self.targets, function_type):
             self.current_targets = self.targets()
 
@@ -2202,7 +2206,11 @@ class System_Base(System):
         """
         if self.scheduler is None:
             self.scheduler = Scheduler(system=self)
+        if self.scheduler_learning is None:
+            self.scheduler_learning = Scheduler(nodes=self.learningExecutionList, toposort_ordering=self.learningGraph)
 
+        logger.debug(inputs)
+        logger.debug(termination_conditions)
         from PsyNeuLink.Globals.Run import run
         return run(self,
                    inputs=inputs,
