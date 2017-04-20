@@ -1,13 +1,4 @@
 import numpy as np
-
-class ScratchPadError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
-#
-#region DEBUG:
-
 # from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear
@@ -27,9 +18,28 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
 from PsyNeuLink.Components.System import system, System, System_Base
 
-#region TEST Multipe Initis
+
+class ScratchPadError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
+#
+
+
+#region TEST Multipe Inits
 
 # # WORKS:
+
+# my_mech = mechanism()
+# print(my_mech.name)
+# my_mech = mechanism()
+# print(my_mech.name)
+# my_mech = mechanism()
+# print(my_mech.name)
+# my_mech = mechanism()
+# print(my_mech.name)
+#
 # my_process = process()
 # print(my_process.name)
 # my_process = process()
@@ -40,34 +50,34 @@ from PsyNeuLink.Components.System import system, System, System_Base
 # print(my_process.name)
 
 # my_process = Process()
-
-# my_process = Process_Base()
-# print(my_process.name)
-# my_process = Process_Base()
 # print(my_process.name)
 
-# my_mech = mechanism()
-# print(my_mech.name)
-# my_mech = mechanism()
-# print(my_mech.name)
-# my_mech = mechanism()
-# print(my_mech.name)
-# my_mech = mechanism()
-# print(my_mech.name)
+# my_sys = system()
+# print(my_sys.name)
+# my_sys = system()
+# print(my_sys.name)
+# my_sys = system()
+# print(my_sys.name)
+# my_sys = system()
+# print(my_sys.name)
+
+# DOESN'T WORK:
+
+
 # my_mech = Mechanism()
+# print(my_mech.name)
+
 # my_mech = Mechanism_Base()
+# print(my_mech.name)
 
-my_sys = system()  # <- WORKS
-print(my_sys.name)
-my_sys = system()  # <- WORKS
-print(my_sys.name)
-my_sys = system()  # <- WORKS
-print(my_sys.name)
-my_sys = system()  # <- WORKS
-print(my_sys.name)
+my_process = Process_Base()
+print(my_process.name)
+my_process = Process_Base()
+print(my_process.name)
+
 # my_sys = System(variable_default=None, param_defaults=None)
-# my_sys = System_Base()
 
+# my_sys = System_Base()
 
 #endregion
 

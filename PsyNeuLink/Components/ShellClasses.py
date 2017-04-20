@@ -62,6 +62,39 @@ class System(ShellClass):
 
 
 class Process(ShellClass):
+    # def __init__(self,
+    #              variable_default,
+    #              param_defaults,
+    #              name=None,
+    #              prefs=None,
+    #              context=None):
+    #     if context is None:
+    #         from PsyNeuLink.Components.Process import process, DEFAULT_PROJECTION_MATRIX
+    #         process(default_input_value=variable_default,
+    #                 pathway=None,
+    #                 initial_values={},
+    #                 clamp_input=None,
+    #                 default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
+    #                 learning=None,
+    #                 learning_rate=None,
+    #                 target=None,
+    #                 params=param_defaults,
+    #                 name=name,
+    #                 prefs=prefs,
+    #                 context=None)
+    def __init__(self,
+                 variable_default=None,
+                 param_defaults=None,
+                 name=None,
+                 prefs=None,
+                 context=None):
+        if context is None:
+            raise ShellClassError("Can't call {} directly;  must use {}".format(self.__class__.__name__, 'process()'))
+        super().__init__(variable_default=variable_default,
+                         param_defaults=param_defaults,
+                         name=name,
+                         prefs=prefs,
+                         context=context)
     pass
 
 
