@@ -58,14 +58,8 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
-#
+# FIX: controlMechanism vs. controller in System??
 # FIX: 3 re-initializations crashes process and syste (also mechanism?)
-# FIX: EVC
-#        - costs vector EVCAuxiliary are not re-initailizaing with each simulation run
-# FIX: TransferMechanism:
-#         single instance of integrator_function getting assigned to all instances of mechanism
-# FIX: Mechanism:
-#         mechanims that validate params (such as TransferMechanism) trip on use of tuple to specify CONTROL
 
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
 # FIX: WHY IS NOISE COMMENTED OUT IN TransferMechanism._validate_params()??

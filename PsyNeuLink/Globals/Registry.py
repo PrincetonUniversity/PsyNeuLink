@@ -101,14 +101,11 @@ def register_category(entry,
     :return:
     """
 
-    if not issubclass(base_class, object):
-        raise RegistryError("base_class ({0}) for registry must be a subclass of Component".format(base_class))
-
-    # if registry is NotImplemented:
-    #     try:
-    #         registry = base_class.registry
-    #     except AttributeError:
-    #         raise RegistryError("{0} must be a dict".format(registry))
+    from PsyNeuLink.Components.Component import Component
+    from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceSet
+    if not issubclass(base_class, (Component, PreferenceSet)):
+        raise RegistryError("base_class ({0}) for registry must be a subclass of "
+                            "Component or PreferenceSet".format(base_class))
 
     if not isinstance(registry, dict):
         raise RegistryError("Registry ({0}) for {1} must be a dict".format(registry,base_class.__name__))
@@ -122,11 +119,14 @@ def register_category(entry,
     #     except AttributeError:
     #         raise RegistryError("sub_group_attr arg ({0}) must be an attribute of {1} ".
     #                             format(sub_group_attr,entry.__class__.__name__))
-    #
+
     # If entry is an instance (presumably of a component type of the base class):
     if isinstance(entry, base_class):
 
-        component_type_name = entry.__class__.__name__
+        try:
+            component_type_name = entry.componentType
+        except AttributeError:
+            component_type_name = entry.__class__.__name__
 
         # Component type is registered (i.e., there is an entry for component_type_name)
         if component_type_name in registry:
