@@ -13,10 +13,32 @@ import numpy as np
 # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 # from PsyNeuLink.Components.States.OutputState import OutputState
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
-from PsyNeuLink.Components.Process import Process, Process_Base, process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
-from PsyNeuLink.Components.System import system, System, System_Base
+# from PsyNeuLink.Components.Process import Process, Process_Base, process
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+# from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
+# from PsyNeuLink.Components.System import system, System, System_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+
+class ScratchPadError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
+#
+
+#region TEST whether function attribute assignment is used and "sticks"
+
+my_mech = IntegratorMechanism()
+# my_mech.function_object.rate = 2.0
+print(my_mech.execute())
+my_mech.function_object.rate = 0.9
+print(my_mech.execute())
+my_mech.function_object.rate = .75
+print(my_mech.function_object.rate)
+my_mech.function_object.rate = .2
+print(my_mech.execute())
+
+#endregion
 
 
 class ScratchPadError(Exception):
@@ -70,10 +92,10 @@ class ScratchPadError(Exception):
 # my_mech = Mechanism_Base()
 # print(my_mech.name)
 
-my_process = Process_Base()
-print(my_process.name)
-my_process = Process_Base()
-print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
 
 # my_sys = System(variable_default=None, param_defaults=None)
 
