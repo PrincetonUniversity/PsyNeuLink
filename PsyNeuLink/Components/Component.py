@@ -2363,10 +2363,24 @@ def make_property(name, default_value):
         # Update user_params dict with new value
         self.user_params.__additem__(name, val)
 
+        # Update parameterState.value if there is one
+        try:
+            if name in self.parameterStates:
+                self.parameterStates[name].baseValue = val
+        except AttributeError:
+            pass
+
         # If component is a Function and has an owner, update function_params dict for owner
         from PsyNeuLink.Components.Functions.Function import Function_Base
         if isinstance(self, Function_Base) and self.owner:
             self.owner.function_params.__additem__(name, val)
+
+            # Update value of owner's parameterState
+            try:
+                if name in self.owner.parameterStates:
+                    self.owner.parameterStates[name].baseValue = val
+            except AttributeError:
+                pass
 
 
     # Create the property
