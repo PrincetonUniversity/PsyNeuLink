@@ -650,8 +650,9 @@ class Component(object):
         self._instantiate_attributes_after_function(context=context)
         #endregion
 
-    # def __repr__(self):
-    #     return '({0} {1})'.format(type(self).__name__, self.name)
+    def __repr__(self):
+        #return '({0} {1})'.format(type(self).__name__, self.name)
+        return '{1}'.format(type(self).__name__, self.name)
 
 #endregion
 
