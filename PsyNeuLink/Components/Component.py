@@ -25,7 +25,7 @@ component objects.
 Creating a Component
 --------------------
 
-A Component is never created directly.  However, its __init__ method is always called when a subclass is instantiated;
+A Component is never created directly.  However, its __init__() method is always called when a subclass is instantiated;
 that, in turn, calls a standard set of methods (listed `below <Component_Methods>`) as part of the initialization 
 procedure.
 
@@ -570,6 +570,8 @@ class Component(object):
         self.variableInstanceDefault = None
         self.paramInstanceDefaults = {}
 
+        self._auto_dependent = False
+
         # self.componentName = self.componentType
         try:
             self.componentName = self.componentName or self.componentType
@@ -699,16 +701,6 @@ class Component(object):
 
         # self.paramsCurrent = self.paramInstanceDefaults
         self.paramsCurrent = self.paramInstanceDefaults.copy()
-        # MODIFIED 4/17/17 NEW:
-        # # Assign params to paramsCurrent in the order they were assigned in assign_args_to_param_dicts.
-        # #    IMPLEMENTATION NOTE:
-        # #    This is to insure that attributes are created for paramClassDefault entires before those in user_params,
-        # #    as attributes in user_params may refer (as properties) to ones in paramClassDefaults
-        # #    (for example, if user_params contains attributes of functions specified in paramClassDefaults,
-        # #     as in the case of the noise parameter of a TransferMechanism, that refers to its integrator_function)
-        # for param in self.paramInstanceDefaults.keys():
-        #     self.paramsCurrent[param] = self.paramInstanceDefaults[param]
-        # MODIFIED 4/17/17 END
 
         self.runtime_params_in_use = False
         #endregion
@@ -788,7 +780,7 @@ class Component(object):
         default = lambda val : list(sig.parameters.values())[list(sig.parameters.keys()).index(val)].default
 
         def parse_arg(arg):
-            # Resolves the string value of any args that use keywords as their name
+            # Resolve the string value of any args that use keywords as their name
             try:
                 name = eval(arg)
             except NameError:
@@ -931,7 +923,7 @@ class Component(object):
                         #                   "therefore runtime_params cannot be used".format(default(arg).__name__))
                     else:
                         raise ComponentError("Unrecognized object ({}) specified as function for {}".
-                                             format(fct, self.name))
+                                             format(function, self.name))
 
                     ignore_FUNCTION_PARAMS = True
 
@@ -1394,15 +1386,24 @@ class Component(object):
                         # MODIFIED 11/29/16 END
                         request_set[param_name].setdefault(dict_entry_name, dict_entry_value)
 
-
-
         # VALIDATE PARAMS
 
-        # if request_set has been passed or created then validate and, if OK, assign to targets
+        # if request_set has been passed or created then validate and, if OK, assign params to target_set
         if request_set:
+            # MODIFIED 4/18/17 NEW:
+            # For params that are a ParamValueProjection or 2-item tuple, extract the value
+            #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
+            #    which is used it instantiate the specified projections)
+            # IMPLEMENTATION NOTE:  Do this here rather than in _validate_params, as it needs to be done before
+            #                       any override of _validate_params, which (should not, but) may process params
+            #                       before calling super()._validate_params
+            from PsyNeuLink.Components.ShellClasses import ParamValueProjection
+            for param_name, param_value in request_set.items():
+                if isinstance(param_value, (ParamValueProjection, tuple)):
+                    param_value = self._get_param_value_from_tuple(param_value)
+                    request_set[param_name] = param_value
+            # MODIFIED 4/18/17 END NEW
             self._validate_params(request_set, target_set, context=context)
-            # Variable passed validation, so assign as instance_default
-
 
     def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
@@ -1701,36 +1702,22 @@ class Component(object):
                 and not param_name is FUNCTION):
                 param_value = self.paramClassDefaults[param_name]
 
-            # If self is a Function:
-            #    if param is a tuple, get its value (since Functions can't take projection specifications)
-            #    if param is a class ref for function, instantiate it as the function
+            # If self is a Function and param is a class ref for function, instantiate it as the function
             from PsyNeuLink.Components.Functions.Function import Function_Base
             from PsyNeuLink.Components.ShellClasses import ParamValueProjection
-            if isinstance(self, Function_Base):
-                if isinstance(param_value, (ParamValueProjection, tuple)):
-                    # Get value and assign to param_value for compatibility check below
-                    param_value = self._get_param_value_from_tuple(param_value)
-                # Value is a class (presumably a Function), so instantiate it as value
-                elif (inspect.isclass(param_value) and
-                          issubclass(param_value, self.paramClassDefaults[param_name])):
+            if (isinstance(self, Function_Base) and
+                    inspect.isclass(param_value) and
+                    issubclass(param_value, self.paramClassDefaults[param_name])):
                     # Assign instance to target and move on
                     #  (compatiblity check no longer needed and can't handle function)
                     target_set[param_name] = param_value()
                     continue
 
-            # Value is a ParamValueProjection or 2-item tuple, so extract its value for validation below
-            if isinstance(param_value, (ParamValueProjection, tuple)):
-                param_value = self._get_param_value_from_tuple(param_value)
-
-            # MODIFIED 12/11/16 OLD:  NO LONGER NEED AS "LISTIFICATION" NOW OCCURS IN assign_args_to_param_dicts
-            # # If it is a state specification for a mechanism with a single item, convert to list format
-            # if param_name in {INPUT_STATES, OUTPUT_STATES}:
-            #     from PsyNeuLink.Components.States.State import State_Base
-            #     if (isinstance(param_value, (str, State_Base, dict)) or
-            #             is_numeric(param_value) or
-            #             (inspect.isclass(param_value) and issubclass(param_value, State_Base))):
-            #         param_value = [param_value]
-            #         # request_set[param_name] = [param_value]
+            # # MODIFIED 4/18/17 OLD:
+            # # Value is a ParamValueProjection or 2-item tuple extract its value for validation below
+            # if isinstance(param_value, (ParamValueProjection, tuple)):
+            #     param_value = self._get_param_value_from_tuple(param_value)
+            # MODIFIED 4/18/17 END
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
@@ -1812,12 +1799,11 @@ class Component(object):
 
 
             # If param is a function_type, allow any other function_type
-            # MODIFIED 1/9/16 NEW:
             elif callable(param_value):
                 target_set[param_name] = param_value
-            # MODIFIED 1/9/16 END
             elif callable(param_value.function):
                 target_set[param_name] = param_value
+
             # Parameter is not a valid type
             else:
                 if type(self.paramClassDefaults[param_name]) is type:
@@ -1837,12 +1823,16 @@ class Component(object):
 
         if isinstance(param_spec, ParamValueProjection):
             value =  param_spec.value
+
+        # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
         elif (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION} or
+                (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING} or
                      isinstance(param_spec[1], Projection) or
                      (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
               ):
             value =  param_spec[0]
+
+        # Otherwise, just return the tuple
         else:
             value = param_spec
 
@@ -2327,6 +2317,23 @@ class Component(object):
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
 
+    @property
+    def auto_dependent(self):
+        return self._auto_dependent
+
+    @auto_dependent.setter
+    def auto_dependent(self, value):
+        """Assign auto_dependent status to component and any of its owners up the hierarchy
+        """
+        owner = self
+        while owner is not None:
+            try:
+                owner._auto_dependent = value
+                owner = self.owner.owner
+
+            except AttributeError:
+                owner = None
+
 COMPONENT_BASE_CLASS = Component
 
 
@@ -2356,10 +2363,30 @@ def make_property(name, default_value):
         # Update user_params dict with new value
         self.user_params.__additem__(name, val)
 
+        # # MODIFIED 4/20/17 NEW:
+        # # Update parameterState.value if there is one
+        # try:
+        #     if name in self.parameterStates:
+        #         self.parameterStates[name].baseValue = val
+        #         # self.parameterStates[name].value = val
+        # except AttributeError:
+        #     pass
+        # # MODIFIED 4/20/17 END
+
         # If component is a Function and has an owner, update function_params dict for owner
         from PsyNeuLink.Components.Functions.Function import Function_Base
         if isinstance(self, Function_Base) and self.owner:
             self.owner.function_params.__additem__(name, val)
+
+            # # MODIFIED 4/20/17 NEW:
+            # # Update value of owner's parameterState
+            # try:
+            #     if name in self.owner.parameterStates:
+            #         self.owner.parameterStates[name].baseValue = val
+            #         # self.owner.parameterStates[name].value = val
+            # except AttributeError:
+            #     pass
+            # # MODIFIED 4/20/17 END
 
 
     # Create the property

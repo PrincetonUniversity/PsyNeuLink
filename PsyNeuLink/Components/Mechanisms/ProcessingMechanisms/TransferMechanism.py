@@ -132,7 +132,7 @@ Transfer_DEFAULT_LENGTH= 1
 Transfer_DEFAULT_GAIN = 1
 Transfer_DEFAULT_BIAS = 0
 Transfer_DEFAULT_OFFSET = 0
-Transfer_DEFAULT_RANGE = np.array([])
+# Transfer_DEFAULT_RANGE = np.array([])
 
 
 class TransferError(Exception):
@@ -349,7 +349,7 @@ class TransferMechanism(ProcessingMechanism_Base):
              CALCULATE:lambda x: np.mean(x)},
             {NAME:TRANSFER_VARIANCE,
              CALCULATE:lambda x: np.var(x)}],
-        INTEGRATOR_FUNCTION: Integrator()
+        # INTEGRATOR_FUNCTION: Integrator
         })
 
     paramNames = paramClassDefaults.keys()
@@ -361,7 +361,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  initial_value=None,
                  noise=0.0,
                  time_constant=1.0,
-                 range=np.array([]),
+                 range=None,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
@@ -384,6 +384,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   params=params)
         if default_input_value is None:
             default_input_value = Transfer_DEFAULT_BIAS
+
+        self.integrator_function = Integrator()
 
         super(TransferMechanism, self).__init__(variable=default_input_value,
                                                 params=params,
@@ -500,8 +502,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # If function is a logistic, and range has not been specified, bound it between 0 and 1
         if ((isinstance(self.function, Logistic) or
                  (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
-                not list(self.range)):
-            self.range = np.array([0,1])
+                self.range is None):
+            self.range = (0,1)
 
         super()._instantiate_parameter_states(context=context)
 
@@ -611,7 +613,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=runtime_params)
 
-        if list(range):
+        # # MODIFIED  OLD:
+        # if list(range):
+        # MODIFIED  NEW:
+        if range is not None:
+        # MODIFIED  END
             minCapIndices = np.where(output_vector < range[0])
             maxCapIndices = np.where(output_vector > range[1])
             output_vector[minCapIndices] = np.min(range)
