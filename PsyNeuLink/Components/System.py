@@ -1415,7 +1415,8 @@ class System_Base(System):
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
         self.terminalMechanisms = MechanismList(self, self._terminal_mech_tuples)
         self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mech_tuples)
-        self.controlMechanism = MechanismList(self, self._control_mech_tuple)
+        self.controlMechanism = MechanismList(self, self._control_mech_tuple) # Used for inspection and in case there
+                                                                              # are multiple controllers in the future
 
         try:
             self.execution_sets = list(toposort(self.executionGraph))
