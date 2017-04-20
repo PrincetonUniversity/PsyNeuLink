@@ -716,13 +716,16 @@ class ParameterState(State_Base):
         # FIX: STRIP VALUES OUT OF ARRAY OR LIST OF THAT IS WHAT PARAMETER REQUIRES (USE TYPE-MATCH?)
         # FIX: DEHACK TEST FOR MATRIX
         # FIX: MOVE TO PROPERTY
-        # MODIFIED 2/21/17 NEW: FOR EVC BUT BREAKS LEARNING
-        # If this parameterState is for a parameter of its owner's function, then assign the value there as well
-        if self.name in self.owner.function_params and not 'matrix' in self.name:
-        #     setattr(self.owner.function.__self__, self.name, self.value)
-            param_type = type(getattr(self.owner.function.__self__, self.name))
-            # setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
-            self.owner.function.__self__.paramsCurrent[self.name] = type_match(self.value, param_type)
+        # # MODIFIED 2/21/17 NEW: FOR EVC BUT BREAKS LEARNING
+        # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
+        # if self.name in self.owner.function_params and not 'matrix' in self.name:
+        #     param_type = type(getattr(self.owner.function.__self__, self.name))
+        #     # # MODIFIED 4/20/17 OLD:
+        #     # self.owner.function.__self__.paramsCurrent[self.name] = type_match(self.value, param_type)
+        #     # MODIFIED 4/20/17 NEW:
+        #     param_back_field_name = '_' + self.name
+        #     self.owner.function.__self__.paramsCurrent[param_back_field_name] = type_match(self.value, param_type)
+        #     # MODIFIED 4/20/17 END
 
         #region APPLY RUNTIME PARAM VALUES
         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
@@ -747,13 +750,14 @@ class ParameterState(State_Base):
             # If tuple, use param-specific ModulationOperation as operation
             self.value = operation(value, self.value)
 
-        # MODIFIED 2/21/17 NEW: FOR EVC, BUT BREAKS LEARNING
-        # If this parameterState is for a parameter of its owner's function, then assign the value there as well
-        if self.name in self.owner.function_params and not 'matrix' in self.name:
-        # if self.name in self.owner.function_params:
-        #     setattr(self.owner.function.__self__, self.name, self.value)
-            param_type = type(getattr(self.owner.function.__self__, self.name))
-            setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
+        # # MODIFIED 4/20/17 REMOVED (SEEMS NOT TO BE NEEDED)
+        # # MODIFIED 2/21/17 NEW: FOR EVC, BUT BREAKS LEARNING
+        # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
+        # if self.name in self.owner.function_params and not 'matrix' in self.name:
+        # # if self.name in self.owner.function_params:
+        # #     setattr(self.owner.function.__self__, self.name, self.value)
+        #     param_type = type(getattr(self.owner.function.__self__, self.name))
+        #     setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
 
         #endregion
 
@@ -860,12 +864,14 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             return
     # Allow tuples (could be spec that includes a projection or ModulationOperation)
     elif isinstance(param_value, tuple):
+        # # MODIFIED 4/18/17 NEW:
+        # # FIX: EXTRACT VALUE HERE (AS IN Component.__init__?? [4/18/17]
+        # param_value = owner._get_param_value_from_tuple(param_value)
+        # # MODIFIED 4/18/17 END
         pass
     # Allow if it is a keyword for a parameter
     elif isinstance(param_value, str) and param_value in parameter_keywords:
         pass
-    # elif param_value is NotImplemented:
-    #     return
     # Exclude function (see docstring above)
     elif param_name is FUNCTION:
         return
@@ -879,7 +885,6 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             # Assignment of ParameterState for Component objects, function or method are not currently supported
             if isinstance(function_param_value, (function_type, method_type, Component)):
                 continue
-            # MODIFIED 2/22/17 NEW:
             # IMPLEMENTATION NOTE:
             # The following is necessary since, if ANY parameters of a function are specified, entries are made
             #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values
