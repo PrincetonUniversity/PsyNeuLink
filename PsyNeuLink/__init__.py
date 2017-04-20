@@ -7,6 +7,7 @@
 #
 #
 # ***********************************************  Init ****************************************************************
+import logging
 
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
@@ -21,6 +22,11 @@ from PsyNeuLink.Components.System import System, system
 from PsyNeuLink.Globals.Defaults import DefaultControlAllocationMode
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 __all__ = ['System',
            'system',
