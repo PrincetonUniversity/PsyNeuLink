@@ -15,7 +15,7 @@ class SchedulerError(Exception):
          return repr(self.error_value)
 
 class Scheduler(object):
-    def __init__(self, composition=None, system=None, condition_set=None, mechanisms=None, toposort_ordering=None):
+    def __init__(self, composition=None, system=None, condition_set=None, nodes=None, toposort_ordering=None):
         '''
         :param self:
         :param composition: (Composition) - the Composition this scheduler is scheduling for
@@ -27,13 +27,13 @@ class Scheduler(object):
         self.consideration_queue = []
 
         if composition is not None:
-            self.mechanisms = [vert.mechanism for vert in composition.graph.vertices]
+            self.nodes = [vert.mechanism for vert in composition.graph.vertices]
             self._init_consideration_queue_from_composition(composition)
         elif system is not None:
-            self.mechanisms = system.mechanisms
+            self.nodes = system.mechanisms
             self._init_consideration_queue_from_system(system)
-        elif mechanisms is not None:
-            self.mechanisms = mechanisms
+        elif nodes is not None:
+            self.nodes = nodes
             if toposort_ordering is None:
                 raise SchedulerError('Instantiating Scheduler by list of mechanisms requires a toposort ordering (kwarg toposort_ordering)')
             self.consideration_queue = list(toposort_ordering)
@@ -68,16 +68,16 @@ class Scheduler(object):
         # self.times[p][q] stores the number of TimeScale q ticks that have happened in the current TimeScale p
         self.times = {ts: {ts: 0 for ts in TimeScale} for ts in TimeScale}
         # stores total the number of occurrences of a mechanism through the time scale
-        # i.e. the number of times mech has ran/been queued to run in a trial
+        # i.e. the number of times node has ran/been queued to run in a trial
         self.counts_total = {ts: None for ts in TimeScale}
         # counts_useable is a dictionary intended to store the number of available "instances" of a certain mechanism that
         # are available to expend in order to satisfy conditions such as "run B every two times A runs"
         # specifically, counts_useable[a][b] = n indicates that there are n uses of a that are available for b to expend
         # so, in the previous example B would check to see if counts_useable[A][B] is 2, in which case B can run
-        self.counts_useable = {mech: {m: 0 for m in self.mechanisms} for mech in self.mechanisms}
+        self.counts_useable = {node: {m: 0 for m in self.nodes} for node in self.nodes}
 
         for ts in TimeScale:
-            self.counts_total[ts] = {m: 0 for m in self.mechanisms}
+            self.counts_total[ts] = {m: 0 for m in self.nodes}
 
     def _reset_count(self, count, time_scale):
         for c in count[time_scale]:
@@ -123,10 +123,10 @@ class Scheduler(object):
 
     def _validate_condition_set(self):
         unspecified_mechs = []
-        for mech in self.mechanisms:
-            if mech not in self.condition_set:
-                self.condition_set.add_condition(mech, Always())
-                unspecified_mechs.append(mech)
+        for node in self.nodes:
+            if node not in self.condition_set:
+                self.condition_set.add_condition(node, Always())
+                unspecified_mechs.append(node)
         if len(unspecified_mechs) > 0:
             logger.warning('These mechanisms have no Conditions specified, and will be scheduled with condition Always: {0}'.format(unspecified_mechs))
 
@@ -165,7 +165,7 @@ class Scheduler(object):
 
         execution_list = []
 
-        self.counts_useable = {mech: {m: 0 for m in self.mechanisms} for mech in self.mechanisms}
+        self.counts_useable = {node: {m: 0 for m in self.nodes} for node in self.nodes}
         self._reset_count(self.counts_total, TimeScale.TRIAL)
         self._reset_time(TimeScale.TRIAL)
 
