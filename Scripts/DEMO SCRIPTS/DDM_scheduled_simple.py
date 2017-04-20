@@ -12,15 +12,11 @@ from PsyNeuLink.Globals.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
 
-process_prefs = {
-    REPORT_OUTPUT_PREF: True,
-    VERBOSE_PREF: False
-}
-
 o = TransferMechanism(
     name='origin',
     default_input_value = [0],
     function=Linear(slope=.5),
+    prefs={REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)}
 )
 
 ddm = DDM(
@@ -37,13 +33,13 @@ term = TransferMechanism(
     name='terminal',
     default_input_value = [0],
     function=Linear(slope=2.0),
+    prefs={REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)}
 )
 
 p = process(
     default_input_value = [0],
     pathway = [o, ddm, term],
     name = 'p',
-    prefs=process_prefs
 )
 
 # origin → DDM → terminal
