@@ -923,7 +923,7 @@ class Component(object):
                         #                   "therefore runtime_params cannot be used".format(default(arg).__name__))
                     else:
                         raise ComponentError("Unrecognized object ({}) specified as function for {}".
-                                             format(fct, self.name))
+                                             format(function, self.name))
 
                     ignore_FUNCTION_PARAMS = True
 
@@ -2363,24 +2363,30 @@ def make_property(name, default_value):
         # Update user_params dict with new value
         self.user_params.__additem__(name, val)
 
-        # Update parameterState.value if there is one
-        try:
-            if name in self.parameterStates:
-                self.parameterStates[name].baseValue = val
-        except AttributeError:
-            pass
+        # # MODIFIED 4/20/17 NEW:
+        # # Update parameterState.value if there is one
+        # try:
+        #     if name in self.parameterStates:
+        #         self.parameterStates[name].baseValue = val
+        #         # self.parameterStates[name].value = val
+        # except AttributeError:
+        #     pass
+        # # MODIFIED 4/20/17 END
 
         # If component is a Function and has an owner, update function_params dict for owner
         from PsyNeuLink.Components.Functions.Function import Function_Base
         if isinstance(self, Function_Base) and self.owner:
             self.owner.function_params.__additem__(name, val)
 
-            # Update value of owner's parameterState
-            try:
-                if name in self.owner.parameterStates:
-                    self.owner.parameterStates[name].baseValue = val
-            except AttributeError:
-                pass
+            # # MODIFIED 4/20/17 NEW:
+            # # Update value of owner's parameterState
+            # try:
+            #     if name in self.owner.parameterStates:
+            #         self.owner.parameterStates[name].baseValue = val
+            #         # self.owner.parameterStates[name].value = val
+            # except AttributeError:
+            #     pass
+            # # MODIFIED 4/20/17 END
 
 
     # Create the property

@@ -1650,7 +1650,12 @@ class Mechanism_Base(Mechanism):
 
             # Assign version of parameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
+            # MODIFIED 4/20/17 OLD:
             param[state_name] = type_match(state.value, param_type)
+            # # MODIFIED 4/20/17 NEW:
+            # param_back_field_name = '_' + state_name
+            # param[param_back_field_name] = type_match(state.value, param_type)
+            # # MODIFIED 4/20/17 END
 
     def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
         """Execute function for each outputState and assign result of each to corresponding item of self.outputValue

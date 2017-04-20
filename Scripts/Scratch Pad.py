@@ -1,13 +1,4 @@
 import numpy as np
-
-class ScratchPadError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
-#
-#region DEBUG:
-
 # from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear
@@ -22,10 +13,27 @@ class ScratchPadError(Exception):
 # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 # from PsyNeuLink.Components.States.OutputState import OutputState
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
-from PsyNeuLink.Components.Process import Process, Process_Base, process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
-from PsyNeuLink.Components.System import system, System, System_Base
+# from PsyNeuLink.Components.Process import Process, Process_Base, process
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+# from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
+# from PsyNeuLink.Components.System import system, System, System_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+
+class ScratchPadError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
+#
+
+#region TEST property assignment
+
+my_mech = IntegratorMechanism()
+my_mech.function_object.rate = 1.0
+# my_mech.parameterStates['rate'].baseValue = 1.0
+print(my_mech.execute())
+
+#endregion
 
 #region TEST Multipe Initis
 
@@ -41,10 +49,10 @@ from PsyNeuLink.Components.System import system, System, System_Base
 
 # my_process = Process()
 
-my_process = Process_Base()
-print(my_process.name)
-my_process = Process_Base()
-print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
 
 # my_mech = mechanism()
 # my_mech = Mechanism()
