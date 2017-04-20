@@ -1328,8 +1328,8 @@ class State_Base(State):
         return self._baseValue
 
     @baseValue.setter
-    def baseValue(self, item):
-        self._baseValue = item
+    def baseValue(self, value):
+        self._baseValue = value
 
     @property
     def projections(self):
