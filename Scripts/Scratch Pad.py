@@ -29,7 +29,7 @@ class ScratchPadError(Exception):
 #region TEST property assignment
 
 my_mech = IntegratorMechanism()
-my_mech.function_object.rate = 1.0
+my_mech.function_object.rate = 2.0
 # my_mech.parameterStates['rate'].baseValue = 1.0
 print(my_mech.execute())
 
