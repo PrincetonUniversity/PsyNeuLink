@@ -36,6 +36,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     """
 
     componentName = DEFAULT_PROCESSING_MECHANISM
+    componentType = DEFAULT_PROCESSING_MECHANISM
     onlyFunctionOnInit = True
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE

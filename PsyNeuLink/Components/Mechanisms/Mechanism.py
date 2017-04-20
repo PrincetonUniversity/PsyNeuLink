@@ -787,7 +787,7 @@ class Mechanism_Base(Mechanism):
         """
 
         # Forbid direct call to base class constructor
-        if not isinstance(context, type(self)) and not kwValidate in context:
+        if not isinstance(context, type(self)) and not VALIDATE in context:
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
                                  "use mechanism() or one of the following subclasses: {0}".
                                  format(", ".join("{!s}".format(key) for (key) in MechanismRegistry.keys())))
@@ -797,7 +797,7 @@ class Mechanism_Base(Mechanism):
         self._execution_id = None
 
         # Register with MechanismRegistry or create one
-        if not context is kwValidate:
+        if not context is VALIDATE:
             register_category(entry=self,
                               base_class=Mechanism_Base,
                               name=name,
