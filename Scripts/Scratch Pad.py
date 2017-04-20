@@ -22,15 +22,40 @@ class ScratchPadError(Exception):
 # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 # from PsyNeuLink.Components.States.OutputState import OutputState
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Process import Process, Process_Base, process
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
+from PsyNeuLink.Components.System import system, System, System_Base
+
+#region TEST Multipe Initis
+
+# # WORKS:
+# my_process = process()
+# print(my_process.name)
+# my_process = process()
+# print(my_process.name)
+# my_process = process()
+# print(my_process.name)
+# my_process = process()
+# print(my_process.name)
+
+# my_process = Process()
+
+my_process = Process_Base()
+print(my_process.name)
+my_process = Process_Base()
+print(my_process.name)
+
+# my_mech = mechanism()
+# my_mech = Mechanism()
+# my_mech = Mechanism_Base()
+
+# my_sys = system()  # <- WORKS
+# my_sys = System(variable_default=None, param_defaults=None)
+# my_sys = System_Base()
 
 
-my_mech = IntegratorMechanism()
-my_mech.function_object.rate = 1.0
-print(my_mech.execute())
-print(my_mech.execute())
-print(my_mech.execute())
-TEST = True
+#endregion
 
 # #region TEST ReadOnlyOrderedDict
 #
@@ -138,8 +163,8 @@ TEST = True
 # # x['goodbye'] = 2
 # # print(list(x.keys()))
 # #
-#
-# #endregion
+
+#endregion
 
 # #region TEST AUTO_PROP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
