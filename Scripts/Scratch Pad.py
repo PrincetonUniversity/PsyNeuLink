@@ -26,16 +26,16 @@ class ScratchPadError(Exception):
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
 #
 
-#region TEST property assignment
+#region TEST whether function attribute assignment is used and "sticks"
 
 my_mech = IntegratorMechanism()
 # my_mech.function_object.rate = 2.0
 print(my_mech.execute())
 my_mech.function_object.rate = 0.9
 print(my_mech.execute())
-print(my_mech.function_object.rate)
 my_mech.function_object.rate = .75
 print(my_mech.function_object.rate)
+my_mech.function_object.rate = .2
 print(my_mech.execute())
 
 #endregion
