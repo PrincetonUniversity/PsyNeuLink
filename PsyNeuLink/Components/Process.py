@@ -1050,7 +1050,7 @@ class Process_Base(Process):
                                            " is neither a mechanism nor a projection specification".
                                            format(config_item[0], i, self.name))
                     # Check that second item is a dict (presumably of params)
-                    if not isinstance(config_item[1], dict):
+                    if config_item[1] is not None and not isinstance(config_item[1], dict):
                         raise ProcessError("Second item of tuple ({}) in entry {} of pathway for {}"
                                            " must be a params dict".
                                            format(config_item[1], i, self.name))
