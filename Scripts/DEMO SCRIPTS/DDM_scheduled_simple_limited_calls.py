@@ -6,7 +6,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Functions.Function import Linear, Integrator
 from PsyNeuLink.scheduling.Scheduler import Scheduler
-from PsyNeuLink.scheduling.condition import AfterNCalls, AtPass, WhenFinished
+from PsyNeuLink.scheduling.condition import Any, AfterNCalls, AtPass, WhenFinished
 from PsyNeuLink.Globals.Keywords import DIFFUSION
 from PsyNeuLink.Globals.TimeScale import TimeScale
 
@@ -53,7 +53,7 @@ stim_list = {o: [[1]]}
 s.scheduler = Scheduler(system=s)
 s.scheduler.add_condition(o, AtPass(0))
 # ddm has default condition of Always - run at every chance
-s.scheduler.add_condition(term, WhenFinished(ddm))
+s.scheduler.add_condition(term, Any(WhenFinished(ddm), AfterNCalls(ddm, 10)))
 
 term_conds = {TimeScale.TRIAL: AfterNCalls(term, 1)}
 

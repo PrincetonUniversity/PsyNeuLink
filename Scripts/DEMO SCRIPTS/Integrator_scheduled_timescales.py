@@ -62,11 +62,6 @@ q = process(
     prefs=process_prefs
 )
 
-#   A
-#  ↙︎ ↘︎
-# B   C
-#  ↘︎ ↙︎
-#   D
 s = system(
     processes=[p, q],
     name = 's'
@@ -82,6 +77,7 @@ s.scheduler.add_condition(D, EveryNCalls(C, 1))
 
 term_conds = {TimeScale.TRIAL: AfterNCalls(D, 1)}
 
+s.show_graph()
 results = s.run(
     inputs=stim_list,
     termination_conditions=term_conds
