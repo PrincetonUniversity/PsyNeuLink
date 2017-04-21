@@ -913,7 +913,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -930,7 +930,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -947,7 +947,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -964,7 +964,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -981,7 +981,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -998,7 +998,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1015,7 +1015,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1032,7 +1032,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1049,7 +1049,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1066,7 +1066,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1083,7 +1083,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1100,7 +1100,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1117,7 +1117,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1134,7 +1134,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1151,7 +1151,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1168,7 +1168,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1185,7 +1185,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1202,7 +1202,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1219,7 +1219,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1236,7 +1236,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1611,7 +1611,7 @@ B:  INTERNAL
 C:  INTERNAL
 D:  TERMINAL
 *****************************************************************************
-WARNING:  Process (p2-2) being instantiated in context ( INITIALIZING p2-2: Process.__init__ INITIALIZING : Function.__init__) other than a System 
+WARNING:  Process (p2-2) being instantiated in context ( INITIALIZING p2-2: Process.__init__ INITIALIZING : Component.__init__) other than a System 
 
 ---------------------------------------------------------
 
@@ -1826,4 +1826,3 @@ RUNNING Documentation Examples Script.py
 [ 0.65077768]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-

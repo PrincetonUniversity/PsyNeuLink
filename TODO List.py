@@ -58,13 +58,10 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
-# FIX: controlMechanism vs. controller in System??
-# FIX: 3 re-initializations crashes process and syste (also mechanism?)
+# IMPLEMENT:  Deferred init for control.
+# FIX: Flip names of Xxxx() and Xxxx_Base()
 
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
-# FIX: WHY IS NOISE COMMENTED OUT IN TransferMechanism._validate_params()??
-# FIX: TransferMechanism:  MOVED INSTANTATION OF INTEGRATOR TO _instantiate_attributes_before_function
-#       PROBLEM:  ASSIGNMENT OF NOISE DOES GET PASSED TO INTEGRATOR FUNCTION
 
 # DOCUMENTATION: items in paramClassDefaults are created as attributes (not properties), and are thus not validated
 #                    when assignments are made to them;  items in user_params are created as properties, and are
@@ -84,15 +81,14 @@
 
 # DOCUMENTATION: RESTORE runtime_params DOCUMENTATION
 
-# IMPLEMENT: error threshold / criterion for ending learning
 # DOCUMENTATION: FUNCTION_PARAMS in runtime_params example
-# FIX: Stroop Model Test Script: Process -> System
 
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
+
 # FIX: Component: IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
 #                 SEE learning_rate IN LearningMechanism FOR EXAMPLE
-
 # FIX: MOVE setattr OUT OF make_property AND HAVE make_property TAKE IT AS AN ARG
+
 # FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)
 # QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)#
 # FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
