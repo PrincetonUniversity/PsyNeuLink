@@ -55,16 +55,16 @@ Input_Weights = MappingProjection(name='Input Weights',
                         matrix=Input_Weights_matrix
                         )
 
-# This projection will be used by the process below by assigning its sender and receiver args
-#    to mechanismss in the pathway
-Middle_Weights = MappingProjection(name='Middle Weights',
-                         sender=Hidden_Layer_1,
-                         receiver=Hidden_Layer_2,
-                         # matrix=(FULL_CONNECTIVITY_MATRIX, LearningProjection())
-                         # matrix=FULL_CONNECTIVITY_MATRIX
-                         matrix=Middle_Weights_matrix
-                         )
-
+# # This projection will be used by the process below by assigning its sender and receiver args
+# #    to mechanismss in the pathway
+# Middle_Weights = MappingProjection(name='Middle Weights',
+#                          sender=Hidden_Layer_1,
+#                          receiver=Hidden_Layer_2,
+#                          # matrix=(FULL_CONNECTIVITY_MATRIX, LearningProjection())
+#                          # matrix=FULL_CONNECTIVITY_MATRIX
+#                          matrix=Middle_Weights_matrix
+#                          )
+#
 # Commented lines in this projection illustrate variety of ways in which matrix and learning signals can be specified
 Output_Weights = MappingProjection(name='Output Weights',
                          sender=Hidden_Layer_2,
