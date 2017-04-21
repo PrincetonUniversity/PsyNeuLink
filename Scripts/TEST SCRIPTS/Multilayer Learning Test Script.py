@@ -6,6 +6,8 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
+from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.scheduling.condition import AfterNCalls
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 
@@ -160,14 +162,17 @@ elif COMPOSITION is SYSTEM:
     composition = x
 
     # x.show_graph_with_learning()
-    results = x.run(num_executions=10,
-                    # inputs=stim_list,
-                    # inputs=[[-1, 30],[2, 10]],
-                    # targets=[[0, 0, 1],[0, 0, 1]],
-                    inputs=stim_list,
-                    targets=target_list,
-                    call_before_trial=print_header,
-                    call_after_trial=show_target)
+    results = x.run(
+        num_executions=10,
+        # inputs=stim_list,
+        # inputs=[[-1, 30],[2, 10]],
+        # targets=[[0, 0, 1],[0, 0, 1]],
+        inputs=stim_list,
+        targets=target_list,
+        call_before_trial=print_header,
+        call_after_trial=show_target,
+        termination_processing={TimeScale.TRIAL: AfterNCalls(Output_Layer, 1)}
+    )
 
 else:
     print ("Multilayer Learning Network NOT RUN")

@@ -138,5 +138,5 @@ x.run(num_executions=10,
       targets=target_list,
       call_before_trial=print_header,
       call_after_trial=show_target,
-      termination_conditions={TimeScale.TRIAL: AfterNCalls(Output_Layer, 1)}
+      termination_processing={TimeScale.TRIAL: AfterNCalls(Output_Layer, 1)}
 )

@@ -104,7 +104,7 @@ class TestLinear:
 
         results = s.run(
             inputs=stim_list,
-            termination_conditions=term_conds
+            termination_processing=term_conds
         )
 
         terminal_mech = A
@@ -147,11 +147,11 @@ class TestLinear:
 
         sched = Scheduler(system=s)
         sched.add_condition(B, EveryNCalls(A, 2))
-        s.scheduler = sched
+        s.scheduler_processing = sched
 
         results = s.run(
             inputs=stim_list,
-            termination_conditions=term_conds
+            termination_processing=term_conds
         )
 
         terminal_mech = B
@@ -195,11 +195,11 @@ class TestLinear:
         sched = Scheduler(system=s)
         sched.add_condition(A, Any(AtPass(0), AfterNCalls(B, 2)))
         sched.add_condition(B, Any(JustRan(A), JustRan(B)))
-        s.scheduler = sched
+        s.scheduler_processing = sched
 
         results = s.run(
             inputs=stim_list,
-            termination_conditions=term_conds
+            termination_processing=term_conds
         )
 
         terminal_mech = B
@@ -255,11 +255,11 @@ class TestBranching:
         sched = Scheduler(system=s)
         sched.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
         sched.add_condition(C, EveryNCalls(A, 2))
-        s.scheduler = sched
+        s.scheduler_processing = sched
 
         results = s.run(
             inputs=stim_list,
-            termination_conditions=term_conds
+            termination_processing=term_conds
         )
 
         terminal_mechs = [B, C]
@@ -320,11 +320,11 @@ class TestBranching:
         sched = Scheduler(system=s)
         sched.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
         sched.add_condition(C, EveryNCalls(A, 2))
-        s.scheduler = sched
+        s.scheduler_processing = sched
 
         results = s.run(
             inputs=stim_list,
-            termination_conditions=term_conds
+            termination_processing=term_conds
         )
 
         terminal_mechs = [B, C]
@@ -388,11 +388,11 @@ class TestBranching:
 
         sched = Scheduler(system=s)
         sched.add_condition(C, All(EveryNCalls(A, 1), EveryNCalls(B, 1)))
-        s.scheduler = sched
+        s.scheduler_processing = sched
 
         results = s.run(
             inputs=stim_list,
-            termination_conditions=term_conds
+            termination_processing=term_conds
         )
 
         terminal_mechs = [C]
@@ -453,11 +453,11 @@ class TestBranching:
 
         sched = Scheduler(system=s)
         sched.add_condition(C, All(EveryNCalls(A, 1), EveryNCalls(B, 1)))
-        s.scheduler = sched
+        s.scheduler_processing = sched
 
         results = s.run(
             inputs=stim_list,
-            termination_conditions=term_conds
+            termination_processing=term_conds
         )
 
         terminal_mechs = [C]
@@ -522,11 +522,11 @@ class TestBranching:
         sched = Scheduler(system=s)
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
-        s.scheduler = sched
+        s.scheduler_processing = sched
 
         results = s.run(
             inputs=stim_list,
-            termination_conditions=term_conds
+            termination_processing=term_conds
         )
 
         mechs = [A, B, C]
@@ -601,11 +601,11 @@ class TestBranching:
         sched.add_condition(B, EveryNCalls(A, 1))
         sched.add_condition(C, EveryNCalls(A, 2))
         sched.add_condition(D, Any(EveryNCalls(B, 3), EveryNCalls(C, 3)))
-        s.scheduler = sched
+        s.scheduler_processing = sched
 
         results = s.run(
             inputs=stim_list,
-            termination_conditions=term_conds
+            termination_processing=term_conds
         )
 
         terminal_mechs = [D]
@@ -692,11 +692,11 @@ class TestBranching:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, EveryNCalls(A, 1))
         sched.add_condition(D, EveryNCalls(B, 1))
-        s.scheduler = sched
+        s.scheduler_processing = sched
 
         results = s.run(
             inputs=stim_list,
-            termination_conditions=term_conds
+            termination_processing=term_conds
         )
 
         mechs = [A, B, C, D]
@@ -778,11 +778,11 @@ class TestBranching:
         sched.add_condition(C, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
         sched.add_condition(D, EveryNCalls(C, 1))
         sched.add_condition(E, EveryNCalls(C, 1))
-        s.scheduler = sched
+        s.scheduler_processing = sched
 
         results = s.run(
             inputs=stim_list,
-            termination_conditions=term_conds
+            termination_processing=term_conds
         )
 
         terminal_mechs = [D, E]
@@ -918,11 +918,11 @@ class TestBranching:
         sched.add_condition(D, EveryNCalls(B, 1))
         sched.add_condition(E, EveryNCalls(C, 1))
         sched.add_condition(F, EveryNCalls(D, 2))
-        s.scheduler = sched
+        s.scheduler_processing = sched
 
         results = s.run(
             inputs=stim_list,
-            termination_conditions=term_conds
+            termination_processing=term_conds
         )
 
         # Intermediate time steps

@@ -6,6 +6,7 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.scheduling.condition import AfterNCalls
 
 import random
 random.seed(0)
@@ -119,8 +120,10 @@ mySystem.controller.reportOutputPref = False
 
 # mySystem.run(inputs=trial_list,
 # # mySystem.run(inputs=reversed_trial_list,
-mySystem.run(inputs=stim_list_dict,
-             call_before_trial=show_trial_header,
-             # call_after_time_step=show_results
-             call_after_trial=show_results
-             )
+mySystem.run(
+    inputs=stim_list_dict,
+    call_before_trial=show_trial_header,
+    # call_after_time_step=show_results
+    call_after_trial=show_results,
+    termination_processing={TimeScale.TRIAL: AfterNCalls(Decision, 1)}
+)

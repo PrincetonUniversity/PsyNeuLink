@@ -399,7 +399,8 @@ def run(object,
         call_after_time_step:tc.optional(function_type)=None,
         clock=CentralClock,
         time_scale:tc.optional(tc.enum(TimeScale.TRIAL, TimeScale.TIME_STEP))=None,
-        termination_conditions=None,
+        termination_processing=None,
+        termination_learning=None,
         context=None):
     """run(                         \
     inputs,                      \
@@ -637,7 +638,8 @@ def run(object,
                                     execution_id=execution_id,
                                     clock=clock,
                                     time_scale=time_scale,
-                                    termination_conditions=termination_conditions,
+                                    termination_processing=termination_processing,
+                                    termination_learning=termination_learning,
                                     context=context)
 
             if call_after_time_step:
