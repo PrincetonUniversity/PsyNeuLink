@@ -666,7 +666,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         return input_state.value
 
-
     def add_monitored_values(self, states_spec, context=None):
         """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
 
