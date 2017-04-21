@@ -878,10 +878,11 @@ class System_Base(System):
             if not isinstance(process, Process):
                 raise SystemError("{} (in processes arg for \'{}\') is not a Process object".format(process, self.name))
 
-        for mech, value in target_set[kwInitialValues].items():
-            if not isinstance(mech, Mechanism):
-                raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
-                                  "is not a Mechanism object".format(mech, self.name))
+        if INITIAL_VALUES in target_set and target_set[INITIAL_VALUES] is not None:
+            for mech, value in target_set[INITIAL_VALUES].items():
+                if not isinstance(mech, Mechanism):
+                    raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
+                                      "is not a Mechanism object".format(mech, self.name))
 
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiate processes and graph
@@ -1415,7 +1416,8 @@ class System_Base(System):
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
         self.terminalMechanisms = MechanismList(self, self._terminal_mech_tuples)
         self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mech_tuples)
-        self.controlMechanism = MechanismList(self, self._control_mech_tuple)
+        self.controlMechanism = MechanismList(self, self._control_mech_tuple) # Used for inspection and in case there
+                                                                              # are multiple controllers in the future
 
         try:
             self.execution_sets = list(toposort(self.executionGraph))
@@ -1453,14 +1455,15 @@ class System_Base(System):
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
         # FIX: ONLY CHECKS FIRST ITEM OF self._value_template (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
         # FIX: ONLY CHECK ONES THAT RECEIVE PROJECTIONS
-        for mech, value in self.initial_values.items():
-            if not mech in self.execution_graph_mechs:
-                raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
-                                  format(mech.name, self.name))
-            mech._update_value
-            if not iscompatible(value, mech._value_template[0]):
-                raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
-                                  format(value, self.name, append_type_to_name(self)))
+        if self.initial_values is not None:
+            for mech, value in self.initial_values.items():
+                if not mech in self.execution_graph_mechs:
+                    raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
+                                      format(mech.name, self.name))
+                mech._update_value
+                if not iscompatible(value, mech._value_template[0]):
+                    raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
+                                      format(value, self.name, append_type_to_name(self)))
 
     def _instantiate_stimulus_inputs(self, context=None):
 

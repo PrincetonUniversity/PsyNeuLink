@@ -13,11 +13,11 @@ import numpy as np
 # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 # from PsyNeuLink.Components.States.OutputState import OutputState
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
-# from PsyNeuLink.Components.Process import Process, Process_Base, process
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-# from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
-# from PsyNeuLink.Components.System import system, System, System_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Process import Process, Process_Base, process
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
+from PsyNeuLink.Components.System import system, System, System_Base
 
 class ScratchPadError(Exception):
     def __init__(self, error_value):
@@ -26,23 +26,45 @@ class ScratchPadError(Exception):
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
 #
 
-#region TEST whether function attribute assignment is used and "sticks"
+class ScratchPadError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
 
-my_mech = IntegratorMechanism()
-# my_mech.function_object.rate = 2.0
-print(my_mech.execute())
-my_mech.function_object.rate = 0.9
-print(my_mech.execute())
-my_mech.function_object.rate = .75
-print(my_mech.function_object.rate)
-my_mech.function_object.rate = .2
-print(my_mech.execute())
+# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
+#
 
-#endregion
+# #region TEST whether function attribute assignment is used and "sticks"
+#
+# my_mech = IntegratorMechanism()
+# # my_mech.function_object.rate = 2.0
+# print(my_mech.execute())
+# my_mech.function_object.rate = 0.9
+# print(my_mech.execute())
+# my_mech.function_object.rate = .75
+# print(my_mech.function_object.rate)
+# my_mech.function_object.rate = .2
+# print(my_mech.execute())
+#
+# #endregion
 
-#region TEST Multipe Initis
+
+#region TEST Multipe Inits
 
 # # WORKS:
+
+# my_mech = mechanism()
+# print(my_mech.name)
+# my_mech = mechanism()
+# print(my_mech.name)
+# my_mech = mechanism()
+# print(my_mech.name)
+# my_mech = mechanism()
+# print(my_mech.name)
+
+# my_mech = Mechanism()
+
+# my_mech = Mechanism_Base()
+
 # my_process = process()
 # print(my_process.name)
 # my_process = process()
@@ -53,20 +75,32 @@ print(my_mech.execute())
 # print(my_process.name)
 
 # my_process = Process()
+# print(my_process.name)
 
 # my_process = Process_Base()
 # print(my_process.name)
 # my_process = Process_Base()
 # print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
 
-# my_mech = mechanism()
-# my_mech = Mechanism()
-# my_mech = Mechanism_Base()
+# my_sys = system()
+# print(my_sys.name)
+# my_sys = system()
+# print(my_sys.name)
+# my_sys = system()
+# print(my_sys.name)
+# my_sys = system()
+# print(my_sys.name)
 
-# my_sys = system()  # <- WORKS
-# my_sys = System(variable_default=None, param_defaults=None)
-# my_sys = System_Base()
+# my_sys = System()
 
+my_sys = System_Base()
+print(my_sys.name)
+my_sys = System_Base()
+print(my_sys.name)
+my_sys = System_Base()
+print(my_sys.name)
 
 #endregion
 

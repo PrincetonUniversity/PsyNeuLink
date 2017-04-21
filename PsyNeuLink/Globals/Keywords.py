@@ -174,8 +174,7 @@ kwAssign = ': Assign' # Used in context for Log
 ASSIGN_VALUE = ': Assign value'
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
-kwValidate = 'Validate'
-VALIDATE = kwValidate
+VALIDATE = 'Validate'
 COMMAND_LINE = "COMMAND_LINE"
 kwParams = 'params'
 CHANGED = 'CHANGED'
@@ -235,7 +234,7 @@ NAME = "name"
 PARAMS = "params"
 CONTEXT = "context"
 
-kwInitialValues = 'initial_values'
+INITIAL_VALUES = 'initial_values'
 
 # inputs list/ndarray:
 TRIALS_DIM = 0
@@ -243,7 +242,7 @@ TIME_STEPS_DIM = 1
 PROCESSES_DIM = 2
 INPUTS_DIM = 3
 
-COMPONENT_INIT = 'Function.__init__'
+COMPONENT_INIT = 'Component.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
 DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
 USER_PARAMS = 'user_params' # Params available to user for inspection in user_params dict
