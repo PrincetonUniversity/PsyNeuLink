@@ -356,9 +356,9 @@ class DDMError(Exception):
 
 
 class DDM(ProcessingMechanism_Base):
-# DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
-#                    ADD INFO ABOUT B VS. N&F
-#                    ADD _instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
+    # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
+    #                    ADD INFO ABOUT B VS. N&F
+    #                    ADD _instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
     """
     DDM(                       \
     default_input_value=None,  \
@@ -535,30 +535,29 @@ class DDM(ProcessingMechanism_Base):
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in _instantiate_defaults_to_paramClassDefaults (in __init__)
         # # MONITOR_FOR_CONTROL:[PROBABILITY_LOWER_THRESHOLD,(RESPONSE_TIME, -1, 1)]
-        OUTPUT_STATES:[                                        # Full set specified to include Navarro and Fuss outputs
-            {NAME:DDM_DECISION_VARIABLE,
-             INDEX:DDM_Output.DECISION_VARIABLE.value},
+        OUTPUT_STATES: [  # Full set specified to include Navarro and Fuss outputs
+            {NAME: DDM_DECISION_VARIABLE,
+             INDEX: DDM_Output.DECISION_VARIABLE.value},
 
-            {NAME:DDM_RESPONSE_TIME,
-             INDEX:DDM_Output.RESPONSE_TIME.value},
+            {NAME: DDM_RESPONSE_TIME,
+             INDEX: DDM_Output.RESPONSE_TIME.value},
 
-            {NAME:DDM_PROBABILITY_UPPER_THRESHOLD,          # Probability of hitting upper bound
-             INDEX:DDM_Output.P_UPPER_MEAN.value},
+            {NAME: DDM_PROBABILITY_UPPER_THRESHOLD,  # Probability of hitting upper bound
+             INDEX: DDM_Output.P_UPPER_MEAN.value},
 
-            {NAME:DDM_PROBABILITY_LOWER_THRESHOLD,          # Probability of hitting lower bound
-             INDEX:DDM_Output.P_LOWER_MEAN.value},
+            {NAME: DDM_PROBABILITY_LOWER_THRESHOLD,  # Probability of hitting lower bound
+             INDEX: DDM_Output.P_LOWER_MEAN.value},
 
-            {NAME:DDM_RT_CORRECT_MEAN,                      # NavarroAnd Fuss only
-             INDEX:DDM_Output.RT_CORRECT_MEAN.value},
+            {NAME: DDM_RT_CORRECT_MEAN,  # NavarroAnd Fuss only
+             INDEX: DDM_Output.RT_CORRECT_MEAN.value},
 
-            {NAME:DDM_RT_CORRECT_VARIANCE,                  # NavarroAnd Fuss only
-             INDEX:DDM_Output.RT_CORRECT_VARIANCE.value}
+            {NAME: DDM_RT_CORRECT_VARIANCE,  # NavarroAnd Fuss only
+             INDEX: DDM_Output.RT_CORRECT_VARIANCE.value}
         ]
     })
 
     # Set default input_value to default bias for DDM
     paramNames = paramClassDefaults.keys()
-
 
     @tc.typecheck
     def __init__(self,
@@ -567,15 +566,15 @@ class DDM(ProcessingMechanism_Base):
                  function=BogaczEtAl(drift_rate=1.0,
                                      starting_point=0.0,
                                      threshold=1.0,
-                                     noise=0.5, 
+                                     noise=0.5,
                                      t0=.200),
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  name=None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
-                 prefs:is_pref_set=None,
+                 prefs: is_pref_set = None,
                  # context=None):
-                 context=componentType+INITIALIZING):
+                 context=componentType + INITIALIZING):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -586,12 +585,11 @@ class DDM(ProcessingMechanism_Base):
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
         if default_input_value is None:
-          try: 
-            default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
-          except: 
+            try:
+                default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
+            except:
 
-            default_input_value = 0.0
-            
+                default_input_value = 0.0
 
         super(DDM, self).__init__(variable=default_input_value,
                                   params=params,
@@ -605,7 +603,7 @@ class DDM(ProcessingMechanism_Base):
         # for param in self.user_params.keys():
         #     print("\t{}: {}".format(param, self.user_params[param]))
 
-    def plot(self, threshold = 10.0):
+    def plot(self, stimulus=1.0, threshold=10.0):
         """
         Generate a dynamic plot of the DDM integrating over time towards a threshold.
 
@@ -631,6 +629,7 @@ class DDM(ProcessingMechanism_Base):
         # # Select a random seed to ensure that the test run will be the same as the real run
         seed_value = np.random.randint(0, 100)
         np.random.seed(seed_value)
+        self.variable = stimulus
 
         result_check = 0
         time_check = 0
@@ -643,9 +642,9 @@ class DDM(ProcessingMechanism_Base):
         np.random.seed(seed_value)
         axes = plt.gca()
         axes.set_xlim([0, time_check])
-        axes.set_xlabel("Time Step", weight ="heavy", size="large")
+        axes.set_xlabel("Time Step", weight="heavy", size="large")
         axes.set_ylim([-1.25 * threshold, 1.25 * threshold])
-        axes.set_ylabel("Position", weight ="heavy", size="large")
+        axes.set_ylabel("Position", weight="heavy", size="large")
         plt.axhline(y=threshold, linewidth=1, color='k', linestyle='dashed')
         plt.axhline(y=-threshold, linewidth=1, color='k', linestyle='dashed')
         plt.plot()
@@ -668,6 +667,7 @@ class DDM(ProcessingMechanism_Base):
         if not isinstance(variable, numbers.Number) and len(variable) > 1:
             raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
         super()._validate_variable(variable=variable, context=context)
+
     # MODIFIED 11/21/16 END
 
 
@@ -720,8 +720,6 @@ class DDM(ProcessingMechanism_Base):
                 raise DDMError("{} param of {} ({}) must be >= zero".
                                format(THRESHOLD, self.name, threshold))
 
-
-
     def _instantiate_attributes_before_function(self, context=None):
         """Delete params not in use, call super.instantiate_execute_method
         """
@@ -738,11 +736,11 @@ class DDM(ProcessingMechanism_Base):
     #         del self.outputStates[DDM_RT_CORRECT_VARIANCE]
 
     def _execute(self,
-                variable=None,
-                runtime_params=None,
-                clock=CentralClock,
-                time_scale = TimeScale.TRIAL,
-                context=None):
+                 variable=None,
+                 runtime_params=None,
+                 clock=CentralClock,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
         """Execute DDM function (currently only trial-level, analytic solution)
         Execute DDM and estimate outcome or calculate trajectory of decision variable
         Currently implements only trial-level DDM (analytic solution) and returns:
@@ -777,22 +775,22 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        # PLACEHOLDER for a time_step_size parameter when time_step_mode/scheduling is implemented: 
+        # PLACEHOLDER for a time_step_size parameter when time_step_mode/scheduling is implemented:
         time_step_size = 1.0
 
         if variable is None or np.isnan(variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
             variable = self.variableInstanceDefault
 
-
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
             if self.function_params['integration_type'] == 'diffusion':
                 result = self.function(self.variable, context=context)
-                return np.array([result,[0.0],[0.0],[0.0]])
+                return np.array([result, [0.0], [0.0], [0.0]])
             else:
-                raise MechanismError("Invalid integration_type: '{}'. For the DDM mechanism, integration_type must be set"
-                                     " to 'DIFFUSION'".format(self.function_params['integration_type']))
+                raise MechanismError(
+                    "Invalid integration_type: '{}'. For the DDM mechanism, integration_type must be set"
+                    " to 'DIFFUSION'".format(self.function_params['integration_type']))
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif self.timeScale == TimeScale.TRIAL:
@@ -815,20 +813,20 @@ class DDM(ProcessingMechanism_Base):
             noise = float(self.parameterStates[NOISE].value)
             t0 = float(self.parameterStates[NON_DECISION_TIME].value)
 
-            result = self.function(params={DRIFT_RATE:drift_rate,
-                                           STARTING_POINT:starting_point,
-                                           THRESHOLD:threshold,
-                                           NOISE:noise,
-                                           NON_DECISION_TIME:t0},
+            result = self.function(params={DRIFT_RATE: drift_rate,
+                                           STARTING_POINT: starting_point,
+                                           THRESHOLD: threshold,
+                                           NOISE: noise,
+                                           NON_DECISION_TIME: t0},
                                    context=context)
 
             if isinstance(self.function.__self__, BogaczEtAl):
-                return_value = np.array([[0.0],[0.0],[0.0],[0.0]])
+                return_value = np.array([[0.0], [0.0], [0.0], [0.0]])
                 return_value[DDM_Output.RESPONSE_TIME.value], return_value[DDM_Output.P_LOWER_MEAN.value] = result
                 return_value[DDM_Output.P_UPPER_MEAN.value] = 1 - return_value[DDM_Output.P_LOWER_MEAN.value]
 
             elif isinstance(self.function.__self__, NavarroAndFuss):
-                return_value = np.array([[0],[0],[0],[0],[0],[0]])
+                return_value = np.array([[0], [0], [0], [0], [0], [0]])
                 return_value[DDM_Output.RESPONSE_TIME.value] = result[NF_Results.MEAN_DT.value]
                 return_value[DDM_Output.P_LOWER_MEAN.value] = result[NF_Results.MEAN_ER.value]
                 return_value[DDM_Output.P_UPPER_MEAN.value] = 1 - result[NF_Results.MEAN_ER.value]
@@ -847,32 +845,32 @@ class DDM(ProcessingMechanism_Base):
         else:
             raise MechanismError("time_scale not specified for DDM")
 
-    # def _out_update(self, particle, drift, noise, time_step_size, decay):
-    #     ''' Single update for OU (special case l=0 is DDM)'''
-    #     return particle + time_step_size * (decay * particle + drift) + random.normal(0, noise) * sqrt(time_step_size)
+            # def _out_update(self, particle, drift, noise, time_step_size, decay):
+            #     ''' Single update for OU (special case l=0 is DDM)'''
+            #     return particle + time_step_size * (decay * particle + drift) + random.normal(0, noise) * sqrt(time_step_size)
 
 
-    # def _ddm_update(self, particle, a, s, dt):
-    #     return self._out_update(particle, a, s, dt, decay=0)
+            # def _ddm_update(self, particle, a, s, dt):
+            #     return self._out_update(particle, a, s, dt, decay=0)
 
 
-    # def _ddm_rt(self, x0, t0, a, s, z, dt):
-    #     samps = 0
-    #     particle = x0
-    #     while abs(particle) < z:
-    #         samps = samps + 1
-    #         particle = self._out_update(particle, a, s, dt, decay=0)
-    #     # return -rt for errors as per convention
-    #     return (samps * dt + t0) if particle > 0 else -(samps * dt + t0)
+            # def _ddm_rt(self, x0, t0, a, s, z, dt):
+            #     samps = 0
+            #     particle = x0
+            #     while abs(particle) < z:
+            #         samps = samps + 1
+            #         particle = self._out_update(particle, a, s, dt, decay=0)
+            #     # return -rt for errors as per convention
+            #     return (samps * dt + t0) if particle > 0 else -(samps * dt + t0)
 
-    # def _ddm_distr(self, n, x0, t0, a, s, z, dt):
-    #     return np.fromiter((self._ddm_rt(x0, t0, a, s, z, dt) for i in range(n)), dtype='float64')
+            # def _ddm_distr(self, n, x0, t0, a, s, z, dt):
+            #     return np.fromiter((self._ddm_rt(x0, t0, a, s, z, dt) for i in range(n)), dtype='float64')
 
 
-    # def terminate_function(self, context=None):
-    #     """Terminate the process
-    #     called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
-    #     returns output
-    #     Returns: value
-    #     """
-    #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
+            # def terminate_function(self, context=None):
+            #     """Terminate the process
+            #     called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
+            #     returns output
+            #     Returns: value
+            #     """
+            #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
