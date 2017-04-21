@@ -2691,7 +2691,7 @@ class System_Base(System):
                 #### CHANGE MADE HERE ###
                 # if rcvr is learning mechanism, draw arrow with learning color
                 if isinstance(rcvr[0], LearningMechanism) or isinstance(rcvr[0], ObjectiveMechanism):
-                    arrow_color=learning_color
+                    arrow_color=control_color
                 else:
                     arrow_color="black"
                 G.edge(sndr_label, rcvr_label, label = edge_label, color=arrow_color)
