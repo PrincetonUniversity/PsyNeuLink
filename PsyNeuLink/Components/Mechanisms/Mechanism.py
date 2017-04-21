@@ -1703,10 +1703,10 @@ class Mechanism_Base(Mechanism):
                     context=None):
         return self.function(variable=variable, params=runtime_params, time_scale=time_scale, context=context)
 
-    def _report_mechanism_execution(self, input=None, params=None, output=None):
+    def _report_mechanism_execution(self, input_val=None, params=None, output=None):
 
-        if input is None:
-            input = self.inputValue
+        if input_val is None:
+            input_val = self.inputValue
         if output is None:
             output = self.outputState.value
         params = params or self.user_params
@@ -1719,11 +1719,16 @@ class Mechanism_Base(Mechanism):
 
         # # MODIFIED 2/20/17 OLD:
         # if not isinstance(input, Iterable):
-        #     input_string = [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")
+        #     input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
         # else:
-        #     input_string = input
-        # MODIFIED 2/20/17 NEW:
-        input_string = [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")
+            input_string = input_val
+        # # MODIFIED 2/20/17 NEW:
+        # input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
+        # MODIFIED 4/21/17 NEWER: [NEW CRASHES IF input_val IS AN ARRAY]
+        if isinstance(input_val, np.ndarray) and input_val.ndim > 1 and input_val.shape[1] > 1:
+            input_string = input_val
+        else:
+            input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
         # MODIFIED 2/20/17 END
 
         print ("\n\'{}\'{} executed:\n- input:  {}".

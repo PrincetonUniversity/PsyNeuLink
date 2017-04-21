@@ -637,7 +637,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Suppress reporting of range (not currently used)
         del print_params[RANGE]
 
-        super()._report_mechanism_execution(input=print_input, params=print_params)
+        super()._report_mechanism_execution(input_val=print_input, params=print_params)
 
 
     # def terminate_function(self, context=None):
