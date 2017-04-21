@@ -2653,6 +2653,78 @@ class System_Base(System):
         elif output_fmt == 'jupyter':
             return G
 
+    def show_graph_with_control(self, output_fmt='pdf', direction = 'BT', control_color='blue'):
+
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+
+        import graphviz as gv
+
+        system_graph = self.graph
+
+        # build graph and configure visualisation settings
+        G = gv.Digraph(engine = "dot", 
+                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'}, 
+                       edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
+                       graph_attr = {"rankdir" : direction} )
+
+        # work with system graph
+        rcvrs = list(system_graph.keys())
+        # loop through receivers
+        for rcvr in rcvrs:
+            rcvr_name = rcvr[0].name
+            rcvr_label = rcvr_name
+
+            # loop through senders
+            sndrs = system_graph[rcvr]
+            for sndr in sndrs:
+                sndr_name = sndr[0].name
+                sndr_label = sndr_name
+
+                # find edge name
+                projs = sndr[0].outputState.sendsToProjections
+                for proj in projs:
+                    if proj.receiver.owner == rcvr[0]:
+                        edge_name = proj.name
+                edge_label = edge_name
+                #### CHANGE MADE HERE ###
+                # if rcvr is learning mechanism, draw arrow with learning color
+                if isinstance(rcvr[0], LearningMechanism) or isinstance(rcvr[0], ObjectiveMechanism):
+                    arrow_color=learning_color
+                else:
+                    arrow_color="black"
+                G.edge(sndr_label, rcvr_label, label = edge_label, color=arrow_color)
+
+        controller = self.controller
+
+        connector = controller.inputState.receivesFromProjections[0]
+        objmech = connector.sender.owner
+
+        # main edge
+        G.node(controller.name, color=control_color)
+        G.node(objmech.name, color=control_color)
+        G.edge(objmech.name, controller.name, label=connector.name, color=control_color)
+
+        # outgoing edges
+        for output_state in controller.controlSignals:
+            for projection in output_state.sendsToProjections:
+                edge_name
+                rcvr_name = projection.receiver.owner.name
+                G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
+
+        # incoming edges
+        for istate in objmech.inputStates.values():
+            for proj in istate.receivesFromProjections:
+                sndr_name = proj.sender.owner.name
+                G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
+
+        if   output_fmt == 'pdf':
+            G.view(self.name.replace(" ", "-"), cleanup=True)
+        elif output_fmt == 'jupyter':
+            return G
+
+  
     def show_graph_with_learning(self, output_fmt='pdf', direction = 'BT', learning_color='green'):
         """Generate visualization of interconnections between all mechanisms and projections, including all learning machinery
 
