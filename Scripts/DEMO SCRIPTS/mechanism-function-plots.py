@@ -1,5 +1,8 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+
+import matplotlib
+matplotlib.use('TkAgg')
 # LINEAR
 
 # Creating a Transfer Mechanism with a Linear function

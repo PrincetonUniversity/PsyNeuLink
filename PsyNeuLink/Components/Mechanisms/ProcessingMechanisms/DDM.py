@@ -622,42 +622,83 @@ class DDM(ProcessingMechanism_Base):
             towards a specified threshold
 
         """
-
         import matplotlib.pyplot as plt
+        import time
         plt.ion()
 
-        # # Select a random seed to ensure that the test run will be the same as the real run
-        seed_value = np.random.randint(0, 100)
-        np.random.seed(seed_value)
+        # set initial values and threshold
+        time_step = [0]
+        position = [float(self.variable)]
         self.variable = stimulus
 
-        result_check = 0
-        time_check = 0
+        # execute the mechanism once to begin the loop
+        result_check = self.plot_function(self.variable, context="plot")[0][0]
 
+        # continue executing the ddm until its value exceeds the threshold
         while abs(result_check) < threshold:
-            time_check += 1
-            result_check = self.get_axes_function(self.variable, context='plot')
+            time_step.append(time_step[-1] + 1)
+            position.append(result_check)
+            result_check = self.plot_function(self.variable, context="plot")[0][0]
 
-        # Re-set random seed for the real run
-        np.random.seed(seed_value)
-        axes = plt.gca()
-        axes.set_xlim([0, time_check])
-        axes.set_xlabel("Time Step", weight="heavy", size="large")
-        axes.set_ylim([-1.25 * threshold, 1.25 * threshold])
-        axes.set_ylabel("Position", weight="heavy", size="large")
-        plt.axhline(y=threshold, linewidth=1, color='k', linestyle='dashed')
-        plt.axhline(y=-threshold, linewidth=1, color='k', linestyle='dashed')
-        plt.plot()
+        # add the ddm's final position to the list of positions
+        time_step.append(time_step[-1] + 1)
+        position.append(result_check)
 
-        result = 0
-        time = 0
-        while abs(result) < threshold:
-            time += 1
-            result = self.plot_function(self.variable, context='plot')
-            plt.plot(time, float(result), '-o', color='r', ms=2.5)
-            plt.pause(0.01)
+        figure, ax = plt.subplots(1, 1)
+        lines, = ax.plot([], [], 'o')
+        ax.set_xlim(0, time_step[-1])
+        ax.set_ylim(-threshold, threshold)
+        ax.grid()
+        xdata = []
+        ydata = []
 
-        plt.pause(10000)
+        # add each of the position values to the plot one at a time
+        for t in range(time_step[-1]):
+            xdata.append(t)
+            ydata.append(position[t])
+            lines.set_xdata(xdata)
+            lines.set_ydata(ydata)
+            figure.canvas.draw()
+            # number of seconds to wait before next point is plotted
+            time.sleep(.1)
+
+
+        #
+        # import matplotlib.pyplot as plt
+        # plt.ion()
+        #
+        # # # Select a random seed to ensure that the test run will be the same as the real run
+        # seed_value = np.random.randint(0, 100)
+        # np.random.seed(seed_value)
+        # self.variable = stimulus
+        #
+        # result_check = 0
+        # time_check = 0
+        #
+        # while abs(result_check) < threshold:
+        #     time_check += 1
+        #     result_check = self.get_axes_function(self.variable, context='plot')
+        #
+        # # Re-set random seed for the real run
+        # np.random.seed(seed_value)
+        # axes = plt.gca()
+        # axes.set_xlim([0, time_check])
+        # axes.set_xlabel("Time Step", weight="heavy", size="large")
+        # axes.set_ylim([-1.25 * threshold, 1.25 * threshold])
+        # axes.set_ylabel("Position", weight="heavy", size="large")
+        # plt.axhline(y=threshold, linewidth=1, color='k', linestyle='dashed')
+        # plt.axhline(y=-threshold, linewidth=1, color='k', linestyle='dashed')
+        # plt.plot()
+        #
+        # result = 0
+        # time = 0
+        # while abs(result) < threshold:
+        #     time += 1
+        #     result = self.plot_function(self.variable, context='plot')
+        #     plt.plot(time, float(result), '-o', color='r', ms=2.5)
+        #     plt.pause(0.01)
+        #
+        # plt.pause(10000)
 
     # MODIFIED 11/21/16 NEW:
     def _validate_variable(self, variable, context=None):
