@@ -1781,7 +1781,10 @@ class Mechanism_Base(Mechanism):
         # else:
         #     output_string = output
         # MODIFIED 2/20/17 NEW:
-        output = [output]
+        try:
+            iter(output)
+        except TypeError:
+            output = [output]
         output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
         # MODIFIED 2/20/17 END
 
