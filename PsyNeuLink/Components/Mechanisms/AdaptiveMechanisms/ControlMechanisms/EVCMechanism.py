@@ -883,7 +883,9 @@ class EVCMechanism(ControlMechanism_Base):
 
         MappingProjection(sender=self.monitoring_mechanism,
                           receiver=self,
-                          matrix=AUTO_ASSIGN_MATRIX)
+                          matrix=AUTO_ASSIGN_MATRIX,
+                          name = self.system.name + ' outcome signal'
+                          )
 
     def _get_monitored_states(self, context=None):
         """
