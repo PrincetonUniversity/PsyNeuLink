@@ -1722,10 +1722,10 @@ class Mechanism_Base(Mechanism):
         #     input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
         # else:
             input_string = input_val
-        # MODIFIED 2/20/17 NEW:
+        # # MODIFIED 2/20/17 NEW:
         # input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
         # MODIFIED 4/21/17 NEWER: [NEW CRASHES IF input_val IS AN ARRAY]
-        if isinstance(input_val, np.ndarray) and input_val.ndim >1:
+        if isinstance(input_val, np.ndarray) and input_val.ndim > 1 and input_val.shape[1] > 1:
             input_string = input_val
         else:
             input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
