@@ -787,10 +787,13 @@ class Mechanism_Base(Mechanism):
         """
 
         # Forbid direct call to base class constructor
-        if not isinstance(context, type(self)) and not VALIDATE in context:
+        if context is None or (not isinstance(context, type(self)) and not VALIDATE in context):
+            # raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
+                                 # "use mechanism() or one of the following subclasses: {0}".
+                                 # format(", ".join("{!s}".format(key) for (key) in MechanismRegistry.keys())))
+                                 # format(", ".join("{!s}".format(key) for (key) in MechanismRegistry.keys())))
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
-                                 "use mechanism() or one of the following subclasses: {0}".
-                                 format(", ".join("{!s}".format(key) for (key) in MechanismRegistry.keys())))
+                                 "use mechanism() or a subclass")
 
 # IMPLEMENT **args (PER State)
 

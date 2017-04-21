@@ -61,6 +61,10 @@ class ScratchPadError(Exception):
 # my_mech = mechanism()
 # print(my_mech.name)
 
+# my_mech = Mechanism()
+
+my_mech = Mechanism_Base()
+
 # my_process = process()
 # print(my_process.name)
 # my_process = process()
@@ -73,6 +77,13 @@ class ScratchPadError(Exception):
 # my_process = Process()
 # print(my_process.name)
 
+# my_process = Process_Base()
+# print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
+
 # my_sys = system()
 # print(my_sys.name)
 # my_sys = system()
@@ -82,23 +93,14 @@ class ScratchPadError(Exception):
 # my_sys = system()
 # print(my_sys.name)
 
-# DOESN'T WORK:
-
-
-# my_mech = Mechanism()
-# print(my_mech.name)
-
-# my_mech = Mechanism_Base()
-# print(my_mech.name)
-
-my_process = Process_Base()
-print(my_process.name)
-my_process = Process_Base()
-print(my_process.name)
-
-# my_sys = System(variable_default=None, param_defaults=None)
+# my_sys = System()
 
 # my_sys = System_Base()
+# print(my_sys.name)
+# my_sys = System_Base()
+# print(my_sys.name)
+# my_sys = System_Base()
+# print(my_sys.name)
 
 #endregion
 

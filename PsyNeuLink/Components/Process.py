@@ -901,8 +901,8 @@ class Process_Base(Process):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Note: don't confuse target_set (argument of validate_params) with self.target (process attribute for learning)
-        if kwInitialValues in target_set and target_set[kwInitialValues]:
-            for mech, value in target_set[kwInitialValues].items():
+        if INITIAL_VALUES in target_set and target_set[INITIAL_VALUES]:
+            for mech, value in target_set[INITIAL_VALUES].items():
                 if not isinstance(mech, Mechanism):
                     raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
