@@ -63,7 +63,7 @@ class ScratchPadError(Exception):
 
 # my_mech = Mechanism()
 
-my_mech = Mechanism_Base()
+# my_mech = Mechanism_Base()
 
 # my_process = process()
 # print(my_process.name)
@@ -95,12 +95,12 @@ my_mech = Mechanism_Base()
 
 # my_sys = System()
 
-# my_sys = System_Base()
-# print(my_sys.name)
-# my_sys = System_Base()
-# print(my_sys.name)
-# my_sys = System_Base()
-# print(my_sys.name)
+my_sys = System_Base()
+print(my_sys.name)
+my_sys = System_Base()
+print(my_sys.name)
+my_sys = System_Base()
+print(my_sys.name)
 
 #endregion
 
