@@ -783,8 +783,10 @@ class System_Base(System):
         self.targets = None
         self.current_targets = None
         self.learning = False
-        self.scheduler = scheduler
+        self.scheduler_processing = scheduler
         self.scheduler_learning = None
+        self.termination_processing = None
+        self.termination_learning = None
 
         register_category(entry=self,
                           base_class=System_Base,
@@ -1854,7 +1856,8 @@ class System_Base(System):
                 execution_id=None,
                 clock=CentralClock,
                 time_scale=None,
-                termination_conditions={ts: None for ts in TimeScale},
+                termination_processing=None,
+                termination_learning=None,
                 # time_scale=TimeScale.TRIAL
                 context=None):
         """Execute mechanisms in system at specified :ref:`phases <System_Execution_Phase>` in order \
@@ -1962,6 +1965,10 @@ class System_Base(System):
                         raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
         self.input = input
+        if termination_processing is not None:
+            self.termination_processing = termination_processing
+        if termination_learning is not None:
+            self.termination_learning = termination_learning
         #endregion
 
         if self._report_system_output:
@@ -1976,7 +1983,7 @@ class System_Base(System):
         # sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
-        self._execute_processing(clock=clock, termination_conditions=termination_conditions, context=context)
+        self._execute_processing(clock=clock, context=context)
         #endregion
 
         # region EXECUTE LEARNING FOR EACH PROCESS
@@ -2013,14 +2020,14 @@ class System_Base(System):
 
         return self.terminalMechanisms.outputStateValues
 
-    def _execute_processing(self, clock=CentralClock, termination_conditions={ts: None for ts in TimeScale}, context=None):
+    def _execute_processing(self, clock=CentralClock, context=None):
     # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
         # Execute each Mechanism in self.executionList, in the order listed during its phase
 
-        if self.scheduler is None:
+        if self.scheduler_processing is None:
             raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, must be initialized before execution'.format(self.name))
-        logger.debug('{0}.scheduler termination conditions: {1}'.format(self, termination_conditions))
-        for next_execution_set in self.scheduler.run(termination_conds=termination_conditions):
+        logger.debug('{0}.scheduler processing termination conditions: {1}'.format(self, self.termination_processing))
+        for next_execution_set in self.scheduler_processing.run(termination_conds=self.termination_processing):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             for mechanism in next_execution_set:
                 logger.debug('\tRunning mechanism {0}'.format(mechanism))
@@ -2145,7 +2152,8 @@ class System_Base(System):
             call_after_time_step=None,
             clock=CentralClock,
             time_scale=None,
-            termination_conditions=None,
+            termination_processing=None,
+            termination_learning=None,
             context=None):
         """Run a sequence of executions
 
@@ -2204,13 +2212,14 @@ class System_Base(System):
             list of the OutputValue for each `TERMINAL` mechanism of the system returned for each execution.
 
         """
-        if self.scheduler is None:
-            self.scheduler = Scheduler(system=self)
+        if self.scheduler_processing is None:
+            self.scheduler_processing = Scheduler(system=self)
+
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(nodes=self.learningExecutionList, toposort_ordering=self.learningGraph)
 
         logger.debug(inputs)
-        logger.debug(termination_conditions)
+
         from PsyNeuLink.Globals.Run import run
         return run(self,
                    inputs=inputs,
@@ -2224,7 +2233,8 @@ class System_Base(System):
                    call_before_time_step=call_before_time_step,
                    call_after_time_step=call_after_time_step,
                    time_scale=time_scale,
-                   termination_conditions=termination_conditions,
+                   termination_processing=termination_processing,
+                   termination_learning=termination_learning,
                    clock=clock,
                    context=context)
 

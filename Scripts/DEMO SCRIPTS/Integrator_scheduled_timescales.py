@@ -69,18 +69,18 @@ s = system(
 
 stim_list = {A: [[1]]}
 
-s.scheduler = Scheduler(system=s)
-s.scheduler.add_condition(A, Any(AtPass(0), EveryNCalls(D, 1)))
+s.scheduler_processing = Scheduler(system=s)
+s.scheduler_processing.add_condition(A, Any(AtPass(0), EveryNCalls(D, 1)))
 # B has default condition of Always - run at every chance
-s.scheduler.add_condition(C, EveryNCalls(B, 5))
-s.scheduler.add_condition(D, EveryNCalls(C, 1))
+s.scheduler_processing.add_condition(C, EveryNCalls(B, 5))
+s.scheduler_processing.add_condition(D, EveryNCalls(C, 1))
 
 term_conds = {TimeScale.TRIAL: AfterNCalls(D, 1)}
 
 s.show_graph()
 results = s.run(
     inputs=stim_list,
-    termination_conditions=term_conds
+    termination_processing=term_conds
 )
-logger.info('Executed in order: {0}'.format(s.scheduler.execution_list))
+logger.info('Executed in order: {0}'.format(s.scheduler_processing.execution_list))
 logger.info('System result: {0}'.format(results))

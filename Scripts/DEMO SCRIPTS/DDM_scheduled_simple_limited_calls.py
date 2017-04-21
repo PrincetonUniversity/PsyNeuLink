@@ -50,16 +50,16 @@ s = system(
 
 stim_list = {o: [[1]]}
 
-s.scheduler = Scheduler(system=s)
-s.scheduler.add_condition(o, AtPass(0))
+s.scheduler_processing = Scheduler(system=s)
+s.scheduler_processing.add_condition(o, AtPass(0))
 # ddm has default condition of Always - run at every chance
-s.scheduler.add_condition(term, Any(WhenFinished(ddm), AfterNCalls(ddm, 10)))
+s.scheduler_processing.add_condition(term, Any(WhenFinished(ddm), AfterNCalls(ddm, 10)))
 
 term_conds = {TimeScale.TRIAL: AfterNCalls(term, 1)}
 
 s.show_graph()
 results = s.run(
     inputs=stim_list,
-    termination_conditions=term_conds
+    termination_processing=term_conds
 )
 logger.info('System result: {0}'.format(results))

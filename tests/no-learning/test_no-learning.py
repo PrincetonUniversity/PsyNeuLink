@@ -121,7 +121,7 @@ class TestNoLearning:
                         # inputs=[[-1, 30],[2, 10]],
                         # targets=[[0, 0, 1],[0, 0, 1]],
                         inputs=stim_list,
-                        termination_conditions=term_conds
+                        termination_processing=term_conds
         )
 
         # list consisting of Output_Layer's OutputState, [result, mean, variance]
