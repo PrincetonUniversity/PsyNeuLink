@@ -58,6 +58,9 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: Matrix specifications in Multilayer Learning Test Script:
+#      default spec (if MappingProjection is commented out) not working
+#
 # FIX: Control:  Graceful treatment (or relevant error message) if control is specified by no monitoring projections:
 #                 LINE 319 of ControlMechanism
 #                 LINE 1256 of EVCMechanism
