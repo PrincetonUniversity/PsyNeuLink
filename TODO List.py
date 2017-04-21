@@ -58,7 +58,7 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
-
+# IMPLEMENT:  Deferred init for control.
 # FIX: Flip names of Xxxx() and Xxxx_Base()
 
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)

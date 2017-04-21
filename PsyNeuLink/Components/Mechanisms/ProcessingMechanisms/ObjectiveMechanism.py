@@ -739,4 +739,4 @@ def _instantiate_monitoring_projection(sender, receiver, matrix=DEFAULT_MATRIX):
     MappingProjection(sender=sender,
                       receiver=receiver,
                       matrix=matrix,
-                      name = sender.owner.name + ' to ' + SAMPLE)
+                      name = sender.name + ' monitor')
