@@ -234,7 +234,7 @@ NAME = "name"
 PARAMS = "params"
 CONTEXT = "context"
 
-kwInitialValues = 'initial_values'
+INITIAL_VALUES = 'initial_values'
 
 # inputs list/ndarray:
 TRIALS_DIM = 0
