@@ -316,6 +316,16 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Iterate through old controller's outputStates
         to_be_deleted_outputStates = []
+
+        try:
+            DefaultController.outputStates
+        except AttributeError:
+            if self.system.verbosePref:
+                warnings.warn("No ControlProjections specified for {};  control will be disabled".
+                              format(self.system.name))
+            self.system.enable_controller = False
+            return
+
         for outputState in DefaultController.outputStates:
 
             # Iterate through projections sent for outputState

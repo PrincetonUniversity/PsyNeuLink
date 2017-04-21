@@ -117,6 +117,7 @@ def show_results():
 mySystem.controller.reportOutputPref = False
 
 # mySystem.show_graph(direction='LR')
+mySystem.show_graph_with_control()
 
 # mySystem.run(inputs=trial_list,
 # # mySystem.run(inputs=reversed_trial_list,
