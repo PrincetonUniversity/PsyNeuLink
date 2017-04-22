@@ -1895,7 +1895,7 @@ class SoftMax(
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
         determines how the softmax-transformed values of the elements in `variable <SoftMax.variable>` are reported
         in the array returned by `function <SoftMax.funtion>`:
-            * **ALL**: array of all softmax-transformed values;
+            * **ALL**: array of all softmax-transformed values (the default);
             * **MAX_VAL**: softmax-transformed value for the element with the maximum such value, 0 for all others;
             * **MAX_INDICATOR**: 1 for the element with the maximum softmax-transformed value, 0 for all others;
             * **PROB**: probabilistically chosen element based on softmax-transformed values after normalizing sum of
@@ -2015,13 +2015,27 @@ class SoftMax(
         Returns
         -------
 
-        derivative :  number
-            output - maximum value.
+        derivative :  2d np.array
+            derivative of the SoftMax value of each element of the array with respect to the others:
+            D\ :sub:`j`\ S\ :sub:`i` = S\ :sub:`i`\ (𝜹\ :sub:`i,j` - S\ :sub:`j`), 
+            where 𝜹\ :sub:`i,j`\ =1 if i=j and 𝜹\ :sub:`i,j`\ =0 if i≠j.
 
         """
-        # FIX: ??CORRECT:
-        indicator = self.function(input, params={MAX_VAL: True})
-        return output - indicator
+
+        size = len(input)
+        sm = self.function(input, params={OUTPUT_TYPE: ALL})
+        derivative = np.empty([size, size])
+
+        for j in range(size):
+            for i in self.variable:
+                if i==j:
+                    d = 1
+                else:
+                    d = 0
+                derivative[j,i] = sm[i] * (d - sm[j])
+
+        return derivative
+
 
 
 class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------
