@@ -2015,7 +2015,7 @@ class SoftMax(
         derivative(output)
 
         Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL, 
-        return Jacobian matrix of derivatives for each element of the output array with respect to the others:
+        return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
             COMMENT:
                 D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
             COMMENT
@@ -2064,7 +2064,6 @@ class SoftMax(
         else:
             raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB"
                                 "(and therefore choice of item is ambiguous".format(self.owner_name))
-
 
         return derivative
 
