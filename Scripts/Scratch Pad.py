@@ -31,10 +31,9 @@ class ScratchPadError(Exception):
         self.error_value = error_value
 
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
-#
 
-# #region TEST whether function attribute assignment is used and "sticks"
-#
+#region TEST whether function attribute assignment is used and "sticks"
+
 # my_mech = IntegratorMechanism()
 # # my_mech.function_object.rate = 2.0
 # print(my_mech.execute())
@@ -44,9 +43,8 @@ class ScratchPadError(Exception):
 # print(my_mech.function_object.rate)
 # my_mech.function_object.rate = .2
 # print(my_mech.execute())
-#
-# #endregion
 
+#endregion
 
 #region TEST Multipe Inits
 
@@ -95,17 +93,17 @@ class ScratchPadError(Exception):
 
 # my_sys = System()
 
-my_sys = System_Base()
-print(my_sys.name)
-my_sys = System_Base()
-print(my_sys.name)
-my_sys = System_Base()
-print(my_sys.name)
+# my_sys = System_Base()
+# print(my_sys.name)
+# my_sys = System_Base()
+# print(my_sys.name)
+# my_sys = System_Base()
+# print(my_sys.name)
 
 #endregion
 
-# #region TEST ReadOnlyOrderedDict
-#
+# region TEST ReadOnlyOrderedDict
+
 # from collections import UserDict, OrderedDict
 #
 # # class ReadOnlyOrderedDict(OrderedDict):
@@ -213,7 +211,7 @@ print(my_sys.name)
 
 #endregion
 
-# #region TEST AUTO_PROP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST AUTO_PROP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # defaults = {'foo':5, 'bar': ['hello', 'world']}
 #
@@ -273,7 +271,7 @@ print(my_sys.name)
 #     the docs we installed are available in the help system""")
 # #endregion
 
-# #region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # print = Linear(variable=[[1,1],[2,2]])
 
@@ -284,7 +282,6 @@ print(my_sys.name)
 #
 # Decision.execute()
 
-#endregion
 
 # for i, j in zip(range(5), range(5)):
 #     print(i, j)
@@ -481,10 +478,10 @@ print(my_sys.name)
 #              name='y')
 #
 # TEST = True
-
+#
 # print(y.run([1,2,3]))
 
-#endegion
+#endregion
 
 #region TEST INPUT FORMATS
 
@@ -600,17 +597,25 @@ print(my_sys.name)
 
 #region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Components.Functions.Function import *
-# #
+from PsyNeuLink.Components.Functions.Function import *
+#
+x = SoftMax()
 # x = SoftMax(output=SoftMax.PROB)
-# y = x.execute([-11, 2, 3])
-# print ("SoftMax execute return value: \n", y)
-#
-# # z = x.derivative(x.execute([-11, 2, 3]))
-# # z = x.derivative(y)
-# # z = x.derivative(output=y, input=[-11, 2, 3])
-#
-# # print ("SoftMax derivative return value: \n", z)
+# x = SoftMax(output=MAX_VAL)
+y = x.function([-11, 2, 3])
+z = x.derivative([-11, 2, 3])
+print ("SoftMax execute return value: \n", [float(i) for i in y])
+if z.ndim == 1:
+    print ("SoftMax derivative return value: \n", [float(i) for i in z])
+else:
+    print ("SoftMax derivative return value: \n", [[float(i) for i in j] for j in z])
+
+
+# z = x.derivative(x.execute([-11, 2, 3]))
+# z = x.derivative(y)
+# z = x.derivative(output=y, input=[-11, 2, 3])
+
+# print ("SoftMax derivative return value: \n", z)
 
 #endregion
 
@@ -1820,7 +1825,7 @@ import typecheck as tc
 # except TypeError:
 #     pass
 # #endregion
-#
+
 # print(state_params)
 
 #region TEST:  ORDERED DICTIONARY ORDERING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -1841,7 +1846,6 @@ import typecheck as tc
 # print ("b: ", b)
 #
 #endregion
-
 
 #region TEST:  add a parameterState to a param after an object is instantiated @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 

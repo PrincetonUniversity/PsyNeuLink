@@ -58,7 +58,7 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
-# FIX: SoftMax: augment with OUTPUT_VALUE
+# FIX: Function, derivatives: change output to input??
 #
 # IMPLEMENT:  Deferred init for control.
 # FIX: Flip names of Xxxx() and Xxxx_Base()
