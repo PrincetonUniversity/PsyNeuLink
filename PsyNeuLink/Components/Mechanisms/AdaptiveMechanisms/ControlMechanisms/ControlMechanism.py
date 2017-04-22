@@ -299,6 +299,8 @@ class ControlMechanism_Base(Mechanism_Base):
             # If specified as DefaultController, reassign ControlProjections from DefaultController
             if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
                 self._take_over_as_default_controller(context=context)
+            if not self.system.enable_controller:
+                return
         except KeyError:
             pass
 
