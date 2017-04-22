@@ -2053,13 +2053,13 @@ class SoftMax(
             derivative = np.empty(size)
             # Get the element of output returned as non-zero when output_type is not ALL
             index_of_max = int(np.where(output==np.max(output))[0])
-            max_item = output[index_of_max]
+            max_val = sm[index_of_max]
             for i in range(size):
                 if i==index_of_max:
                     d = 1
                 else:
                     d = 0
-                derivative[i] = sm[i] * (d - sm[i])
+                derivative[i] = sm[i] * (d - max_val)
 
         else:
             raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
