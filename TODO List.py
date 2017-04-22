@@ -90,12 +90,8 @@
 
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
 
-# FIX: Component: IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
-#                 SEE learning_rate IN LearningMechanism FOR EXAMPLE
-# FIX: MOVE setattr OUT OF make_property AND HAVE make_property TAKE IT AS AN ARG
-
+# TEST: learning_rate is assignable and "sticks" at function, mech, process and system levels
 # FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)
-# QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)#
 # FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
 # FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
 # FIX: DERIVATIVE FOR SoftMax Function
