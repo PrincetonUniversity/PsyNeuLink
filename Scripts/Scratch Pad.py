@@ -599,23 +599,17 @@ class ScratchPadError(Exception):
 
 from PsyNeuLink.Components.Functions.Function import *
 #
-x = SoftMax()
+# x = SoftMax()
+x = SoftMax(output=MAX_VAL)
+a = [-1, 2, 1]
 # x = SoftMax(output=SoftMax.PROB)
-# x = SoftMax(output=MAX_VAL)
-y = x.function([-11, 2, 3])
-z = x.derivative([-11, 2, 3])
+y = x.function(a)
+z = x.derivative(a)
 print ("SoftMax execute return value: \n", [float(i) for i in y])
 if z.ndim == 1:
     print ("SoftMax derivative return value: \n", [float(i) for i in z])
 else:
     print ("SoftMax derivative return value: \n", [[float(i) for i in j] for j in z])
-
-
-# z = x.derivative(x.execute([-11, 2, 3]))
-# z = x.derivative(y)
-# z = x.derivative(output=y, input=[-11, 2, 3])
-
-# print ("SoftMax derivative return value: \n", z)
 
 #endregion
 
