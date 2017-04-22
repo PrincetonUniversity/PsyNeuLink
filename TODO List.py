@@ -58,15 +58,13 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
-# FIX: Control:  Graceful treatment (or relevant error message) if control is specified by no monitoring projections:
-#                 LINE 319 of ControlMechanism
-#                 LINE 1256 of EVCMechanism
-# FIX: Mechanism LINE 1728:  reporting of input_val
-
+# FIX: Function, derivatives: change output to input??
+#
 # IMPLEMENT:  Deferred init for control.
 # FIX: Flip names of Xxxx() and Xxxx_Base()
 
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
+# IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)
 
 # DOCUMENTATION: items in paramClassDefaults are created as attributes (not properties), and are thus not validated
 #                    when assignments are made to them;  items in user_params are created as properties, and are
@@ -90,15 +88,14 @@
 
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
 
-# FIX: Component: IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
-#                 SEE learning_rate IN LearningMechanism FOR EXAMPLE
-# FIX: MOVE setattr OUT OF make_property AND HAVE make_property TAKE IT AS AN ARG
+# TEST: learning_rate is assignable and "sticks" at function, mech, process and system levels
 
 # FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)
-# QUESTION: IF VARIABLE IS AN ARRAY, DOES IT RETURN AN ARRAY FOR EACH RETURN VALUE (RT, ER, ETC.)#
 # FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
 # FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
+
 # FIX: DERIVATIVE FOR SoftMax Function
+
 # FIX: ADD owner ARG TO Function CONSTRUCTOR (DEFAULT = NONE)
 # FIX: SEARCH FOR AND PURGE: monitoringMechanism and monitoring_mechanism AND monitoring_mech
 # FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
