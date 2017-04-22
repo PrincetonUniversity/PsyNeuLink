@@ -419,6 +419,10 @@ class Function_Base(Function):
                           name=name,
                           context=context)
         self.owner = owner
+        if self.owner is not None:
+            self.owner_name = ' ' + self.owner.name
+        else:
+            self.owner_name = ''
 
         super().__init__(variable_default=variable_default,
                          param_defaults=params,
@@ -1972,7 +1976,7 @@ class SoftMax(
         self._check_args(variable, params, context)
 
         # Assign the params and return the result
-        output = self.params[OUTPUT_TYPE]
+        output_type = self.params[OUTPUT_TYPE]
         gain = self.params[GAIN]
 
         # Modulate variable by gain
@@ -1985,19 +1989,19 @@ class SoftMax(
         sm = v / np.sum(v, axis=0)
 
         # For the element that is max of softmax, set it's value to its softmax value, set others to zero
-        if output is MAX_VAL:
+        if output_type is MAX_VAL:
             max_value = np.max(sm)
             sm = np.where(sm == max_value, max_value, 0)
 
         # For the element that is max of softmax, set its value to 1, set others to zero
-        elif output is MAX_INDICATOR:
+        elif output_type is MAX_INDICATOR:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             sm = np.where(sm == max_value, 1, 0)
 
         # Choose a single element probabilistically based on softmax of their values;
         #    leave that element's value intact, set others to zero
-        elif output is PROB:
+        elif output_type is PROB:
             cum_sum = np.cumsum(sm)
             random_value = np.random.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
@@ -2010,32 +2014,59 @@ class SoftMax(
         """
         derivative(output)
 
-        Derivative of `function <SoftMax.function>`.
+        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL, 
+        return Jacobian matrix of derivatives for each element of the output array with respect to the others:
+            COMMENT:
+                D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
+            COMMENT
+            D\ :sub:`j`\ S\ :sub:`i` = S\ :sub:`i`\ (𝜹\ :sub:`i,j` - S\ :sub:`j`), 
+            where 𝜹\ :sub:`i,j`\ =1 if i=j and 𝜹\ :sub:`i,j`\ =0 if i≠j.
+        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum 
+        value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
+        (since it is ambiguous as to which element would have been chosen by the SoftMax function)
 
         Returns
         -------
 
-        derivative :  2d np.array
-            derivative of the SoftMax value of each element of the array with respect to the others:
-            D\ :sub:`j`\ S\ :sub:`i` = S\ :sub:`i`\ (𝜹\ :sub:`i,j` - S\ :sub:`j`), 
-            where 𝜹\ :sub:`i,j`\ =1 if i=j and 𝜹\ :sub:`i,j`\ =0 if i≠j.
+        derivative :  1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)
+            derivative of values returns by SoftMax.
 
         """
 
+        output_type = self.params[OUTPUT_TYPE]
         size = len(input)
         sm = self.function(input, params={OUTPUT_TYPE: ALL})
-        derivative = np.empty([size, size])
 
-        for j in range(size):
-            for i in self.variable:
-                if i==j:
+        if output_type is ALL:
+            # Return full Jacobian matrix of derivatives
+            derivative = np.empty([size, size])
+            for j in range(size):
+                for i in input:
+                    if i==j:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[j,i] = sm[i] * (d - sm[j])
+
+        elif output_type in {MAX_VAL, MAX_INDICATOR}:
+            # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
+            derivative = np.empty(size)
+            # Get the element of input returned as non-zero when output_type is not ALL
+            index_of_max = np.where(input==np.max(input))[0]
+            input = input[index_of_max]
+            for i in input:
+                if i==index_of_max:
                     d = 1
                 else:
                     d = 0
-                derivative[j,i] = sm[i] * (d - sm[j])
+                derivative[i] = sm[i] * (d - sm[i])
+
+        else:
+            raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB"
+                                "(and therefore choice of item is ambiguous".format(self.owner_name))
+
 
         return derivative
-
 
 
 class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------

@@ -58,10 +58,13 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX: SoftMax: augment with OUTPUT_VALUE
+#
 # IMPLEMENT:  Deferred init for control.
 # FIX: Flip names of Xxxx() and Xxxx_Base()
 
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
+# IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)
 
 # DOCUMENTATION: items in paramClassDefaults are created as attributes (not properties), and are thus not validated
 #                    when assignments are made to them;  items in user_params are created as properties, and are

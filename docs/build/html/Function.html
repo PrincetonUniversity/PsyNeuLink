@@ -402,7 +402,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="#Function.SoftMax.function" title="Function.SoftMax.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -1067,16 +1067,20 @@ arguments of the constructor.</li>
 <dl class="method">
 <dt id="Function.SoftMax.derivative">
 <code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax.derivative" title="Permalink to this definition">¶</a></dt>
-<dd><p>Derivative of <a class="reference internal" href="#Function.SoftMax.function" title="Function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
+<dd><p>Calculates the derivative of <a class="reference internal" href="#Function.SoftMax.function" title="Function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.  If OUTPUT_TYPE is ALL, returns Jacobian matrix for
+of derivatives for each element of the array with respect to the others:</p>
+<blockquote>
+<div>D<sub>j</sub>S<sub>i</sub> = S<sub>i</sub>(𝜹<sub>i,j</sub> - S<sub>j</sub>),
+where 𝜹<sub>i,j</sub>=1 if i=j and 𝜹<sub>i,j</sub>=0 if i≠j.</div></blockquote>
+<p>If OUTPUT_TYPE is MAX_VAL, MAX_INDICATOR or PROB, returns 1d array of the derivatives of the selected value
+with respect to the other (calculated as above).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivative</strong> &#8211; derivative of the SoftMax value of each element of the array with respect to the others:
-D<sub>j</sub>S<sub>i</sub> = S<sub>i</sub>(𝜹<sub>i,j</sub> - S<sub>j</sub>)
-where 𝜹<sub>i,j</sub>=1 if i==j and 𝜹<sub>i,j</sub>=0 if i≠j.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivative</strong> &#8211; derivative of values returns by SoftMax.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">2d np.array</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)</td>
 </tr>
 </tbody>
 </table>
@@ -1567,7 +1571,7 @@ Gaussian random process).</p>
 <dt>owner</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">Mechanism</span><dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</dd>
 <dt>prefs</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.prefs" title="MappingProjection.MappingProjection.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+ <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.WaldDist.prefs" title="Function.WaldDist.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</dd>
 </dl>
@@ -1884,7 +1888,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="#Function.Logistic.variable" title="Function.Logistic.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.variable" title="TransferMechanism.TransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
