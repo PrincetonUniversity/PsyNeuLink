@@ -2165,18 +2165,10 @@ class Component(object):
                 raise ComponentError("Function being assigned to {} ({}) belongs to another component: {}".
                                      format(self.name, self.function_object.name, self.function_object.owner.name))
 
-            # IMPLEMENT:  PROGRAMMATICALLY ADD GETTER AND SETTER PROPERTY FOR EACH FUNCTION_PARAM HERE
-            #             SEE learning_rate IN LearningMechanism FOR EXAMPLE
-            # # MODIFIED 4/1/17 OLD:
-            # self.function_params = self.function_object.user_params
-            # self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
-            # MODIFIED 4/8/17 NEWER:
-            # self.function_params = ReadOnlyOrderedDict(name='function_params')
             for param_name in sorted(list(self.function_object.user_params_for_instantiation.keys())):
                 self.function_params.__additem__(param_name,
                                                  self.function_object.user_params_for_instantiation[param_name])
             self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
-            # MODIFIED 4/1/17 END
 
     def _instantiate_attributes_after_function(self, context=None):
         pass
