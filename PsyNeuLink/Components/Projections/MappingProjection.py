@@ -360,13 +360,15 @@ class MappingProjection(Projection_Base):
             (i.e., by: _instantiate_receiver(State)
 
         """
-        # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
-        if isinstance(self.receiver, Mechanism):
-            if (len(self.receiver.inputStates) > 1 and
-                    (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
-                print("{0} has more than one inputState; {1} was assigned to the first one".
-                      format(self.receiver.owner.name, self.name))
-            self.receiver = self.receiver.inputState
+        # MODIFIED 4/21/17 OLD: [MOVED TO PROJECTION INIT]
+        # # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
+        # if isinstance(self.receiver, Mechanism):
+        #     if (len(self.receiver.inputStates) > 1 and
+        #             (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
+        #         print("{0} has more than one inputState; {1} was assigned to the first one".
+        #               format(self.receiver.owner.name, self.name))
+        #     self.receiver = self.receiver.inputState
+        # MODIFIED 4/21/17 END
 
         self.reshapedWeightMatrix = False
 

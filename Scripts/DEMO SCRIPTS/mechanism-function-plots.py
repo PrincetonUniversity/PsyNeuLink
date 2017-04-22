@@ -56,20 +56,20 @@ my_Custom_Transfer_Logistic.plot()
 
 # -----------------------------------------
 
-# DDM - Dynamic Plot
-
-# Creating a DDM Mechanism
-my_DDM = DDM(function=Integrator(rate=0.1, noise=0.2, integration_type="diffusion"),
-             name='My_DDM',
-             time_scale=TimeScale.TIME_STEP
-             )
-
-# Parameters specified in above mechanism will be reflected in plot
-
-# Plot method takes two parameters --
-# First parameter is stimulus (default =1.0)
-# Second parameter is threshold (default = 10.0)
-# E.g. my_DDM.plot(2.0, 11.0) plots the DDM with a stimulus of 2.0 until it crosses -11.0 or  11.0
-my_DDM.plot()
-
+# # DDM - Dynamic Plot
+#
+# # Creating a DDM Mechanism
+# my_DDM = DDM(function=Integrator(rate=0.1, noise=0.2, integration_type="diffusion"),
+#              name='My_DDM',
+#              time_scale=TimeScale.TIME_STEP
+#              )
+#
+# # Parameters specified in above mechanism will be reflected in plot
+#
+# # Plot method takes two parameters --
+# # First parameter is stimulus (default =1.0)
+# # Second parameter is threshold (default = 10.0)
+# # E.g. my_DDM.plot(2.0, 11.0) plots the DDM with a stimulus of 2.0 until it crosses -11.0 or  11.0
+# my_DDM.plot()
+#
 #-----------------------------------------
