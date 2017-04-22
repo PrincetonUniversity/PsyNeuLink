@@ -46,23 +46,25 @@ Overview
 --------
 
 A Function is a `component <Component>` that "packages" a function (in its `function <Function_Base.function>` method)
-for use by PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function, and when that
-component is executed, that Function's `function <Function_Base.function` is executed.  The
-`function <Function_Base.function` can be any callable operation, although most commonly it is a mathematical operation
-(and, for those, almost always uses calls to numpy function).
+for use by other PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function; when thata 
+component is executed, its Function's `function <Function_Base.function>` is executed.  The
+`function <Function_Base.function>` can be any callable operation, although most commonly it is a mathematical operation
+(and, for those, almost always uses a call to one or more numpy functions).  There are two reasons PsyNeuLink 
+packages functions in a Function component: to *manage parameters*, and for *modularity*.
 
-There are two reasons PsyNeuLink packages functions in a Function component. The first is to **manage parameters**.
-Parameters are attributes of a function that either remain stable over multiple calls to the
-function (e.g., the gain or bias of a logistic function, or the learning rate of a learning function);
-or, if they change, they do less frequently or under the control of different factors than the function's variable
-(i.e., its input).  As a consequence, it is useful to manage these separately from the function's variable,
-and not have to provide them every time the function is called.  To address this, every PsyNeuLink Function has a
-set of attributes corresponding to the parameters of the function, that can be specified at the time the Function is
-created (in arguments to its constructor), and can be modified independently of a call to its :keyword:`function`.
-Modifications can be directly (e.g., in a script), or by the operation of other PsyNeuLink components (e.g.,
-`AdaptiveMechanisms`).  The second to reason PsyNeuLink uses Functions is for  **modularity**. By providing a standard
-interface, any Function assigned to a components in PsyNeuLink can be replaced with other PsyNeuLink Functions, or with
-user-written custom functions (so long as they adhere to certain standards (the PsyNeuLink `Function API <LINK>`).
+**Manage parameters**. Parameters are attributes of a function that either remain stable over multiple calls to the
+function (e.g., the `gain <Logistic.gain>` or `bias <Logistic.bias>` of a `Logistic` function, or the learning rate 
+of a learning function); or, if they change, they do so less frequently or under the control of different factors
+than the function's variable (i.e., its input).  As a consequence, it is useful to manage these separately from the 
+function's variable, and not have to provide them every time the function is called.  To address this, every 
+PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at 
+the time the Function is created (in arguments to its constructor), and can be modified independently 
+of a call to its :keyword:`function`. Modifications can be directly (e.g., in a script), or by the operation of other 
+PsyNeuLink components (e.g., `AdaptiveMechanisms`) by way of `ControlProjections <ControlProjection>`.  
+
+**Modularity**. By providing a standard interface, any Function assigned to a components in PsyNeuLink can be replaced 
+with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain standards 
+(the PsyNeuLink :ref:`Function API <LINK>`). 
 
 .. _Function_Creation:
 
@@ -92,7 +94,7 @@ method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (anot
 `function_object <Component.function_object>` attribute.  Each of the Function's attributes is also assigned
 as an attribute of the `owner <Function_Base.owner>`, and those are each associated with with a
 `parameterState <ParameterState>` of the `owner <Function_Base.owner>`.  Projections to those parameterStates can be
-used to modify the Function's parameters. 
+used by `ControlProjections <ControlProjection>` to modify the Function's parameters. 
 
 COMMENT:
 .. _Function_Output_Type_Conversion:
