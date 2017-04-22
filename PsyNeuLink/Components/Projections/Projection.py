@@ -485,6 +485,18 @@ class Projection_Base(Projection):
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
+
+        # MODIFIED 4/21/17 NEW: [MOVED FROM MappingProjection._instantiate_receiver]
+        # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
+        if isinstance(self.receiver, Mechanism):
+            if (len(self.receiver.inputStates) > 1 and
+                    (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
+                print("{0} has more than one inputState; {1} was assigned to the first one".
+                      format(self.receiver.owner.name, self.name))
+            self.receiver = self.receiver.inputState
+        # MODIFIED 4/21/17 END
+
+
 # FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlProjection??
 # FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE

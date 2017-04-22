@@ -6,6 +6,9 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
+import matplotlib
+matplotlib.use('TkAgg')
+
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic,
@@ -15,9 +18,9 @@ Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
                           default_input_value = np.zeros((5,)))
 
-#region
+# #region
 # Hidden_Layer_1.plot()
-#endregion
+# #endregion
 
 Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2',
                           function=Logistic(),
