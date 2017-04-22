@@ -599,8 +599,8 @@ class ScratchPadError(Exception):
 
 from PsyNeuLink.Components.Functions.Function import *
 #
-# x = SoftMax()
-x = SoftMax(output=MAX_VAL)
+x = SoftMax()
+# x = SoftMax(output=MAX_VAL)
 a = [-1, 2, 1]
 # x = SoftMax(output=SoftMax.PROB)
 y = x.function(a)
