@@ -1853,7 +1853,8 @@ class SoftMax(
 
     .. _SoftMax:
 
-    SoftMax transform of variable.
+    SoftMax transform of variable (see `The Softmax function and its derivative 
+    <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
 
     Arguments
     ---------
@@ -1947,8 +1948,6 @@ class SoftMax(
         sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
         filtered by `ouptput <SoftMax.output>` specification.
         
-        See for a nice consideration of softmax: XXX
-
         Arguments
         ---------
 
@@ -1976,14 +1975,6 @@ class SoftMax(
         output = self.params[OUTPUT_TYPE]
         gain = self.params[GAIN]
 
-
-        # # MODIFIED 4/22/17 OLD:
-        # # Exponentiate elements (modulated by gain)
-        # exps = np.exp(gain * self.variable)
-        # # Normalize (to sum to 1)
-        # sm = exps / np.sum(exps, axis=0)
-
-        # MODIFIED 4/22/17 NEW: [NUMERICALLY STABLE, AVOIDS NAN'S FOR EXTERME VALUES]
         # Modulate variable by gain
         v = gain * self.variable
         # Shift by max to avoid extreme values:
@@ -1992,7 +1983,6 @@ class SoftMax(
         v = np.exp(v)
         # Normalize (to sum to 1)
         sm = v / np.sum(v, axis=0)
-        # # MODIFIED 4/22/17 END
 
         # For the element that is max of softmax, set it's value to its softmax value, set others to zero
         if output is MAX_VAL:
