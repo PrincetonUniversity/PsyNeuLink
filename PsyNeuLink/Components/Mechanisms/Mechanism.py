@@ -904,6 +904,7 @@ class Mechanism_Base(Mechanism):
         x_space = np.linspace(x_range[0],x_range[1])
         plt.plot(x_space, self.function(x_space), lw=3.0, c='r')
         plt.show()
+
     def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 

@@ -1364,9 +1364,10 @@ class Process_Base(Process):
                     if not projection_found:
                         # No projection found, so instantiate MappingProjection from preceding mech to current one;
                         # Note:  If self.learning arg is specified, it has already been added to projection_params above
-                        MappingProjection(sender=preceding_item,
+                        temp = MappingProjection(sender=preceding_item,
                                 receiver=item,
-                                params=projection_params
+                                params=projection_params,
+                                name='{} from {} to {}'.format(MAPPING_PROJECTION, preceding_item.name, item.name)
                                 )
                         if self.prefs.verbosePref:
                             print("MappingProjection added from mechanism {0} to mechanism {1}"

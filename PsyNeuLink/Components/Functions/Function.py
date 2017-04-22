@@ -3210,7 +3210,7 @@ class BogaczEtAl(
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 drift_rate: parameter_spec = 1.0,
+                 drift_rate:parameter_spec = 1.0,
                  starting_point: parameter_spec = 0.0,
                  threshold: parameter_spec = 1.0,
                  noise: parameter_spec = 0.5,
