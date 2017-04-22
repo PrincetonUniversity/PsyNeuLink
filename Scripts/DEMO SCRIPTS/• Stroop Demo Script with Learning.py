@@ -16,11 +16,17 @@ Word_Input = TransferMechanism(name='Word Input', function=Linear(slope = 0.2995
 
 # Processing Mechanisms (Control)
 Color_Hidden = TransferMechanism(name='Colors Hidden',
-                               function=Logistic(gain=(1.0, ControlProjection)))
+                               # function=Logistic(gain=(1.0, ControlProjection))
+                               function=Logistic()
+                                 )
 Word_Hidden = TransferMechanism(name='Words Hidden',
-                               function=Logistic(gain=(1.0, ControlProjection)))
+                               # function=Logistic(gain=(1.0, ControlProjection))
+                               function=Logistic()
+                                 )
 Output = TransferMechanism(name='Output',
-                               function=Logistic(gain=(1.0, ControlProjection)))
+                               # function=Logistic(gain=(1.0, ControlProjection))
+                               function=Logistic()
+                                 )
 
 # Processes:
 ColorNamingProcess = process(
@@ -56,7 +62,7 @@ mySystem.show()
 stim_list_dict = {Color_Input:[1, 1],
                   Word_Input:[-1, -1]}
 
-target_list_dict = {Output:[1]}
+target_list_dict = {Output:[1, 1]}
 
 # Run system:
 Color_Hidden.reportOutputPref = True

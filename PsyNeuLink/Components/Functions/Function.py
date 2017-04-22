@@ -419,6 +419,10 @@ class Function_Base(Function):
                           name=name,
                           context=context)
         self.owner = owner
+        if self.owner is not None:
+            self.owner_name = ' ' + self.owner.name
+        else:
+            self.owner_name = ''
 
         super().__init__(variable_default=variable_default,
                          param_defaults=params,
@@ -1853,7 +1857,8 @@ class SoftMax(
 
     .. _SoftMax:
 
-    SoftMax transform of variable.
+    SoftMax transform of variable (see `The Softmax function and its derivative 
+    <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
 
     Arguments
     ---------
@@ -1894,7 +1899,7 @@ class SoftMax(
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
         determines how the softmax-transformed values of the elements in `variable <SoftMax.variable>` are reported
         in the array returned by `function <SoftMax.funtion>`:
-            * **ALL**: array of all softmax-transformed values;
+            * **ALL**: array of all softmax-transformed values (the default);
             * **MAX_VAL**: softmax-transformed value for the element with the maximum such value, 0 for all others;
             * **MAX_INDICATOR**: 1 for the element with the maximum softmax-transformed value, 0 for all others;
             * **PROB**: probabilistically chosen element based on softmax-transformed values after normalizing sum of
@@ -1946,7 +1951,7 @@ class SoftMax(
         Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
         sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
         filtered by `ouptput <SoftMax.output>` specification.
-
+        
         Arguments
         ---------
 
@@ -1971,31 +1976,32 @@ class SoftMax(
         self._check_args(variable, params, context)
 
         # Assign the params and return the result
-        output = self.params[OUTPUT_TYPE]
+        output_type = self.params[OUTPUT_TYPE]
         gain = self.params[GAIN]
 
-        # print('\ninput: {}'.format(self.variable))
-
-        # Get numerator
-        sm = np.exp(gain * self.variable)
-
-        # Normalize
-        sm = sm / np.sum(sm, axis=0)
+        # Modulate variable by gain
+        v = gain * self.variable
+        # Shift by max to avoid extreme values:
+        v = v - np.max(v)
+        # Exponentiate
+        v = np.exp(v)
+        # Normalize (to sum to 1)
+        sm = v / np.sum(v, axis=0)
 
         # For the element that is max of softmax, set it's value to its softmax value, set others to zero
-        if output is MAX_VAL:
+        if output_type is MAX_VAL:
             max_value = np.max(sm)
             sm = np.where(sm == max_value, max_value, 0)
 
         # For the element that is max of softmax, set its value to 1, set others to zero
-        elif output is MAX_INDICATOR:
+        elif output_type is MAX_INDICATOR:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             sm = np.where(sm == max_value, 1, 0)
 
         # Choose a single element probabilistically based on softmax of their values;
         #    leave that element's value intact, set others to zero
-        elif output is PROB:
+        elif output_type is PROB:
             cum_sum = np.cumsum(sm)
             random_value = np.random.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
@@ -2008,18 +2014,58 @@ class SoftMax(
         """
         derivative(output)
 
-        Derivative of `function <SoftMax.function>`.
+        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL, 
+        return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
+            COMMENT:
+                D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
+            COMMENT
+            D\ :sub:`j`\ S\ :sub:`i` = S\ :sub:`i`\ (𝜹\ :sub:`i,j` - S\ :sub:`j`), 
+            where 𝜹\ :sub:`i,j`\ =1 if i=j and 𝜹\ :sub:`i,j`\ =0 if i≠j.
+        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum 
+        value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
+        (since it is ambiguous as to which element would have been chosen by the SoftMax function)
 
         Returns
         -------
 
-        derivative :  number
-            output - maximum value.
+        derivative :  1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)
+            derivative of values returns by SoftMax.
 
         """
-        # FIX: ??CORRECT:
-        indicator = self.function(input, params={MAX_VAL: True})
-        return output - indicator
+
+        output_type = self.params[OUTPUT_TYPE]
+        size = len(output)
+        sm = self.function(output, params={OUTPUT_TYPE: ALL})
+
+        if output_type is ALL:
+            # Return full Jacobian matrix of derivatives
+            derivative = np.empty([size, size])
+            for j in range(size):
+                for i, val in zip(range(size), output):
+                    if i==j:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[j,i] = sm[i] * (d - sm[j])
+
+        elif output_type in {MAX_VAL, MAX_INDICATOR}:
+            # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
+            derivative = np.empty(size)
+            # Get the element of output returned as non-zero when output_type is not ALL
+            index_of_max = int(np.where(output==np.max(output))[0])
+            max_val = sm[index_of_max]
+            for i in range(size):
+                if i==index_of_max:
+                    d = 1
+                else:
+                    d = 0
+                derivative[i] = sm[i] * (d - max_val)
+
+        else:
+            raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
+                                "(and therefore the relevant element is ambiguous)".format(self.owner_name))
+
+        return derivative
 
 
 class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------
