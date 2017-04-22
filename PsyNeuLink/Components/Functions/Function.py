@@ -2034,14 +2034,14 @@ class SoftMax(
         """
 
         output_type = self.params[OUTPUT_TYPE]
-        size = len(input)
-        sm = self.function(input, params={OUTPUT_TYPE: ALL})
+        size = len(output)
+        sm = self.function(output, params={OUTPUT_TYPE: ALL})
 
         if output_type is ALL:
             # Return full Jacobian matrix of derivatives
             derivative = np.empty([size, size])
             for j in range(size):
-                for i in input:
+                for i, val in zip(range(size), output):
                     if i==j:
                         d = 1
                     else:
@@ -2051,10 +2051,10 @@ class SoftMax(
         elif output_type in {MAX_VAL, MAX_INDICATOR}:
             # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
             derivative = np.empty(size)
-            # Get the element of input returned as non-zero when output_type is not ALL
-            index_of_max = np.where(input==np.max(input))[0]
-            input = input[index_of_max]
-            for i in input:
+            # Get the element of output returned as non-zero when output_type is not ALL
+            index_of_max = int(np.where(output==np.max(output))[0])
+            max_item = output[index_of_max]
+            for i in range(size):
                 if i==index_of_max:
                     d = 1
                 else:
@@ -2062,8 +2062,8 @@ class SoftMax(
                 derivative[i] = sm[i] * (d - sm[i])
 
         else:
-            raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB"
-                                "(and therefore choice of item is ambiguous".format(self.owner_name))
+            raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
+                                "(and therefore the relevant element is ambiguous)".format(self.owner_name))
 
         return derivative
 
