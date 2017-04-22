@@ -1224,6 +1224,9 @@ class EVCMechanism(ControlMechanism_Base):
 
         super()._instantiate_attributes_after_function(context=context)
 
+        if not self.system.enable_controller:
+            return
+
         outcome_Function = self.outcome_function
         cost_Function = self.cost_function
 

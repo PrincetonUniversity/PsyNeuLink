@@ -61,7 +61,6 @@
 # FIX: Control:  Graceful treatment (or relevant error message) if control is specified by no monitoring projections:
 #                 LINE 319 of ControlMechanism
 #                 LINE 1256 of EVCMechanism
-# FIX: Mechanism LINE 1728:  reporting of input_val
 
 # IMPLEMENT:  Deferred init for control.
 # FIX: Flip names of Xxxx() and Xxxx_Base()
