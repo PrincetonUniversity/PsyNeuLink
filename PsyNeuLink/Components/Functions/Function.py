@@ -88,10 +88,11 @@ that determines the computation that it carries out.  Ths must be a callable obj
 method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be 
 "turtles" all the way down!).  A Function also has an attribute for each of the parameters of its `function
 <Function_Base.function>`.   If a Function has been assigned to another component, then it also has an `owner
-<Function_Base.owner>` attribute that refers to that component. Each of the Function's attributes is also assigned
+<Function_Base.owner>` attribute that refers to that component.  The Function itself is assigned as the component's
+`function_object <Component.function_object>` attribute.  Each of the Function's attributes is also assigned
 as an attribute of the `owner <Function_Base.owner>`, and those are each associated with with a
-`parameterState <ParameterState>` of the `owner <Function_Base.owner>`. Projections to those parameterStates can be
-used to modify the Function's parameters.
+`parameterState <ParameterState>` of the `owner <Function_Base.owner>`.  Projections to those parameterStates can be
+used to modify the Function's parameters. 
 
 COMMENT:
 .. _Function_Output_Type_Conversion:
