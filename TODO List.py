@@ -142,11 +142,6 @@
 #             I.E., THAT THIS BE OK FOR ALL OTHER INSTANCES OF THAT CLASS
 #             FOR EXAMPLE, IN assign_params_to_dicts, WHERE A DEFAULT IS SPECIFIED IN THE ARG RATHER THAN classDefaults
 #
-#
-# FIX: WHY DOESN"T THIS WORK: [ASSIGNMENT OF LEARNING_RATE TO SLOPE OF LEARNING FUNCTION]
-# FIX: HANDLE THIS AS runtime_param??
-#         if self.learning_rate:
-#             params.update({SLOPE:self.learning_rate})
 
 # FIX:
 #    0) Deal with function parameter assignment in update() of ParameterState
