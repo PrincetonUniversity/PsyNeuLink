@@ -478,27 +478,26 @@ class LearningProjection(Projection_Base):
         learned_projection.has_learning_projection = True
 
 
-    def execute(self, input=None, clock=CentralClock, time_scale=None, params={}, context=None):
+    def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
+
+        params = params or {}
 
         # Pass during initialization (since has not yet been fully initialized
         if self.value is DEFERRED_INITIALIZATION:
             return self.value
 
-        # # FIX: WHY DOESN"T THIS WORK: [ASSIGNMENT OF LEARNING_RATE TO SLOPE OF LEARNING FUNCTION]
-        # # FIX: HANDLE THIS AS runtime_param?? OR JUST USE learning_rate TO MODULATE WEIGHT CHANGE MATRIX DIRECTLY?
-        self.learning_rate = 2
-        if self.learning_rate:
-            params.update({SLOPE:self.learning_rate})
+        # if self.learning_rate:
+        #     params.update({SLOPE:self.learning_rate})
 
         self.weight_change_matrix = self.function(variable=self.sender.value,
                                                   params=params,
                                                   context=context)
 
-        # if self.learning_rate:
-        #     self.weight_change_matrix *= self.learning_rate
+        if self.learning_rate:
+            self.weight_change_matrix *= self.learning_rate
 
 
         if not INITIALIZING in context and self.reportOutputPref:
