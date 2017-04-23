@@ -3381,7 +3381,7 @@ class BogaczEtAl(
         derivative(output, input)
 
         Calculate the derivative of the reward rate with respect to the threshold (passed as :keyword:`output` arg)
-        and drift_rate (passed as :keyword:`input` arg).  Assume reward rate is given by:
+        and drift_rate (passed as :keyword:`input` arg).  Reward rate is given by:
           
             1 / (delay\ :sub:`ITI` + Z/A + ED);
            
@@ -3409,9 +3409,9 @@ class BogaczEtAl(
         Returns
         -------
 
-        derivatives :  (float, float)
-            of `threshold <BogaczEtAl.threshold>` and `drift_rate <BogaczEtAl.drift_rate>` 
-            with respect reward rate.  
+        derivatives :  List[float, float)
+            of 1/(reward rate) with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate 
+            <BogaczEtAl.drift_rate>`. 
 
         """
         Z = output or self.threshold
@@ -3424,10 +3424,10 @@ class BogaczEtAl(
         D = D_iti + D_pen
         # RR =  1/(D_iti + Z/A + (E*D))
 
-        dZ = 1/A + E/A + (2*A/c_sq)*E*D
-        dA = -Z/A**2 + (Z/A**2)*E - (2*Z/c_sq)*E*D
+        dRR_dZ = 1/A + E/A + (2*A/c_sq)*E*D
+        dRR_dA = -Z/A**2 + (Z/A**2)*E - (2*Z/c_sq)*E*D
 
-        return (dZ, dA)
+        return [dRR_dZ, dRR_dA]
 
 
 # Results from Navarro and Fuss DDM solution (indices for return value tuple)
