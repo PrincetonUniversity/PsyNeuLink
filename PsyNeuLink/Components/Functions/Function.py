@@ -3375,7 +3375,7 @@ class BogaczEtAl(
         return rt, er
 
 
-    def derivative(self, output, input):
+    def derivative(self, output=None, input=None):
         """
         
         derivative(output, input)
@@ -3414,8 +3414,8 @@ class BogaczEtAl(
             with respect reward rate.  
 
         """
-        Z = output
-        A = input
+        Z = output or self.threshold
+        A = input or self.drift_rate
         c = self.noise
         c_sq = c**2
         E = exp(-2*Z*A/c_sq)

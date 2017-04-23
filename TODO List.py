@@ -60,7 +60,9 @@
 
 # FIX: Function, derivatives: change output to input??
 
-# IMPLEMENT:  DDM -> add Diti, Dpenalty, RR calculation, and add RR to return
+# IMPLEMENT:  BogcazEtAl:
+#                 add Diti, Dpenalty, RR calculation, and add RR to return
+#                 modify variable to accept drift_rate??
 # IMPLEMENT:  Deferred init for control.
 # FIX: Flip names of Xxxx() and Xxxx_Base()
 
