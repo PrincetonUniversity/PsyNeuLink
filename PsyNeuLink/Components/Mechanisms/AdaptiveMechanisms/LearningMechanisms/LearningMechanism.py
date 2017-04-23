@@ -591,7 +591,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  variable:tc.any(list, np.ndarray),
                  error_source:tc.optional(Mechanism)=None,
                  function:is_function_type=BackPropagation,
-                 learning_rate:tc.optional(float)=None,
+                 learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
