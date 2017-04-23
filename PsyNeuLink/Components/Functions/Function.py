@@ -3289,7 +3289,8 @@ class BogaczEtAl(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: terminal value of decision variable, mean accuracy (error rate; ER) and mean response time (RT)
+        Return: terminal value of decision variable (equal to threshold), mean accuracy (error rate; ER) and mean 
+        response time (RT)
 
         Arguments
         ---------
@@ -3372,6 +3373,61 @@ class BogaczEtAl(
             er = (is_neg_drift == 1) * (1 - er) + (is_neg_drift == 0) * (er)
 
         return rt, er
+
+
+    def derivative(self, output, input):
+        """
+        
+        derivative(output, input)
+
+        Calculate the derivative of the reward rate with respect to the threshold (passed as :keyword:`output` arg)
+        and drift_rate (passed as :keyword:`input` arg).  Assume reward rate is given by:
+          
+            1 / (delay\ :sub:`ITI` + Z/A + ED);
+           
+        the derivative of `threshold <BogaczEtAl.threshold>` with respect to reward rate is:
+          
+            1/A - E/A - (2A/c\ :sup:`2`\ )ED;
+          
+        and the derivative of `drift_rate <BogaczEtAl.drift_rate>` with respect to reward rate is:
+          
+            -Z/A\ :sup:`2` + (Z/A\ :sup:`2`\ )E - (2Z/c\ :sup:`2`\ )ED
+                                   
+        where:
+
+            A = `drift_rate <BogaczEtAl.drift_rate>`,
+
+            Z = `threshold <BogaczEtAl.threshold>`,  
+
+            c = `noise <BogaczEtAl.noise>`,  
+
+            E = exp(-2ZA/\ c\ :sup:`2`\ ), and  
+
+            D = delay\ :sub:`ITI` + delay\ :sub:`penalty` - Z/A
+
+          
+        Returns
+        -------
+
+        derivatives :  (float, float)
+            of `threshold <BogaczEtAl.threshold>` and `drift_rate <BogaczEtAl.drift_rate>` 
+            with respect reward rate.  
+
+        """
+        Z = output
+        A = input
+        c = self.noise
+        c_sq = c**2
+        E = exp(-2*Z*A/c_sq)
+        D_iti = 0
+        D_pen = 0
+        D = D_iti + D_pen
+        # RR =  1/(D_iti + Z/A + (E*D))
+
+        dZ = 1/A + E/A + (2*A/c_sq)*E*D
+        dA = -Z/A**2 + (Z/A**2)*E - (2*Z/c_sq)*E*D
+
+        return (dZ, dA)
 
 
 # Results from Navarro and Fuss DDM solution (indices for return value tuple)

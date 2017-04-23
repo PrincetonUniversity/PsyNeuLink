@@ -403,7 +403,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="#Function.Reduce.function" title="Function.Reduce.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="InputState.html#InputState.InputState.function" title="InputState.InputState.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -1460,7 +1460,8 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="method">
 <dt id="Function.BogaczEtAl.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return: terminal value of decision variable, mean accuracy (error rate; ER) and mean response time (RT)</p>
+<dd><p>Return: terminal value of decision variable (equal to threshold), mean accuracy (error rate; ER) and mean
+response time (RT)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1479,6 +1480,40 @@ arguments of the constructor.</li>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(float, float, float)</p>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.BogaczEtAl.derivative">
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the derivative of the reward rate with respect to the threshold (passed as <code class="xref std std-keyword docutils literal"><span class="pre">output</span></code> arg)
+and drift_rate (passed as <code class="xref std std-keyword docutils literal"><span class="pre">input</span></code> arg).  Assume reward rate is given by:</p>
+<blockquote>
+<div>1 / (delay<sub>ITI</sub> + Z/A + ED);</div></blockquote>
+<p>the derivative of <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> with respect to reward rate is:</p>
+<blockquote>
+<div>1/A - E/A - (2A/c<sup>2</sup>)ED;</div></blockquote>
+<p>and the derivative of <a class="reference internal" href="#Function.BogaczEtAl.drift_rate" title="Function.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a> with respect to reward rate is:</p>
+<blockquote>
+<div>-Z/A<sup>2</sup> + (Z/A<sup>2</sup>)E - (2Z/c<sup>2</sup>)ED</div></blockquote>
+<p>where:</p>
+<blockquote>
+<div><p>A = <a class="reference internal" href="#Function.BogaczEtAl.drift_rate" title="Function.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a>,</p>
+<p>Z = <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>,</p>
+<p>c = <a class="reference internal" href="#Function.BogaczEtAl.noise" title="Function.BogaczEtAl.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>,</p>
+<p>E = exp(-2ZA/c<sup>2</sup>), and</p>
+<p>D = delay<sub>ITI</sub> + delay<sub>penalty</sub> - Z/A</p>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivatives</strong> &#8211; of <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> and <a class="reference internal" href="#Function.BogaczEtAl.drift_rate" title="Function.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a>
+with respect reward rate.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple[float, float]</td>
 </tr>
 </tbody>
 </table>
@@ -1573,7 +1608,7 @@ Gaussian random process).</p>
 <dt>owner</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">Mechanism</span><dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</dd>
 <dt>prefs</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="InputState.html#InputState.InputState.prefs" title="InputState.InputState.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+ <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.BackPropagation.prefs" title="Function.BackPropagation.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</dd>
 </dl>
@@ -1890,7 +1925,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.variable" title="IntegratorMechanism.IntegratorMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">

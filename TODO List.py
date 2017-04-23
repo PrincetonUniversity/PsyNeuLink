@@ -59,7 +59,8 @@
 #   added attribute to Projections:  has_learning_projection
 
 # FIX: Function, derivatives: change output to input??
-#
+
+# IMPLEMENT:  DDM -> add Diti, Dpenalty, RR calculation, and add RR to return
 # IMPLEMENT:  Deferred init for control.
 # FIX: Flip names of Xxxx() and Xxxx_Base()
 
