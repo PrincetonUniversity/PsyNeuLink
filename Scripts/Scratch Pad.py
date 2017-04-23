@@ -600,8 +600,9 @@ class ScratchPadError(Exception):
 from PsyNeuLink.Components.Functions.Function import *
 #
 x = BogaczEtAl()
-print(x.function(params={DRIFT_RATE:1}))
-print(x.derivative(output=1.0, input=5))
+print(x.function(params={DRIFT_RATE:1.0,
+                         THRESHOLD:1}))
+print(x.derivative())
 
 
 #endregion

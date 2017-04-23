@@ -58,12 +58,12 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
-# FIX: Function, derivatives: change output to input??
-
 # IMPLEMENT:  BogcazEtAl:
-#                 add Diti, Dpenalty, RR calculation, and add RR to return
+#                 add Diti, Dpenalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
+#
 # IMPLEMENT:  Deferred init for control.
+#
 # FIX: Flip names of Xxxx() and Xxxx_Base()
 
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
