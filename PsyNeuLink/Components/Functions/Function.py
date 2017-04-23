@@ -1486,7 +1486,7 @@ class Linear(
 
         """
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
         slope = self.paramsCurrent[SLOPE]
         intercept = self.paramsCurrent[INTERCEPT]
         outputType = self.functionOutputType
@@ -1676,7 +1676,7 @@ class Exponential(
 
         """
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
 
         # Assign the params and return the result
         rate = self.paramsCurrent[RATE]
@@ -1823,7 +1823,7 @@ class Logistic(
 
         """
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
@@ -1976,7 +1976,7 @@ class SoftMax(
 
         """
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
 
         # Assign the params and return the result
         output_type = self.params[OUTPUT_TYPE]
@@ -2463,7 +2463,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
-        self._check_args(variable, params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
         return np.dot(self.variable, self.matrix)
 
