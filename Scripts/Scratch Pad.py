@@ -595,11 +595,11 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST BogaczEtAl Derivate @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 from PsyNeuLink.Components.Functions.Function import *
 #
-x = SoftMax()
+x = DDM()
 # x = SoftMax(output=MAX_VAL)
 a = [-1, 2, 1]
 # x = SoftMax(output=SoftMax.PROB)
@@ -610,6 +610,25 @@ if z.ndim == 1:
     print ("SoftMax derivative return value: \n", [float(i) for i in z])
 else:
     print ("SoftMax derivative return value: \n", [[float(i) for i in j] for j in z])
+
+#endregion
+
+
+#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Functions.Function import *
+# #
+# x = SoftMax()
+# # x = SoftMax(output=MAX_VAL)
+# a = [-1, 2, 1]
+# # x = SoftMax(output=SoftMax.PROB)
+# y = x.function(a)
+# z = x.derivative(a)
+# print ("SoftMax execute return value: \n", [float(i) for i in y])
+# if z.ndim == 1:
+#     print ("SoftMax derivative return value: \n", [float(i) for i in z])
+# else:
+#     print ("SoftMax derivative return value: \n", [[float(i) for i in j] for j in z])
 
 #endregion
 
