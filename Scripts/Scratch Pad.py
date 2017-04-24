@@ -2301,7 +2301,6 @@ import typecheck as tc
 #                        {kwControlSignalIdentity: identity,
 #                         kwControlSignalSettings: settings,
 #                         kwControlSignalAllocationSamplingRange: NotImplemented,
-#                         kwControlSignalLogProfile: log_profile}
 #                        )
 #
 # # Can also change settings on the fly (note:  ControlProjection.OFF is just an enum defined in the ControlProjection module)
