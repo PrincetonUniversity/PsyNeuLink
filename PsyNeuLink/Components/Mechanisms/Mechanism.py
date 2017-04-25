@@ -1632,10 +1632,18 @@ class Mechanism_Base(Mechanism):
                 param = param_template = self.paramsCurrent
 
             # Determine whether template (param to type-match) is at top level or in a function_params dictionary
+            # # MODIFIED 4/25/17 OLD:
+            # try:
+            #     param_template[state_name]
+            # except KeyError:
+            #     param_template = self.function_params
+            # MODIFIED 4/25/17 NEW:
             try:
-                param_template[state_name]
+                param[state_name]
             except KeyError:
+                param = self.function_object.paramsCurrent
                 param_template = self.function_params
+            # MODIFIED 4/25/17 END
 
             # param_spec is the existing specification for the parameter in paramsCurrent or runtime_params
             param_spec = param_template[state_name]
