@@ -241,6 +241,17 @@ class AfterNTrials(Condition):
             return self.scheduler.times[time_scale][TimeScale.TRIAL] >= n
         super().__init__(n, func, time_scale)
 
+class AllHaveRun(Condition):
+    def __init__(self, *dependencies, time_scale=TimeScale.TRIAL):
+        def func(_none, *dependencies):
+            if self.scheduler is None:
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+            for d in dependencies:
+                if self.scheduler.counts_total[time_scale][d] < 1:
+                    return False
+            return True
+        super().__init__(None, func, *dependencies)
+
 class AtNCalls(Condition):
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
         def func(dependency, n):
