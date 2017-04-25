@@ -89,7 +89,7 @@ z = process(default_input_value=[0, 0],
                            Hidden_Layer_1,
                            # No projection specification is needed here since the sender arg for Middle_Weights
                            #    is Hidden_Layer_1 and its receiver arg is Hidden_Layer_2
-                           Middle_Weights,
+                           # Middle_Weights,
                            Hidden_Layer_2,
                            # Output_Weights does not need to be listed for the same reason as Middle_Weights
                            # If Middle_Weights and/or Output_Weights is not declared above, then the process
