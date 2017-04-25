@@ -1208,7 +1208,9 @@ class System_Base(System):
                                 isinstance(projection.receiver.owner, ControlMechanism_Base) or
                                  # or ObjectiveMechanism(s) used for Learning or Control
                                  (isinstance(projection.receiver.owner, ObjectiveMechanism) and
-                                             projection.receiver.owner.role in (LEARNING, CONTROL))
+                                             projection.receiver.owner.role in (LEARNING, CONTROL)) or
+                                # itself!
+                                 projection.receiver.owner is sender_mech
                             for projection in output_state.sendsToProjections)
                         for output_state in sender_mech.outputStates.values())):
                 try:

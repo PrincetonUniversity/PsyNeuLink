@@ -285,14 +285,14 @@ Contributors
 .. toctree::
    :hidden:
 
-   Component
    System
    Process
    Mechanism
    State
    Projection
-   Function
    Run
+   Component
+   Function
 
 
 .. _Indices_and_Tables:
