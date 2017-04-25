@@ -184,6 +184,10 @@ class Scheduler(object):
             ):
                 cur_time_step_exec = set()
                 cur_consideration_set = self.consideration_queue[cur_index_consideration_queue]
+                try:
+                    iter(cur_consideration_set)
+                except TypeError as e:
+                    raise SchedulerError('cur_consideration_set is not iterable, did you ensure that this Scheduler was instantiated with an actual toposort output for param toposort_ordering? err: {0}'.format(e))
                 logger.debug('trial, num passes in trial {0}, consideration_queue {1}'.format(self.times[TimeScale.TRIAL][TimeScale.PASS], ' '.join([str(x) for x in cur_consideration_set])))
 
                 # do-while, on cur_consideration_set_has_changed
