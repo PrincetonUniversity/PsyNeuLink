@@ -1,22 +1,32 @@
 import numpy as np
-# from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-# from PsyNeuLink.Components.Functions.Function import Linear
-# from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+
+# GLOBALS:
+from PsyNeuLink.Globals.Keywords import *
+# FUNCTIONS:
 # from PsyNeuLink.Components.Functions.Function import Logistic
-# from PsyNeuLink.Components.Process import process
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-# from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
-# from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+# from PsyNeuLink.Components.Functions.Function import Linear
+
+# STATES:
 # from PsyNeuLink.Components.States.OutputState import OutputState
+# from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
+
+# PROJECTIONS:
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+# from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+# from PsyNeuLink.Components.Projections.ControlProjection import ControldProjection
+# from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
+
+# MECHANISMS:
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+
+# COMPOSITIONS:
 from PsyNeuLink.Components.Process import Process, Process_Base, process
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
 from PsyNeuLink.Components.System import system, System, System_Base
 
 class ScratchPadError(Exception):
@@ -595,24 +605,6 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-from PsyNeuLink.Components.Functions.Function import *
-#
-# x = SoftMax()
-x = SoftMax(output=MAX_VAL)
-a = [-1, 2, 1]
-# x = SoftMax(output=SoftMax.PROB)
-y = x.function(a)
-z = x.derivative(a)
-print ("SoftMax execute return value: \n", [float(i) for i in y])
-if z.ndim == 1:
-    print ("SoftMax derivative return value: \n", [float(i) for i in z])
-else:
-    print ("SoftMax derivative return value: \n", [[float(i) for i in j] for j in z])
-
-#endregion
-
 #region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Components.Function import *
@@ -624,6 +616,66 @@ else:
 # # print (y(2, [0.25, 0.5]))
 #
 #
+#endregion
+
+#region TEST AutoAssociator
+
+my_auto = TransferMechanism(default_input_value=[0,0,0])
+
+my_auto_matrix = MappingProjection(sender=my_auto,
+                                   receiver=my_auto,
+                                   matrix=FULL_CONNECTIVITY_MATRIX)
+my_process = process(pathway=[my_auto],
+                     # learning=LEARNING
+                     )
+
+
+# my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
+#                      # learning=LEARNING,
+#                      target=[0,0,0])
+
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+
+input_list = {my_auto:[1,1,1]}
+
+# print(my_process.run(inputs=input_list, num_executions=3))
+
+my_system = system(processes=[my_process])
+print(my_system.run(inputs=input_list, num_executions=3))
+
+
+#endregion
+
+#region TEST BogaczEtAl Derivative @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Functions.Function import *
+# #
+# x = BogaczEtAl()
+# print(x.function(params={DRIFT_RATE:1.0,
+#                          THRESHOLD:1}))
+# print(x.derivative())
+
+#endregion
+
+#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Functions.Function import *
+# #
+# x = SoftMax()
+# # x = SoftMax(output=MAX_VAL)
+# a = [-1, 2, 1]
+# # x = SoftMax(output=SoftMax.PROB)
+# y = x.function(a)
+# z = x.derivative(a)
+# print ("SoftMax execute return value: \n", [float(i) for i in y])
+# if z.ndim == 1:
+#     print ("SoftMax derivative return value: \n", [float(i) for i in z])
+# else:
+#     print ("SoftMax derivative return value: \n", [[float(i) for i in j] for j in z])
+
 #endregion
 
 #region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -2288,7 +2340,6 @@ import typecheck as tc
 #                        {kwControlSignalIdentity: identity,
 #                         kwControlSignalSettings: settings,
 #                         kwControlSignalAllocationSamplingRange: NotImplemented,
-#                         kwControlSignalLogProfile: log_profile}
 #                        )
 #
 # # Can also change settings on the fly (note:  ControlProjection.OFF is just an enum defined in the ControlProjection module)
