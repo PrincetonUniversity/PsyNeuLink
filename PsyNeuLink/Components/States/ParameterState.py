@@ -758,6 +758,7 @@ class ParameterState(State_Base):
         # #     setattr(self.owner.function.__self__, self.name, self.value)
         #     param_type = type(getattr(self.owner.function.__self__, self.name))
         #     setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
+        TEST = True
 
         #endregion
 

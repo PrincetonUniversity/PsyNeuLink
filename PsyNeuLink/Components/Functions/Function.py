@@ -2785,18 +2785,19 @@ class Integrator(
                                  target_set=target_set,
                                  context=context)
 
-        if self.integration_type is ADAPTIVE:
-            if isinstance(target_set[RATE], (list, np.ndarray)):
-                for r in target_set[RATE]:
-                    if r < 0.0 or r > 1.0:
-                        raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                            "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
-                                            format(target_set[RATE], self.name))
-            else:
-                if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-                    raise FunctionError(
-                        "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                        "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+        if RATE in target_set:
+            if self.integration_type is ADAPTIVE:
+                if isinstance(target_set[RATE], (list, np.ndarray)):
+                    for r in target_set[RATE]:
+                        if r < 0.0 or r > 1.0:
+                            raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
+                                                "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+                                                format(target_set[RATE], self.name))
+                else:
+                    if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
+                        raise FunctionError(
+                            "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
+                            "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
 
         # self._validate_initializer()
 
