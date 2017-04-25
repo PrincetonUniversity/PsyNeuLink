@@ -154,6 +154,8 @@ class Scheduler(object):
         self.termination_conds = termination_conds
         self._validate_run_state()
 
+        logger.info('termination_conds: {0}, self.termination_conds: {1}'.format(termination_conds, self.termination_conds))
+
         def has_reached_termination(self, time_scale=None):
             term = True
             if time_scale is None:
@@ -169,7 +171,7 @@ class Scheduler(object):
         self._reset_count(self.counts_total, TimeScale.TRIAL)
         self._reset_time(TimeScale.TRIAL)
 
-        while not termination_conds[TimeScale.TRIAL].is_satisfied():
+        while not self.termination_conds[TimeScale.TRIAL].is_satisfied():
             self._reset_count(self.counts_total, TimeScale.PASS)
             self._reset_time(TimeScale.PASS)
 
@@ -178,7 +180,7 @@ class Scheduler(object):
 
             while (
                 cur_index_consideration_queue < len(self.consideration_queue)
-                and not termination_conds[TimeScale.TRIAL].is_satisfied()
+                and not self.termination_conds[TimeScale.TRIAL].is_satisfied()
             ):
                 cur_time_step_exec = set()
                 cur_consideration_set = self.consideration_queue[cur_index_consideration_queue]
@@ -233,6 +235,7 @@ class Scheduler(object):
                 self._increment_time(TimeScale.TIME_STEP)
 
             # can execute the execution_list here
+            logger.info(self.execution_list)
             logger.debug('Execution list: [{0}]'.format(' '.join([str(x) for x in self.execution_list])))
             self._increment_time(TimeScale.PASS)
 
