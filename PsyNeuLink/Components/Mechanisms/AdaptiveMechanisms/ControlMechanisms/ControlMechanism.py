@@ -258,18 +258,11 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # For all other ControlMechanisms, validate System specification
         else:
-            try:
+            if SYSTEM in request_set:
                 if not isinstance(request_set[SYSTEM], System):
                     raise KeyError
-            except KeyError:
-                # Validation called by assign_params() for user-specified param set, so SYSTEM need not be included
-                if COMMAND_LINE in context:
-                    pass
                 else:
-                    raise ControlMechanismError("A system must be specified in the SYSTEM param to instantiate {0}".
-                                                format(self.name))
-            else:
-                self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
+                    self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
         super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,
@@ -306,6 +299,8 @@ class ControlMechanism_Base(Mechanism_Base):
             # If specified as DefaultController, reassign ControlProjections from DefaultController
             if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
                 self._take_over_as_default_controller(context=context)
+            if not self.system.enable_controller:
+                return
         except KeyError:
             pass
 
@@ -323,6 +318,16 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Iterate through old controller's outputStates
         to_be_deleted_outputStates = []
+
+        try:
+            DefaultController.outputStates
+        except AttributeError:
+            if self.system.verbosePref:
+                warnings.warn("No ControlProjections specified for {};  control will be disabled".
+                              format(self.system.name))
+            self.system.enable_controller = False
+            return
+
         for outputState in DefaultController.outputStates:
 
             # Iterate through projections sent for outputState
@@ -358,6 +363,7 @@ class ControlMechanism_Base(Mechanism_Base):
         for item in to_be_deleted_outputStates:
             del DefaultController.outputStates[item.name]
 
+
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """Add outputState and assign as sender to requesting ControlProjection
 
@@ -392,7 +398,8 @@ class ControlMechanism_Base(Mechanism_Base):
             output_state_index = len(self.outputStates)
         except AttributeError:
             output_state_index = 0
-        output_state_name = projection.receiver.name + '_ControlSignal'
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
+        output_state_name = projection.receiver.name + '_' + ControlSignal.__name__
         output_state_value = self.allocation_policy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
@@ -406,8 +413,6 @@ class ControlMechanism_Base(Mechanism_Base):
                                             # constraint_output_state_index=output_item_output_state_index,
                                             context=context)
 
-        # Add index assignment to outputState
-        state.index = output_state_index
 
         # Assign outputState as ControlProjection's sender
         projection.sender = state
@@ -418,6 +423,9 @@ class ControlMechanism_Base(Mechanism_Base):
         except AttributeError:
             self.outputStates = OrderedDict({output_state_name:state})
             self.outputState = self.outputStates[output_state_name]
+
+        # Add index assignment to outputState
+        state.index = output_state_index
 
         # Add ControlProjection to list of outputState's outgoing projections
         state.sendsToProjections.append(projection)

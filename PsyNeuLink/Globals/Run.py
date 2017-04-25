@@ -838,7 +838,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                        projection in target.inputStates[SAMPLE].receivesFromProjections
                        for mech in stimuli.keys()):
                     raise RunError("Entry for {} is missing from specification of targets for run of {}".
-                                   format(target.inputStates[COMPARATOR_SAMPLE].
+                                   format(target.inputStates[SAMPLE].
                                           receivesFromProjections[0].sender.owner.name,
                                           object.name))
 

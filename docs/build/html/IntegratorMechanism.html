@@ -86,6 +86,7 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
@@ -195,7 +196,7 @@ assigned a custom function.</p>
 <a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref py py-func docutils literal"><span class="pre">mechanism</span></code></a> function and specifying <code class="xref std std-keyword docutils literal"><span class="pre">IntegratorMechanism</span></code> as its <code class="xref any docutils literal"><span class="pre">mech_spec</span></code>
 argument.  Its function is specified in the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> argument, which can be parameterized by calling its
 constructor with parameter values:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_time_averaging_mechanism</span> <span class="o">=</span> <span class="n">IntegratorMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Integrator</span><span class="p">(</span><span class="n">weighting</span><span class="o">=</span><span class="n">ADAPTIVE</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_time_averaging_mechanism</span> <span class="o">=</span> <span class="n">IntegratorMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Integrator</span><span class="p">(</span><span class="n">integration_type</span><span class="o">=</span><span class="n">ADAPTIVE</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -205,7 +206,7 @@ constructor with parameter values:</p>
 used as the  <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.variable" title="IntegratorMechanism.IntegratorMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <code class="xref any docutils literal"><span class="pre">function</span></code>.   The
 <code class="xref std std-keyword docutils literal"><span class="pre">default_input_value</span></code> argument specifies the format of its input (i.e., whether it is a single scalar or an
 array), as well as the value to use if none is provided when mechanism is executed.  The default for
-<code class="xref any docutils literal"><span class="pre">function</span></code> is <code class="xref any docutils literal"><span class="pre">Integrator(weighting=ADAPTIVE,</span> <span class="pre">rate=0.5)</span></code>. However, a custom function can
+<code class="xref any docutils literal"><span class="pre">function</span></code> is <code class="xref any docutils literal"><span class="pre">Integrator(integration_type=ADAPTIVE,</span> <span class="pre">rate=0.5)</span></code>. However, a custom function can
 also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric values as its input,
 and returns a value of the same type and format.  The mechanism has a single <code class="xref any docutils literal"><span class="pre">outputState</span></code> of which is assigned the result of  the call to the mechanism&#8217;s
 <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
@@ -224,7 +225,7 @@ specified for <code class="xref std std-keyword docutils literal"><span class="p
 <span id="integratormechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="IntegratorMechanism.IntegratorMechanism">
-<em class="property">class </em><code class="descclassname">IntegratorMechanism.</code><code class="descname">IntegratorMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=Integrator(weighting=ADAPTIVE</em>, <em>rate=0.5)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">IntegratorMechanism.</code><code class="descname">IntegratorMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=Integrator(integration_type=ADAPTIVE</em>, <em>rate=0.5)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements the IntegratorMechanism subclass of Mechanism.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -264,7 +265,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="IntegratorMechanism.IntegratorMechanism.time_scale">
 <code class="descname">time_scale</code><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism.time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TimeScale : defaul tTimeScale.TRIAL</em> &#8211; specifies whether the mechanism is executed on the <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> time scale.</p>
+<dd><p><em>TimeScale : defaultTimeScale.TRIAL</em> &#8211; specifies whether the mechanism is executed on the <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> time scale.</p>
 </dd></dl>
 
 <dl class="attribute">

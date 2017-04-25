@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="next" title="Process" href="Process.html"/>
-        <link rel="prev" title="PsyNeuLink Documentation" href="index.html"/> 
+        <link rel="prev" title="Component" href="Component.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -85,6 +85,7 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">System</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-system">Creating a System</a></li>
@@ -724,22 +725,17 @@ each execution.</p>
 <dl class="method">
 <dt id="System.System_Base.show_graph">
 <code class="descname">show_graph</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='BT'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections</p>
+<dd><p>Generate simple visualization of execution graph, showing dimensions</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>output_fmt</strong> (<em>'jupyter' or 'pdf'</em>) &#8211; pdf to generate and open a pdf with the visualization,
-jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>output_fmt</strong> (<em>'jupyter' or 'pdf'</em>) &#8211; <p>&#8216;pdf&#8217; will generate and open a pdf with the visualization,</p>
+<p>&#8216;jupyter&#8217; will simply return graphviz graph the object (ideal for working in jupyter/ipython notebooks)</p>
+</li>
 <li><strong>direction</strong> (<em>'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left</em>) &#8211; rank direction of graph</li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Graphviz graph object if output_fmt is &#8216;jupyter&#8217;</p>
 </td>
 </tr>
 </tbody>
@@ -748,8 +744,8 @@ jupyter to simply return the object (ideal for working in jupyter/ipython notebo
 
 <dl class="method">
 <dt id="System.System_Base.show_graph_with_learning">
-<code class="descname">show_graph_with_learning</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='BT'</em>, <em>learning_color='blue'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph_with_learning" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections</p>
+<code class="descname">show_graph_with_learning</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='BT'</em>, <em>learning_color='green'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph_with_learning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate visualization of interconnections between all mechanisms and projections, including all learning machinery</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -758,7 +754,7 @@ jupyter to simply return the object (ideal for working in jupyter/ipython notebo
 <li><strong>output_fmt</strong> (<em>'jupyter' or 'pdf'</em>) &#8211; pdf to generate and open a pdf with the visualization,
 jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)</li>
 <li><strong>direction</strong> (<em>'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left</em>) &#8211; rank direction of graph</li>
-<li><strong>learning_color</strong> (<em>default is 'blue', set to 'black' to turn off</em>) &#8211; determines color with which to highlight learning machinery</li>
+<li><strong>learning_color</strong> (<em>determines with what color to draw all the learning machinery</em>) &#8211; </li>
 </ul>
 </td>
 </tr>
@@ -797,7 +793,7 @@ jupyter to simply return the object (ideal for working in jupyter/ipython notebo
         <a href="Process.html" class="btn btn-neutral float-right" title="Process" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="PsyNeuLink Documentation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Component.html" class="btn btn-neutral" title="Component" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

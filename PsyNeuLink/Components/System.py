@@ -731,7 +731,17 @@ class System_Base(System):
     variableClassDefault = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
+    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL,
+                               'outputStates': {},
+                               '_phaseSpecMax': 0,
+                               'stimulusInputStates': [],
+                               'inputs': [],
+                               'current_input': None,
+                               'targetInputStates': [],
+                               'targets': None,
+                               'current_targets': None,
+                               'learning': False
+                               })
 
     @tc.typecheck
     def __init__(self,
@@ -763,15 +773,6 @@ class System_Base(System):
                                                   params=params)
 
         self.function = self.execute
-        self.outputStates = {}
-        self._phaseSpecMax = 0
-        self.stimulusInputStates = []
-        self.inputs = []
-        self.current_input = None
-        self.targetInputStates = []
-        self.targets = None
-        self.current_targets = None
-        self.learning = False
 
         register_category(entry=self,
                           base_class=System_Base,
@@ -877,10 +878,11 @@ class System_Base(System):
             if not isinstance(process, Process):
                 raise SystemError("{} (in processes arg for \'{}\') is not a Process object".format(process, self.name))
 
-        for mech, value in target_set[kwInitialValues].items():
-            if not isinstance(mech, Mechanism):
-                raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
-                                  "is not a Mechanism object".format(mech, self.name))
+        if INITIAL_VALUES in target_set and target_set[INITIAL_VALUES] is not None:
+            for mech, value in target_set[INITIAL_VALUES].items():
+                if not isinstance(mech, Mechanism):
+                    raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
+                                      "is not a Mechanism object".format(mech, self.name))
 
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiate processes and graph
@@ -1021,7 +1023,7 @@ class System_Base(System):
             # If process item is a Process object, assign process_input as default
             if isinstance(process, Process):
                 if process_input is not None:
-                    process._assign_defaults(variable=process_input, context=context)
+                    process._instantiate_defaults(variable=process_input, context=context)
                 # If learning_rate is specified for system but not for process, then apply to process
                 # # MODIFIED 3/21/17 OLD:
                 # if self.learning_rate and not process.learning_rate:
@@ -1414,7 +1416,8 @@ class System_Base(System):
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
         self.terminalMechanisms = MechanismList(self, self._terminal_mech_tuples)
         self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mech_tuples)
-        self.controlMechanism = MechanismList(self, self._control_mech_tuple)
+        self.controlMechanism = MechanismList(self, self._control_mech_tuple) # Used for inspection and in case there
+                                                                              # are multiple controllers in the future
 
         try:
             self.execution_sets = list(toposort(self.executionGraph))
@@ -1452,14 +1455,15 @@ class System_Base(System):
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
         # FIX: ONLY CHECKS FIRST ITEM OF self._value_template (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
         # FIX: ONLY CHECK ONES THAT RECEIVE PROJECTIONS
-        for mech, value in self.initial_values.items():
-            if not mech in self.execution_graph_mechs:
-                raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
-                                  format(mech.name, self.name))
-            mech._update_value
-            if not iscompatible(value, mech._value_template[0]):
-                raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
-                                  format(value, self.name, append_type_to_name(self)))
+        if self.initial_values is not None:
+            for mech, value in self.initial_values.items():
+                if not mech in self.execution_graph_mechs:
+                    raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
+                                      format(mech.name, self.name))
+                mech._update_value
+                if not iscompatible(value, mech._value_template[0]):
+                    raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
+                                      format(value, self.name, append_type_to_name(self)))
 
     def _instantiate_stimulus_inputs(self, context=None):
 
@@ -1965,7 +1969,7 @@ class System_Base(System):
         # region EXECUTE LEARNING FOR EACH PROCESS
 
         # Don't execute learning for simulation runs
-        if not EVC_SIMULATION in context:
+        if not EVC_SIMULATION in context and self.learning:
             self._execute_learning(clock=clock, context=context + LEARNING)
         # endregion
 
@@ -2589,22 +2593,19 @@ class System_Base(System):
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
     def show_graph(self, output_fmt='pdf', direction = 'BT'):
-        """Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections
+        """Generate simple visualization of execution graph, showing dimensions
 
         Arguments
         ---------
 
         output_fmt : 'jupyter' or 'pdf'
-            pdf to generate and open a pdf with the visualization,
-            jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
+            'pdf' will generate and open a pdf with the visualization,
+
+            'jupyter' will simply return graphviz graph the object (ideal for working in jupyter/ipython notebooks)
 
         direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
             rank direction of graph
 
-        Returns
-        -------
-
-        Graphviz graph object if output_fmt is 'jupyter'
 
         """
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
@@ -2652,27 +2653,8 @@ class System_Base(System):
         elif output_fmt == 'jupyter':
             return G
 
-    def show_graph_with_learning(self, output_fmt='pdf', direction = 'BT', learning_color='blue'):
-        """Generate visualization of interconnections between all mechanisms including objective and learning mechanisms, and projections
+    def show_graph_with_control(self, output_fmt='pdf', direction = 'BT', control_color='blue'):
 
-        Arguments
-        ---------
-        output_fmt : 'jupyter' or 'pdf'
-            pdf to generate and open a pdf with the visualization,
-            jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
-
-        direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
-            rank direction of graph
-
-        learning_color : default is 'blue', set to 'black' to turn off
-            determines color with which to highlight learning machinery
-
-        Returns
-        -------
-
-        Graphviz graph object if output_fmt is 'jupyter'
-
-        """
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
@@ -2680,14 +2662,13 @@ class System_Base(System):
         import graphviz as gv
 
         system_graph = self.graph
-        learning_graph=self.learningGraph
-        
+
         # build graph and configure visualisation settings
         G = gv.Digraph(engine = "dot", 
                        node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'}, 
                        edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
                        graph_attr = {"rankdir" : direction} )
-        
+
         # work with system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
@@ -2706,35 +2687,240 @@ class System_Base(System):
                 for proj in projs:
                     if proj.receiver.owner == rcvr[0]:
                         edge_name = proj.name
-                        draw_node = not proj.has_learning_projection
                 edge_label = edge_name
                 #### CHANGE MADE HERE ###
-                if draw_node:
-                    G.edge(sndr_label, rcvr_label, label = edge_label)
+                # if rcvr is learning mechanism, draw arrow with learning color
+                if isinstance(rcvr[0], LearningMechanism) or isinstance(rcvr[0], ObjectiveMechanism):
+                    arrow_color=control_color
                 else:
+                    arrow_color="black"
+                G.edge(sndr_label, rcvr_label, label = edge_label, color=arrow_color)
+
+        controller = self.controller
+
+        connector = controller.inputState.receivesFromProjections[0]
+        objmech = connector.sender.owner
+
+        # main edge
+        G.node(controller.name, color=control_color)
+        G.node(objmech.name, color=control_color)
+        G.edge(objmech.name, controller.name, label=connector.name, color=control_color)
+
+        # outgoing edges
+        for output_state in controller.controlSignals:
+            for projection in output_state.sendsToProjections:
+                edge_name
+                rcvr_name = projection.receiver.owner.name
+                G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
+
+        # incoming edges
+        for istate in objmech.inputStates.values():
+            for proj in istate.receivesFromProjections:
+                sndr_name = proj.sender.owner.name
+                G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
+
+        if   output_fmt == 'pdf':
+            G.view(self.name.replace(" ", "-"), cleanup=True)
+        elif output_fmt == 'jupyter':
+            return G
+
+
+    def show_graph_with_learning(self, output_fmt='pdf', direction = 'BT', learning_color='green'):
+        """Generate visualization of interconnections between all mechanisms and projections, including all learning machinery
+
+        Arguments
+        ---------
+
+        output_fmt : 'jupyter' or 'pdf'
+            pdf to generate and open a pdf with the visualization,
+            jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
+
+        direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
+            rank direction of graph
+
+        learning_color : determines with what color to draw all the learning machinery
+
+        Returns
+        -------
+
+        Graphviz graph object if output_fmt is 'jupyter'
+
+        """
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+
+        import graphviz as gv
+
+        system_graph = self.graph
+        learning_graph=self.learningGraph
+
+        # build graph and configure visualisation settings
+        G = gv.Digraph(engine = "dot", 
+                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'}, 
+                       edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
+                       graph_attr = {"rankdir" : direction} )
+
+        # work with system graph
+        rcvrs = list(system_graph.keys())
+        # loop through receivers
+        for rcvr in rcvrs:
+            rcvr_name = rcvr[0].name
+            rcvr_label = rcvr_name
+
+            # loop through senders
+            sndrs = system_graph[rcvr]
+            for sndr in sndrs:
+                sndr_name = sndr[0].name
+                sndr_label = sndr_name
+
+                # find edge name
+                projs = sndr[0].outputState.sendsToProjections
+                for proj in projs:
+                    if proj.receiver.owner == rcvr[0]:
+                        edge_name = proj.name
+                        draw_node = proj.has_learning_projection
+                edge_label = edge_name
+                #### CHANGE MADE HERE ###
+                # if rcvr is learning mechanism, draw arrow with learning color
+                if isinstance(rcvr[0], LearningMechanism) or isinstance(rcvr[0], ObjectiveMechanism):
+                    arrow_color=learning_color
+                else:
+                    arrow_color="black"
+                if not draw_node:
+                    G.edge(sndr_label, rcvr_label, label = edge_label, color=arrow_color)
+                else:
+
                     G.node(sndr_label, shape="oval")
                     G.node(edge_label, shape="diamond")
                     G.node(rcvr_label, shape="oval")
                     G.edge(sndr_label, edge_label, arrowhead='none')
                     G.edge(edge_label, rcvr_label)
                 #### CHANGE MADE HERE ###
-                    
+
         rcvrs = list(learning_graph.keys())
-        
+
         for rcvr in rcvrs:
                 # if rcvr is projection
                 if isinstance(rcvr, MappingProjection):
                     # for each sndr of rcvr
                     sndrs = learning_graph[rcvr]
                     for sndr in sndrs:
-                        G.edge(sndr.name, rcvr.name)
+                        edge_label = rcvr.parameterStates['matrix'].receivesFromProjections[0].name
+                        G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
                 else:
                     sndrs = learning_graph[rcvr]
                     for sndr in sndrs:
+                        projs = sndr.outputState.sendsToProjections
+                        for proj in projs:
+                            if proj.receiver.owner == rcvr:
+                                edge_name = proj.name
                         G.node(rcvr.name, color=learning_color)
                         G.node(sndr.name, color=learning_color)
-                        G.edge(sndr.name, rcvr.name, color=learning_color)
-                
+                        G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
+
+        if   output_fmt == 'pdf':
+            G.view(self.name.replace(" ", "-"), cleanup=True)
+        elif output_fmt == 'jupyter':
+            return G
+
+    def show_graph_with_learning_and_control(self, output_fmt='pdf', direction = 'BT', learning_color='green', control_color='blue'):
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+
+        import graphviz as gv
+
+        system_graph = self.graph
+        learning_graph=self.learningGraph
+
+        # build graph and configure visualisation settings
+        G = gv.Digraph(engine = "dot", 
+                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'}, 
+                       edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
+                       graph_attr = {"rankdir" : direction} )
+
+        # work with system graph
+        rcvrs = list(system_graph.keys())
+        # loop through receivers
+        for rcvr in rcvrs:
+            rcvr_name = rcvr[0].name
+            rcvr_label = rcvr_name
+
+            # loop through senders
+            sndrs = system_graph[rcvr]
+            for sndr in sndrs:
+                sndr_name = sndr[0].name
+                sndr_label = sndr_name
+
+                # find edge name
+                projs = sndr[0].outputState.sendsToProjections
+                for proj in projs:
+                    if proj.receiver.owner == rcvr[0]:
+                        edge_name = proj.name
+                        draw_node = proj.has_learning_projection
+                edge_label = edge_name
+                #### CHANGE MADE HERE ###
+                # if rcvr is learning mechanism, draw arrow with learning color
+                if isinstance(rcvr[0], LearningMechanism) or isinstance(rcvr[0], ObjectiveMechanism):
+                    arrow_color=learning_color
+                else:
+                    arrow_color="black"
+                if not draw_node:
+                    G.edge(sndr_label, rcvr_label, label = edge_label, color=arrow_color)
+                else:
+
+                    G.node(sndr_label, shape="oval")
+                    G.node(edge_label, shape="diamond")
+                    G.node(rcvr_label, shape="oval")
+                    G.edge(sndr_label, edge_label, arrowhead='none')
+                    G.edge(edge_label, rcvr_label)
+                #### CHANGE MDE HERE ###
+
+        rcvrs = list(learning_graph.keys())
+
+        for rcvr in rcvrs:
+                # if rcvr is projection
+                if isinstance(rcvr, MappingProjection):
+                    # for each sndr of rcvr
+                    sndrs = learning_graph[rcvr]
+                    for sndr in sndrs:
+                        edge_label = rcvr.parameterStates['matrix'].receivesFromProjections[0].name
+                        G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
+                else:
+                    sndrs = learning_graph[rcvr]
+                    for sndr in sndrs:
+                        projs = sndr.outputState.sendsToProjections
+                        for proj in projs:
+                            if proj.receiver.owner == rcvr:
+                                edge_name = proj.name
+                        G.node(rcvr.name, color=learning_color)
+                        G.node(sndr.name, color=learning_color)
+                        G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
+
+        controller = self.controller
+
+        connector = controller.inputState.receivesFromProjections[0]
+        objmech = connector.sender.owner
+
+        # main edge
+        G.node(controller.name, color=control_color)
+        G.node(objmech.name, color=control_color)
+        G.edge(objmech.name, controller.name, label=connector.name, color=control_color)
+
+        # outgoing edges
+        for output_state in controller.controlSignals:
+            for projection in output_state.sendsToProjections:
+                edge_name
+                rcvr_name = projection.receiver.owner.name
+                G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
+
+        # incoming edges
+        for istate in objmech.inputStates.values():
+            for proj in istate.receivesFromProjections:
+                sndr_name = proj.sender.owner.name
+                G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
+
         if   output_fmt == 'pdf':
             G.view(self.name.replace(" ", "-"), cleanup=True)
         elif output_fmt == 'jupyter':

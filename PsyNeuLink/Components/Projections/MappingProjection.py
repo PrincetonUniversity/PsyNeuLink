@@ -321,11 +321,9 @@ class MappingProjection(Projection_Base):
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(
-                                                 # function=function,
-                                                 function_params={MATRIX: matrix},
-                                                 param_modulation_operation=param_modulation_operation,
-                                                 params=params)
+        params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
+                                                  param_modulation_operation=param_modulation_operation,
+                                                  params=params)
 
         self.learning_mechanism = None
 
@@ -362,13 +360,15 @@ class MappingProjection(Projection_Base):
             (i.e., by: _instantiate_receiver(State)
 
         """
-        # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
-        if isinstance(self.receiver, Mechanism):
-            if (len(self.receiver.inputStates) > 1 and
-                    (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
-                print("{0} has more than one inputState; {1} was assigned to the first one".
-                      format(self.receiver.owner.name, self.name))
-            self.receiver = self.receiver.inputState
+        # MODIFIED 4/21/17 OLD: [MOVED TO PROJECTION INIT]
+        # # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
+        # if isinstance(self.receiver, Mechanism):
+        #     if (len(self.receiver.inputStates) > 1 and
+        #             (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
+        #         print("{0} has more than one inputState; {1} was assigned to the first one".
+        #               format(self.receiver.owner.name, self.name))
+        #     self.receiver = self.receiver.inputState
+        # MODIFIED 4/21/17 END
 
         self.reshapedWeightMatrix = False
 
@@ -532,7 +532,16 @@ class MappingProjection(Projection_Base):
                        (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
                             issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection)))
               ):
-            self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1])
+            # # MODIFIED 4/8/17 OLD:
+            # self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1])
+            # MODIFIED 4/8/17 NEW:
+            self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX,
+                                                            (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]))
+            # MODIFIED 4/8/17 END
 
         else:
-            self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = value
+            # # MODIFIED 4/8/17 OLD:
+            # self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = value
+            # MODIFIED 4/8/17 NEW:
+            self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX, value)
+            # MODIFIED 4/8/17 END

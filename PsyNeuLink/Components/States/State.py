@@ -1328,8 +1328,8 @@ class State_Base(State):
         return self._baseValue
 
     @baseValue.setter
-    def baseValue(self, item):
-        self._baseValue = item
+    def baseValue(self, value):
+        self._baseValue = value
 
     @property
     def projections(self):
@@ -1805,10 +1805,11 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function._instantiate_function()
     PARAM_SPEC = 0
     PROJECTION_SPEC = 1
-    #region 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
+    #region
+    # 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
-    #    projection specification (MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION or class ref to one of those), allow it
-    #       (though should use ParamValueProjection)
+    #    projection specification (MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL or LEARNING,
+    #    or class ref to one of those), allow it (though should use ParamValueProjection)
     # - check that first item matches constraint_value and assign to state_variable
     # - assign second item as projection to STATE_PARAMS:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
@@ -1818,7 +1819,11 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #      since it could just be a numeric tuple used for the variable of a state;
     #      could check string against ProjectionRegistry (as done in _parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
-            (state_spec[PROJECTION_SPEC] in {MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION} or
+            (state_spec[PROJECTION_SPEC] in {MAPPING_PROJECTION,
+                                             CONTROL_PROJECTION,
+                                             LEARNING_PROJECTION,
+                                             CONTROL,
+                                             LEARNING} or
                  isinstance(state_spec[PROJECTION_SPEC], Projection) or
                  (inspect.isclass(state_spec[PROJECTION_SPEC]) and issubclass(state_spec[PROJECTION_SPEC], Projection)))
         ):

@@ -253,7 +253,7 @@ default value of 0)::
 
     mechanism_1 = TransferMechanism()
     mechanism_2 = DDM()
-    some_params = {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{THRESHOLD:2,NOISE:0.1}}}
+    some_params = {PARAMETER_STATE_PARAMS:{THRESHOLD:2,NOISE:0.1}}
     my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
 
 *Default projection specification:*  The `pathway` for this process uses default projection specifications; as a
@@ -818,7 +818,17 @@ class Process_Base(Process):
     # MODIFIED 10/2/16 END
 
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
+    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL,
+                               '_execution_id': None,
+                               PATHWAY: None,
+                               'input':[],
+                               'processInputStates': [],
+                               'targets': None,
+                               'targetInputStates': [],
+                               'systems': [],
+                               '_phaseSpecMax': 0,
+                               '_isControllerProcess': False
+                               })
 
     default_pathway = [Mechanism_Base.defaultMechanism]
 
@@ -846,21 +856,7 @@ class Process_Base(Process):
                                                   learning_rate=learning_rate,
                                                   target=target,
                                                   params=params)
-
-        self._execution_id = None
-        self.pathway = None
-        # # MODIFIED 2/17/17 OLD:
-        # self.input = None
-        # MODIFIED 2/17/17 NEW:
-        self.input = []
-        # MODIFIED 2/17/17 END
-        self.processInputStates = []
         self.function = self.execute
-        self.targets = None
-        self.targetInputStates = []
-        self.systems = []
-        self._phaseSpecMax = 0
-        self._isControllerProcess = False
 
         register_category(entry=self,
                           base_class=Process_Base,
@@ -877,6 +873,7 @@ class Process_Base(Process):
                                            name=self.name,
                                            prefs=prefs,
                                            context=context)
+
 
     def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
@@ -904,8 +901,8 @@ class Process_Base(Process):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Note: don't confuse target_set (argument of validate_params) with self.target (process attribute for learning)
-        if kwInitialValues in target_set and target_set[kwInitialValues]:
-            for mech, value in target_set[kwInitialValues].items():
+        if INITIAL_VALUES in target_set and target_set[INITIAL_VALUES]:
+            for mech, value in target_set[INITIAL_VALUES].items():
                 if not isinstance(mech, Mechanism):
                     raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
@@ -1053,7 +1050,7 @@ class Process_Base(Process):
                                            " is neither a mechanism nor a projection specification".
                                            format(config_item[0], i, self.name))
                     # Check that second item is a dict (presumably of params)
-                    if not isinstance(config_item[1], dict):
+                    if config_item[1] is not None and not isinstance(config_item[1], dict):
                         raise ProcessError("Second item of tuple ({}) in entry {} of pathway for {}"
                                            " must be a params dict".
                                            format(config_item[1], i, self.name))
@@ -1368,9 +1365,11 @@ class Process_Base(Process):
                         # No projection found, so instantiate MappingProjection from preceding mech to current one;
                         # Note:  If self.learning arg is specified, it has already been added to projection_params above
                         MappingProjection(sender=preceding_item,
-                                receiver=item,
-                                params=projection_params
-                                )
+                                          receiver=item,
+                                          params=projection_params,
+                                          name='{} from {} to {}'.
+                                          format(MAPPING_PROJECTION, preceding_item.name, item.name)
+                                          )
                         if self.prefs.verbosePref:
                             print("MappingProjection added from mechanism {0} to mechanism {1}"
                                   " in pathway of {2}".format(preceding_item.name, item.name, self.name))
@@ -1628,9 +1627,7 @@ class Process_Base(Process):
             process_input_state = ProcessInputState(owner=self,
                                                     variable=process_input[i],
                                                     prefs=self.prefs)
-            # MODIFIED 2/17/17 OLD:
             self.processInputStates.append(process_input_state)
-            # MODIFIED 2/17/17 END
 
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
@@ -1638,7 +1635,10 @@ class Process_Base(Process):
         if num_process_inputs == num_mechanism_input_states:
             for i in range(num_mechanism_input_states):
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.inputState
-                if not iscompatible(process_input[i], mechanism.variable[i]):
+                # MODIFIED 4/3/17 NEW:
+                input_state_variable = list(mechanism.inputStates.values())[i].variable
+                # MODIFIED 4/3/17 END
+                if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                        "variable for corresponding inputState of {3}".
                                        format(i, process_input[i], self.name, mechanism.name))
