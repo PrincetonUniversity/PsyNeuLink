@@ -2063,36 +2063,44 @@ class System_Base(System):
             self.targetInputStates[i].value = self.current_targets[i]
 
         # NEXT, execute all components involved in learning
-        for component in self.learningExecutionList:
+        if self.scheduler_learning is None:
+            raise SystemError('System.py:_execute_learning - {0}\'s scheduler is None, must be initialized before execution'.format(self.name))
+        logger.debug('{0}.scheduler learning termination conditions: {1}'.format(self, self.termination_learning))
+        for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
+            logger.debug('Running next_execution_set {0}'.format(next_execution_set))
+            for component in next_execution_set:
+                logger.debug('\tRunning component {0}'.format(component))
 
-            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-            if isinstance(component, MappingProjection):
-                continue
+                from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+                if isinstance(component, MappingProjection):
+                    continue
 
-            params = None
+                params = None
 
-            component_type = component.componentType
+                component_type = component.componentType
 
-            processes = list(component.processes.keys())
+                processes = list(component.processes.keys())
 
-            # Sort for consistency of reporting:
-            process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-            process_names = list(p.name for p in process_keys_sorted)
+                # Sort for consistency of reporting:
+                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                process_names = list(p.name for p in process_keys_sorted)
 
-            context_str = str("{} | {}: {} [in processes: {}]".
-                              format(context,
-                                     component_type,
-                                     component.name,
-                                     re.sub('[\[,\],\n]','',str(process_names))))
+                context_str = str("{} | {}: {} [in processes: {}]".
+                                  format(context,
+                                         component_type,
+                                         component.name,
+                                         re.sub('[\[,\],\n]','',str(process_names))))
 
-            # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(clock=clock,
-                              time_scale=self.timeScale,
-                              runtime_params=params,
-                              # time_scale=time_scale,
-                              context=context_str)
-            # # TEST PRINT:
-            # print ("EXECUTING MONITORING UPDATES: ", component.name)
+                # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+                component.execute(
+                    clock=clock,
+                    time_scale=self.timeScale,
+                    runtime_params=params,
+                    # time_scale=time_scale,
+                    context=context_str
+                )
+                # # TEST PRINT:
+                # print ("EXECUTING MONITORING UPDATES: ", component.name)
 
         # THEN update all MappingProjections
         for component in self.learningExecutionList:
@@ -2216,7 +2224,7 @@ class System_Base(System):
             self.scheduler_processing = Scheduler(system=self)
 
         if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(nodes=self.learningExecutionList, toposort_ordering=self.learningGraph)
+            self.scheduler_learning = Scheduler(nodes=self.learningExecutionList, toposort_ordering=toposort(self.learningGraph))
 
         logger.debug(inputs)
 
