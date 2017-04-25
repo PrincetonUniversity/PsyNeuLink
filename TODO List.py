@@ -27,10 +27,11 @@
 #          (E.G., PREFS, NAME, FUNCTION, FUNCTON_PARAMS, USER_PARAMS, ETC.)
 #   6) SHOULD WE SUPPORT >2D VALUES (PASSED ALONG PROJECTIONS, USED AS STATE VALUES, ETC.; INPUTS TO TRANSFER FCT, ETC.)
 #   7) SHOULD OVERRIDE OF ATTRIBUTE SETTERS BE @PROPERTY IN CLASS DEFINITION, OR SETTER PASSED TO make_property?
-#   8) DOCUMENTATION: SHOULD WE INCLUDE COMPONENT ATTRIBUTES IN DOCSTRING FOR SUBCLASSES (E.G., params, prefs, etc.)
-#   9) DOCUMENTATION: SHOULD EXAMPLES BE GENERIC (SEE COMPONENT FUNCTION) OR SPECIFIC (USING ACTUAL PSYNEULINK OBJECTS)
+#   8) • DOCUMENTATION: SHOULD WE INCLUDE COMPONENT ATTRIBUTES IN DOCSTRING FOR SUBCLASSES (E.G., params, prefs, etc.)
+#   9) • DOCUMENTATION: SHOULD EXAMPLES BE GENERIC (SEE COMPONENT FUNCTION) OR SPECIFIC (USING ACTUAL PNL OBJECTS)?
 #  10) DOCUMENTATION: INCLUDE EXAMPLES "INLINE" OR IN THEIR OWN SECTION AT THE END?
-#  11) SHOULD COMPONENT NAMES HAVE SPACES OF UNDERSCORES?
+#  11) • SHOULD COMPONENT NAMES HAVE SPACES OF UNDERSCORES?
+#  12) • SHOULD learning_rate FOR LearningProjection SET SLOPE OF function OR DIRECTLY MULTIPLY WEIGHTS?
 
 # TASKS:
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
@@ -58,9 +59,12 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
-# FIX: Function, derivatives: change output to input??
+# IMPLEMENT:  BogcazEtAl:
+#                 add Diti, Dpenalty, RR calculation, and add RR to return value
+#                 modify variable to accept drift_rate??
 #
 # IMPLEMENT:  Deferred init for control.
+#
 # FIX: Flip names of Xxxx() and Xxxx_Base()
 
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
@@ -88,6 +92,10 @@
 
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
 
+# TEST: Autoassociative SOFT_CLAMP
+# TEST: Autoassociative learning:  bp = Delta rule
+# IMPLEMENT: IAC TransferFunction
+# IMPLEMENT: Simple Hebbian learning
 # TEST: learning_rate is assignable and "sticks" at function, mech, process and system levels
 
 # FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)
@@ -138,11 +146,6 @@
 #             I.E., THAT THIS BE OK FOR ALL OTHER INSTANCES OF THAT CLASS
 #             FOR EXAMPLE, IN assign_params_to_dicts, WHERE A DEFAULT IS SPECIFIED IN THE ARG RATHER THAN classDefaults
 #
-#
-# FIX: WHY DOESN"T THIS WORK: [ASSIGNMENT OF LEARNING_RATE TO SLOPE OF LEARNING FUNCTION]
-# FIX: HANDLE THIS AS runtime_param??
-#         if self.learning_rate:
-#             params.update({SLOPE:self.learning_rate})
 
 # FIX:
 #    0) Deal with function parameter assignment in update() of ParameterState

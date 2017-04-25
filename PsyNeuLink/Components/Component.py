@@ -2321,7 +2321,7 @@ class Component(object):
         while owner is not None:
             try:
                 owner._auto_dependent = value
-                owner = self.owner.owner
+                owner = owner.owner
 
             except AttributeError:
                 owner = None

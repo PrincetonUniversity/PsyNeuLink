@@ -287,8 +287,9 @@ PARAMETER_STATE = "ParameterState"
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
-CONTROL_PROJECTION = "ControlProjection"
 LEARNING_PROJECTION = "LearningProjection"
+CONTROL_PROJECTION = "ControlProjection"
+GATING_PROJECTION = "GatingProjection"
 
 # Function:
 EXAMPLE_FUNCTION_TYPE = "EXAMPLE FUNCTION"
