@@ -626,24 +626,25 @@ my_auto_matrix = MappingProjection(sender=my_auto,
                                    receiver=my_auto,
                                    matrix=FULL_CONNECTIVITY_MATRIX)
 my_process = process(pathway=[my_auto],
-                     learning=LEARNING)
+                     # learning=LEARNING
+                     )
 
 
 # my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
 #                      learning=LEARNING,
 #                      target=[0,0,0])
 
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
+print(my_process.execute([1,1,1]))
+print(my_process.execute([1,1,1]))
+print(my_process.execute([1,1,1]))
+print(my_process.execute([1,1,1]))
 
-input_list = {my_auto:[1,1,1]}
+# input_list = {my_auto:[1,1,1]}
 
 # print(my_process.run(inputs=input_list, num_executions=3))
 
-my_system = system(processes=[process])
-print(my_system.run(inputs=input_list, num_executions=3))
+# my_system = system(processes=[process])
+# print(my_system.run(inputs=input_list, num_executions=3))
 
 
 #endregion
