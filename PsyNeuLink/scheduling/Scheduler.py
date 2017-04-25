@@ -3,7 +3,7 @@ import logging
 from toposort import toposort
 
 from PsyNeuLink.Globals.TimeScale import TimeScale
-from PsyNeuLink.scheduling.condition import Always, ConditionSet, Never
+from PsyNeuLink.scheduling.condition import AllHaveRun, Always, ConditionSet
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ class Scheduler(object):
         # stores the in order list of self.run's yielded outputs
         self.execution_list = []
         self.consideration_queue = []
+        self.termination_conds = None
 
         if composition is not None:
             self.nodes = [vert.mechanism for vert in composition.graph.vertices]
@@ -35,10 +36,10 @@ class Scheduler(object):
         elif nodes is not None:
             self.nodes = nodes
             if toposort_ordering is None:
-                raise SchedulerError('Instantiating Scheduler by list of mechanisms requires a toposort ordering (kwarg toposort_ordering)')
+                raise SchedulerError('Instantiating Scheduler by list of nodes requires a toposort ordering (kwarg toposort_ordering)')
             self.consideration_queue = list(toposort_ordering)
         else:
-            raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition), or a list of Mechanisms (kwarg mechanisms) and and a toposort ordering over them (kwarg toposort_ordering)')
+            raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition), or a list of Mechanisms (kwarg nodes) and and a toposort ordering over them (kwarg toposort_ordering)')
 
         self._init_counts()
 
@@ -67,17 +68,17 @@ class Scheduler(object):
     def _init_counts(self):
         # self.times[p][q] stores the number of TimeScale q ticks that have happened in the current TimeScale p
         self.times = {ts: {ts: 0 for ts in TimeScale} for ts in TimeScale}
-        # stores total the number of occurrences of a mechanism through the time scale
+        # stores total the number of occurrences of a node through the time scale
         # i.e. the number of times node has ran/been queued to run in a trial
         self.counts_total = {ts: None for ts in TimeScale}
-        # counts_useable is a dictionary intended to store the number of available "instances" of a certain mechanism that
+        # counts_useable is a dictionary intended to store the number of available "instances" of a certain node that
         # are available to expend in order to satisfy conditions such as "run B every two times A runs"
         # specifically, counts_useable[a][b] = n indicates that there are n uses of a that are available for b to expend
         # so, in the previous example B would check to see if counts_useable[A][B] is 2, in which case B can run
-        self.counts_useable = {node: {m: 0 for m in self.nodes} for node in self.nodes}
+        self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
 
         for ts in TimeScale:
-            self.counts_total[ts] = {m: 0 for m in self.nodes}
+            self.counts_total[ts] = {n: 0 for n in self.nodes}
 
     def _reset_count(self, count, time_scale):
         for c in count[time_scale]:
@@ -117,55 +118,54 @@ class Scheduler(object):
     # Validation methods
     #   to provide the user with info if they do something odd
     ################################################################################
-    def _validate_run_state(self, termination_conds):
+    def _validate_run_state(self):
         self._validate_condition_set()
-        self._validate_termination(termination_conds)
+        self._validate_termination()
 
     def _validate_condition_set(self):
-        unspecified_mechs = []
+        unspecified_nodes = []
         for node in self.nodes:
             if node not in self.condition_set:
                 self.condition_set.add_condition(node, Always())
-                unspecified_mechs.append(node)
-        if len(unspecified_mechs) > 0:
-            logger.warning('These mechanisms have no Conditions specified, and will be scheduled with condition Always: {0}'.format(unspecified_mechs))
+                unspecified_nodes.append(node)
+        if len(unspecified_nodes) > 0:
+            logger.warning('These nodes have no Conditions specified, and will be scheduled with condition Always: {0}'.format(unspecified_nodes))
 
-    def _validate_termination(self, termination_conds):
-        try:
-            for tc in termination_conds:
-                if termination_conds[tc] is None:
-                    if tc in [TimeScale.TRIAL]:
-                        raise SchedulerError('Must specify a {0} termination Condition (termination_conds[{0}]'.format(tc))
-                else:
-                    if termination_conds[tc].scheduler is None:
-                        logger.debug('Setting scheduler of {0} to self ({1})'.format(termination_conds[tc], self))
-                        termination_conds[tc].scheduler = self
-        except TypeError as e:
-            raise SchedulerError('Must specify a termination Condition dict (termination_conds[<time_step>]: Condition); err: {0}'.format(e))
-
+    def _validate_termination(self):
+        if self.termination_conds is None:
+            logger.warning('A termination Condition dict (termination_conds[<time_step>]: Condition) was not specified, and so the termination conditions for all TimeScale will be set to AllHaveRun()')
+            self.termination_conds = {ts: AllHaveRun() for ts in TimeScale}
+        for tc in self.termination_conds:
+            if self.termination_conds[tc] is None:
+                if tc in [TimeScale.TRIAL]:
+                    raise SchedulerError('Must specify a {0} termination Condition (termination_conds[{0}]'.format(tc))
+            else:
+                if self.termination_conds[tc].scheduler is None:
+                    logger.debug('Setting scheduler of {0} to self ({1})'.format(self.termination_conds[tc], self))
+                    self.termination_conds[tc].scheduler = self
     ################################################################################
     # Run methods
     ################################################################################
-    def run(self, termination_conds={ts: None for ts in TimeScale}):
+    def run(self, termination_conds=None):
         '''
         :param self:
         :param termination_conds: (dict) - a mapping from :keyword:`TimeScale`s to :keyword:`Condition`s that when met terminate the execution of the specified :keyword:`TimeScale`
         '''
-        self._validate_run_state(termination_conds)
+        self.termination_conds = termination_conds
+        self._validate_run_state()
 
         def has_reached_termination(self, time_scale=None):
             term = True
             if time_scale is None:
-                for ts in termination_conds:
-                    term = term and termination_conds[ts].is_satisfied()
+                for ts in self.termination_conds:
+                    term = term and self.termination_conds[ts].is_satisfied()
             else:
-                term = term and termination_conds[time_scale].is_satisfied()
+                term = term and self.termination_conds[time_scale].is_satisfied()
 
             return term
 
         execution_list = []
-
-        self.counts_useable = {node: {m: 0 for m in self.nodes} for node in self.nodes}
+        self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
         self._reset_count(self.counts_total, TimeScale.TRIAL)
         self._reset_time(TimeScale.TRIAL)
 
@@ -177,9 +177,9 @@ class Scheduler(object):
             cur_index_consideration_queue = 0
 
             while (
-                    cur_index_consideration_queue < len(self.consideration_queue)
-                    and not termination_conds[TimeScale.TRIAL].is_satisfied()
-                    ):
+                cur_index_consideration_queue < len(self.consideration_queue)
+                and not termination_conds[TimeScale.TRIAL].is_satisfied()
+            ):
                 cur_time_step_exec = set()
                 cur_consideration_set = self.consideration_queue[cur_index_consideration_queue]
                 logger.debug('trial, num passes in trial {0}, consideration_queue {1}'.format(self.times[TimeScale.TRIAL][TimeScale.PASS], ' '.join([str(x) for x in cur_consideration_set])))
@@ -187,33 +187,33 @@ class Scheduler(object):
                 # do-while, on cur_consideration_set_has_changed
                 while True:
                     cur_consideration_set_has_changed = False
-                    for current_mech in cur_consideration_set:
+                    for current_node in cur_consideration_set:
                         logger.debug('cur time_step exec: {0}'.format(cur_time_step_exec))
-                        for m in self.counts_useable:
-                            logger.debug('Counts of {0} useable by'.format(m))
-                            for m2 in self.counts_useable[m]:
-                                logger.debug('\t{0}: {1}'.format(m2, self.counts_useable[m][m2]))
+                        for n in self.counts_useable:
+                            logger.debug('Counts of {0} useable by'.format(n))
+                            for n2 in self.counts_useable[n]:
+                                logger.debug('\t{0}: {1}'.format(n2, self.counts_useable[n][n2]))
 
-                        if self.condition_set.conditions[current_mech].is_satisfied():
-                            if current_mech not in cur_time_step_exec:
-                                logger.debug('adding {0} to execution list'.format(current_mech))
+                        if self.condition_set.conditions[current_node].is_satisfied():
+                            if current_node not in cur_time_step_exec:
+                                logger.debug('adding {0} to execution list'.format(current_node))
                                 logger.debug('cur time_step exec pre add: {0}'.format(cur_time_step_exec))
-                                cur_time_step_exec.add(current_mech)
+                                cur_time_step_exec.add(current_node)
                                 logger.debug('cur time_step exec post add: {0}'.format(cur_time_step_exec))
                                 execution_list_has_changed = True
                                 cur_consideration_set_has_changed = True
 
                                 for ts in TimeScale:
-                                    self.counts_total[ts][current_mech] += 1
+                                    self.counts_total[ts][current_node] += 1
                                     self.times[ts][TimeScale.TIME_STEP] += 1
-                                # current_mech's mechanism is added to the execution queue, so we now need to
-                                # reset all of the counts useable by current_mech's mechanism to 0
-                                for m in self.counts_useable:
-                                    self.counts_useable[m][current_mech] = 0
-                                # and increment all of the counts of current_mech's mechanism useable by other
-                                # mechanisms by 1
-                                for m in self.counts_useable:
-                                    self.counts_useable[current_mech][m] += 1
+                                # current_node's node is added to the execution queue, so we now need to
+                                # reset all of the counts useable by current_node's node to 0
+                                for n in self.counts_useable:
+                                    self.counts_useable[n][current_node] = 0
+                                # and increment all of the counts of current_node's node useable by other
+                                # nodes by 1
+                                for n in self.counts_useable:
+                                    self.counts_useable[current_node][n] += 1
                     # do-while condition
                     if not cur_consideration_set_has_changed:
                         break
