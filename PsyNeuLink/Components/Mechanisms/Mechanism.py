@@ -1669,6 +1669,7 @@ class Mechanism_Base(Mechanism):
             # param_back_field_name = '_' + state_name
             # param[param_back_field_name] = type_match(state.value, param_type)
             # # MODIFIED 4/20/17 END
+            TEST = True
 
     def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
         """Execute function for each outputState and assign result of each to corresponding item of self.outputValue
