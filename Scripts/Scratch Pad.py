@@ -13,7 +13,7 @@ from PsyNeuLink.Globals.Keywords import *
 # PROJECTIONS:
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 # from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-# from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+# from PsyNeuLink.Components.Projections.ControlProjection import ControldProjection
 # from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
 
 # MECHANISMS:
@@ -631,20 +631,20 @@ my_process = process(pathway=[my_auto],
 
 
 # my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
-#                      learning=LEARNING,
+#                      # learning=LEARNING,
 #                      target=[0,0,0])
 
-print(my_process.execute([1,1,1]))
-print(my_process.execute([1,1,1]))
-print(my_process.execute([1,1,1]))
-print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
 
-# input_list = {my_auto:[1,1,1]}
+input_list = {my_auto:[1,1,1]}
 
 # print(my_process.run(inputs=input_list, num_executions=3))
 
-# my_system = system(processes=[process])
-# print(my_system.run(inputs=input_list, num_executions=3))
+my_system = system(processes=[my_process])
+print(my_system.run(inputs=input_list, num_executions=3))
 
 
 #endregion
