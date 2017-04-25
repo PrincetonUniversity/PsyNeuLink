@@ -46,6 +46,10 @@ class ShellClassError(Exception):
         return repr(self.error_value)
 
 
+def _attempt_to_call_base_class(cls, alternative):
+    raise ShellClassError("Can't call {} directly;  must use {}".format(cls.__class__.__name__, alternative))
+
+
 class ShellClass(Component):
     pass
 
@@ -53,6 +57,20 @@ class ShellClass(Component):
 # ******************************************* SYSTEM *******************************************************************
 
 class System(ShellClass):
+
+    def __init__(self,
+                 variable_default=None,
+                 param_defaults=None,
+                 name=None,
+                 prefs=None,
+                 context=None):
+        if context is None:
+            _attempt_to_call_base_class(self,'system()')
+        super().__init__(variable_default=variable_default,
+                         param_defaults=param_defaults,
+                         name=name,
+                         prefs=prefs,
+                         context=context)
 
     def execute(self, variable=None, time_scale=None, context=None):
         raise ShellClassError("Must implement execute in {0}".format(self.__class__.__name__))
@@ -62,8 +80,19 @@ class System(ShellClass):
 
 
 class Process(ShellClass):
-    pass
-
+    def __init__(self,
+                 variable_default=None,
+                 param_defaults=None,
+                 name=None,
+                 prefs=None,
+                 context=None):
+        if context is None:
+            _attempt_to_call_base_class(self,'process()')
+        super().__init__(variable_default=variable_default,
+                         param_defaults=param_defaults,
+                         name=name,
+                         prefs=prefs,
+                         context=context)
 
 # ******************************************* MECHANISM ****************************************************************
 
@@ -71,6 +100,20 @@ ParamValueProjection = namedtuple('ParamValueProjection', 'value projection')
 
 
 class Mechanism(ShellClass):
+
+    def __init__(self,
+                 variable_default=None,
+                 param_defaults=None,
+                 name=None,
+                 prefs=None,
+                 context=None):
+        if context is None:
+            _attempt_to_call_base_class(self,'mechanism()')
+        super().__init__(variable_default=variable_default,
+                         param_defaults=param_defaults,
+                         name=name,
+                         prefs=prefs,
+                         context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         raise ShellClassError("Must implement _validate_params in {0}".format(self))

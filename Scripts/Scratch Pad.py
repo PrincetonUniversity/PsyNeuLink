@@ -1,16 +1,7 @@
 import numpy as np
-
-class ScratchPadError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
-#
-#region DEBUG:
-
 # from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Functions.Function import Linear
+# from PsyNeuLink.Components.Functions.Function import Linear
 # from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 # from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 # from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
@@ -22,69 +13,265 @@ from PsyNeuLink.Components.Functions.Function import Linear
 # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 # from PsyNeuLink.Components.States.OutputState import OutputState
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Process import Process, Process_Base, process
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
+from PsyNeuLink.Components.System import system, System, System_Base
 
+class ScratchPadError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
 
-#region TEST AUTO_PROP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
+#
 
-defaults = {'foo':5, 'bar': ['hello', 'world']}
+class ScratchPadError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
 
-docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
-        'bar': 'Bar none, the most important property'}
+# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
 
+#region TEST whether function attribute assignment is used and "sticks"
 
-def make_property(name):
-    backing_field = '_' + name
+# my_mech = IntegratorMechanism()
+# # my_mech.function_object.rate = 2.0
+# print(my_mech.execute())
+# my_mech.function_object.rate = 0.9
+# print(my_mech.execute())
+# my_mech.function_object.rate = .75
+# print(my_mech.function_object.rate)
+# my_mech.function_object.rate = .2
+# print(my_mech.execute())
 
-    def getter(self):
-        if hasattr(self, backing_field):
-            return getattr(self, backing_field)
-        else:
-            return defaults[name]
-
-    def setter(self, val):
-        setattr(self, backing_field, val)
-
-    # Create the property
-    prop = property(getter).setter(setter)
-
-    # Install some documentation
-    prop.__doc__ = docs[name]
-    return prop
-
-
-def autoprop(cls):
-    for k, v in defaults.items():
-        setattr(cls, k, make_property(k))
-    return cls
-
-
-@autoprop
-class Test:
-    pass
-
-if __name__ == '__main__':
-    t = Test()
-    t2 = Test()
-    print("Stored values in t", t.__dict__)
-    print("Properties on t", dir(t))
-    print("Check that default values are there by default")
-    assert t.foo == 5
-    assert t.bar == ['hello', 'world']
-    print("Assign and check the assignment holds")
-    t.foo = 20
-    assert t.foo == 20
-    print("Check that assignment on t didn't change the defaulting on t2 somehow")
-    assert t2.foo == 5
-    print("Check that changing the default changes the value on t2")
-    defaults['foo'] = 27
-    assert t2.foo == 27
-    print("But t1 keeps the value it was assigned")
-    assert t.foo == 20
-    print(""""Note that 'help(Test.foo)' and help('Test.bar') will show 
-    the docs we installed are available in the help system""")
 #endregion
 
-# #region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Multipe Inits
+
+# # WORKS:
+
+# my_mech = mechanism()
+# print(my_mech.name)
+# my_mech = mechanism()
+# print(my_mech.name)
+# my_mech = mechanism()
+# print(my_mech.name)
+# my_mech = mechanism()
+# print(my_mech.name)
+
+# my_mech = Mechanism()
+
+# my_mech = Mechanism_Base()
+
+# my_process = process()
+# print(my_process.name)
+# my_process = process()
+# print(my_process.name)
+# my_process = process()
+# print(my_process.name)
+# my_process = process()
+# print(my_process.name)
+
+# my_process = Process()
+# print(my_process.name)
+
+# my_process = Process_Base()
+# print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
+
+# my_sys = system()
+# print(my_sys.name)
+# my_sys = system()
+# print(my_sys.name)
+# my_sys = system()
+# print(my_sys.name)
+# my_sys = system()
+# print(my_sys.name)
+
+# my_sys = System()
+
+# my_sys = System_Base()
+# print(my_sys.name)
+# my_sys = System_Base()
+# print(my_sys.name)
+# my_sys = System_Base()
+# print(my_sys.name)
+
+#endregion
+
+# region TEST ReadOnlyOrderedDict
+
+# from collections import UserDict, OrderedDict
+#
+# # class ReadOnlyOrderedDict(OrderedDict):
+# #     def __init__(self, dict=None, **kwargs):
+# #         UserDict.__init__(self, dict, **kwargs)
+# #         self._ordered_keys = []
+# #         for key in list(dict.keys()):
+# #             self._ordered_keys.append(key)
+# #         TEST = True
+# #     def __setitem__(self, key, item):
+# #         raise TypeError
+# #     def __delitem__(self, key):
+# #         raise TypeError
+# #     def clear(self):
+# #         raise TypeError
+# #     def pop(self, key, *args):
+# #         raise TypeError
+# #     def popitem(self):
+# #         raise TypeError
+# #
+# #     def update(self, dict=None):
+# #         if dict is None:
+# #             pass
+# #         elif isinstance(dict, UserDict):
+# #             self.data = dict.data
+# #         elif isinstance(dict, type({})):
+# #             self.data = dict
+# #         else:
+# #             raise TypeError
+# #
+# #     def okeys(self):
+# #         return self._ordered_keys
+# #
+# #     # def __setitem__(self, key, value):
+# #     #     self.data[key] = item
+# #     #     self._ordered_keys.append(key)
+# #
+# # x = ReadOnlyOrderedDict(OrderedDict({'hello':1, 'goodbye':2}))
+# # print(x.okeys())
+#
+#
+# # Ordered UserDict
+# class ReadOnlyOrderedDict(UserDict):
+#     def __init__(self, dict=None, name=None, **kwargs):
+#         self.name = name or self.__class__.__name__
+#         UserDict.__init__(self, dict, **kwargs)
+#         self._ordered_keys = []
+#     def __setitem__(self, key, item):
+#         raise ScratchPadError("{} is read-only".format(self.name))
+#     def __delitem__(self, key):
+#         raise TypeError
+#     def clear(self):
+#         raise TypeError
+#     def pop(self, key, *args):
+#         raise TypeError
+#     def popitem(self):
+#         raise TypeError
+#     def __additem__(self, key, value):
+#         self.data[key] = value
+#         if not key in self._ordered_keys:
+#             self._ordered_keys.append(key)
+#     def keys(self):
+#         return self._ordered_keys
+#
+# x = ReadOnlyOrderedDict()
+# x.__additem__('hello',1)
+# x.__additem__('hello',2)
+# x.__additem__('goodbye',2)
+# print(x.keys())
+# for key in x.keys():
+#     print(x[key])
+# # x['new item']=3
+#
+# # # ReadOnly UserDict
+# # class ReadOnlyOrderedDict(OrderedDict):
+# # 	def __setitem__(self, key, item): raise TypeError
+# # 	def __delitem__(self, key): raise TypeError
+# # 	def clear(self): raise TypeError
+# # 	def pop(self, key, *args): raise TypeError
+# # 	def popitem(self): raise TypeError
+# # 	def __additem__(selfself, key, item):
+# #
+# #
+# # 	def update(self, dict=None):
+# # 		if dict is None:
+# # 			pass
+# # 		elif isinstance(dict, UserDict):
+# # 			self.data = dict.data
+# # 		elif isinstance(dict, type({})):
+# # 			self.data = dict
+# # 		else:
+# # 			raise TypeError
+# #
+# # x = ReadOnlyDict({'hello':1, 'goodbye':2})
+# # print(list(x.keys()))
+# # # x['new'] = 4
+# #
+# #
+# # # ReadOnly UserDict
+# # x = ReadOnlyDict()
+# # x['hello'] = 1
+# # x['goodbye'] = 2
+# # print(list(x.keys()))
+# #
+
+#endregion
+
+#region TEST AUTO_PROP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# defaults = {'foo':5, 'bar': ['hello', 'world']}
+#
+# docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
+#         'bar': 'Bar none, the most important property'}
+#
+#
+# def make_property(name):
+#     backing_field = '_' + name
+#
+#     def getter(self):
+#         if hasattr(self, backing_field):
+#             return getattr(self, backing_field)
+#         else:
+#             return defaults[name]
+#
+#     def setter(self, val):
+#         setattr(self, backing_field, val)
+#
+#     # Create the property
+#     prop = property(getter).setter(setter)
+#
+#     # Install some documentation
+#     prop.__doc__ = docs[name]
+#     return prop
+#
+#
+# def autoprop(cls):
+#     for k, v in defaults.items():
+#         setattr(cls, k, make_property(k))
+#     return cls
+#
+#
+# @autoprop
+# class Test:
+#     pass
+#
+# if __name__ == '__main__':
+#     t = Test()
+#     t2 = Test()
+#     print("Stored values in t", t.__dict__)
+#     print("Properties on t", dir(t))
+#     print("Check that default values are there by default")
+#     assert t.foo == 5
+#     assert t.bar == ['hello', 'world']
+#     print("Assign and check the assignment holds")
+#     t.foo = 20
+#     assert t.foo == 20
+#     print("Check that assignment on t didn't change the defaulting on t2 somehow")
+#     assert t2.foo == 5
+#     print("Check that changing the default changes the value on t2")
+#     defaults['foo'] = 27
+#     assert t2.foo == 27
+#     print("But t1 keeps the value it was assigned")
+#     assert t.foo == 20
+#     print(""""Note that 'help(Test.foo)' and help('Test.bar') will show
+#     the docs we installed are available in the help system""")
+# #endregion
+
+#region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # print = Linear(variable=[[1,1],[2,2]])
 
@@ -95,7 +282,6 @@ if __name__ == '__main__':
 #
 # Decision.execute()
 
-#endregion
 
 # for i, j in zip(range(5), range(5)):
 #     print(i, j)
@@ -292,10 +478,10 @@ if __name__ == '__main__':
 #              name='y')
 #
 # TEST = True
-
+#
 # print(y.run([1,2,3]))
 
-#endegion
+#endregion
 
 #region TEST INPUT FORMATS
 
@@ -411,17 +597,19 @@ if __name__ == '__main__':
 
 #region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Components.Functions.Function import *
-# #
+from PsyNeuLink.Components.Functions.Function import *
+#
+# x = SoftMax()
+x = SoftMax(output=MAX_VAL)
+a = [-1, 2, 1]
 # x = SoftMax(output=SoftMax.PROB)
-# y = x.execute([-11, 2, 3])
-# print ("SoftMax execute return value: \n", y)
-#
-# # z = x.derivative(x.execute([-11, 2, 3]))
-# # z = x.derivative(y)
-# # z = x.derivative(output=y, input=[-11, 2, 3])
-#
-# # print ("SoftMax derivative return value: \n", z)
+y = x.function(a)
+z = x.derivative(a)
+print ("SoftMax execute return value: \n", [float(i) for i in y])
+if z.ndim == 1:
+    print ("SoftMax derivative return value: \n", [float(i) for i in z])
+else:
+    print ("SoftMax derivative return value: \n", [[float(i) for i in j] for j in z])
 
 #endregion
 
@@ -1631,7 +1819,7 @@ import typecheck as tc
 # except TypeError:
 #     pass
 # #endregion
-#
+
 # print(state_params)
 
 #region TEST:  ORDERED DICTIONARY ORDERING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -1652,7 +1840,6 @@ import typecheck as tc
 # print ("b: ", b)
 #
 #endregion
-
 
 #region TEST:  add a parameterState to a param after an object is instantiated @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 

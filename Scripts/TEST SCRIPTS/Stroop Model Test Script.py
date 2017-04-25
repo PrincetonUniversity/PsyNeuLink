@@ -46,6 +46,8 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
                   prefs=system_prefs,
                   )
 
+# mySystem.show_graph_with_learning()
+
 # TEST REPORT_OUTPUT_PREFs:
 # colors.reportOutputPref = True
 # words.reportOutputPref = True
@@ -84,7 +86,7 @@ for i in range(10):
 # mySystem.run(num_executions=2,
 #              inputs=stim_dict,
 #              targets=target_dict)
-
+#
 
 # SHOW OPTIONS:
 # mySystem.show()
