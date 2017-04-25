@@ -247,7 +247,7 @@ class AllHaveRun(Condition):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
             if len(dependencies) == 0:
-                dependencies = self.scheduler.mechanisms
+                dependencies = self.scheduler.nodes
             for d in dependencies:
                 if self.scheduler.counts_total[time_scale][d] < 1:
                     return False
