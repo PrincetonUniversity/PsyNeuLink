@@ -2103,28 +2103,31 @@ class System_Base(System):
                 # print ("EXECUTING MONITORING UPDATES: ", component.name)
 
         # THEN update all MappingProjections
-        for component in self.learningExecutionList:
+        for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
+            logger.debug('Running next_execution_set {0}'.format(next_execution_set))
+            for component in next_execution_set:
+                logger.debug('\tRunning component {0}'.format(component))
 
-            if isinstance(component, (LearningMechanism, ObjectiveMechanism)):
-                continue
-            if not isinstance(component, MappingProjection):
-                raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
+                if isinstance(component, (LearningMechanism, ObjectiveMechanism)):
+                    continue
+                if not isinstance(component, MappingProjection):
+                    raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
 
-            component_type = "mappingProjection"
-            processes = list(component.sender.owner.processes.keys())
+                component_type = "mappingProjection"
+                processes = list(component.sender.owner.processes.keys())
 
 
-            # Sort for consistency of reporting:
-            process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-            process_names = list(p.name for p in process_keys_sorted)
+                # Sort for consistency of reporting:
+                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                process_names = list(p.name for p in process_keys_sorted)
 
-            context_str = str("{} | {}: {} [in processes: {}]".
-                              format(context,
-                                     component_type,
-                                     component.name,
-                                     re.sub('[\[,\],\n]','',str(process_names))))
+                context_str = str("{} | {}: {} [in processes: {}]".
+                                  format(context,
+                                         component_type,
+                                         component.name,
+                                         re.sub('[\[,\],\n]','',str(process_names))))
 
-            component.parameterStates[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
+                component.parameterStates[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
 
             # TEST PRINT:
             # print ("EXECUTING WEIGHT UPDATES: ", component.name)
