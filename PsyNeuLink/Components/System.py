@@ -2059,6 +2059,9 @@ class System_Base(System):
     def _execute_learning(self, clock=CentralClock, context=None):
         # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
 
+        if self.current_targets is None:
+           raise SystemError("No targets were specified in the call to execute {} with learning".format(self.name))
+
         # FIRST, if targets were specified as a function, call the function now
         #    (i.e., after execution of the pathways, but before learning)
         # Note:  this accomodates functions that predicate the target on the outcome of processing

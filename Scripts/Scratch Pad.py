@@ -655,7 +655,10 @@ target_list = {my_auto:[0,0,0]}
 
 my_system = system(processes=[my_process],
                    targets=[0,0,0])
-print(my_system.run(inputs=input_list, targets=target_list, num_executions=5))
+
+print(my_system.run(inputs=input_list,
+                    targets=target_list,
+                    num_executions=5))
 
 
 #endregion
