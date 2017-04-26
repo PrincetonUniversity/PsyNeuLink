@@ -57,7 +57,7 @@ myProcess_2 = Process_Base(default_input_value=[0, 0],
                                                     FULL_CONNECTIVITY_MATRIX,
                                                     (Layer_3, 0)]})
 
-mySystem = System_Base(params={kwProcesses:[(myProcess_1,0), (myProcess_2,0)]})
+mySystem = System_Base(params={PROCESSES:[(myProcess_1,0), (myProcess_2,0)]})
 
 myProcess_1.reportOutputPref = True
 myProcess_2.reportOutputPref = True
