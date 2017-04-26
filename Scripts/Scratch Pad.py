@@ -631,7 +631,6 @@ my_auto = TransferMechanism(default_input_value=[0,0,0],
 #                      learning=LEARNING
 #                      )
 
-
 my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
                      learning=LEARNING,
                      target=[0,0,0])
