@@ -1365,8 +1365,8 @@ class EVCMechanism(ControlMechanism_Base):
         for origin_mech in self.system.originMechanisms:
             # Get origin mechanism for each process
             # Assign value of predictionMechanism to the entry of predictedInput for the corresponding ORIGIN mechanism
-            # self.predictedInput[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
-            self.predictedInput[origin_mech] = self.origin_prediction_mechanisms[origin_mech].outputState.value
+            self.predictedInput[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
+            # self.predictedInput[origin_mech] = self.origin_prediction_mechanisms[origin_mech].outputState.value
 
     def add_monitored_values(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC
@@ -1438,14 +1438,8 @@ class EVCMechanism(ControlMechanism_Base):
         self.monitoring_mechanism.execute(context=EVC_SIMULATION)
         self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
-        # Get cost of each controlSignal
-        # # MODIFIED 4/18/17 OLD:
-        # for control_signal in self.controlSignals:
-            # self.controlSignalCosts = np.append(self.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
-        # MODIFIED 4/18/17 NEW:
         for i in range(len(self.controlSignals)):
             self.controlSignalCosts[i] = self.controlSignals[i].cost
-        # MODIFIED 4/18/17 END
 
 
     # The following implementation of function attributes as properties insures that even if user sets the value of a
