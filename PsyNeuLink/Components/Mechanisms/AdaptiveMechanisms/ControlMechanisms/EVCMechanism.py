@@ -847,6 +847,7 @@ class EVCMechanism(ControlMechanism_Base):
             # Add to list of EVCMechanism's prediction_mech_tuples
             self.prediction_mech_tuples.append(MechanismTuple(prediction_mechanism, None, origin_mech.phaseSpec))
 
+            # Add prediction mechanisms to system graph
             # MODIFIED 4/25/17 OLD:
             # # Add to ORIGIN mechanism's process and assign and phase = ORIGIN mechanism's phase
             # prediction_process._isControllerProcess = True
