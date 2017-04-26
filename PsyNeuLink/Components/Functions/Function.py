@@ -2330,7 +2330,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
-                elif param_value is IDENTITY_MATRIX:
+                elif param_value in {IDENTITY_MATRIX, OFF_DIAGNOAL_MATRIX}:
                     # Receiver length doesn't equal sender length
                     if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
                         # if self.owner.prefs.verbosePref:
@@ -2339,9 +2339,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         #            format(receiver_len, sender_len))
                         # # Set receiver to sender
                         # param_set[kwReceiver] = sender
-                        raise FunctionError("Identity matrix requested for the {} function of {}, "
+                        raise FunctionError("{} requested for the {} function of {}, "
                                             "but length of receiver ({}) does not match length of sender ({})".
-                                            format(self.name, self.owner.name, receiver_len, sender_len))
+                                            format(param_value, self.name, self.owner.name, receiver_len, sender_len))
                     continue
 
                 # list used to describe matrix, so convert to 2D np.array and pass to validation of matrix below
@@ -2499,6 +2499,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         + matrix keyword:
             + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
             + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
+            + OFF_DIAGONAL_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
             + FULL_CONNECTIVITY_MATRIX: all 1's
             + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
         + 2D list or np.ndarray of numbers
@@ -2529,11 +2530,17 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     if specification == FULL_CONNECTIVITY_MATRIX:
         return np.full((rows, cols), 1.0)
 
-    if specification == IDENTITY_MATRIX:
+    if specification is IDENTITY_MATRIX:
         if rows != cols:
-            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use identity matrix".
-                                format(rows, cols))
+            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
+                                format(rows, cols, specification))
         return np.identity(rows)
+
+    if specification is OFF_DIAGNOAL_MATRIX:
+        if rows != cols:
+            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
+                                format(rows, cols, specification))
+        return 1-np.identity(rows)
 
     if specification is RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)

@@ -624,6 +624,8 @@ my_auto = TransferMechanism(default_input_value=[0,0,0],
                             # function=Logistic
                             )
 
+# THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
+#                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
 # my_auto_matrix = MappingProjection(sender=my_auto,
 #                                    receiver=my_auto,
 #                                    matrix=FULL_CONNECTIVITY_MATRIX)
@@ -644,14 +646,6 @@ input_list = {my_auto:[1,1,1]}
 target_list = {my_auto:[0,0,0]}
 
 # print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
-
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
 
 my_system = system(processes=[my_process],
                    targets=[0,0,0])
