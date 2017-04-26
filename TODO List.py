@@ -101,6 +101,7 @@
 
 # TEST: Autoassociative SOFT_CLAMP
 # TEST: Autoassociative learning:  bp = Delta rule
+# FIX: ADD PredictionMechanisms TO system.graph AND ASK NATE TO RENDER THEM IN BLUE
 # FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
 # IMPLEMENT: IAC TransferFunction
 # IMPLEMENT: Simple Hebbian learning
