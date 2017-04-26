@@ -634,17 +634,18 @@ my_process = process(pathway=[my_auto],
 #                      # learning=LEARNING,
 #                      target=[0,0,0])
 
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
+print(my_process.execute([1,1,1]))
+print(my_process.execute([1,1,1]))
+print(my_process.execute([1,1,1]))
+print(my_process.execute([1,1,1]))
 
-input_list = {my_auto:[1,1,1]}
-
+# input_list = {my_auto:[1,1,1]}
+# target_list = {my_auto:[1,1,1]}
+#
 # print(my_process.run(inputs=input_list, num_executions=3))
 
-my_system = system(processes=[my_process])
-print(my_system.run(inputs=input_list, num_executions=3))
+# my_system = system(processes=[my_process])
+# print(my_system.run(inputs=input_list, num_executions=3))
 
 
 #endregion

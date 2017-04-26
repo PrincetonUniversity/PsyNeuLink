@@ -1632,10 +1632,18 @@ class Mechanism_Base(Mechanism):
                 param = param_template = self.paramsCurrent
 
             # Determine whether template (param to type-match) is at top level or in a function_params dictionary
+            # # MODIFIED 4/25/17 OLD:
+            # try:
+            #     param_template[state_name]
+            # except KeyError:
+            #     param_template = self.function_params
+            # MODIFIED 4/25/17 NEW:
             try:
-                param_template[state_name]
+                param[state_name]
             except KeyError:
+                param = self.function_object.paramsCurrent
                 param_template = self.function_params
+            # MODIFIED 4/25/17 END
 
             # param_spec is the existing specification for the parameter in paramsCurrent or runtime_params
             param_spec = param_template[state_name]
@@ -1661,6 +1669,7 @@ class Mechanism_Base(Mechanism):
             # param_back_field_name = '_' + state_name
             # param[param_back_field_name] = type_match(state.value, param_type)
             # # MODIFIED 4/20/17 END
+            TEST = True
 
     def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
         """Execute function for each outputState and assign result of each to corresponding item of self.outputValue
