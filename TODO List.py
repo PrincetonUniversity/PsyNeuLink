@@ -65,6 +65,13 @@
 #
 # IMPLEMENT:  Deferred init for control.
 #
+
+# IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
+#           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
+
+# FIX: printout of intial_value (see devel_upstream on Quill)
+# FIX fix _update_parameter_state in Projection as in Mechanism
+
 # FIX: Flip names of Xxxx() and Xxxx_Base()
 
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
@@ -1856,7 +1863,7 @@
 #
 # FIX: NOTES: MAKE SURE System.execute DOESN'T CALL EVC FOR EXECUTION (WHICH WILL RESULT IN INFINITE RECURSION)
 #
-# FIX: NEED TO INSURE THAT self.variable, self.inputs ARE 3D np.arrays (ONE 2D ARRAY FOR EACH PROCESS IN kwProcesses)
+# FIX: NEED TO INSURE THAT self.variable, self.inputs ARE 3D np.arrays (ONE 2D ARRAY FOR EACH PROCESS IN PROCESSES)
 # FIX:     RESTORE "# # MODIFIED 6/26/16 NEW:" IN self._validate_variable
 # FIX:     MAKE CORRESPONDING ADJUSTMENTS IN self._instantiate_function (SEE FIX)
 #
