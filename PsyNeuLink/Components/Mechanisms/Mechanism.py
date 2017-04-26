@@ -1626,27 +1626,19 @@ class Mechanism_Base(Mechanism):
             #    assign parameter value there as parameterState's value
             if runtime_params and PARAMETER_STATE_PARAMS in runtime_params and state_name in runtime_params[
                 PARAMETER_STATE_PARAMS]:
-                param = param_template = runtime_params
+                params = runtime_params
             # Otherwise use paramsCurrent
             else:
-                param = param_template = self.paramsCurrent
+                params = self.paramsCurrent
 
             # Determine whether template (param to type-match) is at top level or in a function_params dictionary
-            # # MODIFIED 4/25/17 OLD:
-            # try:
-            #     param_template[state_name]
-            # except KeyError:
-            #     param_template = self.function_params
-            # MODIFIED 4/25/17 NEW:
             try:
-                param[state_name]
+                params[state_name]
             except KeyError:
-                param = self.function_object.paramsCurrent
-                param_template = self.function_params
-            # MODIFIED 4/25/17 END
+                params = self.function_object.paramsCurrent
 
             # param_spec is the existing specification for the parameter in paramsCurrent or runtime_params
-            param_spec = param_template[state_name]
+            param_spec = params[state_name]
 
             # If param_spec is a projection (i.e., ControlProjection or LearningProjection)
             #    then its value will be provided by the execution of the parameterState's function
@@ -1663,13 +1655,7 @@ class Mechanism_Base(Mechanism):
 
             # Assign version of parameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
-            # MODIFIED 4/20/17 OLD:
-            param[state_name] = type_match(state.value, param_type)
-            # # MODIFIED 4/20/17 NEW:
-            # param_back_field_name = '_' + state_name
-            # param[param_back_field_name] = type_match(state.value, param_type)
-            # # MODIFIED 4/20/17 END
-            TEST = True
+            params[state_name] = type_match(state.value, param_type)
 
     def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
         """Execute function for each outputState and assign result of each to corresponding item of self.outputValue
@@ -1897,6 +1883,7 @@ def _is_mechanism_spec(spec):
         return True
     return False
 
+# MechanismTuple indices
 OBJECT_ITEM = 0
 PARAMS_ITEM = 1
 PHASE_ITEM = 2

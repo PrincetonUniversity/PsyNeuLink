@@ -503,7 +503,7 @@ class System_Base(System):
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {kwProcesses: [Mechanism_Base.defaultMechanism],
+        + paramClassDefaults = {PROCESSES: [Mechanism_Base.defaultMechanism],
                                 CONTROLLER: DefaultController,
                                 TIME_SCALE: TimeScale.TRIAL}
        Class methods
@@ -874,7 +874,7 @@ class System_Base(System):
             raise SystemError("{} (controller arg for \'{}\') is not a ControllerMechanism or subclass of one".
                               format(controller, self.name))
 
-        for process in target_set[kwProcesses]:
+        for process in target_set[PROCESSES]:
             if not isinstance(process, Process):
                 raise SystemError("{} (in processes arg for \'{}\') is not a Process object".format(process, self.name))
 
@@ -899,7 +899,7 @@ class System_Base(System):
         This is necessary to:
         - insure there is no FUNCTION specified (not allowed for a System object)
         - suppress validation (and attendant execution) of System execute method (unless VALIDATE_PROCESS is set)
-            since generally there is no need, as all of the mechanisms in kwProcesses have already been validated
+            since generally there is no need, as all of the mechanisms in PROCESSES have already been validated
         """
 
         if self.paramsCurrent[FUNCTION] != self.execute:
@@ -919,7 +919,7 @@ class System_Base(System):
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
         """Instantiate processes of system
 
-        Use self.processes (populated by self.paramsCurrent[kwProcesses] in Function._assign_args_to_param_dicts
+        Use self.processes (populated by self.paramsCurrent[PROCESSES] in Function._assign_args_to_param_dicts
         If self.processes is empty, instantiate default process by calling process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
         If input is specified, check that it's length equals the number of processes
@@ -1047,11 +1047,11 @@ class System_Base(System):
                 elif isinstance(process, dict):
                     # IMPLEMENT:  HANDLE Process specification dict here;
                     #             include process_input as ??param, and context=self
-                    raise SystemError("Attempt to instantiate process {0} in kwProcesses of {1} "
+                    raise SystemError("Attempt to instantiate process {0} in PROCESSES of {1} "
                                       "using a Process specification dict: not currently supported".
                                       format(process.name, self.name))
                 else:
-                    raise SystemError("Entry {0} of kwProcesses ({1}) must be a Process object, class, or a "
+                    raise SystemError("Entry {0} of PROCESSES ({1}) must be a Process object, class, or a "
                                       "specification dict for a Process".format(i, process))
 
             # # process should now be a Process object;  assign to processList
@@ -1119,7 +1119,7 @@ class System_Base(System):
         # # MODIFIED 2/8/17 END
         #
         # # Instantiate processList using process_tuples, and point self.processes to it
-        # # Note: this also points self.params[kwProcesses] to self.processes
+        # # Note: this also points self.params[PROCESSES] to self.processes
         self.process_tuples = processes_spec
         self._processList = ProcessList(self, self.process_tuples)
         self.processes = self._processList.processes
