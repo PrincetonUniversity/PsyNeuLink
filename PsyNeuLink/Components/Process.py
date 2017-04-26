@@ -1189,7 +1189,7 @@ class Process_Base(Process):
             # Add Process to the mechanism's list of processes to which it belongs
             if not self in mech.processes:
                 mech.processes[self] = INTERNAL
-            self._mech_tuples.append(pathway[i])
+                self._mech_tuples.append(pathway[i])
             # self.mechanismNames.append(mech.name)
 
         # Validate initial values
@@ -1895,7 +1895,7 @@ class Process_Base(Process):
 
             # Trace projections to first learning ObjectiveMechanism (which is for the last mechanism in the process)
             #   (in case terminal mechanism of process is part of another process that has learning implemented)
-            #    in which case, shouldn't assign target ObjectiveMechanism, but rather WeightedError ObjectiveMechanism)
+            #    in which case, shouldn't assign target ObjectiveMechanism, but rather just a LearningMechanism)
             target_mech = trace_learning_objective_mechanism_projections(self._monitoring_mech_tuples[0][0])
             if target_mech:
                 if self.prefs.verbosePref:
