@@ -99,33 +99,29 @@ def show_trial_header():
 def show_results():
     import re
     print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
-    print('\tCONTROL SIGNAL VALUES:')
-    print ('\t\tDrift rate control signal (from EVC): {}'.
-           # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
-           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value))))))
-    print ('\t\tThreshold control signal (from EVC): {}'.
-           format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[THRESHOLD].value))),
-                  mySystem.controller.outputStates['threshold_ControlSignal'].value,
-                  Decision.parameterStates[THRESHOLD].receivesFromProjections[0].value
-                  ))
-    # results = sorted(zip(mySystem.terminalMechanisms.outputStateNames,
-    #                      mySystem.terminalMechanisms.outputStateValues))
-    # for result in results:
-    #     print("\t{}: {}".format(result[0],
-    #                             re.sub('[\[,\],\n]','',str("{:0.3}".format(float(result[1]))))))
     results_for_decision = \
         [result for result in sorted(zip(mySystem.terminalMechanisms.outputStateNames,
                                            mySystem.terminalMechanisms.outputStateValues)) if 'DDM' in result[0]]
     print("\tDecision:")
+    print('\t\tControlSignal values:')
+    print ('\t\t\tDrift rate control signal (from EVC): {}'.
+           # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
+           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value))))))
+    print ('\t\t\tThreshold control signal (from EVC): {}'.
+           format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[THRESHOLD].value))),
+                  mySystem.controller.outputStates['threshold_ControlSignal'].value,
+                  Decision.parameterStates[THRESHOLD].receivesFromProjections[0].value
+                  ))
+    print('\t\tOutput:')
     for result in results_for_decision:
-        print("\t\t{}: {}".format(result[0],
+        print("\t\t\t{}: {}".format(result[0],
                                 re.sub('[\[,\],\n]','',str("{:0.3}".format(float(result[1]))))))
     results_for_reward = \
         [result for result in sorted(zip(mySystem.terminalMechanisms.outputStateNames,
                                            mySystem.terminalMechanisms.outputStateValues)) if 'transfer' in result[0]]
-    print("\tReward:")
+    print("\tReward:\n\t\tOutput:")
     for result in results_for_reward:
-        print("\t\t{}: {}".format(result[0],
+        print("\t\t\t{}: {}".format(result[0],
                                 re.sub('[\[,\],\n]','',str("{:0.3}".format(float(result[1]))))))
 
 
