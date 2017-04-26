@@ -291,8 +291,12 @@ Class Reference
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCAuxiliary import \
     ControlSignalGridSearch, ValueFunction
 
+from PsyNeuLink.Components.Process import Process_Base
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
 OBJECT = 0
 WEIGHT = 1
@@ -762,11 +766,11 @@ class EVCMechanism(ControlMechanism_Base):
         self._instantiate_prediction_mechanisms(context=context)
         self._instantiate_monitoring_mechanism(context=context)
 
-        # MODIFIED 2/9/17 NEW:
-        # Re-instantiate system with predictionMechanism Process(es) and monitoringMechanism added
-        self.system._instantiate_processes(input=self.system.variable, context=context)
-        self.system._instantiate_graph(context=context)
-        # MODIFIED 2/9/17 END
+        # # MODIFIED 2/9/17 NEW:
+        # # Re-instantiate system with predictionMechanism Process(es) and monitoringMechanism added
+        # self.system._instantiate_processes(input=self.system.variable, context=context)
+        # self.system._instantiate_graph(context=context)
+        # # MODIFIED 2/9/17 END
 
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction mechanism and associated process for each ORIGIN (input) mechanism in the system
@@ -789,8 +793,6 @@ class EVCMechanism(ControlMechanism_Base):
         Args:
             context:
         """
-
-        from PsyNeuLink.Components.Process import Process_Base
 
         # Dictionary of prediction_mechanisms, keyed by the ORIGIN mechanism to which they correspond
         self.origin_prediction_mechanisms = {}
@@ -830,7 +832,7 @@ class EVCMechanism(ControlMechanism_Base):
             #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
             for orig_state_name, prediction_state_name in zip(origin_mech.inputStates.keys(),
                                                                 prediction_mechanism.inputStates.keys()):
-                for projection in origin_mech.inputStates[orig_state_name].receivesFromPojections:
+                for projection in origin_mech.inputStates[orig_state_name].receivesFromProjections:
                     MappingProjection(sender=projection.sender,
                                       receiver=prediction_mechanism.inputStates[prediction_state_name],
                                       matrix=projection.matrix)
@@ -845,18 +847,12 @@ class EVCMechanism(ControlMechanism_Base):
             self.origin_prediction_mechanisms[origin_mech] = prediction_mechanism
 
             # Add to list of EVCMechanism's prediction_mech_tuples
-            self.prediction_mech_tuples.append(MechanismTuple(prediction_mechanism, None, origin_mech.phaseSpec))
+            prediction_mech_tuple = MechanismTuple(prediction_mechanism, None, origin_mech.phaseSpec)
+            self.prediction_mech_tuples.append(prediction_mech_tuple)
 
-
-            # Add prediction mechanisms to system graph
-            # MODIFIED 4/25/17 OLD:
-            # # Add to ORIGIN mechanism's process and assign and phase = ORIGIN mechanism's phase
-            # prediction_process._isControllerProcess = True
-            # # Add the process to the system's processes param (with None as input)
-            # self.system.params[PROCESSES].append((prediction_process, None))
-            # # Add the process to the controller's list of prediction processes
-            # self.predictionProcesses.append(prediction_process)
-            # MODIFIED 4/25/17 END
+            # Add to system executionGraph and executionList
+            self.system.executionGraph[prediction_mech_tuple] = set()
+            self.system.executionList.append(prediction_mech_tuple)
 
         self.predictionMechanisms = MechanismList(self, self.prediction_mech_tuples)
 
@@ -884,9 +880,6 @@ class EVCMechanism(ControlMechanism_Base):
         * self.inputStates is the usual ordered dict of states,
             each of which receives a projection from a corresponding outputState in self.monitored_output_states
         """
-
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
         self._get_monitored_states(context=context)
 
