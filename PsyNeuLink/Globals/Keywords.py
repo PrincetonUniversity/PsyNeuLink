@@ -362,7 +362,7 @@ RUN = 'Run'
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
 
 PROCESS = "PROCESS"
-kwProcesses = "processes"
+PROCESSES = "processes"
 PROCESS_INIT = 'Process.__init__'
 PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
