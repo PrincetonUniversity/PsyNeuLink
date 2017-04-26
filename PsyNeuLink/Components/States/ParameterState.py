@@ -682,6 +682,7 @@ class ParameterState(State_Base):
                        time_scale=time_scale,
                        context=context)
 
+        # FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
         #region COMBINE PROJECTIONS INPUT WITH BASE PARAM VALUE
         try:
             # Check whether ModulationOperation for projections has been specified at runtime
@@ -758,6 +759,7 @@ class ParameterState(State_Base):
         # #     setattr(self.owner.function.__self__, self.name, self.value)
         #     param_type = type(getattr(self.owner.function.__self__, self.name))
         #     setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
+        TEST = True
 
         #endregion
 
