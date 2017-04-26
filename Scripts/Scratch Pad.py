@@ -3,8 +3,8 @@ import numpy as np
 # GLOBALS:
 from PsyNeuLink.Globals.Keywords import *
 # FUNCTIONS:
-# from PsyNeuLink.Components.Functions.Function import Logistic
-# from PsyNeuLink.Components.Functions.Function import Linear
+from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Components.Functions.Function import Linear
 
 # STATES:
 # from PsyNeuLink.Components.States.OutputState import OutputState
@@ -620,29 +620,39 @@ class ScratchPadError(Exception):
 
 #region TEST AutoAssociator
 
-my_auto = TransferMechanism(default_input_value=[0,0,0])
+my_auto = TransferMechanism(default_input_value=[0,0,0],
+                            # function=Logistic
+                            )
 
-my_auto_matrix = MappingProjection(sender=my_auto,
-                                   receiver=my_auto,
-                                   matrix=FULL_CONNECTIVITY_MATRIX)
-my_process = process(pathway=[my_auto],
-                     # learning=LEARNING
-                     )
+# my_auto_matrix = MappingProjection(sender=my_auto,
+#                                    receiver=my_auto,
+#                                    matrix=FULL_CONNECTIVITY_MATRIX)
+# my_process = process(pathway=[my_auto],
+#                      learning=LEARNING
+#                      )
 
 
-# my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
-#                      # learning=LEARNING,
-#                      target=[0,0,0])
+my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
+                     learning=LEARNING,
+                     target=[0,0,0])
 
-print(my_process.execute([1,1,1]))
-print(my_process.execute([1,1,1]))
-print(my_process.execute([1,1,1]))
-print(my_process.execute([1,1,1]))
-
-# input_list = {my_auto:[1,1,1]}
-# target_list = {my_auto:[1,1,1]}
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
 #
-# print(my_process.run(inputs=input_list, num_executions=3))
+input_list = {my_auto:[1,1,1]}
+target_list = {my_auto:[0,0,0]}
+
+print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
+
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
 
 # my_system = system(processes=[my_process])
 # print(my_system.run(inputs=input_list, num_executions=3))
