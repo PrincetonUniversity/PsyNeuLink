@@ -94,6 +94,7 @@
 
 # TEST: Autoassociative SOFT_CLAMP
 # TEST: Autoassociative learning:  bp = Delta rule
+# FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
 # IMPLEMENT: IAC TransferFunction
 # IMPLEMENT: Simple Hebbian learning
 # TEST: learning_rate is assignable and "sticks" at function, mech, process and system levels

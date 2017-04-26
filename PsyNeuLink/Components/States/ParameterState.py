@@ -682,6 +682,7 @@ class ParameterState(State_Base):
                        time_scale=time_scale,
                        context=context)
 
+        # FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
         #region COMBINE PROJECTIONS INPUT WITH BASE PARAM VALUE
         try:
             # Check whether ModulationOperation for projections has been specified at runtime
