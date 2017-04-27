@@ -501,7 +501,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                      params=object_mech_params,
                                                      name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM)
 
-            objective_mechanism._role=LEARNING,
+            objective_mechanism._role = LEARNING
             objective_mechanism._learning_role = TARGET
 
         try:

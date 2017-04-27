@@ -2068,7 +2068,7 @@ class Process_Base(Process):
         # Execute each Mechanism in the pathway, in the order listed, except those used for learning
         for mechanism, params, phase_spec in self._mech_tuples:
             if (isinstance(mechanism, LearningMechanism) or
-                    (isinstance(mechanism, ObjectiveMechanism) and mechanism.role is LEARNING)):
+                    (isinstance(mechanism, ObjectiveMechanism) and mechanism._role is LEARNING)):
                 continue
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
