@@ -1165,7 +1165,7 @@ class System_Base(System):
 
             # If sender is an ObjectiveMechanism being used for learning or control, or a LearningMechanism,
             # Assign as MONITORING and move on
-            if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role) or
+            if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role) or
                     isinstance(sender_mech, LearningMechanism)):
                 sender_mech.systems[self] = MONITORING
                 return
@@ -1198,7 +1198,7 @@ class System_Base(System):
                 # It is not a ControlMechanism
                 not (isinstance(sender_mech, ControlMechanism_Base) or
                     # It is not an ObjectiveMechanism used for Learning or Control
-                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role in (LEARNING,CONTROL))) and
+                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role in (LEARNING,CONTROL))) and
                         # All of its projections
                         all(
                             all(
@@ -1206,7 +1206,7 @@ class System_Base(System):
                                 isinstance(projection.receiver.owner, (ControlMechanism_Base, LearningMechanism)) or
                                  # ObjectiveMechanism(s) used for Learning or Control
                                  (isinstance(projection.receiver.owner, ObjectiveMechanism) and
-                                             projection.receiver.owner.role in (LEARNING, CONTROL)) or
+                                             projection.receiver.owner._role in (LEARNING, CONTROL)) or
                                 # itself!
                                  projection.receiver.owner is sender_mech
                             for projection in output_state.sendsToProjections)
@@ -1520,7 +1520,7 @@ class System_Base(System):
 
             # All other sender_mechs must be either a MonitoringMechanism or an ObjectiveMechanism with role=LEARNING
             elif not (isinstance(sender_mech, LearningMechanism) or
-                          (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role is LEARNING)):
+                          (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role is LEARNING)):
                 raise SystemError("PROGRAM ERROR: {} is not a legal object for learning graph;"
                                   "must be a LearningMechanism or an ObjectiveMechanism".
                                   format(sender_mech))
@@ -2747,6 +2747,17 @@ class System_Base(System):
                 for proj in istate.receivesFromProjections:
                     sndr_name = proj.sender.owner.name
                     G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
+
+            # prediction mechanisms
+            for mech_tuple in self.executionList:
+                mech = mech_tuple[0]
+                if 'PredictionMechanism' in mech.name:
+                    G.node(mech.name, color=control_color)
+                    # proj = mech.outputState.sendsToProjections[0]
+                    # proj_name = proj.name
+                    # recvr = proj.receiver.owner
+                    # G.edge(recvr.name, mech.name, label=proj_name, color=control_color)
+                    pass
 
         # return
         if   output_fmt == 'pdf':

@@ -827,6 +827,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                             # INPUT_STATES=state_names,
                                                             params = prediction_mechanism_params,
                                                             context=context)
+            prediction_mechanism._role = CONTROL
 
             # Assign projections to prediction_mechanism that duplicate those received by origin_mech
             #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
