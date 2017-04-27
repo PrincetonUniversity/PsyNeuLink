@@ -273,16 +273,20 @@ Contributors
 
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
-* **Bryn Keller**, Intel Labs, Intel Corporation
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Kevin Mantel**, Princeton Neuroscience Institute, Princeton University
+* **Ted Willke**, Intel Labs, Intel Corporation
+* **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
+
+with substantial assistance from:
+
+* **Mihai Capota**, Intel Labs, Intel Corporation
+* **Bryn Keller**, Intel Labs, Intel Corporation
+* **Garrett McGrath**, Princeton Neuroscience Institute, Princeton University
 * **Sebastian Musslick**, Princeton Neuroscience Institute, Princeton University
 * **Amitai Shenhav**, Cognitive, Linguistic, & Psychological Sciences, Brown University
 * **Michael Shvartsman**, Princeton Neuroscience Institute, Princeton University
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
-* **Ted Willke**, Intel Labs, Intel Corporation
-* **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
-
 
 ..
    .. toctree::
