@@ -144,6 +144,7 @@
 <li><span class="xref std std-ref">What PsyNeuLink is NOT</span></li>
 <li><a class="reference internal" href="#component-hierarchy"><span class="std std-ref">Component Hierarchy</span></a></li>
 <li><a class="reference internal" href="#installation"><span class="std std-ref">Installation</span></a></li>
+<li><a class="reference internal" href="#conventions"><span class="std std-ref">Conventions</span></a></li>
 <li><a class="reference internal" href="#contributors"><span class="std std-ref">Contributors</span></a></li>
 <li><a class="reference internal" href="#indices-and-tables"><span class="std std-ref">Indices and tables</span></a></li>
 </ul>
@@ -269,7 +270,7 @@ elements into a single integrated system.  This affords modelers the flexibility
 model to a form of processing and/or level of analysis that is appropriate for that component, while providing
 the opportunity to test and explore how they interact with one another in a single system.</p>
 <p id="system-figure"><strong>Major Components in PsyNeuLink</strong></p>
-<div class="figure" id="id8">
+<div class="figure" id="id9">
 <a class="reference internal image-reference" href="_images/System_simple_fig.jpg"><img alt="Overview of major PsyNeuLink components" src="_images/System_simple_fig.jpg" style="width: 498.0px; height: 571.5px;" /></a>
 <p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">system</span></a>.  Each process has a
 series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
@@ -294,31 +295,32 @@ complete example, that includes components responsible for control and learning)
 <dd><p class="first">Transforms an input representation into an output representation.
 Parameters determine its operation, under the influence of projections.
 There are three primary types:
-..</p>
-<ul>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a></dt>
-<dd><p class="first last">Aggregates the inputs it receives from other mechanisms or the input to a process or system,
+..
++ <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a></p>
+<blockquote>
+<div><p>Aggregates the inputs it receives from other mechanisms or the input to a process or system,
 transforms them in some way, and provides the result either as input to other mechanisms and/or
 to the output of a process or system.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<ul>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a></dt>
-<dd><p class="first last">Evaluates the output of one or more other mechanisms, and uses this to modify the parameters of those
-or other mechanisms.</p>
-</dd>
-</dl>
-</li>
-</ul>
+</div></blockquote>
 <ul class="last">
 <li><dl class="first docutils">
-<dt><span class="xref doc">MonitoringMechanism</span></dt>
-<dd><p class="first last">Monitors the output of one or more other mechanisms, compares these to a target value,
-and generates an error signal used for learning.</p>
+<dt><a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanisms</span></a></dt>
+<dd><p class="first">Uses the input it receives from other mechanisms  or the input to a process or system to modify the
+parameters of one or more other PsyNeuLink components.  There are two primary types:
+..
++ <span class="xref doc">LearningMechanisms</span></p>
+<blockquote>
+<div><p>Uses an error signal it receives to modify the matrix of a MappingProjection.</p>
+</div></blockquote>
+<ul class="last">
+<li><dl class="first docutils">
+<dt><span class="xref doc">ControlMechanisms</span></dt>
+<dd><p class="first last">Evaluates the output of one or more other mechanisms, and uses this to modify the
+parameters of those or other mechanisms in the system to which it belongs.</p>
+</dd>
+</dl>
+</li>
+</ul>
 </dd>
 </dl>
 </li>
@@ -341,16 +343,16 @@ and provides it as input to that receiver mechanism.</p>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd><p class="first last">Takes an allocation (scalar) (usually the output of a ControlMechanism) and uses it to modulate
-the parameter(s) of a mechanism.</p>
+<dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
+<dd><p class="first last">Takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism)
+and uses it to modulate the parameter of a projection (usually the matrix of a MappingProjection).</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
-<dd><p class="first last">Takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism)
-and uses it to modulate the parameter of a projection (usually the matrix of a MappingProjection).</p>
+<dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
+<dd><p class="first last">Takes an allocation (scalar) (usually the output of a ControlMechanism) and uses it to modulate
+the parameter(s) of a mechanism.</p>
 </dd>
 </dl>
 </li>
@@ -393,8 +395,24 @@ of the PsyNeuLink package.  Once the jupyter notebook opens, within the list of 
 started.</p>
 <p>If you have trouble installing the package, or run into other problems, please contact <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>.</p>
 </div>
+<div class="section" id="conventions">
+<span id="id6"></span><h2>Conventions<a class="headerlink" href="#conventions" title="Permalink to this headline">¶</a></h2>
+<p>The following conventions are used for the names of PsyNeuLink objects and their documentation:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="Component.html"><span class="doc">Component</span></a>: names use CamelCase (with initial capitalization);
+the initial mention in a section documentation is formatted as a link (in colored text)
+to the documentation for that component.</li>
+<li><code class="xref any docutils literal"><span class="pre">attribute</span></code> or <code class="xref any docutils literal"><span class="pre">method</span></code> of a PsyNeuLink component:  names use lower_case_and_underscore;
+formatted in a <code class="xref any docutils literal"><span class="pre">small</span> <span class="pre">box</span></code> in the documentation.</li>
+<li><strong>argument</strong> for a method or function:  names use lower_case_and_underscore;
+formatted <strong>boldfaced</strong> in the the docoumentation.</li>
+<li>KEYWORDS: names use UPPER_CASE_AND_UNDERSCORE;  formatted as simple text in the documentation.</li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="contributors">
-<span id="id6"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
+<span id="id7"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><strong>Jonathan D. Cohen</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Peter Johnson</strong>, Princeton Neuroscience Institute, Princeton University</li>
@@ -413,7 +431,7 @@ started.</p>
 </div>
 </div>
 <div class="section" id="indices-and-tables">
-<span id="id7"></span><h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<span id="id8"></span><h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
