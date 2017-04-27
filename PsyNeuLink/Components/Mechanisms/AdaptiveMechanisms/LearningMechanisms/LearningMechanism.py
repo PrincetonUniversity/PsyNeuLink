@@ -25,9 +25,11 @@ A LearningMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies 
 <MappingProjection.matrix>`) of a `MappingProjection`.  It's function takes an `error_signal` (usually the output of
 an `ObjectiveMechanism` or another `LearningMechanism`) and generates a `learning_signal` that is used to modify
 the MappingProjection by way of a `LearningProjection`.  A LearningMechanism can modify only MappingProjections that
-link ProcessingMechanisms in the same `system <System>` or `process <Process>` to which it belongs.  It is executed
-after all of the ProcessingMechanisms in that system or process have been executed.  If it belongs to a system,
-it is executed before the `ControlMechanism <ControlMechanism>` for that system has been executed.
+link ProcessingMechanisms in the same `system <System>` or `process <Process>` to which it belongs.  The learning  
+components of a system can be displayed using the system's `show_graph` method with its **show_learning** argument 
+assigned :keyword:``True`.  LearningMechanisms are execute after all of the ProcessingMechanisms in that system or 
+process have been executed.  If they belong to a system, they are executed before the  
+`control components <ControlMechanism>` for that system have been executed.
 
 COMMENT:
   @@@ SEARCH FOR LearningProjection_Automatic_Creation AND REPLACE WITH REFERENCE TO THIS LABEL:
@@ -133,8 +135,8 @@ are assigned to the LearningMechanism's
 
 .. _LearningMechanism_OutputStates:
 
-OutputStates b
-~~~~~~~~~~~
+OutputStates
+~~~~~~~~~~~~
 
 These receive the output of the LearningMechanism's `function <LearningMechanism.function>`:
 
@@ -199,7 +201,8 @@ When learning is specified for a `MappingProjection`, a `process <Process_Learni
 `system <System_Execution_Learning>`, PsyNeuLink automatically creates all of the components required for the
 `MappingProjections <MappingProjection>` between `ProcessingMechanisms <ProcessingMechanism>` in that composition to
 be learned.  The type of components that are generated depends on the :ref:`learning function <LearningFunction>`
-specified, and the configuration of the composition.
+specified, and the configuration of the composition.  All of the learning components of a system can be displayed
+using the system's `show_graph` method with its **show_learning** argument assigned :keyword:`True`.
 
 .. _LearningMechanism_Single_Layer:
 

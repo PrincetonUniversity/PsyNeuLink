@@ -1,5 +1,5 @@
-Adaptive Mechanisms
-===================
+Adaptive Mechanism
+==================
 
 .. toctree::
    :maxdepth: 1

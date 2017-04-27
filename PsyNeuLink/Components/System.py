@@ -66,16 +66,17 @@ Structure
 Graph
 ~~~~~
 
-When an instance of a system is created, a graph is constructed that describes the projections (edges) among its
-mechanisms (nodes).  The graph is assigned to the system's `graph` attribute.  This is a dictionary of dependencies,
-that can be passed to graph theoretical tools for analysis.  A system can have recurrent processing pathways, such as
-feedback loops, in which case the system will have a cyclic graph.  PsyNeuLink also uses the graph of a
-system to determine the order in which its mechanisms are executed.  In order to do so in an orderly manner, however,
-the graph must be acyclic.  So, for execution, PsyNeuLink constructs an `executionGraph` from the system's `graph`.
-If the  system is acyclic, these are the same.  If the system is cyclic, then the `executionGraph` is a subset of the
-`graph` in which the dependencies (edges) associated with projections that close a loop have been removed. Note that
-this only impacts the order of execution;  the projections themselves remain in effect, and will be fully functional
-during the execution of the affected mechanisms (see :ref:`System_Execution` below for a more detailed description).
+When a system is created, a graph is constructed that describes the projections (edges) among its mechanisms (nodes).  
+The graph is assigned to the system's `graph` attribute.  A system's graph can be displayed using its `show_graph` 
+method.  The graph is stored as a dictionary of dependencies, that can be passed to graph theoretical tools for 
+analysis.  A system can have recurrent processing pathways, such as feedback loops, in which case the system will 
+have a cyclic graph.  PsyNeuLink also uses the graph of a system to determine the order in which its mechanisms are 
+executed.  In order to do so in an orderly manner, however, the graph must be acyclic.  So, for execution, 
+PsyNeuLink constructs an `executionGraph` from the system's `graph`. If the  system is acyclic, these are the same.  
+If the system is cyclic, then the `executionGraph` is a subset of the `graph` in which the dependencies (edges) 
+associated with projections that close a loop have been removed. Note that this only impacts the order of execution;  
+the projections themselves remain in effect, and will be fully functional during the execution of the affected 
+mechanisms (see `System_Execution` below for a more detailed description).
 
 .. _System_Mechanisms:
 
@@ -195,13 +196,15 @@ of execution, as input to mechanisms that close recurrent loops (designated as `
 Learning
 ~~~~~~~~
 The system will execute learning if it is specified for any process in the system.  The system's `learning` attribute
-indicates whether learning is enabled for the system. Learning is executed for any
-components (individual projections or processes) for which it is specified after all processing mechanisms in the
-system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
-learning) can be specified in either of two formats, sequence or mechanism, that are described in the :doc:`Run` module;
-see `Run_Inputs` and `Run_Targets`).  Both formats require that an input be provided for each `ORIGIN` mechanism of
-the system (listed in its `originMechanisms <System_Base.originMechanisms>` attribute).  If the targets are specified
-in sequence or mechanism format, one target must be provided for each `TARGET` mechanism (listed in its
+indicates whether learning is enabled for the system. Learning is executed for any components (individual projections 
+or processes) for which it is specified after all processing mechanisms in the
+system have been executed, but before the controller is executed (see below).  The learning components of a system
+can be displayed using the system's `show_graph` method with its **show_learning** argument assigned :keyword:`True`.
+The stimuli used for learning (both inputs and targets) can be specified in either of two formats, 
+sequence or mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both 
+formats require that an input be provided for each `ORIGIN` mechanism of the system (listed in its `originMechanisms 
+<System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or mechanism format, 
+one target must be provided for each `TARGET` mechanism (listed in its 
 `targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a
 `function format <Run_Targets_Function_Format>`, which generates a target for each execution of the mechanism.
 
@@ -214,13 +217,14 @@ in sequence or mechanism format, one target must be provided for each `TARGET` m
 
 Control
 ~~~~~~~
-Every system is associated with a single `controller`.  The controller monitors the outputState(s) of one or more
-mechanisms in the system (listed in its `monitored_output_states` attribute), and uses that information to set the
-value of parameters for those or other mechanisms in the system, or their functions
+Every system is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor  
+the outputState(s) of one or more mechanisms in the system (listed in its `monitored_output_states` attribute), 
+and uses that information to set the value of parameters for those or other mechanisms in the system, or their functions
 (see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which outputStates are
-monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled). The controller is
-executed after all other mechanisms in the system are executed, and sets the values of any parameters that it
-controls, which then take effect in the next round of execution.
+monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled).  The control components
+of a system can be displayed using the system's `show_graph` method with its **show_control** argument assigned 
+:keyword:``True`. The controller is executed after all other mechanisms in the system are executed, and sets the 
+values of any parameters that it controls, which then take effect in the next round of execution.
 
 COMMENT:
    Examples

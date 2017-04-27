@@ -180,21 +180,21 @@ PsyNeuLink uses the following primary constructs (illustrated in the :ref:`figur
         - :doc:`Mechanism`
             Transforms an input representation into an output representation.
             Parameters determine its operation, under the influence of projections.
-            There are three primary types:
-            ..
+            There are two primary types:
+
             + :doc:`ProcessingMechanism`
                   Aggregates the inputs it receives from other mechanisms or the input to a process or system,
                   transforms them in some way, and provides the result either as input to other mechanisms and/or
                   to the output of a process or system.
-            ..
+
             + :doc:`AdaptiveMechanism`
                   Uses the input it receives from other mechanisms  or the input to a process or system to modify the
                   parameters of one or more other PsyNeuLink components.  There are two primary types:
-                  ..
-                  + :doc:`LearningMechanisms`
+
+                  + :doc:`LearningMechanism`
                         Uses an error signal it receives to modify the matrix of a MappingProjection.
-                  ..
-                  + :doc:`ControlMechanisms`
+
+                  + :doc:`ControlMechanism`
                         Evaluates the output of one or more other mechanisms, and uses this to modify the
                         parameters of those or other mechanisms in the system to which it belongs.
 
@@ -256,14 +256,16 @@ The following conventions are used for the names of PsyNeuLink objects and their
   + `Component` (class): names use CamelCase (with initial capitalization);
     the initial mention in a section documentation is formatted as a link (in colored text)
     to the documentation for that component.
+  ..
+  + `attribute` or `method` of a component:  names use lower_case_and_underscore; formatted in a `small box`.
+  ..
+  + **argument** of a method or function:  names use lower_case_and_underscore; formatted in **boldface**.
+  ..
+  + KEYWORD: use UPPER_CASE_AND_UNDERSCORE;  formatted as simple text.
+  ..
+  + Example::
 
-  + `attribute` or `method` of a PsyNeuLink component:  names use lower_case_and_underscore;
-    formatted in a `small box` in the documentation.
-
-  + **argument** of a method or function:  names use lower_case_and_underscore;
-    formatted **boldfaced** in the the docoumentation.
-
-  + KEYWORD: use UPPER_CASE_AND_UNDERSCORE;  formatted as simple text in the documentation.
+          Appear in boxed insets.
 
 
 .. _Contributors:
