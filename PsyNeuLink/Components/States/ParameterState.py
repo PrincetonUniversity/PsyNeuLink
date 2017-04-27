@@ -328,10 +328,7 @@ COMMENT:
    XXXX DOCUMENT THAT MOD OP CAN BE SPECIFIED IN A TUPLE WITH PARAM VALUE (INSTEAD OF PROJECTION) AS PER FIGURE?
 COMMENT
 
-The figure below shows how the various ways to specify a parameter's value are combined by the parameterState to 
-determine its final value, including runtime specifications:
-
-    **How a ParameterState Determines the Value of a Parameter**
+The figure below shows how runtime paramter specification combines the others ways to specify a parameter's value:
 
     .. figure:: _static/ParameterState_fig_with_runtime_params.pdf
        :alt: ParameterState
@@ -352,15 +349,15 @@ determine its final value, including runtime specifications:
        +--------------+--------------------------------------------------------------------+
        | E (red)      | combined projection values modulate ``baseValue``                  |
        +--------------+--------------------------------------------------------------------+
+       
+       * 1st example:  param_x is given a runtime value (violet) but no runtime ModulationOperation;
+         param_y is given a runtime value (violet) and also a runtime ModulationOperation (red);
+        the parameterState's parameterModulationOperation is set to MULTIPLY (green).
+       ..
+       * 2nd example:  param_x is given a runtime value (violet) and also a runtime ModulationOperation (red);
+         param_y is given a runtime value (violet) but no runtime ModulationOperation;
+         the parameterState's parameterModulationOperation is set to SUM (green)
 
-       Runtime parameter specification:
-           1st example:  param_x is given a runtime value (violet) but no runtime ModulationOperation;
-                         param_y is given a runtime value (violet) and also a runtime ModulationOperation (red);
-                         the parameterState's parameterModulationOperation is set to MULTIPLY (green).
-           ..
-           2nd example:  param_x is given a runtime value (violet) and also a runtime ModulationOperation (red);
-                         param_y is given a runtime value (violet) but no runtime ModulationOperation;
-                         the parameterState's parameterModulationOperation is set to SUM (green)
        COMMENT:
            NOTES: CAPS FOR PARAM SPECIFICATION IN DICTS -> KEYWORDS
                   AUGMENT FIGURE TO SHOW PARAM SPECIFICATIONS FOR BOTH THE OBJECT AND ITS FUNCTION
