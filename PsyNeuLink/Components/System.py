@@ -1893,6 +1893,8 @@ class System_Base(System):
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
         # self.learningExecutionList
         for mech in self.execution_graph_mechs:
+            if mech._role is LEARNING:
+                continue
             mech._execution_id = self._execution_id
         for learning_mech in self.learningExecutionList:
             learning_mech._execution_id = self._execution_id
