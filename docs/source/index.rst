@@ -274,7 +274,7 @@ Contributors
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Bryn Keller**, Intel Labs, Intel Corporation
-* **Kristin Manning**, Princeton Neuroscience Institute, Princeton University
+* **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Kevin Mantel**, Princeton Neuroscience Institute, Princeton University
 * **Sebastian Musslick**, Princeton Neuroscience Institute, Princeton University
 * **Amitai Shenhav**, Cognitive, Linguistic, & Psychological Sciences, Brown University
