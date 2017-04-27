@@ -367,7 +367,7 @@ list or 1d np.array that must be compatible with the format of the first item of
 <li><strong>enable_controller</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; specifies whether the <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is executed during system execution.</li>
 <li><strong>monitor_for_control</strong> (<em>list of OutputState objects or specifications : default None</em>) &#8211; specifies the outputStates of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms in the system to be monitored by its <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>
 (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for specifying the <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> argument).</li>
-<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all mechanisms in the system (see <a class="reference internal" href="#System.System_Base.learning_rate" title="System.System_Base.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
+<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all mechanisms in the system (see <a class="reference internal" href="Function.html#Function.BackPropagation.learning_rate" title="Function.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
 information).</li>
 <li><strong>targets</strong> (<em>Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes</em>) &#8211; the values assigned to the TARGET input of each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism in the system (listed in its
 <a class="reference internal" href="Process.html#Process.Process_Base.targetMechanisms" title="Process.Process_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanisms</span></code></a> attribute).  There must be the same number of items as there are <a class="reference internal" href="Process.html#Process.Process_Base.targetMechanisms" title="Process.Process_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanisms</span></code></a>,
@@ -724,44 +724,37 @@ each execution.</p>
 
 <dl class="method">
 <dt id="System.System_Base.show_graph">
-<code class="descname">show_graph</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='BT'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate simple visualization of execution graph, showing dimensions</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>output_fmt</strong> (<em>'jupyter' or 'pdf'</em>) &#8211; <p>&#8216;pdf&#8217; will generate and open a pdf with the visualization,</p>
-<p>&#8216;jupyter&#8217; will simply return graphviz graph the object (ideal for working in jupyter/ipython notebooks)</p>
-</li>
-<li><strong>direction</strong> (<em>'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left</em>) &#8211; rank direction of graph</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="System.System_Base.show_graph_with_learning">
-<code class="descname">show_graph_with_learning</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='BT'</em>, <em>learning_color='green'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph_with_learning" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate visualization of interconnections between all mechanisms and projections, including all learning machinery</p>
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_learning=False</em>, <em>show_control=False</em>, <em>direction='BT'</em>, <em>learning_color='green'</em>, <em>control_color='blue'</em>, <em>output_fmt='pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates visualization of the graph structure of mechanisms and projections in the system.</p>
+<p>By default, only the <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> and <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>
+in the <code class="xref any docutils literal"><span class="pre">system's</span> <span class="pre">graph</span></code> are displayed.  However, the <code class="xref std std-keyword docutils literal"><span class="pre">show_learning</span></code> and
+<code class="xref std std-keyword docutils literal"><span class="pre">show_control</span></code> arguments can be used to also show the <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a> and
+<a class="reference internal" href="ControlMechanism.html"><span class="doc">control</span></a> components of the system.  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> are always displayed as (oval)
+nodes.  <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> are displayed as labelled arrows, unless <code class="xref std std-keyword docutils literal"><span class="pre">show_learning</span></code> is
+assigned <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>, in which case MappingProjections that receive a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> are
+displayed as diamond-shaped nodes. The numbers in parentheses within a mechanism node indicate its
+dimensionality.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>output_fmt</strong> (<em>'jupyter' or 'pdf'</em>) &#8211; pdf to generate and open a pdf with the visualization,
-jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)</li>
-<li><strong>direction</strong> (<em>'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left</em>) &#8211; rank direction of graph</li>
-<li><strong>learning_color</strong> (<em>determines with what color to draw all the learning machinery</em>) &#8211; </li>
+<li><strong>show_learning</strong> (<em>bool : default False</em>) &#8211; determines whether or not to show <a class="reference internal" href="ControlMechanism.html"><span class="doc">learning components</span></a>;
+projections that receive a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> will be shown as a diamond-shaped node.</li>
+<li><strong>show_control</strong> (<em>bool : default False</em>) &#8211; determines whether or not to show control components.</li>
+<li><strong>learning_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">green</span></code>) &#8211; determines the color in which to display the learning components.</li>
+<li><strong>control_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">blue</span></code>) &#8211; determines the color in which to display the learning components.</li>
+<li><strong>direction</strong> (<em>keyword : default 'BT'</em>) &#8211; &#8216;BT&#8217;: bottom to top; &#8216;TB&#8217;: top to bottom; &#8216;LR&#8217;: left to right; and &#8216;RL`: right to left.</li>
+<li><strong>output_fmt</strong> (<em>keyword : default 'pdf'</em>) &#8211; &#8216;pdf&#8217;: generate and open a pdf with the visualization;
+&#8216;jupyter&#8217;: return the object (ideal for working in jupyter/ipython notebooks).</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>display of system</strong> &#8211; &#8216;pdf&#8217; (placed in current directory) if <code class="xref std std-keyword docutils literal"><span class="pre">output_fmt</span></code> arg is &#8216;pdf&#8217;;
+Graphviz graph object if <code class="xref std std-keyword docutils literal"><span class="pre">output_fmt</span></code> arg is &#8216;jupyter&#8217;.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Graphviz graph object if output_fmt is &#8216;jupyter&#8217;</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="xref any docutils literal"><span class="pre">pdf</span></code> or Graphviz graph object</p>
 </td>
 </tr>
 </tbody>

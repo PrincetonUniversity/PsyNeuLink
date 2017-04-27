@@ -2598,37 +2598,56 @@ class System_Base(System):
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
     def show_graph(self, 
-                   output_fmt='pdf', 
-                   direction = 'BT', 
-                   show_learning = False, 
+                   direction = 'BT',
+                   show_learning = False,
+                   show_control = False,
                    learning_color = 'green',
-                   show_control = False, 
-                   control_color='blue'):
-        """Generate visualization of interconnections between all mechanisms and projections.
+                   control_color='blue',
+                   output_fmt='pdf',
+                   ):
+        """Generate a display of the graph structure of mechanisms and projections in the system.
+        
+        By default, only the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>` 
+        in the `system's graph <System.graph>` are displayed.  However, the :keyword:`show_learning` and 
+        :keyword:`show_control` arguments can be used to also show the `learning <LearningMechanism>` and
+        `control <ControlMechanism>` components of the system.  `Mechanisms <Mechanism>` are always displayed as (oval) 
+        nodes.  `Projections <Projection>` are displayed as labelled arrows, unless :keyword:`show_learning` is 
+        assigned :keyword:`True`, in which case MappingProjections that receive a `LearningProjection` are 
+        displayed as diamond-shaped nodes. The numbers in parentheses within a mechanism node indicate its 
+        dimensionality.   
 
         Arguments
         ---------
 
-        output_fmt : 'jupyter' or 'pdf'
-            pdf to generate and open a pdf with the visualization,
-            jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
+        direction : keyword : default 'BT' 
+            'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
 
-        direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
-            rank direction of graph
+        show_learning : bool : default False 
+            determines whether or not to show the learning components of the system;  
+            they will all be displayed in the color specified for **learning_color**.
+            projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
 
-        show_learning : determines whether or not to show learning machinery, if true, projections that have learning will be rendered as a diamond shape node.
+        show_control :  bool : default False 
+            determines whether or not to show the control components of the system;  
+            they will all be displayed in the color specified for **control_color**.
 
-        show_control : determines whether or not to show control machinery
+        learning_color : keyword : default `green`
+            determines the color in which the learning components are displayed
 
-        learning_color : determines with what color to draw all the learning machinery
+        control_color : keyword : default `blue`
+            determines the color in which the learning components are displayed.
 
-        control_color : determines with what color to draw all the control machinery
+        output_fmt : keyword : default 'pdf'
+            'pdf': generate and open a pdf with the visualization;
+            'jupyter': return the object (ideal for working in jupyter/ipython notebooks).
 
 
         Returns
         -------
 
-        Graphviz graph object if output_fmt is 'jupyter', 'pdf' generates a pdf in current directory
+        display of system : `pdf` or Graphviz graph object 
+            'pdf' (placed in current directory) if :keyword:`output_fmt` arg is 'pdf'; 
+            Graphviz graph object if :keyword:`output_fmt` arg is 'jupyter'.
 
         """
 
