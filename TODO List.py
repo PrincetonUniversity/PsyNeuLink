@@ -100,7 +100,7 @@
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
 
 # TEST: Autoassociative SOFT_CLAMP
-# TEST: Autoassociative learning:  fix [auto_mech] and System versions
+# TEST: Autoassociative learning:  fix [auto_mech] version
 # FIX: ADD PredictionMechanisms TO system.graph AND ASK NATE TO RENDER THEM IN BLUE
 # FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
 # IMPLEMENT: IAC TransferFunction
