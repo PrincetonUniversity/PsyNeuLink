@@ -34,7 +34,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="next" title="Mechanisms" href="Mechanism.html"/>
+        <link rel="next" title="Mechanism" href="Mechanism.html"/>
         <link rel="prev" title="System" href="System.html"/> 
 
   
@@ -85,7 +85,6 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Process</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
@@ -102,11 +101,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 
             
@@ -236,7 +236,7 @@ can be omitted from a MechanismTuple (if the phase is omitted, the default value
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Irrespective of the format in which a mechanism is specified in a <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, it&#8217;s entry is
-converted internally to a MechanismTuple, and listed in the process&#8217; <a class="reference internal" href="#Process.Process_Base.mechanisms" title="Process.Process_Base.mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">mechanisms</span></code></a> attribute.</p>
+converted internally to a MechanismTuple, and listed in the process&#8217; <a class="reference internal" href="System.html#System.System_Base.mechanisms" title="System.System_Base.mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">mechanisms</span></code></a> attribute.</p>
 </div>
 <p>The same mechanism can appear more than once in a <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, as one means of generating a recurrent processing loop
 (another is to specify this in the projections &#8211; see below).</p>
@@ -369,7 +369,7 @@ However, the input can be &#8220;clamped&#8221; on using the <a class="reference
 <a class="reference internal" href="#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>.  After the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism is executed, each subsequent mechanism in the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> is
 executed in sequence (irrespective of any <code class="xref any docutils literal"><span class="pre">phase</span></code> specification).  If a mechanism is specified in the pathway in a
 <a class="reference internal" href="#process-mechanism-specification"><span class="std std-ref">MechanismTuple</span></a>, then the runtime parameters are applied and the mechanism is
-executed using them (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for parameter specification).  Finally the output of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism
+executed using them (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> for parameter specification).  Finally the output of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism
 (last one in the pathway) is assigned as the output of the process.  If <a class="reference internal" href="#process-learning"><span class="std std-ref">learning</span></a> has been
 specified for the process or any of the projections in its <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, then the relevant learning mechanisms are
 executed. These calculate changes that will be made to the corresponding projections.</p>
@@ -815,7 +815,7 @@ each execution.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="System.html" class="btn btn-neutral" title="System" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

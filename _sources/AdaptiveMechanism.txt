@@ -1,8 +1,8 @@
-Adaptive Mechanisms
-===================
+Adaptive Mechanism
+==================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    LearningMechanism
    ControlMechanism

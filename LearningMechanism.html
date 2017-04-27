@@ -34,9 +34,9 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="up" title="Adaptive Mechanisms" href="AdaptiveMechanism.html"/>
+        <link rel="up" title="Adaptive Mechanism" href="AdaptiveMechanism.html"/>
         <link rel="next" title="LearningProjection" href="LearningProjection.html"/>
-        <link rel="prev" title="Adaptive Mechanisms" href="AdaptiveMechanism.html"/> 
+        <link rel="prev" title="Adaptive Mechanism" href="AdaptiveMechanism.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -86,12 +86,11 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanisms</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Learning Mechanism</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="LearningProjection.html">LearningProjection</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
@@ -116,9 +115,10 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 
             
@@ -149,9 +149,9 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Mechanism.html">Mechanisms</a> &raquo;</li>
+          <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
       
-          <li><a href="AdaptiveMechanism.html">Adaptive Mechanisms</a> &raquo;</li>
+          <li><a href="AdaptiveMechanism.html">Adaptive Mechanism</a> &raquo;</li>
       
     <li>Learning Mechanism</li>
       <li class="wy-breadcrumbs-aside">
@@ -184,11 +184,13 @@
 <span class="target" id="module-AdaptiveMechanisms.LearningMechanisms.LearningMechanism"></span><div class="section" id="overview">
 <span id="learningmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A LearningMechanism is an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> that modifies a parameter (usually the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>) of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.  It&#8217;s function takes an <a class="reference internal" href="Function.html#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (usually the output of
-an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> or another <a class="reference internal" href="#"><span class="doc">Learning Mechanism</span></a>) and generates a <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> that is used to modify
+an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> or another <a class="reference internal" href="#"><span class="doc">Learning Mechanism</span></a>) and generates a <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> that is used to modify
 the MappingProjection by way of a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.  A LearningMechanism can modify only MappingProjections that
-link ProcessingMechanisms in the same <a class="reference internal" href="System.html"><span class="doc">system</span></a> or <a class="reference internal" href="Process.html"><span class="doc">process</span></a> to which it belongs.  It is executed
-after all of the ProcessingMechanisms in that system or process have been executed.  If it belongs to a system,
-it is executed before the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> for that system has been executed.</p>
+link ProcessingMechanisms in the same <a class="reference internal" href="System.html"><span class="doc">system</span></a> or <a class="reference internal" href="Process.html"><span class="doc">process</span></a> to which it belongs.  The learning
+components of a system can be displayed using the system&#8217;s <a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method with its <strong>show_learning</strong> argument
+assigned :keyword:<a href="#id1"><span class="problematic" id="id2">``</span></a>True`.  LearningMechanisms are execute after all of the ProcessingMechanisms in that system or
+process have been executed.  If they belong to a system, they are executed before the
+<a class="reference internal" href="ControlMechanism.html"><span class="doc">control components</span></a> for that system have been executed.</p>
 </div>
 <div class="section" id="creating-a-learningmechanism">
 <span id="learningmechanism-creation"></span><h2>Creating a LearningMechanism<a class="headerlink" href="#creating-a-learningmechanism" title="Permalink to this headline">¶</a></h2>
@@ -265,7 +267,7 @@ LearningMechanism.  The latter is generated as a result of the LearningMechanism
 <div class="section" id="learning-function">
 <span id="learningmechanism-function"></span><h3>Learning Function<a class="headerlink" href="#learning-function" title="Permalink to this headline">¶</a></h3>
 <p>This uses the three values received by the LearningMechanism&#8217;s <a class="reference internal" href="#learningmechanism-inputstates"><span class="std std-ref">inputStates</span></a> to
-calculate a <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> and its own <a class="reference internal" href="Function.html#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>.  The <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> is the set of changes to the
+calculate a <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> and its own <a class="reference internal" href="Function.html#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>.  The <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> is the set of changes to the
 <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the MappingProjection required to reduce the value received by the
 LearningMechanism&#8217;s <a class="reference internal" href="#learningmechanism-input-error-signal"><span class="std std-ref">ERROR_SIGNAL</span></a> inputState .  In
 <a class="reference internal" href="#learningmechanism-multi-layer"><span class="std std-ref">multilayer learning</span></a>, the <a class="reference internal" href="Function.html#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> it calculates reflects the contribution &#8211;
@@ -276,10 +278,10 @@ its <a class="reference internal" href="MappingProjection.html#MappingProjection
 other PsyNeuLink <a class="reference internal" href="Function.html#Function.LearningFunction" title="Function.LearningFunction"><code class="xref any py py-class docutils literal"><span class="pre">LearningFunction</span></code></a>
 It returns two values that
 are assigned to the LearningMechanism&#8217;s
-<a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> and <a class="reference internal" href="Function.html#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> attributes, respectively, as well as to its two outputStates, as described below.</p>
+<a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> and <a class="reference internal" href="Function.html#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> attributes, respectively, as well as to its two outputStates, as described below.</p>
 </div>
-<div class="section" id="outputstates-b">
-<span id="learningmechanism-outputstates"></span><h3>OutputStates b<a class="headerlink" href="#outputstates-b" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="outputstates">
+<span id="learningmechanism-outputstates"></span><h3>OutputStates<a class="headerlink" href="#outputstates" title="Permalink to this headline">¶</a></h3>
 <p>These receive the output of the LearningMechanism&#8217;s <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:</p>
 <ul id="learningmechanism-learning-signal">
 <li><dl class="first docutils">
@@ -287,7 +289,7 @@ are assigned to the LearningMechanism&#8217;s
 <dd><p class="first last">This is assigned the value used to modify the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter
 of the MappingProjection being learned.  It is assigned as the <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> for the
 LearningProjection that projects to the MappingProjection.  It&#8217;s value is accessible as the LearningMechanism&#8217;s
-<a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> attribute, and as the first item of the LearningMechanism&#8217;s
+<a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> attribute, and as the first item of the LearningMechanism&#8217;s
 <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.outputValue" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a> attribute.</p>
 </dd>
 </dl>
@@ -301,7 +303,7 @@ weighted by the contribution that the MappingProjection and the mechanism to whi
 <a class="reference internal" href="Function.html#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> received by the LearningProjection.  If the LearningMechanism is in a
 <a class="reference internal" href="#learningmechanism-multi-layer"><span class="std std-ref">multilayer learning sequence</span></a>, it serves as the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.sender" title="MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>
 for a MappingProjection to the LearningMechanism for the MappingProjection before it in the sequence (i.e.,
-the layer &#8220;below&#8221; it).  It&#8217;s value is accessible as the LearningMechanism&#8217;s <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> attribute,
+the layer &#8220;below&#8221; it).  It&#8217;s value is accessible as the LearningMechanism&#8217;s <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> attribute,
 and as the first item of the LearningMechanism&#8217;s <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.outputValue" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a> attribute.</p>
 </dd>
 </dl>
@@ -314,7 +316,7 @@ and as the first item of the LearningMechanism&#8217;s <a class="reference inter
 components being learned:</p>
 <ul>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a></dt>
+<dt><a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a></dt>
 <dd><p class="first last">the MappingProjection for which the LearningMechanism is responsible;  that is, the one with the
 <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter that the LearningMechanism modifies.</p>
 </dd>
@@ -324,7 +326,7 @@ components being learned:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_source" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_source"><code class="xref any py py-attr docutils literal"><span class="pre">error_source</span></code></a></dt>
-<dd><p class="first last">the mechanism that receives the <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a>;  that is, the one that generates the output
+<dd><p class="first last">the mechanism that receives the <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a>;  that is, the one that generates the output
 used to calculate the error_signal that the LearningMechanism attempts to reduce.</p>
 </dd>
 </dl>
@@ -352,7 +354,8 @@ then it uses the default value assigned by its <a class="reference internal" hre
 <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>, PsyNeuLink automatically creates all of the components required for the
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> between <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in that composition to
 be learned.  The type of components that are generated depends on the <span class="xref std std-ref">learning function</span>
-specified, and the configuration of the composition.</p>
+specified, and the configuration of the composition.  All of the learning components of a system can be displayed
+using the system&#8217;s <a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method with its <strong>show_learning</strong> argument assigned <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>.</p>
 <div class="section" id="single-layer-learning">
 <span id="learningmechanism-single-layer"></span><h4>Single layer learning<a class="headerlink" href="#single-layer-learning" title="Permalink to this headline">¶</a></h4>
 <p>This is the case when only a single MappingProjection is specified for learning, or the LearningMechanism&#8217;s function
@@ -378,7 +381,7 @@ layer of learning, <em>no</em> projection is created or assigned to the Learning
 <a class="reference internal" href="#learningmechanism-output-error-signal"><span class="std std-ref">ERROR_SIGNAL</span></a> outputState.</p>
 <blockquote id="learningmechanism-single-layer-learning-figure">
 <div><p><strong>Components for Single Layer Learning</strong></p>
-<div class="figure" id="id1">
+<div class="figure" id="id3">
 <a class="reference internal image-reference" href="_images/LearningMechanism_Single_Layer_Learning_fig.pdf"><img alt="Schematic of mechanisms and projections involved in learning for a single MappingProjection" src="_images/LearningMechanism_Single_Layer_Learning_fig.pdf" /></a>
 <p class="caption"><span class="caption-text">ObjectiveMechanism, LearningMechanism and associated projections created for a single learned_projection
 and error_source.  Each mechanism is labeled by its type (uppler line, in bold) and its designated
@@ -403,9 +406,9 @@ standalone process (i.e., one not in a system), or the <a class="reference inter
 system (and therefore a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> for the system).  In these cases, as for single layer learning,
 an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> is created that receives the output of the <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_source" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_source"><code class="xref any py py-attr docutils literal"><span class="pre">error_source</span></code></a> as well as the target for learning
 (see <code class="xref any docutils literal"><span class="pre">LearningMechanisms_Targets</span></code> below), and projects to a LearningMechanism that is created for the
-<a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a>.  For all others, the following MappingProjections are created (shown in the <a class="reference internal" href="#learningmechanism-multilayer-learning-figure"><span class="std std-ref">figure</span></a> below):</p>
+<a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a>.  For all others, the following MappingProjections are created (shown in the <a class="reference internal" href="#learningmechanism-multilayer-learning-figure"><span class="std std-ref">figure</span></a> below):</p>
 <ul class="simple">
-<li>from the <code class="xref any docutils literal"><span class="pre">sender</span> <span class="pre">&lt;MappingProjection.sender</span></code> of the <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a> to the LearningMechanism&#8217;s
+<li>from the <code class="xref any docutils literal"><span class="pre">sender</span> <span class="pre">&lt;MappingProjection.sender</span></code> of the <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a> to the LearningMechanism&#8217;s
 <code class="xref any docutils literal"><span class="pre">ACTIVATION_INPUT</span></code> <a class="reference internal" href="#learningmechanism-activation-input"><span class="std std-ref">inputState</span></a>.</li>
 </ul>
 <ul class="simple">
@@ -419,11 +422,11 @@ next MappingProjection in the sequence (i.e., the layer &#8220;above&#8221; it) 
 </ul>
 <p>In addition, a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> is created from each LearningMechanism&#8217;s
 <a class="reference internal" href="#learningmechanism-learning-signal"><span class="std std-ref">LEARNING_SIGNAL</span></a> outputState to the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a>
-of its <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a>.  If the <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a> is the first in the sequence, then <em>no</em> projection is
+of its <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a>.  If the <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a> is the first in the sequence, then <em>no</em> projection is
 created or assigned to its LearningMechanism&#8217;s <a class="reference internal" href="#learningmechanism-output-error-signal"><span class="std std-ref">ERROR_SIGNAL</span></a> outputState.</p>
 <blockquote id="learningmechanism-multilayer-learning-figure">
 <div><p><strong>Components for Multilayer Learning</strong></p>
-<div class="figure" id="id2">
+<div class="figure" id="id4">
 <a class="reference internal image-reference" href="_images/LearningMechanism_Multilayer_Learning_fig.pdf"><img alt="Schematic of mechanisms and projections involved in learning for a sequence of MappingProjections" src="_images/LearningMechanism_Multilayer_Learning_fig.pdf" /></a>
 <p class="caption"><span class="caption-text">ObjectiveMechanism and LearningMechanisms and associated projections created for a sequence of two
 MappingProjections specified for learning.  Each mechanism is labeled by its type (uppler line, in bold) and
@@ -434,7 +437,7 @@ beside a component indicates the attribute of the LearningMechanism with which i
 <p id="learningmechanism-targets"><strong>TARGET mechanisms</strong>: receive the targets specified for learning.  When learning is specified for a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>, the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>  that will receive its
 <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">targets</span></a> (specified in the call to its <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method) are identified and
 designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanisms. These are listed in the process` or system&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">targetMechanisms</span></code> attribute.
-It is important to note that the status of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a> in a system takes precedence over its status in any
+It is important to note that the status of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a> in a system takes precedence over its status in any
 of the processes to which it belongs. This means that even if a mechanism is the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> of a particular process,
 if that process is combined with others in a system, the mechanism appears in any of those other processes,
 and it is not the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> of all of them, then it will <em>not</em> be the <code class="xref any docutils literal"><span class="pre">TERMINAL</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">system.</span>&#160; <span class="pre">As</span> <span class="pre">consequence,</span>
@@ -444,7 +447,7 @@ mechanisms is the <a class="reference internal" href="Keywords.html#Keywords.Key
 processes converge on that mechanism), only one ObjectiveMechanism will be created for it in the system.</p>
 <blockquote id="learningprojection-target-vs-terminal-figure">
 <div><p><strong>TERMINAL</strong> and <strong>TARGET</strong> Mechanisms in Learning</p>
-<div class="figure" id="id3">
+<div class="figure" id="id5">
 <a class="reference internal image-reference" href="_images/LearningMechanism_TERMINAL_vs_TARGET_fig.pdf"><img alt="Schematic of mechanisms and projections involved in learning" src="_images/LearningMechanism_TERMINAL_vs_TARGET_fig.pdf" /></a>
 <p class="caption"><span class="caption-text">Mechanism 3 is the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism for Process A, However, it is also an <a class="reference internal" href="Keywords.html#Keywords.Keywords.INTERNAL" title="Keywords.Keywords.INTERNAL"><code class="xref any py py-attr docutils literal"><span class="pre">INTERNAL</span></code></a> mechanism of Process B.
 Therefore, Mechanism 3 is designated as an <a class="reference internal" href="Keywords.html#Keywords.Keywords.INTERNAL" title="Keywords.Keywords.INTERNAL"><code class="xref any py py-attr docutils literal"><span class="pre">INTERNAL</span></code></a> mechanism for the system, and Mechanism 4 is its <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>
@@ -462,11 +465,11 @@ and designated as a <a class="reference internal" href="Keywords.html#Keywords.K
 been executed, including the ObjectiveMechanism(s) that provide the <a class="reference internal" href="Function.html#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> to each LearningMechanism.  When the
 LearningMechanism is executed, it uses the value of its <a class="reference internal" href="#learningmechanism-input-error-signal"><span class="std std-ref">ERROR_SIGNAL</span></a>
 inputState to calculate changes to the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of its
-<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.  The changes are assigned as the value of its <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learning_signal" title="LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> attribute (as well as the 1st item
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.  The changes are assigned as the value of its <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> attribute (as well as the 1st item
 of its <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.outputValue" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a> attribute) and used as the <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.value" title="LearningProjection.LearningProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
-the <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> from the LearningMechanism to the <code class="xref any docutils literal"><span class="pre">MATRIX</span></code> parameterState of its <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a>.
+the <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> from the LearningMechanism to the <code class="xref any docutils literal"><span class="pre">MATRIX</span></code> parameterState of its <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a>.
 However, these but are not applied to the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> itself until the next
-time the <a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.learned_projection" title="LearningProjection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a> is executed (see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of &#8220;lazy&#8221; updating).
+time the <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learned_projection"><code class="xref any py py-attr docutils literal"><span class="pre">learned_projection</span></code></a> is executed (see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of &#8220;lazy&#8221; updating).
 In addition, the LearningMechanism assigns the <a class="reference internal" href="Function.html#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> signal computed by its
 <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to its <a class="reference internal" href="Function.html#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> attribute (as well as the 2nd item of its
 <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.outputValue" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a> attribute).</p>
@@ -539,7 +542,7 @@ the error signal received from either an ObjectiveMechanism or the next Learning
 <dt id="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function">
 <code class="descname">function</code><a class="headerlink" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>LearningFunction or function : default BackPropagation</em> &#8211; specifies function used to compute the <a class="reference internal" href="#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>.  Must take the following arguments:
-<a class="reference internal" href="Process.html#Process.Process_Base.input" title="Process.Process_Base.input"><code class="xref any py py-attr docutils literal"><span class="pre">input</span></code></a> (list or 1d array), <a class="reference internal" href="Function.html#Function.SoftMax.output" title="Function.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">output</span></code></a> (list or 1d array), <a class="reference internal" href="Function.html#Function.SoftMax.derivative" title="Function.SoftMax.derivative"><code class="xref any py py-meth docutils literal"><span class="pre">derivative</span></code></a> (function) and <code class="xref any docutils literal"><span class="pre">error</span></code> (list or 1d array).</p>
+<a class="reference internal" href="Process.html#Process.Process_Base.input" title="Process.Process_Base.input"><code class="xref any py py-attr docutils literal"><span class="pre">input</span></code></a> (list or 1d array), <a class="reference internal" href="Function.html#Function.SoftMax.output" title="Function.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">output</span></code></a> (list or 1d array), <a class="reference internal" href="Function.html#Function.Logistic.derivative" title="Function.Logistic.derivative"><code class="xref any py py-meth docutils literal"><span class="pre">derivative</span></code></a> (function) and <code class="xref any docutils literal"><span class="pre">error</span></code> (list or 1d array).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -606,7 +609,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
         <a href="LearningProjection.html" class="btn btn-neutral float-right" title="LearningProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="AdaptiveMechanism.html" class="btn btn-neutral" title="Adaptive Mechanisms" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="AdaptiveMechanism.html" class="btn btn-neutral" title="Adaptive Mechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
