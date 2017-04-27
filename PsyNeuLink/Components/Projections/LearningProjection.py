@@ -474,7 +474,7 @@ class LearningProjection(Projection_Base):
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
         candidate_objective_mech = learning_mechanism.inputStates[ERROR_SIGNAL].receivesFromProjections[0].sender.owner
-        if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech.role is LEARNING:
+        if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
             learned_projection.objective_mechanism = candidate_objective_mech
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = True
