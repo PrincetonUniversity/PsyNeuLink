@@ -105,8 +105,10 @@ z = process(default_input_value=[0, 0],
 
 # stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 # target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
+# stim_list = {Input_Layer:[[-1, 30]]}
+# stim_list = {Input_Layer:[[-1, 30]]}
 stim_list = {Input_Layer:[[-1, 30]]}
-target_list = {Output_Layer:[[0, 0, 1]]}
+target_list = {Output_Layer:[[0, 0, 1]]}
 
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
