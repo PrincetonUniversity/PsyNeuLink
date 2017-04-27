@@ -2651,7 +2651,6 @@ class System_Base(System):
 
         """
 
-
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
