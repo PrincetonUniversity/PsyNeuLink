@@ -69,6 +69,7 @@
 # IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
 #           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
 
+# FIX: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
 # FIX: printout of intial_value (see devel_upstream on Quill)
 # FIX fix _update_parameter_state in Projection as in Mechanism
 
