@@ -1,3 +1,4 @@
+/Users/jdc/anaconda/envs/python35/bin/python3.5 "/Users/jdc/PycharmProjects/PsyNeuLink/Scripts/TEST SCRIPTS/META Test Script.py"
 
 RUNNING EVC System Laming Validation Test Script.py
 
@@ -22,10 +23,10 @@ EVC Test System
 		Phase 0:
 			Input
 			Decision
-			Input_PredictionMechanism
+			Input Prediction Mechanism
 		Phase 1:
 			Reward
-			Reward_PredictionMechanism
+			Reward Prediction Mechanism
 			EVCMechanism-1
 
 	Origin mechanisms: 
@@ -74,7 +75,7 @@ EVCMechanism-1
 	time_scale: TimeScale.TRIAL
 - output: 1.0
 
-'Input_PredictionMechanism'  executed:
+'Input Prediction Mechanism'  executed:
 - input:  0.5
 - params:
 	function: Integrator
@@ -86,7 +87,7 @@ EVCMechanism-1
 	monitor_for_control: None
 - output: 0.25
 
-'Reward_PredictionMechanism'  executed:
+'Reward Prediction Mechanism'  executed:
 - input:  20.0
 - params:
 	function: Integrator
@@ -128,7 +129,7 @@ RESULTS (time step 2):
 	time_scale: TimeScale.TRIAL
 - output: 1.0
 
-'Input_PredictionMechanism'  executed:
+'Input Prediction Mechanism'  executed:
 - input:  0.123
 - params:
 	function: Integrator
@@ -140,7 +141,7 @@ RESULTS (time step 2):
 	monitor_for_control: None
 - output: 0.186
 
-'Reward_PredictionMechanism'  executed:
+'Reward Prediction Mechanism'  executed:
 - input:  20.0
 - params:
 	function: Integrator
@@ -1842,3 +1843,6 @@ RUNNING Documentation Examples Script.py
 [ 0.65077768]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+Process finished with exit code 0
