@@ -66,11 +66,11 @@ above, or using one of the following:
     and/or entries specifying the value of parameters used to instantiate it.
     These should take the following form:
 
-      * `MECHANISM_TYPE`: <name of a mechanism type>
+      * MECHANISM_TYPE: <name of a mechanism type>
 
           if this entry is absent, a `default mechanism <LINK>` will be created.
 
-      * <name of argument>:<value>
+      * <name of parameter>:<value>
 
           this can contain any of the standard parameters for instantiating a mechanism
           (see `Mechanism_Parameters`) or ones specific to a particular type of mechanism
@@ -91,7 +91,7 @@ and to execute its `function <Mechanism_Function>`).  When a mechanism is create
 parameterStates it needs to represent its parameters, including those of its `function <Mechanism_Base.function>`.
 It also creates any inputStates and outputStates required for the projections it has been assigned. InputStates and
 outputStates, and corresponding projections, can also be specified in the mechanism's params dictionary, using entries
-with the keys `INPUT_STATES` and `OUTPUT_STATES`, respectively. The value of each entry can be the name of the state's
+with the keys INPUT_STATES and OUTPUT_STATES, respectively. The value of each entry can be the name of the state's
 class (to create a default), an existing state, a specification dictionary for one, a value (used as the state's
 ``variable``) or a list containing of any of these to create multiple states (see `InputStates <InputState_Creation>`
 and `OutputStates <OutputStates_Creation>` for details).
@@ -250,11 +250,11 @@ first item of the mechanism's `value <Mechanism_Base.value>` attribute (usually 
 some `ProcessingMechanisms <ProcessingMechanism>` (such as `TransferMechanism`) use outputStates to represent
 values derived from the value of their `primary outputState <OutputState_Primary>` (e.g., the mean and variance).
 `ControlMechanisms <ControlMechanism>` assign one outputState for each of their `ControlProjections
-<ControlProjection>`.  An outputState can be assigned to a particular item of the mechanism's `value
-<Mechanism_Base>value` attribute using the outputState's `index` parameter, and its `calculate` parameter can be used
-to modify that item before assigning it as the outputState's :keyword:`value` (see `OutputStates_Creation`). The
-:keyword:`value` attributes of all of a mechanism's outputStates  are assigned to the mechanism's `outputValue
-<Mechanism_Base.outputValue>` attribute (a list), in the same order in which they appear in mechanism's
+<ControlProjection>`.  An outputState can be assigned to a particular item of the mechanism's 
+`value <Mechanism_Base.value>` attribute using the outputState's `index` parameter, and its `calculate` parameter can 
+be used to modify that item before assigning it as the outputState's :keyword:`value` (see `OutputStates_Creation`). 
+The :keyword:`value` attributes of all of a mechanism's outputStates  are assigned to the mechanism's 
+`outputValue <Mechanism_Base.outputValue>` attribute (a list), in the same order in which they appear in mechanism's
 `outputStates <Mechanism_Base.outputStates>`  attribute.  Note that this is distinct from the mechanism's `value
 <Mechanism_Base.value>` attribute, which contains the full and unmodified results of its
 `function <Mechanism_Base.function>`.
@@ -269,13 +269,13 @@ attribute of the mechanisms (e.g., myMechanism.attribute), in a
 `parameter dictionary <ParameterState_Specifying_Parameters>` assigned to `params` argument in the mechanism's
 constructor, or with the mechanism's `assign_params` method, using the following keywords:
 
-    * `INPUT_STATES` - specifies specialized inputStates required by a mechanism subclass
+    * INPUT_STATES - specifies specialized inputStates required by a mechanism subclass
       (see :ref:`inputState specification <InputState_Creation>` for details of specification).
     ..
-    * `FUNCTION` - specifies the `function <Mechanism_Base.function>` for the mechanism;  can be one of several
+    * FUNCTION - specifies the `function <Mechanism_Base.function>` for the mechanism;  can be one of several
       functions pre-specified by the subclass or a user-defined `custom function <Mechanism_Custom_Function>`.
     ..
-    * `FUNCTION_PARAMS` - a specification dictionary of parameters for the mechanism's :keyword:`function`;
+    * FUNCTION_PARAMS - a specification dictionary of parameters for the mechanism's :keyword:`function`;
       the key for each entry must be the name of one of the function's parameters;  its value can be any of the
       following (see :ref:`ParameterState_Specifying_Parameters` for details):
 
@@ -291,19 +291,19 @@ constructor, or with the mechanism's `assign_params` method, using the following
         clarity).
       |
       .. note::
-         Some Mechanism subclasses include the function parameters as arguments in mechanism's constructor,
-         any values specified in the `FUNCTION__PARAMS` entry of a 
-         `parameter specification dictionary <Mechanism_Creation>` for the mechanism take precedence over values 
-         assigned to parameter-specific arguments in its (or its function's) constructor.
+         Some Mechanism subclasses include the function parameters as arguments in mechanism's constructor.
+         Any values specified in the `FUNCTION__PARAMS` entry of a 
+         `parameter specification dictionary <ParameterState_Specifying_Parameters>` for the mechanism take precedence 
+         over values assigned to parameter-specific arguments in its (or its function's) constructor.
 
-    * `OUTPUT_STATES` - specifies specialized outputStates required by a mechanism subclass
+    * OUTPUT_STATES - specifies specialized outputStates required by a mechanism subclass
       (see :ref:`OutputStates_Creation` for details of specification).
     ..
-    * `MONITOR_FOR_CONTROL` - specifies which of the mechanism's outputStates is monitored by the `controller`
+    * MONITOR_FOR_CONTROL - specifies which of the mechanism's outputStates is monitored by the `controller`
       for the system to which the mechanism belongs (see :ref:`specifying monitored outputStates
       <ControlMechanism_Monitored_OutputStates>` for details of specification).
     ..
-    * `MONITOR_FOR_LEARNING` - specifies which of the mechanism's outputStates is used for learning
+    * MONITOR_FOR_LEARNING - specifies which of the mechanism's outputStates is used for learning
       (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).
 
 The parameters of a mechanism are listed in a dictionary in its `params <Mechanism_Base.params>
@@ -374,14 +374,57 @@ Runtime Parameters
 ~~~~~~~~~~~~~~~~~~
 
 The parameters of a mechanism are usually specified when the mechanism is created.  However, these can be overridden
-when it executed.  This can be done by using the `runtime_param` argument of its `execute <Mechanism_Base.execute>`
-method, or by specifying the runtime parameters in a tuple with the mechanism in the `pathway` of a process (see
-Process :ref:`Process_Mechanisms`). In either case, runtime parameters are specified using a dictionary that
-contains one or more entries, each of which itself contains a dictionary corresponding to the mechanism's function or
-its states (inputStates, parameterStates and/or outputStates); those dictionaries, in turn, contain
-entries for the values of the runtime parameters for the function, a state, or its projection(s) (see the
-**runtime_params** argument of the `execute <Mechanism_Base.execute>` method below for more details).
+when it executed.  This can be done in a `parameter specification dictionary <ParameterState_Specifying_Parameters>` 
+assigned to the **runtime_param** argument of the mechanism's `execute <Mechanism_Base.execute>` method, or in a tuple 
+with the mechanism in the `pathway` of a process (see Process :ref:`Process_Mechanisms`).  Any value assigned to a 
+parameter in a runtime_params dicitonary will override the current value of that parameter for the (and *only* the) 
+current execution of the mechanism; the value will return to its previous value following current round of execution, 
+unless the `runtimeParamStickyAssignmentPref` is set for the component to which the parameter belongs. The runtime 
+parameters for a mechanism are specified using a dictionary that contains one or more entries, each of which is for 
+a parameter of the mechanism or its  function, or for one of the mechanism's states.  Entries for parameters of the 
+mechanism or its function use the standard format for `parameter dictionaries <ParameterState_Specifying_Parameters>`.  
+Entries for the mechanism's states can be used to specify runtime parameters of the corresponding state, its function, 
+or any of the projections to that state.  Each state entry uses a key corresponding to the type of state 
+(INPUT_STATE_PARAMS, OUTPUT_STATE_PARAMS or PARAMETER_STATE_PARAMS), and the value is a subdictionary containing a 
+parameter dictionary with the runtime  parameter specifications for all states of that type). Within the subdictionary, 
+specification of parameters for the  state or its function use the  standard format for `parameter dictionaries 
+<ParameterState_Specifying_Parameters>`.  Parameters for all of the state's projections can be specified in an entry 
+with the key PROJECTION_PARAMS, and a subdictionary that contains the parameter specifications;  parameters for 
+projections of a particular type can be placed in an entry with a key specifying the type (MAPPING_PROJECTION_PARAMS, 
+CONTROL_PROJECTION_PARAMS, or LEARNING_PROJECTION_PARAMS; and parameters can for a specific projection can be placed 
+in an entry with a key specifying the name of the project and a dictionary with the specifications.
 
+COMMENT:
+?? DO PROJECTION DICTIONARIES PERTAIN TO INCOMING OR OUTGOING PROJECTIONS OR BOTH??
+?? CAN THE KEY FOR A STATE DICTIONARY REFERENCE A SPECIFIC STATE BY NAME, OR ONLY STATE-TYPE??
+
+state keyword: dict for state's params
+    function or projection keyword: dict for funtion or projection's params
+        parameter keyword: vaue of param
+
+    dict: can be one (or more) of the following:
+        + INPUT_STATE_PARAMS:<dict>
+        + PARAMETER_STATE_PARAMS:<dict>
+   [TBI + OUTPUT_STATE_PARAMS:<dict>]
+        - each dict will be passed to the corresponding State
+        - params can be any permissible executeParamSpecs for the corresponding State
+        - dicts can contain the following embedded dicts:
+            + FUNCTION_PARAMS:<dict>:
+                 will be passed the State's execute method,
+                     overriding its paramInstanceDefaults for that call
+            + PROJECTION_PARAMS:<dict>:
+                 entry will be passed to all of the State's projections, and used by
+                 by their execute methods, overriding their paramInstanceDefaults for that call
+            + MAPPING_PROJECTION_PARAMS:<dict>:
+                 entry will be passed to all of the State's MappingProjections,
+                 along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+            + CONTROL_PROJECTION_PARAMS:<dict>:
+                 entry will be passed to all of the State's ControlProjections,
+                 along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+            + <projectionName>:<dict>:
+                 entry will be passed to the State's projection with the key's name,
+                 along with any in the PROJECTION_PARAMS and MappingProjection or ControlProjection dicts
+COMMENT
 
 .. _Mechanism_Class_Reference:
 
@@ -446,7 +489,7 @@ def mechanism(mech_spec=None, params=None, context=None):
 
     COMMENT:
         context : str
-            if it is the keyword :keyword:`VALIDATE`, returns :keyword:`True` if specification would return a valid
+            if it is the keyword VALIDATE, returns :keyword:`True` if specification would return a valid
             subclass object; otherwise returns :keyword:`False`.
     COMMENT
 
@@ -1274,58 +1317,14 @@ class Mechanism_Base(Mechanism):
             `variable <InputState.InputState.variable>` (see `Run Inputs <Run_Inputs>` for details of input
             specification formats).
 
-        COMMENT:
-          MOVE THE BULK OF THIS TO THE DESCRIPTION OF RUNTIME PARAMS ABOVE, AND REFERENCE THAT.
-        COMMENT
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
             a dictionary that can include any of the parameters used as arguments to instantiate the mechanism,
             its function, or projection(s) to any of its states.  Any value assigned to a parameter will override
-            the current value of that parameter for the (and only the current) execution of the mechanism; it will
-            return to its previous value following execution.  Each entry is either the specification for one of the
-            mechanism's parameters (in which case the key is the name of the parameter, and its value the value to be
-            assigned to that parameter), or a dictionary for a specified type of state (in which case, the key is the
-            name of a specific state or a keyword for the type of state (`INPUT_STATE_PARAMS`, `OUTPUT_STATE_PARAMS`
-            or `PARAMETER_STATE_PARAMS`), and the value is a dictionary containing a parameter dictionary for that
-            state or all states of the specified type.  The latter (state dictionaries) contain entries that are
-            themselves dictionaries containing parameters for the state's function or its projections. The key for
-            each entry is a keyword indicating whether it is for the state's function (`FUNCTION_PARAMS`),
-            all of its projections (`PROJECTION_PARAMS`), a particular type of projection (`MAPPING_PROJECTION_PARAMS`
-            or `CONTROL_PROJECTION_PARAMS`), or to a specific projection (using its name), and the value of
-            each entry is a dictionary containing the parameters for the function, projection, or set of projections
-            (the keys of which are parameter names, and the values of which are the parameter values to be assigned).
-
-          COMMENT:
-            ?? DO PROJECTION DICTIONARIES PERTAIN TO INCOMING OR OUTGOING PROJECTIONS OR BOTH??
-            ?? CAN THE KEY FOR A STATE DICTIONARY REFERENCE A SPECIFIC STATE BY NAME, OR ONLY STATE-TYPE??
-
-            state keyword: dict for state's params
-                function or projection keyword: dict for funtion or projection's params
-                    parameter keyword: vaue of param
-
-                dict: can be one (or more) of the following:
-                    + INPUT_STATE_PARAMS:<dict>
-                    + PARAMETER_STATE_PARAMS:<dict>
-               [TBI + OUTPUT_STATE_PARAMS:<dict>]
-                    - each dict will be passed to the corresponding State
-                    - params can be any permissible executeParamSpecs for the corresponding State
-                    - dicts can contain the following embedded dicts:
-                        + FUNCTION_PARAMS:<dict>:
-                             will be passed the State's execute method,
-                                 overriding its paramInstanceDefaults for that call
-                        + PROJECTION_PARAMS:<dict>:
-                             entry will be passed to all of the State's projections, and used by
-                             by their execute methods, overriding their paramInstanceDefaults for that call
-                        + MAPPING_PROJECTION_PARAMS:<dict>:
-                             entry will be passed to all of the State's MappingProjections,
-                             along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
-                        + CONTROL_PROJECTION_PARAMS:<dict>:
-                             entry will be passed to all of the State's ControlProjections,
-                             along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
-                        + <projectionName>:<dict>:
-                             entry will be passed to the State's projection with the key's name,
-                             along with any in the PROJECTION_PARAMS and MappingProjection or ControlProjection dicts
-          COMMENT
-
+            the current value of that parameter for the (and only the current) execution of the mechanism, and will
+            return to its previous value following execution (unless the `runtimeParamStickyAssignmentPref` is set
+            for the component to which the parameter belongs).  See `runtime_params <Mechanism_Runtime_Parameters>` 
+            above for details concerning specification.
+              
         time_scale : TimeScale :  default TimeScale.TRIAL
             specifies whether the mechanism is executed for a single time_step or a trial.
 

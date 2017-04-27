@@ -211,16 +211,17 @@ Each parameterState is created using the specification of the parameter for whic
 belongs (see <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for additional details).</li>
 </ul>
 <ul class="simple">
-<li>In a <strong>parameter dictionary</strong> used to specify the <a class="reference internal" href="Function.html#Function.WaldDist.params" title="Function.WaldDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument in the constructor for the component to which
-the parameter belongs. The entry for each parameter must use the keyword for the parameter as its key,
-and the parameter&#8217;s specification as its value (see <a class="reference internal" href="#parameterstate-specification-examples"><span class="std std-ref">examples</span></a> below).
-Parameters for a component&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> must be specified in an entry with the key
-<code class="xref std std-keyword docutils literal"><span class="pre">FUNCTION_PARAMS</span></code>, the value of which is a parameter dictionary containing an entry for each of the
-function&#8217;s parameters to be specified.  When a value is assigned to a parameter in a parameter dictionary,
-it overrides any value assigned to the argument for the parameter in the component&#8217;s constructor.</li>
+<li>In a <strong>parameter specification dictionary</strong> assigned to the <strong>params</strong> argument in the constructor for the
+component to which the parameter belongs. The entry for each parameter must use the name of the parameter
+(or a corresponding keyword) as its key, and the parameter&#8217;s specification as its value (see
+<a class="reference internal" href="#parameterstate-specification-examples"><span class="std std-ref">examples</span></a> below). Parameters for a component&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>
+must be specified in an entry with the key FUNCTION_PARAMS, the value of which is a parameter dictionary
+containing an entry for each of the function&#8217;s parameters to be specified.  When a value is assigned to a
+parameter in a parameter dictionary, it overrides any value assigned to the argument for the parameter in the
+component&#8217;s constructor.</li>
 </ul>
 <ul class="simple">
-<li>By direct reference to the corresponding attribute of the component to which the parameter belongs.  The
+<li>By direct assignment to the corresponding attribute of the component to which the parameter belongs.  The
 attribute always has the same name as the parameter and can be referenced using standard python attribute
 notation (e.g., myComponent.paramter_name).</li>
 </ul>
@@ -356,7 +357,7 @@ receives) is combined with its <a class="reference internal" href="#ParameterSta
 for which it is responsible.  This must be a value of <a class="reference internal" href="Utilities.html#Utilities.ModulationOperation" title="Utilities.ModulationOperation"><code class="xref any py py-class docutils literal"><span class="pre">ModulationOperation</span></code></a>.  It can be specified in either
 the <strong>parameter_modulation_operation</strong> argument of the parameterState&#8217;s constructor, or in a
 PARAMETER_MODULATION_OPERATION entry of a <a class="reference internal" href="#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> in
-either the <strong>params</strong> argument of the parameterState&#8217;s constructor or within a <code class="xref std std-keyword docutils literal"><span class="pre">PARAMETER_STATE_PARAMS</span></code>
+either the <strong>params</strong> argument of the parameterState&#8217;s constructor or within a PARAMETER_STATE_PARAMS
 dictionary in a <a class="reference internal" href="#parameterstate-runtime-parameters"><span class="std std-ref">runtime specification</span></a>. The default is value is
 <code class="xref any docutils literal"><span class="pre">ModulationOperation.PRODUCT</span></code>, which multiples the parameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref any py py-attr docutils literal"><span class="pre">baseValue</span></code></a> by the
 aggregated value of the result of the parameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine the value

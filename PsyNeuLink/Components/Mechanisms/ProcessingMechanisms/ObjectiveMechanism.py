@@ -312,7 +312,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     COMMENT:
         [TBI]
         time_scale :  TimeScale : TimeScale.TRIAL
-            specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+            specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.
             This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
     COMMENT
 
@@ -535,7 +535,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         self.variableClassDefault = self.variable.copy()
         self.inputValue = list(self.variable)
-
 
     def _instantiate_input_state_for_monitored_value(self, variable, monitored_value, name=None, context=None):
         """Instantiate inputState with projection from monitoredOutputState

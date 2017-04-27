@@ -649,9 +649,9 @@ class EVCMechanism(ControlMechanism_Base):
         default `combine_outcome_and_cost_function` is called by a custom `value_function`, the weights and/or
         exponents parameters of the `LinearCombination` function can be used, respectively, to scale and/or exponentiate
         the contribution of the outcome and/or cost to the result.  These must be specified as 1d arrays in a `WEIGHTS`
-        and/or `EXPONENTS` entry of a  `parameter dictionary <ParameterState_Specifying_Parameters>` specified for the
-        function's `params` argument; each array must have two elements, the first for the outcome and second for the
-        cost. The default function can also be replaced with any
+        and/or EXPONENTS entry of a  `parameter specifiction dictionary <ParameterState_Specifying_Parameters>` 
+        assigned to the function's `params` argument; each array must have two elements, the first for the outcome 
+        and second for the cost. The default function can also be replaced with any
         `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that returns a scalar value.  If used with
         the EVCMechanism's default `value_function`, a custom combine_outcome_and_cost_function must accomoudate three
         arguments (passed by name): a :keyword:`controller` argument that is the EVCMechanism itself; an
@@ -1416,7 +1416,7 @@ class EVCMechanism(ControlMechanism_Base):
             description.
 
         time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+            specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.
 
         """
 
