@@ -303,7 +303,7 @@ with substantial assistance from:
       Mechanism
 
    .. toctree::
-      :maxdepth: 2
+      :maxdepth: 3
 
       State
       Projection

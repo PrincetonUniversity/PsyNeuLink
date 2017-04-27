@@ -85,36 +85,10 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">DDM</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-ddm-mechanism">Creating a DDM Mechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#creating-a-processingmechanism">Creating a ProcessingMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#execution">Execution</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
@@ -255,7 +229,7 @@ possible parameters. See individual functions for more details.</p>
               <span class="p">)</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="Function.html#integrator"><span class="std std-ref">Integrator</span></a></p>
+<p><a class="reference internal" href="IntegratorMechanism.html#integrator"><span class="std std-ref">Integrator</span></a></p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_DDM_TimeStep</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Integrator</span><span class="p">(</span> <span class="n">integration_type</span> <span class="o">=</span> <span class="n">DIFFUSION</span><span class="p">,</span>
                                   <span class="n">noise</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
                                   <span class="n">time_step_size</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
@@ -315,7 +289,7 @@ of greater than 1 is handled).</div></blockquote>
 <li><strong>function</strong> (<em>IntegratorFunction : default BogaczEtAl</em>) &#8211; specifies the analytic solution to use for the decision process if <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is set to
 <code class="xref any docutils literal"><span class="pre">TimeScale.TRIAL</span></code>; can be <a class="reference internal" href="Function.html#Function.BogaczEtAl" title="Function.BogaczEtAl"><code class="xref any py py-class docutils literal"><span class="pre">BogaczEtAl</span></code></a> or <a class="reference internal" href="Function.html#Function.NavarroAndFuss" title="Function.NavarroAndFuss"><code class="xref any py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code></a> (note:  the latter requires that the MatLab engine
 is installed). If <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is set to <code class="xref any docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>, <a class="reference internal" href="#DDM.DDM.function" title="DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> must
-be <a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a> with an integration_type of DIFFUSION, and the mechanism
+be <a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.Integrator" title="IntegratorMechanism.IntegratorMechanism.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a> with an integration_type of DIFFUSION, and the mechanism
 will return the result of one time step.</li>
 <li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) &#8211; specifies whether the mechanism is executed on the time_step or trial time scale.
 This must be set to <code class="xref any docutils literal"><span class="pre">TimeScale.TRIAL</span></code> to use one of the analytic solutions specified by
@@ -345,7 +319,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <code class="descname">function</code><a class="headerlink" href="#DDM.DDM.function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>IntegratorFunction : default BogaczEtAl</em> &#8211; the function used to compute the outcome of the decision process when <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is
 <code class="xref any docutils literal"><span class="pre">TimeScale.TRIAL</span></code>.  If <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is set to <code class="xref any docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>, <a class="reference internal" href="#DDM.DDM.function" title="DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-must be <a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a> with an &#8216;integration_type &lt;Integrator.integration_type&gt;&#8217; of DIFFUSION, and the mechanism
+must be <a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.Integrator" title="IntegratorMechanism.IntegratorMechanism.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a> with an &#8216;integration_type &lt;Integrator.integration_type&gt;&#8217; of DIFFUSION, and the mechanism
 will return the result of one time step.</p>
 </dd></dl>
 
