@@ -31,7 +31,7 @@ class Scheduler(object):
             self.nodes = [vert.mechanism for vert in composition.graph.vertices]
             self._init_consideration_queue_from_composition(composition)
         elif system is not None:
-            self.nodes = [m[0] for m in system.executionList]
+            self.nodes = [m[0] for m in system.executionListProcessing]
             self._init_consideration_queue_from_system(system)
         elif nodes is not None:
             self.nodes = nodes
@@ -57,7 +57,7 @@ class Scheduler(object):
 
     def _init_consideration_queue_from_system(self, system):
         dependencies = []
-        for dependency_set in list(toposort(system.executionGraph)):
+        for dependency_set in list(toposort(system.executionGraphProcessing)):
             new_set = set()
             for d in dependency_set:
                 new_set.add(d.mechanism)
