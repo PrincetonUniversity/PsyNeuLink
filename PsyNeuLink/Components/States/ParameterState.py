@@ -333,7 +333,7 @@ determine its final value, including runtime specifications:
 
     **How a ParameterState Determines the Value of a Parameter**
 
-    .. figure:: _static/ParameterState_fig.jpg
+    .. figure:: _static/ParameterState_fig.pdf
        :alt: ParameterState
        :scale: 75 %
 
