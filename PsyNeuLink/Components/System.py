@@ -1165,7 +1165,7 @@ class System_Base(System):
 
             # If sender is an ObjectiveMechanism being used for learning or control, or a LearningMechanism,
             # Assign as MONITORING and move on
-            if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role) or
+            if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role) or
                     isinstance(sender_mech, LearningMechanism)):
                 sender_mech.systems[self] = MONITORING
                 return
@@ -1198,7 +1198,7 @@ class System_Base(System):
                 # It is not a ControlMechanism
                 not (isinstance(sender_mech, ControlMechanism_Base) or
                     # It is not an ObjectiveMechanism used for Learning or Control
-                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role in (LEARNING,CONTROL))) and
+                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role in (LEARNING,CONTROL))) and
                         # All of its projections
                         all(
                             all(
@@ -1206,7 +1206,7 @@ class System_Base(System):
                                 isinstance(projection.receiver.owner, (ControlMechanism_Base, LearningMechanism)) or
                                  # ObjectiveMechanism(s) used for Learning or Control
                                  (isinstance(projection.receiver.owner, ObjectiveMechanism) and
-                                             projection.receiver.owner.role in (LEARNING, CONTROL)) or
+                                             projection.receiver.owner._role in (LEARNING, CONTROL)) or
                                 # itself!
                                  projection.receiver.owner is sender_mech
                             for projection in output_state.sendsToProjections)
@@ -1520,7 +1520,7 @@ class System_Base(System):
 
             # All other sender_mechs must be either a MonitoringMechanism or an ObjectiveMechanism with role=LEARNING
             elif not (isinstance(sender_mech, LearningMechanism) or
-                          (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role is LEARNING)):
+                          (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role is LEARNING)):
                 raise SystemError("PROGRAM ERROR: {} is not a legal object for learning graph;"
                                   "must be a LearningMechanism or an ObjectiveMechanism".
                                   format(sender_mech))
@@ -2602,10 +2602,10 @@ class System_Base(System):
         By default, only the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>` 
         in the `system's graph <System.graph>` are displayed.  However, the **show_learning** and 
         **show_control** arguments can be used to also show the `learning <LearningMechanism>` and
-        `control <ControlMechanism>` components of the system.  `Mechanisms <Mechanism>` are always displayed as (oval) 
-        nodes.  `Projections <Projection>` are displayed as labelled arrows, unless **show_learning** is 
-        assigned **True**, in which case MappingProjections that receive a `LearningProjection` are 
-        displayed as diamond-shaped nodes. The numbers in parentheses within a mechanism node indicate its 
+        `control <ControlMechanism>` components of the system, respectively.  `Mechanisms <Mechanism>` are always 
+        displayed as (oval) nodes.  `Projections <Projection>` are displayed as labelled arrows, unless 
+        **show_learning** is assigned **True**, in which case MappingProjections that receive a `LearningProjection` 
+        are displayed as diamond-shaped nodes. The numbers in parentheses within a mechanism node indicate its 
         dimensionality.   
 
         Arguments
@@ -2627,7 +2627,12 @@ class System_Base(System):
             determines the color in which the learning components are displayed
 
         control_color : keyword : default `blue`
-            determines the color in which the learning components are displayed.
+            determines the color in which the learning components are displayed (note: if the system's 
+            `controller <System.controller>`) is an `EVCMechanism`, then a link is shown in red from the
+            `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` it creates to the corresponding 
+            `ORIGIN` mechanisms of the system, to indicate that although no projection are created for these, 
+            the prediction mechanisms determine the input to the `ORIGIN` mechanisms when the EVCMechanism 
+            `simulates execution <EVCMechanism_Execution>` of the system.
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
@@ -2747,6 +2752,15 @@ class System_Base(System):
                 for proj in istate.receivesFromProjections:
                     sndr_name = proj.sender.owner.name
                     G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
+
+            # prediction mechanisms
+            for mech_tuple in self.executionList:
+                mech = mech_tuple[0]
+                if mech._role is CONTROL:
+                    G.node(mech.name, color=control_color)
+                    recvr = mech.origin_mech
+                    G.edge(mech.name, recvr.name, label=' prediction assignment', color='red')
+                    pass
 
         # return
         if   output_fmt == 'pdf':

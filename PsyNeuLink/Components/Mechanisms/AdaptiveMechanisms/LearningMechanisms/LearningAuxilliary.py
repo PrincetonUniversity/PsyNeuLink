@@ -334,10 +334,10 @@ def _instantiate_learning_components(learning_projection, context=None):
             # lc.activation_mech already projects to an ObjectiveMechanism used for learning
             #    (presumably instantiated for another process);
             #    note:  doesn't matter if it is not being used for learning (then its just another ProcessingMechanism)
-            elif isinstance(receiver_mech, ObjectiveMechanism) and LEARNING in receiver_mech.role:
+            elif isinstance(receiver_mech, ObjectiveMechanism) and LEARNING in receiver_mech._role:
 
                 # ObjectiveMechanism is for learning but projection is not to its SAMPLE inputState
-                if LEARNING in receiver_mech.role and not receiver_state.name is SAMPLE:
+                if LEARNING in receiver_mech._role and not receiver_state.name is SAMPLE:
                     raise LearningAuxilliaryError("PROGRAM ERROR: {} projects to the {} rather than the {} "
                                                   "inputState of an ObjectiveMechanism for learning {}".
                                                   format(lc.activation_mech.name,
@@ -498,11 +498,11 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                                        TARGET],
                                                      names=['SAMPLE','TARGET'],
                                                      function=LinearCombination(weights=[[-1], [1]]),
-                                                     role=LEARNING,
                                                      params=object_mech_params,
                                                      name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM)
 
-            objective_mechanism.learning_role = TARGET
+            objective_mechanism._role = LEARNING
+            objective_mechanism._learning_role = TARGET
 
         try:
             lc.error_projection = objective_mechanism.inputState.receivesFromProjections[0]
@@ -1011,7 +1011,7 @@ class LearningComponents(object):
     def error_signal_mech(self, assignment):
         if (assignment is None or
                 isinstance(assignment, LearningMechanism) or
-                (isinstance(assignment, ObjectiveMechanism) and assignment.role is LEARNING)):
+                (isinstance(assignment, ObjectiveMechanism) and assignment._role is LEARNING)):
             self._error_signal_mech = assignment
         else:
             raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_signal_mech; "

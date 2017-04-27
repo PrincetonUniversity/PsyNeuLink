@@ -175,6 +175,11 @@
 <li class="toctree-l1"><a class="reference internal" href="EVCMechanism.html">EVCMechanism</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">ControlSignal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlProjection.html">ControlProjection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#creating-an-evcmechanism">Creating an EVCMechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
 </ul>
@@ -183,7 +188,7 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ControlMechanism is an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> that modifies the parameter(s) of one or more <code class="xref any docutils literal"><span class="pre">ProcessingMechanisms</span></code>.
 It&#8217;s function takes a value (usually the output of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>) and uses that to calculate an
-<a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>:  a list of <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.allocation" title="ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> values for each of its ControlSignals that specify the value to assign
+<a class="reference internal" href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>:  a list of <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.allocation" title="ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> values for each of its ControlSignals that specify the value to assign
 to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is conveyed by
 a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of the corresopnding ProcessingMechanism.  A
 ControlMechanism can regulate only the parameters of mechanism in the system for which it is the
@@ -197,7 +202,7 @@ been executed.</p>
 <p>ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
 A ControlMechanism is also created automatically whenever a <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">system is created</span></a>, and assigned as
 the <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a> for that system. The <a class="reference internal" href="OutputState.html"><span class="doc">outputStates</span></a> to be monitored by a
-ControlMechanism are specified in its <code class="xref any docutils literal"><span class="pre">monitored_output_states</span></code> argument, which can take  a number of
+ControlMechanism are specified in its <a class="reference internal" href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.monitored_output_states" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> argument, which can take  a number of
 <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-outputstates"><span class="std std-ref">forms</span></a>.  When the ControlMechanism is created, it automatically creates
 an ObjectiveMechanism that is used to monitor and evaluate the mechanisms and/or outputStates specified in its
 <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> attribute.  The result of the evaluation is used to
@@ -215,14 +220,14 @@ to which the parameter belongs (see <a class="reference internal" href="Mechanis
 <p>When an ControlMechanism is constructed automatically, it creates an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> (specified in its
 <code class="xref any docutils literal"><span class="pre">montioring_mechanism</span></code> attribute) that is used to monitor and evaluate the system&#8217;s performance.  The
 ObjectiveMechanism monitors each mechanism and/or outputState listed in the ControlMechanism&#8217;s
-&#8216;monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="Function.html#Function.SoftMax.function" title="Function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
+&#8216;monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="Function.html#Function.Exponential.function" title="Function.Exponential.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
 This information is used to set the value of the ControlMechanism&#8217;s ControlProjections.</p>
 </div>
 </div>
 <div class="section" id="execution">
 <span id="controlmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A ControlMechanism that is a system&#8217;s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is always the last mechanism to be executed (see <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System Control</span></a>).  Its <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the values of the
-outputStates in its <code class="xref any docutils literal"><span class="pre">monitored_output_states</span></code> attribute, and uses those to determine the value of its
+outputStates in its <a class="reference internal" href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.monitored_output_states" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and uses those to determine the value of its
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>. In the subsequent round of execution, each ControlProjection&#8217;s value is
 used by the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which it projects to update the parameter being controlled.</p>
 <div class="admonition note">
