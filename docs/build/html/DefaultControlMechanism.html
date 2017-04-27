@@ -169,8 +169,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="defaultcontrolmechanism">
-<h1>DefaultControlMechanism<a class="headerlink" href="#defaultcontrolmechanism" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism">
+<span id="defaultcontrolmechanism"></span><h1>DefaultControlMechanism<a class="headerlink" href="#module-AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism" title="Permalink to this headline">¶</a></h1>
+<p>The DefaultControlMechanism is created whenever PsyNeuLink is run.  It is assigned as the ControlMechanism for any
+<a class="reference internal" href="System.html"><span class="doc">System</span></a> that is created for which no ControlMechanism is specified.  The DefaultControlMechanism creates
+an inputState for each ControlProjection it is assigned, and uses <code class="xref py py-data docutils literal"><span class="pre">defaultControlAllocation</span></code> as the value for
+the control signal.  By default,  <code class="xref py py-data docutils literal"><span class="pre">defaultControlAllocation</span></code> = 1, so that ControlProjections from the
+DefaultControlMechanism have no effect on their parameters.  Thus, for the most part, the DefaultControlMechanism
+serves as a place marker for ControlProjections (having on effect on the parameters it &#8220;controls&#8221;), until the system
+is assigned a more useful ControlMechanism (such as the <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a>).  However, it can be used to uniformly
+control the parameters that receive ControlProjections from it, by manually changing the value of
+<code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code>.  See <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> for additional details of how ControlMechanisms are
+created, executed and their attributes.</p>
 </div>
 
 
