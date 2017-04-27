@@ -2751,12 +2751,10 @@ class System_Base(System):
             # prediction mechanisms
             for mech_tuple in self.executionList:
                 mech = mech_tuple[0]
-                if 'PredictionMechanism' in mech.name:
+                if mech._role is CONTROL:
                     G.node(mech.name, color=control_color)
-                    # proj = mech.outputState.sendsToProjections[0]
-                    # proj_name = proj.name
-                    # recvr = proj.receiver.owner
-                    # G.edge(recvr.name, mech.name, label=proj_name, color=control_color)
+                    recvr = mech.origin_mech
+                    G.edge(mech.name, recvr.name, label='prediction assignment', color='red')
                     pass
 
         # return

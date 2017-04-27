@@ -71,7 +71,7 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()
-# mySystem.show_graph(show_control=True)
+mySystem.show_graph(show_control=True)
 
 # Specify stimuli for run:
 # #   two ways to do so:
