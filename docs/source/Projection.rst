@@ -1,5 +1,5 @@
-Projections
-===========
+Projection
+==========
 
 .. toctree::
    :maxdepth: 1
