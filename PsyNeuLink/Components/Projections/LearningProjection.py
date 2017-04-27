@@ -15,7 +15,7 @@ Overview
 --------
 
 A LearningProjection is a subclass of `Projection` that projects from a `LearningMechanism` to the
-:keyword:`MATRIX` `parameterState <ParameterState>` of a `MappingProjection`, and modifies the value of the
+MATRIX `parameterState <ParameterState>` of a `MappingProjection`, and modifies the value of the
 `matrix <MappingProjection.matrix>` parameter of that MappingProjection.
 
 .. _LearningProjection_Creation:
@@ -43,7 +43,7 @@ needed to implement learning for the MappingProjection (see `LearningMechanism_L
 When a LearningProjection is created, its full initialization is :ref:`deferred <Component_Deferred_Init>` until its
 `sender <LearningProjection.sender>` and `receiver <LearningProjection.receiver>` have been fully specified.  This
 allows a LearningProjection to be created before its `sender` and/or `receiver` have been created (e.g., before them
-in a script), by calling its constructor without specifying its :keyword:`sender` or :keyword:`receiver` arguments.
+in a script), by calling its constructor without specifying its **sender** or **receiver** arguments.
 However, for the LearningProjection to be operational, initialization must be completed by calling its `deferred_init`
 method.  This is not necessary if learning has been specified for a `system <System_Execution_Learning>`,
 `process <Process_Learning>`, or as the `projection <MappingProjection_Tuple_Specification>` in the `pathway` of a

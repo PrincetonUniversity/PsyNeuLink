@@ -3411,14 +3411,15 @@ class BogaczEtAl(
             E = exp(-2ZA/\ c\ :sup:`2`\ ), and  
 
             D = delay\ :sub:`ITI` + delay\ :sub:`penalty` - Z/A
+            
+            delay\ :sub:`ITI` is the intertrial interval and delay\ :sub:`penalty` is a penalty delay.
 
           
         Returns
         -------
 
         derivatives :  List[float, float)
-            of 1/(reward rate) with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate 
-            <BogaczEtAl.drift_rate>`. 
+            of 1/RR with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate <BogaczEtAl.drift_rate>`. 
 
         """
         Z = output or self.threshold
