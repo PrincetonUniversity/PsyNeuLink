@@ -68,7 +68,7 @@ def test_multilayer():
         matrix=Output_Weights_matrix,
     )
 
-    z = process(
+    p = process(
         default_input_value=[0, 0],
         pathway=[
             Input_Layer,
@@ -104,8 +104,8 @@ def test_multilayer():
         print("\n\n**** TRIAL: ", CentralClock.trial)
 
     def show_target():
-        i = x.input
-        t = x.targetInputStates[0].value
+        i = s.input
+        t = s.targetInputStates[0].value
         print ('\nOLD WEIGHTS: \n')
         print ('- Input Weights: \n', Input_Weights.matrix)
         print ('- Middle Weights: \n', Middle_Weights.matrix)
@@ -116,20 +116,20 @@ def test_multilayer():
         print ('- Middle 2: \n', Hidden_Layer_2.value)
         print ('- Output:\n', Output_Layer.value)
 
-    x = system(processes=[z],
+    s = system(processes=[p],
                targets=[0, 0, 1],
                learning_rate=1.0)
 
-    x.reportOutputPref = True
+    s.reportOutputPref = True
 
-    results = x.run(
+    results = s.run(
         num_executions=10,
         inputs=stim_list,
         targets=target_list,
         termination_processing={TimeScale.TRIAL: AfterNCalls(Output_Layer, 1)}
     )
 
-    objective_output_layer = x.mechanisms[4]
+    objective_output_layer = s.mechanisms[4]
 
     expected_output = [
         (Output_Layer.outputState.value, np.array([ 0.22686074,  0.25270212,  0.91542149])),
