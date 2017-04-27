@@ -31,7 +31,7 @@ class Scheduler(object):
             self.nodes = [vert.mechanism for vert in composition.graph.vertices]
             self._init_consideration_queue_from_composition(composition)
         elif system is not None:
-            self.nodes = system.mechanisms
+            self.nodes = [m[0] for m in system.executionList]
             self._init_consideration_queue_from_system(system)
         elif nodes is not None:
             self.nodes = nodes
