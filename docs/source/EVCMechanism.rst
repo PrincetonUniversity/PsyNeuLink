@@ -7,6 +7,6 @@ EVCMechanism
    ControlSignal
    ControlProjection
 
-.. automodule:: EVC.EVCMechanism
+.. automodule:: AdaptiveMechanisms.ControlMechanisms.EVCMechanism
    :members:
    :exclude-members: random, LinearCombination
