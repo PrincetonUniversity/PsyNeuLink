@@ -85,35 +85,10 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">TransferMechanism</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-transfermechanism">Creating a TransferMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="DDM.html">DDM</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#creating-a-processingmechanism">Creating a ProcessingMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#execution">Execution</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
@@ -217,9 +192,9 @@ parameters (in addition to those specified for the function):</p>
 <li><a class="reference internal" href="#TransferMechanism.TransferMechanism.noise" title="TransferMechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>: applied element-wise to the input before transforming it.</li>
 </ul>
 <ul class="simple">
-<li><a class="reference internal" href="#TransferMechanism.TransferMechanism.time_constant" title="TransferMechanism.TransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a>: if <a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.time_scale" title="IntegratorMechanism.IntegratorMechanism.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>,
+<li><a class="reference internal" href="#TransferMechanism.TransferMechanism.time_constant" title="TransferMechanism.TransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a>: if <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.time_scale" title="Mechanism.Mechanism_Base.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>,
 the input is exponentially time-averaged before transforming it (higher value specifies faster rate);
-if <a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.time_scale" title="IntegratorMechanism.IntegratorMechanism.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, <a class="reference internal" href="#TransferMechanism.TransferMechanism.time_constant" title="TransferMechanism.TransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> is ignored.</li>
+if <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.time_scale" title="Mechanism.Mechanism_Base.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, <a class="reference internal" href="#TransferMechanism.TransferMechanism.time_constant" title="TransferMechanism.TransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> is ignored.</li>
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="#TransferMechanism.TransferMechanism.range" title="TransferMechanism.TransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a>: caps all elements of the <a class="reference internal" href="#TransferMechanism.TransferMechanism.function" title="TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> result by

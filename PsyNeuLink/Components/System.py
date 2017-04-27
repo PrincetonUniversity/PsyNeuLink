@@ -34,28 +34,26 @@ Overview
 A system is a collection of `processes <Process>` that are executed together.  Executing a system executes all of the
 `mechanisms <Mechanism>` in its processes in a structured order.  `Projections <Projection>` between mechanisms in
 different processes within the system are permitted, as are recurrent projections, but projections from mechanisms
-in other systems are ignored (PsyNeuLink does not support ESP).  A system can include three types of mechanisms:
+in other systems are ignored (PsyNeuLink does not support ESP).  A system can include two types of mechanisms:
 
 * `ProcessingMechanism`
-    These receive input from one or more projections, transform the input in some way,
+    These receive input from one or more projections, transform their input in some way,
     and assign the result as their output.
 
-* `ControlMechanism`
-    These monitor the output of other mechanisms for use in controlling the parameters of other mechanisms or their
-    functions.
-
-* `MonitoringMechanism`
-    These monitor the output of other mechanisms for use in modifying the parameters of projections (learning)
+* `AdpativeMechanism`
+    These are used to adjust the operation of other components.  There are two types:  
+    `LearningMechanisms <LearningMechanism>` that adjust projections, and `ControlMechanisms <ControlMechanism>`
+    that adjust the parameters of other mechanisms and/or their functions.
 
 .. _System_Creation:
 
 Creating a System
 -----------------
 
-Systems are created by calling the :py:func:`system` function.  If no arguments are provided, a system with a
+Systems are created by calling :py:func:`system`.  If no arguments are provided, a system with a
 single process containing a single :ref:`default mechanism <LINK>` will be returned. Whenever a system is created,
 a `ControlMechanism <ControlMechanism>` is created for it and assigned as its `controller`.  The controller can be
-specified by assigning an existing ControlMechanism to the  :keyword:`controller`  argument of the system's constructor,
+specified by assigning an existing ControlMechanism to the **controller** argument of the system's constructor,
 or specifying a class of ControlMechanism;  if none is specified, a `DefaultControlMechanism` is created.
 
 .. _System_Structure:
@@ -68,7 +66,7 @@ Structure
 Graph
 ~~~~~
 
-When an instance of a system is created, a graph is constructed that describes the connections (edges) among its
+When an instance of a system is created, a graph is constructed that describes the projections (edges) among its
 mechanisms (nodes).  The graph is assigned to the system's `graph` attribute.  This is a dictionary of dependencies,
 that can be passed to graph theoretical tools for analysis.  A system can have recurrent processing pathways, such as
 feedback loops, in which case the system will have a cyclic graph.  PsyNeuLink also uses the graph of a
@@ -649,7 +647,7 @@ class System_Base(System):
 
     monitoringMechanisms : MechanismList)
         contains all `MONITORING` mechanisms in the system (used for learning).
-        COMMENET:
+        COMMENT:
             based on _monitoring_mech_tuples)
         COMMENT
 
@@ -663,10 +661,6 @@ class System_Base(System):
         one item for each `TARGET` mechanism in the system (listed in `targetMechanisms`).  Used to represent the
         :keyword:`targets` specified in the system's `execute <System.execute>` and `run <System.run>` methods, and
         provide their values to the the TARGET inputState of each `TARGET` mechanism during execution.
-
-    COMMENT:
-       IS THIS CORRECT:
-    COMMENT
 
     controlMechanisms : MechanismList
         contains `controller` of the system
@@ -2212,12 +2206,6 @@ class System_Base(System):
         Returns
         -------
 
-        COMMMENT:
-            OLD;  CORRECT?
-            <system>.results : List[outputState.value]
-                list of the value of the outputState for each `TERMINAL` mechanism of the system returned for
-                each execution.
-        COMMMENT
         <system>.results : List[Mechanism.OutputValue]
             list of the OutputValue for each `TERMINAL` mechanism of the system returned for each execution.
 
@@ -2408,36 +2396,36 @@ class System_Base(System):
 
         Diciontary contains entries for the following attributes and values:
 
-            :keyword:`PROCESSES`: list of processes in system
+            PROCESSES: list of processes in system
 
-            :keyword:`MECHANISMS`: list of all mechanisms in the system
+            MECHANISMS: list of all mechanisms in the system
 
-            :keyword:`ORIGIN_MECHANISMS`: list of ORIGIN mechanisms
+            ORIGIN_MECHANISMS: list of ORIGIN mechanisms
 
-            :keyword:`INPUT_ARRAY`: ndarray of the inputs to the ORIGIN mechanisms
+            INPUT_ARRAY: ndarray of the inputs to the ORIGIN mechanisms
 
-            :keyword:`RECURRENT_MECHANISMS`:  list of INITALIZE_CYCLE mechanisms
+            RECURRENT_MECHANISMS:  list of INITALIZE_CYCLE mechanisms
 
-            :keyword:`RECURRENT_INIT_ARRAY`: ndarray of initial_values
+            RECURRENT_INIT_ARRAY: ndarray of initial_values
 
-            :keyword:`TERMINAL_MECHANISMS`:list of TERMINAL mechanisms
+            TERMINAL_MECHANISMS:list of TERMINAL mechanisms
 
-            :keyword:`OUTPUT_STATE_NAMES`: list of outputState names corrresponding to 1D arrays in output_value_array
+            OUTPUT_STATE_NAMES: list of outputState names corrresponding to 1D arrays in output_value_array
 
-            :keyword:`OUTPUT_VALUE_ARRAY`:3D ndarray of 2D arrays of output.value arrays of outputStates for all
+            OUTPUT_VALUE_ARRAY:3D ndarray of 2D arrays of output.value arrays of outputStates for all
             `TERMINAL` mechs
 
-            :keyword:`NUM_PHASES_PER_TRIAL`:number of phases required to execute all mechanisms in the system
+            NUM_PHASES_PER_TRIAL:number of phases required to execute all mechanisms in the system
 
-            :keyword:`MONITORING_MECHANISMS`:list of MONITORING mechanisms
+            MONITORING_MECHANISMS:list of MONITORING mechanisms
 
-            `TARGET`:list of TARGET mechanisms
+            TARGET:list of TARGET mechanisms
 
-            :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of MappingProjections that receive learning projections
+            LEARNING_PROJECTION_RECEIVERS:list of MappingProjections that receive learning projections
 
-            :keyword:`CONTROL_MECHANISMS`:list of CONTROL mechanisms
+            CONTROL_MECHANISMS:list of CONTROL mechanisms
 
-            :keyword:`CONTROL_PROJECTION_RECEIVERS`:list of parameterStates that receive learning projections
+            CONTROL_PROJECTION_RECEIVERS:list of parameterStates that receive learning projections
 
         Returns
         -------
@@ -2608,11 +2596,11 @@ class System_Base(System):
         """Generate a display of the graph structure of mechanisms and projections in the system.
         
         By default, only the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>` 
-        in the `system's graph <System.graph>` are displayed.  However, the :keyword:`show_learning` and 
-        :keyword:`show_control` arguments can be used to also show the `learning <LearningMechanism>` and
+        in the `system's graph <System.graph>` are displayed.  However, the **show_learning** and 
+        **show_control** arguments can be used to also show the `learning <LearningMechanism>` and
         `control <ControlMechanism>` components of the system.  `Mechanisms <Mechanism>` are always displayed as (oval) 
-        nodes.  `Projections <Projection>` are displayed as labelled arrows, unless :keyword:`show_learning` is 
-        assigned :keyword:`True`, in which case MappingProjections that receive a `LearningProjection` are 
+        nodes.  `Projections <Projection>` are displayed as labelled arrows, unless **show_learning** is 
+        assigned **True**, in which case MappingProjections that receive a `LearningProjection` are 
         displayed as diamond-shaped nodes. The numbers in parentheses within a mechanism node indicate its 
         dimensionality.   
 
