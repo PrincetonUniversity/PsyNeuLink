@@ -2602,10 +2602,10 @@ class System_Base(System):
         By default, only the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>` 
         in the `system's graph <System.graph>` are displayed.  However, the **show_learning** and 
         **show_control** arguments can be used to also show the `learning <LearningMechanism>` and
-        `control <ControlMechanism>` components of the system.  `Mechanisms <Mechanism>` are always displayed as (oval) 
-        nodes.  `Projections <Projection>` are displayed as labelled arrows, unless **show_learning** is 
-        assigned **True**, in which case MappingProjections that receive a `LearningProjection` are 
-        displayed as diamond-shaped nodes. The numbers in parentheses within a mechanism node indicate its 
+        `control <ControlMechanism>` components of the system, respectively.  `Mechanisms <Mechanism>` are always 
+        displayed as (oval) nodes.  `Projections <Projection>` are displayed as labelled arrows, unless 
+        **show_learning** is assigned **True**, in which case MappingProjections that receive a `LearningProjection` 
+        are displayed as diamond-shaped nodes. The numbers in parentheses within a mechanism node indicate its 
         dimensionality.   
 
         Arguments
@@ -2627,7 +2627,12 @@ class System_Base(System):
             determines the color in which the learning components are displayed
 
         control_color : keyword : default `blue`
-            determines the color in which the learning components are displayed.
+            determines the color in which the learning components are displayed (note: if the system's 
+            `controller <System.controller>`) is an `EVCMechanism`, then a link is shown in red from the
+            `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` it creates to the corresponding 
+            `ORIGIN` mechanisms of the system, to indicate that although no projection are created for these, 
+            the prediction mechanisms determine the input to the `ORIGIN` mechanisms when the EVCMechanism 
+            `simulates execution <EVCMechanism_Execution>` of the system.
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
@@ -2754,7 +2759,7 @@ class System_Base(System):
                 if mech._role is CONTROL:
                     G.node(mech.name, color=control_color)
                     recvr = mech.origin_mech
-                    G.edge(mech.name, recvr.name, label='prediction assignment', color='red')
+                    G.edge(mech.name, recvr.name, label=' prediction assignment', color='red')
                     pass
 
         # return

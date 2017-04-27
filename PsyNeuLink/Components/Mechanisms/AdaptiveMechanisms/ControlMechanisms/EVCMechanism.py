@@ -752,6 +752,7 @@ class EVCMechanism(ControlMechanism_Base):
                                            name=name,
                                            prefs=prefs,
                                            context=self)
+        TEST = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -821,7 +822,7 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
-                                                            name=origin_mech.name + "_" + PREDICTION_MECHANISM,
+                                                            name=origin_mech.name + " " + PREDICTION_MECHANISM,
                                                             default_input_value = origin_mech.inputState.variable,
                                                             # default_input_value=variables,
                                                             # INPUT_STATES=state_names,
