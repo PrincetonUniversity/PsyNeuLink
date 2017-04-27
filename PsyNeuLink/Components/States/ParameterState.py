@@ -353,30 +353,17 @@ determine its final value, including runtime specifications:
        | E (red)      | combined projection values modulate ``baseValue``                  |
        +--------------+--------------------------------------------------------------------+
 
-       In the first line, the values for ``param_x`` and ``param_z`` labeled "A" (and shown in brown)
-       specify the :py:data:`baseValue <ParameterState.baseValue>` of the paramterStates for each parameter;
-       these are the values that will be used for those parameters absent any other influences.  The values labelled
+       Runtime parameter specification:
+           1st example:  param_x is given a runtime value (violet) but no runtime ModulationOperation;
+                         param_y is given a runtime value (violet) and also a runtime ModulationOperation (red);
+                         the parameterState's parameterModulationOperation is set to MULTIPLY (green).
+           ..
+           2nd example:  param_x is given a runtime value (violet) and also a runtime ModulationOperation (red);
+                         param_y is given a runtime value (violet) but no runtime ModulationOperation;
+                         the parameterState's parameterModulationOperation is set to SUM (green)
        COMMENT:
-         Constructor parameter specification:
-             1st example: the values for ``param_x`` and ``param_z`` labeled "A" (and shown in brown)
-                          specify the ``baseValue`` of the paramterStates for each parameter;  these are the values
-                          that will be used for those parameters absent any other influences.
-                          param_x is given a controlSignal;  any values specified by the control siginal are combined
-                          using the parameterState's ``function`` (E) and then combined with its baseValue (A) using the
-                          parameterState's ``parameterModulationOpeartion`` (D);  finally, those will be combined
-                          with any runtime specification (see 2nd and 3rd examples)
-                          using the runtime parameterModulationOperation (C)
-         Runtime parameter specification:
-             2nd example:  param_x is given a runtime value (violet) but no runtime ModulationOperation;
-                           param_y is given a runtime value (violet) and also a runtime ModulationOperation (red);
-                           the parameterState's parameterModulationOperation is set to MULTIPLY (green).
-             3rd example:  param_x is given a runtime value (violet) and also a runtime ModulationOperation (red);
-                           param_y is given a runtime value (violet) but no runtime ModulationOperation;
-                           the parameterState's parameterModulationOperation is set to SUM (green)
-         NOTE: CAPS FOR PARAM SPECIFICATION IN DICTS -> KEYWORDS
-
-
-          AUGMENT FIGURE TO SHOW PARAM SPECIFICATIONS FOR BOTH THE OBJECT AND ITS FUNCTION
+           NOTES: CAPS FOR PARAM SPECIFICATION IN DICTS -> KEYWORDS
+                  AUGMENT FIGURE TO SHOW PARAM SPECIFICATIONS FOR BOTH THE OBJECT AND ITS FUNCTION
        COMMENT
 
 .. _ParameterState_Class_Reference:

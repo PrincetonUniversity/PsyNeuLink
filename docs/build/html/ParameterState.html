@@ -211,7 +211,7 @@ Each parameterState is created using the specification of the parameter for whic
 belongs (see <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for additional details).</li>
 </ul>
 <ul class="simple">
-<li>In a <strong>parameter dictionary</strong> used to specify the <a class="reference internal" href="Function.html#Function.WaldDist.params" title="Function.WaldDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument in the constructor for the component to which
+<li>In a <strong>parameter dictionary</strong> used to specify the <a class="reference internal" href="Function.html#Function.NormalDist.params" title="Function.NormalDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument in the constructor for the component to which
 the parameter belongs. The entry for each parameter must use the keyword for the parameter as its key,
 and the parameter&#8217;s specification as its value (see <a class="reference internal" href="#parameterstate-specification-examples"><span class="std std-ref">examples</span></a> below).
 Parameters for a component&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> must be specified in an entry with the key
@@ -485,9 +485,20 @@ determine its final value, including runtime specifications:</p>
 </tr>
 </tbody>
 </table>
-<p>In the first line, the values for <code class="docutils literal"><span class="pre">param_x</span></code> and <code class="docutils literal"><span class="pre">param_z</span></code> labeled &#8220;A&#8221; (and shown in brown)
-specify the <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a> of the paramterStates for each parameter;
-these are the values that will be used for those parameters absent any other influences.  The values labelled</p>
+<dl class="docutils">
+<dt>Runtime parameter specification:</dt>
+<dd><dl class="first docutils">
+<dt>1st example:  param_x is given a runtime value (violet) but no runtime ModulationOperation;</dt>
+<dd>param_y is given a runtime value (violet) and also a runtime ModulationOperation (red);
+the parameterState&#8217;s parameterModulationOperation is set to MULTIPLY (green).</dd>
+</dl>
+<dl class="last docutils">
+<dt>2nd example:  param_x is given a runtime value (violet) and also a runtime ModulationOperation (red);</dt>
+<dd>param_y is given a runtime value (violet) but no runtime ModulationOperation;
+the parameterState&#8217;s parameterModulationOperation is set to SUM (green)</dd>
+</dl>
+</dd>
+</dl>
 </div>
 </div>
 </div></blockquote>
