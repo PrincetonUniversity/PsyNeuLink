@@ -253,17 +253,17 @@ Conventions
 
 The following conventions are used for the names of PsyNeuLink objects and their documentation:
 
-  + `Component`: names use CamelCase (with initial capitalization);
+  + `Component` (class): names use CamelCase (with initial capitalization);
     the initial mention in a section documentation is formatted as a link (in colored text)
     to the documentation for that component.
 
   + `attribute` or `method` of a PsyNeuLink component:  names use lower_case_and_underscore;
     formatted in a `small box` in the documentation.
 
-  + **argument** for a method or function:  names use lower_case_and_underscore;
+  + **argument** of a method or function:  names use lower_case_and_underscore;
     formatted **boldfaced** in the the docoumentation.
 
-  + KEYWORDS: names use UPPER_CASE_AND_UNDERSCORE;  formatted as simple text in the documentation.
+  + KEYWORD: use UPPER_CASE_AND_UNDERSCORE;  formatted as simple text in the documentation.
 
 
 .. _Contributors:
@@ -273,16 +273,19 @@ Contributors
 
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
-* **Bryn Keller**, Intel Labs, Intel Corporation
-* **Kristin Manning**, Princeton Neuroscience Institute, Princeton University
+* **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Kevin Mantel**, Princeton Neuroscience Institute, Princeton University
+* **Ted Willke**, Intel Labs, Intel Corporation
+* **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
+
+with the assistance from:
+
+* **Bryn Keller**, Intel Labs, Intel Corporation
+* **Mihai Kapota**, Intel Labs, Intel Corporation
 * **Sebastian Musslick**, Princeton Neuroscience Institute, Princeton University
 * **Amitai Shenhav**, Cognitive, Linguistic, & Psychological Sciences, Brown University
 * **Michael Shvartsman**, Princeton Neuroscience Institute, Princeton University
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
-* **Ted Willke**, Intel Labs, Intel Corporation
-* **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
-
 
 ..
    .. toctree::
