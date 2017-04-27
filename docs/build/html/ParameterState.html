@@ -194,28 +194,38 @@ parameterStates are created automatically when the mechanism or projection to wh
 <code class="xref any docutils literal"><span class="pre">owner</span></code> of a parameterState must be a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.  If the
 <code class="xref any docutils literal"><span class="pre">owner</span></code> is not explicitly specified, and can&#8217;t be determined by context, the parameterState
 will be assigned to the <span class="xref std std-ref">DefaultProcessingMechanism</span>.  One parameterState is created for each configurable
-parameter of its owner, as well as for each parameter that has been speciied for that object&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>.
+parameter of its owner, as well as for each parameter that has been specified for that component&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>.
 Each parameterState is created using the specification of the parameter for which it is responsible, as described below.</p>
 <div class="section" id="specifying-parameters">
 <span id="parameterstate-specifying-parameters"></span><h3>Specifying Parameters<a class="headerlink" href="#specifying-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Parameters can be specified in one of several places:</p>
 <blockquote>
 <div><ul class="simple">
-<li>In the <strong>argument for the parameter</strong> in the constructor for the <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> or
-<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to which the parameter belongs
-(see <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for additional details).</li>
+<li>In the <strong>argument for the parameter</strong> of the constructor for the <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the parameter
+belongs (see <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for additional details).</li>
 </ul>
 <ul class="simple">
-<li>In a <strong>parameter dictionary</strong> used to specify the <a class="reference internal" href="Function.html#Function.GammaDist.params" title="Function.GammaDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument in the constructor for the object to which
+<li>In a <strong>parameter dictionary</strong> used to specify the <a class="reference internal" href="Function.html#Function.ExponentialDist.params" title="Function.ExponentialDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument in the constructor for the component to which
 the parameter belongs. The entry for each parameter must use the keyword for the parameter as its key,
 and the parameter&#8217;s specification as its value (see <a class="reference internal" href="#parameterstate-specification-examples"><span class="std std-ref">examples</span></a> below).
-Parameters for an object&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> must be specified in an entry with the key
+Parameters for a component&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> must be specified in an entry with the key
 <code class="xref std std-keyword docutils literal"><span class="pre">FUNCTION_PARAMS</span></code>, the value of which is a parameter dictionary containing an entry for each of the
 function&#8217;s parameters to be specified.  When a value is assigned to a parameter in a parameter dictionary,
-it overrides any value assigned to the argument for the parameter in the object&#8217;s constructor.</li>
+it overrides any value assigned to the argument for the parameter in the component&#8217;s constructor.</li>
 </ul>
 <ul class="simple">
-<li>In the <code class="xref any docutils literal"><span class="pre">assign_params</span></code> method for the object.</li>
+<li>By direct reference to the corresponding attribute of the component to which the parameter belongs.  The
+attribute always has the same name as the parameter and can be referenced using standard python attribute
+notation (e.g., myComponent.paramter_name).</li>
+</ul>
+<ul class="simple">
+<li>In the <code class="xref any docutils literal"><span class="pre">assign_params</span></code> method for the component.</li>
+</ul>
+<ul class="simple">
+<li>When the component is executed, in the <strong>runtime_params</strong> argument of a call to component&#8217;s
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a>
+method (only for a mechanism), or in a tuple with the mechanism where it is specified as part of the
+<a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> for a process (see <span class="xref std std-ref">Runtime Specification</span> below).</li>
 </ul>
 </div></blockquote>
 <p>The value specified for the parameter (either explicitly or by default) is assigned as the parameterState&#8217;s
@@ -258,7 +268,7 @@ the parameterState as its <code class="xref any docutils literal"><span class="p
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>, and its value must be a valid one for the parameter.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Currently, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of an object, although it can be specified a parameter value,
+<p class="last">Currently, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a component, although it can be specified a parameter value,
 cannot be assigned
 a ControlProjection or a LearningProjection. This may change in the future.</p>
 </div>
