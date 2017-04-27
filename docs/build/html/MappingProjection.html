@@ -34,9 +34,9 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="up" title="Projections" href="Projection.html"/>
+        <link rel="up" title="Projection" href="Projection.html"/>
         <link rel="next" title="Run" href="Run.html"/>
-        <link rel="prev" title="Projections" href="Projection.html"/> 
+        <link rel="prev" title="Projection" href="Projection.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -88,9 +88,9 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projection</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">MappingProjection</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-mappingprojection">Creating a MappingProjection</a></li>
@@ -140,7 +140,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Projection.html">Projections</a> &raquo;</li>
+          <li><a href="Projection.html">Projection</a> &raquo;</li>
       
     <li>MappingProjection</li>
       <li class="wy-breadcrumbs-aside">
@@ -161,7 +161,7 @@
 <div class="section" id="overview">
 <span id="mapping-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A MappingProjection transmits the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a> of one
-<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a> (its sender) to the <a class="reference internal" href="InputState.html"><span class="doc">inputState</span></a> of another (its receiver).  The default function
+<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a> (its sender) to the <a class="reference internal" href="InputState.html"><span class="doc">inputState</span></a> of another (its receiver).  The default function
 for a MappingProjection is  <a class="reference internal" href="Function.html#Function.LinearMatrix" title="Function.LinearMatrix"><code class="xref any py py-class docutils literal"><span class="pre">LinearMatrix</span></code></a>, which uses the MappingProjection&#8217;s <a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
 attribute to transform the value received from its sender and provide the result to its receiver.</p>
 </div>
@@ -237,7 +237,7 @@ different formats, as described <a class="reference internal" href="#mapping-mat
 <a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> influence it.  For example, this is used for a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> to apply
 weight changes to the <a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> during learning. The
 <code class="xref std std-keyword docutils literal"><span class="pre">param_modulation_operation</span></code> attribute must be assigned a value of <a class="reference internal" href="Utilities.html#Utilities.ModulationOperation" title="Utilities.ModulationOperation"><code class="xref any py py-class docutils literal"><span class="pre">ModulationOperation</span></code></a> and the operation
-is always applied in an element-wise (Hadamard) manner. The default operation is <code class="xref std std-keyword docutils literal"><span class="pre">ADD</span></code>.</p>
+is always applied in an element-wise (Hadamard) manner. The default operation is ADD.</p>
 </li>
 </ul>
 </div>
@@ -366,7 +366,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
         <a href="Run.html" class="btn btn-neutral float-right" title="Run" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Projection.html" class="btn btn-neutral" title="Projections" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Projection.html" class="btn btn-neutral" title="Projection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

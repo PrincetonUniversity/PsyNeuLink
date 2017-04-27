@@ -264,7 +264,8 @@ to modify that item before assigning it as the outputState's :keyword:`value` (s
 Mechanism Parameters
 ~~~~~~~~~~~~~~~~~~~~
 
-Most mechanisms implement a standard set of parameters, that can be specified in a
+Most mechanisms implement a standard set of parameters, that can be specified by direct reference to the corresponding
+attribute of the mechanisms (e.g., myMechanism.attribute), in a 
 `parameter dictionary <ParameterState_Specifying_Parameters>` assigned to `params` argument in the mechanism's
 constructor, or with the mechanism's `assign_params` method, using the following keywords:
 
@@ -379,7 +380,7 @@ Process :ref:`Process_Mechanisms`). In either case, runtime parameters are speci
 contains one or more entries, each of which itself contains a dictionary corresponding to the mechanism's function or
 its states (inputStates, parameterStates and/or outputStates); those dictionaries, in turn, contain
 entries for the values of the runtime parameters for the function, a state, or its projection(s) (see the
-`runtime_params` argument of the `execute <Mechanism_Base.execute>` method below for more details).
+**runtime_params** argument of the `execute <Mechanism_Base.execute>` method below for more details).
 
 
 .. _Mechanism_Class_Reference:

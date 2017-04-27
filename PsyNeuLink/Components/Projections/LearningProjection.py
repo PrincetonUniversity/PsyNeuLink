@@ -15,8 +15,10 @@ Overview
 --------
 
 A LearningProjection is a subclass of `Projection` that projects from a `LearningMechanism` to the
-:keyword:`MATRIX` `parameterState <ParameterState>` of a `MappingProjection`, and modifies the value of the
-`matrix <MappingProjection.matrix>` parameter of that MappingProjection.
+MATRIX `parameterState <ParameterState>` of a `MappingProjection`, and modifies the value of the
+`matrix <MappingProjection.matrix>` parameter of that MappingProjection.  All of the LearningProjections in a system, 
+along with its other `learning components <LearningMechanism>`, can be displayed using the system's `show_graph` method 
+with its **show_learning** argument assigned :keyword:`True`.
 
 .. _LearningProjection_Creation:
 
@@ -43,7 +45,7 @@ needed to implement learning for the MappingProjection (see `LearningMechanism_L
 When a LearningProjection is created, its full initialization is :ref:`deferred <Component_Deferred_Init>` until its
 `sender <LearningProjection.sender>` and `receiver <LearningProjection.receiver>` have been fully specified.  This
 allows a LearningProjection to be created before its `sender` and/or `receiver` have been created (e.g., before them
-in a script), by calling its constructor without specifying its :keyword:`sender` or :keyword:`receiver` arguments.
+in a script), by calling its constructor without specifying its **sender** or **receiver** arguments.
 However, for the LearningProjection to be operational, initialization must be completed by calling its `deferred_init`
 method.  This is not necessary if learning has been specified for a `system <System_Execution_Learning>`,
 `process <Process_Learning>`, or as the `projection <MappingProjection_Tuple_Specification>` in the `pathway` of a
@@ -472,7 +474,7 @@ class LearningProjection(Projection_Base):
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
         candidate_objective_mech = learning_mechanism.inputStates[ERROR_SIGNAL].receivesFromProjections[0].sender.owner
-        if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech.role is LEARNING:
+        if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
             learned_projection.objective_mechanism = candidate_objective_mech
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = True

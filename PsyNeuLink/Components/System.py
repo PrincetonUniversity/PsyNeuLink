@@ -34,28 +34,26 @@ Overview
 A system is a collection of `processes <Process>` that are executed together.  Executing a system executes all of the
 `mechanisms <Mechanism>` in its processes in a structured order.  `Projections <Projection>` between mechanisms in
 different processes within the system are permitted, as are recurrent projections, but projections from mechanisms
-in other systems are ignored (PsyNeuLink does not support ESP).  A system can include three types of mechanisms:
+in other systems are ignored (PsyNeuLink does not support ESP).  A system can include two types of mechanisms:
 
 * `ProcessingMechanism`
-    These receive input from one or more projections, transform the input in some way,
+    These receive input from one or more projections, transform their input in some way,
     and assign the result as their output.
 
-* `ControlMechanism`
-    These monitor the output of other mechanisms for use in controlling the parameters of other mechanisms or their
-    functions.
-
-* `MonitoringMechanism`
-    These monitor the output of other mechanisms for use in modifying the parameters of projections (learning)
+* `AdpativeMechanism`
+    These are used to adjust the operation of other components.  There are two types:  
+    `LearningMechanisms <LearningMechanism>` that adjust projections, and `ControlMechanisms <ControlMechanism>`
+    that adjust the parameters of other mechanisms and/or their functions.
 
 .. _System_Creation:
 
 Creating a System
 -----------------
 
-Systems are created by calling the :py:func:`system` function.  If no arguments are provided, a system with a
+Systems are created by calling :py:func:`system`.  If no arguments are provided, a system with a
 single process containing a single :ref:`default mechanism <LINK>` will be returned. Whenever a system is created,
 a `ControlMechanism <ControlMechanism>` is created for it and assigned as its `controller`.  The controller can be
-specified by assigning an existing ControlMechanism to the  :keyword:`controller`  argument of the system's constructor,
+specified by assigning an existing ControlMechanism to the **controller** argument of the system's constructor,
 or specifying a class of ControlMechanism;  if none is specified, a `DefaultControlMechanism` is created.
 
 .. _System_Structure:
@@ -68,16 +66,17 @@ Structure
 Graph
 ~~~~~
 
-When an instance of a system is created, a graph is constructed that describes the connections (edges) among its
-mechanisms (nodes).  The graph is assigned to the system's `graph` attribute.  This is a dictionary of dependencies,
-that can be passed to graph theoretical tools for analysis.  A system can have recurrent processing pathways, such as
-feedback loops, in which case the system will have a cyclic graph.  PsyNeuLink also uses the graph of a
-system to determine the order in which its mechanisms are executed.  In order to do so in an orderly manner, however,
-the graph must be acyclic.  So, for execution, PsyNeuLink constructs an `executionGraph` from the system's `graph`.
-If the  system is acyclic, these are the same.  If the system is cyclic, then the `executionGraph` is a subset of the
-`graph` in which the dependencies (edges) associated with projections that close a loop have been removed. Note that
-this only impacts the order of execution;  the projections themselves remain in effect, and will be fully functional
-during the execution of the affected mechanisms (see :ref:`System_Execution` below for a more detailed description).
+When a system is created, a graph is constructed that describes the projections (edges) among its mechanisms (nodes).  
+The graph is assigned to the system's `graph` attribute.  A system's graph can be displayed using its `show_graph` 
+method.  The graph is stored as a dictionary of dependencies, that can be passed to graph theoretical tools for 
+analysis.  A system can have recurrent processing pathways, such as feedback loops, in which case the system will 
+have a cyclic graph.  PsyNeuLink also uses the graph of a system to determine the order in which its mechanisms are 
+executed.  In order to do so in an orderly manner, however, the graph must be acyclic.  So, for execution, 
+PsyNeuLink constructs an `executionGraph` from the system's `graph`. If the  system is acyclic, these are the same.  
+If the system is cyclic, then the `executionGraph` is a subset of the `graph` in which the dependencies (edges) 
+associated with projections that close a loop have been removed. Note that this only impacts the order of execution;  
+the projections themselves remain in effect, and will be fully functional during the execution of the affected 
+mechanisms (see `System_Execution` below for a more detailed description).
 
 .. _System_Mechanisms:
 
@@ -197,13 +196,15 @@ of execution, as input to mechanisms that close recurrent loops (designated as `
 Learning
 ~~~~~~~~
 The system will execute learning if it is specified for any process in the system.  The system's `learning` attribute
-indicates whether learning is enabled for the system. Learning is executed for any
-components (individual projections or processes) for which it is specified after all processing mechanisms in the
-system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
-learning) can be specified in either of two formats, sequence or mechanism, that are described in the :doc:`Run` module;
-see `Run_Inputs` and `Run_Targets`).  Both formats require that an input be provided for each `ORIGIN` mechanism of
-the system (listed in its `originMechanisms <System_Base.originMechanisms>` attribute).  If the targets are specified
-in sequence or mechanism format, one target must be provided for each `TARGET` mechanism (listed in its
+indicates whether learning is enabled for the system. Learning is executed for any components (individual projections 
+or processes) for which it is specified after all processing mechanisms in the
+system have been executed, but before the controller is executed (see below).  The learning components of a system
+can be displayed using the system's `show_graph` method with its **show_learning** argument assigned :keyword:`True`.
+The stimuli used for learning (both inputs and targets) can be specified in either of two formats, 
+sequence or mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both 
+formats require that an input be provided for each `ORIGIN` mechanism of the system (listed in its `originMechanisms 
+<System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or mechanism format, 
+one target must be provided for each `TARGET` mechanism (listed in its 
 `targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a
 `function format <Run_Targets_Function_Format>`, which generates a target for each execution of the mechanism.
 
@@ -216,13 +217,14 @@ in sequence or mechanism format, one target must be provided for each `TARGET` m
 
 Control
 ~~~~~~~
-Every system is associated with a single `controller`.  The controller monitors the outputState(s) of one or more
-mechanisms in the system (listed in its `monitored_output_states` attribute), and uses that information to set the
-value of parameters for those or other mechanisms in the system, or their functions
+Every system is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor  
+the outputState(s) of one or more mechanisms in the system (listed in its `monitored_output_states` attribute), 
+and uses that information to set the value of parameters for those or other mechanisms in the system, or their functions
 (see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which outputStates are
-monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled). The controller is
-executed after all other mechanisms in the system are executed, and sets the values of any parameters that it
-controls, which then take effect in the next round of execution.
+monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled).  The control components
+of a system can be displayed using the system's `show_graph` method with its **show_control** argument assigned 
+:keyword:``True`. The controller is executed after all other mechanisms in the system are executed, and sets the 
+values of any parameters that it controls, which then take effect in the next round of execution.
 
 COMMENT:
    Examples
@@ -649,7 +651,7 @@ class System_Base(System):
 
     monitoringMechanisms : MechanismList)
         contains all `MONITORING` mechanisms in the system (used for learning).
-        COMMENET:
+        COMMENT:
             based on _monitoring_mech_tuples)
         COMMENT
 
@@ -663,10 +665,6 @@ class System_Base(System):
         one item for each `TARGET` mechanism in the system (listed in `targetMechanisms`).  Used to represent the
         :keyword:`targets` specified in the system's `execute <System.execute>` and `run <System.run>` methods, and
         provide their values to the the TARGET inputState of each `TARGET` mechanism during execution.
-
-    COMMENT:
-       IS THIS CORRECT:
-    COMMENT
 
     controlMechanisms : MechanismList
         contains `controller` of the system
@@ -1167,7 +1165,7 @@ class System_Base(System):
 
             # If sender is an ObjectiveMechanism being used for learning or control, or a LearningMechanism,
             # Assign as MONITORING and move on
-            if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role) or
+            if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role) or
                     isinstance(sender_mech, LearningMechanism)):
                 sender_mech.systems[self] = MONITORING
                 return
@@ -1200,7 +1198,7 @@ class System_Base(System):
                 # It is not a ControlMechanism
                 not (isinstance(sender_mech, ControlMechanism_Base) or
                     # It is not an ObjectiveMechanism used for Learning or Control
-                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role in (LEARNING,CONTROL))) and
+                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role in (LEARNING,CONTROL))) and
                         # All of its projections
                         all(
                             all(
@@ -1208,7 +1206,7 @@ class System_Base(System):
                                 isinstance(projection.receiver.owner, (ControlMechanism_Base, LearningMechanism)) or
                                  # ObjectiveMechanism(s) used for Learning or Control
                                  (isinstance(projection.receiver.owner, ObjectiveMechanism) and
-                                             projection.receiver.owner.role in (LEARNING, CONTROL)) or
+                                             projection.receiver.owner._role in (LEARNING, CONTROL)) or
                                 # itself!
                                  projection.receiver.owner is sender_mech
                             for projection in output_state.sendsToProjections)
@@ -1522,7 +1520,7 @@ class System_Base(System):
 
             # All other sender_mechs must be either a MonitoringMechanism or an ObjectiveMechanism with role=LEARNING
             elif not (isinstance(sender_mech, LearningMechanism) or
-                          (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role is LEARNING)):
+                          (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role is LEARNING)):
                 raise SystemError("PROGRAM ERROR: {} is not a legal object for learning graph;"
                                   "must be a LearningMechanism or an ObjectiveMechanism".
                                   format(sender_mech))
@@ -2212,12 +2210,6 @@ class System_Base(System):
         Returns
         -------
 
-        COMMMENT:
-            OLD;  CORRECT?
-            <system>.results : List[outputState.value]
-                list of the value of the outputState for each `TERMINAL` mechanism of the system returned for
-                each execution.
-        COMMMENT
         <system>.results : List[Mechanism.OutputValue]
             list of the OutputValue for each `TERMINAL` mechanism of the system returned for each execution.
 
@@ -2408,36 +2400,36 @@ class System_Base(System):
 
         Diciontary contains entries for the following attributes and values:
 
-            :keyword:`PROCESSES`: list of processes in system
+            PROCESSES: list of processes in system
 
-            :keyword:`MECHANISMS`: list of all mechanisms in the system
+            MECHANISMS: list of all mechanisms in the system
 
-            :keyword:`ORIGIN_MECHANISMS`: list of ORIGIN mechanisms
+            ORIGIN_MECHANISMS: list of ORIGIN mechanisms
 
-            :keyword:`INPUT_ARRAY`: ndarray of the inputs to the ORIGIN mechanisms
+            INPUT_ARRAY: ndarray of the inputs to the ORIGIN mechanisms
 
-            :keyword:`RECURRENT_MECHANISMS`:  list of INITALIZE_CYCLE mechanisms
+            RECURRENT_MECHANISMS:  list of INITALIZE_CYCLE mechanisms
 
-            :keyword:`RECURRENT_INIT_ARRAY`: ndarray of initial_values
+            RECURRENT_INIT_ARRAY: ndarray of initial_values
 
-            :keyword:`TERMINAL_MECHANISMS`:list of TERMINAL mechanisms
+            TERMINAL_MECHANISMS:list of TERMINAL mechanisms
 
-            :keyword:`OUTPUT_STATE_NAMES`: list of outputState names corrresponding to 1D arrays in output_value_array
+            OUTPUT_STATE_NAMES: list of outputState names corrresponding to 1D arrays in output_value_array
 
-            :keyword:`OUTPUT_VALUE_ARRAY`:3D ndarray of 2D arrays of output.value arrays of outputStates for all
+            OUTPUT_VALUE_ARRAY:3D ndarray of 2D arrays of output.value arrays of outputStates for all
             `TERMINAL` mechs
 
-            :keyword:`NUM_PHASES_PER_TRIAL`:number of phases required to execute all mechanisms in the system
+            NUM_PHASES_PER_TRIAL:number of phases required to execute all mechanisms in the system
 
-            :keyword:`MONITORING_MECHANISMS`:list of MONITORING mechanisms
+            MONITORING_MECHANISMS:list of MONITORING mechanisms
 
-            `TARGET`:list of TARGET mechanisms
+            TARGET:list of TARGET mechanisms
 
-            :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of MappingProjections that receive learning projections
+            LEARNING_PROJECTION_RECEIVERS:list of MappingProjections that receive learning projections
 
-            :keyword:`CONTROL_MECHANISMS`:list of CONTROL mechanisms
+            CONTROL_MECHANISMS:list of CONTROL mechanisms
 
-            :keyword:`CONTROL_PROJECTION_RECEIVERS`:list of parameterStates that receive learning projections
+            CONTROL_PROJECTION_RECEIVERS:list of parameterStates that receive learning projections
 
         Returns
         -------
@@ -2598,40 +2590,63 @@ class System_Base(System):
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
     def show_graph(self, 
-                   output_fmt='pdf', 
-                   direction = 'BT', 
-                   show_learning = False, 
+                   direction = 'BT',
+                   show_learning = False,
+                   show_control = False,
                    learning_color = 'green',
-                   show_control = False, 
-                   control_color='blue'):
-        """Generate visualization of interconnections between all mechanisms and projections.
+                   control_color='blue',
+                   output_fmt='pdf',
+                   ):
+        """Generate a display of the graph structure of mechanisms and projections in the system.
+        
+        By default, only the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>` 
+        in the `system's graph <System.graph>` are displayed.  However, the **show_learning** and 
+        **show_control** arguments can be used to also show the `learning <LearningMechanism>` and
+        `control <ControlMechanism>` components of the system, respectively.  `Mechanisms <Mechanism>` are always 
+        displayed as (oval) nodes.  `Projections <Projection>` are displayed as labelled arrows, unless 
+        **show_learning** is assigned **True**, in which case MappingProjections that receive a `LearningProjection` 
+        are displayed as diamond-shaped nodes. The numbers in parentheses within a mechanism node indicate its 
+        dimensionality.   
 
         Arguments
         ---------
 
-        output_fmt : 'jupyter' or 'pdf'
-            pdf to generate and open a pdf with the visualization,
-            jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
+        direction : keyword : default 'BT' 
+            'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
 
-        direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
-            rank direction of graph
+        show_learning : bool : default False 
+            determines whether or not to show the learning components of the system;  
+            they will all be displayed in the color specified for **learning_color**.
+            projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
 
-        show_learning : determines whether or not to show learning machinery, if true, projections that have learning will be rendered as a diamond shape node.
+        show_control :  bool : default False 
+            determines whether or not to show the control components of the system;  
+            they will all be displayed in the color specified for **control_color**.
 
-        show_control : determines whether or not to show control machinery
+        learning_color : keyword : default `green`
+            determines the color in which the learning components are displayed
 
-        learning_color : determines with what color to draw all the learning machinery
+        control_color : keyword : default `blue`
+            determines the color in which the learning components are displayed (note: if the system's 
+            `controller <System.controller>`) is an `EVCMechanism`, then a link is shown in red from the
+            `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` it creates to the corresponding 
+            `ORIGIN` mechanisms of the system, to indicate that although no projection are created for these, 
+            the prediction mechanisms determine the input to the `ORIGIN` mechanisms when the EVCMechanism 
+            `simulates execution <EVCMechanism_Execution>` of the system.
 
-        control_color : determines with what color to draw all the control machinery
+        output_fmt : keyword : default 'pdf'
+            'pdf': generate and open a pdf with the visualization;
+            'jupyter': return the object (ideal for working in jupyter/ipython notebooks).
 
 
         Returns
         -------
 
-        Graphviz graph object if output_fmt is 'jupyter', 'pdf' generates a pdf in current directory
+        display of system : `pdf` or Graphviz graph object 
+            'pdf' (placed in current directory) if :keyword:`output_fmt` arg is 'pdf'; 
+            Graphviz graph object if :keyword:`output_fmt` arg is 'jupyter'.
 
         """
-
 
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
@@ -2737,6 +2752,15 @@ class System_Base(System):
                 for proj in istate.receivesFromProjections:
                     sndr_name = proj.sender.owner.name
                     G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
+
+            # prediction mechanisms
+            for mech_tuple in self.executionList:
+                mech = mech_tuple[0]
+                if mech._role is CONTROL:
+                    G.node(mech.name, color=control_color)
+                    recvr = mech.origin_mech
+                    G.edge(mech.name, recvr.name, label=' prediction assignment', color='red')
+                    pass
 
         # return
         if   output_fmt == 'pdf':

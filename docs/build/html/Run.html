@@ -87,9 +87,9 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Run</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#scope-of-execution">Scope of Execution</a></li>
@@ -228,7 +228,7 @@ output.  It is up to the mechanism how it implements its <code class="xref any d
 internal numerical iteration or an analytic calculation). Execution of a <code class="xref any docutils literal"><span class="pre">trial</span></code> is defined as the execution of a
 <code class="xref any docutils literal"><span class="pre">trial</span></code> of all of the objects in the scope of execution.</li>
 </ul>
-<p>The <code class="xref std std-keyword docutils literal"><span class="pre">time_scale</span></code> argument of an <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method determines the time scale for each
+<p>The <strong>time_scale</strong> argument of an <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method determines the time scale for each
 round of execution: a <code class="xref any docutils literal"><span class="pre">time_step</span></code> or a <code class="xref any docutils literal"><span class="pre">trial</span></code>.  When a <a class="reference internal" href="Process.html"><span class="doc">process</span></a> is run, each mechanism is executed in the
 order that it appears in the process&#8217; <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, once per round of execution.  When a <a class="reference internal" href="System.html"><span class="doc">system</span></a> is run,
 the order of execution is determined by the system&#8217;s <a class="reference internal" href="System.html#System.System_Base.executionList" title="System.System_Base.executionList"><code class="xref any py py-attr docutils literal"><span class="pre">executionList</span></code></a> attribute, which is based on the system&#8217;s
@@ -241,7 +241,7 @@ requires that it be appropriately updated.</p>
 <div class="section" id="inputs">
 <span id="run-inputs"></span><h3>Inputs<a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function presents the inputs for each round of execution to the inputStates of the relevant
-mechanisms. These are specified in the <code class="xref std std-keyword docutils literal"><span class="pre">inputs</span></code> argument of the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.
+mechanisms. These are specified in the <strong>inputs</strong> argument of the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.
 For a mechanism, they comprise the input value for each of the mechanism&#8217;s <a class="reference internal" href="InputState.html"><span class="doc">inputStates</span></a>.  For a process
 or system, they comprise the input values for the inputState(s) of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism(s).  Input values can be
 specified in one of two ways: <a class="reference internal" href="#run-inputs-sequence-format"><span class="std std-ref">sequence format</span></a> and <code class="xref any docutils literal"><span class="pre">mechanism</span> <span class="pre">format</span></code>.
@@ -375,7 +375,7 @@ a target for each round of execution.</p>
 <p>The number of targets specified in the sequence or mechanism formats for each round of execution, or generated using
 the function format, must equal the number of <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanisms for the process or system being run (see process
 <a class="reference internal" href="Process.html#Process.Process_Base.targetMechanisms" title="Process.Process_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanism</span></code></a> or
-system <code class="xref any docutils literal"><span class="pre">targetMechanism</span></code> respectively), and the value of each target must
+system <a class="reference internal" href="System.html#System.System_Base.targetMechanisms" title="System.System_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanism</span></code></a> respectively), and the value of each target must
 match (in number and type of elements) that  of the <code class="xref any docutils literal"><span class="pre">target</span></code>
 attribute of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism for which it is intended.  Furthermore, if a range is specified for the output of
 the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism with which the target is compared (that is, the mechanism that provides the
@@ -388,7 +388,7 @@ value, then the target must be within that range (for example, if the <a class="
 <p><em>(List[values] or ndarray):</em> &#8211; there are at most three levels of nesting (or dimensions) required for
 <code class="xref std std-keyword docutils literal"><span class="pre">targets</span></code>:  one for executions, one for mechanisms, and one for the elements of each input.  For a system
 with more than one <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism, the targets must be specified in the same order as they appear in the system&#8217;s
-<code class="xref any docutils literal"><span class="pre">targetMechanisms</span></code> attribute.  This should be the same order in which
+<a class="reference internal" href="System.html#System.System_Base.targetMechanisms" title="System.System_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanisms</span></code></a> attribute.  This should be the same order in which
 they are declared, and can be displayed using the system&#8217;s <a class="reference internal" href="System.html#System.System_Base.show" title="System.System_Base.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method). All
 other requirements are the same as the <a class="reference internal" href="#run-inputs-sequence-format"><span class="std std-ref">sequence format</span></a> for <code class="xref std std-keyword docutils literal"><span class="pre">inputs</span></code>.</p>
 </div>

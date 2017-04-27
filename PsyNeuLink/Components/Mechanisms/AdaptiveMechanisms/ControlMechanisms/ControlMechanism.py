@@ -18,9 +18,10 @@ It's function takes a value (usually the output of an `ObjectiveMechanism`) and 
 to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is conveyed by
 a `ControlProjection` to the `parameterState <ParameterState>` of the corresopnding ProcessingMechanism.  A
 ControlMechanism can regulate only the parameters of mechanism in the system for which it is the
-`controller <System_Execution_Control>`.  ControlMechanisms are executed after all ProcessingMechanisms and
-`LearningMechanisms <LearningMechanism>` in that system have been executed.
-
+`controller <System_Execution_Control>`.  The control components of a system can be displayed using the system's 
+`show_graph` method with its **show_control** argument assigned :keyword:``True`.  The control components of a 
+system are executed after all ProcessingMechanisms and `learning components <LearningMechanism>` in that system have 
+been executed.
 
 .. _ControlMechanism_Creation:
 

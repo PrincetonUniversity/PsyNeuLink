@@ -105,9 +105,11 @@ DEPRECATED:
 
 ### rST / SPHINX:
 Terminology used here:
-    - reference:  a formatted string (but not necessarily with a link); the two main forms are:
-        - `keyword` (shows up inside a small box)
+    - references:  a formatted string (but not necessarily with a link); the four main forms are:
+        - `attribute` or `method` (shows up inside a small box)
         - `text <referenced_location>`
+        - KEYWORD (always all caps with underscores)
+        - **argument** (of a functon or method)
     - link: a "live" reference (i.e., when clicked, navigates somewhere); 
             can be either a keyword or a text reference 
 - PsyNeuLink terms should generally be references (i.e., by enclosing in back-ticks (`term`);
@@ -121,13 +123,13 @@ Terminology used here:
         then add further specification: `term <Module.term>`.
     - to force a term that will be automatically parsed by Spinx as an attribute or argument, 
         to appear as normal text, use the ref role:  :ref:`term`.
-    - note: arguments to methods and functions can not be linked (in the way that attributes can);
-        therefore, they must be verbally designated (e.g.: the `params` argument of a function...)
+    - note: arguments of methods and functions can not be linked (in the way that attributes can);
+        they should be boldfaced and must be verbally designated (e.g.: the **params** argument of a function...)
 - Section references should be formatted as links, and also kept as simple as possible:
     - wherever possible, simply enclose in backticks (e.g., `section`)
-    - to assign a link to some other description, use the ref role (e.g., :ref:`my text <section>`) 
-    - for classes that have subclasses, the titles in the rst file (that will appear in the text of the reference) are plural
-      even though the name of the file itself (to which the reference must be made) is singular;
+    - to assign a link to some other description, add angle brackets (e.g., :ref:`my text <section>`) 
+    - for classes that have subclasses, the titles in the rst file (that will appear in the text of the reference) 
+      are plural even though the name of the file itself (to which the reference must be made) is singular;
         therefore, to have the singular form appear in the text (e.g., ControlMechanism),
         the module must be explicitly referenced (e.g., `ControlMechanism <ControlMechanism>`);
         [this appears to be redundant, but it is necessary]
@@ -135,7 +137,7 @@ Terminology used here:
         therefore, to refer to the plural of such a class (e.g., InputState),
         the module must be explicitly referenced (e.g., `InputStates <InputState>`);
     - to flag references to sections that have not yet been documented (or labelled), 
-        use the following construction: `section <LINK>`.
+        use the following construction: `section <LINK>` (so that <LINK> can be searched for replace these later).
  
         
            

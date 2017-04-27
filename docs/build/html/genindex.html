@@ -86,9 +86,9 @@
                 <ul>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
@@ -197,6 +197,14 @@
   </dt>
 
       
+  <dt><a href="DefaultControlMechanism.html#module-AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism">AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism (module)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#module-AdaptiveMechanisms.ControlMechanisms.EVCMechanism">AdaptiveMechanisms.ControlMechanisms.EVCMechanism (module)</a>
+  </dt>
+
+      
   <dt><a href="LearningMechanism.html#module-AdaptiveMechanisms.LearningMechanisms.LearningMechanism">AdaptiveMechanisms.LearningMechanisms.LearningMechanism (module)</a>
   </dt>
 
@@ -204,6 +212,10 @@
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="Log.html#Log.Log.add_entries">add_entries() (Log.Log method)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.add_monitored_values">add_monitored_values() (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism method)</a>
   </dt>
 
       
@@ -218,6 +230,12 @@
   <dt><a href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy">allocation_policy (AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base attribute)</a>
   </dt>
 
+      <dd><dl>
+        
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy">(AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      </dl></dd>
       
   <dt><a href="Function.html#Function.ArgumentTherapy">ArgumentTherapy (class in Function)</a>
   </dt>
@@ -293,6 +311,10 @@
   </dt>
 
       
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.combine_outcome_and_cost_function">combine_outcome_and_cost_function (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
   <dt><a href="Component.html#module-Component">Component (module)</a>
   </dt>
 
@@ -322,18 +344,22 @@
   </dt>
 
       </dl></dd>
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="Log.html#Log.LogEntry.context">context (Log.LogEntry attribute)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="System.html#System.System_Base.controller">controller (System.System_Base attribute)</a>
   </dt>
 
       
   <dt><a href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base">ControlMechanism_Base (class in AdaptiveMechanisms.ControlMechanisms.ControlMechanism)</a>
+  </dt>
+
+      
+  <dt><a href="System.html#System.System_Base.controlMechanisms">controlMechanisms (System.System_Base attribute)</a>
   </dt>
 
       
@@ -355,7 +381,23 @@
   </dt>
 
       
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.ControlSignalCostOptions">ControlSignalCostOptions (class in AdaptiveMechanisms.ControlMechanisms.EVCMechanism)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.controlSignals">controlSignals (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.controlSignalSearchSpace">controlSignalSearchSpace (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
   <dt><a href="Utilities.html#Utilities.convert_to_np_array">convert_to_np_array() (in module Utilities)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.cost_function">cost_function (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
   </dt>
 
       
@@ -475,6 +517,32 @@
   </dt>
 
       
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.EVC_max">EVC_max (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.EVC_max_policy">EVC_max_policy (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.EVC_max_state_values">EVC_max_state_values (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.EVC_policies">EVC_policies (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.EVC_values">EVC_values (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism">EVCMechanism (class in AdaptiveMechanisms.ControlMechanisms.EVCMechanism)</a>
+  </dt>
+
+      
   <dt><a href="Mechanism.html#Mechanism.Mechanism_Base.execute">execute() (Mechanism.Mechanism_Base method)</a>
   </dt>
 
@@ -488,8 +556,6 @@
   </dt>
 
       </dl></dd>
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="Log.html#Log.LogLevel.EXECUTION">EXECUTION (Log.LogLevel attribute)</a>
   </dt>
@@ -533,10 +599,14 @@
   </dt>
 
       
-  <dt><a href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function">function (AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism attribute)</a>
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.function">function (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
   </dt>
 
       <dd><dl>
+        
+  <dt><a href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function">(AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism attribute)</a>
+  </dt>
+
         
   <dt><a href="DDM.html#DDM.DDM.function">(DDM.DDM attribute)</a>
   </dt>
@@ -730,6 +800,12 @@
   <dt><a href="Process.html#Process.Process_Base.initial_values">initial_values (Process.Process_Base attribute)</a>
   </dt>
 
+      <dd><dl>
+        
+  <dt><a href="System.html#System.System_Base.initial_values">(System.System_Base attribute)</a>
+  </dt>
+
+      </dl></dd>
       
   <dt><a href="Mechanism.html#Mechanism.Mechanism_Base.initialize">initialize() (Mechanism.Mechanism_Base method)</a>
   </dt>
@@ -764,12 +840,12 @@
   <dt><a href="Mechanism.html#Mechanism.Mechanism_Base.inputState">inputState (Mechanism.Mechanism_Base attribute)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="InputState.html#module-InputState">InputState (module)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="Mechanism.html#Mechanism.Mechanism_Base.inputStates">inputStates (Mechanism.Mechanism_Base attribute)</a>
   </dt>
@@ -969,6 +1045,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.make_default_controller">make_default_controller (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
   <dt><a href="MappingProjection.html#MappingProjection.MappingProjection">MappingProjection (class in MappingProjection)</a>
   </dt>
 
@@ -1018,12 +1098,12 @@
   <dt><a href="Mechanism.html#Mechanism.Mechanism_Base">Mechanism_Base (class in Mechanism)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="Process.html#Process.Process_Base.mechanismNames">mechanismNames (Process.Process_Base attribute)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="Process.html#Process.Process_Base.mechanisms">mechanisms (Process.Process_Base attribute)</a>
   </dt>
@@ -1047,11 +1127,23 @@
   </dt>
 
       
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.monitor_for_control_weights_and_exponents">monitor_for_control_weights_and_exponents (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.monitored_output_states">monitored_output_states (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
   <dt><a href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_values">monitored_values (ObjectiveMechanism.ObjectiveMechanism attribute)</a>
   </dt>
 
       
   <dt><a href="Keywords.html#Keywords.Keywords.MONITORING">MONITORING (Keywords.Keywords attribute)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.monitoring_mechanism">monitoring_mechanism (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
   </dt>
 
       
@@ -1132,6 +1224,10 @@
   </dt>
 
         
+  <dt><a href="System.html#System.System_Base.name">(System.System_Base attribute)</a>
+  </dt>
+
+        
   <dt><a href="TransferMechanism.html#TransferMechanism.TransferMechanism.name">(TransferMechanism.TransferMechanism attribute)</a>
   </dt>
 
@@ -1170,7 +1266,7 @@
 
       <dd><dl>
         
-  <dt><a href="System.html#System.System_Base.numPhases">(System.System_Base attribute)</a>
+  <dt><a href="System.html#System.System_Base.numPhases">(System.System_Base attribute)</a>, <a href="System.html#System.System_Base.numPhases">[1]</a>
   </dt>
 
       </dl></dd>
@@ -1195,6 +1291,10 @@
   </dt>
 
       
+  <dt><a href="Keywords.html#Keywords.MatrixKeywords.OFF_DIAGONAL_MATRIX">OFF_DIAGONAL_MATRIX (Keywords.MatrixKeywords attribute)</a>
+  </dt>
+
+      
   <dt><a href="Function.html#Function.LinearCombination.offset">offset (Function.LinearCombination attribute)</a>
   </dt>
 
@@ -1213,6 +1313,10 @@
   </dt>
 
       
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.origin_prediction_mechanisms">origin_prediction_mechanisms (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
   <dt><a href="Process.html#Process.Process_Base.originMechanisms">originMechanisms (Process.Process_Base attribute)</a>
   </dt>
 
@@ -1222,6 +1326,10 @@
   </dt>
 
       </dl></dd>
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.outcome_function">outcome_function (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
       
   <dt><a href="Function.html#Function.SoftMax.output">output (Function.SoftMax attribute)</a>
   </dt>
@@ -1274,6 +1382,8 @@
   </dt>
 
       </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="Function.html#Function.ArgumentTherapy.owner">owner (Function.ArgumentTherapy attribute)</a>
   </dt>
@@ -1440,6 +1550,22 @@
   </dt>
 
       </dl></dd>
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.predictedInput">predictedInput (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.prediction_mechanism_params">prediction_mechanism_params (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.prediction_mechanism_type">prediction_mechanism_type (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.predictionMechanisms">predictionMechanisms (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
       
   <dt><a href="Preferences.html#module-Preferences">Preferences (module)</a>
   </dt>
@@ -1682,12 +1808,12 @@
   </dt>
 
       </dl></dd>
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="System.html#System.System_Base.recurrentInitMechanisms">recurrentInitMechanisms (System.System_Base attribute)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="Function.html#Function.Reduce">Reduce (class in Function)</a>
   </dt>
@@ -1708,6 +1834,12 @@
   <dt><a href="Process.html#Process.Process_Base.results">results (Process.Process_Base attribute)</a>
   </dt>
 
+      <dd><dl>
+        
+  <dt><a href="System.html#System.System_Base.results">(System.System_Base attribute)</a>
+  </dt>
+
+      </dl></dd>
       
   <dt><a href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.role">role (ObjectiveMechanism.ObjectiveMechanism attribute)</a>
   </dt>
@@ -1734,12 +1866,20 @@
   </dt>
 
       </dl></dd>
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.run_simulation">run_simulation() (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism method)</a>
+  </dt>
+
   </dl></td>
 </tr></table>
 
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.save_all_values_and_policies">save_all_values_and_policies (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
+  </dt>
+
       
   <dt><a href="Function.html#Function.Exponential.scale">scale (Function.Exponential attribute)</a>
   </dt>
@@ -1801,15 +1941,11 @@
   </dt>
 
       
-  <dt><a href="System.html#System.System_Base.show_graph_with_learning">show_graph_with_learning() (System.System_Base method)</a>
+  <dt><a href="Keywords.html#Keywords.Keywords.SINGLETON">SINGLETON (Keywords.Keywords attribute)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="Keywords.html#Keywords.Keywords.SINGLETON">SINGLETON (Keywords.Keywords attribute)</a>
-  </dt>
-
       
   <dt><a href="Function.html#Function.Linear.slope">slope (Function.Linear attribute)</a>
   </dt>
@@ -1842,6 +1978,10 @@
 
       
   <dt><a href="Log.html#Log.Log.suspend_entries">suspend_entries() (Log.Log method)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.system">system (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
   </dt>
 
       
@@ -1891,9 +2031,19 @@
   </dt>
 
       
+  <dt><a href="System.html#System.System_Base.targetInputStates">targetInputStates (System.System_Base attribute)</a>
+  </dt>
+
+      
   <dt><a href="Process.html#Process.Process_Base.targetMechanisms">targetMechanisms (Process.Process_Base attribute)</a>
   </dt>
 
+      <dd><dl>
+        
+  <dt><a href="System.html#System.System_Base.targetMechanisms">(System.System_Base attribute)</a>
+  </dt>
+
+      </dl></dd>
       
   <dt><a href="System.html#System.System_Base.targets">targets (System.System_Base attribute)</a>
   </dt>
@@ -1968,6 +2118,12 @@
   <dt><a href="Process.html#Process.Process_Base.timeScale">timeScale (Process.Process_Base attribute)</a>
   </dt>
 
+      <dd><dl>
+        
+  <dt><a href="System.html#System.System_Base.timeScale">(System.System_Base attribute)</a>
+  </dt>
+
+      </dl></dd>
       
   <dt><a href="TransferMechanism.html#TransferMechanism.Transfer_Output">Transfer_Output (class in TransferMechanism)</a>
   </dt>
@@ -2058,12 +2214,20 @@
   </dt>
 
         
+  <dt><a href="System.html#System.System_Base.value">(System.System_Base attribute)</a>
+  </dt>
+
+        
   <dt><a href="TransferMechanism.html#TransferMechanism.TransferMechanism.value">(TransferMechanism.TransferMechanism attribute)</a>
   </dt>
 
       </dl></dd>
       
   <dt><a href="Log.html#Log.LogLevel.VALUE_ASSIGNMENT">VALUE_ASSIGNMENT (Log.LogLevel attribute)</a>
+  </dt>
+
+      
+  <dt><a href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.value_function">value_function (AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism attribute)</a>
   </dt>
 
       
