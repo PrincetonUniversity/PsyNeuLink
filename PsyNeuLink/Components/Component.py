@@ -229,9 +229,9 @@ COMMENT
 .. _Component_Assign_Params:
 
 * **assign_params** - the `assign_params` method is used to assign the value of one or more parameters of a 
-  component.  Each parameter is specified as an entry in a dict in the :keyword:`request_set` argument;  
+  component.  Each parameter is specified as an entry in a dict in the **request_set** argument;  
   parameters for the component's function are specified as entries in a FUNCTION_PARAMS dict within 
-  :keyword:`request_set` dict.   
+  **request_set** dict.   
 
 * **reset_params** - the `reset_params` method is used to reset the value of all user_params to their default
   (paramClass
@@ -571,6 +571,7 @@ class Component(object):
         self.paramInstanceDefaults = {}
 
         self._auto_dependent = False
+        self._role = None
 
         # self.componentName = self.componentType
         try:
@@ -2321,7 +2322,7 @@ class Component(object):
         while owner is not None:
             try:
                 owner._auto_dependent = value
-                owner = self.owner.owner
+                owner = owner.owner
 
             except AttributeError:
                 owner = None

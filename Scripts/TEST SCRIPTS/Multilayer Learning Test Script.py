@@ -17,11 +17,6 @@ Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
                           default_input_value = np.zeros((5,)))
 
-# Hidden_Layer_1.function_object.gain = 33
-# Hidden_Layer_1.noise = .3
-# # Hidden_Layer_1.integrator_function.noise = 55
-# Hidden_Layer_1.reset_params(ResetMode.CURRENT_TO_INSTANCE_DEFAULTS)
-
 Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2',
                           function=Logistic(),
                           default_input_value = [0,0,0,0])
@@ -89,7 +84,7 @@ z = process(default_input_value=[0, 0],
                            Hidden_Layer_1,
                            # No projection specification is needed here since the sender arg for Middle_Weights
                            #    is Hidden_Layer_1 and its receiver arg is Hidden_Layer_2
-                           Middle_Weights,
+                           # Middle_Weights,
                            Hidden_Layer_2,
                            # Output_Weights does not need to be listed for the same reason as Middle_Weights
                            # If Middle_Weights and/or Output_Weights is not declared above, then the process
@@ -110,6 +105,8 @@ z = process(default_input_value=[0, 0],
 
 # stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 # target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
+# stim_list = {Input_Layer:[[-1, 30]]}
+# stim_list = {Input_Layer:[[-1, 30]]}
 stim_list = {Input_Layer:[[-1, 30]]}
 target_list = {Output_Layer:[[0, 0, 1]]}
 

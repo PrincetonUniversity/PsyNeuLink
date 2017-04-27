@@ -1,5 +1,5 @@
-Mechanisms
-==========
+Mechanism
+=========
 
 .. toctree::
   :maxdepth: 1

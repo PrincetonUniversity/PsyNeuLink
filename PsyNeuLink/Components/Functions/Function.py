@@ -46,23 +46,25 @@ Overview
 --------
 
 A Function is a `component <Component>` that "packages" a function (in its `function <Function_Base.function>` method)
-for use by PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function, and when that
-component is executed, that Function's `function <Function_Base.function` is executed.  The
-`function <Function_Base.function` can be any callable operation, although most commonly it is a mathematical operation
-(and, for those, almost always uses calls to numpy function).
+for use by other PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function; when thata 
+component is executed, its Function's `function <Function_Base.function>` is executed.  The
+`function <Function_Base.function>` can be any callable operation, although most commonly it is a mathematical operation
+(and, for those, almost always uses a call to one or more numpy functions).  There are two reasons PsyNeuLink 
+packages functions in a Function component: to *manage parameters*, and for *modularity*.
 
-There are two reasons PsyNeuLink packages functions in a Function component. The first is to **manage parameters**.
-Parameters are attributes of a function that either remain stable over multiple calls to the
-function (e.g., the gain or bias of a logistic function, or the learning rate of a learning function);
-or, if they change, they do less frequently or under the control of different factors than the function's variable
-(i.e., its input).  As a consequence, it is useful to manage these separately from the function's variable,
-and not have to provide them every time the function is called.  To address this, every PsyNeuLink Function has a
-set of attributes corresponding to the parameters of the function, that can be specified at the time the Function is
-created (in arguments to its constructor), and can be modified independently of a call to its :keyword:`function`.
-Modifications can be directly (e.g., in a script), or by the operation of other PsyNeuLink components (e.g.,
-`AdaptiveMechanisms`).  The second to reason PsyNeuLink uses Functions is for  **modularity**. By providing a standard
-interface, any Function assigned to a components in PsyNeuLink can be replaced with other PsyNeuLink Functions, or with
-user-written custom functions (so long as they adhere to certain standards (the PsyNeuLink `Function API <LINK>`).
+**Manage parameters**. Parameters are attributes of a function that either remain stable over multiple calls to the
+function (e.g., the `gain <Logistic.gain>` or `bias <Logistic.bias>` of a `Logistic` function, or the learning rate 
+of a learning function); or, if they change, they do so less frequently or under the control of different factors
+than the function's variable (i.e., its input).  As a consequence, it is useful to manage these separately from the 
+function's variable, and not have to provide them every time the function is called.  To address this, every 
+PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at 
+the time the Function is created (in arguments to its constructor), and can be modified independently 
+of a call to its :keyword:`function`. Modifications can be directly (e.g., in a script), or by the operation of other 
+PsyNeuLink components (e.g., `AdaptiveMechanisms`) by way of `ControlProjections <ControlProjection>`.  
+
+**Modularity**. By providing a standard interface, any Function assigned to a components in PsyNeuLink can be replaced 
+with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain standards 
+(the PsyNeuLink :ref:`Function API <LINK>`). 
 
 .. _Function_Creation:
 
@@ -88,10 +90,11 @@ that determines the computation that it carries out.  Ths must be a callable obj
 method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be 
 "turtles" all the way down!).  A Function also has an attribute for each of the parameters of its `function
 <Function_Base.function>`.   If a Function has been assigned to another component, then it also has an `owner
-<Function_Base.owner>` attribute that refers to that component. Each of the Function's attributes is also assigned
+<Function_Base.owner>` attribute that refers to that component.  The Function itself is assigned as the component's
+`function_object <Component.function_object>` attribute.  Each of the Function's attributes is also assigned
 as an attribute of the `owner <Function_Base.owner>`, and those are each associated with with a
-`parameterState <ParameterState>` of the `owner <Function_Base.owner>`. Projections to those parameterStates can be
-used to modify the Function's parameters.
+`parameterState <ParameterState>` of the `owner <Function_Base.owner>`.  Projections to those parameterStates can be
+used by `ControlProjections <ControlProjection>` to modify the Function's parameters. 
 
 COMMENT:
 .. _Function_Output_Type_Conversion:
@@ -1483,7 +1486,7 @@ class Linear(
 
         """
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
         slope = self.paramsCurrent[SLOPE]
         intercept = self.paramsCurrent[INTERCEPT]
         outputType = self.functionOutputType
@@ -1673,7 +1676,7 @@ class Exponential(
 
         """
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
 
         # Assign the params and return the result
         rate = self.paramsCurrent[RATE]
@@ -1820,7 +1823,7 @@ class Logistic(
 
         """
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
@@ -1973,7 +1976,7 @@ class SoftMax(
 
         """
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
 
         # Assign the params and return the result
         output_type = self.params[OUTPUT_TYPE]
@@ -2327,7 +2330,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
-                elif param_value is IDENTITY_MATRIX:
+                elif param_value in {IDENTITY_MATRIX, OFF_DIAGNOAL_MATRIX}:
                     # Receiver length doesn't equal sender length
                     if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
                         # if self.owner.prefs.verbosePref:
@@ -2336,9 +2339,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         #            format(receiver_len, sender_len))
                         # # Set receiver to sender
                         # param_set[kwReceiver] = sender
-                        raise FunctionError("Identity matrix requested for the {} function of {}, "
+                        raise FunctionError("{} requested for the {} function of {}, "
                                             "but length of receiver ({}) does not match length of sender ({})".
-                                            format(self.name, self.owner.name, receiver_len, sender_len))
+                                            format(param_value, self.name, self.owner.name, receiver_len, sender_len))
                     continue
 
                 # list used to describe matrix, so convert to 2D np.array and pass to validation of matrix below
@@ -2460,7 +2463,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
-        self._check_args(variable, params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
         return np.dot(self.variable, self.matrix)
 
@@ -2496,6 +2499,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         + matrix keyword:
             + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
             + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
+            + OFF_DIAGONAL_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
             + FULL_CONNECTIVITY_MATRIX: all 1's
             + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
         + 2D list or np.ndarray of numbers
@@ -2526,11 +2530,17 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     if specification == FULL_CONNECTIVITY_MATRIX:
         return np.full((rows, cols), 1.0)
 
-    if specification == IDENTITY_MATRIX:
+    if specification is IDENTITY_MATRIX:
         if rows != cols:
-            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use identity matrix".
-                                format(rows, cols))
+            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
+                                format(rows, cols, specification))
         return np.identity(rows)
+
+    if specification is OFF_DIAGNOAL_MATRIX:
+        if rows != cols:
+            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
+                                format(rows, cols, specification))
+        return 1-np.identity(rows)
 
     if specification is RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)
@@ -2782,18 +2792,19 @@ class Integrator(
                                  target_set=target_set,
                                  context=context)
 
-        if self.integration_type is ADAPTIVE:
-            if isinstance(target_set[RATE], (list, np.ndarray)):
-                for r in target_set[RATE]:
-                    if r < 0.0 or r > 1.0:
-                        raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                            "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
-                                            format(target_set[RATE], self.name))
-            else:
-                if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-                    raise FunctionError(
-                        "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                        "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+        if RATE in target_set:
+            if self.integration_type is ADAPTIVE:
+                if isinstance(target_set[RATE], (list, np.ndarray)):
+                    for r in target_set[RATE]:
+                        if r < 0.0 or r > 1.0:
+                            raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
+                                                "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+                                                format(target_set[RATE], self.name))
+                else:
+                    if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
+                        raise FunctionError(
+                            "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
+                            "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
 
         # self._validate_initializer()
 
@@ -3286,7 +3297,8 @@ class BogaczEtAl(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: terminal value of decision variable, mean accuracy (error rate; ER) and mean response time (RT)
+        Return: terminal value of decision variable (equal to threshold), mean accuracy (error rate; ER) and mean 
+        response time (RT)
 
         Arguments
         ---------
@@ -3369,6 +3381,61 @@ class BogaczEtAl(
             er = (is_neg_drift == 1) * (1 - er) + (is_neg_drift == 0) * (er)
 
         return rt, er
+
+
+    def derivative(self, output=None, input=None):
+        """
+        derivative(output, input)
+
+        Calculate the derivative of 1/(reward rate) with respect to the threshold (**output** arg)
+        and drift_rate (**input** arg).  Reward rate (RR) is assumed to be:
+          
+            RR = (delay\ :sub:`ITI` + Z/A + ED);
+           
+        the derivative of 1/RR with respect to the `threshold <BogaczEtAl.threshold>` is:
+        
+            1/A - E/A - (2A/c\ :sup:`2`\ )ED;
+          
+        and the derivative of 1/RR with respect to the `drift_rate <BogaczEtAl.drift_rate>` is:
+          
+            -Z/A\ :sup:`2` + (Z/A\ :sup:`2`\ )E - (2Z/c\ :sup:`2`\ )ED
+                                   
+        where:
+
+            A = `drift_rate <BogaczEtAl.drift_rate>`,
+
+            Z = `threshold <BogaczEtAl.threshold>`,  
+
+            c = `noise <BogaczEtAl.noise>`,  
+
+            E = exp(-2ZA/\ c\ :sup:`2`\ ), and  
+
+            D = delay\ :sub:`ITI` + delay\ :sub:`penalty` - Z/A
+            
+            delay\ :sub:`ITI` is the intertrial interval and delay\ :sub:`penalty` is a penalty delay.
+
+          
+        Returns
+        -------
+
+        derivatives :  List[float, float)
+            of 1/RR with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate <BogaczEtAl.drift_rate>`. 
+
+        """
+        Z = output or self.threshold
+        A = input or self.drift_rate
+        c = self.noise
+        c_sq = c**2
+        E = exp(-2*Z*A/c_sq)
+        D_iti = 0
+        D_pen = 0
+        D = D_iti + D_pen
+        # RR =  1/(D_iti + Z/A + (E*D))
+
+        dRR_dZ = 1/A + E/A + (2*A/c_sq)*E*D
+        dRR_dA = -Z/A**2 + (Z/A**2)*E - (2*Z/c_sq)*E*D
+
+        return [dRR_dZ, dRR_dA]
 
 
 # Results from Navarro and Fuss DDM solution (indices for return value tuple)

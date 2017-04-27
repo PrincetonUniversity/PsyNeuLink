@@ -264,7 +264,8 @@ to modify that item before assigning it as the outputState's :keyword:`value` (s
 Mechanism Parameters
 ~~~~~~~~~~~~~~~~~~~~
 
-Most mechanisms implement a standard set of parameters, that can be specified in a
+Most mechanisms implement a standard set of parameters, that can be specified by direct reference to the corresponding
+attribute of the mechanisms (e.g., myMechanism.attribute), in a 
 `parameter dictionary <ParameterState_Specifying_Parameters>` assigned to `params` argument in the mechanism's
 constructor, or with the mechanism's `assign_params` method, using the following keywords:
 
@@ -379,7 +380,7 @@ Process :ref:`Process_Mechanisms`). In either case, runtime parameters are speci
 contains one or more entries, each of which itself contains a dictionary corresponding to the mechanism's function or
 its states (inputStates, parameterStates and/or outputStates); those dictionaries, in turn, contain
 entries for the values of the runtime parameters for the function, a state, or its projection(s) (see the
-`runtime_params` argument of the `execute <Mechanism_Base.execute>` method below for more details).
+**runtime_params** argument of the `execute <Mechanism_Base.execute>` method below for more details).
 
 
 .. _Mechanism_Class_Reference:
@@ -1626,19 +1627,19 @@ class Mechanism_Base(Mechanism):
             #    assign parameter value there as parameterState's value
             if runtime_params and PARAMETER_STATE_PARAMS in runtime_params and state_name in runtime_params[
                 PARAMETER_STATE_PARAMS]:
-                param = param_template = runtime_params
+                params = runtime_params
             # Otherwise use paramsCurrent
             else:
-                param = param_template = self.paramsCurrent
+                params = self.paramsCurrent
 
             # Determine whether template (param to type-match) is at top level or in a function_params dictionary
             try:
-                param_template[state_name]
+                params[state_name]
             except KeyError:
-                param_template = self.function_params
+                params = self.function_object.paramsCurrent
 
             # param_spec is the existing specification for the parameter in paramsCurrent or runtime_params
-            param_spec = param_template[state_name]
+            param_spec = params[state_name]
 
             # If param_spec is a projection (i.e., ControlProjection or LearningProjection)
             #    then its value will be provided by the execution of the parameterState's function
@@ -1655,12 +1656,7 @@ class Mechanism_Base(Mechanism):
 
             # Assign version of parameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
-            # MODIFIED 4/20/17 OLD:
-            param[state_name] = type_match(state.value, param_type)
-            # # MODIFIED 4/20/17 NEW:
-            # param_back_field_name = '_' + state_name
-            # param[param_back_field_name] = type_match(state.value, param_type)
-            # # MODIFIED 4/20/17 END
+            params[state_name] = type_match(state.value, param_type)
 
     def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
         """Execute function for each outputState and assign result of each to corresponding item of self.outputValue
@@ -1888,6 +1884,7 @@ def _is_mechanism_spec(spec):
         return True
     return False
 
+# MechanismTuple indices
 OBJECT_ITEM = 0
 PARAMS_ITEM = 1
 PHASE_ITEM = 2

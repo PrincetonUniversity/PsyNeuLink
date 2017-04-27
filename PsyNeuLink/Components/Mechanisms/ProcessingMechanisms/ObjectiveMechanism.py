@@ -243,7 +243,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     monitored_values=None,        \
     names=None,                   \
     function=LinearCombination,   \
-    role=None                     \
     params=None,                  \
     name=None,                    \
     prefs=None)
@@ -399,7 +398,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  monitored_values=None,
                  names:tc.optional(list)=None,
                  function=LinearCombination,
-                 role:tc.optional(str)=None,
+                 # role:tc.optional(str)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -412,10 +411,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         params = self._assign_args_to_param_dicts(monitored_values=monitored_values,
                                                   names=names,
                                                   function=function,
-                                                  role=role,
                                                   params=params)
 
-        self.learning_role = None
+        self._learning_role = None
 
         super().__init__(variable=default_input_value,
                          params=params,
@@ -717,7 +715,7 @@ def validate_monitored_value(objective_mech, state_spec, context=None):
 
 def _objective_mechanism_role(mech, role):
     if isinstance(mech, ObjectiveMechanism):
-        if mech.role is role:
+        if mech._role is role:
             return True
         else:
             return False

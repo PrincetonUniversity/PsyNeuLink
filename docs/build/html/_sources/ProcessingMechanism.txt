@@ -1,5 +1,5 @@
-Processing Mechanisms
-=====================
+Processing Mechanism
+====================
 
 .. toctree:: 
    :maxdepth: 1

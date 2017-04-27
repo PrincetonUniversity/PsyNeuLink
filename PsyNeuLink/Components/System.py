@@ -34,28 +34,26 @@ Overview
 A system is a collection of `processes <Process>` that are executed together.  Executing a system executes all of the
 `mechanisms <Mechanism>` in its processes in a structured order.  `Projections <Projection>` between mechanisms in
 different processes within the system are permitted, as are recurrent projections, but projections from mechanisms
-in other systems are ignored (PsyNeuLink does not support ESP).  A system can include three types of mechanisms:
+in other systems are ignored (PsyNeuLink does not support ESP).  A system can include two types of mechanisms:
 
 * `ProcessingMechanism`
-    These receive input from one or more projections, transform the input in some way,
+    These receive input from one or more projections, transform their input in some way,
     and assign the result as their output.
 
-* `ControlMechanism`
-    These monitor the output of other mechanisms for use in controlling the parameters of other mechanisms or their
-    functions.
-
-* `MonitoringMechanism`
-    These monitor the output of other mechanisms for use in modifying the parameters of projections (learning)
+* `AdpativeMechanism`
+    These are used to adjust the operation of other components.  There are two types:  
+    `LearningMechanisms <LearningMechanism>` that adjust projections, and `ControlMechanisms <ControlMechanism>`
+    that adjust the parameters of other mechanisms and/or their functions.
 
 .. _System_Creation:
 
 Creating a System
 -----------------
 
-Systems are created by calling the :py:func:`system` function.  If no arguments are provided, a system with a
+Systems are created by calling :py:func:`system`.  If no arguments are provided, a system with a
 single process containing a single :ref:`default mechanism <LINK>` will be returned. Whenever a system is created,
 a `ControlMechanism <ControlMechanism>` is created for it and assigned as its `controller`.  The controller can be
-specified by assigning an existing ControlMechanism to the  :keyword:`controller`  argument of the system's constructor,
+specified by assigning an existing ControlMechanism to the **controller** argument of the system's constructor,
 or specifying a class of ControlMechanism;  if none is specified, a `DefaultControlMechanism` is created.
 
 .. _System_Structure:
@@ -68,16 +66,17 @@ Structure
 Graph
 ~~~~~
 
-When an instance of a system is created, a graph is constructed that describes the connections (edges) among its
-mechanisms (nodes).  The graph is assigned to the system's `graph` attribute.  This is a dictionary of dependencies,
-that can be passed to graph theoretical tools for analysis.  A system can have recurrent processing pathways, such as
-feedback loops, in which case the system will have a cyclic graph.  PsyNeuLink also uses the graph of a
-system to determine the order in which its mechanisms are executed.  In order to do so in an orderly manner, however,
-the graph must be acyclic.  So, for execution, PsyNeuLink constructs an `executionGraph` from the system's `graph`.
-If the  system is acyclic, these are the same.  If the system is cyclic, then the `executionGraph` is a subset of the
-`graph` in which the dependencies (edges) associated with projections that close a loop have been removed. Note that
-this only impacts the order of execution;  the projections themselves remain in effect, and will be fully functional
-during the execution of the affected mechanisms (see :ref:`System_Execution` below for a more detailed description).
+When a system is created, a graph is constructed that describes the projections (edges) among its mechanisms (nodes).  
+The graph is assigned to the system's `graph` attribute.  A system's graph can be displayed using its `show_graph` 
+method.  The graph is stored as a dictionary of dependencies, that can be passed to graph theoretical tools for 
+analysis.  A system can have recurrent processing pathways, such as feedback loops, in which case the system will 
+have a cyclic graph.  PsyNeuLink also uses the graph of a system to determine the order in which its mechanisms are 
+executed.  In order to do so in an orderly manner, however, the graph must be acyclic.  So, for execution, 
+PsyNeuLink constructs an `executionGraph` from the system's `graph`. If the  system is acyclic, these are the same.  
+If the system is cyclic, then the `executionGraph` is a subset of the `graph` in which the dependencies (edges) 
+associated with projections that close a loop have been removed. Note that this only impacts the order of execution;  
+the projections themselves remain in effect, and will be fully functional during the execution of the affected 
+mechanisms (see `System_Execution` below for a more detailed description).
 
 .. _System_Mechanisms:
 
@@ -197,13 +196,15 @@ of execution, as input to mechanisms that close recurrent loops (designated as `
 Learning
 ~~~~~~~~
 The system will execute learning if it is specified for any process in the system.  The system's `learning` attribute
-indicates whether learning is enabled for the system. Learning is executed for any
-components (individual projections or processes) for which it is specified after all processing mechanisms in the
-system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
-learning) can be specified in either of two formats, sequence or mechanism, that are described in the :doc:`Run` module;
-see `Run_Inputs` and `Run_Targets`).  Both formats require that an input be provided for each `ORIGIN` mechanism of
-the system (listed in its `originMechanisms <System_Base.originMechanisms>` attribute).  If the targets are specified
-in sequence or mechanism format, one target must be provided for each `TARGET` mechanism (listed in its
+indicates whether learning is enabled for the system. Learning is executed for any components (individual projections 
+or processes) for which it is specified after all processing mechanisms in the
+system have been executed, but before the controller is executed (see below).  The learning components of a system
+can be displayed using the system's `show_graph` method with its **show_learning** argument assigned :keyword:`True`.
+The stimuli used for learning (both inputs and targets) can be specified in either of two formats, 
+sequence or mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both 
+formats require that an input be provided for each `ORIGIN` mechanism of the system (listed in its `originMechanisms 
+<System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or mechanism format, 
+one target must be provided for each `TARGET` mechanism (listed in its 
 `targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a
 `function format <Run_Targets_Function_Format>`, which generates a target for each execution of the mechanism.
 
@@ -216,13 +217,14 @@ in sequence or mechanism format, one target must be provided for each `TARGET` m
 
 Control
 ~~~~~~~
-Every system is associated with a single `controller`.  The controller monitors the outputState(s) of one or more
-mechanisms in the system (listed in its `monitored_output_states` attribute), and uses that information to set the
-value of parameters for those or other mechanisms in the system, or their functions
+Every system is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor  
+the outputState(s) of one or more mechanisms in the system (listed in its `monitored_output_states` attribute), 
+and uses that information to set the value of parameters for those or other mechanisms in the system, or their functions
 (see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which outputStates are
-monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled). The controller is
-executed after all other mechanisms in the system are executed, and sets the values of any parameters that it
-controls, which then take effect in the next round of execution.
+monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled).  The control components
+of a system can be displayed using the system's `show_graph` method with its **show_control** argument assigned 
+:keyword:``True`. The controller is executed after all other mechanisms in the system are executed, and sets the 
+values of any parameters that it controls, which then take effect in the next round of execution.
 
 COMMENT:
    Examples
@@ -503,7 +505,7 @@ class System_Base(System):
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {kwProcesses: [Mechanism_Base.defaultMechanism],
+        + paramClassDefaults = {PROCESSES: [Mechanism_Base.defaultMechanism],
                                 CONTROLLER: DefaultController,
                                 TIME_SCALE: TimeScale.TRIAL}
        Class methods
@@ -649,7 +651,7 @@ class System_Base(System):
 
     monitoringMechanisms : MechanismList)
         contains all `MONITORING` mechanisms in the system (used for learning).
-        COMMENET:
+        COMMENT:
             based on _monitoring_mech_tuples)
         COMMENT
 
@@ -663,10 +665,6 @@ class System_Base(System):
         one item for each `TARGET` mechanism in the system (listed in `targetMechanisms`).  Used to represent the
         :keyword:`targets` specified in the system's `execute <System.execute>` and `run <System.run>` methods, and
         provide their values to the the TARGET inputState of each `TARGET` mechanism during execution.
-
-    COMMENT:
-       IS THIS CORRECT:
-    COMMENT
 
     controlMechanisms : MechanismList
         contains `controller` of the system
@@ -874,7 +872,7 @@ class System_Base(System):
             raise SystemError("{} (controller arg for \'{}\') is not a ControllerMechanism or subclass of one".
                               format(controller, self.name))
 
-        for process in target_set[kwProcesses]:
+        for process in target_set[PROCESSES]:
             if not isinstance(process, Process):
                 raise SystemError("{} (in processes arg for \'{}\') is not a Process object".format(process, self.name))
 
@@ -899,7 +897,7 @@ class System_Base(System):
         This is necessary to:
         - insure there is no FUNCTION specified (not allowed for a System object)
         - suppress validation (and attendant execution) of System execute method (unless VALIDATE_PROCESS is set)
-            since generally there is no need, as all of the mechanisms in kwProcesses have already been validated
+            since generally there is no need, as all of the mechanisms in PROCESSES have already been validated
         """
 
         if self.paramsCurrent[FUNCTION] != self.execute:
@@ -919,7 +917,7 @@ class System_Base(System):
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
         """Instantiate processes of system
 
-        Use self.processes (populated by self.paramsCurrent[kwProcesses] in Function._assign_args_to_param_dicts
+        Use self.processes (populated by self.paramsCurrent[PROCESSES] in Function._assign_args_to_param_dicts
         If self.processes is empty, instantiate default process by calling process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
         If input is specified, check that it's length equals the number of processes
@@ -1047,11 +1045,11 @@ class System_Base(System):
                 elif isinstance(process, dict):
                     # IMPLEMENT:  HANDLE Process specification dict here;
                     #             include process_input as ??param, and context=self
-                    raise SystemError("Attempt to instantiate process {0} in kwProcesses of {1} "
+                    raise SystemError("Attempt to instantiate process {0} in PROCESSES of {1} "
                                       "using a Process specification dict: not currently supported".
                                       format(process.name, self.name))
                 else:
-                    raise SystemError("Entry {0} of kwProcesses ({1}) must be a Process object, class, or a "
+                    raise SystemError("Entry {0} of PROCESSES ({1}) must be a Process object, class, or a "
                                       "specification dict for a Process".format(i, process))
 
             # # process should now be a Process object;  assign to processList
@@ -1119,7 +1117,7 @@ class System_Base(System):
         # # MODIFIED 2/8/17 END
         #
         # # Instantiate processList using process_tuples, and point self.processes to it
-        # # Note: this also points self.params[kwProcesses] to self.processes
+        # # Note: this also points self.params[PROCESSES] to self.processes
         self.process_tuples = processes_spec
         self._processList = ProcessList(self, self.process_tuples)
         self.processes = self._processList.processes
@@ -1167,7 +1165,7 @@ class System_Base(System):
 
             # If sender is an ObjectiveMechanism being used for learning or control, or a LearningMechanism,
             # Assign as MONITORING and move on
-            if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role) or
+            if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role) or
                     isinstance(sender_mech, LearningMechanism)):
                 sender_mech.systems[self] = MONITORING
                 return
@@ -1191,24 +1189,26 @@ class System_Base(System):
 
             # Assign as TERMINAL (or SINGLETON) if it:
             #    - is not an Objective Mechanism used for Learning or Control and
-            #    - has no outgoing projections or
-            #    -     only ones to ObjectiveMechanism(s) used for Learning or Control and
+            #    - it is not a controlMechanism and
+            #    - it has no outgoing projections or
+            #          only ones to ObjectiveMechanism(s) used for Learning or Control
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
-            # It is not a ControlMechanism
             if (
-
+                # It is not a ControlMechanism
                 not (isinstance(sender_mech, ControlMechanism_Base) or
                     # It is not an ObjectiveMechanism used for Learning or Control
-                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role in (LEARNING,CONTROL))) and
+                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role in (LEARNING,CONTROL))) and
                         # All of its projections
                         all(
                             all(
                                 # are to ControlMechanism(s)...
-                                isinstance(projection.receiver.owner, ControlMechanism_Base) or
-                                 # or ObjectiveMechanism(s) used for Learning or Control
+                                isinstance(projection.receiver.owner, (ControlMechanism_Base, LearningMechanism)) or
+                                 # ObjectiveMechanism(s) used for Learning or Control
                                  (isinstance(projection.receiver.owner, ObjectiveMechanism) and
-                                             projection.receiver.owner.role in (LEARNING, CONTROL))
+                                             projection.receiver.owner._role in (LEARNING, CONTROL)) or
+                                # itself!
+                                 projection.receiver.owner is sender_mech
                             for projection in output_state.sendsToProjections)
                         for output_state in sender_mech.outputStates.values())):
                 try:
@@ -1343,19 +1343,19 @@ class System_Base(System):
 
             build_dependency_sets_by_traversing_projections(first_mech)
 
-        # MODIFIED 4/1/17 NEW:
-        # HACK TO LABEL TERMINAL MECHS -- SHOULD HAVE BEEN HANDLED ABOVE
-        # LABELS ANY MECH AS A TARGET THAT PROJECTION TO AN ObjectiveMechanism WITH LEARNING AS ITS role
-        for mech in self.mechanisms:
-            for output_state in mech.outputStates.values():
-                for projection in output_state.sendsToProjections:
-                    receiver = projection.receiver.owner
-                    if isinstance(receiver, ObjectiveMechanism) and receiver.role == LEARNING:
-                        mech.systems[self] = TERMINAL
-                        break
-                if mech.systems[self] == TERMINAL:
-                    break
-        # MODIFIED 4/1/17 END
+        # # MODIFIED 4/1/17 NEW:
+        # # HACK TO LABEL TERMINAL MECHS -- SHOULD HAVE BEEN HANDLED ABOVE
+        # # LABELS ANY MECH AS A TARGET THAT PROJECTS TO AN ObjectiveMechanism WITH LEARNING AS ITS role
+        # for mech in self.mechanisms:
+        #     for output_state in mech.outputStates.values():
+        #         for projection in output_state.sendsToProjections:
+        #             receiver = projection.receiver.owner
+        #             if isinstance(receiver, ObjectiveMechanism) and receiver.role == LEARNING:
+        #                 mech.systems[self] = TERMINAL
+        #                 break
+        #         if mech.systems[self] == TERMINAL:
+        #             break
+        # # MODIFIED 4/1/17 END
 
         # Print graph
         if self.verbosePref:
@@ -1520,7 +1520,7 @@ class System_Base(System):
 
             # All other sender_mechs must be either a MonitoringMechanism or an ObjectiveMechanism with role=LEARNING
             elif not (isinstance(sender_mech, LearningMechanism) or
-                          (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role is LEARNING)):
+                          (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role is LEARNING)):
                 raise SystemError("PROGRAM ERROR: {} is not a legal object for learning graph;"
                                   "must be a LearningMechanism or an ObjectiveMechanism".
                                   format(sender_mech))
@@ -2064,6 +2064,9 @@ class System_Base(System):
         if isinstance(self.targets, function_type):
             self.current_targets = self.targets()
 
+        if self.current_targets is None:
+           raise SystemError("No targets were specified in the call to execute {} with learning".format(self.name))
+
         for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
         # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
         #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
@@ -2207,12 +2210,6 @@ class System_Base(System):
         Returns
         -------
 
-        COMMMENT:
-            OLD;  CORRECT?
-            <system>.results : List[outputState.value]
-                list of the value of the outputState for each `TERMINAL` mechanism of the system returned for
-                each execution.
-        COMMMENT
         <system>.results : List[Mechanism.OutputValue]
             list of the OutputValue for each `TERMINAL` mechanism of the system returned for each execution.
 
@@ -2403,36 +2400,36 @@ class System_Base(System):
 
         Diciontary contains entries for the following attributes and values:
 
-            :keyword:`PROCESSES`: list of processes in system
+            PROCESSES: list of processes in system
 
-            :keyword:`MECHANISMS`: list of all mechanisms in the system
+            MECHANISMS: list of all mechanisms in the system
 
-            :keyword:`ORIGIN_MECHANISMS`: list of ORIGIN mechanisms
+            ORIGIN_MECHANISMS: list of ORIGIN mechanisms
 
-            :keyword:`INPUT_ARRAY`: ndarray of the inputs to the ORIGIN mechanisms
+            INPUT_ARRAY: ndarray of the inputs to the ORIGIN mechanisms
 
-            :keyword:`RECURRENT_MECHANISMS`:  list of INITALIZE_CYCLE mechanisms
+            RECURRENT_MECHANISMS:  list of INITALIZE_CYCLE mechanisms
 
-            :keyword:`RECURRENT_INIT_ARRAY`: ndarray of initial_values
+            RECURRENT_INIT_ARRAY: ndarray of initial_values
 
-            :keyword:`TERMINAL_MECHANISMS`:list of TERMINAL mechanisms
+            TERMINAL_MECHANISMS:list of TERMINAL mechanisms
 
-            :keyword:`OUTPUT_STATE_NAMES`: list of outputState names corrresponding to 1D arrays in output_value_array
+            OUTPUT_STATE_NAMES: list of outputState names corrresponding to 1D arrays in output_value_array
 
-            :keyword:`OUTPUT_VALUE_ARRAY`:3D ndarray of 2D arrays of output.value arrays of outputStates for all
+            OUTPUT_VALUE_ARRAY:3D ndarray of 2D arrays of output.value arrays of outputStates for all
             `TERMINAL` mechs
 
-            :keyword:`NUM_PHASES_PER_TRIAL`:number of phases required to execute all mechanisms in the system
+            NUM_PHASES_PER_TRIAL:number of phases required to execute all mechanisms in the system
 
-            :keyword:`MONITORING_MECHANISMS`:list of MONITORING mechanisms
+            MONITORING_MECHANISMS:list of MONITORING mechanisms
 
-            `TARGET`:list of TARGET mechanisms
+            TARGET:list of TARGET mechanisms
 
-            :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of MappingProjections that receive learning projections
+            LEARNING_PROJECTION_RECEIVERS:list of MappingProjections that receive learning projections
 
-            :keyword:`CONTROL_MECHANISMS`:list of CONTROL mechanisms
+            CONTROL_MECHANISMS:list of CONTROL mechanisms
 
-            :keyword:`CONTROL_PROJECTION_RECEIVERS`:list of parameterStates that receive learning projections
+            CONTROL_PROJECTION_RECEIVERS:list of parameterStates that receive learning projections
 
         Returns
         -------
@@ -2592,335 +2589,180 @@ class System_Base(System):
         """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
-    def show_graph(self, output_fmt='pdf', direction = 'BT'):
-        """Generate simple visualization of execution graph, showing dimensions
+    def show_graph(self, 
+                   direction = 'BT',
+                   show_learning = False,
+                   show_control = False,
+                   learning_color = 'green',
+                   control_color='blue',
+                   output_fmt='pdf',
+                   ):
+        """Generate a display of the graph structure of mechanisms and projections in the system.
+        
+        By default, only the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>` 
+        in the `system's graph <System.graph>` are displayed.  However, the **show_learning** and 
+        **show_control** arguments can be used to also show the `learning <LearningMechanism>` and
+        `control <ControlMechanism>` components of the system, respectively.  `Mechanisms <Mechanism>` are always 
+        displayed as (oval) nodes.  `Projections <Projection>` are displayed as labelled arrows, unless 
+        **show_learning** is assigned **True**, in which case MappingProjections that receive a `LearningProjection` 
+        are displayed as diamond-shaped nodes. The numbers in parentheses within a mechanism node indicate its 
+        dimensionality.   
 
         Arguments
         ---------
 
-        output_fmt : 'jupyter' or 'pdf'
-            'pdf' will generate and open a pdf with the visualization,
+        direction : keyword : default 'BT' 
+            'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
 
-            'jupyter' will simply return graphviz graph the object (ideal for working in jupyter/ipython notebooks)
+        show_learning : bool : default False 
+            determines whether or not to show the learning components of the system;  
+            they will all be displayed in the color specified for **learning_color**.
+            projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
 
-        direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
-            rank direction of graph
+        show_control :  bool : default False 
+            determines whether or not to show the control components of the system;  
+            they will all be displayed in the color specified for **control_color**.
 
+        learning_color : keyword : default `green`
+            determines the color in which the learning components are displayed
+
+        control_color : keyword : default `blue`
+            determines the color in which the learning components are displayed (note: if the system's 
+            `controller <System.controller>`) is an `EVCMechanism`, then a link is shown in red from the
+            `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` it creates to the corresponding 
+            `ORIGIN` mechanisms of the system, to indicate that although no projection are created for these, 
+            the prediction mechanisms determine the input to the `ORIGIN` mechanisms when the EVCMechanism 
+            `simulates execution <EVCMechanism_Execution>` of the system.
+
+        output_fmt : keyword : default 'pdf'
+            'pdf': generate and open a pdf with the visualization;
+            'jupyter': return the object (ideal for working in jupyter/ipython notebooks).
+
+
+        Returns
+        -------
+
+        display of system : `pdf` or Graphviz graph object 
+            'pdf' (placed in current directory) if :keyword:`output_fmt` arg is 'pdf'; 
+            Graphviz graph object if :keyword:`output_fmt` arg is 'jupyter'.
 
         """
+
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-        
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+
         import graphviz as gv
 
         system_graph = self.graph
         learning_graph=self.learningGraph
-        
+
         # build graph and configure visualisation settings
         G = gv.Digraph(engine = "dot", 
                        node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'}, 
                        edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
                        graph_attr = {"rankdir" : direction} )
-        
+
+
         # work with system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
-            if isinstance(rcvr[0], ObjectiveMechanism) or isinstance(rcvr[0], LearningMechanism):
-                continue
             rcvr_name = rcvr[0].name
             rcvr_shape = rcvr[0].variable.shape[1]
-            rcvr_label = " {} ({}) ".format(rcvr_name, rcvr_shape)
-            
+            rcvr_label = rcvr_name
+
+
             # loop through senders
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
                 sndr_name = sndr[0].name
                 sndr_shape = sndr[0].variable.shape[1]
-                sndr_label = " {} ({}) ".format(sndr_name, sndr_shape)
-                
+                sndr_label = sndr_name
+
                 # find edge name
                 projs = sndr[0].outputState.sendsToProjections
                 for proj in projs:
                     if proj.receiver.owner == rcvr[0]:
                         edge_name = proj.name
                         edge_shape = proj.matrix.shape
-                edge_label = " {} {} ".format(edge_name, edge_shape)
-                G.edge(sndr_label, rcvr_label, label = edge_label)
-                
-        if   output_fmt == 'pdf':
-            G.view(self.name.replace(" ", "-"), cleanup=True)
-        elif output_fmt == 'jupyter':
-            return G
-
-    def show_graph_with_control(self, output_fmt='pdf', direction = 'BT', control_color='blue'):
-
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-
-        import graphviz as gv
-
-        system_graph = self.graph
-
-        # build graph and configure visualisation settings
-        G = gv.Digraph(engine = "dot", 
-                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'}, 
-                       edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
-                       graph_attr = {"rankdir" : direction} )
-
-        # work with system graph
-        rcvrs = list(system_graph.keys())
-        # loop through receivers
-        for rcvr in rcvrs:
-            rcvr_name = rcvr[0].name
-            rcvr_label = rcvr_name
-
-            # loop through senders
-            sndrs = system_graph[rcvr]
-            for sndr in sndrs:
-                sndr_name = sndr[0].name
-                sndr_label = sndr_name
-
-                # find edge name
-                projs = sndr[0].outputState.sendsToProjections
-                for proj in projs:
-                    if proj.receiver.owner == rcvr[0]:
-                        edge_name = proj.name
+                        has_learning = proj.has_learning_projection
                 edge_label = edge_name
                 #### CHANGE MADE HERE ###
                 # if rcvr is learning mechanism, draw arrow with learning color
                 if isinstance(rcvr[0], LearningMechanism) or isinstance(rcvr[0], ObjectiveMechanism):
-                    arrow_color=control_color
+                    break
                 else:
                     arrow_color="black"
-                G.edge(sndr_label, rcvr_label, label = edge_label, color=arrow_color)
-
-        controller = self.controller
-
-        connector = controller.inputState.receivesFromProjections[0]
-        objmech = connector.sender.owner
-
-        # main edge
-        G.node(controller.name, color=control_color)
-        G.node(objmech.name, color=control_color)
-        G.edge(objmech.name, controller.name, label=connector.name, color=control_color)
-
-        # outgoing edges
-        for output_state in controller.controlSignals:
-            for projection in output_state.sendsToProjections:
-                edge_name
-                rcvr_name = projection.receiver.owner.name
-                G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
-
-        # incoming edges
-        for istate in objmech.inputStates.values():
-            for proj in istate.receivesFromProjections:
-                sndr_name = proj.sender.owner.name
-                G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
-
-        if   output_fmt == 'pdf':
-            G.view(self.name.replace(" ", "-"), cleanup=True)
-        elif output_fmt == 'jupyter':
-            return G
-
-
-    def show_graph_with_learning(self, output_fmt='pdf', direction = 'BT', learning_color='green'):
-        """Generate visualization of interconnections between all mechanisms and projections, including all learning machinery
-
-        Arguments
-        ---------
-
-        output_fmt : 'jupyter' or 'pdf'
-            pdf to generate and open a pdf with the visualization,
-            jupyter to simply return the object (ideal for working in jupyter/ipython notebooks)
-
-        direction : 'BT', 'TB', 'LR', or 'RL' correspond to bottom to top, top to bottom, left to right, and right to left
-            rank direction of graph
-
-        learning_color : determines with what color to draw all the learning machinery
-
-        Returns
-        -------
-
-        Graphviz graph object if output_fmt is 'jupyter'
-
-        """
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-
-        import graphviz as gv
-
-        system_graph = self.graph
-        learning_graph=self.learningGraph
-
-        # build graph and configure visualisation settings
-        G = gv.Digraph(engine = "dot", 
-                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'}, 
-                       edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
-                       graph_attr = {"rankdir" : direction} )
-
-        # work with system graph
-        rcvrs = list(system_graph.keys())
-        # loop through receivers
-        for rcvr in rcvrs:
-            rcvr_name = rcvr[0].name
-            rcvr_label = rcvr_name
-
-            # loop through senders
-            sndrs = system_graph[rcvr]
-            for sndr in sndrs:
-                sndr_name = sndr[0].name
-                sndr_label = sndr_name
-
-                # find edge name
-                projs = sndr[0].outputState.sendsToProjections
-                for proj in projs:
-                    if proj.receiver.owner == rcvr[0]:
-                        edge_name = proj.name
-                        draw_node = proj.has_learning_projection
-                edge_label = edge_name
-                #### CHANGE MADE HERE ###
-                # if rcvr is learning mechanism, draw arrow with learning color
-                if isinstance(rcvr[0], LearningMechanism) or isinstance(rcvr[0], ObjectiveMechanism):
-                    arrow_color=learning_color
-                else:
-                    arrow_color="black"
-                if not draw_node:
-                    G.edge(sndr_label, rcvr_label, label = edge_label, color=arrow_color)
-                else:
-
+                if show_learning and has_learning:
+                    # expand
                     G.node(sndr_label, shape="oval")
                     G.node(edge_label, shape="diamond")
                     G.node(rcvr_label, shape="oval")
                     G.edge(sndr_label, edge_label, arrowhead='none')
                     G.edge(edge_label, rcvr_label)
-                #### CHANGE MADE HERE ###
-
-        rcvrs = list(learning_graph.keys())
-
-        for rcvr in rcvrs:
-                # if rcvr is projection
-                if isinstance(rcvr, MappingProjection):
-                    # for each sndr of rcvr
-                    sndrs = learning_graph[rcvr]
-                    for sndr in sndrs:
-                        edge_label = rcvr.parameterStates['matrix'].receivesFromProjections[0].name
-                        G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
                 else:
-                    sndrs = learning_graph[rcvr]
-                    for sndr in sndrs:
-                        projs = sndr.outputState.sendsToProjections
-                        for proj in projs:
-                            if proj.receiver.owner == rcvr:
-                                edge_name = proj.name
-                        G.node(rcvr.name, color=learning_color)
-                        G.node(sndr.name, color=learning_color)
-                        G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
-
-        if   output_fmt == 'pdf':
-            G.view(self.name.replace(" ", "-"), cleanup=True)
-        elif output_fmt == 'jupyter':
-            return G
-
-    def show_graph_with_learning_and_control(self, output_fmt='pdf', direction = 'BT', learning_color='green', control_color='blue'):
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-
-        import graphviz as gv
-
-        system_graph = self.graph
-        learning_graph=self.learningGraph
-
-        # build graph and configure visualisation settings
-        G = gv.Digraph(engine = "dot", 
-                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'}, 
-                       edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
-                       graph_attr = {"rankdir" : direction} )
-
-        # work with system graph
-        rcvrs = list(system_graph.keys())
-        # loop through receivers
-        for rcvr in rcvrs:
-            rcvr_name = rcvr[0].name
-            rcvr_label = rcvr_name
-
-            # loop through senders
-            sndrs = system_graph[rcvr]
-            for sndr in sndrs:
-                sndr_name = sndr[0].name
-                sndr_label = sndr_name
-
-                # find edge name
-                projs = sndr[0].outputState.sendsToProjections
-                for proj in projs:
-                    if proj.receiver.owner == rcvr[0]:
-                        edge_name = proj.name
-                        draw_node = proj.has_learning_projection
-                edge_label = edge_name
-                #### CHANGE MADE HERE ###
-                # if rcvr is learning mechanism, draw arrow with learning color
-                if isinstance(rcvr[0], LearningMechanism) or isinstance(rcvr[0], ObjectiveMechanism):
-                    arrow_color=learning_color
-                else:
-                    arrow_color="black"
-                if not draw_node:
+                    # render normally
                     G.edge(sndr_label, rcvr_label, label = edge_label, color=arrow_color)
-                else:
 
-                    G.node(sndr_label, shape="oval")
-                    G.node(edge_label, shape="diamond")
-                    G.node(rcvr_label, shape="oval")
-                    G.edge(sndr_label, edge_label, arrowhead='none')
-                    G.edge(edge_label, rcvr_label)
-                #### CHANGE MDE HERE ###
+        # add learning graph if show_learning
+        if show_learning:
+            rcvrs = list(learning_graph.keys())
 
-        rcvrs = list(learning_graph.keys())
+            for rcvr in rcvrs:
+                    # if rcvr is projection
+                    if isinstance(rcvr, MappingProjection):
+                        # for each sndr of rcvr
+                        sndrs = learning_graph[rcvr]
+                        for sndr in sndrs:
+                            edge_label = rcvr.parameterStates['matrix'].receivesFromProjections[0].name
+                            G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
+                    else:
+                        sndrs = learning_graph[rcvr]
+                        for sndr in sndrs:
+                            projs = sndr.outputState.sendsToProjections
+                            for proj in projs:
+                                if proj.receiver.owner == rcvr:
+                                    edge_name = proj.name
+                            G.node(rcvr.name, color=learning_color)
+                            G.node(sndr.name, color=learning_color)
+                            G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
 
-        for rcvr in rcvrs:
-                # if rcvr is projection
-                if isinstance(rcvr, MappingProjection):
-                    # for each sndr of rcvr
-                    sndrs = learning_graph[rcvr]
-                    for sndr in sndrs:
-                        edge_label = rcvr.parameterStates['matrix'].receivesFromProjections[0].name
-                        G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
-                else:
-                    sndrs = learning_graph[rcvr]
-                    for sndr in sndrs:
-                        projs = sndr.outputState.sendsToProjections
-                        for proj in projs:
-                            if proj.receiver.owner == rcvr:
-                                edge_name = proj.name
-                        G.node(rcvr.name, color=learning_color)
-                        G.node(sndr.name, color=learning_color)
-                        G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
+        # add control graph if show_control
+        if show_control:
+            controller = self.controller
 
-        controller = self.controller
+            connector = controller.inputState.receivesFromProjections[0]
+            objmech = connector.sender.owner
 
-        connector = controller.inputState.receivesFromProjections[0]
-        objmech = connector.sender.owner
+            # main edge
+            G.node(controller.name, color=control_color)
+            G.node(objmech.name, color=control_color)
+            G.edge(objmech.name, controller.name, label=connector.name, color=control_color)
 
-        # main edge
-        G.node(controller.name, color=control_color)
-        G.node(objmech.name, color=control_color)
-        G.edge(objmech.name, controller.name, label=connector.name, color=control_color)
+            # outgoing edges
+            for output_state in controller.controlSignals:
+                for projection in output_state.sendsToProjections:
+                    edge_name
+                    rcvr_name = projection.receiver.owner.name
+                    G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
 
-        # outgoing edges
-        for output_state in controller.controlSignals:
-            for projection in output_state.sendsToProjections:
-                edge_name
-                rcvr_name = projection.receiver.owner.name
-                G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
+            # incoming edges
+            for istate in objmech.inputStates.values():
+                for proj in istate.receivesFromProjections:
+                    sndr_name = proj.sender.owner.name
+                    G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
 
-        # incoming edges
-        for istate in objmech.inputStates.values():
-            for proj in istate.receivesFromProjections:
-                sndr_name = proj.sender.owner.name
-                G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
+            # prediction mechanisms
+            for mech_tuple in self.executionList:
+                mech = mech_tuple[0]
+                if mech._role is CONTROL:
+                    G.node(mech.name, color=control_color)
+                    recvr = mech.origin_mech
+                    G.edge(mech.name, recvr.name, label=' prediction assignment', color='red')
+                    pass
 
+        # return
         if   output_fmt == 'pdf':
             G.view(self.name.replace(" ", "-"), cleanup=True)
         elif output_fmt == 'jupyter':

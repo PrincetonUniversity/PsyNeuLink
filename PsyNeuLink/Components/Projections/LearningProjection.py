@@ -15,8 +15,10 @@ Overview
 --------
 
 A LearningProjection is a subclass of `Projection` that projects from a `LearningMechanism` to the
-:keyword:`MATRIX` `parameterState <ParameterState>` of a `MappingProjection`, and modifies the value of the
-`matrix <MappingProjection.matrix>` parameter of that MappingProjection.
+MATRIX `parameterState <ParameterState>` of a `MappingProjection`, and modifies the value of the
+`matrix <MappingProjection.matrix>` parameter of that MappingProjection.  All of the LearningProjections in a system, 
+along with its other `learning components <LearningMechanism>`, can be displayed using the system's `show_graph` method 
+with its **show_learning** argument assigned :keyword:`True`.
 
 .. _LearningProjection_Creation:
 
@@ -43,7 +45,7 @@ needed to implement learning for the MappingProjection (see `LearningMechanism_L
 When a LearningProjection is created, its full initialization is :ref:`deferred <Component_Deferred_Init>` until its
 `sender <LearningProjection.sender>` and `receiver <LearningProjection.receiver>` have been fully specified.  This
 allows a LearningProjection to be created before its `sender` and/or `receiver` have been created (e.g., before them
-in a script), by calling its constructor without specifying its :keyword:`sender` or :keyword:`receiver` arguments.
+in a script), by calling its constructor without specifying its **sender** or **receiver** arguments.
 However, for the LearningProjection to be operational, initialization must be completed by calling its `deferred_init`
 method.  This is not necessary if learning has been specified for a `system <System_Execution_Learning>`,
 `process <Process_Learning>`, or as the `projection <MappingProjection_Tuple_Specification>` in the `pathway` of a
@@ -198,7 +200,7 @@ class LearningProjection(Projection_Base):
         specifies a function to be used for learning by the `sender <LearningMechanism.sender>` (i.e., its
         `function <LearningMechanism.function>` attribute).
 
-    learning_rate : Optional[float]
+    learning_rate : Optional[float or int]
         if specified, it is applied mulitiplicatively to `learning_signal` received from the `LearningMechanism`
         from which it projects (see `learning_rate <LearningProjection.learning_rate>` for additional details).
 
@@ -312,8 +314,8 @@ class LearningProjection(Projection_Base):
     def __init__(self,
                  sender:tc.optional(tc.any(OutputState, LearningMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
-                 learning_rate:tc.optional(float)=None,
                  learning_function:tc.optional(is_function_type)=BackPropagation,
+                 learning_rate:tc.optional(tc.any(parameter_spec))=None,
                  params:tc.optional(dict)=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -350,55 +352,57 @@ class LearningProjection(Projection_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        # VALIDATE SENDER
-        sender = self.sender
-        if isinstance(sender, LearningMechanism):
-            sender = self.sender = sender.outputState
+        if INITIALIZING in context:
+            # VALIDATE SENDER
+            sender = self.sender
+            if isinstance(sender, LearningMechanism):
+                sender = self.sender = sender.outputState
 
-        if any(s in {OutputState, LearningMechanism} for s in {sender, type(sender)}):
-            # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
-            if isinstance(sender, OutputState):
-                if not isinstance(sender.value, (list, np.ndarray)):
-                    raise LearningProjectionError("Sender for {} (outputState of LearningMechanism {}) "
-                                                  "must be a list or 1D np.array".format(self.name, sender.name))
-                if not np.array(sender.value).ndim == 1:
-                    raise LearningProjectionError("OutputState of {} (LearningMechanism for {})"
-                                                  " must be an 1D np.array".format(sender.name, self.name))
-            # If specification is a LearningMechanism class, pass (it will be instantiated in _instantiate_sender)
-            elif inspect.isclass(sender) and issubclass(sender,  LearningMechanism):
-                pass
+            if any(s in {OutputState, LearningMechanism} for s in {sender, type(sender)}):
+                # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
+                if isinstance(sender, OutputState):
+                    if not isinstance(sender.value, (list, np.ndarray)):
+                        raise LearningProjectionError("Sender for \'{}\' (outputState of LearningMechanism \'{}\') "
+                                                      "must be a list or 1D np.array".format(self.name, sender.name))
+                    if not np.array(sender.value).ndim == 1:
+                        raise LearningProjectionError("OutputState of \'{}\' (LearningMechanism for \'{}\')"
+                                                      " must be an 1D np.array".format(sender.owner.name, self.name))
+                # If specification is a LearningMechanism class, pass (it will be instantiated in _instantiate_sender)
+                elif inspect.isclass(sender) and issubclass(sender,  LearningMechanism):
+                    pass
 
-        else:
-            raise LearningProjectionError("The sender arg for {} ({}) must be an LearningMechanism, "
-                                          "the outputState of one, or a reference to the class"
-                                          .format(self.name, sender.name))
+            else:
+                raise LearningProjectionError("The sender arg for {} ({}) must be an LearningMechanism, "
+                                              "the outputState of one, or a reference to the class"
+                                              .format(self.name, sender.name))
 
 
-        # VALIDATE RECEIVER
-        receiver = self.receiver
-        if isinstance(receiver, MappingProjection):
+            # VALIDATE RECEIVER
+            receiver = self.receiver
+            if isinstance(receiver, MappingProjection):
+                try:
+                    receiver = self.receiver = receiver.parameterStates[MATRIX]
+                except KeyError:
+                    raise LearningProjectionError("The MappingProjection {} specified as the receiver for {} "
+                                                  "has no MATRIX parameter state".format(receiver.name, self.name))
+            if not any(s in {ParameterState, MappingProjection} for s in {receiver, type(receiver)}):
+                raise LearningProjectionError("The receiver arg for {} must be a MappingProjection "
+                                              "or the MATRIX parameterState of one."
+                                              .format(PROJECTION_SENDER, sender, self.name, ))
+
+            # VALIDATE WEIGHT CHANGE PARAMS
             try:
-                receiver = self.receiver = receiver.parameterStates[MATRIX]
+                weight_change_params = target_set[WEIGHT_CHANGE_PARAMS]
             except KeyError:
-                raise LearningProjectionError("The MappingProjection {} specified as the receiver for {} "
-                                              "has no MATRIX parameter state".format(receiver.name, self.name))
-        if not any(s in {ParameterState, MappingProjection} for s in {receiver, type(receiver)}):
-            raise LearningProjectionError("The receiver arg for {} must be a MappingProjection "
-                                          "or the MATRIX parameterState of one."
-                                          .format(PROJECTION_SENDER, sender, self.name, ))
-
-        # VALIDATE WEIGHT CHANGE PARAMS
-        try:
-            weight_change_params = target_set[WEIGHT_CHANGE_PARAMS]
-        except KeyError:
-            pass
-        else:
-            # FIX: CHECK THAT EACH ONE INCLUDED IS A PARAM OF A LINEAR COMBINATION FUNCTION
-            for param_name, param_value in weight_change_params.items():
-                if param_name is FUNCTION:
-                    raise LearningProjectionError("{} of {} contains a function specification ({}) that would override "
-                                                  "the LinearCombination function of the targeted MappingProjection".
-                                                  format(WEIGHT_CHANGE_PARAMS,self.name,param_value))
+                pass
+            else:
+                # FIX: CHECK THAT EACH ONE INCLUDED IS A PARAM OF A LINEAR COMBINATION FUNCTION
+                for param_name, param_value in weight_change_params.items():
+                    if param_name is FUNCTION:
+                        raise LearningProjectionError("{} of {} contains a function specification ({}) "
+                                                      "that would override the LinearCombination function "
+                                                      "of the targeted MappingProjection".
+                                                      format(WEIGHT_CHANGE_PARAMS,self.name,param_value))
 
     def _instantiate_sender(self, context=None):
         """Instantiate LearningMechanism
@@ -470,27 +474,25 @@ class LearningProjection(Projection_Base):
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
         candidate_objective_mech = learning_mechanism.inputStates[ERROR_SIGNAL].receivesFromProjections[0].sender.owner
-        if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech.role is LEARNING:
+        if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
             learned_projection.objective_mechanism = candidate_objective_mech
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = True
 
 
-    def execute(self, input=None, clock=CentralClock, time_scale=None, params={}, context=None):
+    def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
+
+        params = params or {}
 
         # Pass during initialization (since has not yet been fully initialized
         if self.value is DEFERRED_INITIALIZATION:
             return self.value
 
-        # # # FIX: WHY DOESN"T THIS WORK: [ASSIGNMENT OF LEARNING_RATE TO SLOPE OF LEARNING FUNCTION]
-        # # # FIX: HANDLE THIS AS runtime_param?? OR JUST USE learning_rate TO MODULATE WEIGHT CHANGE MATRIX DIRECTLY?
-        # # if self.learning_rate:
-        # #     params.update({SLOPE:self.learning_rate})
         # if self.learning_rate:
-        #     self.learning_signal *= self.learning_rate
+        #     params.update({SLOPE:self.learning_rate})
 
         self.weight_change_matrix = self.function(variable=self.sender.value,
                                                   params=params,
