@@ -571,6 +571,7 @@ class Component(object):
         self.paramInstanceDefaults = {}
 
         self._auto_dependent = False
+        self._role = None
 
         # self.componentName = self.componentType
         try:

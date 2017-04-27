@@ -1795,7 +1795,7 @@ class Process_Base(Process):
                 if (isinstance(mech, ObjectiveMechanism) and
                         # any(projection.sender.owner.processes[self] == TERMINAL
                         #     for projection in mech.inputStates[SAMPLE].receivesFromProjections) and
-                        mech.learning_role is TARGET and
+                        mech._learning_role is TARGET and
                         self.learning
                             ):
                     mech_tuple[0].processes[self] = TARGET
@@ -1892,7 +1892,7 @@ class Process_Base(Process):
                     # If projection is not from another ObjectiveMechanism, ignore
                     if not isinstance(sender, (ObjectiveMechanism)):
                         continue
-                    if isinstance(sender, ObjectiveMechanism) and sender.learning_role is TARGET:
+                    if isinstance(sender, ObjectiveMechanism) and sender._learning_role is TARGET:
                         return sender
                     if sender.inputStates:
                         target_mech = trace_learning_objective_mechanism_projections(sender)
@@ -1910,7 +1910,7 @@ class Process_Base(Process):
         target_mechs = list(mech_tuple.mechanism
                            for mech_tuple in self._mech_tuples
                             if (isinstance(mech_tuple.mechanism, ObjectiveMechanism) and
-                                mech_tuple.mechanism.learning_role is TARGET))
+                                mech_tuple.mechanism._learning_role is TARGET))
 
         if not target_mechs:
 
@@ -2068,7 +2068,7 @@ class Process_Base(Process):
         # Execute each Mechanism in the pathway, in the order listed, except those used for learning
         for mechanism, params, phase_spec in self._mech_tuples:
             if (isinstance(mechanism, LearningMechanism) or
-                    (isinstance(mechanism, ObjectiveMechanism) and mechanism.role is LEARNING)):
+                    (isinstance(mechanism, ObjectiveMechanism) and mechanism._role is LEARNING)):
                 continue
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
