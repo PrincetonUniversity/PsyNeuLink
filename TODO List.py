@@ -69,6 +69,8 @@
 # IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
 #           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
 
+# FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
+# FIX: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
 # FIX: printout of intial_value (see devel_upstream on Quill)
 # FIX fix _update_parameter_state in Projection as in Mechanism
 
@@ -84,7 +86,7 @@
 # DOCUMENTATION:  Now that attribute assignment calls:
 #                         _assign_params, which in turn calls _instantiate_params, which in turn calls _validate_params
 #                             therefore _validate params may only get a subset of the params for a component
-#                                in which case it can't be used to insure that a give param has been implemented,
+#                                in which case it can't be used to insure that a given param has been implemented,
 #                                only that its value is a syntactically legal one.
 #                                enforcement of assignment should be done using required_params
 #                         in general, _validate_params should now check that the parameter being validated
@@ -100,7 +102,7 @@
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
 
 # TEST: Autoassociative SOFT_CLAMP
-# TEST: Autoassociative learning:  fix [auto_mech] and System versions
+# TEST: Autoassociative learning:  fix [auto_mech] version
 # FIX: ADD PredictionMechanisms TO system.graph AND ASK NATE TO RENDER THEM IN BLUE
 # FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
 # IMPLEMENT: IAC TransferFunction

@@ -11,6 +11,7 @@ PsyNeuLink Documentation
 * :ref:`What PsyNeuLink is NOT`
 * :ref:`Component Hierarchy <Component_Hierarchy>`
 * :ref:`Installation`
+* :ref:`Conventions`
 * :ref:`Contributors`
 * :ref:`Indices_and_Tables`
 
@@ -179,21 +180,23 @@ PsyNeuLink uses the following primary constructs (illustrated in the :ref:`figur
         - :doc:`Mechanism`
             Transforms an input representation into an output representation.
             Parameters determine its operation, under the influence of projections.
-            There are three primary types:
-            ..
+            There are two primary types:
 
             + :doc:`ProcessingMechanism`
                   Aggregates the inputs it receives from other mechanisms or the input to a process or system,
                   transforms them in some way, and provides the result either as input to other mechanisms and/or
                   to the output of a process or system.
-            ..
-            + :doc:`ControlMechanism`
-                  Evaluates the output of one or more other mechanisms, and uses this to modify the parameters of those
-                  or other mechanisms.
-            ..
-            + :doc:`MonitoringMechanism`
-                   Monitors the output of one or more other mechanisms, compares these to a target value,
-                   and generates an error signal used for learning.
+
+            + :doc:`AdaptiveMechanism`
+                  Uses the input it receives from other mechanisms  or the input to a process or system to modify the
+                  parameters of one or more other PsyNeuLink components.  There are two primary types:
+
+                  + :doc:`LearningMechanism`
+                        Uses an error signal it receives to modify the matrix of a MappingProjection.
+
+                  + :doc:`ControlMechanism`
+                        Evaluates the output of one or more other mechanisms, and uses this to modify the
+                        parameters of those or other mechanisms in the system to which it belongs.
 
         - :doc:`Projection`
              Takes the output of a mechanism, possibly transforms it, and uses it to determine the operation of
@@ -203,13 +206,13 @@ PsyNeuLink uses the following primary constructs (illustrated in the :ref:`figur
                 Takes the output of a sender mechanism, transform it as necessary to be usable by a receiver mechanism,
                 and provides it as input to that receiver mechanism.
 
-            + :doc:`ControlProjection`
-                 Takes an allocation (scalar) (usually the output of a ControlMechanism) and uses it to modulate
-                 the parameter(s) of a mechanism.
-
             + :doc:`LearningProjection`
                  Takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism)
                  and uses it to modulate the parameter of a projection (usually the matrix of a MappingProjection).
+
+            + :doc:`ControlProjection`
+                 Takes an allocation (scalar) (usually the output of a ControlMechanism) and uses it to modulate
+                 the parameter(s) of a mechanism.
 
             [+ GatingSignal — Not yet implemented
                  Takes a gating signal source and uses it to modulate the input or output state of a mechanism.
@@ -243,6 +246,27 @@ started.
 
 If you have trouble installing the package, or run into other problems, please contact psyneulinkhelp@princeton.edu.
 
+.. _Conventions:
+
+Conventions
+-----------
+
+The following conventions are used for the names of PsyNeuLink objects and their documentation:
+
+  + `Component` (class): names use CamelCase (with initial capitalization);
+    the initial mention in a section documentation is formatted as a link (in colored text)
+    to the documentation for that component.
+  ..
+  + `attribute` or `method` of a component:  names use lower_case_and_underscore; formatted in a `small box`.
+  ..
+  + **argument** of a method or function:  names use lower_case_and_underscore; formatted in **boldface**.
+  ..
+  + KEYWORD: use UPPER_CASE_AND_UNDERSCORE;  formatted as simple text.
+  ..
+  + Example::
+
+          Appear in boxed insets.
+
 
 .. _Contributors:
 
@@ -251,16 +275,20 @@ Contributors
 
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
-* **Bryn Keller**, Intel Labs, Intel Corporation
-* **Kristin Manning**, Princeton Neuroscience Institute, Princeton University
+* **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Kevin Mantel**, Princeton Neuroscience Institute, Princeton University
+* **Ted Willke**, Intel Labs, Intel Corporation
+* **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
+
+with substantial assistance from:
+
+* **Mihai Capota**, Intel Labs, Intel Corporation
+* **Bryn Keller**, Intel Labs, Intel Corporation
+* **Garrett McGrath**, Princeton Neuroscience Institute, Princeton University
 * **Sebastian Musslick**, Princeton Neuroscience Institute, Princeton University
 * **Amitai Shenhav**, Cognitive, Linguistic, & Psychological Sciences, Brown University
 * **Michael Shvartsman**, Princeton Neuroscience Institute, Princeton University
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
-* **Ted Willke**, Intel Labs, Intel Corporation
-* **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
-
 
 ..
    .. toctree::

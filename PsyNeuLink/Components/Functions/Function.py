@@ -3385,19 +3385,18 @@ class BogaczEtAl(
 
     def derivative(self, output=None, input=None):
         """
-        
         derivative(output, input)
 
-        Calculate the derivative of the reward rate with respect to the threshold (passed as :keyword:`output` arg)
-        and drift_rate (passed as :keyword:`input` arg).  Reward rate is given by:
+        Calculate the derivative of 1/(reward rate) with respect to the threshold (**output** arg)
+        and drift_rate (**input** arg).  Reward rate (RR) is assumed to be:
           
-            1 / (delay\ :sub:`ITI` + Z/A + ED);
+            RR = (delay\ :sub:`ITI` + Z/A + ED);
            
-        the derivative of `threshold <BogaczEtAl.threshold>` with respect to reward rate is:
-          
+        the derivative of 1/RR with respect to the `threshold <BogaczEtAl.threshold>` is:
+        
             1/A - E/A - (2A/c\ :sup:`2`\ )ED;
           
-        and the derivative of `drift_rate <BogaczEtAl.drift_rate>` with respect to reward rate is:
+        and the derivative of 1/RR with respect to the `drift_rate <BogaczEtAl.drift_rate>` is:
           
             -Z/A\ :sup:`2` + (Z/A\ :sup:`2`\ )E - (2Z/c\ :sup:`2`\ )ED
                                    
@@ -3412,14 +3411,15 @@ class BogaczEtAl(
             E = exp(-2ZA/\ c\ :sup:`2`\ ), and  
 
             D = delay\ :sub:`ITI` + delay\ :sub:`penalty` - Z/A
+            
+            delay\ :sub:`ITI` is the intertrial interval and delay\ :sub:`penalty` is a penalty delay.
 
           
         Returns
         -------
 
         derivatives :  List[float, float)
-            of 1/(reward rate) with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate 
-            <BogaczEtAl.drift_rate>`. 
+            of 1/RR with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate <BogaczEtAl.drift_rate>`. 
 
         """
         Z = output or self.threshold
