@@ -11,14 +11,12 @@ EVC Test System
 	Processes:
 		TaskExecutionProcess [learning enabled: False]
 		RewardProcess [learning enabled: False]
-		Reward_PredictionProcess [learning enabled: False]
-		Input_PredictionProcess [learning enabled: False]
 
 	Execution sets: 
 		Set 0:
 			{ Input Reward }
 		Set 1:
-			{ Decision Input_PredictionMechanism Reward_PredictionMechanism }
+			{ Decision }
 
 	Execution list: 
 		Phase 0:
@@ -40,6 +38,10 @@ EVC Test System
 			DDM_response_time
 			DDM_probability_upperBound
 			DDM_probability_lowerBound
+		Reward (phase: 1)
+			transfer_result
+			transfer_mean 
+			transfer_variance
 
 ---------------------------------------------------------
 
@@ -76,7 +78,7 @@ EVCMechanism-1
 - input:  0.5
 - params:
 	function: Integrator
-		initializer: 0
+		initializer: array([0])
 		integration_type: adaptive
 		noise: 0.0
 		rate: 0.5
@@ -88,7 +90,7 @@ EVCMechanism-1
 - input:  20.0
 - params:
 	function: Integrator
-		initializer: 0
+		initializer: array([0])
 		integration_type: adaptive
 		noise: 0.0
 		rate: 0.5
@@ -97,12 +99,20 @@ EVCMechanism-1
 - output: 10.0
 
 RESULTS (time step 2): 
-	Drift rate control signal (from EVC): 1.0
-	Threshold control signal (from EVC): 1.0000000000000002
-	DDM_decision_variable: 1.0
-	DDM_probability_lowerBound: 0.119
-	DDM_probability_upperBound: 0.881
-	DDM_response_time: 3.5
+	Decision:
+		ControlSignal values:
+			Drift rate control signal (from EVC): 1.0
+			Threshold control signal (from EVC): 1.0000000000000002
+		Output:
+			DDM_decision_variable: 1.0
+			DDM_probability_lowerBound: 0.119
+			DDM_probability_upperBound: 0.881
+			DDM_response_time: 3.5
+	Reward:
+		Output:
+			transfer_mean : 10.0
+			transfer_result: 10.0
+			transfer_variance: 0.0
 
 ############################ TRIAL 1 ############################
 
@@ -122,7 +132,7 @@ RESULTS (time step 2):
 - input:  0.123
 - params:
 	function: Integrator
-		initializer: 0
+		initializer: array([0])
 		integration_type: adaptive
 		noise: 0.0
 		rate: 0.5
@@ -134,7 +144,7 @@ RESULTS (time step 2):
 - input:  20.0
 - params:
 	function: Integrator
-		initializer: 0
+		initializer: array([0])
 		integration_type: adaptive
 		noise: 0.0
 		rate: 0.5
@@ -143,12 +153,20 @@ RESULTS (time step 2):
 - output: 15.0
 
 RESULTS (time step 4): 
-	Drift rate control signal (from EVC): 1.0
-	Threshold control signal (from EVC): 1.0000000000000002
-	DDM_decision_variable: 1.0
-	DDM_probability_lowerBound: 0.184
-	DDM_probability_upperBound: 0.816
-	DDM_response_time: 3.84
+	Decision:
+		ControlSignal values:
+			Drift rate control signal (from EVC): 1.0
+			Threshold control signal (from EVC): 1.0000000000000002
+		Output:
+			DDM_decision_variable: 1.0
+			DDM_probability_lowerBound: 0.184
+			DDM_probability_upperBound: 0.816
+			DDM_response_time: 3.84
+	Reward:
+		Output:
+			transfer_mean : 15.0
+			transfer_result: 15.0
+			transfer_variance: 0.0
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -913,7 +931,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -930,7 +948,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -947,7 +965,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -964,7 +982,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -981,7 +999,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -998,7 +1016,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1015,7 +1033,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1032,7 +1050,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1049,7 +1067,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1066,7 +1084,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1083,7 +1101,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1100,7 +1118,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1117,7 +1135,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1134,7 +1152,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1151,7 +1169,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1168,7 +1186,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1185,7 +1203,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1202,7 +1220,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1219,7 +1237,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-7 LearningMechanism']
+- pathway: ['Colors' 'Response' 'Response ObjectiveMechanism' 'MappingProjection-8 LearningMechanism']
 - input: [[1, 1]]
 
 ''Color Naming' process' completed:
@@ -1236,7 +1254,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-8 LearningMechanism']
+- pathway: ['Words' 'Response' 'Response ObjectiveMechanism-1' 'MappingProjection-9 LearningMechanism']
 - input: [[1, 1]]
 
 ''Word Reading' process' completed:
@@ -1299,7 +1317,6 @@ RUNNING Stroop Model Learning Test Script.py
 - error for target 'Response-1 ObjectiveMechanism' processingmechanism_base': 0.487 0.455
 
 'Stroop Model-1' system completed ***********(time_step 0)
-- output for Hidden: '0.119' '0.018'
 - output for Response-1: '0.513' '0.545'
 
 - MSE: 0.222
@@ -1340,7 +1357,6 @@ Word-Hidden:
 - error for target 'Response-1 ObjectiveMechanism' processingmechanism_base': 0.467 0.337
 
 'Stroop Model-1' system completed ***********(time_step 1)
-- output for Hidden: '0.557' '0.0264'
 - output for Response-1: '0.533' '0.663'
 
 - MSE: 0.166
@@ -1390,7 +1406,7 @@ RUNNING Mixed NN & DDM script.py
 - output: -1.0 2.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  0.45, 0.778, 1.32, 1.34, 0.101
+- input:  1.85, -0.111, 0.054, -0.248, 0.868
 - params:
 	function: Logistic
 		bias: 0
@@ -1398,13 +1414,13 @@ RUNNING Mixed NN & DDM script.py
 	initial_value:  0.  0.  0.  0.  0.
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.611 0.685 0.789 0.793 0.525
+- output: 0.864 0.472 0.514 0.438 0.704
 
 'My_DDM-2' mechanism executed:
-- input:  3.4
+- input:  2.99
 - params:
 	function: BogaczEtAl
-		drift_rate: 1.7017263757169907
+		drift_rate: 1.4961207725357517
 		noise: 0.5
 		starting_point: 0.0
 		t0: 0.2
@@ -1439,7 +1455,7 @@ RUNNING Mixed NN & DDM script.py
 - output: 2.0 3.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  3.38, 2.76, 3.97, 2.08, 2.31
+- input:  3.22, 0.937, 1.35, 1.62, 2.84
 - params:
 	function: Logistic
 		bias: 0
@@ -1447,13 +1463,13 @@ RUNNING Mixed NN & DDM script.py
 	initial_value:  0.  0.  0.  0.  0.
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.967 0.941 0.981 0.889 0.91
+- output: 0.962 0.718 0.795 0.835 0.945
 
 'My_DDM-2' mechanism executed:
-- input:  4.69
+- input:  4.25
 - params:
 	function: BogaczEtAl
-		drift_rate: 2.34428625074652
+		drift_rate: 2.1274904610960728
 		noise: 0.5
 		starting_point: 0.0
 		t0: 0.2
@@ -1488,7 +1504,7 @@ RUNNING Mixed NN & DDM script.py
 - output: 5.0 5.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  6.93, 5.37, 7.56, 3.5, 4.89
+- input:  5.59, 2.09, 2.86, 3.66, 5.46
 - params:
 	function: Logistic
 		bias: 0
@@ -1496,13 +1512,13 @@ RUNNING Mixed NN & DDM script.py
 	initial_value:  0.  0.  0.  0.  0.
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.999 0.995 0.999 0.971 0.993
+- output: 0.996 0.89 0.946 0.975 0.996
 
 'My_DDM-2' mechanism executed:
-- input:  4.96
+- input:  4.8
 - params:
 	function: BogaczEtAl
-		drift_rate: 2.4785640328906515
+		drift_rate: 2.4012647668033065
 		noise: 0.5
 		starting_point: 0.0
 		t0: 0.2

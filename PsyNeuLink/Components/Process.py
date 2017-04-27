@@ -1004,7 +1004,12 @@ class Process_Base(Process):
         self._origin_mech_tuples = [pathway[0]]
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
 
-        self.lastMechanism = pathway[-1][OBJECT_ITEM]
+        # Assign last mechanism in pathwway to lastMechanism attribute
+        i = -1
+        while not isinstance(pathway[i][OBJECT_ITEM],Mechanism_Base):
+            i -=1
+        self.lastMechanism = pathway[i][OBJECT_ITEM]
+
         if self.lastMechanism is self.firstMechanism:
             self.lastMechanism.processes[self] = SINGLETON
         else:
@@ -1261,10 +1266,9 @@ class Process_Base(Process):
                         if self.learning:
 
                             # Check if preceding_item has a matrix parameterState and, if so, it has any learningSignals
-                            # If it does, assign them to LEARNING_PROJECTIONs
+                            # If it does, assign them to learning_projections
                             try:
-                                # LEARNING_PROJECTIONs = None
-                                LEARNING_PROJECTIONs = list(projection for
+                                learning_projections = list(projection for
                                                         projection in
                                                         preceding_item.parameterStates[MATRIX].receivesFromProjections
                                                         if isinstance(projection, LearningProjection))
@@ -1296,8 +1300,8 @@ class Process_Base(Process):
                                                                                 context=context)
                             # preceding_item has parameterState for MATRIX,
                             else:
-                                if not LEARNING_PROJECTIONs:
-                                    # Add learning signal to projection if it doesn't have one
+                                if not learning_projections:
+                                    # Add learningProjection to projection if it doesn't have one
                                     _add_projection_to(preceding_item,
                                                       preceding_item.parameterStates[MATRIX],
                                                       projection_spec=self.learning)
@@ -1398,8 +1402,25 @@ class Process_Base(Process):
                     #                CHECK THAT SENDER IS pathway[i-1][OBJECT_ITEM]
                     #                CHECK THAT RECEVIER IS pathway[i+1][OBJECT_ITEM]
 
+
+                    # Get sender for projection
                     sender_mech=pathway[i-1][OBJECT_ITEM]
-                    receiver_mech=pathway[i+1][OBJECT_ITEM]
+                    
+                    # Get receiver for projection
+                    try:
+                        receiver_mech=pathway[i+1][OBJECT_ITEM]
+                    except IndexError:
+                       # There are no more entries in the pathway
+                       #    so the projection had better project to a mechanism already in the pathway;
+                       #    otherwise, raise and exception
+                       try:
+                           receiver_mech = item.receiver.owner
+                           if not receiver_mech in [mech_tuple[0] for mech_tuple in pathway]:
+                               raise AttributeError
+                       except AttributeError:
+                           raise ProcessError("The last entry in the pathway for {} is a project specification {}, "
+                                              "so its receiver must be a mechanism in the pathway".
+                                              format(self.name, item))
 
                     # projection spec is an instance of a MappingProjection
                     if isinstance(item, MappingProjection):
@@ -1479,7 +1500,7 @@ class Process_Base(Process):
                                              receiver=receiver_mech,
                                              params=projection_params)
 
-                    # projection spec is a matrix specification, a keyword for one, or a (matrix, LearningProjection) tuple
+                    # projection spec is a matrix spec, a keyword for one, or a (matrix, LearningProjection) tuple
                     # Note: this is tested above by call to _is_projection_spec()
                     elif (isinstance(item, (np.matrix, str, tuple) or
                               (isinstance(item, np.ndarray) and item.ndim == 2))):
@@ -1896,7 +1917,12 @@ class Process_Base(Process):
             # Trace projections to first learning ObjectiveMechanism (which is for the last mechanism in the process)
             #   (in case terminal mechanism of process is part of another process that has learning implemented)
             #    in which case, shouldn't assign target ObjectiveMechanism, but rather just a LearningMechanism)
-            target_mech = trace_learning_objective_mechanism_projections(self._monitoring_mech_tuples[0][0])
+            try:
+                target_mech = trace_learning_objective_mechanism_projections(self._monitoring_mech_tuples[0][0])
+            except IndexError:
+                raise ProcessError("Learning specified for {} but no ObjectiveMechanisms or LearningMechanisms found"
+                                   .format(self.name))
+
             if target_mech:
                 if self.prefs.verbosePref:
                     warnings.warn("{} itself has no Target Mechanism, but its TERMINAL_MECHANISM ({}) "

@@ -624,18 +624,21 @@ my_auto = TransferMechanism(default_input_value=[0,0,0],
                             # function=Logistic
                             )
 
+my_auto_matrix = MappingProjection(sender=my_auto,
+                                   receiver=my_auto,
+                                   matrix=FULL_CONNECTIVITY_MATRIX)
 # THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
 #                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
-# my_auto_matrix = MappingProjection(sender=my_auto,
-#                                    receiver=my_auto,
-#                                    matrix=FULL_CONNECTIVITY_MATRIX)
-# my_process = process(pathway=[my_auto],
-#                      learning=LEARNING
-#                      )
+my_process = process(pathway=[my_auto],
 
-my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
-                     learning=LEARNING,
-                     target=[0,0,0])
+# THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
+# my_process = process(pathway=[my_auto, my_auto_matrix],
+                     learning=LEARNING
+                     )
+
+# my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
+#                      learning=LEARNING,
+#                      target=[0,0,0])
 
 # print(my_process.execute([1,1,1]))
 # print(my_process.execute([1,1,1]))
