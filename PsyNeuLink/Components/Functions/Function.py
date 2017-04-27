@@ -3385,19 +3385,18 @@ class BogaczEtAl(
 
     def derivative(self, output=None, input=None):
         """
-        
         derivative(output, input)
 
-        Calculate the derivative of the reward rate with respect to the threshold (passed as :keyword:`output` arg)
-        and drift_rate (passed as :keyword:`input` arg).  Reward rate is given by:
+        Calculate the derivative of 1/(reward rate) with respect to the threshold (**output** arg)
+        and drift_rate (**input** arg).  Reward rate (RR) is assumed to be:
           
-            1 / (delay\ :sub:`ITI` + Z/A + ED);
+            RR = (delay\ :sub:`ITI` + Z/A + ED);
            
-        the derivative of `threshold <BogaczEtAl.threshold>` with respect to reward rate is:
-          
+        the derivative of 1/RR with respect to the `threshold <BogaczEtAl.threshold>` is:
+        
             1/A - E/A - (2A/c\ :sup:`2`\ )ED;
           
-        and the derivative of `drift_rate <BogaczEtAl.drift_rate>` with respect to reward rate is:
+        and the derivative of 1/RR with respect to the `drift_rate <BogaczEtAl.drift_rate>` is:
           
             -Z/A\ :sup:`2` + (Z/A\ :sup:`2`\ )E - (2Z/c\ :sup:`2`\ )ED
                                    
