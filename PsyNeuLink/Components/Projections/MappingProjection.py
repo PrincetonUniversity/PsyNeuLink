@@ -134,7 +134,7 @@ In addition to its `function <MappingProjection.function>`, MappingProjections u
   `matrix <MappingProjection.matrix>` influence it.  For example, this is used for a `LearningProjection` to apply
   weight changes to the `matrix <MappingProjection.matrix>` during learning. The
   :keyword:`param_modulation_operation` attribute must be assigned a value of `ModulationOperation` and the operation
-  is always applied in an element-wise (Hadamard) manner. The default operation is :keyword:`ADD`.
+  is always applied in an element-wise (Hadamard) manner. The default operation is ADD.
 
 .. _Projection_Execution:
 
@@ -409,7 +409,7 @@ class MappingProjection(Projection_Base):
             else:
                 projection_string = 'projection'
 
-            if self._matrix_spec is IDENTITY_MATRIX:
+            if self._matrix_spec in {IDENTITY_MATRIX, OFF_DIAGNOAL_MATRIX}:
                 # Identity matrix is not reshapable
                 raise ProjectionError("Output length ({}) of \'{}{}\' from {} to mechanism \'{}\'"
                                       " must equal length of it inputState ({}) to use {}".
@@ -419,7 +419,7 @@ class MappingProjection(Projection_Base):
                                              self.sender.name,
                                              self.receiver.owner.name,
                                              receiver_len,
-                                             IDENTITY_MATRIX))
+                                             self._matrix_spec))
             else:
                 # Flag that matrix is being reshaped
                 self.reshapedWeightMatrix = True

@@ -34,8 +34,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="next" title="Run" href="Run.html"/>
-        <link rel="prev" title="MappingProjection" href="MappingProjection.html"/> 
+        <link rel="prev" title="Component" href="Component.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -85,12 +84,13 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Functions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-function">Creating a Function</a></li>
@@ -99,7 +99,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 </ul>
 
             
@@ -195,22 +194,23 @@
 <div class="section" id="overview">
 <span id="function-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A Function is a <a class="reference internal" href="Component.html"><span class="doc">component</span></a> that &#8220;packages&#8221; a function (in its <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> method)
-for use by PsyNeuLink components.  Every <a class="reference internal" href="Component.html"><span class="doc">component</span></a> in PsyNeuLink is assigned a Function, and when that
-component is executed, that Function&#8217;s <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;Function_Base.function</span></code> is executed.  The
-<code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;Function_Base.function</span></code> can be any callable operation, although most commonly it is a mathematical operation
-(and, for those, almost always uses calls to numpy function).</p>
-<p>There are two reasons PsyNeuLink packages functions in a Function component. The first is to <strong>manage parameters</strong>.
-Parameters are attributes of a function that either remain stable over multiple calls to the
-function (e.g., the gain or bias of a logistic function, or the learning rate of a learning function);
-or, if they change, they do less frequently or under the control of different factors than the function&#8217;s variable
-(i.e., its input).  As a consequence, it is useful to manage these separately from the function&#8217;s variable,
-and not have to provide them every time the function is called.  To address this, every PsyNeuLink Function has a
-set of attributes corresponding to the parameters of the function, that can be specified at the time the Function is
-created (in arguments to its constructor), and can be modified independently of a call to its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>.
-Modifications can be directly (e.g., in a script), or by the operation of other PsyNeuLink components (e.g.,
-<code class="xref any docutils literal"><span class="pre">AdaptiveMechanisms</span></code>).  The second to reason PsyNeuLink uses Functions is for  <strong>modularity</strong>. By providing a standard
-interface, any Function assigned to a components in PsyNeuLink can be replaced with other PsyNeuLink Functions, or with
-user-written custom functions (so long as they adhere to certain standards (the PsyNeuLink <code class="xref any docutils literal"><span class="pre">Function</span> <span class="pre">API</span></code>).</p>
+for use by other PsyNeuLink components.  Every <a class="reference internal" href="Component.html"><span class="doc">component</span></a> in PsyNeuLink is assigned a Function; when thata
+component is executed, its Function&#8217;s <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is executed.  The
+<a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be any callable operation, although most commonly it is a mathematical operation
+(and, for those, almost always uses a call to one or more numpy functions).  There are two reasons PsyNeuLink
+packages functions in a Function component: to <em>manage parameters</em>, and for <em>modularity</em>.</p>
+<p><strong>Manage parameters</strong>. Parameters are attributes of a function that either remain stable over multiple calls to the
+function (e.g., the <a class="reference internal" href="#Function.Logistic.gain" title="Function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> or <a class="reference internal" href="#Function.Logistic.bias" title="Function.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a> of a <a class="reference internal" href="#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function, or the learning rate
+of a learning function); or, if they change, they do so less frequently or under the control of different factors
+than the function&#8217;s variable (i.e., its input).  As a consequence, it is useful to manage these separately from the
+function&#8217;s variable, and not have to provide them every time the function is called.  To address this, every
+PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at
+the time the Function is created (in arguments to its constructor), and can be modified independently
+of a call to its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>. Modifications can be directly (e.g., in a script), or by the operation of other
+PsyNeuLink components (e.g., <code class="xref any docutils literal"><span class="pre">AdaptiveMechanisms</span></code>) by way of <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>.</p>
+<p><strong>Modularity</strong>. By providing a standard interface, any Function assigned to a components in PsyNeuLink can be replaced
+with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain standards
+(the PsyNeuLink <span class="xref std std-ref">Function API</span>).</p>
 </div>
 <div class="section" id="creating-a-function">
 <span id="function-creation"></span><h2>Creating a Function<a class="headerlink" href="#creating-a-function" title="Permalink to this headline">¶</a></h2>
@@ -228,18 +228,20 @@ below.</p>
 <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> method.  It&#8217;s core attribute is its <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute,
 that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or
 method of some kind). Unlike other PsyNeuLink <code class="xref any docutils literal"><span class="pre">Components</span></code>, it <em>cannot</em> be (another) Function object (it can&#8217;t be
-&#8220;turtles&#8221; all the way down!).  A Function also has an attribute for each of the parameters of its <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.   If a Function has been assigned to another component, then it also has an <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> attribute that refers to that component. Each of the Function&#8217;s attributes is also assigned
+&#8220;turtles&#8221; all the way down!).  A Function also has an attribute for each of the parameters of its <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.   If a Function has been assigned to another component, then it also has an <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> attribute that refers to that component.  The Function itself is assigned as the component&#8217;s
+<code class="xref any docutils literal"><span class="pre">function_object</span></code> attribute.  Each of the Function&#8217;s attributes is also assigned
 as an attribute of the <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, and those are each associated with with a
-<a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of the <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>. Projections to those parameterStates can be
-used to modify the Function&#8217;s parameters.</p>
+<a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of the <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.  Projections to those parameterStates can be
+used by <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modify the Function&#8217;s parameters.</p>
 </div>
 <div class="section" id="execution">
 <span id="function-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>Functions are not executable objects, but their <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be called.   This can be done
 directly.  More commonly, however, they are called when their <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> is executed.  The parameters
 of the <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be modified when it is executed, by assigning a
-<a class="reference internal" href="Mechanism.html#mechanism-creation"><span class="std std-ref">parameter specification dictionary</span></a> to the <code class="xref any docutils literal"><span class="pre">Function.params</span></code> argument in the call to the
-<a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  For <a class="reference internal" href="Mechanism.html"><span class="doc">mechanisms</span></a>, this can also be done by specifying <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime_params</span></a> for the mechanism when it is <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">executed</span></code></a>.</p>
+<a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter specification dictionary</span></a> to the <strong>params</strong> argument in the
+call to the <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  For <a class="reference internal" href="Mechanism.html"><span class="doc">mechanisms</span></a>, this can also be done by specifying
+<a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime_params</span></a> for the mechanism when it is <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">executed</span></code></a>.</p>
 </div>
 <div class="section" id="class-reference">
 <h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -402,7 +404,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="#Function.LinearCombination.function" title="Function.LinearCombination.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -1067,13 +1069,14 @@ arguments of the constructor.</li>
 <dl class="method">
 <dt id="Function.SoftMax.derivative">
 <code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax.derivative" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates the derivative of <a class="reference internal" href="#Function.SoftMax.function" title="Function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.  If OUTPUT_TYPE is ALL, returns Jacobian matrix for
-of derivatives for each element of the array with respect to the others:</p>
+<dd><p>Calculate the derivative of <a class="reference internal" href="#Function.SoftMax.function" title="Function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.  If OUTPUT_TYPE for the SoftMax Function is ALL,
+return Jacobian matrix (derivative for each element of the output array with respect to each of the others):</p>
 <blockquote>
 <div>D<sub>j</sub>S<sub>i</sub> = S<sub>i</sub>(𝜹<sub>i,j</sub> - S<sub>j</sub>),
 where 𝜹<sub>i,j</sub>=1 if i=j and 𝜹<sub>i,j</sub>=0 if i≠j.</div></blockquote>
-<p>If OUTPUT_TYPE is MAX_VAL, MAX_INDICATOR or PROB, returns 1d array of the derivatives of the selected value
-with respect to the other (calculated as above).</p>
+<p>If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
+value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
+(since it is ambiguous as to which element would have been chosen by the SoftMax function)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1458,7 +1461,8 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="method">
 <dt id="Function.BogaczEtAl.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return: terminal value of decision variable, mean accuracy (error rate; ER) and mean response time (RT)</p>
+<dd><p>Return: terminal value of decision variable (equal to threshold), mean accuracy (error rate; ER) and mean
+response time (RT)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1477,6 +1481,40 @@ arguments of the constructor.</li>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(float, float, float)</p>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.BogaczEtAl.derivative">
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the derivative of 1/(reward rate) with respect to the threshold (<strong>output</strong> arg)
+and drift_rate (<strong>input</strong> arg).  Reward rate (RR) is assumed to be:</p>
+<blockquote>
+<div>RR = (delay<sub>ITI</sub> + Z/A + ED);</div></blockquote>
+<p>the derivative of 1/RR with respect to the <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> is:</p>
+<blockquote>
+<div>1/A - E/A - (2A/c<sup>2</sup>)ED;</div></blockquote>
+<p>and the derivative of 1/RR with respect to the <a class="reference internal" href="#Function.BogaczEtAl.drift_rate" title="Function.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a> is:</p>
+<blockquote>
+<div>-Z/A<sup>2</sup> + (Z/A<sup>2</sup>)E - (2Z/c<sup>2</sup>)ED</div></blockquote>
+<p>where:</p>
+<blockquote>
+<div><p>A = <a class="reference internal" href="#Function.BogaczEtAl.drift_rate" title="Function.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a>,</p>
+<p>Z = <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>,</p>
+<p>c = <a class="reference internal" href="#Function.BogaczEtAl.noise" title="Function.BogaczEtAl.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>,</p>
+<p>E = exp(-2ZA/c<sup>2</sup>), and</p>
+<p>D = delay<sub>ITI</sub> + delay<sub>penalty</sub> - Z/A</p>
+<p>delay<sub>ITI</sub> is the intertrial interval and delay<sub>penalty</sub> is a penalty delay.</p>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivatives</strong> &#8211; of 1/RR with respect to <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> and <a class="reference internal" href="#Function.BogaczEtAl.drift_rate" title="Function.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">List[float, float)</td>
 </tr>
 </tbody>
 </table>
@@ -1571,7 +1609,7 @@ Gaussian random process).</p>
 <dt>owner</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">Mechanism</span><dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</dd>
 <dt>prefs</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.WaldDist.prefs" title="Function.WaldDist.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+ <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.BogaczEtAl.prefs" title="Function.BogaczEtAl.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</dd>
 </dl>
@@ -1888,7 +1926,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.variable" title="TransferMechanism.TransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
@@ -2201,10 +2239,8 @@ arguments of the constructor.</li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Run.html" class="btn btn-neutral float-right" title="Run" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="MappingProjection.html" class="btn btn-neutral" title="MappingProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Component.html" class="btn btn-neutral" title="Component" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -78,11 +78,11 @@ Any of the following can be used to specify a projection in context:
   ..
   * *Projection keyword*.  This creates a default instance of the specified type, and can be any of the following:
 
-      * `MAPPING_PROJECTION` -- a `MappingProjection` with the `DefaultMechanism` as its :keyword:`sender`.
+      * MAPPING_PROJECTION -- a `MappingProjection` with the `DefaultMechanism` as its :keyword:`sender`.
       |
-      * `CONTROL_PROJECTION` -- a `ControlProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
+      * CONTROL_PROJECTION -- a `ControlProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
       |
-      * `LEARNING_PROJECTION` -- a `LearningProjection`.  At present, this can only be used together with the
+      * LEARNING_PROJECTION -- a `LearningProjection`.  At present, this can only be used together with the
         specification of a MappingProjection (see `tuple <Mapping_Matrix_Specification>` format).  If the
         :keyword:`receiver` of the MappingProjection projects to a `MonitoringMechanism <MonitoringMechanism>`,
         the latter will be used as the :keyword:`sender` for the LearningProjection.  Otherwise,
@@ -94,11 +94,11 @@ Any of the following can be used to specify a projection in context:
   * *Specification dictionary*.  This can contain an entry specifying the type of projection, and/or entries
     specifying the value of parameters used to instantiate it. These should take the following form:
 
-      * :keyword:`PROJECTION_TYPE`: *<name of a projection type>* --
+      * PROJECTION_TYPE: *<name of a projection type>* --
         if this entry is absent, a default projection will be created that is appropriate for the context
         (for example, a MappingProjection for an inputState, and a ControlProjection for a parameterState).
       |
-      * :keyword:`PROJECTION_PARAMS`: *Dict[projection argument, argument value]* --
+      * PROJECTION_PARAMS: *Dict[projection argument, argument value]* --
         the key for each entry of the dictionary must be the name of a projection parameter, and its value the value
         of the parameter.  It can contain any of the standard parameters for instantiating a projection (in particular
         its `sender <Projection_Sender>` and `receiver <Projection_Receiver>` or ones specific to a particular type of
@@ -240,6 +240,7 @@ PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             DEFAULT_MATRIX,
                             IDENTITY_MATRIX,
                             FULL_CONNECTIVITY_MATRIX,
+                            OFF_DIAGNOAL_MATRIX,
                             RANDOM_CONNECTIVITY_MATRIX,
                             LEARNING_PROJECTION,
                             CONTROL_PROJECTION}
