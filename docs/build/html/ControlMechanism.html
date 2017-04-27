@@ -187,8 +187,10 @@ It&#8217;s function takes a value (usually the output of an <a class="reference 
 to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is conveyed by
 a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of the corresopnding ProcessingMechanism.  A
 ControlMechanism can regulate only the parameters of mechanism in the system for which it is the
-<a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a>.  ControlMechanisms are executed after all ProcessingMechanisms and
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> in that system have been executed.</p>
+<a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a>.  The control components of a system can be displayed using the system&#8217;s
+<a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method with its <strong>show_control</strong> argument assigned :keyword:<a href="#id1"><span class="problematic" id="id2">``</span></a>True`.  The control components of a
+system are executed after all ProcessingMechanisms and <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning components</span></a> in that system have
+been executed.</p>
 </div>
 <div class="section" id="creating-a-controlmechanism">
 <span id="controlmechanism-creation"></span><h2>Creating A ControlMechanism<a class="headerlink" href="#creating-a-controlmechanism" title="Permalink to this headline">¶</a></h2>
@@ -213,7 +215,7 @@ to which the parameter belongs (see <a class="reference internal" href="Mechanis
 <p>When an ControlMechanism is constructed automatically, it creates an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> (specified in its
 <code class="xref any docutils literal"><span class="pre">montioring_mechanism</span></code> attribute) that is used to monitor and evaluate the system&#8217;s performance.  The
 ObjectiveMechanism monitors each mechanism and/or outputState listed in the ControlMechanism&#8217;s
-&#8216;monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="Function.html#Function.Integrator.function" title="Function.Integrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
+&#8216;monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="Function.html#Function.Logistic.function" title="Function.Logistic.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
 This information is used to set the value of the ControlMechanism&#8217;s ControlProjections.</p>
 </div>
 </div>
@@ -246,7 +248,7 @@ They should be instantiated using the constructor for a <a class="reference inte
 <dt id="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.controlProjections">
 <code class="descname">controlProjections</code><a class="headerlink" href="#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.controlProjections" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[ControlProjection]</em> &#8211; list of <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> managed by the ControlMechanism.
-There is one for each ouputState in the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputStates" title="Mechanism.Mechanism_Base.outputStates"><code class="xref any py py-attr docutils literal"><span class="pre">outputStates</span></code></a> dictionary.</p>
+There is one for each ouputState in the <a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.outputStates" title="TransferMechanism.TransferMechanism.outputStates"><code class="xref any py py-attr docutils literal"><span class="pre">outputStates</span></code></a> dictionary.</p>
 </dd></dl>
 
 <dl class="attribute">

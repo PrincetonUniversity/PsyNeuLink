@@ -485,7 +485,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     predictionMechanisms : MechanismList
         a list of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the system, along with any 
-        runtime_params and the phase in which they execute.
+        `runtime_params <Mechanism.runtime_params>` and the `phase <Mechanism.phase>` in which they execute.
 
     origin_prediction_mechanisms : Dict[ProcessingMechanism, ProcessingMechanism]
         dictionary of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the `system <System>` for
