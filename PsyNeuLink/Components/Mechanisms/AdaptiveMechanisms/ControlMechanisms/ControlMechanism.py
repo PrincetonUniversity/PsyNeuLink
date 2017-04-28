@@ -18,9 +18,10 @@ It's function takes a value (usually the output of an `ObjectiveMechanism`) and 
 to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is conveyed by
 a `ControlProjection` to the `parameterState <ParameterState>` of the corresopnding ProcessingMechanism.  A
 ControlMechanism can regulate only the parameters of mechanism in the system for which it is the
-`controller <System_Execution_Control>`.  ControlMechanisms are executed after all ProcessingMechanisms and
-`LearningMechanisms <LearningMechanism>` in that system have been executed.
-
+`controller <System_Execution_Control>`.  The control components of a system can be displayed using the system's 
+`show_graph` method with its **show_control** argument assigned :keyword:``True`.  The control components of a 
+system are executed after all ProcessingMechanisms and `learning components <LearningMechanism>` in that system have 
+been executed.
 
 .. _ControlMechanism_Creation:
 
@@ -258,18 +259,11 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # For all other ControlMechanisms, validate System specification
         else:
-            try:
+            if SYSTEM in request_set:
                 if not isinstance(request_set[SYSTEM], System):
                     raise KeyError
-            except KeyError:
-                # Validation called by assign_params() for user-specified param set, so SYSTEM need not be included
-                if COMMAND_LINE in context:
-                    pass
                 else:
-                    raise ControlMechanismError("A system must be specified in the SYSTEM param to instantiate {0}".
-                                                format(self.name))
-            else:
-                self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
+                    self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
         super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,
@@ -306,6 +300,8 @@ class ControlMechanism_Base(Mechanism_Base):
             # If specified as DefaultController, reassign ControlProjections from DefaultController
             if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
                 self._take_over_as_default_controller(context=context)
+            if not self.system.enable_controller:
+                return
         except KeyError:
             pass
 
@@ -323,6 +319,16 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Iterate through old controller's outputStates
         to_be_deleted_outputStates = []
+
+        try:
+            DefaultController.outputStates
+        except AttributeError:
+            if self.system.verbosePref:
+                warnings.warn("No ControlProjections specified for {};  control will be disabled".
+                              format(self.system.name))
+            self.system.enable_controller = False
+            return
+
         for outputState in DefaultController.outputStates:
 
             # Iterate through projections sent for outputState
@@ -408,8 +414,6 @@ class ControlMechanism_Base(Mechanism_Base):
                                             # constraint_output_state_index=output_item_output_state_index,
                                             context=context)
 
-        # Add index assignment to outputState
-        state.index = output_state_index
 
         # Assign outputState as ControlProjection's sender
         projection.sender = state
@@ -420,6 +424,9 @@ class ControlMechanism_Base(Mechanism_Base):
         except AttributeError:
             self.outputStates = OrderedDict({output_state_name:state})
             self.outputState = self.outputStates[output_state_name]
+
+        # Add index assignment to outputState
+        state.index = output_state_index
 
         # Add ControlProjection to list of outputState's outgoing projections
         state.sendsToProjections.append(projection)

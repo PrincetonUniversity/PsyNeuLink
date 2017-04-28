@@ -1,6 +1,8 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 
+import matplotlib
+matplotlib.use('TkAgg')
 # LINEAR
 
 # Creating a Transfer Mechanism with a Linear function
@@ -38,33 +40,36 @@ my_Transfer_Logistic = TransferMechanism(name='my_Transfer_Logistic',
 # Any parameters specified in above mechanism (line27) will be reflected in plot
 my_Transfer_Logistic.plot()
 
+
+## **** NEW FEATURES BELOW ****
+
+# You can change the domain of any plot by passing in a list of [low x-value, high x-value] to the plot method
+my_Transfer_Logistic.plot([-20,20])
+
+# You can change the parameters that the function is plotted with by specifying them in the mechanism's function
+# Creating a Transfer Mechanism with a Logistic function
+my_Custom_Transfer_Logistic = TransferMechanism(name='my_Transfer_Logistic',
+                       function=Logistic(gain=0.5,bias=0.5)
+                       )
+
+my_Custom_Transfer_Logistic.plot()
+
 # -----------------------------------------
 
-# DDM - FIXED PARAMETERS
-
-# Creating a DDM Mechanism
-my_DDM = DDM(function=DDMIntegrator(rate=0.01, noise=0.2),
-             name='My_DDM',
-             time_scale=TimeScale.TIME_STEP
-             )
-
-# Plots DDM dynamically over time with a fixed horizontal axis
-# NOTE: parameters specified in above mechanism will be reflected in plot
-my_DDM.plot()
-
+# # DDM - Dynamic Plot
+#
+# # Creating a DDM Mechanism
+# my_DDM = DDM(function=Integrator(rate=0.1, noise=0.2, integration_type="diffusion"),
+#              name='My_DDM',
+#              time_scale=TimeScale.TIME_STEP
+#              )
+#
+# # Parameters specified in above mechanism will be reflected in plot
+#
+# # Plot method takes two parameters --
+# # First parameter is stimulus (default =1.0)
+# # Second parameter is threshold (default = 10.0)
+# # E.g. my_DDM.plot(2.0, 11.0) plots the DDM with a stimulus of 2.0 until it crosses -11.0 or  11.0
+# my_DDM.plot()
+#
 #-----------------------------------------
-
-# DDM - VARIABLE PARAMETERS
-
-# Creating a DDM Mechansim
-# Specifying a 'plot_threshold' (line64) causes the mechanism to plot its out put at each time step until the threshold
-# Any changes to paramters (line62) will be reflected on execution and in the plot
-# Plot width updates continuously
-my_DDM2 = DDM(function=DDMIntegrator(rate=0.01, noise=0.2),
-             name='My_DDM2',
-             time_scale=TimeScale.TIME_STEP,
-             plot_threshold = 10.0
-             )
-
-my_DDM2.execute()
-

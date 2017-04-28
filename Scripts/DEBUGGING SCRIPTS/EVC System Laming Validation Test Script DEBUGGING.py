@@ -6,7 +6,6 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.scheduling.condition import AfterNCalls
 
 import random
 random.seed(0)
@@ -24,7 +23,6 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 # Mechanisms:
 Input = TransferMechanism(name='Input',
                  # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
-
                  )
 Reward = TransferMechanism(name='Reward',
                  # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
@@ -70,9 +68,8 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   name='EVC Test System')
 
 # Show characteristics of system:
-mySystem.show()
-mySystem.controller.show()
-# mySystem.show_graph(show_control=True)
+# mySystem.show()
+# mySystem.controller.show()
 
 # Specify stimuli for run:
 # #   two ways to do so:
@@ -85,8 +82,12 @@ mySystem.controller.show()
 # # stim_list_dict = {Input:[0.5, 0.123],
 # #               Reward:[20, 20]}
 
-stim_list_dict = {Input:[0.5, 0.123],
-                  Reward:[20, 20]}
+# stim_list_dict = {Input:[0.5, 0.123],
+#                   Reward:[20, 20]}
+
+stim_list_dict = {Input:[0.5],
+                  Reward:[20]}
+
 
 # #   - as a list of trials;
 # #     each item in the list contains the stimuli for a given trial,
@@ -100,46 +101,40 @@ def show_trial_header():
 
 def show_results():
     import re
-    print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
-    results_for_decision = \
-        [result for result in sorted(zip(mySystem.terminalMechanisms.outputStateNames,
-                                           mySystem.terminalMechanisms.outputStateValues)) if 'DDM' in result[0]]
-    print("\tDecision:")
-    print('\t\tControlSignal values:')
-    print ('\t\t\tDrift rate control signal (from EVC): {}'.
+    results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+    # print('\nRESULTS (time step {}): [RANDOM: {}]'.format(CentralClock.time_step, np.random.random()))
+    print('\nRESULTS (time step {}): [RANDOM: {}]'.format(CentralClock.time_step, np.random.random()))
+    print ('\tDrift rate control signal (from EVC):'
+           '\n\t\tDecision.parameterState: {}'
+           '\n\t\tControlSignal: {}'
+           '\n\t\tControlProjection: {}'.
            # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
-           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value))))))
-    print ('\t\t\tThreshold control signal (from EVC): {}'.
+           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value)))),
+                  mySystem.controller.outputStates['drift_rate_ControlSignal'].value,
+                  Decision.parameterStates[DRIFT_RATE].receivesFromProjections[0].value
+                  ))
+    print ('\tThreshold control signal (from EVC):'
+           '\n\t\tDecision.parameterState: {}'
+           '\n\t\tControlSignal: {}'
+           '\n\t\tControlProjection: {}'.
            format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[THRESHOLD].value))),
                   mySystem.controller.outputStates['threshold_ControlSignal'].value,
                   Decision.parameterStates[THRESHOLD].receivesFromProjections[0].value
                   ))
-    print('\t\tOutput:')
-    for result in results_for_decision:
-        print("\t\t\t{}: {}".format(result[0],
+    for result in results:
+        print("\t{}: {}".format(result[0],
                                 re.sub('[\[,\],\n]','',str("{:0.3}".format(float(result[1]))))))
-    results_for_reward = \
-        [result for result in sorted(zip(mySystem.terminalMechanisms.outputStateNames,
-                                           mySystem.terminalMechanisms.outputStateValues)) if 'transfer' in result[0]]
-    print("\tReward:\n\t\tOutput:")
-    for result in results_for_reward:
-        print("\t\t\t{}: {}".format(result[0],
-                                re.sub('[\[,\],\n]','',str("{:0.3}".format(float(result[1]))))))
-
 
 # Run system:
 
 mySystem.controller.reportOutputPref = False
 
 # mySystem.show_graph(direction='LR')
-# mySystem.show_graph_with_control()
 
 # mySystem.run(inputs=trial_list,
 # # mySystem.run(inputs=reversed_trial_list,
-mySystem.run(
-    inputs=stim_list_dict,
-    call_before_trial=show_trial_header,
-    # call_after_time_step=show_results
-    call_after_trial=show_results,
-    termination_processing={TimeScale.TRIAL: AfterNCalls(Decision, 1)}
-)
+mySystem.run(inputs=stim_list_dict,
+             call_before_trial=show_trial_header,
+             # call_after_time_step=show_results
+             call_after_trial=show_results
+             )

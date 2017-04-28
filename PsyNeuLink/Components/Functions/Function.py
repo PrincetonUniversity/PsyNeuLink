@@ -46,23 +46,25 @@ Overview
 --------
 
 A Function is a `component <Component>` that "packages" a function (in its `function <Function_Base.function>` method)
-for use by PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function, and when that
-component is executed, that Function's `function <Function_Base.function` is executed.  The
-`function <Function_Base.function` can be any callable operation, although most commonly it is a mathematical operation
-(and, for those, almost always uses calls to numpy function).
+for use by other PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function; when thata 
+component is executed, its Function's `function <Function_Base.function>` is executed.  The
+`function <Function_Base.function>` can be any callable operation, although most commonly it is a mathematical operation
+(and, for those, almost always uses a call to one or more numpy functions).  There are two reasons PsyNeuLink 
+packages functions in a Function component: to *manage parameters*, and for *modularity*.
 
-There are two reasons PsyNeuLink packages functions in a Function component. The first is to **manage parameters**.
-Parameters are attributes of a function that either remain stable over multiple calls to the
-function (e.g., the gain or bias of a logistic function, or the learning rate of a learning function);
-or, if they change, they do less frequently or under the control of different factors than the function's variable
-(i.e., its input).  As a consequence, it is useful to manage these separately from the function's variable,
-and not have to provide them every time the function is called.  To address this, every PsyNeuLink Function has a
-set of attributes corresponding to the parameters of the function, that can be specified at the time the Function is
-created (in arguments to its constructor), and can be modified independently of a call to its :keyword:`function`.
-Modifications can be directly (e.g., in a script), or by the operation of other PsyNeuLink components (e.g.,
-`AdaptiveMechanisms`).  The second to reason PsyNeuLink uses Functions is for  **modularity**. By providing a standard
-interface, any Function assigned to a components in PsyNeuLink can be replaced with other PsyNeuLink Functions, or with
-user-written custom functions (so long as they adhere to certain standards (the PsyNeuLink `Function API <LINK>`).
+**Manage parameters**. Parameters are attributes of a function that either remain stable over multiple calls to the
+function (e.g., the `gain <Logistic.gain>` or `bias <Logistic.bias>` of a `Logistic` function, or the learning rate 
+of a learning function); or, if they change, they do so less frequently or under the control of different factors
+than the function's variable (i.e., its input).  As a consequence, it is useful to manage these separately from the 
+function's variable, and not have to provide them every time the function is called.  To address this, every 
+PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at 
+the time the Function is created (in arguments to its constructor), and can be modified independently 
+of a call to its :keyword:`function`. Modifications can be directly (e.g., in a script), or by the operation of other 
+PsyNeuLink components (e.g., `AdaptiveMechanisms`) by way of `ControlProjections <ControlProjection>`.  
+
+**Modularity**. By providing a standard interface, any Function assigned to a components in PsyNeuLink can be replaced 
+with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain standards 
+(the PsyNeuLink :ref:`Function API <LINK>`). 
 
 .. _Function_Creation:
 
@@ -88,10 +90,11 @@ that determines the computation that it carries out.  Ths must be a callable obj
 method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be
 "turtles" all the way down!).  A Function also has an attribute for each of the parameters of its `function
 <Function_Base.function>`.   If a Function has been assigned to another component, then it also has an `owner
-<Function_Base.owner>` attribute that refers to that component. Each of the Function's attributes is also assigned
+<Function_Base.owner>` attribute that refers to that component.  The Function itself is assigned as the component's
+`function_object <Component.function_object>` attribute.  Each of the Function's attributes is also assigned
 as an attribute of the `owner <Function_Base.owner>`, and those are each associated with with a
-`parameterState <ParameterState>` of the `owner <Function_Base.owner>`. Projections to those parameterStates can be
-used to modify the Function's parameters.
+`parameterState <ParameterState>` of the `owner <Function_Base.owner>`.  Projections to those parameterStates can be
+used by `ControlProjections <ControlProjection>` to modify the Function's parameters. 
 
 COMMENT:
 .. _Function_Output_Type_Conversion:
@@ -116,9 +119,9 @@ Execution
 Functions are not executable objects, but their `function <Function_Base.function>` can be called.   This can be done
 directly.  More commonly, however, they are called when their `owner <Function_Base.owner>` is executed.  The parameters
 of the `function <Function_Base.function>` can be modified when it is executed, by assigning a
-`parameter specification dictionary <Mechanism_Creation>` to the `Function.params` argument in the call to the
-`function <Function_Base.function>`.  For `mechanisms <Mechanism>`, this can also be done by specifying `runtime_params
-<Mechanism_Runtime_Parameters>` for the mechanism when it is `executed <Mechanism_Base.execute>`.
+`parameter specification dictionary <ParameterState_Specifying_Parameters>` to the **params** argument in the 
+call to the `function <Function_Base.function>`.  For `mechanisms <Mechanism>`, this can also be done by specifying 
+`runtime_params <Mechanism_Runtime_Parameters>` for the mechanism when it is `executed <Mechanism_Base.execute>`.
 
 Class Reference
 ---------------
@@ -255,8 +258,8 @@ class Function_Base(Function):
             Functions are used to "wrap" functions used used by other components;
             They are defined here (on top of standard libraries) to provide a uniform interface for managing parameters
              (including defaults)
-            NOTE:   the Function category definition serves primarily as a shell, and an interface to the Function class,
-                       to maintain consistency of structure with the other function categories;
+            NOTE:   the Function category definition serves primarily as a shell, and as an interface to the Function 
+                       class, to maintain consistency of structure with the other function categories;
                     it also insures implementation of .function for all Function Components
                     (as distinct from other Function subclasses, which can use a FUNCTION param
                         to implement .function instead of doing so directly)
@@ -269,7 +272,7 @@ class Function_Base(Function):
         IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
             - Parameters can be assigned and/or changed individually or in sets, by:
               - including them in the initialization call
-              - calling the _assign_defaults method (which changes their default values)
+              - calling the _instantiate_defaults method (which changes their default values)
               - including them in a call the function method (which changes their values for just for that call)
             - Parameters must be specified in a params dictionary:
               - the key for each entry should be the name of the parameter (used also to name associated projections)
@@ -419,6 +422,10 @@ class Function_Base(Function):
                           name=name,
                           context=context)
         self.owner = owner
+        if self.owner is not None:
+            self.owner_name = ' ' + self.owner.name
+        else:
+            self.owner_name = ''
 
         super().__init__(variable_default=variable_default,
                          param_defaults=params,
@@ -551,7 +558,7 @@ class ArgumentTherapy(Function_Base):
 
     # Param class defaults
     # These are used both to type-cast the params, and as defaults if none are assigned
-    #  in the initialization call or later (using either _assign_defaults or during a function call)
+    #  in the initialization call or later (using either _instantiate_defaults or during a function call)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwFunctionOutputTypeConversion: True,
@@ -697,10 +704,10 @@ class ArgumentTherapy(Function_Base):
             raise FunctionError("This should not happen if parameter_validation == True;  check its value")
 
 
-# region ****************************************   FUNCTIONS   *********************************************************
+# region ****************************************   FUNCTIONS   ********************************************************
 # endregion
 
-# region **********************************  USER-DEFINED FUNCTION  *****************************************************
+# region **********************************  USER-DEFINED FUNCTION  ****************************************************
 # endregion
 
 class UserDefinedFunction(Function_Base):
@@ -817,7 +824,7 @@ class UserDefinedFunction(Function_Base):
         return self.user_defined_function(**kwargs)
 
 
-# region **********************************  COMBINATION FUNCTIONS  *****************************************************
+# region **********************************  COMBINATION FUNCTIONS  ****************************************************
 # endregion
 
 
@@ -1240,15 +1247,16 @@ class LinearCombination(
                                  target_set=target_set,
                                  context=context)
 
-        if target_set[WEIGHTS] is not None:
+        if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-        if target_set[EXPONENTS] is not None:
+        if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
 
             # if not operation:
             #     raise FunctionError("Operation param missing")
             # if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
-            #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".format(operation))
+            #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
+            #     format(operation))
 
     def function(self,
                  variable=None,
@@ -1478,7 +1486,7 @@ class Linear(
 
         """
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
         slope = self.paramsCurrent[SLOPE]
         intercept = self.paramsCurrent[INTERCEPT]
         outputType = self.functionOutputType
@@ -1668,7 +1676,7 @@ class Exponential(
 
         """
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
 
         # Assign the params and return the result
         rate = self.paramsCurrent[RATE]
@@ -1815,7 +1823,7 @@ class Logistic(
 
         """
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
@@ -1852,7 +1860,8 @@ class SoftMax(
 
     .. _SoftMax:
 
-    SoftMax transform of variable.
+    SoftMax transform of variable (see `The Softmax function and its derivative 
+    <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
 
     Arguments
     ---------
@@ -1893,7 +1902,7 @@ class SoftMax(
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
         determines how the softmax-transformed values of the elements in `variable <SoftMax.variable>` are reported
         in the array returned by `function <SoftMax.funtion>`:
-            * **ALL**: array of all softmax-transformed values;
+            * **ALL**: array of all softmax-transformed values (the default);
             * **MAX_VAL**: softmax-transformed value for the element with the maximum such value, 0 for all others;
             * **MAX_INDICATOR**: 1 for the element with the maximum softmax-transformed value, 0 for all others;
             * **PROB**: probabilistically chosen element based on softmax-transformed values after normalizing sum of
@@ -1945,7 +1954,7 @@ class SoftMax(
         Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
         sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
         filtered by `ouptput <SoftMax.output>` specification.
-
+        
         Arguments
         ---------
 
@@ -1967,34 +1976,35 @@ class SoftMax(
 
         """
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
 
         # Assign the params and return the result
-        output = self.params[OUTPUT_TYPE]
+        output_type = self.params[OUTPUT_TYPE]
         gain = self.params[GAIN]
 
-        # print('\ninput: {}'.format(self.variable))
-
-        # Get numerator
-        sm = np.exp(gain * self.variable)
-
-        # Normalize
-        sm = sm / np.sum(sm, axis=0)
+        # Modulate variable by gain
+        v = gain * self.variable
+        # Shift by max to avoid extreme values:
+        v = v - np.max(v)
+        # Exponentiate
+        v = np.exp(v)
+        # Normalize (to sum to 1)
+        sm = v / np.sum(v, axis=0)
 
         # For the element that is max of softmax, set it's value to its softmax value, set others to zero
-        if output is MAX_VAL:
+        if output_type is MAX_VAL:
             max_value = np.max(sm)
             sm = np.where(sm == max_value, max_value, 0)
 
         # For the element that is max of softmax, set its value to 1, set others to zero
-        elif output is MAX_INDICATOR:
+        elif output_type is MAX_INDICATOR:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             sm = np.where(sm == max_value, 1, 0)
 
         # Choose a single element probabilistically based on softmax of their values;
         #    leave that element's value intact, set others to zero
-        elif output is PROB:
+        elif output_type is PROB:
             cum_sum = np.cumsum(sm)
             random_value = np.random.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
@@ -2007,18 +2017,58 @@ class SoftMax(
         """
         derivative(output)
 
-        Derivative of `function <SoftMax.function>`.
+        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL, 
+        return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
+            COMMENT:
+                D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
+            COMMENT
+            D\ :sub:`j`\ S\ :sub:`i` = S\ :sub:`i`\ (𝜹\ :sub:`i,j` - S\ :sub:`j`), 
+            where 𝜹\ :sub:`i,j`\ =1 if i=j and 𝜹\ :sub:`i,j`\ =0 if i≠j.
+        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum 
+        value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
+        (since it is ambiguous as to which element would have been chosen by the SoftMax function)
 
         Returns
         -------
 
-        derivative :  number
-            output - maximum value.
+        derivative :  1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)
+            derivative of values returns by SoftMax.
 
         """
-        # FIX: ??CORRECT:
-        indicator = self.function(input, params={MAX_VAL: True})
-        return output - indicator
+
+        output_type = self.params[OUTPUT_TYPE]
+        size = len(output)
+        sm = self.function(output, params={OUTPUT_TYPE: ALL})
+
+        if output_type is ALL:
+            # Return full Jacobian matrix of derivatives
+            derivative = np.empty([size, size])
+            for j in range(size):
+                for i, val in zip(range(size), output):
+                    if i==j:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[j,i] = sm[i] * (d - sm[j])
+
+        elif output_type in {MAX_VAL, MAX_INDICATOR}:
+            # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
+            derivative = np.empty(size)
+            # Get the element of output returned as non-zero when output_type is not ALL
+            index_of_max = int(np.where(output==np.max(output))[0])
+            max_val = sm[index_of_max]
+            for i in range(size):
+                if i==index_of_max:
+                    d = 1
+                else:
+                    d = 0
+                derivative[i] = sm[i] * (d - max_val)
+
+        else:
+            raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
+                                "(and therefore the relevant element is ambiguous)".format(self.owner_name))
+
+        return derivative
 
 
 class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------
@@ -2239,6 +2289,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if param_name is kwFunctionOutputTypeConversion:
                 continue
 
+            if param_name is AUTO_DEPENDENT:
+                continue
+
             # Matrix specification param
             elif param_name == MATRIX:
 
@@ -2277,7 +2330,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
-                elif param_value is IDENTITY_MATRIX:
+                elif param_value in {IDENTITY_MATRIX, OFF_DIAGNOAL_MATRIX}:
                     # Receiver length doesn't equal sender length
                     if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
                         # if self.owner.prefs.verbosePref:
@@ -2286,9 +2339,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         #            format(receiver_len, sender_len))
                         # # Set receiver to sender
                         # param_set[kwReceiver] = sender
-                        raise FunctionError("Identity matrix requested for the {} function of {}, "
+                        raise FunctionError("{} requested for the {} function of {}, "
                                             "but length of receiver ({}) does not match length of sender ({})".
-                                            format(self.name, self.owner.name, receiver_len, sender_len))
+                                            format(param_value, self.name, self.owner.name, receiver_len, sender_len))
                     continue
 
                 # list used to describe matrix, so convert to 2D np.array and pass to validation of matrix below
@@ -2410,7 +2463,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
-        self._check_args(variable, params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
         return np.dot(self.variable, self.matrix)
 
@@ -2446,6 +2499,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         + matrix keyword:
             + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
             + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
+            + OFF_DIAGONAL_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
             + FULL_CONNECTIVITY_MATRIX: all 1's
             + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
         + 2D list or np.ndarray of numbers
@@ -2476,11 +2530,17 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     if specification == FULL_CONNECTIVITY_MATRIX:
         return np.full((rows, cols), 1.0)
 
-    if specification == IDENTITY_MATRIX:
+    if specification is IDENTITY_MATRIX:
         if rows != cols:
-            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use identity matrix".
-                                format(rows, cols))
+            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
+                                format(rows, cols, specification))
         return np.identity(rows)
+
+    if specification is OFF_DIAGNOAL_MATRIX:
+        if rows != cols:
+            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
+                                format(rows, cols, specification))
+        return 1-np.identity(rows)
 
     if specification is RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)
@@ -2493,7 +2553,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     return None
 
 
-# region ***********************************  INTEGRATOR FUNCTIONS ******************************************************
+# region ***********************************  INTEGRATOR FUNCTIONS *****************************************************
 
 #  Integrator
 #  DDM_BogaczEtAl
@@ -2554,8 +2614,8 @@ class Integrator(
         `noise <Integrator.noise>` for details).
 
     time_step_size : float : default 0.0
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
-        DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
+        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` 
+        is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -2589,8 +2649,8 @@ class Integrator(
 
     integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
         specifies type of integration:
-            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` + `noise <Integrator.noise>`
-              (ignores `variable <Integrator.variable>`);
+            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` + 
+              `noise <Integrator.noise>` (ignores `variable <Integrator.variable>`);
             * **SIMPLE**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` *
               `variable <variable.Integrator.variable>` + `noise <Integrator.noise>`;
             * **ADAPTIVE**: (1-`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
@@ -2623,8 +2683,8 @@ class Integrator(
         is set to DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
     initializer : 1d np.array or list
-        determines the starting value for integration (i.e., the value to which `previous_value <Integrator.previous_value>`
-        is set.
+        determines the starting value for integration (i.e., the value to which 
+        `previous_value <Integrator.previous_value>` is set.
 
         If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
         initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
@@ -2676,6 +2736,7 @@ class Integrator(
                                                   noise=noise,
                                                   )
 
+
         # Assign here as default, for use in initialization of function
         self.previous_value = self.paramClassDefaults[INITIALIZER]
 
@@ -2684,35 +2745,99 @@ class Integrator(
                          owner=owner,
                          prefs=prefs,
                          context=context)
+
         # Reassign to kWInitializer in case default value was overridden
         self.previous_value = self.initializer
 
+        self.auto_dependent = True
 
-        # self.noise = self.paramsCurrent[NOISE]
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        # Handle list or array for rate specification
+        if RATE in request_set:
+            rate = request_set[RATE]
+            if isinstance(rate, (list, np.ndarray)):
+                if len(rate) != np.array(self.variable).size:
+                    # If the variable was not specified, then reformat it to match rate specification
+                    #    and assign variableClassDefault accordingly
+                    # Note: this situation can arise when the rate is parameterized (e.g., as an array) in the
+                    #       Integrator's constructor, where that is used as a specification for a function parameter
+                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
+                    #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
+                    #       the object itself, thus does not see the array specification for the input.
+                    if self._variable_not_specified:
+                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
+                        if self.verbosePref:
+                            warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                          "must match the length ({}) of the default input ({});  "
+                                          "the default input has been updated to match".
+                                          format(len(rate),
+                                                 rate,
+                                                 self.name,
+                                                 np.array(self.variable).size),
+                                          self.variable)
+                    else:
+                        raise FunctionError("The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                            "must match the length ({}) of the default input ({})".
+                                            format(len(rate),
+                                                   rate,
+                                                   self.name,
+                                                   np.array(self.variable).size,
+                                                   self.variable))
+
+                self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        if RATE in target_set:
+            if self.integration_type is ADAPTIVE:
+                if isinstance(target_set[RATE], (list, np.ndarray)):
+                    for r in target_set[RATE]:
+                        if r < 0.0 or r > 1.0:
+                            raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
+                                                "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+                                                format(target_set[RATE], self.name))
+                else:
+                    if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
+                        raise FunctionError(
+                            "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
+                            "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+
+        # self._validate_initializer()
+
+        if NOISE in target_set:
+            # FIX: SHOULDN'T THIS PASS target_set[NOISE] to _validate_noise() rather than use self.noise?
+            self._validate_noise(target_set[NOISE])
+
+        if TIME_STEP_SIZE in target_set:
+            time_step_size = target_set[TIME_STEP_SIZE]
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
-    def _validate_noise(self):
+    def _validate_noise(self, noise):
         # Noise is a list or array
-        if isinstance(self.noise, (np.ndarray, list)):
+        if isinstance(noise, (np.ndarray, list)):
             # Variable is a list/array
             if isinstance(self.variable, (np.ndarray, list)):
-                if len(self.noise) != np.array(self.variable).size:
+                if len(noise) != np.array(self.variable).size:
                     try:
-                        formatted_noise = list(map(lambda x: x.__qualname__, self.noise))
+                        formatted_noise = list(map(lambda x: x.__qualname__, noise))
                     except AttributeError:
-                        formatted_noise = self.noise
+                        formatted_noise = noise
                     raise FunctionError("The length ({}) of the array specified for the noise parameter ({}) of {} "
                                         "must match the length ({}) of the default input ({}). If noise is specified as"
                                         " an array or list, it must be of the same size as the input."
-                                        .format(len(self.noise), formatted_noise, self.name, np.array(self.variable).size,
+                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
                                                 self.variable))
                 else:
                     # Noise is a list or array of functions
-                    if callable(self.noise[0]):
+                    if callable(noise[0]):
                         self.noise_function = True
                     # Noise is a list or array of floats
-                    elif isinstance(self.noise[0], float):
+                    elif isinstance(noise[0], float):
                         self.noise_function = False
                     # Noise is a list or array of invalid elements
                     else:
@@ -2720,20 +2845,20 @@ class Integrator(
             # Variable is not a list/array
             else:
                 raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
-                                    "default input value is also a list or array.".format(self.noise, self.name))
+                                    "default input value is also a list or array.".format(noise, self.name))
 
-        elif callable(self.noise):
+        elif callable(noise):
             self.noise_function = True
             if isinstance(self.variable, (np.ndarray, list)):
                 new_noise = []
                 for i in self.variable:
                     new_noise.append(self.noise)
-                self.noise = new_noise
-        elif isinstance(self.noise, float):
+                noise = new_noise
+        elif isinstance(noise, float):
             self.noise_function = False
         else:
             raise FunctionError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
-                                "array or list of functions.".format(self.noise, self.name))
+                                "array or list of functions.".format(noise, self.name))
 
         if self.noise_function and self.integration_type == "diffusion":
 
@@ -2741,92 +2866,48 @@ class Integrator(
                                 " float. Noise parameter is used to construct the standard DDM noise distribution"
                                 .format(self.name))
 
-    def _validate_initializer(self):
-        print(self.initializer, " = SELF.INITIALIZER")
+    def _validate_initializer(self, initializer):
         # Initializer is a list or array
-        if isinstance(self.initializer[0], (np.ndarray, list)):
+        if isinstance(initializer[0], (np.ndarray, list)):
             # Variable is a list/array
             if isinstance(self.variable, (np.ndarray, list)):
-                if len(self.initializer[0]) != np.array(self.variable).size:
+                if len(initializer[0]) != np.array(self.variable).size:
                     try:
-                        formatted_initializer = list(map(lambda x: x.__qualname__, self.initializer[0]))
+                        formatted_initializer = list(map(lambda x: x.__qualname__, initializer[0]))
                     except AttributeError:
-                        formatted_initializer = self.initializer[0]
-                    raise FunctionError("The length ({}) of the array specified for the initializer parameter ({}) of {} "
-                                        "must match the length ({}) of the default input ({}). If initializer is specified as"
-                                        " an array or list, it must be of the same size as the input."
-                                        .format(len(self.initializer[0]), formatted_initializer, self.name, np.array(self.variable).size,
+                        formatted_initializer = initializer[0]
+                    raise FunctionError("The length ({}) of the array specified for the initializer parameter "
+                                        "({}) of {} must match the length ({}) of the default input ({}). "
+                                        "If initializer is specified as an array or list, "
+                                        "it must be of the same size as the input."
+                                        .format(len(initializer[0]),
+                                                formatted_initializer,
+                                                self.name, np.array(self.variable).size,
                                                 self.variable))
                 else:
-                    if callable(self.initializer[0][0]):
+                    if callable(initializer[0][0]):
                         self.initializer_function = True
                     # Initializer is a list or array of floats
 
        # Variable is not a list/array
             else:
                 raise FunctionError("The initializer parameter ({}) for {} may only be a list or array if the "
-                                    "default input value is also a list or array.".format(self.initializer[0], self.name))
+                                    "default input value is also a list or array.".
+                                    format(self.initializer[0], self.name))
 
-        elif callable(self.initializer[0]):
+        elif callable(initializer[0]):
             self.initializer_function = True
             if isinstance(self.variable, (np.ndarray, list)):
                 new_initializer = []
                 for i in self.variable:
-                    new_initializer.append(self.initializer[0])
-                self.initializer[0] = new_initializer
-        elif isinstance(self.initializer[0], float):
-            self.initializer_function = False
+                    new_initializer.append(initializer[0])
+                initializer[0] = new_initializer
+        elif isinstance(initializer[0], float):
+            initializer_function = False
         else:
-            raise FunctionError("initializer parameter ({}) for {} must be a number, function, array or list of floats, or "
-                                "array or list of functions.".format(self.initializer[0], self.name))
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        # Handle list or array for rate specification
-        rate = request_set[RATE]
-        if isinstance(rate, (list, np.ndarray)):
-            if len(rate) != np.array(self.variable).size:
-                # If the variable was not specified, then reformat it to match rate specification
-                #    and assign variableClassDefault accordingly
-                # Note: this situation can arise when the rate is parameterized (e.g., as an array)
-                #       in the Integrator's constructor, where that is used as a specification for a function parameter
-                #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
-                #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
-                #       the object itself, thus does not see the array specification for the input.
-                if self._variable_not_specified:
-                    self._assign_defaults(variable=np.zeros_like(np.array(rate)), context=context)
-                    if self.verbosePref:
-                        warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} must "
-                                      "match the length ({}) of the default input ({});  the default input has been "
-                                      "updated to match".
-                                      format(len(rate), rate, self.name, np.array(self.variable).size), self.variable)
-                else:
-                    raise FunctionError("The length ({}) of the array specified for the rate parameter ({}) of {} "
-                                        "must match the length ({}) of the default input ({})".
-                                        format(len(rate), rate, self.name, np.array(self.variable).size, self.variable))
-
-            self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
-
-        super()._validate_params(request_set=request_set,
-                                 target_set=target_set,
-                                 context=context)
-
-        if self.integration_type is ADAPTIVE:
-            if isinstance(self.rate, (list, np.ndarray)):
-                for r in self.rate:
-                    if r < 0.0 or r > 1.0:
-                        raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                                            "1.0 when integration_type is set to ADAPTIVE.".format(self.rate, self.name))
-            else:
-                if self.rate < 0.0 or self.rate > 1.0:
-                    raise FunctionError(
-                        "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                        "1.0 when integration_type is set to ADAPTIVE.".format(self.rate, self.name))
-
-        # self._validate_initializer()
-        self._validate_noise()
-        noise = target_set[NOISE]
-        time_step_size = target_set[TIME_STEP_SIZE]
+            raise FunctionError("initializer parameter ({}) for {} must be a number, function, "
+                                "array or list of floats, or array or list of functions.".
+                                format(initializer[0], self.name))
 
     def function(self,
                  variable=None,
@@ -2923,7 +3004,8 @@ class Integrator(
 #     .. _DDMIntegrator:
 #
 #     Implement drift diffusion integration process.
-#     It is a subclass of the `Integrator` Function that enforce use of the DIFFUSION `integration_type <Integrator.integration_type>`.
+#     It is a subclass of the `Integrator` Function that enforces use of the DIFFUSION `integration_type
+#     <Integrator.integration_type>`.
 #
 #     Arguments
 #     ---------
@@ -2944,7 +3026,8 @@ class Integrator(
 #         (see `noise <DDMIntegrator.rate>` for details).
 #
 #     time_step_size : float : default 0.0
-#         determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
+#         determines the timing precision of the integration process when
+#         `integration_type <Integrator.integration_type>` is set to
 #         DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
 #
 #     initializer float, list or 1d np.array : default 0.0
@@ -2982,13 +3065,15 @@ class Integrator(
 #         diffusion component of the drift diffusion process).
 #
 #     time_step_size : float
-#         determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` is set to
-#         DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
+#         determines the timing precision of the integration process when
+#         `integration_type <Integrator.integration_type>` is set to DIFFUSION
+#         (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 #
 #     initializer : float or 1d np.array
-#         determines the starting value for integration (i.e., the value to which `previous_value <Integrator.previous_value>`
-#         is set.  If it is assigned as a `runtime_param <LINK>` it resets `previous_value <Integrator.previous_value>` to the
-#         specified value (see `initializer <Integrator.initializer>` for details).
+#         determines the starting value for integration (i.e., the value to which
+#         `previous_value <Integrator.previous_value>`
+#         is set.  If it is assigned as a `runtime_param <LINK>` it resets `previous_value <Integrator.previous_value>`
+#         to the specified value (see `initializer <Integrator.initializer>` for details).
 #
 #     previous_value : 1d np.array : default variableClassDefault
 #         stores previous value with which `variable <Integrator.variable>` is integrated.
@@ -3182,7 +3267,7 @@ class BogaczEtAl(
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 drift_rate: parameter_spec = 1.0,
+                 drift_rate:parameter_spec = 1.0,
                  starting_point: parameter_spec = 0.0,
                  threshold: parameter_spec = 1.0,
                  noise: parameter_spec = 0.5,
@@ -3212,7 +3297,8 @@ class BogaczEtAl(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: terminal value of decision variable, mean accuracy (error rate; ER) and mean response time (RT)
+        Return: terminal value of decision variable (equal to threshold), mean accuracy (error rate; ER) and mean 
+        response time (RT)
 
         Arguments
         ---------
@@ -3265,8 +3351,8 @@ class BogaczEtAl(
             is_neg_drift = drift_rate < 0
             bias_adj = (is_neg_drift == 1) * (1 - bias) + (is_neg_drift == 0) * bias
             y0tilde = ((noise ** 2) / 2) * np.log(bias_adj / (1 - bias_adj))
-            if abs(y0tilde) > threshold:    y0tilde = -1 * (is_neg_drift == 1) * threshold + (
-                                                                                             is_neg_drift == 0) * threshold
+            if abs(y0tilde) > threshold:
+                y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
             x0tilde = y0tilde / drift_rate_normed
 
             import warnings
@@ -3295,6 +3381,61 @@ class BogaczEtAl(
             er = (is_neg_drift == 1) * (1 - er) + (is_neg_drift == 0) * (er)
 
         return rt, er
+
+
+    def derivative(self, output=None, input=None):
+        """
+        derivative(output, input)
+
+        Calculate the derivative of 1/(reward rate) with respect to the threshold (**output** arg)
+        and drift_rate (**input** arg).  Reward rate (RR) is assumed to be:
+          
+            RR = (delay\ :sub:`ITI` + Z/A + ED);
+           
+        the derivative of 1/RR with respect to the `threshold <BogaczEtAl.threshold>` is:
+        
+            1/A - E/A - (2A/c\ :sup:`2`\ )ED;
+          
+        and the derivative of 1/RR with respect to the `drift_rate <BogaczEtAl.drift_rate>` is:
+          
+            -Z/A\ :sup:`2` + (Z/A\ :sup:`2`\ )E - (2Z/c\ :sup:`2`\ )ED
+                                   
+        where:
+
+            A = `drift_rate <BogaczEtAl.drift_rate>`,
+
+            Z = `threshold <BogaczEtAl.threshold>`,  
+
+            c = `noise <BogaczEtAl.noise>`,  
+
+            E = exp(-2ZA/\ c\ :sup:`2`\ ), and  
+
+            D = delay\ :sub:`ITI` + delay\ :sub:`penalty` - Z/A
+            
+            delay\ :sub:`ITI` is the intertrial interval and delay\ :sub:`penalty` is a penalty delay.
+
+          
+        Returns
+        -------
+
+        derivatives :  List[float, float)
+            of 1/RR with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate <BogaczEtAl.drift_rate>`. 
+
+        """
+        Z = output or self.threshold
+        A = input or self.drift_rate
+        c = self.noise
+        c_sq = c**2
+        E = exp(-2*Z*A/c_sq)
+        D_iti = 0
+        D_pen = 0
+        D = D_iti + D_pen
+        # RR =  1/(D_iti + Z/A + (E*D))
+
+        dRR_dZ = 1/A + E/A + (2*A/c_sq)*E*D
+        dRR_dA = -Z/A**2 + (Z/A**2)*E - (2*Z/c_sq)*E*D
+
+        return [dRR_dZ, dRR_dA]
 
 
 # Results from Navarro and Fuss DDM solution (indices for return value tuple)
@@ -3502,7 +3643,7 @@ class NavarroAndFuss(
         return results
 
 
-# region ************************************   DISTRIBUTION FUNCTIONS   ************************************************
+# region ************************************   DISTRIBUTION FUNCTIONS   ***********************************************
 
 class DistributionFunction(Function_Base):
     componentType = DIST_FUNCTION_TYPE
@@ -4018,7 +4159,7 @@ class WaldDist(DistributionFunction):
 
 # endregion
 
-# region **************************************   LEARNING FUNCTIONS ****************************************************
+# region **************************************   LEARNING FUNCTIONS ***************************************************
 
 
 class LearningFunction(Function_Base):
@@ -4430,7 +4571,6 @@ class BackPropagation(LearningFunction):
                  # variable_default:tc.any(list, np.ndarray),
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  error_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
-                 # error_matrix:tc.optional(tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection))=None,
                  error_matrix=None,
                  learning_rate: tc.optional(parameter_spec) = None,
                  params=None,
@@ -4495,63 +4635,62 @@ class BackPropagation(LearningFunction):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Validate error_matrix specification
-        try:
+        if ERROR_MATRIX in target_set:
+
             error_matrix = target_set[ERROR_MATRIX]
-        except KeyError:
-            raise FunctionError("PROGRAM ERROR:  No specification for {} in {}".
-                                format(ERROR_MATRIX, self.name))
 
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-        if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
-            raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
-                                "MappingProjection".format(ERROR_MATRIX, self.name))
+            from PsyNeuLink.Components.States.ParameterState import ParameterState
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
+                raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
+                                    "MappingProjection".format(ERROR_MATRIX, self.name))
 
-        if isinstance(error_matrix, MappingProjection):
-            try:
-                error_matrix = error_matrix.parameterStates[MATRIX].value
-                param_type_string = "MappingProjection's ParameterState"
-            except KeyError:
-                raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
-                                    "paramaterState that has been assigned a 2d array or matrix".
-                                    format(ERROR_MATRIX, self.name, error_matrix.shape, MATRIX))
+            if isinstance(error_matrix, MappingProjection):
+                try:
+                    error_matrix = error_matrix.parameterStates[MATRIX].value
+                    param_type_string = "MappingProjection's ParameterState"
+                except KeyError:
+                    raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
+                                        "paramaterState that has been assigned a 2d array or matrix".
+                                        format(ERROR_MATRIX, self.name, error_matrix.shape, MATRIX))
 
-        elif isinstance(error_matrix, ParameterState):
-            try:
-                error_matrix = error_matrix.value
-                param_type_string = "ParameterState"
-            except KeyError:
-                raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+            elif isinstance(error_matrix, ParameterState):
+                try:
+                    error_matrix = error_matrix.value
+                    param_type_string = "ParameterState"
+                except KeyError:
+                    raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                                        "must be a 2d array or matrix".
+                                        format(MATRIX, ERROR_MATRIX, self.name, error_matrix.shape))
+
+            else:
+                param_type_string = "array or matrix"
+
+            error_matrix = np.array(error_matrix)
+            rows = error_matrix.shape[WT_MATRIX_SENDERS_DIM]
+            cols = error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]
+            activity_output_len = len(self.activation_output)
+            error_signal_len = len(self.error_signal)
+
+            if error_matrix.ndim != 2:
+                raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
                                     "must be a 2d array or matrix".
-                                    format(MATRIX, ERROR_MATRIX, self.name, error_matrix.shape))
+                                    format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
 
-        else:
-            param_type_string = "array or matrix"
+            # The length of the sender outputState.value (the error signal) must be the
+            #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
 
-        error_matrix = np.array(error_matrix)
-        rows = error_matrix.shape[WT_MATRIX_SENDERS_DIM]
-        cols = error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]
-        activity_output_len = len(self.activation_output)
-        error_signal_len = len(self.error_signal)
+            # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
+            if cols != error_signal_len:
+                raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
+                                    "must match the length of the error signal ({}) it receives".
+                                    format(cols, MATRIX, error_matrix.shape, self.name, cols))
 
-        if error_matrix.ndim != 2:
-            raise FunctionError("The value of the {} specified for the {} arg of {} ({}) must be a 2d array or matrix".
-                                format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
-
-        # The length of the sender outputState.value (the error signal) must be the
-        #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
-
-        # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
-        if cols != error_signal_len:
-            raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
-                                "must match the length of the error signal ({}) it receives".
-                                format(cols, MATRIX, error_matrix.shape, self.name, cols))
-
-        # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
-        if rows != activity_output_len:
-            raise FunctionError("The height (number of rows, {}) of \'{}\' arg specified for {} must match the "
-                                "length of the output {} of the activity vector being monitored ({})".
-                                format(rows, MATRIX, self.name, activity_output_len))
+            # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
+            if rows != activity_output_len:
+                raise FunctionError("The height (number of rows, {}) of \'{}\' arg specified for {} must match the "
+                                    "length of the output {} of the activity vector being monitored ({})".
+                                    format(rows, MATRIX, self.name, activity_output_len))
 
     def function(self,
                  variable=None,
@@ -4634,8 +4773,8 @@ class BackPropagation(LearningFunction):
 
         return [weight_change_matrix, dE_dW]
 
-# region *****************************************   OBJECTIVE FUNCTIONS ************************************************
+# region *****************************************   OBJECTIVE FUNCTIONS ***********************************************
 # endregion
 # TBI
 
-# region  *****************************************   REGISTER FUNCTIONS ************************************************
+# region  *****************************************   REGISTER FUNCTIONS ***********************************************

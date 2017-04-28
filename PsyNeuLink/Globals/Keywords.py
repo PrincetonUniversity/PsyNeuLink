@@ -97,7 +97,12 @@ class MatrixKeywords:
     ----------
 
     IDENTITY_MATRIX
-        a square matrix of 1's; this requires that the length of the sender and receiver values are the same.
+        a square matrix of 1's along the diagnoal, 0's elsewhere; this requires that the length of the sender and 
+        receiver values are the same.
+
+    OFF_DIAGONAL_MATRIX
+        a square matrix of 0's along the diagnoal, 1's elsewhere; this requires that the length of the sender and 
+        receiver values are the same.
 
     FULL_CONNECTIVITY_MATRIX
         a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
@@ -119,6 +124,7 @@ class MatrixKeywords:
     def __init__(self):
         self.MATRIX = MATRIX
         self.IDENTITY_MATRIX = IDENTITY_MATRIX
+        self.OFF_DIAGONAL = OFF_DIAGNOAL_MATRIX
         self.FULL_CONNECTIVITY_MATRIX = FULL_CONNECTIVITY_MATRIX
         self.RANDOM_CONNECTIVITY_MATRIX = RANDOM_CONNECTIVITY_MATRIX
         self.AUTO_ASSIGN_MATRIX = AUTO_ASSIGN_MATRIX
@@ -132,6 +138,7 @@ class MatrixKeywords:
 
 MATRIX = "matrix"
 IDENTITY_MATRIX = "IdentityMatrix"
+OFF_DIAGNOAL_MATRIX = "OffDiagonalMatrix"
 FULL_CONNECTIVITY_MATRIX = "FullConnectivityMatrix"
 RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
 AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
@@ -174,8 +181,7 @@ kwAssign = ': Assign' # Used in context for Log
 ASSIGN_VALUE = ': Assign value'
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
-kwValidate = 'Validate'
-VALIDATE = kwValidate
+VALIDATE = 'Validate'
 COMMAND_LINE = "COMMAND_LINE"
 kwParams = 'params'
 CHANGED = 'CHANGED'
@@ -235,7 +241,7 @@ NAME = "name"
 PARAMS = "params"
 CONTEXT = "context"
 
-kwInitialValues = 'initial_values'
+INITIAL_VALUES = 'initial_values'
 
 # inputs list/ndarray:
 TRIALS_DIM = 0
@@ -243,7 +249,7 @@ TIME_STEPS_DIM = 1
 PROCESSES_DIM = 2
 INPUTS_DIM = 3
 
-COMPONENT_INIT = 'Function.__init__'
+COMPONENT_INIT = 'Component.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
 DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
 USER_PARAMS = 'user_params' # Params available to user for inspection in user_params dict
@@ -288,8 +294,9 @@ PARAMETER_STATE = "ParameterState"
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
-CONTROL_PROJECTION = "ControlProjection"
 LEARNING_PROJECTION = "LearningProjection"
+CONTROL_PROJECTION = "ControlProjection"
+GATING_PROJECTION = "GatingProjection"
 
 # Function:
 EXAMPLE_FUNCTION_TYPE = "EXAMPLE FUNCTION"
@@ -363,7 +370,7 @@ RUN = 'Run'
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
 
 PROCESS = "PROCESS"
-kwProcesses = "processes"
+PROCESSES = "processes"
 PROCESS_INIT = 'Process.__init__'
 PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
@@ -433,11 +440,10 @@ kwInitialPoint = 'initial_point'
 
 MAKE_DEFAULT_CONTROLLER = "make_default_controller"
 MONITOR_FOR_CONTROL = "monitor_for_control"
-PREDICTION_MECHANISM = "PredictionMechanism"
+PREDICTION_MECHANISM = "Prediction Mechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
-kwPredictionProcess = "PredictionProcess"
 CONTROL_SIGNAL = 'control_signal'
 CONTROL_PROJECTIONS = 'ControlProjections'
 OUTCOME_FUNCTION = 'outcome_function'
@@ -482,10 +488,10 @@ PROJECTION_PARAMS = "ProjectionParams"
 MAPPING_PROJECTION_PARAMS = "MappingProjectionParams"
 CONTROL_PROJECTION_PARAMS = "ControlProjectionParams"
 LEARNING_PROJECTION_PARAMS = 'LearningProjectionParams'
-PROJECTION_SENDER = 'projectionSender'
+PROJECTION_SENDER = 'projection_sender'
 kwSenderArg = 'sender'
-PROJECTION_SENDER_VALUE =  "projectionSenderValue"
-kwProjectionReceiver = 'ProjectionReceiver'
+PROJECTION_SENDER_VALUE =  "projection_sender_value"
+kwProjectionReceiver = 'projection_receiver'
 kwReceiverArg = 'receiver'
 # kpLog = "ProjectionLog"
 MONITOR_FOR_LEARNING = 'monitor_for_learning'
@@ -513,7 +519,10 @@ RATE = 'rate'
 SCALE = 'scale'
 NOISE = 'noise'
 
+AUTO_DEPENDENT='auto_dependent'
 DRIFT_RATE = 'drift_rate'
+INTEGRATOR_FUNCTION = 'integrator_function'
+INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
 
 MEAN = 'mean'
@@ -525,8 +534,6 @@ HIGH = 'high'
 BETA = 'beta'
 
 SHAPE = 'shape'
-
-INTEGRATION_TYPE = "integration_type"
 
 OUTPUT_TYPE = 'output'
 ALL = 'all'

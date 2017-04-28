@@ -243,7 +243,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     monitored_values=None,        \
     names=None,                   \
     function=LinearCombination,   \
-    role=None                     \
     params=None,                  \
     name=None,                    \
     prefs=None)
@@ -313,7 +312,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     COMMENT:
         [TBI]
         time_scale :  TimeScale : TimeScale.TRIAL
-            specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+            specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.
             This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
     COMMENT
 
@@ -399,7 +398,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  monitored_values=None,
                  names:tc.optional(list)=None,
                  function=LinearCombination,
-                 role:tc.optional(str)=None,
+                 # role:tc.optional(str)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -412,10 +411,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         params = self._assign_args_to_param_dicts(monitored_values=monitored_values,
                                                   names=names,
                                                   function=function,
-                                                  role=role,
                                                   params=params)
 
-        self.learning_role = None
+        self._learning_role = None
 
         super().__init__(variable=default_input_value,
                          params=params,
@@ -449,11 +447,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                  target_set=target_set,
                                  context=context)
 
-        if target_set[ROLE] and not target_set[ROLE] in {LEARNING, CONTROL}:
+        if ROLE in target_set and target_set[ROLE] and not target_set[ROLE] in {LEARNING, CONTROL}:
             raise ObjectiveMechanismError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
                                  format(target_set[ROLE], self.name))
 
-        if target_set[NAMES]:
+        if NAMES in target_set and target_set[NAMES]:
             if len(target_set[NAMES]) != len(target_set[MONITORED_VALUES]):
                 raise ObjectiveMechanismError("The number of items in \'names\'arg ({}) must equal of the number in the "
                                      "\`monitored_values\` arg for {}".
@@ -468,38 +466,40 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # FIX: IS THE FOLLOWING STILL TRUE:
         # Note: this must be validated after OUTPUT_STATES (and therefore call to super._validate_params)
         #       as it can reference entries in that param
-        try:
-            if not target_set[MONITORED_VALUES] or target_set[MONITORED_VALUES] is NotImplemented:
+        if MONITORED_VALUES in target_set:
+            try:
+                if not target_set[MONITORED_VALUES] or target_set[MONITORED_VALUES] is NotImplemented:
+                    pass
+                # It is a MonitoredOutputStatesOption specification
+                elif isinstance(target_set[MONITORED_VALUES], MonitoredOutputStatesOption):
+                    # Put in a list (standard format for processing by _instantiate_monitored_output_states)
+                    target_set[MONITORED_VALUES] = [target_set[MONITORED_VALUES]]
+                # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
+                else:
+                    # Validate each item of MONITORED_VALUES
+                    for item in target_set[MONITORED_VALUES]:
+                        validate_monitored_value(self, item, context=context)
+                    # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
+                    # FIX:  INDICATING THAT IT WILL BE IGNORED;
+                    # FIX:  weights AND exponents ARE SPECIFIED IN TUPLES
+                    # FIX:  WEIGHTS and EXPONENTS ARE VALIDATED IN
+                    # FIX:           SystemContro.Mechanism_instantiate_monitored_output_states
+                    # # Validate WEIGHTS if it is specified
+                    # try:
+                    #     num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])
+                    # except KeyError:
+                    #     # WEIGHTS not specified, so ignore
+                    #     pass
+                    # else:
+                    #     # Insure that number of weights specified in WEIGHTS
+                    #     #    equals the number of states instantiated from MONITOR_FOR_CONTROL
+                    #     num_monitored_states = len(target_set[MONITOR_FOR_CONTROL])
+                    #     if not num_weights != num_monitored_states:
+                    #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
+                    #                        "does not match the number of monitored states ({1})".
+                    #                        format(num_weights, num_monitored_states))
+            except KeyError:
                 pass
-            # It is a MonitoredOutputStatesOption specification
-            elif isinstance(target_set[MONITORED_VALUES], MonitoredOutputStatesOption):
-                # Put in a list (standard format for processing by _instantiate_monitored_output_states)
-                target_set[MONITORED_VALUES] = [target_set[MONITORED_VALUES]]
-            # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
-            else:
-                # Validate each item of MONITORED_VALUES
-                for item in target_set[MONITORED_VALUES]:
-                    validate_monitored_value(self, item, context=context)
-                # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
-                # FIX:     INDICATING THAT IT WILL BE IGNORED;
-                # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
-                # FIX:     WEIGHTS and EXPONENTS ARE VALIDATED IN SystemContro.Mechanism_instantiate_monitored_output_states
-                # # Validate WEIGHTS if it is specified
-                # try:
-                #     num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])
-                # except KeyError:
-                #     # WEIGHTS not specified, so ignore
-                #     pass
-                # else:
-                #     # Insure that number of weights specified in WEIGHTS
-                #     #    equals the number of states instantiated from MONITOR_FOR_CONTROL
-                #     num_monitored_states = len(target_set[MONITOR_FOR_CONTROL])
-                #     if not num_weights != num_monitored_states:
-                #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
-                #                        "does not match the number of monitored states ({1})".
-                #                        format(num_weights, num_monitored_states))
-        except KeyError:
-            pass
 
 
     def _instantiate_input_states(self, context=None):
@@ -535,7 +535,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         self.variableClassDefault = self.variable.copy()
         self.inputValue = list(self.variable)
-
 
     def _instantiate_input_state_for_monitored_value(self, variable, monitored_value, name=None, context=None):
         """Instantiate inputState with projection from monitoredOutputState
@@ -664,7 +663,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         return input_state.value
 
-
     def add_monitored_values(self, states_spec, context=None):
         """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
 
@@ -716,7 +714,7 @@ def validate_monitored_value(objective_mech, state_spec, context=None):
 
 def _objective_mechanism_role(mech, role):
     if isinstance(mech, ObjectiveMechanism):
-        if mech.role is role:
+        if mech._role is role:
             return True
         else:
             return False
@@ -737,4 +735,4 @@ def _instantiate_monitoring_projection(sender, receiver, matrix=DEFAULT_MATRIX):
     MappingProjection(sender=sender,
                       receiver=receiver,
                       matrix=matrix,
-                      name = sender.owner.name + ' to ' + SAMPLE)
+                      name = sender.name + ' monitor')

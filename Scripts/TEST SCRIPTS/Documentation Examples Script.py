@@ -110,7 +110,7 @@ from PsyNeuLink.Components.Functions.Function import *
 # Specification of mechanisms in a pathway
 mechanism_1 = TransferMechanism()
 mechanism_2 = DDM()
-some_params = {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{THRESHOLD:2,NOISE:0.1}}}
+some_params = {PARAMETER_STATE_PARAMS:{THRESHOLD:2,NOISE:0.1}}
 my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params, 0)])
 print(my_process.execute())
 

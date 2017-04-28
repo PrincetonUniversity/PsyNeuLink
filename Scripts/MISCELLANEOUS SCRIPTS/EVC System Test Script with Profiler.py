@@ -49,7 +49,7 @@ def run():
     #endregion
 
     #region System
-    mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
+    mySystem = System_Base(params={PROCESSES:[TaskExecutionProcess, RewardProcess],
                                    MONITOR_FOR_CONTROL:[Reward, ERROR_RATE,(RESPONSE_TIME, -1, 1)]},
                            name='EVC Test System')
     #endregion

@@ -59,6 +59,7 @@ Middle_Weights = MappingProjection(name='Middle Weights',
                          receiver=Hidden_Layer_2,
                          # matrix=(FULL_CONNECTIVITY_MATRIX, LearningProjection())
                          # matrix=FULL_CONNECTIVITY_MATRIX
+                         # matrix=RANDOM_CONNECTIVITY_MATRIX
                          matrix=Middle_Weights_matrix
                          )
 
@@ -106,6 +107,8 @@ z = process(default_input_value=[0, 0],
 
 # stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 # target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
+# stim_list = {Input_Layer:[[-1, 30]]}
+# stim_list = {Input_Layer:[[-1, 30]]}
 stim_list = {Input_Layer:[[-1, 30]]}
 target_list = {Output_Layer:[[0, 0, 1]]}
 

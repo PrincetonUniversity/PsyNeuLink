@@ -83,7 +83,7 @@ attribute.
   internal numerical iteration or an analytic calculation). Execution of a `trial` is defined as the execution of a
   `trial` of all of the objects in the scope of execution.
 
-The :keyword:`time_scale` argument of an :keyword:`execute` or :keyword:`run` method determines the time scale for each
+The **time_scale** argument of an :keyword:`execute` or :keyword:`run` method determines the time scale for each
 round of execution: a `time_step` or a `trial`.  When a `process <Process>` is run, each mechanism is executed in the
 order that it appears in the process' `pathway`, once per round of execution.  When a `system <System>` is run,
 the order of execution is determined by the system's `executionList` attribute, which is based on the system's
@@ -127,7 +127,7 @@ COMMENT:
 COMMENT
 
 The :keyword:`run` function presents the inputs for each round of execution to the inputStates of the relevant
-mechanisms. These are specified in the :keyword:`inputs` argument of the :keyword:`execute` or :keyword:`run` method.
+mechanisms. These are specified in the **inputs** argument of the :keyword:`execute` or :keyword:`run` method.
 For a mechanism, they comprise the input value for each of the mechanism's `inputStates <InputState>`.  For a process
 or system, they comprise the input values for the inputState(s) of the `ORIGIN` mechanism(s).  Input values can be
 specified in one of two ways: `sequence format <Run_Inputs_Sequence_Format>` and `mechanism format <Run_Dict_format>`.

@@ -17,7 +17,9 @@ Overview
 A ControlProjection is a subclass of `Projection` that projects to the `parameterState <ParameterState>`
 of a `ProcessingMechanism`. It takes the value of an `outputState <OutputState> of another mechanism (e.g., usually a
 `ControlMechanism <ControlMechanism>`), and uses it to  modify the value of the parameter associated with the
-parameterState to which it projects.
+parameterState to which it projects.  All of the ControlProjections in a system, along with its other 
+`control components <ControlMechanism>`, can be displayed using the system's `show_graph` method with its 
+**show_control** argument assigned :keyword:`True`.
 
 .. _ControlProjection_Creation:
 
@@ -86,12 +88,12 @@ class ControlProjectionError(Exception):
 
 class ControlProjection(Projection_Base):
     """
-    ControlProjection(                                \
-     sender=None,                                     \
-     receiver=None,                                   \
-     function=Linear                                  \
-     params=None,                                     \
-     name=None,                                       \
+    ControlProjection( \
+     sender=None,      \
+     receiver=None,    \
+     function=Linear   \
+     params=None,      \
+     name=None,        \
      prefs=None)
 
      Implements a projection that controls the parameter of a mechanism or its :keyword:`function`.
@@ -121,10 +123,8 @@ class ControlProjection(Projection_Base):
                 PROJECTION_SENDER: DefaultController, # ControlProjection (assigned to class ref in __init__ module)
                 PROJECTION_SENDER_VALUE: [defaultControlAllocation],
                 CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS,
-                kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
                 ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
             + paramNames = paramClassDefaults.keys()
-            + costFunctionNames = paramClassDefaults[kwControlSignalCostFunctions].keys()
     COMMENT
 
 
@@ -261,11 +261,11 @@ class ControlProjection(Projection_Base):
             DefaultController is being assigned as sender and, if so:
             - creates projection-dedicated inputState and outputState in DefaultController
             - puts them in DefaultController's inputStates and outputStates attributes
-            - lengthens variable of DefaultController to accommodate the ControlProjection channel
-            - updates value of DefaultController (in resposne to new variable)
+            - lengthens variable of DefaultController to accommodate the ControlProjection
+            - updates value of the DefaultController (in response to the new variable)
         Notes:
-            * the default execute method of DefaultController simply maps the inputState value to the outputState
-            * the params arg is assumed to be a dictionary of params for the controlSignal of the ControlMechanism
+            * the default function of the DefaultController simply maps the inputState value to the outputState
+            * the params arg is assumed to be a dictionary of params for the ControlSignal of the ControlMechanism
 
         :return:
         """
@@ -289,7 +289,7 @@ class ControlProjection(Projection_Base):
         # If sender is a Mechanism (rather than a State) object, get (or instantiate) its State
         #    (Note:  this includes ControlMechanism)
         if isinstance(self.sender, Mechanism):
-            # If sender is a ControlMechanism, call it to instantiate its controlSignal projection
+            # If sender is a ControlMechanism, call it to instantiate its ControlSignal projection
             from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
             from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignalError
             if isinstance(self.sender, ControlMechanism_Base):
@@ -297,7 +297,7 @@ class ControlProjection(Projection_Base):
                     params = params or self.control_signal
                     self.sender._instantiate_control_projection(self, params=params, context=context)
                 except ControlSignalError as error_msg:
-                    raise FunctionError("Error in attempt to specify controlSignal for {} of {}".
+                    raise FunctionError("Error in attempt to specify ControlSignal for {} of {}".
                                         format(self.name, self.receiver.owner.name, error_msg))
 
         # Call super to instantiate sender

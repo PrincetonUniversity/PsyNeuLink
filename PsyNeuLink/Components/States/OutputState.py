@@ -37,8 +37,8 @@ created within the `pathway` of a `process <Process>`, an outputState will be cr
 or to the process's `output <Process_Input_And_Ouput>` if the mechanism is a `TERMINAL` mechanism for that process.
 
 An outputState must be owned by a mechanism. Therefore, if the outputState is created explicitly, the mechanism to
-which it belongs must be specified in the :keyword:`owner` argument of its constructor; if the outputState is specified
-in the :keyword:`OUTPUT_STATES` entry of the `parameter dictionary <ParameterState_Specifying_Parameters>` for a
+which it belongs must be specified in the **owner** argument of its constructor; if the outputState is specified
+in the OUTPUT_STATES entry of the `parameter dictionary <ParameterState_Specifying_Parameters>` for a
 mechanism, then the owner is inferred from the context.
 
 .. _OutputState_Primary:
@@ -57,7 +57,7 @@ additional outputStates that calculate values derived from one or more of those 
 
 If one or more custom outputStates need to be added when a mechanism is created, or added to an existing
 mechanism, they can be specified in an entry of the mechanism's
-`parameter dictionary <ParameterState_Specifying_Parameters>`, using the key :keyword:`OUTPUT_STATES`.  For a single
+`parameter dictionary <ParameterState_Specifying_Parameters>`, using the key OUTPUT_STATES.  For a single
 outputState, the value of the entry can be any of the specifications in the the list below.  To create multiple
 outputStates, the value can be either: a list, each item of which can be any of the specifications below; or
 it can be an OrderedDict in which the key for each entry is a string  specifying the name for the outputState to be
@@ -70,7 +70,7 @@ of the following formats:
     ..
     * A reference to the **OutputState class** or a ** name string**.  This creates a default outputState that is
       assigned the first item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` as its value.  If the
-      name of the OutputState class or its keyword (:keyword:`OUTPUTSTATE`) are used, a default name is assigned to the
+      name of the OutputState class or its keyword (OUTPUTSTATE) are used, a default name is assigned to the
       outputState;  if a string is used, it is assigned as the name of the outputState
       (see :ref:`naming conventions <LINK>`).
     ..
@@ -101,7 +101,7 @@ COMMENT
 
 .. _OutputState_Names:
 
-Assigning outputStates explicitly (i.e., including an :keyword:`OUTPUT_STATES` entry in the mechanism's
+Assigning outputStates explicitly (i.e., including an OUTPUT_STATES entry in the mechanism's
 `parameter dictionary <ParameterState_Specifying_Parameters>`) adds them to any that are automatically generated for
 that mechanism.  If the name of an explicitly specified outputState is the same as one that was created automatically
 (or another one that was created explicitly), its name will be suffixed with a numerical index (incremented for each
@@ -171,8 +171,8 @@ An outputState also has two additional attributes that determine its operation:
   before assigning it as the outputState's `value <OutputState.vaue>`.  The result is combined with the result of the
   outputState's `function <OutputState.function>` attribute (which aggregates the value of its projections), to
   determine the outputState's `value <OutputState.value>` (though see `note <OutputState_Function_Note_1>`). The
-  default for `calculate  <OutputState.calculate>` is an identity function (`Linear` with :keyword:`slope=1` and
-  :keyword:`intercept=0`), which simply assigns the specified item of the mechanism's
+  default for `calculate  <OutputState.calculate>` is an identity function (`Linear` with **slope**\ =1 and
+  **intercept**\ =0), which simply assigns the specified item of the mechanism's
   `value <Mechanism.Mechanism_Base.value>` unmodified as the `value <OutputState.value>` of the outputState. However,
   `calculate  <OutputState.calculate>` can be assigned any function that can take as its input the designated item
   of the owner mechanism's `value <Mechanism.Mechanism_Base.value>`, and the result of which can be combined with the
@@ -298,7 +298,7 @@ class OutputState(State_Base):
         function used to aggregate the values of the projections received by the outputState.
         It must produce a result that has the same format (number and type of elements) as the item of the mechanism's
         `value <Mechanism.Mechanism_Base.value>` to which the outputState is assigned (specified by its
-        :keyword:`index` argument).
+        **index** argument).
 
         .. note::
              This is not used a present (see `note <OutputState_Function_Note_2>` for additonal details).
@@ -528,8 +528,13 @@ class OutputState(State_Base):
         #            TO COMBINE self.value ASSIGNED IN CALL TO SUPER (FROM PROJECTIONS)
         #            WITH calculate(self.owner.value[index]) PER BELOW
 
-        if not self.value:
-            self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
+        # # MODIFIED 4/15/17 OLD:
+        # if not self.value:
+        #     self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
+        # # MODIFIED 4/15/17 NEW:
+        self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
+        # # MODIFIED 4/15/17 END
+
 
 
 def _instantiate_output_states(owner, context=None):
