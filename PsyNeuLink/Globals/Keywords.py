@@ -324,6 +324,7 @@ OBJECTIVE_MECHANISM = "ObjectiveMechanism"
 # ProcessingMechanisms:
 DDM_MECHANISM = "DDM"
 TRANSFER_MECHANISM = "TransferMechanism"
+RECURRENT_TRANSFER_MECHANISM = "RecurrentTransferMechanism"
 INTEGRATOR_MECHANISM = "IntegratorMechanmism"
 
 # Function:

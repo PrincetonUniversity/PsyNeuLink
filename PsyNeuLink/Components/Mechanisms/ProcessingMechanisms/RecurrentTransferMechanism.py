@@ -105,7 +105,7 @@ class RecurrentTransferError(Exception):
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class RecurrentTransferMechanism(TransferMechanism):
     """
-    RecurrentTransferMechanism(  \
+    RecurrentTransferMechanism(        \
     default_input_value=None,          \
     function=Linear,                   \
     matrix=FULL_CONNECTIVITY_MATRIX,   \
@@ -348,6 +348,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError("{} param for {} must be square".format(MATRIX, self.name))
 
     def _instantiate_attributes_before_function(self, context=None):
+
         super()._instantiate_attributes_before_function(context=context)
 
         if isinstance(self.matrix, str):
@@ -355,118 +356,4 @@ class RecurrentTransferMechanism(TransferMechanism):
             from PsyNeuLink.Components.Functions.Function import get_matrix
             self.matrix = get_matrix(self.matrix, size, size)
 
-    def _execute(self,
-                variable=None,
-                runtime_params=None,
-                clock=CentralClock,
-                time_scale = TimeScale.TRIAL,
-                context=None):
-        """Execute TransferMechanism function and return transform of input
-
-        Execute TransferMechanism function on input, and assign to outputValue:
-            - Activation value for all units
-            - Mean of the activation values across units
-            - Variance of the activation values across units
-        Return:
-            value of input transformed by TransferMechanism function in outputState[TransferOuput.RESULT].value
-            mean of items in RESULT outputState[TransferOuput.MEAN].value
-            variance of items in RESULT outputState[TransferOuput.VARIANCE].value
-
-        Arguments:
-
-        # CONFIRM:
-        variable (float): set to self.value (= self.inputValue)
-        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + NOISE (float)
-            + TIME_CONSTANT (float)
-            + RANGE ([float, float])
-        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
-        - context (str)
-
-        Returns the following values in self.value (2D np.array) and in
-            the value of the corresponding outputState in the self.outputStates dict:
-            - activation value (float)
-            - mean activation value (float)
-            - standard deviation of activation values (float)
-
-        :param self:
-        :param variable (float)
-        :param params: (dict)
-        :param time_scale: (TimeScale)
-        :param context: (str)
-        :rtype self.outputState.value: (number)
-        """
-
-        # FIX: ??CALL check_args()??
-
-        # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
-        # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
-        # Use self.variable to initialize state of input
-
-
-        if INITIALIZING in context:
-            self.previous_input = self.variable
-
-        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        time_scale = self.time_scale
-
-        #region ASSIGN PARAMETER VALUES
-
-        time_constant = self.time_constant
-        range = self.range
-        noise = self.noise
-
-        #endregion
-
-
-        #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
-
-        # FIX: NOT UPDATING self.previous_input CORRECTLY
-        # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
-
-        # Update according to time-scale of integration
-        if time_scale is TimeScale.TIME_STEP:
-            current_input = self.integrator_function.function(self.inputState.value,
-                                                              params = {INITIALIZER: self.previous_input,
-                                                                        NOISE: noise,
-                                                                        RATE: time_constant,
-                                                                        INTEGRATION_TYPE: ADAPTIVE},
-                                                              context=context
-                                                            # name=Integrator.componentName + '_for_' + self.name
-                                                             )
-
-        elif time_scale is TimeScale.TRIAL:
-
-            if self.noise_function:
-                if isinstance(noise, (list, np.ndarray)):
-                    new_noise = []
-                    for n in noise:
-                        new_noise.append(n())
-                    noise = new_noise
-                else:
-                    noise = noise()
-
-            current_input = self.inputState.value + noise
-        else:
-            raise MechanismError("time_scale not specified for TransferMechanism")
-
-        self.previous_input = current_input
-
-        # Compute recurrent activity
-        output_vector = np.dot(current_input, self.matrix)
-
-        # Apply TransferMechanism function
-        output_vector = self.function(variable=current_input, params=runtime_params)
-
-        # # MODIFIED  OLD:
-        # if list(range):
-        # MODIFIED  NEW:
-        if range is not None:
-        # MODIFIED  END
-            minCapIndices = np.where(output_vector < range[0])
-            maxCapIndices = np.where(output_vector > range[1])
-            output_vector[minCapIndices] = np.min(range)
-            output_vector[maxCapIndices] = np.max(range)
-
-        return output_vector
-        #endregion
+def
