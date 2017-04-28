@@ -54,11 +54,11 @@ color_naming_process = process(
     prefs=process_prefs)
 
 word_reading_process = process(
-    default_input_value=[.5, 3],
+    default_input_value=[1, 2.5],
     pathway=[words, WH_Weights, hidden],
     name='Word Reading',
     learning=LEARNING,
-    target=[3,3],
+    target=[2,2],
     prefs=process_prefs)
 
 # color_naming_process.execute()
@@ -91,7 +91,7 @@ def show_target():
 
 
 stim_list_dict = {colors:[[1, 1]],
-                  words:[[-2, -2]]}
+                  words:[[1, 1]]}
 
 target_list_dict = {response:[[1, 1]]}
 
