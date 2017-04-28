@@ -36,7 +36,9 @@ An attribute is logged if:
 
 * it is one `automatically included <LINK>` in logging;
 ..
-* it is included in the `LOG_ENTRIES` entry of the `params` attribute (``params[LOG_ENTRIES]``) of the component;
+* it is included in the LOG_ENTRIES entry of a 
+  `parameter specification dictionary <ParameterState_Specifying_Parameters>` (``params[LOG_ENTRIES]``) assigned to 
+  the **params** argument of the constructor for the component;
 ..
 * the context of the assignment is above the LogLevel specified in the logPref setting of the owner object
 

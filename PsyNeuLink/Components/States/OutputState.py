@@ -57,7 +57,7 @@ additional outputStates that calculate values derived from one or more of those 
 
 If one or more custom outputStates need to be added when a mechanism is created, or added to an existing
 mechanism, they can be specified in an entry of the mechanism's
-`parameter dictionary <ParameterState_Specifying_Parameters>`, using the key :keyword:`OUTPUT_STATES`.  For a single
+`parameter dictionary <ParameterState_Specifying_Parameters>`, using the key OUTPUT_STATES.  For a single
 outputState, the value of the entry can be any of the specifications in the the list below.  To create multiple
 outputStates, the value can be either: a list, each item of which can be any of the specifications below; or
 it can be an OrderedDict in which the key for each entry is a string  specifying the name for the outputState to be
