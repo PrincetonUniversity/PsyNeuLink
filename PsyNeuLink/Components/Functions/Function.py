@@ -2489,6 +2489,16 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         return function(sender_len, receiver_len)
 
 
+def matrix_spec(m):
+    if m is None:
+        return True
+    if m in MATRIX_KEYWORD_VALUES:
+        return True
+    if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+        return True
+    return False
+
+
 def get_matrix(specification, rows=1, cols=1, context=None):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
 

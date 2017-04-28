@@ -92,7 +92,7 @@ Class Reference
 
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Functions.Function import get_matrix
+from PsyNeuLink.Components.Functions.Function import get_matrix, matrix_spec
 
 
 class RecurrentTransferError(Exception):
@@ -286,15 +286,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     """
 
     componentType = RECURRENT_TRANSFER_MECHANISM
-
-    def matrix_spec(m):
-        if m is None:
-            return True
-        if m in MATRIX_KEYWORD_VALUES:
-            return True
-        if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
-            return True
-        return False
 
 
     @tc.typecheck
