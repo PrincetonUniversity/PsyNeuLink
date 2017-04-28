@@ -436,10 +436,10 @@ def process(process_spec=None,
             * `None`: Process input is used only for the first execution of the `ORIGIN` mechanism
               in a round of executions.
 
-            * :keyword:`SOFT_CLAMP`: combines the process' input with input from any other projections to the
+            * SOFT_CLAMP: combines the process' input with input from any other projections to the
               `ORIGIN` mechanism every time it is executed in a round of executions.
 
-            * :keyword:`HARD_CLAMP`: applies the process' input in place of any other sources of input to the
+            * HARD_CLAMP: applies the process' input in place of any other sources of input to the
               `ORIGIN` mechanism every time it is executed in a round of executions.
 
     default_projection_matrix : keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,
