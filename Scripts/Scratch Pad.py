@@ -20,6 +20,7 @@ from PsyNeuLink.Components.Projections.MappingProjection import MappingProjectio
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
@@ -620,13 +621,16 @@ class ScratchPadError(Exception):
 
 #region TEST AutoAssociator
 
-my_auto = TransferMechanism(default_input_value=[0,0,0],
-                            # function=Logistic
-                            )
+my_auto = RecurrentTransferMechanism(default_input_value=[0,0,0])
 
-my_auto_matrix = MappingProjection(sender=my_auto,
-                                   receiver=my_auto,
-                                   matrix=FULL_CONNECTIVITY_MATRIX)
+# my_auto = TransferMechanism(default_input_value=[0,0,0],
+#                             # function=Logistic
+#                             )
+#
+# my_auto_matrix = MappingProjection(sender=my_auto,
+#                                    receiver=my_auto,
+#                                    matrix=FULL_CONNECTIVITY_MATRIX)
+
 # THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
 #                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
 my_process = process(pathway=[my_auto],
@@ -656,7 +660,6 @@ my_system = system(processes=[my_process],
 print(my_system.run(inputs=input_list,
                     targets=target_list,
                     num_executions=5))
-
 
 #endregion
 

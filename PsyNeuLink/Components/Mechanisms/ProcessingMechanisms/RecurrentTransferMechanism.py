@@ -92,7 +92,7 @@ Class Reference
 
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Projections.MappingProjection import get_matrix
+from PsyNeuLink.Components.Functions.Function import get_matrix
 
 
 class RecurrentTransferError(Exception):
@@ -337,12 +337,11 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        # Validate INITIAL_VALUE
+        # Validate MATRIX
         if MATRIX in target_set:
             matrix = target_set[MATRIX]
             size = len(self.variable[0])
             if isinstance(matrix, str):
-                from PsyNeuLink.Components.Functions.Function import get_matrix
                 matrix = get_matrix(matrix, size, size)
             if matrix.shape[0] != matrix.shape[0]:
                 raise RecurrentTransferError("{} param for {} must be square".format(MATRIX, self.name))
@@ -353,7 +352,22 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if isinstance(self.matrix, str):
             size = len(self.variable[0])
-            from PsyNeuLink.Components.Functions.Function import get_matrix
             self.matrix = get_matrix(self.matrix, size, size)
 
-def
+        self.matrix = _instantiate_recurrent_projection(self, self.matrix)
+
+
+# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+@tc.typecheck
+def _instantiate_recurrent_projection(mech:Mechanism_Base,
+                                      matrix:matrix_spec=FULL_CONNECTIVITY_MATRIX):
+    """Instantiate a MappingProjection from mech to itself
+
+    """
+
+    matrix = get_matrix(matrix)
+
+    return MappingProjection(sender=mech,
+                             receiver=mech,
+                             matrix=matrix,
+                             name = mech.name + ' recurrent projection')
