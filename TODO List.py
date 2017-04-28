@@ -70,7 +70,6 @@
 #           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
 
 # FIX:  Stroop Model Learning Test Script:
-#            Response output is being mis-reported
 #            Why is error_matrix being assigned as parameterState on TERMINAL mechanism?
 #                   getting done in LearningAux LC?
 # FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
