@@ -64,7 +64,6 @@
 #                 modify variable to accept drift_rate??
 #
 # IMPLEMENT:  Deferred init for control.
-#
 
 # IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
 #           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
