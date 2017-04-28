@@ -1,7 +1,5 @@
-/Users/jdc/anaconda/envs/python35/bin/python "/Users/jdc/Dropbox/Documents (DropBox)/Python/PsyNeuLink (DropBox)/Scripts/TEST SCRIPTS/META Test Script.py"
 
 RUNNING EVC System Laming Validation Test Script.py
-
 
 ---------------------------------------------------------
 
@@ -1817,6 +1815,3 @@ RUNNING Documentation Examples Script.py
 [ 0.65077768]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-
-Process finished with exit code 0
