@@ -1540,9 +1540,6 @@ class System_Base(System):
                                   "must be a LearningMechanism or an ObjectiveMechanism".
                                   format(sender_mech))
 
-
-            # MODIFIED 3/12/17 NEW:
-
             # MANAGE TARGET ObjectiveMechanism FOR INTERNAL or TERMINAL CONVERGENCE of PATHWAYS
 
             # If sender_mech is an ObjectiveMechanism, and:
@@ -1680,8 +1677,6 @@ class System_Base(System):
                             del learning_mech.parameterStates['error_matrix']
 
                         sender_mech = error_signal_mech
-            # MODIFIED 3/12/17 END
-
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.inputStates.values():
