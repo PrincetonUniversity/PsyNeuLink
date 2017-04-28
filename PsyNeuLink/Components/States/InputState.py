@@ -44,12 +44,12 @@ the ``receiver`` of a MappingProjection from the  preceding mechanism in the pat
 
 An inputState must be owned by a mechanism. Therefore, if the inputState is created directly, its mechanism
 must be specified in the ``owner`` argument of its constructor; if the inputState is specified in the
-:keyword:`INPUT_STATES` entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.
+INPUT_STATES entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.
 
 If one or more custom inputStates need to be specified when a mechanism is created, or added to an existing mechanism,
 they can be specified in an entry of the mechanism's parameter dictionary, using the key :keyword`INPUT_STATES`
 and a value that specifies one or more inputStates. For a single inputState, the value can be any of the
-specifications in the the list below.  To create multiple inputStates, the value of the :keyword:`INPUT_STATES` entry
+specifications in the the list below.  To create multiple inputStates, the value of the INPUT_STATES entry
 can be either a list, each item of which can be any of the specifications below;  or, it can be an OrderedDict,
 in which the key for each entry is a string specifying the name for the inputState to be created, and its value is
 one of the specifications below:
@@ -59,7 +59,7 @@ one of the specifications below:
     ..
     * The :class:`InputState` **class** or a string.  This creates a default inputState using the the first item of
       the owner mechanism's ``variable`` as the inputState's :py:data:`variable <InputState.variable>`.
-      If :keyword:`INPUT_STATE` is used, a default name is assigned to the state;  if a string is, it is assigned as
+      If INPUT_STATE is used, a default name is assigned to the state;  if a string is, it is assigned as
       the name of the inputState (see :ref:`naming conventions <LINK>`).
     ..
     * A **value**.  This creates a default inputState using the specified value as inputState's ``variable``.
@@ -77,7 +77,7 @@ one of the specifications below:
     ..
     * A **specification dictionary**.  This creates the specified inputState using the first item of the owner
       mechanism's ``variable`` as the inputState's :py:data:`variable <InputState.variable>`.  In addition to the
-      standard entries of a :ref:`params <LINK>` dictionary, the dictionary can have a :keyword:`STATE_PROJECTIONS`
+      standard entries of a :ref:`params <LINK>` dictionary, the dictionary can have a STATE_PROJECTIONS
       entry, the value of which can be a Projection,
       :ref:`projection specification dictionary <Projection_In_Context_Specification>`, or a list containing
       items that are either of those.
@@ -104,7 +104,7 @@ COMMENT:
 COMMENT
 
 COMMENT:
-Assigning inputStates using the :keyword:`INPUT_STATES` entry of a mechanism's parameter dictionary adds them to any
+Assigning inputStates using the INPUT_STATES entry of a mechanism's parameter dictionary adds them to any
 that are automatically generated for that mechanism;  if the name of one explicitly specified is them same as one
 automatically generated, the name will be suffixed with a numerical index and added (that is, it will *not* replace
 the one automatically generated). InputStates can also be added by using the

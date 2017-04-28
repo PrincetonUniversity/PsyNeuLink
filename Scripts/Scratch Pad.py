@@ -1,41 +1,168 @@
 import numpy as np
 
+# GLOBALS:
+from PsyNeuLink.Globals.Keywords import *
+# FUNCTIONS:
+from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Components.Functions.Function import Linear
+
+# STATES:
+# from PsyNeuLink.Components.States.OutputState import OutputState
+# from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
+
+# PROJECTIONS:
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+# from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+# from PsyNeuLink.Components.Projections.ControlProjection import ControldProjection
+# from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
+
+# MECHANISMS:
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+
+# COMPOSITIONS:
+from PsyNeuLink.Components.Process import Process, Process_Base, process
+from PsyNeuLink.Components.System import system, System, System_Base
+
 class ScratchPadError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
 #
-#region DEBUG:
 
-# from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Functions.Function import Linear
-# from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-# from PsyNeuLink.Components.Functions.Function import Logistic
-# from PsyNeuLink.Components.Process import process
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-# from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
-# from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-# from PsyNeuLink.Components.States.OutputState import OutputState
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
+class ScratchPadError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
 
-#region TEST ReadOnlyOrderedDict
+# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
 
-from collections import UserDict, OrderedDict
+#region TEST whether function attribute assignment is used and "sticks"
 
-# class ReadOnlyOrderedDict(OrderedDict):
-#     def __init__(self, dict=None, **kwargs):
+# my_mech = IntegratorMechanism()
+# # my_mech.function_object.rate = 2.0
+# print(my_mech.execute())
+# my_mech.function_object.rate = 0.9
+# print(my_mech.execute())
+# my_mech.function_object.rate = .75
+# print(my_mech.function_object.rate)
+# my_mech.function_object.rate = .2
+# print(my_mech.execute())
+
+#endregion
+
+#region TEST Multipe Inits
+
+# # WORKS:
+
+# my_mech = mechanism()
+# print(my_mech.name)
+# my_mech = mechanism()
+# print(my_mech.name)
+# my_mech = mechanism()
+# print(my_mech.name)
+# my_mech = mechanism()
+# print(my_mech.name)
+
+# my_mech = Mechanism()
+
+# my_mech = Mechanism_Base()
+
+# my_process = process()
+# print(my_process.name)
+# my_process = process()
+# print(my_process.name)
+# my_process = process()
+# print(my_process.name)
+# my_process = process()
+# print(my_process.name)
+
+# my_process = Process()
+# print(my_process.name)
+
+# my_process = Process_Base()
+# print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
+# my_process = Process_Base()
+# print(my_process.name)
+
+# my_sys = system()
+# print(my_sys.name)
+# my_sys = system()
+# print(my_sys.name)
+# my_sys = system()
+# print(my_sys.name)
+# my_sys = system()
+# print(my_sys.name)
+
+# my_sys = System()
+
+# my_sys = System_Base()
+# print(my_sys.name)
+# my_sys = System_Base()
+# print(my_sys.name)
+# my_sys = System_Base()
+# print(my_sys.name)
+
+#endregion
+
+# region TEST ReadOnlyOrderedDict
+
+# from collections import UserDict, OrderedDict
+#
+# # class ReadOnlyOrderedDict(OrderedDict):
+# #     def __init__(self, dict=None, **kwargs):
+# #         UserDict.__init__(self, dict, **kwargs)
+# #         self._ordered_keys = []
+# #         for key in list(dict.keys()):
+# #             self._ordered_keys.append(key)
+# #         TEST = True
+# #     def __setitem__(self, key, item):
+# #         raise TypeError
+# #     def __delitem__(self, key):
+# #         raise TypeError
+# #     def clear(self):
+# #         raise TypeError
+# #     def pop(self, key, *args):
+# #         raise TypeError
+# #     def popitem(self):
+# #         raise TypeError
+# #
+# #     def update(self, dict=None):
+# #         if dict is None:
+# #             pass
+# #         elif isinstance(dict, UserDict):
+# #             self.data = dict.data
+# #         elif isinstance(dict, type({})):
+# #             self.data = dict
+# #         else:
+# #             raise TypeError
+# #
+# #     def okeys(self):
+# #         return self._ordered_keys
+# #
+# #     # def __setitem__(self, key, value):
+# #     #     self.data[key] = item
+# #     #     self._ordered_keys.append(key)
+# #
+# # x = ReadOnlyOrderedDict(OrderedDict({'hello':1, 'goodbye':2}))
+# # print(x.okeys())
+#
+#
+# # Ordered UserDict
+# class ReadOnlyOrderedDict(UserDict):
+#     def __init__(self, dict=None, name=None, **kwargs):
+#         self.name = name or self.__class__.__name__
 #         UserDict.__init__(self, dict, **kwargs)
 #         self._ordered_keys = []
-#         for key in list(dict.keys()):
-#             self._ordered_keys.append(key)
-#         TEST = True
 #     def __setitem__(self, key, item):
-#         raise TypeError
+#         raise ScratchPadError("{} is read-only".format(self.name))
 #     def __delitem__(self, key):
 #         raise TypeError
 #     def clear(self):
@@ -44,95 +171,57 @@ from collections import UserDict, OrderedDict
 #         raise TypeError
 #     def popitem(self):
 #         raise TypeError
-#
-#     def update(self, dict=None):
-#         if dict is None:
-#             pass
-#         elif isinstance(dict, UserDict):
-#             self.data = dict.data
-#         elif isinstance(dict, type({})):
-#             self.data = dict
-#         else:
-#             raise TypeError
-#
-#     def okeys(self):
+#     def __additem__(self, key, value):
+#         self.data[key] = value
+#         if not key in self._ordered_keys:
+#             self._ordered_keys.append(key)
+#     def keys(self):
 #         return self._ordered_keys
 #
-#     # def __setitem__(self, key, value):
-#     #     self.data[key] = item
-#     #     self._ordered_keys.append(key)
+# x = ReadOnlyOrderedDict()
+# x.__additem__('hello',1)
+# x.__additem__('hello',2)
+# x.__additem__('goodbye',2)
+# print(x.keys())
+# for key in x.keys():
+#     print(x[key])
+# # x['new item']=3
 #
-# x = ReadOnlyOrderedDict(OrderedDict({'hello':1, 'goodbye':2}))
-# print(x.okeys())
-
-
-# Ordered UserDict
-class ReadOnlyOrderedDict(UserDict):
-    def __init__(self, dict=None, name=None, **kwargs):
-        self.name = name or self.__class__.__name__
-        UserDict.__init__(self, dict, **kwargs)
-        self._ordered_keys = []
-    def __setitem__(self, key, item):
-        raise ScratchPadError("{} is read-only".format(self.name))
-    def __delitem__(self, key):
-        raise TypeError
-    def clear(self):
-        raise TypeError
-    def pop(self, key, *args):
-        raise TypeError
-    def popitem(self):
-        raise TypeError
-    def __additem__(self, key, value):
-        self.data[key] = value
-        if not key in self._ordered_keys:
-            self._ordered_keys.append(key)
-    def keys(self):
-        return self._ordered_keys
-
-x = ReadOnlyOrderedDict()
-x.__additem__('hello',1)
-x.__additem__('hello',2)
-x.__additem__('goodbye',2)
-print(x.keys())
-for key in x.keys():
-    print(x[key])
-# x['new item']=3
-
-# # ReadOnly UserDict
-# class ReadOnlyOrderedDict(OrderedDict):
-# 	def __setitem__(self, key, item): raise TypeError
-# 	def __delitem__(self, key): raise TypeError
-# 	def clear(self): raise TypeError
-# 	def pop(self, key, *args): raise TypeError
-# 	def popitem(self): raise TypeError
-# 	def __additem__(selfself, key, item):
-#
-#
-# 	def update(self, dict=None):
-# 		if dict is None:
-# 			pass
-# 		elif isinstance(dict, UserDict):
-# 			self.data = dict.data
-# 		elif isinstance(dict, type({})):
-# 			self.data = dict
-# 		else:
-# 			raise TypeError
-#
-# x = ReadOnlyDict({'hello':1, 'goodbye':2})
-# print(list(x.keys()))
-# # x['new'] = 4
-#
-#
-# # ReadOnly UserDict
-# x = ReadOnlyDict()
-# x['hello'] = 1
-# x['goodbye'] = 2
-# print(list(x.keys()))
-#
+# # # ReadOnly UserDict
+# # class ReadOnlyOrderedDict(OrderedDict):
+# # 	def __setitem__(self, key, item): raise TypeError
+# # 	def __delitem__(self, key): raise TypeError
+# # 	def clear(self): raise TypeError
+# # 	def pop(self, key, *args): raise TypeError
+# # 	def popitem(self): raise TypeError
+# # 	def __additem__(selfself, key, item):
+# #
+# #
+# # 	def update(self, dict=None):
+# # 		if dict is None:
+# # 			pass
+# # 		elif isinstance(dict, UserDict):
+# # 			self.data = dict.data
+# # 		elif isinstance(dict, type({})):
+# # 			self.data = dict
+# # 		else:
+# # 			raise TypeError
+# #
+# # x = ReadOnlyDict({'hello':1, 'goodbye':2})
+# # print(list(x.keys()))
+# # # x['new'] = 4
+# #
+# #
+# # # ReadOnly UserDict
+# # x = ReadOnlyDict()
+# # x['hello'] = 1
+# # x['goodbye'] = 2
+# # print(list(x.keys()))
+# #
 
 #endregion
 
-# #region TEST AUTO_PROP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST AUTO_PROP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # defaults = {'foo':5, 'bar': ['hello', 'world']}
 #
@@ -192,7 +281,7 @@ for key in x.keys():
 #     the docs we installed are available in the help system""")
 # #endregion
 
-# #region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # print = Linear(variable=[[1,1],[2,2]])
 
@@ -203,7 +292,6 @@ for key in x.keys():
 #
 # Decision.execute()
 
-#endregion
 
 # for i, j in zip(range(5), range(5)):
 #     print(i, j)
@@ -400,10 +488,10 @@ for key in x.keys():
 #              name='y')
 #
 # TEST = True
-
+#
 # print(y.run([1,2,3]))
 
-#endegion
+#endregion
 
 #region TEST INPUT FORMATS
 
@@ -517,22 +605,6 @@ for key in x.keys():
 
 #endregion
 
-#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-# from PsyNeuLink.Components.Functions.Function import *
-# #
-# x = SoftMax(output=SoftMax.PROB)
-# y = x.execute([-11, 2, 3])
-# print ("SoftMax execute return value: \n", y)
-#
-# # z = x.derivative(x.execute([-11, 2, 3]))
-# # z = x.derivative(y)
-# # z = x.derivative(output=y, input=[-11, 2, 3])
-#
-# # print ("SoftMax derivative return value: \n", z)
-
-#endregion
-
 #region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Components.Function import *
@@ -544,6 +616,77 @@ for key in x.keys():
 # # print (y(2, [0.25, 0.5]))
 #
 #
+#endregion
+
+#region TEST AutoAssociator
+
+my_auto = TransferMechanism(default_input_value=[0,0,0],
+                            # function=Logistic
+                            )
+
+my_auto_matrix = MappingProjection(sender=my_auto,
+                                   receiver=my_auto,
+                                   matrix=FULL_CONNECTIVITY_MATRIX)
+# THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
+#                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
+my_process = process(pathway=[my_auto],
+
+# THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
+# my_process = process(pathway=[my_auto, my_auto_matrix],
+                     learning=LEARNING
+                     )
+
+# my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
+#                      learning=LEARNING,
+#                      target=[0,0,0])
+
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+#
+input_list = {my_auto:[1,1,1]}
+target_list = {my_auto:[0,0,0]}
+
+# print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
+
+my_system = system(processes=[my_process],
+                   targets=[0,0,0])
+
+print(my_system.run(inputs=input_list,
+                    targets=target_list,
+                    num_executions=5))
+
+
+#endregion
+
+#region TEST BogaczEtAl Derivative @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Functions.Function import *
+# #
+# x = BogaczEtAl()
+# print(x.function(params={DRIFT_RATE:1.0,
+#                          THRESHOLD:1}))
+# print(x.derivative())
+
+#endregion
+
+#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Functions.Function import *
+# #
+# x = SoftMax()
+# # x = SoftMax(output=MAX_VAL)
+# a = [-1, 2, 1]
+# # x = SoftMax(output=SoftMax.PROB)
+# y = x.function(a)
+# z = x.derivative(a)
+# print ("SoftMax execute return value: \n", [float(i) for i in y])
+# if z.ndim == 1:
+#     print ("SoftMax derivative return value: \n", [float(i) for i in z])
+# else:
+#     print ("SoftMax derivative return value: \n", [[float(i) for i in j] for j in z])
+
 #endregion
 
 #region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -1739,7 +1882,7 @@ import typecheck as tc
 # except TypeError:
 #     pass
 # #endregion
-#
+
 # print(state_params)
 
 #region TEST:  ORDERED DICTIONARY ORDERING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -1760,7 +1903,6 @@ import typecheck as tc
 # print ("b: ", b)
 #
 #endregion
-
 
 #region TEST:  add a parameterState to a param after an object is instantiated @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -2209,7 +2351,6 @@ import typecheck as tc
 #                        {kwControlSignalIdentity: identity,
 #                         kwControlSignalSettings: settings,
 #                         kwControlSignalAllocationSamplingRange: NotImplemented,
-#                         kwControlSignalLogProfile: log_profile}
 #                        )
 #
 # # Can also change settings on the fly (note:  ControlProjection.OFF is just an enum defined in the ControlProjection module)

@@ -107,7 +107,7 @@ if run_transfer_tests:
                                time_scale=TimeScale.TIME_STEP
                                )
         my_Transfer_Test.execute([1,2])
-    except FunctionError as error_text:
+    except MechanismError as error_text:
         print("Error Text: ", error_text)
         print("Passed")
         print("")
@@ -119,7 +119,7 @@ if run_transfer_tests:
     my_Transfer_Test2 = TransferMechanism(name='my_Transfer_Test2',
                             default_input_value = [0,0],
                             function=Logistic(gain=0.1, bias=0.2),
-                            noise=5.0,
+                            noise=2.0,
                             time_constant = 0.1,
                             time_scale=TimeScale.TIME_STEP
                             )
@@ -238,7 +238,7 @@ if run_transfer_tests:
                                 time_scale=TimeScale.TIME_STEP
                                 )
         print(my_Transfer_Test10.execute(1.0))
-    except FunctionError as error_text:
+    except MechanismError as error_text:
         print("Error Text: ",error_text)
         print("Passed")
 
@@ -257,7 +257,7 @@ if run_transfer_tests:
                                 time_scale=TimeScale.TIME_STEP
                                 )
         print(my_Transfer_Test11.execute(1.0))
-    except FunctionError as error_text:
+    except MechanismError as error_text:
         print("Error Text: ",error_text)
         print("Passed")
 
@@ -276,7 +276,7 @@ if run_transfer_tests:
                                 time_scale=TimeScale.TIME_STEP
                                 )
         print(my_Transfer_Test12.execute([1,1,1]))
-    except FunctionError as error_text:
+    except MechanismError as error_text:
         print("Error Text: ",error_text)
         print("Passed")
 

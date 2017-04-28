@@ -4,6 +4,7 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.scheduling.condition import AfterNCalls
@@ -113,6 +114,7 @@ def show_target():
 stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 
+
 # z.execute()
 
 # # PROCESS VERSION:
@@ -129,7 +131,6 @@ target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 x = system(processes=[z],
            targets=[0, 0, 1])
 # x.show_graph()
-
 x.run(num_executions=10,
       # inputs=stim_list,
       # inputs=[[-1, 30],[2, 10]],

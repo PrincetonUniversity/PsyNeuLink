@@ -253,7 +253,7 @@ default value of 0)::
 
     mechanism_1 = TransferMechanism()
     mechanism_2 = DDM()
-    some_params = {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{THRESHOLD:2,NOISE:0.1}}}
+    some_params = {PARAMETER_STATE_PARAMS:{THRESHOLD:2,NOISE:0.1}}
     my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
 
 *Default projection specification:*  The `pathway` for this process uses default projection specifications; as a
@@ -436,10 +436,10 @@ def process(process_spec=None,
             * `None`: Process input is used only for the first execution of the `ORIGIN` mechanism
               in a round of executions.
 
-            * :keyword:`SOFT_CLAMP`: combines the process' input with input from any other projections to the
+            * SOFT_CLAMP: combines the process' input with input from any other projections to the
               `ORIGIN` mechanism every time it is executed in a round of executions.
 
-            * :keyword:`HARD_CLAMP`: applies the process' input in place of any other sources of input to the
+            * HARD_CLAMP: applies the process' input in place of any other sources of input to the
               `ORIGIN` mechanism every time it is executed in a round of executions.
 
     default_projection_matrix : keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,
@@ -818,7 +818,17 @@ class Process_Base(Process):
     # MODIFIED 10/2/16 END
 
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
+    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL,
+                               '_execution_id': None,
+                               PATHWAY: None,
+                               'input':[],
+                               'processInputStates': [],
+                               'targets': None,
+                               'targetInputStates': [],
+                               'systems': [],
+                               '_phaseSpecMax': 0,
+                               '_isControllerProcess': False
+                               })
 
     default_pathway = [Mechanism_Base.defaultMechanism]
 
@@ -846,21 +856,7 @@ class Process_Base(Process):
                                                   learning_rate=learning_rate,
                                                   target=target,
                                                   params=params)
-
-        self._execution_id = None
-        self.pathway = None
-        # # MODIFIED 2/17/17 OLD:
-        # self.input = None
-        # MODIFIED 2/17/17 NEW:
-        self.input = []
-        # MODIFIED 2/17/17 END
-        self.processInputStates = []
         self.function = self.execute
-        self.targets = None
-        self.targetInputStates = []
-        self.systems = []
-        self._phaseSpecMax = 0
-        self._isControllerProcess = False
 
         register_category(entry=self,
                           base_class=Process_Base,
@@ -877,6 +873,7 @@ class Process_Base(Process):
                                            name=self.name,
                                            prefs=prefs,
                                            context=context)
+
 
     def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
@@ -904,8 +901,8 @@ class Process_Base(Process):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Note: don't confuse target_set (argument of validate_params) with self.target (process attribute for learning)
-        if kwInitialValues in target_set and target_set[kwInitialValues]:
-            for mech, value in target_set[kwInitialValues].items():
+        if INITIAL_VALUES in target_set and target_set[INITIAL_VALUES]:
+            for mech, value in target_set[INITIAL_VALUES].items():
                 if not isinstance(mech, Mechanism):
                     raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
@@ -1007,7 +1004,12 @@ class Process_Base(Process):
         self._origin_mech_tuples = [pathway[0]]
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
 
-        self.lastMechanism = pathway[-1][OBJECT_ITEM]
+        # Assign last mechanism in pathwway to lastMechanism attribute
+        i = -1
+        while not isinstance(pathway[i][OBJECT_ITEM],Mechanism_Base):
+            i -=1
+        self.lastMechanism = pathway[i][OBJECT_ITEM]
+
         if self.lastMechanism is self.firstMechanism:
             self.lastMechanism.processes[self] = SINGLETON
         else:
@@ -1055,7 +1057,7 @@ class Process_Base(Process):
                                            " is neither a mechanism nor a projection specification".
                                            format(config_item[0], i, self.name))
                     # Check that second item is a dict (presumably of params)
-                    if not isinstance(config_item[1], dict):
+                    if config_item[1] is not None and not isinstance(config_item[1], dict):
                         raise ProcessError("Second item of tuple ({}) in entry {} of pathway for {}"
                                            " must be a params dict".
                                            format(config_item[1], i, self.name))
@@ -1208,7 +1210,7 @@ class Process_Base(Process):
             # Add Process to the mechanism's list of processes to which it belongs
             if not self in mech.processes:
                 mech.processes[self] = INTERNAL
-            self._mech_tuples.append(pathway[i])
+                self._mech_tuples.append(pathway[i])
             # self.mechanismNames.append(mech.name)
 
         # Validate initial values
@@ -1280,10 +1282,9 @@ class Process_Base(Process):
                         if self.learning:
 
                             # Check if preceding_item has a matrix parameterState and, if so, it has any learningSignals
-                            # If it does, assign them to LEARNING_PROJECTIONs
+                            # If it does, assign them to learning_projections
                             try:
-                                # LEARNING_PROJECTIONs = None
-                                LEARNING_PROJECTIONs = list(projection for
+                                learning_projections = list(projection for
                                                         projection in
                                                         preceding_item.parameterStates[MATRIX].receivesFromProjections
                                                         if isinstance(projection, LearningProjection))
@@ -1315,8 +1316,8 @@ class Process_Base(Process):
                                                                                 context=context)
                             # preceding_item has parameterState for MATRIX,
                             else:
-                                if not LEARNING_PROJECTIONs:
-                                    # Add learning signal to projection if it doesn't have one
+                                if not learning_projections:
+                                    # Add learningProjection to projection if it doesn't have one
                                     _add_projection_to(preceding_item,
                                                       preceding_item.parameterStates[MATRIX],
                                                       projection_spec=self.learning)
@@ -1384,9 +1385,11 @@ class Process_Base(Process):
                         # No projection found, so instantiate MappingProjection from preceding mech to current one;
                         # Note:  If self.learning arg is specified, it has already been added to projection_params above
                         MappingProjection(sender=preceding_item,
-                                receiver=item,
-                                params=projection_params
-                                )
+                                          receiver=item,
+                                          params=projection_params,
+                                          name='{} from {} to {}'.
+                                          format(MAPPING_PROJECTION, preceding_item.name, item.name)
+                                          )
                         if self.prefs.verbosePref:
                             print("MappingProjection added from mechanism {0} to mechanism {1}"
                                   " in pathway of {2}".format(preceding_item.name, item.name, self.name))
@@ -1415,8 +1418,25 @@ class Process_Base(Process):
                     #                CHECK THAT SENDER IS pathway[i-1][OBJECT_ITEM]
                     #                CHECK THAT RECEVIER IS pathway[i+1][OBJECT_ITEM]
 
+
+                    # Get sender for projection
                     sender_mech=pathway[i-1][OBJECT_ITEM]
-                    receiver_mech=pathway[i+1][OBJECT_ITEM]
+                    
+                    # Get receiver for projection
+                    try:
+                        receiver_mech=pathway[i+1][OBJECT_ITEM]
+                    except IndexError:
+                       # There are no more entries in the pathway
+                       #    so the projection had better project to a mechanism already in the pathway;
+                       #    otherwise, raise and exception
+                       try:
+                           receiver_mech = item.receiver.owner
+                           if not receiver_mech in [mech_tuple[0] for mech_tuple in pathway]:
+                               raise AttributeError
+                       except AttributeError:
+                           raise ProcessError("The last entry in the pathway for {} is a project specification {}, "
+                                              "so its receiver must be a mechanism in the pathway".
+                                              format(self.name, item))
 
                     # projection spec is an instance of a MappingProjection
                     if isinstance(item, MappingProjection):
@@ -1496,7 +1516,7 @@ class Process_Base(Process):
                                              receiver=receiver_mech,
                                              params=projection_params)
 
-                    # projection spec is a matrix specification, a keyword for one, or a (matrix, LearningProjection) tuple
+                    # projection spec is a matrix spec, a keyword for one, or a (matrix, LearningProjection) tuple
                     # Note: this is tested above by call to _is_projection_spec()
                     elif (isinstance(item, (np.matrix, str, tuple) or
                               (isinstance(item, np.ndarray) and item.ndim == 2))):
@@ -1791,7 +1811,7 @@ class Process_Base(Process):
                 if (isinstance(mech, ObjectiveMechanism) and
                         # any(projection.sender.owner.processes[self] == TERMINAL
                         #     for projection in mech.inputStates[SAMPLE].receivesFromProjections) and
-                        mech.learning_role is TARGET and
+                        mech._learning_role is TARGET and
                         self.learning
                             ):
                     mech_tuple[0].processes[self] = TARGET
@@ -1888,7 +1908,7 @@ class Process_Base(Process):
                     # If projection is not from another ObjectiveMechanism, ignore
                     if not isinstance(sender, (ObjectiveMechanism)):
                         continue
-                    if isinstance(sender, ObjectiveMechanism) and sender.learning_role is TARGET:
+                    if isinstance(sender, ObjectiveMechanism) and sender._learning_role is TARGET:
                         return sender
                     if sender.inputStates:
                         target_mech = trace_learning_objective_mechanism_projections(sender)
@@ -1906,14 +1926,19 @@ class Process_Base(Process):
         target_mechs = list(mech_tuple.mechanism
                            for mech_tuple in self._mech_tuples
                             if (isinstance(mech_tuple.mechanism, ObjectiveMechanism) and
-                                mech_tuple.mechanism.learning_role is TARGET))
+                                mech_tuple.mechanism._learning_role is TARGET))
 
         if not target_mechs:
 
             # Trace projections to first learning ObjectiveMechanism (which is for the last mechanism in the process)
             #   (in case terminal mechanism of process is part of another process that has learning implemented)
-            #    in which case, shouldn't assign target ObjectiveMechanism, but rather WeightedError ObjectiveMechanism)
-            target_mech = trace_learning_objective_mechanism_projections(self._monitoring_mech_tuples[0][0])
+            #    in which case, shouldn't assign target ObjectiveMechanism, but rather just a LearningMechanism)
+            try:
+                target_mech = trace_learning_objective_mechanism_projections(self._monitoring_mech_tuples[0][0])
+            except IndexError:
+                raise ProcessError("Learning specified for {} but no ObjectiveMechanisms or LearningMechanisms found"
+                                   .format(self.name))
+
             if target_mech:
                 if self.prefs.verbosePref:
                     warnings.warn("{} itself has no Target Mechanism, but its TERMINAL_MECHANISM ({}) "
@@ -2059,7 +2084,7 @@ class Process_Base(Process):
         # Execute each Mechanism in the pathway, in the order listed, except those used for learning
         for mechanism, params, phase_spec in self._mech_tuples:
             if (isinstance(mechanism, LearningMechanism) or
-                    (isinstance(mechanism, ObjectiveMechanism) and mechanism.role is LEARNING)):
+                    (isinstance(mechanism, ObjectiveMechanism) and mechanism._role is LEARNING)):
                 continue
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
