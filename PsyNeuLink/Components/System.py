@@ -1160,13 +1160,20 @@ class System_Base(System):
 
         """
 
+        def is_monitoring_mech(mech):
+            if ((isinstance(mech, ObjectiveMechanism) and mech._role) or
+                    isinstance(mech, (LearningMechanism, ControlMechanism_Base))):
+                return True
+            else:
+                return False
+
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(sender_mech):
 
-            # If sender is an ObjectiveMechanism being used for learning or control, or a LearningMechanism,
+            # If sender is an ObjectiveMechanism being used for learning or control,
+            #     or a LearningMechanism or a ControlMechanism,
             # Assign as MONITORING and move on
-            if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role) or
-                    isinstance(sender_mech, LearningMechanism)):
+            if is_monitoring_mech(sender_mech):
                 sender_mech.systems[self] = MONITORING
                 return
 
@@ -1226,12 +1233,10 @@ class System_Base(System):
                     receiver = projection.receiver.owner
                     receiver_tuple = self._allMechanisms._get_tuple_for_mech(receiver)
 
-                    # MODIFIED 2/8/17 NEW:
                     # If receiver is not in system's list of mechanisms, must belong to a process that has
                     #    not been included in the system, so ignore it
-                    if not receiver_tuple:
+                    if not receiver_tuple or is_monitoring_mech(receiver):
                         continue
-                    # MODIFIED 2/8/17 END
 
                     try:
                         self.graph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
@@ -1893,8 +1898,6 @@ class System_Base(System):
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
         # self.learningExecutionList
         for mech in self.execution_graph_mechs:
-            if mech._role is LEARNING:
-                continue
             mech._execution_id = self._execution_id
         for learning_mech in self.learningExecutionList:
             learning_mech._execution_id = self._execution_id

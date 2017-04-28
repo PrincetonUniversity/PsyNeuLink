@@ -95,6 +95,8 @@ stim_list_dict = {colors:[[1, 1]],
 
 target_list_dict = {response:[[1, 1]]}
 
+# mySystem.show_graph(show_learning=True)
+
 mySystem.run(num_executions=2,
             inputs=stim_list_dict,
             targets=target_list_dict,
