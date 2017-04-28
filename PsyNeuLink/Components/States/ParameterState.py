@@ -45,15 +45,16 @@ Parameters can be specified in one of several places:
     * In the **argument for the parameter** of the constructor for the `component <Component>` to which the parameter 
       belongs (see :ref:`Component_Specifying_Functions_and_Parameters` for additional details).
     ..
-    * In a **parameter dictionary** used to specify the `params` argument in the constructor for the component to which
-      the parameter belongs. The entry for each parameter must use the keyword for the parameter as its key,
-      and the parameter's specification as its value (see `examples <ParameterState_Specification_Examples>` below).
-      Parameters for a component's :keyword:`function` must be specified in an entry with the key
-      :keyword:`FUNCTION_PARAMS`, the value of which is a parameter dictionary containing an entry for each of the
-      function's parameters to be specified.  When a value is assigned to a parameter in a parameter dictionary,
-      it overrides any value assigned to the argument for the parameter in the component's constructor.
+    * In a **parameter specification dictionary** assigned to the **params** argument in the constructor for the 
+      component to which the parameter belongs. The entry for each parameter must use the name of the parameter
+      (or a corresponding keyword) as its key, and the parameter's specification as its value (see 
+      `examples <ParameterState_Specification_Examples>` below). Parameters for a component's :keyword:`function` 
+      must be specified in an entry with the key FUNCTION_PARAMS, the value of which is a parameter dictionary 
+      containing an entry for each of the function's parameters to be specified.  When a value is assigned to a 
+      parameter in a parameter dictionary, it overrides any value assigned to the argument for the parameter in the 
+      component's constructor.
     ..
-    * By direct reference to the corresponding attribute of the component to which the parameter belongs.  The
+    * By direct assignment to the corresponding attribute of the component to which the parameter belongs.  The
       attribute always has the same name as the parameter and can be referenced using standard python attribute
       notation (e.g., myComponent.paramter_name).      
     ..
@@ -220,7 +221,7 @@ parameter for which it is responsible (as shown in the `figure <ParameterState_F
   for which it is responsible.  This must be a value of `ModulationOperation`.  It can be specified in either
   the **parameter_modulation_operation** argument of the parameterState's constructor, or in a 
   PARAMETER_MODULATION_OPERATION entry of a `parameter dictionary <ParameterState_Specifying_Parameters>` in 
-  either the **params** argument of the parameterState's constructor or within a :keyword:`PARAMETER_STATE_PARAMS` 
+  either the **params** argument of the parameterState's constructor or within a PARAMETER_STATE_PARAMS 
   dictionary in a `runtime specification <ParameterState_Runtime_Parameters>`. The default is value is
   `ModulationOperation.PRODUCT`, which multiples the parameterState's `baseValue <ParameterState.baseValue>` by the 
   aggregated value of the result of the parameterState's `function <ParameterState.function>` to determine the value 

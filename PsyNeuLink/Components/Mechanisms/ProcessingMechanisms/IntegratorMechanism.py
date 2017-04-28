@@ -130,7 +130,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         of values, and return one of the same form.
 
     time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+        specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.
         This must be set to `TimeScale.TIME_STEP` for the :keyword:`rate` parameter to have an effect.
 
     params : Optional[Dict[param keyword, param value]]
@@ -155,7 +155,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         the input to mechanism's ``function``.
 
     time_scale :  TimeScale : defaultTimeScale.TRIAL
-        specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+        specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.
 
     name : str : default IntegratorMechanism-<index>
         the name of the mechanism.

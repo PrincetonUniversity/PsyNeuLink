@@ -33,7 +33,7 @@ or by including it in a tuple that specifies the `matrix <Mapping_Matrix_Specifi
 
 If a LearningProjection is created using its constructor on its own, the `receiver <ControlProjection.receiver>`
 argument must be specified.  If it is included in the `matrix specification <Mapping_Matrix_Specification>` for a
-MappingProjection, the parameterState for the MappingProjection's :keyword:`MATRIX` will be assigned as the
+MappingProjection, the parameterState for the MappingProjection's MATRIX will be assigned as the
 LearningProjection's `receiver <LearningProjection.receiver>`.  If its `sender <LearningProjection.sender>` is not
 specified, its assignment depends on the `receiver <LearningProjection.receiver>`.  If the receiver belongs to a
 MappingProjection that projects between two mechanisms that are both in the same `process <Process_Learning>` or

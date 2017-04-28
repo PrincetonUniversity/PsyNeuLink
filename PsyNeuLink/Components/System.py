@@ -1170,13 +1170,20 @@ class System_Base(System):
 
         """
 
+        def is_monitoring_mech(mech):
+            if ((isinstance(mech, ObjectiveMechanism) and mech._role) or
+                    isinstance(mech, (LearningMechanism, ControlMechanism_Base))):
+                return True
+            else:
+                return False
+
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(sender_mech):
 
-            # If sender is an ObjectiveMechanism being used for learning or control, or a LearningMechanism,
+            # If sender is an ObjectiveMechanism being used for learning or control,
+            #     or a LearningMechanism or a ControlMechanism,
             # Assign as MONITORING and move on
-            if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role) or
-                    isinstance(sender_mech, LearningMechanism)):
+            if is_monitoring_mech(sender_mech):
                 sender_mech.systems[self] = MONITORING
                 return
 
@@ -1236,12 +1243,10 @@ class System_Base(System):
                     receiver = projection.receiver.owner
                     receiver_tuple = self._allMechanisms._get_tuple_for_mech(receiver)
 
-                    # MODIFIED 2/8/17 NEW:
                     # If receiver is not in system's list of mechanisms, must belong to a process that has
                     #    not been included in the system, so ignore it
-                    if not receiver_tuple:
+                    if not receiver_tuple or is_monitoring_mech(receiver):
                         continue
-                    # MODIFIED 2/8/17 END
 
                     try:
                         self.graph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
@@ -1629,6 +1634,7 @@ class System_Base(System):
                                                      self in projection.sender.owner.systems.values())), None)
                     # If learning_mech receives another error_signal projection,
                     #    reassign sender_mech to the sender of that projection
+                    # FIX:  NEED TO ALSO REASSIGN learning_mech.function_object.error_matrix TO ONE FOR sender_mech
                     if error_signal_projection:
                         if self.verbosePref:
                             warnings.warn("Although {} a TERMINAL mechanism for the {} process, it is an "
@@ -1649,6 +1655,11 @@ class System_Base(System):
                                                     error_source_mech.name,
                                                     sender_mech.name,
                                                     process.name))
+                    # learning_mech does not receive another error_signal projection,
+                    #     so assign one to it from error_signal_mech
+                    #     (the other LearningMechanism to which the error_source_mech projects)
+                    # and reassign learning_mech.function_object.error_matrix
+                    #     (to the one for the projection to which error_signal_mech projects)
                     else:
                         mp = MappingProjection(sender=error_signal_mech.outputStates[ERROR_SIGNAL],
                                                receiver=learning_mech.inputStates[ERROR_SIGNAL],
@@ -1657,6 +1668,12 @@ class System_Base(System):
                             raise SystemError("Could not instantiate a MappingProjection "
                                               "from {} to {} for the {} process".
                                               format(error_signal_mech.name, learning_mech.name))
+
+                        # Reassign error_matrix to one for the projection to which the error_signal_mech projects
+                        learning_mech.function_object.error_matrix = \
+                            error_signal_mech.outputStates['learning_signal'].sendsToProjections[0].receiver
+                        if 'error_matrix' in learning_mech.parameterStates:
+                            del learning_mech.parameterStates['error_matrix']
 
                         sender_mech = error_signal_mech
             # MODIFIED 3/12/17 END

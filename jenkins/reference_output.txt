@@ -1,7 +1,5 @@
-/Users/jdc/anaconda/envs/python35/bin/python3.5 "/Users/jdc/PycharmProjects/PsyNeuLink/Scripts/TEST SCRIPTS/META Test Script.py"
 
 RUNNING EVC System Laming Validation Test Script.py
-
 
 ---------------------------------------------------------
 
@@ -1274,32 +1272,6 @@ RUNNING Stroop Model Learning Test Script.py
 
 
 
-****************************************
-
-
-''Color Naming-1' process' executing with:
-- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Response-1 ObjectiveMechanism' 'Hidden-Output Weights LearningMechanism' 'Color-Hidden Weights LearningMechanism']
-- input: [[0 0]]
-
-''Color Naming-1' process' completed:
-- output: 0.731 0.881
-
-- MSE: 1.43
-
-
-****************************************
-
-
-''Word Reading-1' process' executing with:
-- pathway: ['Words-1' 'Hidden' 'Hidden ObjectiveMechanism' 'Word-Hidden Weights LearningMechanism']
-- input: [[0 0]]
-
-''Word Reading-1' process' completed:
-- output: 0.5 0.5
-
-- MSE: 6.25
-
-
 **** TRIAL:  0
 
 'Stroop Model-1' system executing with: **** (time_step 0) 
@@ -1315,12 +1287,12 @@ RUNNING Stroop Model Learning Test Script.py
 - input: [-2. -2.]
 
 'Stroop Model-1' learning completed:
-- error for target 'Response-1 ObjectiveMechanism' processingmechanism_base': 0.487 0.455
+- error for target 'Response-1 ObjectiveMechanism' processingmechanism_base': 0.491 0.457
 
 'Stroop Model-1' system completed ***********(time_step 0)
-- output for Response-1: '0.513' '0.545'
+- output for Response-1: '0.509' '0.543'
 
-- MSE: 0.222
+- MSE: 0.225
 
 Color Naming
 	Input: [[ 1.  1.]]
@@ -1330,16 +1302,16 @@ Wording Reading:
 	Target: [[[1 1]]]
 
 Response: 
- [ 0.51326839  0.54518192]
+ [ 0.50899214  0.54318254]
 Hidden-Output:
-[[ 0.12474451  1.05875456]
- [ 2.12474451  3.05875456]]
+[[0 1]
+ [2 3]]
 Color-Hidden:
-[[ 0.  1.]
- [ 2.  3.]]
+[[0 1]
+ [2 3]]
 Word-Hidden:
-[[ 0.  1.]
- [ 2.  3.]]
+[[0 1]
+ [2 3]]
 
 
 **** TRIAL:  1
@@ -1355,12 +1327,12 @@ Word-Hidden:
 - input: [-2. -2.]
 
 'Stroop Model-1' learning completed:
-- error for target 'Response-1 ObjectiveMechanism' processingmechanism_base': 0.467 0.337
+- error for target 'Response-1 ObjectiveMechanism' processingmechanism_base': 0.49 0.452
 
 'Stroop Model-1' system completed ***********(time_step 1)
-- output for Response-1: '0.533' '0.663'
+- output for Response-1: '0.51' '0.548'
 
-- MSE: 0.166
+- MSE: 0.222
 
 Color Naming
 	Input: [[ 1.  1.]]
@@ -1370,16 +1342,16 @@ Wording Reading:
 	Target: [[[1 1]]]
 
 Response: 
- [ 0.53336266  0.66333872]
+ [ 0.51044657  0.5483048 ]
 Hidden-Output:
-[[ 0.13923926  1.0721978 ]
- [ 2.12693159  3.06078298]]
+[[ 0.01462766  1.01351195]
+ [ 2.00220713  3.00203878]]
 Color-Hidden:
-[[ 0.01412906  1.01065622]
- [ 2.01412906  3.01065622]]
+[[ 0.01190129  1.0103412 ]
+ [ 2.01190129  3.0103412 ]]
 Word-Hidden:
-[[-0.55050178  0.90770261]
- [ 1.44949822  2.90770261]]
+[[-0.02380258  0.9793176 ]
+ [ 1.97619742  2.9793176 ]]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -1843,6 +1815,3 @@ RUNNING Documentation Examples Script.py
 [ 0.65077768]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-
-Process finished with exit code 0
