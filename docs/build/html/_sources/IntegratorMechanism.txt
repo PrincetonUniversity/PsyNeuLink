@@ -9,4 +9,4 @@ IntegratorMechanism
 
 .. automodule:: IntegratorMechanism
    :members:
-   :exclude-members: Integrator, random
+   :exclude-members: random

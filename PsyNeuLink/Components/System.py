@@ -50,11 +50,21 @@ in other systems are ignored (PsyNeuLink does not support ESP).  A system can in
 Creating a System
 -----------------
 
-Systems are created by calling :py:func:`system`.  If no arguments are provided, a system with a
-single process containing a single :ref:`default mechanism <LINK>` will be returned. Whenever a system is created,
-a `ControlMechanism <ControlMechanism>` is created for it and assigned as its `controller`.  The controller can be
-specified by assigning an existing ControlMechanism to the **controller** argument of the system's constructor,
-or specifying a class of ControlMechanism;  if none is specified, a `DefaultControlMechanism` is created.
+Systems are created by calling :py:func:`system`.  If no arguments are provided, a system with a single process 
+containing a single :ref:`default mechanism <LINK>` will be created.  More generally, a system is 
+created from one or more `processes <Process>` that are specified in the **processes** argument of its constructor.
+Whenever a system is created, a `ControlMechanism <ControlMechanism>` is created for it and assigned as its 
+`controller`.  The controller can be specified by assigning an existing ControlMechanism to the **controller** 
+argument of the system's constructor, or specifying a class of ControlMechanism;  if none is specified, 
+a `DefaultControlMechanism` is created.  
+
+.. note::
+   At present, only `processes <Process>` can be assigned to a system; `mechanisms <Mechanism>` cannot be assigned 
+   directly to a system.  They must be assigned to the `pathway <Process_Pathway>` of a process, and then that process 
+   must be 
+   included 
+   in the **processes** argument of the constructor for the system.
+
 
 .. _System_Structure:
 

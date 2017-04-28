@@ -356,7 +356,7 @@ the `output` of that process, and similarly for systems to which it belongs.
 Execution
 ---------
 
-A mechanism can be executed using its `execute <Mechanism_Base.execute>` or`run <Mechanism_Base.run>` methods.  This
+A mechanism can be executed using its `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods.  This
 can be useful in testing a mechanism and/or debugging.  However, more typically, mechanisms are executed as part of a
 `process <Process_Execution>` or `system <System_Execution>`.  For either of these, the mechanism must be included in
 the `pathway` of a process.  There, it can be specified on its own, or as the first item of a tuple that also has an
@@ -364,14 +364,13 @@ optional set of `runtime parameters <Mechanism_Runtime_Parameters>`, and/or a `p
 use when  executed in a system (see `Process_Mechanisms` for additional details about specifying a mechanism in a
 process `pathway`).
 
-.. note::
-   Mechanisms cannot be specified directly in a system.  They must be specified in the `pathway` of a process,
-   and then that process must be included in the `processes <`System.System_Base.processes>` attribute for the system.
-
 .. _Mechanism_Runtime_Parameters:
 
 Runtime Parameters
 ~~~~~~~~~~~~~~~~~~
+
+.. note::
+   This is an advanced feature, and is generally not required for most applications.
 
 The parameters of a mechanism are usually specified when the mechanism is created.  However, these can be overridden
 when it executed.  This can be done in a `parameter specification dictionary <ParameterState_Specifying_Parameters>` 
