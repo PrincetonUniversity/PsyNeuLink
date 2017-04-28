@@ -610,7 +610,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # self.init_args = locals().copy()
         # self.init_args['context'] = self
         # self.init_args['name'] = name
-        # delete self.init_args[ERROR_MATRIX]
+        # delete self.init_args[ERROR_SOURCE]
 
         # # Flag for deferred initialization
         # self.value = DEFERRED_INITIALIZATION
@@ -622,6 +622,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
+        TEST = True
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has exactly three items: activation_input, activation_output and error_signal
