@@ -117,7 +117,7 @@ DDM Parameters
 ~~~~~~~~~~~~~~
 COMMENT:
 The DDM process uses the same set of parameters for all modes of execution.  These can be specified as arguments
-for the functions used in :keyword:`TRIAL` mode, or in a params dictionary assigned to the `params` argument,
+for the functions used in TRIAL mode, or in a params dictionary assigned to the `params` argument,
 using the keywords in the list below, as in the following example::
     my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1),
                  params={DRIFT_RATE:(0.2, ControlProjection),
@@ -162,7 +162,7 @@ The parameters for the DDM when `time_scale <DDM.time_scale>` is set to `TimeSca
 ..
 * `NON_DECISION_TIME` (default 0.2)
   specifies the `t0` parameter of the decision process (in units of seconds).
-  when ``time_scale <DDM.time_scale>`` is  :keyword:`TIME_STEP`, it is added to the number of time steps
+  when ``time_scale <DDM.time_scale>`` is  TIME_STEP, it is added to the number of time steps
   taken to complete the decision process when reporting the response time.
 COMMENT
 
@@ -223,13 +223,13 @@ In `TIME_STEP` mode, the DDM returns only the decision variable, which in `TIME_
 
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
-When a DDM mechanism is executed it computes the decision process, either analytically (in :keyword:`TRIAL` mode)
-or by step-wise integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single value,
+When a DDM mechanism is executed it computes the decision process, either analytically (in TRIAL mode)
+or by step-wise integration (in TIME_STEP mode).  As noted above, if the input is a single value,
 it computes a single DDM process.  If the input is a list or array, then multiple parallel DDM processes are executed,
 with each element of the input used for the corresponding process.  All use the same set of parameters,
-so the analytic solutions (used in :keyword:`TRIAL` mode) for a given input will be the same; to implement processes in
+so the analytic solutions (used in TRIAL mode) for a given input will be the same; to implement processes in
 this mode that use different parameters, a separate DDM mechanism should explicitly be created for each. In
-:keyword:`TIME_STEP` mode, the noise term will resolve to different values in each time step, so the integration
+TIME_STEP mode, the noise term will resolve to different values in each time step, so the integration
 paths and outcomes for the same input value will vary. This can be used to generate distributions of the process for a
 single set of parameters that are not subject to the analytic solution (e.g., for time-varying drift rates).
 
@@ -474,7 +474,7 @@ class DDM(ProcessingMechanism_Base):
           if `time_scale <DDM.time_scale>` is `TimeScale.TIME_STEP, this is `None`;
         * **probability of reaching lower threshold** (value of `DDM_PROBABILITY_LOWER_THRESHOLD` outputState);
           if `time_scale <DDM.time_scale>` is `TimeScale.TIME_STEP, this is `None`;
-        * **mean of correct response times** (value of :keyword:`DDM_RT_CORRECT_MEAN` outputState);
+        * **mean of correct response times** (value of DDM_RT_CORRECT_MEAN outputState);
           only assigned if `function <DDM.function>` is `NavarroAndFuss` and `time_scale <DDM.time_scale>` is
           `TimeScale.TRIAL, otherwise it is `None`;
         * **variance of correct response times** (value of `DDM_RT_CORRECT_VARIANCE` outputState);

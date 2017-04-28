@@ -90,9 +90,9 @@ Every component has the following set of core attributes that govern its operati
         more than one component, without being assigned simultaneously to multiple components.
 
   A `function <Component.function>` can also be specified in an entry of a 
-  `parameter specification dictionary <Mechanism_Creation>` assigned to the `params <Component.params>` argument of the 
-  constructor for the component, with the keyword FUNCTION as its key, and one of the specifications above as its 
-  value, as in the following example::  
+  `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the 
+  **params** argument of the constructor for the component, with the keyword FUNCTION as its key, and one of the 
+  specifications above as its value, as in the following example::  
 
         my_component = SomeComponent(params={FUNCTION:SomeFunction(some_param=1)})
 
@@ -113,8 +113,8 @@ Every component has the following set of core attributes that govern its operati
     `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear 
     as arguments in the constructor of the component itself, which can be used to set their values.
 
-  * in an entry of a `parameter specification dictionary <Mechanism_Creation>` assigned to the 
-    `params <Component.params>` argument of the constructor for the component.  The entry must use the keyword 
+  * in an entry of a `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the 
+    **params** argument of the constructor for the component.  The entry must use the keyword 
     FUNCTION_PARAMS as its key, and its value must be a dictionary containing the parameters and their values.
     The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the 
     parameter's value, as in the example below::
@@ -202,8 +202,8 @@ COMMENT:
         
       * `_validate_params <Component._validate_params>` validates the value of any parameters specified in the 
         constructor for the component (whether they are made directly in the argument for a parameter, or in a 
-        `parameter specification dictionary <Mechanism_Creation>`.  If it is overridden by a subclass, customized 
-        validation should generally be performed *after* the call to super().
+        `parameter specification dictionary <ParameterState_Specifying_Parameters>`.  If it is overridden by a subclass, 
+        customized validation should generally be performed *after* the call to super().
     
     * **Instantiation methods** create, assign, and/or perform *semantic* checks on the values of component attributes.  
       Semantic checks may include value and/or range checks, as well as checks of formatting and/or value 

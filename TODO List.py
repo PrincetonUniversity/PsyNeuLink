@@ -64,17 +64,53 @@
 #                 modify variable to accept drift_rate??
 #
 # IMPLEMENT:  Deferred init for control.
-#
 
 # IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
 #           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
 
+# FIX:  Stroop Model Learning Test Script:
+#            Why is error_matrix being assigned as parameterState on TERMINAL mechanism?
+#                   getting done in LearningAux LC?
 # FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
 # FIX: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
 # FIX: printout of intial_value (see devel_upstream on Quill)
 # FIX fix _update_parameter_state in Projection as in Mechanism
 
 # FIX: Flip names of Xxxx() and Xxxx_Base()
+
+# FIX / TEST: runtime_params:
+# COMMENT:
+# ?? DO PROJECTION DICTIONARIES PERTAIN TO INCOMING OR OUTGOING PROJECTIONS OR BOTH??
+# ?? CAN THE KEY FOR A STATE DICTIONARY REFERENCE A SPECIFIC STATE BY NAME, OR ONLY STATE-TYPE??
+#
+# state keyword: dict for state's params
+#     function or projection keyword: dict for funtion or projection's params
+#         parameter keyword: vaue of param
+#
+#     dict: can be one (or more) of the following:
+#         + INPUT_STATE_PARAMS:<dict>
+#         + PARAMETER_STATE_PARAMS:<dict>
+#    [TBI + OUTPUT_STATE_PARAMS:<dict>]
+#         - each dict will be passed to the corresponding State
+#         - params can be any permissible executeParamSpecs for the corresponding State
+#         - dicts can contain the following embedded dicts:
+#             + FUNCTION_PARAMS:<dict>:
+#                  will be passed the State's execute method,
+#                      overriding its paramInstanceDefaults for that call
+#             + PROJECTION_PARAMS:<dict>:
+#                  entry will be passed to all of the State's projections, and used by
+#                  by their execute methods, overriding their paramInstanceDefaults for that call
+#             + MAPPING_PROJECTION_PARAMS:<dict>:
+#                  entry will be passed to all of the State's MappingProjections,
+#                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+#             + CONTROL_PROJECTION_PARAMS:<dict>:
+#                  entry will be passed to all of the State's ControlProjections,
+#                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+#             + <projectionName>:<dict>:
+#                  entry will be passed to the State's projection with the key's name,
+#                  along with any in the PROJECTION_PARAMS and MappingProjection or ControlProjection dicts
+# COMMENT
+
 
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
 # IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)

@@ -49,7 +49,7 @@ INPUT_STATES entry of the parameter dictionary for a mechanism, then the owner i
 If one or more custom inputStates need to be specified when a mechanism is created, or added to an existing mechanism,
 they can be specified in an entry of the mechanism's parameter dictionary, using the key :keyword`INPUT_STATES`
 and a value that specifies one or more inputStates. For a single inputState, the value can be any of the
-specifications in the the list below.  To create multiple inputStates, the value of the :keyword:`INPUT_STATES` entry
+specifications in the the list below.  To create multiple inputStates, the value of the INPUT_STATES entry
 can be either a list, each item of which can be any of the specifications below;  or, it can be an OrderedDict,
 in which the key for each entry is a string specifying the name for the inputState to be created, and its value is
 one of the specifications below:
@@ -77,7 +77,7 @@ one of the specifications below:
     ..
     * A **specification dictionary**.  This creates the specified inputState using the first item of the owner
       mechanism's ``variable`` as the inputState's :py:data:`variable <InputState.variable>`.  In addition to the
-      standard entries of a :ref:`params <LINK>` dictionary, the dictionary can have a :keyword:`STATE_PROJECTIONS`
+      standard entries of a :ref:`params <LINK>` dictionary, the dictionary can have a STATE_PROJECTIONS
       entry, the value of which can be a Projection,
       :ref:`projection specification dictionary <Projection_In_Context_Specification>`, or a list containing
       items that are either of those.

@@ -291,7 +291,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     COMMENT:
         CORRECTED:
         value : 1d np.array
-            the output of ``function``;  also assigned to ``value`` of the :keyword:`TRANSFER_RESULT` outputState
+            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT outputState
             and the first item of ``outputValue``.
     COMMENT
 
