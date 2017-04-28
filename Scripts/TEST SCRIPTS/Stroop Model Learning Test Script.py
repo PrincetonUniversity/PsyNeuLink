@@ -109,8 +109,9 @@ mySystem.run(num_executions=2,
 #
 # PsyNeuLink response & weights after 1st trial:
 #
-# Response (NOTE: I THINK THIS IS FROM LAST TRIAL [JDC]):
+# Response [NOTE: I THINK THIS IS FROM LAST TRIAL -- JDC]:
 #  [ 0.50899214  0.54318254]
+# [NOTE: THESE ARE DEFINITELY FROM THE CURRENT TRIAL]:
 # Hidden-Output:
 # [[ 0.01462766  1.01351195]
 #  [ 2.00220713  3.00203878]]
