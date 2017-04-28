@@ -34,9 +34,9 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="up" title="Learning Mechanism" href="LearningMechanism.html"/>
-        <link rel="next" title="Control Mechanism" href="ControlMechanism.html"/>
-        <link rel="prev" title="Learning Mechanism" href="LearningMechanism.html"/> 
+        <link rel="up" title="Projection" href="Projection.html"/>
+        <link rel="next" title="Run" href="Run.html"/>
+        <link rel="prev" title="MappingProjection" href="MappingProjection.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -88,34 +88,25 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="#">LearningProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="LearningMechanism.html#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="LearningMechanism.html#creating-a-learningmechanism">Creating a LearningMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="LearningMechanism.html#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="LearningMechanism.html#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="LearningMechanism.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html">Control Mechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#creating-an-adaptivemechanism">Creating an AdaptiveMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#execution">Execution</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projection</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">LearningProjection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-learningprojection">Creating a LearningProjection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ControlProjection.html">ControlProjection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
@@ -149,11 +140,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
-      
-          <li><a href="AdaptiveMechanism.html">Adaptive Mechanism</a> &raquo;</li>
-      
-          <li><a href="LearningMechanism.html">Learning Mechanism</a> &raquo;</li>
+          <li><a href="Projection.html">Projection</a> &raquo;</li>
       
     <li>LearningProjection</li>
       <li class="wy-breadcrumbs-aside">
@@ -374,10 +361,10 @@ if it is not specified, a default is assigned using <code class="xref any docuti
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="ControlMechanism.html" class="btn btn-neutral float-right" title="Control Mechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Run.html" class="btn btn-neutral float-right" title="Run" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="LearningMechanism.html" class="btn btn-neutral" title="Learning Mechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="MappingProjection.html" class="btn btn-neutral" title="MappingProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

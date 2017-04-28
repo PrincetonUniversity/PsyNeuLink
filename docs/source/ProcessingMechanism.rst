@@ -5,8 +5,8 @@ Processing Mechanism
    :maxdepth: 1
 
    TransferMechanism
-   RecurrentTransferMechanism
    IntegratorMechanism
+   RecurrentTransferMechanism
    DDM
    ObjectiveMechanism
 
