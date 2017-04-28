@@ -1624,6 +1624,7 @@ class System_Base(System):
                                                      self in projection.sender.owner.systems.values())), None)
                     # If learning_mech receives another error_signal projection,
                     #    reassign sender_mech to the sender of that projection
+                    # FIX:  NEED TO ALSO REASSIGN learning_mech.function_object.error_matrix TO ONE FOR sender_mech
                     if error_signal_projection:
                         if self.verbosePref:
                             warnings.warn("Although {} a TERMINAL mechanism for the {} process, it is an "
@@ -1644,6 +1645,11 @@ class System_Base(System):
                                                     error_source_mech.name,
                                                     sender_mech.name,
                                                     process.name))
+                    # learning_mech does not receive another error_signal projection,
+                    #     so assign one to it from error_signal_mech
+                    #     (the other LearningMechanism to which the error_source_mech projects)
+                    # and reassign learning_mech.function_object.error_matrix
+                    #     (to the one for the projection to which error_signal_mech projects)
                     else:
                         mp = MappingProjection(sender=error_signal_mech.outputStates[ERROR_SIGNAL],
                                                receiver=learning_mech.inputStates[ERROR_SIGNAL],
@@ -1652,6 +1658,12 @@ class System_Base(System):
                             raise SystemError("Could not instantiate a MappingProjection "
                                               "from {} to {} for the {} process".
                                               format(error_signal_mech.name, learning_mech.name))
+
+                        # Reassign error_matrix to one for the projection to which the error_signal_mech projects
+                        learning_mech.function_object.error_matrix = \
+                            error_signal_mech.outputStates['learning_signal'].sendsToProjections[0].receiver
+                        if 'error_matrix' in learning_mech.parameterStates:
+                            del learning_mech.parameterStates['error_matrix']
 
                         sender_mech = error_signal_mech
             # MODIFIED 3/12/17 END
