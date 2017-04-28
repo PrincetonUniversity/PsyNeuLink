@@ -1464,20 +1464,6 @@ class System_Base(System):
         # MODIFIED 10/31/16 NEW:
         temp = toposort_flatten(self.executionGraph, sort=False)
         self.executionList = self._toposort_with_ordered_mech_tuples(self.executionGraph)
-
-        self.executionGraphProcessing = self.executionGraph.copy()
-        learning_mechs_to_delete = []
-        for mech_tuple in self.executionGraphProcessing:
-            try:
-                if mech_tuple[0].role is LEARNING:
-                    learning_mechs_to_delete.append(mech_tuple)
-            except AttributeError:
-                pass
-        for m in learning_mechs_to_delete:
-            del self.executionGraphProcessing[m]
-
-        self.executionListProcessing = self._toposort_with_ordered_mech_tuples(self.executionGraphProcessing)
-
         # MODIFIED 10/31/16 END
 
         # MODIFIED 2/8/17 NEW:
