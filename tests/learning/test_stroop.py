@@ -79,7 +79,7 @@ def test_stroop():
 
     s = system(
         processes=[color_naming_process, word_reading_process],
-        targets=[0,0],
+        targets=[20,20],
         name='Stroop Model',
         prefs=system_prefs,
     )
@@ -122,26 +122,27 @@ def test_stroop():
 
 
     objective_response = s.mechanisms[3]
+    objective_hidden = s.mechanisms[7]
     expected_output = [
-        (response.outputState.value, np.array([ 0.53336266,  0.66333872])),
-        (objective_response.outputStates[TARGET_MSE].value, np.array(0.16554561259074418)),
+        (colors.outputState.value, np.array([1., 1.])),
+        (words.outputState.value, np.array([-2., -2.])),
+        (hidden.outputState.value, np.array([0.13227553,  0.01990677])),
+        (response.outputState.value, np.array([0.51044657,  0.5483048])),
+        (objective_response.outputState.value, np.array([0.48955343, 0.4516952])),
+        (objective_response.outputStates[TARGET_MSE].value, np.array(0.22184555903789838)),
+        (objective_hidden.outputState.value, np.array([0., 0.])),
         (CH_Weights.matrix, np.array([
-            [ 0.02387775, 0.01224238],
-            [ 0.02387775, 0.01224238]
+            [0.01190129, 1.0103412],
+            [2.01190129, 3.0103412]
         ])),
-    #     (Middle_Weights.matrix, np.array([
-    #         [ 0.08992499,  0.10150104,  0.11891032,  0.14250149],
-    #         [ 0.29158517,  0.30154765,  0.31758943,  0.34007336],
-    #         [ 0.49318268,  0.50159531,  0.51632339,  0.5377435 ],
-    #         [ 0.69471052,  0.70164382,  0.71511777,  0.73552215],
-    #         [ 0.8961628 ,  0.90169281,  0.91397691,  0.93341744]
-    #    ])),
-    #     (Output_Weights.matrix, np.array([
-    #         [-0.71039394, -0.66929423,  0.31014399],
-    #         [-0.47462798, -0.43340256,  0.56113343],
-    #         [-0.2388705 , -0.19778374,  0.81214434],
-    #         [-0.00287122,  0.03785105,  1.06315816]
-    #     ])),
+        (WH_Weights.matrix, np.array([
+            [-0.02380258, 0.9793176],
+            [1.97619742, 2.9793176]
+        ])),
+        (HO_Weights.matrix, np.array([
+            [0.01462766, 1.01351195],
+            [2.00220713, 3.00203878]
+        ])),
     ]
 
     for i in range(len(expected_output)):
