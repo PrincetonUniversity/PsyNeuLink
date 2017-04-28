@@ -11,28 +11,28 @@
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
-# ********************************************  TransferMechanism ******************************************************
+# ****************************************  RecurrentTransferMechanism *************************************************
 
 """
 
 Overview
 --------
 
-An RecurrentTransferMechanism is a subclass of TransferMechanism that implements a single-layered recurrent 
+A RecurrentTransferMechanism is a subclass of TransferMechanism that implements a single-layered recurrent 
 network, in which each element is connected to every other element by way of a recurrent MappingProjection
 (referenced by the mechanism's ` matrix <RecurrentTransferMechanism.matrix>` parameter).
   
-.. Recurrent_Transfer_Creation:
+.. _Recurrent_Transfer_Creation:
 
 Creating a RecurrentTransferMechanism
------------------------------
+-------------------------------------
 
 A RecurrentTransferMechanism can be created directly by calling its constructor, or using the :py:func:`mechanism`
 function and specifying `RECURRENT_TRANSFER_MECHANISM` as its `mech_spec` argument.  The set of recurrent connections
 are created by creating a MappingProjection of the type specified in the **matrix** argument of the mechanism's 
 constructor.  In all other respects, it specified as a standard `TransferMechanism`.
 
-.. Recurrent_Transfer_Structure:
+.. _Recurrent_Transfer_Structure:
 
 Structure
 ---------
@@ -86,6 +86,7 @@ COMMENT
 
 Class Reference
 ---------------
+
 
 """
 

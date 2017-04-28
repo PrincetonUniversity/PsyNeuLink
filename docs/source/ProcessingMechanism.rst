@@ -5,10 +5,11 @@ Processing Mechanism
    :maxdepth: 1
 
    TransferMechanism
+   RecurrentTransferMechanism
    IntegratorMechanism
    DDM
    ObjectiveMechanism
 
-.. automodule:: ProcessingMechanism
+.. automodule:: ProcessingMechansms.ProcessingMechanism
    :members:
    :exclude-members: ProcessingMechanism_Base, MechanismTuple, MechanismList, random

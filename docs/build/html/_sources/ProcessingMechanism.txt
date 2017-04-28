@@ -10,6 +10,6 @@ Processing Mechanism
    DDM
    ObjectiveMechanism
 
-.. automodule:: ProcessingMechanism
+.. automodule:: ProcessingMechansms.ProcessingMechanism
    :members:
    :exclude-members: ProcessingMechanism_Base, MechanismTuple, MechanismList, random
