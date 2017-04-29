@@ -138,13 +138,32 @@ class AutoNumber(IntEnum):
 
 TEST_CONDTION = False
 
+
 def is_numeric_or_none(x):
     if x is None:
         return True
     return is_numeric(x)
 
+
 def is_numeric(x):
     return iscompatible(x, **{kwCompatibilityNumeric:True, kwCompatibilityLength:0})
+
+
+def is_matrix_spec(m):
+    return isinstance(m, str) and m in MATRIX_KEYWORD_VALUES
+
+
+def is_matrix(m):
+    if is_matrix_spec(m):
+        return True
+    if isinstance(m, (list, np.ndarray, np.matrix)):
+        return True
+    if callable(m):
+        try:
+            return is_matrix(m())
+        except:
+            return False
+
 
 kwCompatibilityType = "type"
 kwCompatibilityLength = "length"
@@ -260,6 +279,12 @@ def iscompatible(candidate, reference=None, **kargs):
         print("\niscompatible({0}, {1}): length argument must be non-negative; it has been set to 0\n".
               format(candidate, kargs, match_length))
         match_length = 0
+
+    # # FIX??
+    # # Reference is a matrix or a keyword specification for one
+    # # from PsyNeuLink.Components.Functions.Function import matrix_spec
+    if is_matrix_spec(reference):
+        return is_matrix_spec(candidate)
 
     # IMPLEMENTATION NOTE:
     #   modified to allow numeric type mismatches (e.g., int and float;

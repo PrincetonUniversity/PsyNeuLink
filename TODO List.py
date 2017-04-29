@@ -67,13 +67,13 @@
 
 # IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
 #           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
+#
+# IMPLEMENT: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
 
-# FIX:  Stroop Model Learning Test Script:
-#            Why is error_matrix being assigned as parameterState on TERMINAL mechanism?
-#                   getting done in LearningAux LC?
+# FIX: MOVE param_spec FROM ShellClasses to Utilities
+#
 # FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
-# FIX: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
-# FIX: printout of intial_value (see devel_upstream on Quill)
+# FIX: printout of intitial_value with brackets (see devel_upstream on Quill)
 # FIX fix _update_parameter_state in Projection as in Mechanism
 
 # FIX: Flip names of Xxxx() and Xxxx_Base()
@@ -136,6 +136,8 @@
 # DOCUMENTATION: FUNCTION_PARAMS in runtime_params example
 
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
+
+# FIX: VALIDATE PARAMS
 
 # TEST: Autoassociative SOFT_CLAMP
 # TEST: Autoassociative learning:  fix [auto_mech] version

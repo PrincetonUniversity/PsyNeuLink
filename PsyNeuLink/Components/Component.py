@@ -1796,8 +1796,6 @@ class Component(object):
                         target_set[param_name] = param_value
                     else:
                         target_set[param_name] = param_value.copy()
-            # MODIFIED 4/3/17 KM adding list/array parameter for noise
-
 
             # If param is a function_type, allow any other function_type
             elif callable(param_value):
