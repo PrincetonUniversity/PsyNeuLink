@@ -20,29 +20,31 @@ Overview
 
 A RecurrentTransferMechanism is a subclass of TransferMechanism that implements a single-layered recurrent 
 network, in which each element is connected to every other element by way of a recurrent MappingProjection
-(referenced by the mechanism's ` matrix <RecurrentTransferMechanism.matrix>` parameter).
+(referenced by the mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).
   
 .. _Recurrent_Transfer_Creation:
 
 Creating a RecurrentTransferMechanism
 -------------------------------------
 
-A RecurrentTransferMechanism can be created directly by calling its constructor, or using the :py:func:`mechanism`
-function and specifying `RECURRENT_TRANSFER_MECHANISM` as its `mech_spec` argument.  The set of recurrent connections
-are created by creating a MappingProjection of the type specified in the **matrix** argument of the mechanism's 
-constructor.  In all other respects, it specified as a standard `TransferMechanism`.
+A RecurrentTransferMechanism can be created directly by calling its constructor, or using the 
+`mechanism() <Mechanism.mechanism>` function and specifying RECURRENT_TRANSFER_MECHANISM as its 
+**mech_spec** argument.  The recurrent projection is created using the **matrix** argument of the mechanism's 
+constructor, which must specify either a square matrix or a `MappingProjection` that uses one (the default is 
+`FULL_CONNECTIVITY_MATRIX`).  In all other respects, a RecurrentTransferMechanism is specified in the same way as a 
+standard `TransferMechanism`.
 
 .. _Recurrent_Transfer_Structure:
 
 Structure
 ---------
 
-The `matrix <Recurrent.matrix>` parameter of RecurrentTransferMechanism is a self-projecting MappingProjection;
-that is, it projects from the mechanism's `primary outputState <OutputState_Primary>` to its
-`primary inputState <Mechanism_InputStates>`.  In all other respects the mechanism is structured as a standard
-`TransferMechanism`. 
+The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>` 
+parameter, which specifies a self-projecting MappingProjection;  that is, one that projects from the mechanism's 
+`primary outputState <OutputState_Primary>` back to it `primary inputState <Mechanism_InputStates>`.  
+In all other respects the mechanism is identical to a standard `TransferMechanism`. 
 
-.. _Transfer_Execution:
+.. _Recurrent_Transfer_Execution:
 
 Execution
 ---------
@@ -51,38 +53,13 @@ When a RecurrentTransferMechanism executes, it includes in its input the value o
 `primary outputState <OutputState_Primary>` from the last :ref:`round of execution <LINK>`.
 
 Like a `TransferMechanism`, the function used to update each element can be assigned using its
-`function <TransferMechanism.function>` parameter.  When a TransferMechanism is executed, it transforms its input 
-using the specified function and the following parameters (in addition to those specified for the function):
-
-    * `noise <TransferMechanism.noise>`: applied element-wise to the input before transforming it.
-    ..
-    * `time_constant <TransferMechanism.time_constant>`: if `time_scale` is :keyword:`TimeScale.TIME_STEP`,
-      the input is exponentially time-averaged before transforming it (higher value specifies faster rate);
-      if `time_scale` is :keyword:`TimeScale.TRIAL`, `time_constant <TransferMechanism.time_constant>` is ignored.
-    ..
-    * `range <TransferMechanism.range>`: caps all elements of the `function <TransferMechanism.function>` result by
-      the lower and upper values specified by range.
-
-The rate at which the network settles determined jointly by the size of the matrix and the time_constant
-??Must use SOFT_CLAMP SO THAT THE INPUT DOESN'T DOMINATE THE RESULT??  
-
-After each execution of the mechanism:
-
-.. _Transfer_Results:
-
-    * **result** of `function <TransferMechanism.function>` is assigned to the mechanism's
-      `value <TransferMechanism.value>` attribute, the :keyword:`value` of its `TRANSFER_RESULT` outputState,
-      and to the 1st item of the mechanism's `outputValue <TransferMechanism.outputValue>` attribute;
-    ..
-    * **mean** of the result is assigned to the the :keyword:`value` of the mechanism's `TRANSFER_MEAN` outputState,
-      and to the 2nd item of its `outputValue <TransferMechanism.outputValue>` attribute;
-    ..
-    * **variance** of the result is assigned to the :keyword:`value` of the mechanism's `TRANSFER_VARIANCE` outputState,
-      and to the 3rd item of its `outputValue <TransferMechanism.outputValue>` attribute.
+`function <TransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed, it transforms its 
+input (including from the recurrent projection) using the specified function and parameters (see 
+`Transfer_Execution`), and returns the results in its outputStates.
 
 COMMENT
 
-.. _Transfer_Class_Reference:
+.. _Recurrent_Transfer_Class_Reference:
 
 Class Reference
 ---------------
@@ -90,9 +67,9 @@ Class Reference
 
 """
 
-# from numpy import sqrt, random, abs, tanh, exp
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Functions.Function import get_matrix, is_matrix
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
 
 class RecurrentTransferError(Exception):
@@ -123,27 +100,10 @@ class RecurrentTransferMechanism(TransferMechanism):
     COMMENT:
         Description
         -----------
-            TransferMechanism is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the
-                Component class
-            It implements a Mechanism that transforms its input variable based on FUNCTION (default: Linear)
-
-        Class attributes
-        ----------------
-            + componentType (str): TransferMechanism
-            + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + variableClassDefault (value):  Transfer_DEFAULT_BIAS
-            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL}
-            + paramNames (dict): names as above
-
-        Class methods
-        -------------
-            None
-
-        MechanismRegistry
-        -----------------
-            All instances of TransferMechanism are registered in MechanismRegistry, which maintains an
-              entry for the subclass, a count for all instances of it, and a dictionary of those instances
+            RecurrentTransferMechanism is a Subtype of the TransferMechanism Subtype of the ProcessingMechanisms Type 
+            of the Mechanism Category of the Component class.
+            It implements a TransferMechanism with a recurrent projection (default matrix: FULL_CONNECTIVITY_MATRIX).
+            In all other respects, it is identical to a TransferMechanism 
     COMMENT
 
     Arguments
@@ -159,6 +119,10 @@ class RecurrentTransferMechanism(TransferMechanism):
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
         or a custom function.
+
+    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default FULL_CONNECTIVITY_MATRIX
+        specifies the matrix to use for creating a `recurrent MappingProjection <Recurrent_Transfer_Structure>`, 
+        or a MappingProjection to use. 
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
@@ -208,17 +172,24 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     Returns
     -------
-    instance of TransferMechanism : TransferMechanism
+    instance of RecurrentTransferMechanism : RecurrentTransferMechanism
 
 
     Attributes
     ----------
 
-    variable : value: default Transfer_DEFAULT_BIAS
+    variable : value
         the input to mechanism's ``function``.  :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
-    function : Function :  default Linear
+    function : Function
         the function used to transform the input.
+
+    matrix : 2d np.array
+        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the mechanism.
+
+    recurrent_projection : MappingProjection
+        a `MappingProjection` that projects from the mechanism's `primary outputState <OutputState_Primary>` 
+        back to it `primary inputState <Mechanism_InputStates>`.
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
@@ -233,13 +204,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float : default 1.0
+    time_constant : float
         the time constant for exponential time averaging of input
         when the mechanism is executed using the `TIME_STEP` `TimeScale`::
 
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
-    range : Optional[Tuple[float, float]]
+    range : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
         is set to the value of `range <TransferMechanism.range>` it exceeds.  If `function <TransferMechanism.function>`
@@ -268,18 +239,18 @@ class RecurrentTransferMechanism(TransferMechanism):
         * **mean** of the result (``value`` of `TRANSFER_MEAN` outputState)
         * **variance** of the result (``value`` of `TRANSFER_VARIANCE` outputState)
 
-    time_scale :  TimeScale : defaul tTimeScale.TRIAL
+    time_scale :  TimeScale
         specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
 
     name : str : default TransferMechanism-<index>
         the name of the mechanism.
-        Specified in the `name` argument of the constructor for the projection;
+        Specified in the **name** argument of the constructor for the projection;
         if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         the `PreferenceSet` for mechanism.
-        Specified in the `prefs` argument of the constructor for the mechanism;
+        Specified in the **prefs** argument of the constructor for the mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -290,7 +261,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def __init__(self,
                  default_input_value=None,
                  function=Linear,
-                 matrix:is_matrix=FULL_CONNECTIVITY_MATRIX,
+                 matrix:tc.any(is_matrix, MappingProjection)=FULL_CONNECTIVITY_MATRIX,
                  initial_value=None,
                  noise=0.0,
                  time_constant=1.0,
@@ -328,22 +299,39 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Validate MATRIX
         if MATRIX in target_set:
-            matrix = target_set[MATRIX]
+
+            matrix_param = target_set[MATRIX]
             size = len(self.variable[0])
-            if isinstance(matrix, str):
-                matrix = get_matrix(matrix, size, size)
+
+            if isinstance(matrix_param, MappingProjection):
+                matrix = matrix_param.matrix
+
+            elif isinstance(matrix_param, str):
+                matrix = get_matrix(matrix_param, size, size)
+
+            else:
+                matrix = matrix_param
+
             if matrix.shape[0] != matrix.shape[0]:
-                raise RecurrentTransferError("{} param for {} must be square".format(MATRIX, self.name))
+                if (matrix_param, MappingProjection):
+                    if __name__ == '__main__':
+                        err_msg = ("{} param of {} must be square to be used as recurrent projection for {}".
+                                   format(MATRIX, matrix_param.name, self.name))
+                else:
+                    err_msg = "{} param for must be square".format(MATRIX, self.name)
+                raise RecurrentTransferError(err_msg)
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_after_function(self, context=None):
 
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_after_function(context=context)
 
-        if isinstance(self.matrix, str):
-            size = len(self.variable[0])
-            self.matrix = get_matrix(self.matrix, size, size)
+        if isinstance(self.matrix, MappingProjection):
+            self.recurrent_projection = self.matrix
 
-        self.matrix = _instantiate_recurrent_projection(self, self.matrix)
+        else:
+            self.recurrent_projection = _instantiate_recurrent_projection(self, self.matrix)
+
+        self.matrix = self.recurrent_projection.matrix
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
@@ -354,7 +342,10 @@ def _instantiate_recurrent_projection(mech:Mechanism_Base,
 
     """
 
-    matrix = get_matrix(matrix)
+    if isinstance(matrix, str):
+        size = len(mech.variable[0])
+
+    matrix = get_matrix(matrix, size, size)
 
     return MappingProjection(sender=mech,
                              receiver=mech,

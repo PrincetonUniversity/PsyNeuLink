@@ -284,7 +284,7 @@ def iscompatible(candidate, reference=None, **kargs):
     # # Reference is a matrix or a keyword specification for one
     # # from PsyNeuLink.Components.Functions.Function import matrix_spec
     if is_matrix_spec(reference):
-        return is_matrix_spec(candidate)
+        return is_matrix(candidate)
 
     # IMPLEMENTATION NOTE:
     #   modified to allow numeric type mismatches (e.g., int and float;

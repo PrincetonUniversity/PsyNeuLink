@@ -369,7 +369,7 @@ class Function_Base(Function):
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -530,7 +530,7 @@ class ArgumentTherapy(Function_Base):
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -781,7 +781,7 @@ class UserDefinedFunction(Function_Base):
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -890,7 +890,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -1142,7 +1142,7 @@ class LinearCombination(
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -1412,7 +1412,7 @@ class Linear(
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -1615,7 +1615,7 @@ class Exponential(
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -1761,7 +1761,7 @@ class Logistic(
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -1912,7 +1912,7 @@ class SoftMax(
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -2157,7 +2157,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -2708,7 +2708,7 @@ class Integrator(
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -3262,7 +3262,7 @@ class BogaczEtAl(
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -3560,7 +3560,7 @@ class NavarroAndFuss(
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -4308,7 +4308,7 @@ class Reinforcement(
         `mechanism <Mechanism>` to which the function belongs.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
     """
@@ -4561,7 +4561,7 @@ class BackPropagation(LearningFunction):
         `mechanism <Mechanism>` to which the function belongs.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 

@@ -185,7 +185,7 @@ MappingProjection. If there is none, it is <a class="reference internal" href="L
 needed to implement learning for the MappingProjection (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">Learning Configurations</span></a>).</p>
 <p>When a LearningProjection is created, its full initialization is <span class="xref std std-ref">deferred</span> until its
 <a class="reference internal" href="#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="#LearningProjection.LearningProjection.receiver" title="LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This
-allows a LearningProjection to be created before its <a class="reference internal" href="#LearningProjection.LearningProjection.sender" title="LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.receiver" title="ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them
+allows a LearningProjection to be created before its <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.sender" title="ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.receiver" title="ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them
 in a script), by calling its constructor without specifying its <strong>sender</strong> or <strong>receiver</strong> arguments.
 However, for the LearningProjection to be operational, initialization must be completed by calling its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code>
 method.  This is not necessary if learning has been specified for a <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>,
@@ -223,7 +223,7 @@ and conveys this to its <a class="reference internal" href="#LearningProjection.
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sender</strong> (<em>Optional[LearningMechanism or LEARNING_SIGNAL OutputState of one]</em>) &#8211; the source of the <a class="reference internal" href="Function.html#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> for the LearningProjection. If it is not specified, one will be
+<li><strong>sender</strong> (<em>Optional[LearningMechanism or LEARNING_SIGNAL OutputState of one]</em>) &#8211; the source of the <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> for the LearningProjection. If it is not specified, one will be
 <code class="xref any docutils literal"><span class="pre">automatically</span> <span class="pre">created</span></code> that is appropriate for the
 LearningProjection&#8217;s <code class="xref any docutils literal"><span class="pre">errorSource</span></code>.</li>
 <li><strong>receiver</strong> (Optional[MappingProjection or ParameterState for <code class="docutils literal"><span class="pre">matrix</span></code> parameter of one]) &#8211; the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> (or the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that owns it) for the
@@ -335,7 +335,7 @@ its <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanism
 <dt id="LearningProjection.LearningProjection.name">
 <code class="descname">name</code><a class="headerlink" href="#LearningProjection.LearningProjection.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default LearningProjection-&lt;index&gt;</em> &#8211; the name of the LearningProjection.
-Specified in the <a class="reference internal" href="#LearningProjection.LearningProjection.name" title="LearningProjection.LearningProjection.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> argument of the constructor for the projection;
+Specified in the <strong>name</strong> argument of the constructor for the projection;
 if not is specified, a default is assigned by ProjectionRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
@@ -344,7 +344,7 @@ if not is specified, a default is assigned by ProjectionRegistry
 <dt id="LearningProjection.LearningProjection.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#LearningProjection.LearningProjection.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for projection.
-Specified in the <a class="reference internal" href="#LearningProjection.LearningProjection.prefs" title="LearningProjection.LearningProjection.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the projection;
+Specified in the <strong>prefs</strong> argument of the constructor for the projection;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>

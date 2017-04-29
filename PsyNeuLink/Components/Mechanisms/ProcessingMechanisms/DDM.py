@@ -31,7 +31,7 @@ mode), or integrated numerically (in `TIME_STEP` mode).
 Creating a DDM Mechanism
 -----------------------------
 A DDM Mechanism can be instantiated directly by calling its constructor, or by using the `mechanism` function
-and specifying DDM as its `mech_spec` argument.  The analytic solution used in `TRIAL` mode is selected
+and specifying DDM as its **mech_spec** argument.  The analytic solution used in `TRIAL` mode is selected
 using the `function <DDM.function>` argument, which can be simply the name of a DDM function (first example below),
 or a call to the function with arguments specifying its parameters (see `DDM_Execution` below for a description of
 DDM function parameters) and, optionally, a `ControlProjection` (second example)::
