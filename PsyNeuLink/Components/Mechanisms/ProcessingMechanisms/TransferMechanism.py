@@ -582,7 +582,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         #endregion
 
-
         #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
         # FIX: NOT UPDATING self.previous_input CORRECTLY
@@ -610,7 +609,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                              # context=context
                                                              # name=Integrator.componentName + '_for_' + self.name
                                                              )
-
 
         elif time_scale is TimeScale.TRIAL:
 

@@ -92,7 +92,7 @@ Class Reference
 
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Functions.Function import get_matrix, matrix_spec
+from PsyNeuLink.Components.Functions.Function import get_matrix, is_matrix
 
 
 class RecurrentTransferError(Exception):
@@ -284,15 +284,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """
-
     componentType = RECURRENT_TRANSFER_MECHANISM
-
 
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
                  function=Linear,
-                 matrix:matrix_spec=FULL_CONNECTIVITY_MATRIX,
+                 matrix:is_matrix=FULL_CONNECTIVITY_MATRIX,
                  initial_value=None,
                  noise=0.0,
                  time_constant=1.0,
@@ -351,7 +349,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 @tc.typecheck
 def _instantiate_recurrent_projection(mech:Mechanism_Base,
-                                      matrix:matrix_spec=FULL_CONNECTIVITY_MATRIX):
+                                      matrix:is_matrix=FULL_CONNECTIVITY_MATRIX):
     """Instantiate a MappingProjection from mech to itself
 
     """

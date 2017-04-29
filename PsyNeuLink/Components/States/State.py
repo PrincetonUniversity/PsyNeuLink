@@ -503,7 +503,7 @@ class State_Base(State):
         :return:
         """
 
-        is_matrix = False
+        var_is_matrix = False
         # If variable is a matrix (e.g., for the MATRIX parameterState of a MappingProjection),
         #     it needs to be embedded in a list so that it is properly handled in by LinearCombination
         #     (i.e., solo matrix is returned intact, rather than treated as arrays to be combined);
@@ -516,12 +516,12 @@ class State_Base(State):
         if (isinstance(self.variable, np.matrix) or
                 (isinstance(self.variable, np.ndarray) and self.variable.ndim >= 2)):
             self.variable = [self.variable]
-            is_matrix = True
+            var_is_matrix = True
 
         super()._instantiate_function(context=context)
 
         # If it is a matrix, remove from list in which it was embedded after instantiating and evaluating function
-        if is_matrix:
+        if var_is_matrix:
             self.variable = self.variable[0]
 
         # Insure that output of function (self.value) is compatible with (same format as) its input (self.variable)

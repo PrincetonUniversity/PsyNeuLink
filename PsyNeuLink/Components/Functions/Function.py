@@ -157,7 +157,7 @@ import typecheck as tc
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Utilities import random_matrix
+from PsyNeuLink.Globals.Utilities import random_matrix, is_matrix
 
 FunctionRegistry = {}
 
@@ -2171,19 +2171,19 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    def matrix_spec(m):
-        if m is None:
-            return True
-        if m in MATRIX_KEYWORD_VALUES:
-            return True
-        if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
-            return True
-        return False
+    # def is_matrix_spec(m):
+    #     if m is None:
+    #         return True
+    #     if m in MATRIX_KEYWORD_VALUES:
+    #         return True
+    #     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+    #         return True
+    #     return False
 
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 matrix: matrix_spec = None,
+                 matrix:tc.optional(is_matrix) = None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -2489,14 +2489,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         return function(sender_len, receiver_len)
 
 
-def matrix_spec(m):
-    if m is None:
-        return True
-    if m in MATRIX_KEYWORD_VALUES:
-        return True
-    if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
-        return True
-    return False
+# def is_matrix_spec(m):
+#     if m is None:
+#         return True
+#     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+#         return True
+#     if m in MATRIX_KEYWORD_VALUES:
+#         return True
+#     return False
 
 
 def get_matrix(specification, rows=1, cols=1, context=None):
