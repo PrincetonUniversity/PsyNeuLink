@@ -36,9 +36,9 @@ of PsyNeuLink Functions (`Linear`, `Exponential` or `Logistic`), or specified us
 Creating a TransferMechanism
 -----------------------------
 
-A TransferMechanism can be created directly by calling its constructor, or using the :py:func:`mechanism`
-function and specifying `TRANSFER_MECHANISM` as its `mech_spec` argument.  Its function is specified in the
-:keyword:`function` argument, which can be simply the name of the class (first example below), or a call to its
+A TransferMechanism can be created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>`
+function and specifying TRANSFER_MECHANISM as its **mech_spec** argument.  Its function is specified in the
+**function** argument, which can be simply the name of the class (first example below), or a call to its
 constructor which can include arguments specifying the function's parameters (second example)::
 
     my_linear_transfer_mechanism = TransferMechanism(function=Linear)
@@ -312,13 +312,13 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     name : str : default TransferMechanism-<index>
         the name of the mechanism.
-        Specified in the `name` argument of the constructor for the projection;
+        Specified in the **name** argument of the constructor for the projection;
         if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         the `PreferenceSet` for mechanism.
-        Specified in the `prefs` argument of the constructor for the mechanism;
+        Specified in the **prefs** argument of the constructor for the mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
