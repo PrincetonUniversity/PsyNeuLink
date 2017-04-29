@@ -409,7 +409,7 @@ class MappingProjection(Projection_Base):
             else:
                 projection_string = 'projection'
 
-            if self._matrix_spec in {IDENTITY_MATRIX, OFF_DIAGNOAL_MATRIX}:
+            if self._matrix_spec in {IDENTITY_MATRIX, HOLLOW_MATRIX}:
                 # Identity matrix is not reshapable
                 raise ProjectionError("Output length ({}) of \'{}{}\' from {} to mechanism \'{}\'"
                                       " must equal length of it inputState ({}) to use {}".

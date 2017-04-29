@@ -240,7 +240,7 @@ PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             DEFAULT_MATRIX,
                             IDENTITY_MATRIX,
                             FULL_CONNECTIVITY_MATRIX,
-                            OFF_DIAGNOAL_MATRIX,
+                            HOLLOW_MATRIX,
                             RANDOM_CONNECTIVITY_MATRIX,
                             LEARNING_PROJECTION,
                             CONTROL_PROJECTION}

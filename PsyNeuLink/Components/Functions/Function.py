@@ -2330,7 +2330,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
-                elif param_value in {IDENTITY_MATRIX, OFF_DIAGNOAL_MATRIX}:
+                elif param_value in {IDENTITY_MATRIX, HOLLOW_MATRIX}:
                     # Receiver length doesn't equal sender length
                     if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
                         # if self.owner.prefs.verbosePref:
@@ -2509,7 +2509,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         + matrix keyword:
             + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
             + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
-            + OFF_DIAGONAL_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
+            + HOLLOW_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
             + FULL_CONNECTIVITY_MATRIX: all 1's
             + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
         + 2D list or np.ndarray of numbers
@@ -2546,7 +2546,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
                                 format(rows, cols, specification))
         return np.identity(rows)
 
-    if specification is OFF_DIAGNOAL_MATRIX:
+    if specification is HOLLOW_MATRIX:
         if rows != cols:
             raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
                                 format(rows, cols, specification))
