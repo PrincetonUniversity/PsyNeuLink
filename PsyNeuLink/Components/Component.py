@@ -1238,7 +1238,6 @@ class Component(object):
             if variable is None:
                 self.variableInstanceDefault = self.variableClassDefault
             else:
-                # MODIFIED 6/9/16 (CONVERT TO np.ndarray)
                 self.variableInstanceDefault = self.variable
 
         # If no params were passed, then done

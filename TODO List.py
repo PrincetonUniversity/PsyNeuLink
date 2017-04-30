@@ -71,8 +71,6 @@
 #
 # IMPLEMENT: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
 
-# FIX: MOVE param_spec FROM ShellClasses to Utilities
-#
 # FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
 # FIX: printout of intitial_value with brackets (see devel_upstream on Quill)
 # FIX fix _update_parameter_state in Projection as in Mechanism
@@ -137,6 +135,14 @@
 # DOCUMENTATION: FUNCTION_PARAMS in runtime_params example
 
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
+
+# FIX: Backpropagation AND Reinforcement:
+#        ADD TYPECHECKING FOR error_matrix AND THEN CLEAN UP _validate_params
+#        ADD _instantiate_attributes_before_function AND IF MappingProjection IS SPECIFIED FOR error_matrix,
+#                  convert to ParameterState (SEE Energy FOR EXAMPLE)
+
+# FIX: ALLOW Projection PARAM SPECIFICATION TO MAKE IT THROUGH Component._validate_params
+#         (e.g., FOR Energy AND Backpropagation FUNCTIONS)
 
 # FIX: SEARCH FOR "` argument" and replace with "**<arg>** argument"
 # FIX: SEARCH FOR ALL MATRIX KEYWORDS AND REPLACE WITH `MATRIX KEYWORD`
