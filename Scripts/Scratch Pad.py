@@ -3,8 +3,7 @@ import numpy as np
 # GLOBALS:
 from PsyNeuLink.Globals.Keywords import *
 # FUNCTIONS:
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Functions.Function import Linear
+from PsyNeuLink.Components.Functions.Function import Logistic, Linear, Energy, Entropy
 
 # STATES:
 # from PsyNeuLink.Components.States.OutputState import OutputState
@@ -736,7 +735,7 @@ print(my_system.run(inputs=input_list,
 
 #endregion
 
-#region TEST matrix
+#region TEST matrix @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
 # Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
@@ -751,6 +750,12 @@ print(my_system.run(inputs=input_list,
 # b = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 # c = np.dot(b, a, )
 # print(c)
+
+#endregion  ********
+
+#region TEST Energy and Entropy @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
 
 #endregion
 

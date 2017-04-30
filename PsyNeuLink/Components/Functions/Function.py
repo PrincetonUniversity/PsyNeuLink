@@ -4071,7 +4071,7 @@ class GammaDist(DistributionFunction):
 
 class WaldDist(DistributionFunction):
     """
-     WaldDist(\
+     WaldDist(             \
               scale=1.0,\
               mean=1.0,\
               params=None,\
@@ -4186,10 +4186,13 @@ class ObjectiveFunction(Function_Base):
 
 class Energy(ObjectiveFunction):
     """
-     Energy(        \
-        params=None,\
-        owner=None, \
-        prefs=None  \
+     Energy(
+        variable_default=variableCLassDefault,  \
+        matrix=HOLLOW_MATRIX,                   \
+        normalize=False,                        \
+        params=None,                            \
+        owner=None,                             \
+        prefs=None                              \
         )
 
      .. _Energy:
@@ -4368,10 +4371,10 @@ class Energy(ObjectiveFunction):
 
 class Entropy(ObjectiveFunction):
     """
-     Entropy(       \
-        params=None,\
-        owner=None, \
-        prefs=None  \
+     Entropy(                                   \
+        variable_default=variableCLassDefault,  \
+        matrix=HOLLOW_MATRIX,                   \
+        normalize=False,                        \
         )
 
      .. _Entropy:
@@ -4541,7 +4544,27 @@ class Entropy(ObjectiveFunction):
         else:
             matrix = self.matrix
 
-        result = -np.sum( np.dot(matrix * self._hollow_matrix, self.variable[0]))
+        # result = -np.sum( np.dot(matrix * self._hollow_matrix, self.variable[0]))
+        # http://stackoverflow.com/questions/21003272/difference-between-all-1d-points-in-array-with-python-diff
+        result = np.sum(np.subtract.outer(x,x)[np.tril_indices(x.shape[0],k=-1)])
+
+        # Alternative version:
+        # http://stackoverflow.com/questions/29745593/finding-differences-between-all-values-in-an-list
+        # a = [1,4,2,6]
+        #
+        # # Convert input list to a numpy array
+        # arr = np.array(a)
+        #
+        # # Calculate absolute differences between each element
+        # # against all elements to give us a 2D array
+        # sub_arr = np.abs(arr[:,None] - arr)
+        #
+        # # Get diagonal indices for the 2D array
+        # N = arr.size
+        # rem_idx = np.arange(N)*(N+1)
+        #
+        # # Remove the diagonal elements for the final output
+        # out = np.delete(sub_arr,rem_idx)
 
         if self.normalize:
             result /= len(self.variable)
