@@ -4541,6 +4541,8 @@ class Entropy(ObjectiveFunction):
         else:
             matrix = self.matrix
 
+        for row in matrix:
+
         result = -np.sum( np.dot(matrix * self._hollow_matrix, self.variable[0]))
 
         if self.normalize:
