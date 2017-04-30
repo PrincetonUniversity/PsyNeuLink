@@ -35,6 +35,10 @@ Distribution Functions:
   * `UniformDist`
   * `GammaDist`
   * `WaldDist`
+  
+Objective Functions:
+  * `Energy`
+  * `Entropy`
 
 Learning Functions:
   * `Reinforcement`
@@ -141,6 +145,8 @@ Class Reference
 #            'UniformDist`',
 #            'GammaDist',
 #            'WaldDist',
+#            'Energy`,
+#            'Entropy`,
 #            'Reinforcement',
 #            'BackPropagation',
 #            'FunctionError',
@@ -4123,7 +4129,7 @@ class WaldDist(DistributionFunction):
 
      """
 
-    componentName = GAMMA_DIST_FUNCTION
+    componentName = WALD_DIST_FUNCTION
 
     variableClassDefault = [0]
 
@@ -4166,6 +4172,186 @@ class WaldDist(DistributionFunction):
 
         return result
 
+
+# endregion
+
+# region **************************************   OBJECTIVE FUNCTIONS **************************************************
+
+class ObjectiveFunction(Function_Base):
+    """Abstract class of `Function` used for evaluating states.
+    """
+
+    componentType = OBJECTIVE_FUNCTION_TYPE
+
+
+class Energy(ObjectiveFunction):
+    """
+     Energy(              \
+              params=None,\
+              owner=None, \
+              prefs=None  \
+              )
+
+     .. _Energy:
+
+     Return the energy of a vector based an a weight matrix from each element to every other element in the vector  
+
+     Arguments
+     ---------
+
+     params : Optional[Dict[param keyword, param value]]
+         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+         arguments of the constructor.
+
+     owner : Component
+         `component <Component>` to which to assign the Function.
+
+     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+     Attributes
+     ----------
+
+     params : Optional[Dict[param keyword, param value]]
+         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+         arguments of the constructor.
+
+     owner : Component
+         `component <Component>` to which to assign the Function.
+
+     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+     """
+
+    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+    from PsyNeuLink.Components.States.ParameterState import ParameterState
+
+    componentName = ENERGY_FUNCTION
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
+                 normalize:bool=False,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context=componentName + INITIALIZING):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(matrix=matrix,
+                                                  normalize=normalize,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate error_matrix param
+
+        `matrix` argument must be one of the following
+            - 2d list, np.ndarray or np.matrix
+            - ParameterState for one of the above
+            - MappingProjection with a parameterStates[MATRIX] for one of the above
+
+        Parse matrix specification to insure it resolves to a square matrix
+        (but leave in the form in which it was specified so that, if it is a ParameterState or MappingProjection,
+         its current value can be accessed at runtime (i.e., it can be used as a "pointer")
+        """
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        # Validate error_matrix specification
+        if MATRIX in target_set:
+
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.States.ParameterState import ParameterState
+
+            matrix = target_set[MATRIX]
+
+            if isinstance(matrix, MappingProjection):
+                try:
+                    matrix = matrix.parameterStates[MATRIX].value
+                    param_type_string = "MappingProjection's ParameterState"
+                except KeyError:
+                    raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
+                                        "paramaterState that has been assigned a 2d array or matrix".
+                                        format(MATRIX, self.name, matrix.shape, MATRIX))
+
+            elif isinstance(matrix, ParameterState):
+                try:
+                    matrix = matrix.value
+                    param_type_string = "ParameterState"
+                except KeyError:
+                    raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                                        "must be a 2d array or matrix".
+                                        format(MATRIX, MATRIX, self.name, matrix.shape))
+
+            else:
+                param_type_string = "array or matrix"
+
+            matrix = np.array(matrix)
+            if matrix.ndim != 2:
+                raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
+                                    "must be a 2d array or matrix".
+                                    format(param_type_string, MATRIX, self.name, matrix))
+            rows = matrix.shape[0]
+            cols = matrix.shape[1]
+            if rows != cols:
+                raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
+                                    "must be a square matrix".
+                                    format(param_type_string, MATRIX, self.name, matrix))
+
+
+    def _instantiate_attributes_before_function(self, context=None):
+
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        if isinstance(self.matrix,MappingProjection):
+            self.matrix = self.matrix.parameterStates[MATRIX]
+        elif isinstance(self.matrix,ParameterState):
+            pass
+        else:
+            size = len(self.variable)
+            self.matrix = get_matrix(self.matrix, size, size)
+
+        # FIX: MULTIPLY MATRIX BY HOLLOW MATRIX OF THE SAME SIZE
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        if isinstance(self.matrix, ParameterState):
+            matrix = self.matrix.value
+        else:
+            matrix = self.matrix
+
+        result = -np.sum(np.dot(matrix, self.variable[0]))
+
+        if self.normalize:
+            result /= len(self.variable)
+
+        return result
 
 # endregion
 
@@ -4739,8 +4925,9 @@ class BackPropagation(LearningFunction):
 
         """
 
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
         self._check_args(variable=variable, params=params, context=context)
+
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
         if isinstance(self.error_matrix, ParameterState):
             error_matrix = self.error_matrix.value
         else:

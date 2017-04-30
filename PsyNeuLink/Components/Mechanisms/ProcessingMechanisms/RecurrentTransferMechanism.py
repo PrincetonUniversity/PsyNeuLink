@@ -67,7 +67,7 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import get_matrix, is_matrix
+from PsyNeuLink.Components.Functions.Function import get_matrix, is_matrix, Energy
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
@@ -78,6 +78,11 @@ class RecurrentTransferError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
+
+RECURRENT_ENERGY = "energy"
+RECURRENT_ENTROPY = "entropy"
+
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class RecurrentTransferMechanism(TransferMechanism):
@@ -257,6 +262,11 @@ class RecurrentTransferMechanism(TransferMechanism):
     """
     componentType = RECURRENT_TRANSFER_MECHANISM
 
+    paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
+    paramClassDefaults[OUTPUT_STATES].append({NAME:RECURRENT_ENERGY})
+    paramClassDefaults[OUTPUT_STATES].append({NAME:RECURRENT_ENTROPY})
+
+
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
@@ -332,6 +342,12 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_projection = _instantiate_recurrent_projection(self, self.matrix)
 
         self.matrix = self.recurrent_projection.matrix
+
+        self.outputStates[RECURRENT_ENERGY].calculate = Energy(self.variable,
+                                                           self.recurrent_projection.parameterStates[MATRIX]).function
+
+        TEST_CONDTION = True
+
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
