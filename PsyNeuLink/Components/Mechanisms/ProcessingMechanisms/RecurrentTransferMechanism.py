@@ -20,7 +20,8 @@ Overview
 
 A RecurrentTransferMechanism is a subclass of TransferMechanism that implements a single-layered recurrent 
 network, in which each element is connected to every other element by way of a recurrent MappingProjection
-(referenced by the mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).
+(referenced by the mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).  It also allows its
+previous input to be decayed, and reports both the energy and entropy of its output.
   
 .. _Recurrent_Transfer_Creation:
 
@@ -42,8 +43,13 @@ Structure
 The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>` 
 parameter, which specifies a self-projecting MappingProjection;  that is, one that projects from the mechanism's 
 `primary outputState <OutputState_Primary>` back to it `primary inputState <Mechanism_InputStates>`.  
-In all other respects the mechanism is identical to a standard `TransferMechanism`. 
+In all other respects the mechanism is identical to a standard `TransferMechanism`.  
 
+In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, 
+that decrements its `previous_input <TransferMechanism.previous_input>` value by the specified factor in each 
+`round of execution <LINK>`.  It also two additional outputStates:  an ENERGY and an ENTROPY outputState, that 
+each report the  respective values of the vector in it its `primary (RESULTS) outputState <OutputState_Primary>`.
+ 
 .. _Recurrent_Transfer_Execution:
 
 Execution
@@ -53,9 +59,11 @@ When a RecurrentTransferMechanism executes, it includes in its input the value o
 `primary outputState <OutputState_Primary>` from the last :ref:`round of execution <LINK>`.
 
 Like a `TransferMechanism`, the function used to update each element can be assigned using its
-`function <TransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed, it transforms its 
-input (including from the recurrent projection) using the specified function and parameters (see 
-`Transfer_Execution`), and returns the results in its outputStates.
+`function <TransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed,
+if its `decay <RecurrentTransferMechanism.decay>` parameter is specified (and is not 1.0), it 
+decays the value of its `previous_input <TransferMechanism.previous_input>` parameter by the
+specified factor.  It then transforms its input (including from the recurrent projection) using the specified 
+function and parameters (see `Transfer_Execution`), and returns the results in its outputStates.
 
 COMMENT
 
@@ -82,6 +90,7 @@ class RecurrentTransferError(Exception):
 
 RECURRENT_ENERGY = "energy"
 RECURRENT_ENTROPY = "entropy"
+DECAY = 'decay'
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
@@ -92,6 +101,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     function=Linear,                   \
     matrix=FULL_CONNECTIVITY_MATRIX,   \
     initial_value=None,                \
+    decay=None,                        \
     noise=0.0,                         \
     time_constant=1.0,                 \
     range=(float:min, float:max),      \
@@ -128,6 +138,10 @@ class RecurrentTransferMechanism(TransferMechanism):
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default FULL_CONNECTIVITY_MATRIX
         specifies the matrix to use for creating a `recurrent MappingProjection <Recurrent_Transfer_Structure>`, 
         or a MappingProjection to use. 
+
+    decay : number : default 1.0
+        specifies the amount by which to decrement its `previous_input <TransferMechanism.previous_input>`
+        in each round of execution.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
@@ -175,11 +189,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             context : str : default ''None''
                    string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
-    Returns
-    -------
-    instance of RecurrentTransferMechanism : RecurrentTransferMechanism
-
-
     Attributes
     ----------
 
@@ -195,6 +204,10 @@ class RecurrentTransferMechanism(TransferMechanism):
     recurrent_projection : MappingProjection
         a `MappingProjection` that projects from the mechanism's `primary outputState <OutputState_Primary>` 
         back to it `primary inputState <Mechanism_InputStates>`.
+
+    decay : float : default 1.0
+        determines the amount by which to multiply the `previous_input <TransferMechanism.previous_input>` value
+        in each round of execution.
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
@@ -221,9 +234,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         is set to the value of `range <TransferMechanism.range>` it exceeds.  If `function <TransferMechanism.function>`
         is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
 
+    previous_input : 1d np.array of floats
+        the value of the input on the previous round of execution, including the value of `recurrent_projection`. 
+
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of
-        `outputValue <TransferMechanism.outputValue>`.
+        `outputValue <TransferMechanism.outputValue>`.    
 
     COMMENT:
         CORRECTED:
@@ -237,12 +253,16 @@ class RecurrentTransferMechanism(TransferMechanism):
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
+        * `RECURRENT_ENERGY`, the :keyword:`value` of which is the energy of the result, calculated using `Energy`; 
+        * `RECURRENT_ENTROPY`, the :keyword:`value` of which is the entropy of the result, calculated using `Entropy`;
 
     outputValue : List[array(float64), float, float]
         a list with the following items:
         * **result** of the ``function`` calculation (value of `TRANSFER_RESULT` outputState);
         * **mean** of the result (``value`` of `TRANSFER_MEAN` outputState)
         * **variance** of the result (``value`` of `TRANSFER_VARIANCE` outputState)
+        * **energy** of the result (``value`` of `RECURRENT_ENERGY` outputState); uses the `Energy` Function
+        * **entropy** of the result (``value`` of `RECURRENT_ENTROPY` outputState); uses the `Entropy` Function
 
     time_scale :  TimeScale
         specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
@@ -259,6 +279,10 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
+    Returns
+    -------
+    instance of RecurrentTransferMechanism : RecurrentTransferMechanism
+
     """
     componentType = RECURRENT_TRANSFER_MECHANISM
 
@@ -273,8 +297,9 @@ class RecurrentTransferMechanism(TransferMechanism):
                  function=Linear,
                  matrix:tc.any(is_matrix, MappingProjection)=FULL_CONNECTIVITY_MATRIX,
                  initial_value=None,
-                 noise=0.0,
-                 time_constant=1.0,
+                 decay:is_numeric_or_none=None,
+                 noise:is_numeric_or_none=0.0,
+                 time_constant:is_numeric_or_none=1.0,
                  range=None,
                  time_scale=TimeScale.TRIAL,
                  params=None,
@@ -285,7 +310,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(matrix=matrix)
+        params = self._assign_args_to_param_dicts(matrix=matrix,
+                                                  decay=decay)
 
         super().__init__(
                  default_input_value=default_input_value,
@@ -301,7 +327,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate FUNCTION and mechanism params
+        """Validate shape and size of matrix and decay.
 
         """
 
@@ -331,6 +357,13 @@ class RecurrentTransferMechanism(TransferMechanism):
                     err_msg = "{} param for must be square".format(MATRIX, self.name)
                 raise RecurrentTransferError(err_msg)
 
+        if DECAY in target_set and target_set[DECAY] is not None:
+
+            decay = target_set[DECAY]
+            if not (0.0 <= decay and decay <= 1.0):
+                raise RecurrentTransferError("{} argument for {} ({}) must be from 0.0 to 1.0".
+                                             format(DECAY, self.name, decay))
+
     def _instantiate_attributes_after_function(self, context=None):
 
         super()._instantiate_attributes_after_function(context=context)
@@ -345,6 +378,24 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self.outputStates[RECURRENT_ENERGY].calculate = Energy(self.variable,
                                                            self.recurrent_projection.parameterStates[MATRIX]).function
+
+    def _execute(self,
+                 variable=None,
+                 runtime_params=None,
+                 clock=CentralClock,
+                 time_scale = TimeScale.TRIAL,
+                 context=None):
+        """Implement decay
+        """
+
+        if self.decay is not None and self.decay != 1.0:
+            self.previous_input *= self.decay
+
+        return super()._execute(variable=variable,
+                                runtime_params=runtime_params,
+                                clock=CentralClock,
+                                time_scale=time_scale,
+                                context=context)
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
@@ -365,3 +416,4 @@ def _instantiate_recurrent_projection(mech:Mechanism_Base,
                              receiver=mech,
                              matrix=matrix,
                              name = mech.name + ' recurrent projection')
+

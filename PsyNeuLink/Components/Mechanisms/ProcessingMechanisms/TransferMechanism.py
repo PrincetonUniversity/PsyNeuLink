@@ -254,7 +254,14 @@ class TransferMechanism(ProcessingMechanism_Base):
     ----------
 
     variable : value: default Transfer_DEFAULT_BIAS
-        the input to mechanism's ``function``.  :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        the input to mechanism's `function <TransferMechanism.function>`.
+        COMMENT:
+            :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        COMMENT
+    
+    size : int
+        length of the first (and only) item in `variable <TransferMechanism.variable>` 
+        (i.e., the vector transformed by `function <TransferMechanism.function>`.
 
     function : Function :  default Linear
         the function used to transform the input.
@@ -283,6 +290,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
         is set to the value of `range <TransferMechanism.range>` it exceeds.  If `function <TransferMechanism.function>`
         is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
+
+    previous_input : float
+        the value of the `variable <TransferMechanism.variable>` on the `previous round of execution <LINK>`.
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of
@@ -518,6 +528,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_attributes_before_function(context=context)
 
         self.initial_value = self.initial_value or self.variableInstanceDefault
+        self.size = len(self.variable[0])
 
     def _execute(self,
                 variable=None,

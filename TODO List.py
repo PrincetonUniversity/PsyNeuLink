@@ -2,7 +2,7 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# Bryn:
+ # Bryn:
 #  1) Programmatic creation of @property
 #  2) Plug & play
 
@@ -59,23 +59,6 @@
 #         one that either has either no outgoing projections, or none that receive LearningProjections
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
-
-# IMPLEMENT:  BogcazEtAl:
-#                 add Diti, Dpenalty, RR calculation, and add RR to return value
-#                 modify variable to accept drift_rate??
-#
-# IMPLEMENT:  Deferred init for control.
-
-# IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
-#           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
-#
-# IMPLEMENT: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
-
-# FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
-# FIX: printout of intitial_value with brackets (see devel_upstream on Quill)
-# FIX fix _update_parameter_state in Projection as in Mechanism
-
-# FIX: Flip names of Xxxx() and Xxxx_Base()
 
 # FIX / TEST: runtime_params:
 # COMMENT:
@@ -139,16 +122,30 @@
 # DOCUMENTATION: FOR TransferMechanism AND ALL OF ITS SUBCLASSES:
 #                       document that it uses only the first item of its variable arg/attrib (variable[0])
 
+# IMPLEMENT:  BogcazEtAl:
+#                 add Diti, Dpenalty, RR calculation, and add RR to return value
+#                 modify variable to accept drift_rate??
+#
+# IMPLEMENT:  Deferred init for control.
+
+# IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
+#           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
+#
+# IMPLEMENT: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
+
 # IMPLEMENT: LCA (Leaky Competitive Accumulator):
 #                  RecurrentTransferMechanism with inhibition argument instead of matrix, and
 #                     implements matrix that is constrained to be all negative weights = inhibition
 #                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
-# IMPLEMENT: TransferMechanism:  `size` arg/attribute that sets length of variable[0] on init
-#                                 refactor code (for it and all subclasses) to use self.size instead of len(variable[0])
+# FIX/IMPLEMENT: TransferMechanism:
+#                      - `size` arg/attribute that sets length of variable[0] on init refactor code
+#                           (for it and all subclasses) to use self.size instead of len(variable[0])
+#                      - is `previous_input` parameter documented in Attributes?
+#                      - rename outputStates (get rid of "TRANSFER_";  do same for RecurrentTransferMechanism
 
 # FIX: RecurrentTransferMechanism:
-#           Implement decay
+#           Document decay
 #           Add entropy
 #           Document Engery and Entropy in RecurrentTransferMechanism
 
@@ -156,6 +153,12 @@
 #        ADD TYPECHECKING FOR error_matrix AND THEN CLEAN UP _validate_params
 #        ADD _instantiate_attributes_before_function AND IF MappingProjection IS SPECIFIED FOR error_matrix,
 #                  convert to ParameterState (SEE Energy FOR EXAMPLE)
+
+# FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
+# FIX: printout of intitial_value with brackets (see devel_upstream on Quill)
+# FIX fix _update_parameter_state in Projection as in Mechanism
+
+# FIX: Flip names of Xxxx() and Xxxx_Base()
 
 # FIX: ALLOW Projection PARAM SPECIFICATION TO MAKE IT THROUGH Component._validate_params
 #         (e.g., FOR Energy AND Backpropagation FUNCTIONS)
