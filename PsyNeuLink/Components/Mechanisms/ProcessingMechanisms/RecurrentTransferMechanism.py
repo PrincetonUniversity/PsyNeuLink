@@ -339,21 +339,19 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_projection = self.matrix
 
         else:
-            self.recurrent_projection = _instantiate_recurrent_projection(self, self.matrix)
+            self.recurrent_projection = _instantiate_recurrent_projection(self, self.matrix, context=context)
 
         self.matrix = self.recurrent_projection.matrix
 
         self.outputStates[RECURRENT_ENERGY].calculate = Energy(self.variable,
                                                            self.recurrent_projection.parameterStates[MATRIX]).function
 
-        TEST_CONDTION = True
-
-
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 @tc.typecheck
 def _instantiate_recurrent_projection(mech:Mechanism_Base,
-                                      matrix:is_matrix=FULL_CONNECTIVITY_MATRIX):
+                                      matrix:is_matrix=FULL_CONNECTIVITY_MATRIX,
+                                      context=None):
     """Instantiate a MappingProjection from mech to itself
 
     """

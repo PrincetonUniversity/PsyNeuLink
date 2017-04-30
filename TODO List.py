@@ -136,6 +136,22 @@
 
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
 
+# DOCUMENTATION: FOR TransferMechanism AND ALL OF ITS SUBCLASSES:
+#                       document that it uses only the first item of its variable arg/attrib (variable[0])
+
+# IMPLEMENT: LCA (Leaky Competitive Accumulator):
+#                  RecurrentTransferMechanism with inhibition argument instead of matrix, and
+#                     implements matrix that is constrained to be all negative weights = inhibition
+#                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
+
+# IMPLEMENT: TransferMechanism:  `size` arg/attribute that sets length of variable[0] on init
+#                                 refactor code (for it and all subclasses) to use self.size instead of len(variable[0])
+
+# FIX: RecurrentTransferMechanism:
+#           Implement decay
+#           Add entropy
+#           Document Engery and Entropy in RecurrentTransferMechanism
+
 # FIX: Backpropagation AND Reinforcement:
 #        ADD TYPECHECKING FOR error_matrix AND THEN CLEAN UP _validate_params
 #        ADD _instantiate_attributes_before_function AND IF MappingProjection IS SPECIFIED FOR error_matrix,
