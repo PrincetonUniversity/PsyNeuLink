@@ -4363,7 +4363,7 @@ class Energy(ObjectiveFunction):
         else:
             matrix = self.matrix
 
-        result = -np.sum( np.dot(matrix * self._hollow_matrix, self.variable[0]))
+        result = -np.sum(self.variable * np.dot(matrix * self._hollow_matrix, self.variable))
 
         if self.normalize:
             result /= len(self.variable)
@@ -4551,10 +4551,22 @@ class Entropy(ObjectiveFunction):
         else:
             matrix = self.matrix
 
-        x = self.variable
-        # result = -np.sum( np.dot(matrix * self._hollow_matrix, self.variable[0]))
-        # http://stackoverflow.com/questions/21003272/difference-between-all-1d-points-in-array-with-python-diff
-        result = np.sum(np.subtract.outer(x,x)[np.tril_indices(x.shape[0],k=-1)])
+        i = self.variable
+        o = np.dot(matrix * self._hollow_matrix, self.variable)
+
+        # # SIMPLE HADAMARD DIFFERENCE OF INPUT AND OUTPUT
+        result = np.sum(np.abs(o - i))
+
+        # # ECULIDEAN DISTANCE:
+        # result = np.linalg.norm(y-x)
+
+        if self.normalize:
+            # if np.sum(denom):
+            # result /= np.sum(x,y)
+            result /= len(self.variable)
+
+        # # http://stackoverflow.com/questions/21003272/difference-between-all-1d-points-in-array-with-python-diff
+        # result = np.sum(np.subtract.outer(x,x)[np.tril_indices(x.shape[0],k=-1)])
 
         # Alternative version:
         # http://stackoverflow.com/questions/29745593/finding-differences-between-all-values-in-an-list
@@ -4573,9 +4585,6 @@ class Entropy(ObjectiveFunction):
         #
         # # Remove the diagonal elements for the final output
         # out = np.delete(sub_arr,rem_idx)
-
-        if self.normalize:
-            result /= len(self.variable)
 
         return result
 

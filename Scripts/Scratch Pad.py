@@ -754,10 +754,23 @@ class ScratchPadError(Exception):
 
 #region TEST Energy and Entropy @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-e = Entropy(variable_default=[0,0],
-           matrix=[[0,-1],[-1,0]])
+matrix = [[0,-1],[-1,0]]
+normalize = False
 
-print(e.function([1,1]))
+eng = Energy(variable_default=[0,0],
+             matrix=matrix,
+             normalize=normalize
+             )
+
+ent = Entropy(variable_default=[0,0],
+              matrix=matrix,
+              normalize=normalize
+              )
+
+activity = [10,10]
+
+print("Energy: ",eng.function(activity))
+print("Entopy: ", ent.function(activity))
 
 #endregion
 
