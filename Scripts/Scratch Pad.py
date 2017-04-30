@@ -625,13 +625,13 @@ my_auto = RecurrentTransferMechanism(default_input_value=[0,0,0],
                                      # matrix=RANDOM_CONNECTIVITY_MATRIX
                                      )
 
-my_auto = TransferMechanism(default_input_value=[0,0,0],
-                            # function=Logistic
-                            )
+# my_auto = TransferMechanism(default_input_value=[0,0,0],
+#                             # function=Logistic
+#                             )
 
-my_auto_matrix = MappingProjection(sender=my_auto,
-                                   receiver=my_auto,
-                                   matrix=FULL_CONNECTIVITY_MATRIX)
+# my_auto_matrix = MappingProjection(sender=my_auto,
+#                                    receiver=my_auto,
+#                                    matrix=FULL_CONNECTIVITY_MATRIX)
 
 # THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
 #                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection

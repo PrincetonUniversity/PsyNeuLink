@@ -4262,7 +4262,7 @@ class Energy(ObjectiveFunction):
         self.functionOutputType = None
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate error_matrix param
+        """Validate matrix param
 
         `matrix` argument must be one of the following
             - 2d list, np.ndarray or np.matrix
@@ -4312,6 +4312,13 @@ class Energy(ObjectiveFunction):
                                     format(param_type_string, MATRIX, self.name, matrix))
             rows = matrix.shape[0]
             cols = matrix.shape[1]
+            size = len(self.variable[0])
+
+            if rows != size:
+                raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
+                                    "it is {}x{}, but must be square matrix of size {}".
+                                    format(param_type_string, MATRIX, self.name, rows, cols, size))
+
             if rows != cols:
                 raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
                                     "must be a square matrix".
@@ -4320,6 +4327,8 @@ class Energy(ObjectiveFunction):
 
     def _instantiate_attributes_before_function(self, context=None):
 
+        size = len(self.variable[0])
+
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         if isinstance(self.matrix,MappingProjection):
@@ -4327,10 +4336,11 @@ class Energy(ObjectiveFunction):
         elif isinstance(self.matrix,ParameterState):
             pass
         else:
-            size = len(self.variable)
+
             self.matrix = get_matrix(self.matrix, size, size)
 
-        # FIX: MULTIPLY MATRIX BY HOLLOW MATRIX OF THE SAME SIZE
+        self._hollow_matrix = get_matrix(HOLLOW_MATRIX,size, size)
+        TEST_CONDTION = True
 
     def function(self,
                  variable=None,
@@ -4346,7 +4356,7 @@ class Energy(ObjectiveFunction):
         else:
             matrix = self.matrix
 
-        result = -np.sum(np.dot(matrix, self.variable[0]))
+        result = -np.sum( np.dot(matrix * self._hollow_matrix, self.variable[0]))
 
         if self.normalize:
             result /= len(self.variable)
