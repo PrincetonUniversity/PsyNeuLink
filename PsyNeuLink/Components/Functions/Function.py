@@ -2523,6 +2523,10 @@ def get_matrix(specification, rows=1, cols=1, context=None):
      Returns 2D np.array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
     """
 
+
+    if isinstance(specification, list):
+        specification = np.array(specification)
+
     # Matrix provided (and validated in _validate_params); convert to np.array
     if isinstance(specification, np.matrix):
         return np.array(specification)
@@ -4315,7 +4319,7 @@ class Energy(ObjectiveFunction):
                                     format(param_type_string, MATRIX, self.name, matrix))
             rows = matrix.shape[0]
             cols = matrix.shape[1]
-            size = len(self.variable[0])
+            size = len(np.squeeze(self.variable))
 
             if rows != size:
                 raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
@@ -4330,7 +4334,7 @@ class Energy(ObjectiveFunction):
 
     def _instantiate_attributes_before_function(self, context=None):
 
-        size = len(self.variable[0])
+        size = len(np.squeeze(self.variable))
 
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -4375,6 +4379,9 @@ class Entropy(ObjectiveFunction):
         variable_default=variableCLassDefault,  \
         matrix=HOLLOW_MATRIX,                   \
         normalize=False,                        \
+        params=None,                            \
+        owner=None,                             \
+        prefs=None                              \
         )
 
      .. _Entropy:
@@ -4500,7 +4507,7 @@ class Entropy(ObjectiveFunction):
                                     format(param_type_string, MATRIX, self.name, matrix))
             rows = matrix.shape[0]
             cols = matrix.shape[1]
-            size = len(self.variable[0])
+            size = len(np.squeeze(self.variable))
 
             if rows != size:
                 raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
@@ -4515,7 +4522,7 @@ class Entropy(ObjectiveFunction):
 
     def _instantiate_attributes_before_function(self, context=None):
 
-        size = len(self.variable[0])
+        size = len(np.squeeze(self.variable))
 
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -4544,6 +4551,7 @@ class Entropy(ObjectiveFunction):
         else:
             matrix = self.matrix
 
+        x = self.variable
         # result = -np.sum( np.dot(matrix * self._hollow_matrix, self.variable[0]))
         # http://stackoverflow.com/questions/21003272/difference-between-all-1d-points-in-array-with-python-diff
         result = np.sum(np.subtract.outer(x,x)[np.tril_indices(x.shape[0],k=-1)])
