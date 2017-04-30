@@ -620,48 +620,48 @@ class ScratchPadError(Exception):
 
 #region TEST AutoAssociator
 
-my_auto = RecurrentTransferMechanism(default_input_value=[0,0,0],
-                                     # matrix=RANDOM_CONNECTIVITY_MATRIX
-                                     )
-
-# my_auto = TransferMechanism(default_input_value=[0,0,0],
-#                             # function=Logistic
-#                             )
-
-# my_auto_matrix = MappingProjection(sender=my_auto,
-#                                    receiver=my_auto,
-#                                    matrix=FULL_CONNECTIVITY_MATRIX)
-
-# THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
-#                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
-my_process = process(pathway=[my_auto],
-
-# THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
-# my_process = process(pathway=[my_auto, my_auto_matrix],
-                     target=[0,0,0],
-                     learning=LEARNING
-                     )
-
-# my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
-#                      learning=LEARNING,
-#                      target=[0,0,0])
-
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
+# my_auto = RecurrentTransferMechanism(default_input_value=[0,0,0],
+#                                      # matrix=RANDOM_CONNECTIVITY_MATRIX
+#                                      )
 #
-input_list = {my_auto:[1,1,1]}
-target_list = {my_auto:[0,0,0]}
-
-# print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
-
-my_system = system(processes=[my_process],
-                   targets=[0,0,0])
-
-print(my_system.run(inputs=input_list,
-                    targets=target_list,
-                    num_executions=5))
+# # my_auto = TransferMechanism(default_input_value=[0,0,0],
+# #                             # function=Logistic
+# #                             )
+#
+# # my_auto_matrix = MappingProjection(sender=my_auto,
+# #                                    receiver=my_auto,
+# #                                    matrix=FULL_CONNECTIVITY_MATRIX)
+#
+# # THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
+# #                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
+# my_process = process(pathway=[my_auto],
+#
+# # THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
+# # my_process = process(pathway=[my_auto, my_auto_matrix],
+#                      target=[0,0,0],
+#                      learning=LEARNING
+#                      )
+#
+# # my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
+# #                      learning=LEARNING,
+# #                      target=[0,0,0])
+#
+# # print(my_process.execute([1,1,1]))
+# # print(my_process.execute([1,1,1]))
+# # print(my_process.execute([1,1,1]))
+# # print(my_process.execute([1,1,1]))
+# #
+# input_list = {my_auto:[1,1,1]}
+# target_list = {my_auto:[0,0,0]}
+#
+# # print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
+#
+# my_system = system(processes=[my_process],
+#                    targets=[0,0,0])
+#
+# print(my_system.run(inputs=input_list,
+#                     targets=target_list,
+#                     num_executions=5))
 
 #endregion
 
@@ -714,7 +714,6 @@ print(my_system.run(inputs=input_list,
 
 #endregion
 
-
 #region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Process import *
@@ -755,7 +754,10 @@ print(my_system.run(inputs=input_list,
 
 #region TEST Energy and Entropy @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
+e = Entropy(variable_default=[0,0],
+           matrix=[[0,-1],[-1,0]])
 
+print(e.function([1,1]))
 
 #endregion
 
@@ -795,7 +797,6 @@ print(my_system.run(inputs=input_list,
 # Stroop_process.execute()
 #
 # endregion
-
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
