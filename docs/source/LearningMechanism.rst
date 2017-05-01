@@ -4,7 +4,7 @@ Learning Mechanism
 .. toctree::
    :maxdepth: 2
 
-   LearningMechanism
+   LearningProjection
 
 .. automodule:: AdaptiveMechanisms.LearningMechanisms.LearningMechanism
    :members:

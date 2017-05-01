@@ -2,12 +2,12 @@ Utilities
 =========
 
 .. toctree::
-   :maxdepth: 1
+	:maxdepth: 1
 
-   Functions
-   Run
-   Log
-   Preferences
+	Functions
+	Run
+	Log
+	Preferences
 
 .. automodule:: Utilities
    :members:

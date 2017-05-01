@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Processing Mechanism" href="ProcessingMechanism.html"/>
-        <link rel="next" title="RecurrentTransferMechanism" href="RecurrentTransferMechanism.html"/>
+        <link rel="next" title="DDM" href="DDM.html"/>
         <link rel="prev" title="TransferMechanism" href="TransferMechanism.html"/> 
 
   
@@ -99,9 +99,12 @@
 <li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DDM.html">DDM</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#creating-a-processingmechanism">Creating a ProcessingMechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#execution">Execution</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a></li>
@@ -190,8 +193,8 @@ assigned a custom function.</p>
 <div class="section" id="creating-an-integratormechanism">
 <span id="integratormechanism-creation"></span><h2>Creating an IntegratorMechanism<a class="headerlink" href="#creating-an-integratormechanism" title="Permalink to this headline">¶</a></h2>
 <p>An IntegratorMechanism can be created directly by calling its constructor, or using the
-<a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism()</span></code></a> function and specifying INTEGRATOR_MECHANISM as its <strong>mech_spec</strong>
-argument.  Its function is specified in the <strong>function</strong> argument, which can be parameterized by calling its
+<a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref py py-func docutils literal"><span class="pre">mechanism</span></code></a> function and specifying <code class="xref std std-keyword docutils literal"><span class="pre">IntegratorMechanism</span></code> as its <code class="xref any docutils literal"><span class="pre">mech_spec</span></code>
+argument.  Its function is specified in the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> argument, which can be parameterized by calling its
 constructor with parameter values:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_time_averaging_mechanism</span> <span class="o">=</span> <span class="n">IntegratorMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Integrator</span><span class="p">(</span><span class="n">integration_type</span><span class="o">=</span><span class="n">ADAPTIVE</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
 </pre></div>
@@ -269,7 +272,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dt id="IntegratorMechanism.IntegratorMechanism.name">
 <code class="descname">name</code><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default IntegratorMechanism-&lt;index&gt;</em> &#8211; the name of the mechanism.
-Specified in the :keyword:<strong>name</strong> argument of the constructor for the mechanism;
+Specified in the <code class="xref std std-keyword docutils literal"><span class="pre">name</span></code> argument of the constructor for the mechanism;
 if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
@@ -278,7 +281,7 @@ if not is specified, a default is assigned by <code class="xref any docutils lit
 <dt id="IntegratorMechanism.IntegratorMechanism.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
-Specified in the <strong>prefs</strong> argument of the constructor for the mechanism;
+Specified in the <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.prefs" title="IntegratorMechanism.IntegratorMechanism.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the mechanism;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -286,7 +289,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="class">
 <dt id="IntegratorMechanism.IntegratorMechanism.Integrator">
 <em class="property">class </em><code class="descname">Integrator</code><span class="sig-paren">(</span><em>variable_default=None</em>, <em>rate=1.0</em>, <em>integration_type=CONSTANT</em>, <em>noise=0.0</em>, <em>time_step_size=1.0</em>, <em>initializer</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism.Integrator" title="Permalink to this definition">¶</a></dt>
-<dd><p id="integrator">Integrate current value of <a class="reference internal" href="Function.html#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> with its prior value.</p>
+<dd><p id="integrator">Integrate current value of <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.variable" title="IntegratorMechanism.IntegratorMechanism.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> with its prior value.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -296,10 +299,10 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 integrated.</li>
 <li><strong>rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the rate of integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.rate" title="IntegratorMechanism.IntegratorMechanism.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
-<li><strong>integration_type</strong> (<em>CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT</em>) &#8211; specifies type of integration (see <a class="reference internal" href="Function.html#Function.Integrator.integration_type" title="Function.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a> for details).</li>
-<li><strong>noise</strong> (<em>float, PsyNeuLink Function, list or 1d np.array : default 0.0</em>) &#8211; specifies random value to be added in each call to <a class="reference internal" href="Function.html#Function.Integrator.function" title="Function.Integrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
-<a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.noise" title="IntegratorMechanism.IntegratorMechanism.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>time_step_size</strong> (<em>float : default 0.0</em>) &#8211; determines the timing precision of the integration process when <a class="reference internal" href="Function.html#Function.Integrator.integration_type" title="Function.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a>
+<li><strong>integration_type</strong> (<em>CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT</em>) &#8211; specifies type of integration (see <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.integration_type" title="IntegratorMechanism.IntegratorMechanism.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a> for details).</li>
+<li><strong>noise</strong> (<em>float, PsyNeuLink Function, list or 1d np.array : default 0.0</em>) &#8211; specifies random value to be added in each call to <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.function" title="IntegratorMechanism.IntegratorMechanism.Integrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
+<a class="reference internal" href="Function.html#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
+<li><strong>time_step_size</strong> (<em>float : default 0.0</em>) &#8211; determines the timing precision of the integration process when <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.integration_type" title="IntegratorMechanism.IntegratorMechanism.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a>
 is set to DIFFUSION (see <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.time_step_size" title="IntegratorMechanism.IntegratorMechanism.Integrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for details.</li>
 <li><strong>float, list or 1d np.array</strong> (<a class="reference internal" href="Function.html#Function.Integrator.initializer" title="Function.Integrator.initializer"><em>initializer</em></a>) &#8211; specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable_default</span></code> (see <a class="reference internal" href="Function.html#Function.Integrator.initializer" title="Function.Integrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
@@ -326,8 +329,8 @@ added to the prior value;  if it is an array, each element is independently inte
 <code class="descname">rate</code><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism.Integrator.rate" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float or 1d np.array</em> &#8211; determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
 all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-applies to all elements of <a class="reference internal" href="Function.html#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if it has more than one element, each element
-applies to the corresponding element of <a class="reference internal" href="Function.html#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+applies to all elements of <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.variable" title="IntegratorMechanism.IntegratorMechanism.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if it has more than one element, each element
+applies to the corresponding element of <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.variable" title="IntegratorMechanism.IntegratorMechanism.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -338,16 +341,16 @@ applies to the corresponding element of <a class="reference internal" href="Func
 <dt>specifies type of integration:</dt>
 <dd><ul class="first last simple">
 <li><strong>CONSTANT</strong>: <a class="reference internal" href="Function.html#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> + <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.rate" title="IntegratorMechanism.IntegratorMechanism.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> +
-<a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.noise" title="IntegratorMechanism.IntegratorMechanism.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> (ignores <a class="reference internal" href="Function.html#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>);</li>
+<a class="reference internal" href="Function.html#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> (ignores <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.variable" title="IntegratorMechanism.IntegratorMechanism.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>);</li>
 <li><strong>SIMPLE</strong>: <a class="reference internal" href="Function.html#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> + <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.rate" title="IntegratorMechanism.IntegratorMechanism.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> *
-<code class="xref any docutils literal"><span class="pre">variable</span></code> + <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.noise" title="IntegratorMechanism.IntegratorMechanism.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>;</li>
-<li><strong>ADAPTIVE</strong>: (1-<a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.rate" title="IntegratorMechanism.IntegratorMechanism.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) * <a class="reference internal" href="Function.html#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> +
-(<a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.rate" title="IntegratorMechanism.IntegratorMechanism.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> * <a class="reference internal" href="Function.html#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>) + <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.noise" title="IntegratorMechanism.IntegratorMechanism.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>
+<code class="xref any docutils literal"><span class="pre">variable</span></code> + <a class="reference internal" href="Function.html#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>;</li>
+<li><strong>ADAPTIVE</strong>: (1-<a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.rate" title="IntegratorMechanism.IntegratorMechanism.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) * <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.variable" title="IntegratorMechanism.IntegratorMechanism.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> +
+(<a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.rate" title="IntegratorMechanism.IntegratorMechanism.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> * <a class="reference internal" href="Function.html#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>) + <a class="reference internal" href="Function.html#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>
 (<a class="reference external" href="https://en.wikipedia.org/wiki/Wiener_filter">Weiner filter</a> or
 <a class="reference external" href="https://en.wikipedia.org/wiki/Delta_rule">Delta rule</a>);</li>
 <li><strong>DIFFUSION</strong>: <a class="reference internal" href="Function.html#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> +
 (<a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.rate" title="IntegratorMechanism.IntegratorMechanism.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> * <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.previous_value" title="IntegratorMechanism.IntegratorMechanism.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> * <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.time_step_size" title="IntegratorMechanism.IntegratorMechanism.Integrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a>) +
-√(<a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.time_step_size" title="IntegratorMechanism.IntegratorMechanism.Integrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> * <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.noise" title="IntegratorMechanism.IntegratorMechanism.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> * Gaussian(0,1))
+√(<a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.time_step_size" title="IntegratorMechanism.IntegratorMechanism.Integrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> * <a class="reference internal" href="Function.html#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> * Gaussian(0,1))
 (<a class="reference external" href="https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model">Drift Diffusion Model</a>).</li>
 </ul>
 </dd>
@@ -357,9 +360,9 @@ applies to the corresponding element of <a class="reference internal" href="Func
 <dl class="attribute">
 <dt id="IntegratorMechanism.IntegratorMechanism.Integrator.noise">
 <code class="descname">noise</code><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism.Integrator.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d np.array</em> &#8211; specifies random value to be added in each call to <a class="reference internal" href="Function.html#Function.Integrator.function" title="Function.Integrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
+<dd><p><em>float, function, list, or 1d np.array</em> &#8211; specifies random value to be added in each call to <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.function" title="IntegratorMechanism.IntegratorMechanism.Integrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
 <p>If noise is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>. If noise is
-specified as a single float or function, while <a class="reference internal" href="Function.html#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or array,
+specified as a single float or function, while <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.variable" title="IntegratorMechanism.IntegratorMechanism.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or array,
 noise will be applied to each variable element. In the case of a noise function, this means that the function
 will be executed separately for each variable element.</p>
 <p>Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
@@ -373,8 +376,8 @@ list or array of these), then the noise will simply be an offset that remains th
 <dl class="attribute">
 <dt id="IntegratorMechanism.IntegratorMechanism.Integrator.time_step_size">
 <code class="descname">time_step_size</code><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism.Integrator.time_step_size" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; determines the timing precision of the integration process when <a class="reference internal" href="Function.html#Function.Integrator.integration_type" title="Function.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a>
-is set to DIFFUSION (and used to scale the <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.noise" title="IntegratorMechanism.IntegratorMechanism.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> parameter appropriately).</p>
+<dd><p><em>float</em> &#8211; determines the timing precision of the integration process when <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.integration_type" title="IntegratorMechanism.IntegratorMechanism.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a>
+is set to DIFFUSION (and used to scale the <a class="reference internal" href="Function.html#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> parameter appropriately).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -383,7 +386,7 @@ is set to DIFFUSION (and used to scale the <a class="reference internal" href="#
 <dd><p><em>1d np.array or list</em> &#8211; determines the starting value for integration (i.e., the value to which
 <a class="reference internal" href="Function.html#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
 <p>If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>. If
-initializer is specified as a single float or function, while <a class="reference internal" href="Function.html#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or
+initializer is specified as a single float or function, while <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.variable" title="IntegratorMechanism.IntegratorMechanism.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or
 array, initializer will be applied to each variable element. In the case of an initializer function, this means
 that the function will be executed separately for each variable element.</p>
 </dd></dl>
@@ -391,7 +394,7 @@ that the function will be executed separately for each variable element.</p>
 <dl class="attribute">
 <dt id="IntegratorMechanism.IntegratorMechanism.Integrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism.Integrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default variableClassDefault</em> &#8211; stores previous value with which <a class="reference internal" href="Function.html#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+<dd><p><em>1d np.array : default variableClassDefault</em> &#8211; stores previous value with which <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.variable" title="IntegratorMechanism.IntegratorMechanism.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -403,7 +406,7 @@ that the function will be executed separately for each variable element.</p>
 <dl class="attribute">
 <dt id="IntegratorMechanism.IntegratorMechanism.Integrator.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism.Integrator.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.prefs" title="IntegratorMechanism.IntegratorMechanism.Integrator.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -411,7 +414,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="method">
 <dt id="IntegratorMechanism.IntegratorMechanism.Integrator.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism.Integrator.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return: some fraction of <a class="reference internal" href="Function.html#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> combined with some fraction of <a class="reference internal" href="Function.html#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (see <a class="reference internal" href="Function.html#Function.Integrator.integration_type" title="Function.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a>).</p>
+<dd><p>Return: some fraction of <a class="reference internal" href="Function.html#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> combined with some fraction of <a class="reference internal" href="Function.html#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (see <a class="reference internal" href="#IntegratorMechanism.IntegratorMechanism.Integrator.integration_type" title="IntegratorMechanism.IntegratorMechanism.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a>).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -449,7 +452,7 @@ arguments of the constructor.</li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="RecurrentTransferMechanism.html" class="btn btn-neutral float-right" title="RecurrentTransferMechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="DDM.html" class="btn btn-neutral float-right" title="DDM" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="TransferMechanism.html" class="btn btn-neutral" title="TransferMechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

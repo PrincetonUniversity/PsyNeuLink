@@ -286,13 +286,13 @@ class MappingProjection(Projection_Base):
 
     name : str : default MappingProjection-<index>
         the name of the MappingProjection.
-        Specified in the **name** argument of the constructor for the projection;
+        Specified in the `name` argument of the constructor for the projection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for projection.
-        Specified in the **prefs** argument of the constructor for the projection;
+        Specified in the `prefs` argument of the constructor for the projection;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -409,7 +409,7 @@ class MappingProjection(Projection_Base):
             else:
                 projection_string = 'projection'
 
-            if self._matrix_spec in {IDENTITY_MATRIX, HOLLOW_MATRIX}:
+            if self._matrix_spec in {IDENTITY_MATRIX, OFF_DIAGNOAL_MATRIX}:
                 # Identity matrix is not reshapable
                 raise ProjectionError("Output length ({}) of \'{}{}\' from {} to mechanism \'{}\'"
                                       " must equal length of it inputState ({}) to use {}".

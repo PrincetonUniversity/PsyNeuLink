@@ -6,10 +6,9 @@ Processing Mechanism
 
    TransferMechanism
    IntegratorMechanism
-   RecurrentTransferMechanism
    DDM
    ObjectiveMechanism
 
-.. automodule:: ProcessingMechansms.ProcessingMechanism
+.. automodule:: ProcessingMechanism
    :members:
    :exclude-members: ProcessingMechanism_Base, MechanismTuple, MechanismList, random
