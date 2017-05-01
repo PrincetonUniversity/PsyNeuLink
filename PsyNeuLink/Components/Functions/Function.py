@@ -4431,7 +4431,7 @@ class Distance(ObjectiveFunction):
 
     componentName = DISTANCE_FUNCTION
 
-    variableClassDefault = [0]
+    variableClassDefault = [[0],[0]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -4439,7 +4439,7 @@ class Distance(ObjectiveFunction):
     def __init__(self,
                  variable_default=variableClassDefault,
                  matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
-                 metric:tc.any(EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY)=DIFFERENCE,
+                 metric:tc.enum(EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY)=DIFFERENCE,
                  normalize:bool=False,
                  params=None,
                  owner=None,
@@ -4557,11 +4557,24 @@ class Distance(ObjectiveFunction):
         i = self.variable
         o = np.dot(matrix * self._hollow_matrix, self.variable)
 
-        # # SIMPLE HADAMARD DIFFERENCE OF INPUT AND OUTPUT
-        result = np.sum(np.abs(o - i))
+        # SIMPLE HADAMARD DIFFERENCE OF INPUT AND OUTPUT
+        if self.metric is DIFFERENCE:
+            result = np.sum(np.abs(o - i))
 
-        # # ECULIDEAN DISTANCE:
-        # result = np.linalg.norm(y-x)
+        # EUCLIDEAN DISTANCE:
+        elif self.metric is EUCLIDEAN:
+            result = np.linalg.norm(y-x)
+
+        # CROSS_ENTROPY:
+        elif self.metric is CROSS_ENTROPY:
+
+            # import warnings
+            # warnings.filterwarnings('error')
+            # try:
+            #     result = np.sum(i*np.log(o))
+            # except (Warning):
+
+            result = np.sum(i*np.log(o))
 
         if self.normalize:
             # if np.sum(denom):
