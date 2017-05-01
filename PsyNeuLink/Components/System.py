@@ -708,14 +708,14 @@ class System_Base(System):
 
     name : str : default System-<index>
         the name of the system;
-        Specified in the **name** argument of the constructor for the system;
+        Specified in the `name` argument of the constructor for the system;
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
 
     prefs : PreferenceSet or specification dict : System.classPreferences
         the `PreferenceSet` for system.
-        Specified in the **prefs** argument of the constructor for the system;  if it is not specified, a default is
+        Specified in the `prefs` argument of the constructor for the system;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :ref:`PreferenceSet <LINK>` for details).
 
@@ -1540,6 +1540,9 @@ class System_Base(System):
                                   "must be a LearningMechanism or an ObjectiveMechanism".
                                   format(sender_mech))
 
+
+            # MODIFIED 3/12/17 NEW:
+
             # MANAGE TARGET ObjectiveMechanism FOR INTERNAL or TERMINAL CONVERGENCE of PATHWAYS
 
             # If sender_mech is an ObjectiveMechanism, and:
@@ -1669,14 +1672,12 @@ class System_Base(System):
                         # Reassign error_matrix to one for the projection to which the error_signal_mech projects
                         learning_mech.function_object.error_matrix = \
                             error_signal_mech.outputStates['learning_signal'].sendsToProjections[0].receiver
-                        # Delete error_matrix parameterState for error_matrix
-                        #    (since its value, which was the IDENTITY_MATRIX, is now itself ParameterState,
-                        #     and Components are not allowed  as the value of a ParameterState
-                        #     -- see ParameterState._instantiate_parameter_state())
                         if 'error_matrix' in learning_mech.parameterStates:
                             del learning_mech.parameterStates['error_matrix']
 
                         sender_mech = error_signal_mech
+            # MODIFIED 3/12/17 END
+
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.inputStates.values():

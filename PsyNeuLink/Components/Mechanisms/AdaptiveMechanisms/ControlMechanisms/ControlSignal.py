@@ -307,7 +307,7 @@ class ControlSignal(OutputState):
 
     name : str : default <State subclass>-<index>
         name of the outputState.
-        Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
+        Specified in the `name` argument of the constructor for the outputState.  If not is specified, a default is
         assigned by the StateRegistry of the mechanism to which the outputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
@@ -319,7 +319,7 @@ class ControlSignal(OutputState):
 
     prefs : PreferenceSet or specification dict : State.classPreferences
         the `PreferenceSet` for the outputState.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
+        Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 

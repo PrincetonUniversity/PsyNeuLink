@@ -560,13 +560,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     name : str : default LearningProjection-<index>
         the name of the LearningMechanism.
-        Specified in the **name** argument of the constructor for the projection;
+        Specified in the `name` argument of the constructor for the projection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for projection.
-        Specified in the **prefs** argument of the constructor for the projection;
+        Specified in the `prefs` argument of the constructor for the projection;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -610,7 +610,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # self.init_args = locals().copy()
         # self.init_args['context'] = self
         # self.init_args['name'] = name
-        # delete self.init_args[ERROR_SOURCE]
+        # delete self.init_args[ERROR_MATRIX]
 
         # # Flag for deferred initialization
         # self.value = DEFERRED_INITIALIZATION
@@ -622,7 +622,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
-        TEST = True
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has exactly three items: activation_input, activation_output and error_signal
