@@ -2,7 +2,7 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
- # Bryn:
+# Bryn:
 #  1) Programmatic creation of @property
 #  2) Plug & play
 
@@ -32,7 +32,6 @@
 #  10) DOCUMENTATION: INCLUDE EXAMPLES "INLINE" OR IN THEIR OWN SECTION AT THE END?
 #  11) • SHOULD COMPONENT NAMES HAVE SPACES OF UNDERSCORES?
 #  12) • SHOULD learning_rate FOR LearningProjection SET SLOPE OF function OR DIRECTLY MULTIPLY WEIGHTS?
-#  13) HOW TO HANDLE RECURRENT PROJECTIONS RE: LEARNING?
 
 # TASKS:
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
@@ -44,7 +43,7 @@
 #  6) IMPLEMENT Recurrent layer / KWTA??
 #  7) IMPLEMENT TD learning
 #  8) IMPLEMENT CLS / NMPH
-#  9) IMPLEMENT Conflict (stability / distance)
+#  9) IMPLEMENT Conflict (energy / entropy)
 # 10) IMPLEMENT TensorFLow wrapper
 # 11) IMPLEMENT Production System model (using scheduler??)
 # 12) IMPLEMENT LEABRA
@@ -59,6 +58,25 @@
 #         one that either has either no outgoing projections, or none that receive LearningProjections
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
+
+# IMPLEMENT:  BogcazEtAl:
+#                 add Diti, Dpenalty, RR calculation, and add RR to return value
+#                 modify variable to accept drift_rate??
+#
+# IMPLEMENT:  Deferred init for control.
+
+# IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
+#           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
+
+# FIX:  Stroop Model Learning Test Script:
+#            Why is error_matrix being assigned as parameterState on TERMINAL mechanism?
+#                   getting done in LearningAux LC?
+# FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
+# FIX: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
+# FIX: printout of intial_value (see devel_upstream on Quill)
+# FIX fix _update_parameter_state in Projection as in Mechanism
+
+# FIX: Flip names of Xxxx() and Xxxx_Base()
 
 # FIX / TEST: runtime_params:
 # COMMENT:
@@ -118,55 +136,6 @@
 # DOCUMENTATION: FUNCTION_PARAMS in runtime_params example
 
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
-
-# DOCUMENTATION: FOR TransferMechanism AND ALL OF ITS SUBCLASSES:
-#                       document that it uses only the first item of its variable arg/attrib (variable[0])
-
-# IMPLEMENT:  BogcazEtAl:
-#                 add Diti, Dpenalty, RR calculation, and add RR to return value
-#                 modify variable to accept drift_rate??
-#
-# IMPLEMENT:  Deferred init for control.
-
-# IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
-#           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
-#
-# IMPLEMENT: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
-
-# IMPLEMENT: LCA (Leaky Competitive Accumulator):
-#                  RecurrentTransferMechanism with inhibition argument instead of matrix, and
-#                     implements matrix that is constrained to be all negative weights = inhibition
-#                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
-
-# FIX: Stability and Distance:  name is getting set to TYPE rather than to SUBTYPE name
-#                               DOCUMENT args and attribs
-
-# FIX/IMPLEMENT: TransferMechanism:
-#                      - `size` arg/attribute that sets length of variable[0] on init refactor code
-#                           (for it and all subclasses) to use self.size instead of len(variable[0])
-#                      - rename outputStates (get rid of "TRANSFER_";  do same for RecurrentTransferMechanism
-#                      - allow OutputStates to be specifiable using a list in an **outputs** arg
-
-# FIX: Backpropagation AND Reinforcement:
-#        ADD TYPECHECKING FOR error_matrix AND THEN CLEAN UP _validate_params
-#        ADD _instantiate_attributes_before_function AND IF MappingProjection IS SPECIFIED FOR error_matrix,
-#                  convert to ParameterState (SEE Stability FOR EXAMPLE)
-
-# FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
-# FIX: printout of intitial_value with brackets (see devel_upstream on Quill)
-# FIX fix _update_parameter_state in Projection as in Mechanism
-
-# FIX: Flip names of Xxxx() and Xxxx_Base()
-
-# FIX: ALLOW Projection PARAM SPECIFICATION TO MAKE IT THROUGH Component._validate_params
-#         (e.g., FOR Stability AND Backpropagation FUNCTIONS)
-
-# FIX: SEARCH FOR "` argument" and replace with "**<arg>** argument"
-# FIX: SEARCH FOR ALL MATRIX KEYWORDS AND REPLACE WITH `MATRIX KEYWORD`
-# FIX: DOCUMENTATION OF RESULTS OF TransferMechanism EXECUTION (AND OTHERS), REGARDING WHAT GOES IN THE value ATTRIBUTE
-
-# FIX: Component._validate_params: if param is a string, check for keywords before raising excpetion
-#                                  (will require consoliation of all keywords?)
 
 # TEST: Autoassociative SOFT_CLAMP
 # TEST: Autoassociative learning:  fix [auto_mech] version

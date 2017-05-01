@@ -6,6 +6,6 @@ TransferMechanism
 
    TransferMechanism
 
-.. automodule:: ProcessingMechanisms.TransferMechanism
+.. automodule:: TransferMechanism
    :members:
    :exclude-members: random
