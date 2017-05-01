@@ -44,7 +44,7 @@
 #  6) IMPLEMENT Recurrent layer / KWTA??
 #  7) IMPLEMENT TD learning
 #  8) IMPLEMENT CLS / NMPH
-#  9) IMPLEMENT Conflict (energy / distance)
+#  9) IMPLEMENT Conflict (stability / distance)
 # 10) IMPLEMENT TensorFLow wrapper
 # 11) IMPLEMENT Production System model (using scheduler??)
 # 12) IMPLEMENT LEABRA
@@ -138,7 +138,7 @@
 #                     implements matrix that is constrained to be all negative weights = inhibition
 #                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
-# FIX: Energy and Distance:  name is getting get to TYPY rather than SUBTYPE name
+# FIX: Stability and Distance:  name is getting get to TYPY rather than SUBTYPE name
 #               DOCUMENT args and attribs
 
 # FIX/IMPLEMENT: TransferMechanism:
@@ -155,7 +155,7 @@
 # FIX: Backpropagation AND Reinforcement:
 #        ADD TYPECHECKING FOR error_matrix AND THEN CLEAN UP _validate_params
 #        ADD _instantiate_attributes_before_function AND IF MappingProjection IS SPECIFIED FOR error_matrix,
-#                  convert to ParameterState (SEE Energy FOR EXAMPLE)
+#                  convert to ParameterState (SEE Stability FOR EXAMPLE)
 
 # FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
 # FIX: printout of intitial_value with brackets (see devel_upstream on Quill)
@@ -164,7 +164,7 @@
 # FIX: Flip names of Xxxx() and Xxxx_Base()
 
 # FIX: ALLOW Projection PARAM SPECIFICATION TO MAKE IT THROUGH Component._validate_params
-#         (e.g., FOR Energy AND Backpropagation FUNCTIONS)
+#         (e.g., FOR Stability AND Backpropagation FUNCTIONS)
 
 # FIX: SEARCH FOR "` argument" and replace with "**<arg>** argument"
 # FIX: SEARCH FOR ALL MATRIX KEYWORDS AND REPLACE WITH `MATRIX KEYWORD`
