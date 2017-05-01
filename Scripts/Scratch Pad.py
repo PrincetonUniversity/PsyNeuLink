@@ -3,7 +3,7 @@ import numpy as np
 # GLOBALS:
 from PsyNeuLink.Globals.Keywords import *
 # FUNCTIONS:
-from PsyNeuLink.Components.Functions.Function import Logistic, Linear, Energy, Entropy
+from PsyNeuLink.Components.Functions.Function import Logistic, Linear, Energy, Distance
 
 # STATES:
 # from PsyNeuLink.Components.States.OutputState import OutputState
@@ -752,9 +752,9 @@ class ScratchPadError(Exception):
 
 #endregion  ********
 
-#region TEST Energy and Entropy @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Energy and Distance @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-e = Entropy(variable_default=[0,0],
+e = Distance(variable_default=[0,0],
            matrix=[[0,-1],[-1,0]])
 
 print(e.function([1,1]))

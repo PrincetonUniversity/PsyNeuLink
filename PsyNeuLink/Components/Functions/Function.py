@@ -38,7 +38,7 @@ Distribution Functions:
   
 Objective Functions:
   * `Energy`
-  * `Entropy`
+  * `Distance`
 
 Learning Functions:
   * `Reinforcement`
@@ -146,7 +146,7 @@ Class Reference
 #            'GammaDist',
 #            'WaldDist',
 #            'Energy`,
-#            'Entropy`,
+#            'Distance`,
 #            'Reinforcement',
 #            'BackPropagation',
 #            'FunctionError',
@@ -4373,22 +4373,23 @@ class Energy(ObjectiveFunction):
 # endregion
 
 
-class Entropy(ObjectiveFunction):
+class Distance(ObjectiveFunction):
     """
-     Entropy(                                   \
+     Distance(                                  \
         variable_default=variableCLassDefault,  \
         matrix=HOLLOW_MATRIX,                   \
+        metric=EUCLIDEAN                        \
         normalize=False,                        \
         params=None,                            \
         owner=None,                             \
         prefs=None                              \
         )
 
-     .. _Entropy:
+     .. _Distance:
 
-     Return the entropy of a vector based an a weight matrix from each element to every other element in the vector
+     Return the distance of a vector based an a weight matrix from each element to every other element in the vector
        
-     Entropy, in this context, is defined as the sum of the differences between each element of the vector
+     Distance, in this context, is defined as the sum of the differences between each element of the vector
      and each of the others, weighted by its connection with them. 
 
      Arguments
@@ -4428,7 +4429,7 @@ class Entropy(ObjectiveFunction):
     from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
     from PsyNeuLink.Components.States.ParameterState import ParameterState
 
-    componentName = ENTROPY_FUNCTION
+    componentName = DISTANCE_FUNCTION
 
     variableClassDefault = [0]
 
@@ -4438,6 +4439,7 @@ class Entropy(ObjectiveFunction):
     def __init__(self,
                  variable_default=variableClassDefault,
                  matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
+                 metric:tc.any(EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY)=DIFFERENCE,
                  normalize:bool=False,
                  params=None,
                  owner=None,
@@ -4445,6 +4447,7 @@ class Entropy(ObjectiveFunction):
                  context=componentName + INITIALIZING):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
+                                                  metric=metric,
                                                   normalize=normalize,
                                                   params=params)
 

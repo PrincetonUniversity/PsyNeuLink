@@ -44,7 +44,7 @@
 #  6) IMPLEMENT Recurrent layer / KWTA??
 #  7) IMPLEMENT TD learning
 #  8) IMPLEMENT CLS / NMPH
-#  9) IMPLEMENT Conflict (energy / entropy)
+#  9) IMPLEMENT Conflict (energy / distance)
 # 10) IMPLEMENT TensorFLow wrapper
 # 11) IMPLEMENT Production System model (using scheduler??)
 # 12) IMPLEMENT LEABRA
@@ -148,8 +148,8 @@
 
 # FIX: RecurrentTransferMechanism:
 #           Document decay
-#           Add entropy
-#           Document Engery and Entropy in RecurrentTransferMechanism
+#           Add distance
+#           Document Engery and Distance in RecurrentTransferMechanism
 
 # FIX: Backpropagation AND Reinforcement:
 #        ADD TYPECHECKING FOR error_matrix AND THEN CLEAN UP _validate_params
