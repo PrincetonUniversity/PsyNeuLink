@@ -894,7 +894,7 @@ class Process_Base(Process):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate initial_values args
            Note: validation of target (for learning) is deferred until _instantiate_target since,
-                 if it doesn't have a TARGET mechanism (see _check_for_target_mechanism), 
+                 if it doesn't have a TARGET mechanism (see _check_for_target_mechanism),
                  it will not need a target.
         """
 
@@ -1421,7 +1421,7 @@ class Process_Base(Process):
 
                     # Get sender for projection
                     sender_mech=pathway[i-1][OBJECT_ITEM]
-                    
+
                     # Get receiver for projection
                     try:
                         receiver_mech=pathway[i+1][OBJECT_ITEM]
@@ -2009,6 +2009,8 @@ class Process_Base(Process):
                 time_scale=None,
                 # time_scale=TimeScale.TRIAL,
                 runtime_params=None,
+                termination_processing=None,
+                termination_learning=None,
                 context=None
                 ):
         """Execute the mechanisms specified in the process` `pathway` attribute.
