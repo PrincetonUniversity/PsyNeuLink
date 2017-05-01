@@ -455,7 +455,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                             error_derivative_fct=activation_derivative,
                                             # MODIFIED 3/5/17 END
                                             error_matrix=error_matrix,
-                                            learning_rate=learning_rate)
+                                            learning_rate=learning_rate,
+                                            context=context)
 
     else:
         raise LearningAuxilliaryError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
@@ -499,7 +500,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                      names=['SAMPLE','TARGET'],
                                                      function=LinearCombination(weights=[[-1], [1]]),
                                                      params=object_mech_params,
-                                                     name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM)
+                                                     name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM,
+                                                     context=context)
 
             objective_mechanism._role = LEARNING
             objective_mechanism._learning_role = TARGET
@@ -539,7 +541,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                      error_signal],
                                            error_source=error_source,
                                            function=learning_function,
-                                           name = lc.activation_mech_projection.name + " " +LEARNING_MECHANISM)
+                                           name = lc.activation_mech_projection.name + " " +LEARNING_MECHANISM,
+                                           context=context)
 
     # IMPLEMENTATION NOTE:
     # ADD ARGUMENTS TO LearningMechanism FOR activation_input AND activation_output, AND THEN INSTANTIATE THE
@@ -550,13 +553,15 @@ def _instantiate_learning_components(learning_projection, context=None):
     MappingProjection(sender=lc.activation_mech_input,
                       receiver=learning_mechanism.inputStates[ACTIVATION_INPUT],
                       matrix=IDENTITY_MATRIX,
-                      name = lc.activation_mech_input.owner.name + ' to ' + ACTIVATION_INPUT)
+                      name = lc.activation_mech_input.owner.name + ' to ' + ACTIVATION_INPUT,
+                      context=context)
 
     # Assign MappingProjection from activation_mech_output to LearningMechanism's ACTIVATION_OUTPUT inputState
     MappingProjection(sender=lc.activation_mech_output,
                       receiver=learning_mechanism.inputStates[ACTIVATION_OUTPUT],
                       matrix=IDENTITY_MATRIX,
-                      name = lc.activation_mech_output.owner.name + ' to ' + ACTIVATION_OUTPUT)
+                      name = lc.activation_mech_output.owner.name + ' to ' + ACTIVATION_OUTPUT,
+                      context=context)
 
     # Assign learning_mechanism as sender of learning_projection and return
     # Note: learning_projection still has to be assigned to the learning_mechanism's outputState;

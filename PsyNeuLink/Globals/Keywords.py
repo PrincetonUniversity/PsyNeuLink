@@ -100,7 +100,7 @@ class MatrixKeywords:
         a square matrix of 1's along the diagnoal, 0's elsewhere; this requires that the length of the sender and 
         receiver values are the same.
 
-    OFF_DIAGONAL_MATRIX
+    HOLLOW_MATRIX
         a square matrix of 0's along the diagnoal, 1's elsewhere; this requires that the length of the sender and 
         receiver values are the same.
 
@@ -124,7 +124,7 @@ class MatrixKeywords:
     def __init__(self):
         self.MATRIX = MATRIX
         self.IDENTITY_MATRIX = IDENTITY_MATRIX
-        self.OFF_DIAGONAL = OFF_DIAGNOAL_MATRIX
+        self.HOLLOW_MATRIX = HOLLOW_MATRIX
         self.FULL_CONNECTIVITY_MATRIX = FULL_CONNECTIVITY_MATRIX
         self.RANDOM_CONNECTIVITY_MATRIX = RANDOM_CONNECTIVITY_MATRIX
         self.AUTO_ASSIGN_MATRIX = AUTO_ASSIGN_MATRIX
@@ -138,7 +138,7 @@ class MatrixKeywords:
 
 MATRIX = "matrix"
 IDENTITY_MATRIX = "IdentityMatrix"
-OFF_DIAGNOAL_MATRIX = "OffDiagonalMatrix"
+HOLLOW_MATRIX = "HollowMatrix"
 FULL_CONNECTIVITY_MATRIX = "FullConnectivityMatrix"
 RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
 AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
@@ -159,6 +159,7 @@ ON = True
 OFF = False
 DEFAULT = False
 AUTO = True
+
 
 # Used by initDirective
 INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
@@ -305,9 +306,9 @@ COMBINATION_FUNCTION_TYPE = "COMBINATION FUNCTION TYPE"
 DIST_FUNCTION_TYPE = "DIST FUNCTION TYPE"
 INTEGRATOR_FUNCTION_TYPE = "INTEGRATOR FUNCTION TYPE"
 TRANFER_FUNCTION_TYPE = "TRANSFER FUNCTION TYPE"
-LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 DISTRIBUTION_FUNCTION_TYPE = "DISTRIBUTION FUNCTION TYPE"
-
+OBJECTIVE_FUNCTION_TYPE = "OBJECTIVE FUNCTION TYPE"
+LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 
 
 # Component SUBTYPES -----------------
@@ -324,6 +325,7 @@ OBJECTIVE_MECHANISM = "ObjectiveMechanism"
 # ProcessingMechanisms:
 DDM_MECHANISM = "DDM"
 TRANSFER_MECHANISM = "TransferMechanism"
+RECURRENT_TRANSFER_MECHANISM = "RecurrentTransferMechanism"
 INTEGRATOR_MECHANISM = "IntegratorMechanmism"
 
 # Function:
@@ -342,7 +344,7 @@ BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
 RL_FUNCTION = 'Reinforcement Learning Algorithm'
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative'
 
-#Distribution functions 
+# Distribution functions
 
 NORMAL_DIST_FUNCTION = "Normal Distribution"
 UNIFORM_DIST_FUNCTION = "Uniform Distribution"
@@ -350,6 +352,20 @@ EXPONENTIAL_DIST_FUNCTION = "Exponential Distribution"
 GAMMA_DIST_FUNCTION = "Gamma Distribution"
 WALD_DIST_FUNCTION = "Wald Distribution"
 
+# Objective functions
+STABILITY_FUNCTION = 'Stability'
+DISTANCE_FUNCTION = 'Distance'
+
+ENERGY = 'energy'
+ENTROPY = 'entropy'
+
+DIFFERENCE = 'difference'
+EUCLIDEAN = 'euclidean'
+ANGLE = 'angle'
+CORRELATION = 'correlation'
+PEARSON = 'Pearson'
+CROSS_ENTROPY = 'cross-entropy'
+DISTANCE_METRICS = {DIFFERENCE, EUCLIDEAN, ANGLE, CORRELATION, PEARSON, CROSS_ENTROPY}
 
 #endregion
 
@@ -498,7 +514,7 @@ MONITOR_FOR_LEARNING = 'monitor_for_learning'
 
 
 SUM = 'sum'
-DIFFERENCE = 'difference'
+DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS
 PRODUCT = 'product'
 QUOTIENT = 'quotient'
 SUBTRACTION = 'subtraction'
