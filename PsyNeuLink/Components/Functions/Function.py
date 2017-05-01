@@ -37,7 +37,7 @@ Distribution Functions:
   * `WaldDist`
   
 Objective Functions:
-  * `Energy`
+  * `Stability`
   * `Distance`
 
 Learning Functions:
@@ -145,7 +145,7 @@ Class Reference
 #            'UniformDist`',
 #            'GammaDist',
 #            'WaldDist',
-#            'Energy`,
+#            'Stability`,
 #            'Distance`,
 #            'Reinforcement',
 #            'BackPropagation',
@@ -4188,194 +4188,9 @@ class ObjectiveFunction(Function_Base):
     componentType = OBJECTIVE_FUNCTION_TYPE
 
 
-class Energy(ObjectiveFunction):
+class Stability(ObjectiveFunction):
     """
-     Energy(
-        variable_default=variableCLassDefault,  \
-        matrix=HOLLOW_MATRIX,                   \
-        normalize=False,                        \
-        params=None,                            \
-        owner=None,                             \
-        prefs=None                              \
-        )
-
-     .. _Energy:
-
-     Return the energy of a vector based an a weight matrix from each element to every other element in the vector  
-
-     Arguments
-     ---------
-
-     params : Optional[Dict[param keyword, param value]]
-         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-         arguments of the constructor.
-
-     owner : Component
-         `component <Component>` to which to assign the Function.
-
-     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-
-
-     Attributes
-     ----------
-
-     params : Optional[Dict[param keyword, param value]]
-         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-         arguments of the constructor.
-
-     owner : Component
-         `component <Component>` to which to assign the Function.
-
-     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-
-
-     """
-
-    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-    from PsyNeuLink.Components.States.ParameterState import ParameterState
-
-    componentName = ENERGY_FUNCTION
-
-    variableClassDefault = [0]
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
-    @tc.typecheck
-    def __init__(self,
-                 variable_default=variableClassDefault,
-                 matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
-                 normalize:bool=False,
-                 params=None,
-                 owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  normalize=normalize,
-                                                  params=params)
-
-        super().__init__(variable_default=variable_default,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-        self.functionOutputType = None
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate matrix param
-
-        `matrix` argument must be one of the following
-            - 2d list, np.ndarray or np.matrix
-            - ParameterState for one of the above
-            - MappingProjection with a parameterStates[MATRIX] for one of the above
-
-        Parse matrix specification to insure it resolves to a square matrix
-        (but leave in the form in which it was specified so that, if it is a ParameterState or MappingProjection,
-         its current value can be accessed at runtime (i.e., it can be used as a "pointer")
-        """
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
-        # Validate error_matrix specification
-        if MATRIX in target_set:
-
-            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-            from PsyNeuLink.Components.States.ParameterState import ParameterState
-
-            matrix = target_set[MATRIX]
-
-            if isinstance(matrix, MappingProjection):
-                try:
-                    matrix = matrix.parameterStates[MATRIX].value
-                    param_type_string = "MappingProjection's ParameterState"
-                except KeyError:
-                    raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
-                                        "paramaterState that has been assigned a 2d array or matrix".
-                                        format(MATRIX, self.name, matrix.shape, MATRIX))
-
-            elif isinstance(matrix, ParameterState):
-                try:
-                    matrix = matrix.value
-                    param_type_string = "ParameterState"
-                except KeyError:
-                    raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
-                                        "must be a 2d array or matrix".
-                                        format(MATRIX, MATRIX, self.name, matrix.shape))
-
-            else:
-                param_type_string = "array or matrix"
-
-            matrix = np.array(matrix)
-            if matrix.ndim != 2:
-                raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
-                                    "must be a 2d array or matrix".
-                                    format(param_type_string, MATRIX, self.name, matrix))
-            rows = matrix.shape[0]
-            cols = matrix.shape[1]
-            size = len(np.squeeze(self.variable))
-
-            if rows != size:
-                raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
-                                    "it is {}x{}, but must be square matrix of size {}".
-                                    format(param_type_string, MATRIX, self.name, rows, cols, size))
-
-            if rows != cols:
-                raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
-                                    "must be a square matrix".
-                                    format(param_type_string, MATRIX, self.name, matrix))
-
-
-    def _instantiate_attributes_before_function(self, context=None):
-
-        size = len(np.squeeze(self.variable))
-
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if isinstance(self.matrix,MappingProjection):
-            self.matrix = self.matrix.parameterStates[MATRIX]
-        elif isinstance(self.matrix,ParameterState):
-            pass
-        else:
-
-            self.matrix = get_matrix(self.matrix, size, size)
-
-        self._hollow_matrix = get_matrix(HOLLOW_MATRIX,size, size)
-        TEST_CONDTION = True
-
-    def function(self,
-                 variable=None,
-                 params=None,
-                 time_scale=TimeScale.TRIAL,
-                 context=None):
-        # Validate variable and assign to self.variable, and validate params
-        self._check_args(variable=variable, params=params, context=context)
-
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if isinstance(self.matrix, ParameterState):
-            matrix = self.matrix.value
-        else:
-            matrix = self.matrix
-
-        result = -np.sum(self.variable * np.dot(matrix * self._hollow_matrix, self.variable))
-
-        if self.normalize:
-            result /= len(self.variable)
-
-        return result
-
-# endregion
-
-
-class Distance(ObjectiveFunction):
-    """
-     Distance(                                  \
+     Stability(
         variable_default=variableCLassDefault,  \
         matrix=HOLLOW_MATRIX,                   \
         metric=EUCLIDEAN                        \
@@ -4385,12 +4200,9 @@ class Distance(ObjectiveFunction):
         prefs=None                              \
         )
 
-     .. _Distance:
+     .. _Stability:
 
-     Return the distance of a vector based an a weight matrix from each element to every other element in the vector
-       
-     Distance, in this context, is defined as the sum of the differences between each element of the vector
-     and each of the others, weighted by its connection with them. 
+     Return the stability of a vector based an a weight matrix from each element to every other element in the vector  
 
      Arguments
      ---------
@@ -4429,9 +4241,9 @@ class Distance(ObjectiveFunction):
     from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
     from PsyNeuLink.Components.States.ParameterState import ParameterState
 
-    componentName = DISTANCE_FUNCTION
+    componentName = STABILITY_FUNCTION
 
-    variableClassDefault = [[0],[0]]
+    variableClassDefault = [0]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -4439,7 +4251,8 @@ class Distance(ObjectiveFunction):
     def __init__(self,
                  variable_default=variableClassDefault,
                  matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
-                 metric:tc.enum(EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY)=DIFFERENCE,
+                 # metric:is_distance_metric=ENERGY,
+                 metric:tc.any(is_distance_metric, tc.enum(ENERGY))=ENERGY,
                  normalize:bool=False,
                  params=None,
                  owner=None,
@@ -4534,11 +4347,13 @@ class Distance(ObjectiveFunction):
         elif isinstance(self.matrix,ParameterState):
             pass
         else:
-
             self.matrix = get_matrix(self.matrix, size, size)
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX,size, size)
-        TEST_CONDTION = True
+
+        if self.metric in DISTANCE_METRICS:
+            self._metric_fct = Distance(metric=self.metric)
+
 
     def function(self,
                  variable=None,
@@ -4554,12 +4369,141 @@ class Distance(ObjectiveFunction):
         else:
             matrix = self.matrix
 
+
         i = self.variable
         o = np.dot(matrix * self._hollow_matrix, self.variable)
 
+        if self.metric is ENERGY:
+            result = -np.sum(i * o)
+
+        elif self.metric in {DIFFERENCE, EUCLIDEAN, CROSS_ENTROPY, ANGLE}:
+            result = self._metric_fct(i, o)
+
+
+        if self.normalize:
+            result /= len(self.variable)
+
+        return result
+
+# endregion
+
+class Distance(ObjectiveFunction):
+    """
+     Distance(                                  \
+        variable_default=variableCLassDefault,  \
+        metric=EUCLIDEAN                        \
+        normalize=False,                        \
+        params=None,                            \
+        owner=None,                             \
+        prefs=None                              \
+        )
+
+     .. _Distance:
+
+     Return the distance of a vector based an a weight matrix from each element to every other element in the vector
+       
+     Distance, in this context, is defined as the sum of the differences between each element of the vector
+     and each of the others, weighted by its connection with them. 
+
+     Arguments
+     ---------
+
+     params : Optional[Dict[param keyword, param value]]
+         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+         arguments of the constructor.
+
+     owner : Component
+         `component <Component>` to which to assign the Function.
+
+     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+     Attributes
+     ----------
+
+     params : Optional[Dict[param keyword, param value]]
+         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+         arguments of the constructor.
+
+     owner : Component
+         `component <Component>` to which to assign the Function.
+
+     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+     """
+
+    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+    from PsyNeuLink.Components.States.ParameterState import ParameterState
+
+    componentName = DISTANCE_FUNCTION
+
+    variableClassDefault = [[0],[0]]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 metric:tc.enum(EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, ANGLE)=DIFFERENCE,
+                 normalize:bool=False,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context=componentName + INITIALIZING):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(metric=metric,
+                                                  normalize=normalize,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate that variable had two items of equal length
+
+        """
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if len(self.variable) != 2:
+            raise FunctionError("variable for {} ({}) must have two items".format(self.name, self.variable))
+
+        if len(self.variable[0]) != len(self.variable[1]):
+            raise FunctionError("The lengths of the items in the variable for {} ({},{}) must be equal".
+                format(self.name, len(self.variable[0]), len(self.variable[1])))
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        if isinstance(self.matrix, ParameterState):
+            matrix = self.matrix.value
+        else:
+            matrix = self.matrix
+
+        v1 = self.variable[0]
+        v2 = self.variable[1]
+
         # SIMPLE HADAMARD DIFFERENCE OF INPUT AND OUTPUT
         if self.metric is DIFFERENCE:
-            result = np.sum(np.abs(o - i))
+            result = np.sum(np.abs(v1 - v2))
 
         # EUCLIDEAN DISTANCE:
         elif self.metric is EUCLIDEAN:

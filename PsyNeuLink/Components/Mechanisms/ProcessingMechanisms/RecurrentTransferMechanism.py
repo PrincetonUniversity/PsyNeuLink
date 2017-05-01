@@ -21,7 +21,7 @@ Overview
 A RecurrentTransferMechanism is a subclass of TransferMechanism that implements a single-layered recurrent 
 network, in which each element is connected to every other element by way of a recurrent MappingProjection
 (referenced by the mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).  It also allows its
-previous input to be decayed, and reports both the energy and distance of its output.
+previous input to be decayed, and reports both the stability and distance of its output.
   
 .. _Recurrent_Transfer_Creation:
 
@@ -47,7 +47,7 @@ In all other respects the mechanism is identical to a standard `TransferMechanis
 
 In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, 
 that decrements its `previous_input <TransferMechanism.previous_input>` value by the specified factor in each 
-`round of execution <LINK>`.  It also two additional outputStates:  an ENERGY and an DISTANCE outputState, that 
+`round of execution <LINK>`.  It also two additional outputStates:  an STABILITY and an DISTANCE outputState, that 
 each report the  respective values of the vector in it its `primary (RESULTS) outputState <OutputState_Primary>`.
  
 .. _Recurrent_Transfer_Execution:
@@ -75,7 +75,7 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import get_matrix, is_matrix, Energy
+from PsyNeuLink.Components.Functions.Function import get_matrix, is_matrix, Stability
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
@@ -88,7 +88,7 @@ class RecurrentTransferError(Exception):
         return repr(self.error_value)
 
 
-RECURRENT_ENERGY = "energy"
+RECURRENT_STABILITY = "stability"
 RECURRENT_DISTANCE = "distance"
 DECAY = 'decay'
 
@@ -253,7 +253,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
-        * `RECURRENT_ENERGY`, the :keyword:`value` of which is the energy of the result, calculated using `Energy`; 
+        * `RECURRENT_STABILITY`, the :keyword:`value` of which is the stability of the result, calculated using `Stability`; 
         * `RECURRENT_DISTANCE`, the :keyword:`value` of which is the distance of the result, calculated using `Distance`;
 
     outputValue : List[array(float64), float, float]
@@ -261,7 +261,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         * **result** of the ``function`` calculation (value of `TRANSFER_RESULT` outputState);
         * **mean** of the result (``value`` of `TRANSFER_MEAN` outputState)
         * **variance** of the result (``value`` of `TRANSFER_VARIANCE` outputState)
-        * **energy** of the result (``value`` of `RECURRENT_ENERGY` outputState); uses the `Energy` Function
+        * **stability** of the result (``value`` of `RECURRENT_STABILITY` outputState); uses the `Stability` Function
         * **distance** of the result (``value`` of `RECURRENT_DISTANCE` outputState); uses the `Distance` Function
 
     time_scale :  TimeScale
@@ -287,7 +287,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     componentType = RECURRENT_TRANSFER_MECHANISM
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
-    paramClassDefaults[OUTPUT_STATES].append({NAME:RECURRENT_ENERGY})
+    paramClassDefaults[OUTPUT_STATES].append({NAME:RECURRENT_STABILITY})
     paramClassDefaults[OUTPUT_STATES].append({NAME:RECURRENT_DISTANCE})
 
 
@@ -376,7 +376,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self.matrix = self.recurrent_projection.matrix
 
-        self.outputStates[RECURRENT_ENERGY].calculate = Energy(self.variable,
+        self.outputStates[RECURRENT_STABILITY].calculate = Stability(self.variable,
                                                            self.recurrent_projection.parameterStates[MATRIX]).function
 
     def _execute(self,

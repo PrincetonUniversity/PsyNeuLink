@@ -3,7 +3,7 @@ import numpy as np
 # GLOBALS:
 from PsyNeuLink.Globals.Keywords import *
 # FUNCTIONS:
-from PsyNeuLink.Components.Functions.Function import Logistic, Linear, Energy, Distance
+from PsyNeuLink.Components.Functions.Function import Logistic, Linear, Stability, Distance
 
 # STATES:
 # from PsyNeuLink.Components.States.OutputState import OutputState
@@ -752,7 +752,7 @@ class ScratchPadError(Exception):
 
 #endregion  ********
 
-#region TEST Energy and Distance @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Stability and Distance @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 matrix = [[0,-1],[-1,0]]
 normalize = False
@@ -760,21 +760,21 @@ normalize = False
 e = Distance(variable_default=[0,0],
            matrix=[[0,-1],[-1,0]])
 
-eng = Energy(variable_default=[0,0],
+eng = Stability(variable_default=[0,0],
              matrix=matrix,
              normalize=normalize
              )
 
-dist = Distance(variable_default=[0,0],
-                matrix=matrix,
-                metric=CROSS_ENTROPY,
-                normalize=normalize
-                )
+# dist = Distance(variable_default=[0,0],
+#                 matrix=matrix,
+#                 metric=CROSS_ENTROPY,
+#                 normalize=normalize
+#                 )
 
 activity = [100,0]
 
-print("Energy: ",eng.function(activity))
-print("Entopy: ", dist.function(activity))
+print("Stability: ",eng.function(activity))
+# print("Entopy: ", dist.function(activity))
 
 #endregion
 

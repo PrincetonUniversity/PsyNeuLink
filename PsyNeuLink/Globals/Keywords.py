@@ -352,11 +352,15 @@ GAMMA_DIST_FUNCTION = "Gamma Distribution"
 WALD_DIST_FUNCTION = "Wald Distribution"
 
 # Objective functions
-ENERGY_FUNCTION = 'Energy'
+STABILITY_FUNCTION = 'Stability'
 DISTANCE_FUNCTION = 'Distance'
 
-EUCLIDEAN = 'Euclidean'
+ENERGY = 'Energy'
 CROSS_ENTROPY = 'Cross Entropy'
+EUCLIDEAN = 'Euclidean'
+ANGLE = 'Angle'
+DIFFERENCE = 'Difference'
+DISTANCE_METRICS = {DIFFERENCE, EUCLIDEAN, CROSS_ENTROPY, ANGLE}
 
 #endregion
 
@@ -505,7 +509,7 @@ MONITOR_FOR_LEARNING = 'monitor_for_learning'
 
 
 SUM = 'sum'
-DIFFERENCE = 'difference'
+DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS
 PRODUCT = 'product'
 QUOTIENT = 'quotient'
 SUBTRACTION = 'subtraction'

@@ -215,6 +215,13 @@ def is_matrix(m):
             return False
 
 
+def is_distance_metric(s):
+    if s in DISTANCE_METRICS:
+        return True
+    else:
+        return False
+
+
 kwCompatibilityType = "type"
 kwCompatibilityLength = "length"
 kwCompatibilityNumeric = "numeric"
