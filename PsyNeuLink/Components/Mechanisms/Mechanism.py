@@ -53,7 +53,7 @@ Creating a Mechanism
 --------------------
 
 Mechanisms can be created in several ways.  The simplest is to use the standard Python method of calling the
-constructor for the desired type of mechanism.  Alternatively, the `mechanism() <mechanism>` function can be used to
+constructor for the desired type of mechanism.  Alternatively, the :py:func:`mechanism` function can be used to
 instantiate a specified type of mechanism or a default mechanism. Mechanisms can also be specified "in context,"
 for example in the `pathway` attribute of a process; the mechanism can be specified in either of the ways mentioned
 above, or using one of the following:
@@ -740,13 +740,13 @@ class Mechanism_Base(Mechanism):
 
     name : str : default <Mechanism subclass>-<index>
         the name of the mechanism.
-        Specified in the **name** argument of the constructor for the mechanism;  if not is specified,
+        Specified in the `name` argument of the constructor for the mechanism;  if not is specified,
         a default is assigned by `MechanismRegistry` based on the mechanism's subclass
         (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         the `PreferenceSet` for the mechanism.
-        Specified in the **prefs** argument of the constructor for the mechanism;
+        Specified in the `prefs` argument of the constructor for the mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 

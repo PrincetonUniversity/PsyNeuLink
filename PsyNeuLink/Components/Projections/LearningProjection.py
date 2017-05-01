@@ -89,7 +89,7 @@ Class Reference
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import \
     LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
 
-from PsyNeuLink.Components.Functions.Function import BackPropagation, Logistic, Linear
+from PsyNeuLink.Components.Functions.Function import BackPropagation, Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import _objective_mechanism_role
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
@@ -275,13 +275,13 @@ class LearningProjection(Projection_Base):
 
     name : str : default LearningProjection-<index>
         the name of the LearningProjection.
-        Specified in the **name** argument of the constructor for the projection;
+        Specified in the `name` argument of the constructor for the projection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for projection.
-        Specified in the **prefs** argument of the constructor for the projection;
+        Specified in the `prefs` argument of the constructor for the projection;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 

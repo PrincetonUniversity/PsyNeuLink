@@ -512,7 +512,7 @@ class ParameterState(State_Base):
 
     name : str : default <State subclass>-<index>
         the name of the inputState.
-        Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
+        Specified in the `name` argument of the constructor for the outputState.  If not is specified, a default is
         assigned by the StateRegistry of the mechanism to which the outputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
@@ -524,7 +524,7 @@ class ParameterState(State_Base):
 
     prefs : PreferenceSet or specification dict : State.classPreferences
         the `PreferenceSet` for the inputState.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
+        Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -853,11 +853,6 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     else:
         return
 
-    # Assign parameterStates to component for parameters of its function (function_params), except for ones that are:
-    #    - another component
-    #    - a function or method
-    #    - have a value of None (see IMPLEMENTATION_NOTE below)
-    #    - they have the same name as another parameter of the component (raise exception for this)
     if param_name is FUNCTION_PARAMS:
         for function_param_name in param_value.keys():
             function_param_value = param_value[function_param_name]
@@ -876,7 +871,6 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             if function_param_value is None:
                 continue
 
-            # Assign parameterState for function_param to the component
             if function_param_name in owner.user_params:
                 if inspect.isclass(owner.function):
                     function_name = owner.function.__name__

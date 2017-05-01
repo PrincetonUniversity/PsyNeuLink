@@ -357,13 +357,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     name : str : default ComparatorMechanism-<index>
         the name of the mechanism.
-        Specified in the **name** argument of the constructor for the mechanism;
+        Specified in the `name` argument of the constructor for the mechanism;
         if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         the `PreferenceSet` for mechanism.
-        Specified in the **prefs** argument of the constructor for the mechanism;
+        Specified in the `prefs` argument of the constructor for the mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
