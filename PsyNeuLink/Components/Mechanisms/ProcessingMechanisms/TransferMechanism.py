@@ -83,13 +83,13 @@ After each execution of the mechanism:
 .. _Transfer_Results:
 
     * **result** of `function <TransferMechanism.function>` is assigned to the mechanism's
-      `value <TransferMechanism.value>` attribute, the :keyword:`value` of its `TRANSFER_RESULT` outputState,
+      `value <TransferMechanism.value>` attribute, the :keyword:`value` of its TRANSFER_RESULT outputState,
       and to the 1st item of the mechanism's `outputValue <TransferMechanism.outputValue>` attribute;
     ..
-    * **mean** of the result is assigned to the the :keyword:`value` of the mechanism's `TRANSFER_MEAN` outputState,
+    * **mean** of the result is assigned to the the :keyword:`value` of the mechanism's TRANSFER_MEAN outputState,
       and to the 2nd item of its `outputValue <TransferMechanism.outputValue>` attribute;
     ..
-    * **variance** of the result is assigned to the :keyword:`value` of the mechanism's `TRANSFER_VARIANCE` outputState,
+    * **variance** of the result is assigned to the :keyword:`value` of the mechanism's TRANSFER_VARIANCE outputState,
       and to the 3rd item of its `outputValue <TransferMechanism.outputValue>` attribute.
 
 COMMENT
@@ -313,9 +313,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     outputValue : List[array(float64), float, float]
         a list with the following items:
-        * **result** of the ``function`` calculation (value of `TRANSFER_RESULT` outputState);
-        * **mean** of the result (``value`` of `TRANSFER_MEAN` outputState)
-        * **variance** of the result (``value`` of `TRANSFER_VARIANCE` outputState)
+        * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
+        * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
+        * **variance** of the result (``value`` of TRANSFER_VARIANCE outputState)
 
     time_scale :  TimeScale : defaul tTimeScale.TRIAL
         specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.

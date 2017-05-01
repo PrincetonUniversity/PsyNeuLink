@@ -155,7 +155,7 @@ Class Reference
 from functools import reduce
 from operator import *
 from random import randint
-from numpy import sqrt, abs, tanh, exp
+from numpy import sqrt, abs, tanh, exp, finfo
 import numpy as np
 
 import typecheck as tc
@@ -164,6 +164,8 @@ from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Utilities import random_matrix, is_matrix
+
+EPSILON = np.finfo(float).eps
 
 FunctionRegistry = {}
 
@@ -1353,6 +1355,12 @@ class LinearCombination(
 # endregion
 
 class TransferFunction(Function_Base):
+    """Function that transforms variable but maintains its shape
+    
+    All TransferFunctions must have the attribute `bounds` that specifies the lower and upper limits of the result;
+        if there are none, the attribute is set to `None`;  if it has at least one bound, the attribute is set to a
+        tuple specifying the lower and upper bounds, respectively, with `None` as the entry for no bound.
+    """
     componentType = TRANFER_FUNCTION_TYPE
 
 
@@ -1413,6 +1421,8 @@ class Linear(
     intercept : float
         value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
         (if it is specified).
+        
+    bounds : None
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -1425,6 +1435,7 @@ class Linear(
     """
 
     componentName = LINEAR_FUNCTION
+    bounds = None
 
     classPreferences = {
         kwPreferenceSetName: 'LinearClassPreferences',
@@ -1615,7 +1626,9 @@ class Exponential(
         value by which `variable <Exponential.variable>` is multiplied before exponentiation.
 
     scale : float
-        value by which the exponentiated value is multipled.
+        value by which the exponentiated value is multiplied.
+        
+    bounds : (0, None) 
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -1628,6 +1641,8 @@ class Exponential(
     """
 
     componentName = EXPONENTIAL_FUNCTION
+    bounds = (0, None)
+
 
     variableClassDefault = 0
 
@@ -1762,6 +1777,8 @@ class Logistic(
     bias : float
         value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
         (if it is specified).
+        
+    bounds : (0,1)
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -1775,6 +1792,8 @@ class Logistic(
 
     componentName = LOGISTIC_FUNCTION
     parameter_keywords.update({GAIN, BIAS})
+
+    bounds = (0,1)
 
     variableClassDefault = 0
 
@@ -1913,6 +1932,9 @@ class SoftMax(
             * **MAX_INDICATOR**: 1 for the element with the maximum softmax-transformed value, 0 for all others;
             * **PROB**: probabilistically chosen element based on softmax-transformed values after normalizing sum of
               values to 1, 0 for all others.
+
+    bounds : None if `output <SoftMax.output>`==MAX_VAL, else (0,1) : default (0,1)
+    
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -2130,6 +2152,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     matrix : number, list, 1d or 2d np.ndarray, np.matrix, function, or matrix keyword : default IDENTITY_MATRIX
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
+        
+    bounds : None
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -2170,6 +2194,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     """
 
     componentName = LINEAR_MATRIX_FUNCTION
+
+    bounds = None
 
     DEFAULT_FILLER_VALUE = 0
 
@@ -4252,7 +4278,7 @@ class Stability(ObjectiveFunction):
                  variable_default=variableClassDefault,
                  matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
-                 metric:tc.any(tc.enum(ENERGY), is_distance_metric)=ENERGY,
+                 metric:tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)=ENERGY,
                  normalize:bool=False,
                  params=None,
                  owner=None,
@@ -4337,6 +4363,14 @@ class Stability(ObjectiveFunction):
 
 
     def _instantiate_attributes_before_function(self, context=None):
+        """Instantiate matrix
+         
+        Specified matrix specified is convolved with `HOLLOW_MATRIX` 
+            to eliminate the diagonal (self-connections) from the calculation.
+        The `Distance` Function is used for all calculations except ENERGY (which is not really a distance metric). 
+        If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the Distance Function.
+            
+        """
 
         size = len(np.squeeze(self.variable))
 
@@ -4351,7 +4385,10 @@ class Stability(ObjectiveFunction):
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX,size, size)
 
-        if self.metric in DISTANCE_METRICS:
+        if self.metric is ENTROPY:
+            self._metric_fct = Distance(metric=CROSS_ENTROPY)
+
+        elif self.metric in DISTANCE_METRICS:
             self._metric_fct = Distance(metric=self.metric)
 
 
@@ -4369,16 +4406,13 @@ class Stability(ObjectiveFunction):
         else:
             matrix = self.matrix
 
-
         i = self.variable
         o = np.dot(matrix * self._hollow_matrix, self.variable)
 
         if self.metric is ENERGY:
             result = -np.sum(i * o)
-
-        elif self.metric in {DIFFERENCE, EUCLIDEAN, CROSS_ENTROPY, ANGLE}:
-            result = self._metric_fct(i, o)
-
+        else:
+            result = self._metric_fct.function(variable=[i,o], context=context)
 
         if self.normalize:
             result /= len(self.variable)
@@ -4474,7 +4508,6 @@ class Distance(ObjectiveFunction):
         """Validate that variable had two items of equal length
 
         """
-
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if len(self.variable) != 2:
@@ -4492,59 +4525,43 @@ class Distance(ObjectiveFunction):
         # Validate variable and assign to self.variable, and validate params
         self._check_args(variable=variable, params=params, context=context)
 
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if isinstance(self.matrix, ParameterState):
-            matrix = self.matrix.value
-        else:
-            matrix = self.matrix
-
         v1 = self.variable[0]
         v2 = self.variable[1]
 
-        # SIMPLE HADAMARD DIFFERENCE OF INPUT AND OUTPUT
+        # Simple Hadamard difference of v1 and v2
         if self.metric is DIFFERENCE:
             result = np.sum(np.abs(v1 - v2))
 
-        # EUCLIDEAN DISTANCE:
+        # Euclidean distance between v1 and v2
         elif self.metric is EUCLIDEAN:
-            result = np.linalg.norm(y-x)
+            result = np.linalg.norm(v2-v1)
 
-        # CROSS_ENTROPY:
+        # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
+            # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
+            if context is not None and INITIALIZING in context:
+                v1 = np.where(v1==0, EPSILON, v1)
+                v2 = np.where(v2==0, EPSILON, v2)
+            result = -np.sum(v1*np.log(v2))
 
-            # import warnings
-            # warnings.filterwarnings('error')
-            # try:
-            #     result = np.sum(i*np.log(o))
-            # except (Warning):
+        # FIX: NEED SCIPY HERE
+        # # Angle (cosyne) of v1 and v2
+        # elif self.metric is ANGLE:
+        #     result = scipy.spatial.distance.cosine(v1,v2)
 
-            result = np.sum(i*np.log(o))
+        # Correlation of v1 and v2
+        elif self.metric is CORRELATION:
+            result = np.correlate(v1, v2)
+
+        # Pearson Correlation of v1 and v2
+        elif self.metric is PEARSON:
+            result = np.corrcoef(v1, v2)
+
 
         if self.normalize:
             # if np.sum(denom):
             # result /= np.sum(x,y)
             result /= len(self.variable)
-
-        # # http://stackoverflow.com/questions/21003272/difference-between-all-1d-points-in-array-with-python-diff
-        # result = np.sum(np.subtract.outer(x,x)[np.tril_indices(x.shape[0],k=-1)])
-
-        # Alternative version:
-        # http://stackoverflow.com/questions/29745593/finding-differences-between-all-values-in-an-list
-        # a = [1,4,2,6]
-        #
-        # # Convert input list to a numpy array
-        # arr = np.array(a)
-        #
-        # # Calculate absolute differences between each element
-        # # against all elements to give us a 2D array
-        # sub_arr = np.abs(arr[:,None] - arr)
-        #
-        # # Get diagonal indices for the 2D array
-        # N = arr.size
-        # rem_idx = np.arange(N)*(N+1)
-        #
-        # # Remove the diagonal elements for the final output
-        # out = np.delete(sub_arr,rem_idx)
 
         return result
 
