@@ -123,7 +123,7 @@
 #                       document that it uses only the first item of its variable arg/attrib (variable[0])
 
 # IMPLEMENT:  BogcazEtAl:
-#                 add Diti, Dpenalty, RR calculation, and add RR to return value
+#                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
 #
 # IMPLEMENT:  Deferred init for control.
