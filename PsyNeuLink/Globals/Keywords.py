@@ -353,7 +353,10 @@ WALD_DIST_FUNCTION = "Wald Distribution"
 
 # Objective functions
 ENERGY_FUNCTION = 'Energy'
-ENTROPY_FUNCTION = 'Entropy'
+DISTANCE_FUNCTION = 'Distance'
+
+EUCLIDEAN = 'Euclidean'
+CROSS_ENTROPY = 'Cross Entropy'
 
 #endregion
 

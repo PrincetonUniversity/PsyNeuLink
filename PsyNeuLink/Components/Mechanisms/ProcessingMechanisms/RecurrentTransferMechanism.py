@@ -21,7 +21,7 @@ Overview
 A RecurrentTransferMechanism is a subclass of TransferMechanism that implements a single-layered recurrent 
 network, in which each element is connected to every other element by way of a recurrent MappingProjection
 (referenced by the mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).  It also allows its
-previous input to be decayed, and reports both the energy and entropy of its output.
+previous input to be decayed, and reports both the energy and distance of its output.
   
 .. _Recurrent_Transfer_Creation:
 
@@ -47,7 +47,7 @@ In all other respects the mechanism is identical to a standard `TransferMechanis
 
 In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, 
 that decrements its `previous_input <TransferMechanism.previous_input>` value by the specified factor in each 
-`round of execution <LINK>`.  It also two additional outputStates:  an ENERGY and an ENTROPY outputState, that 
+`round of execution <LINK>`.  It also two additional outputStates:  an ENERGY and an DISTANCE outputState, that 
 each report the  respective values of the vector in it its `primary (RESULTS) outputState <OutputState_Primary>`.
  
 .. _Recurrent_Transfer_Execution:
@@ -89,7 +89,7 @@ class RecurrentTransferError(Exception):
 
 
 RECURRENT_ENERGY = "energy"
-RECURRENT_ENTROPY = "entropy"
+RECURRENT_DISTANCE = "distance"
 DECAY = 'decay'
 
 
@@ -254,7 +254,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
         * `RECURRENT_ENERGY`, the :keyword:`value` of which is the energy of the result, calculated using `Energy`; 
-        * `RECURRENT_ENTROPY`, the :keyword:`value` of which is the entropy of the result, calculated using `Entropy`;
+        * `RECURRENT_DISTANCE`, the :keyword:`value` of which is the distance of the result, calculated using `Distance`;
 
     outputValue : List[array(float64), float, float]
         a list with the following items:
@@ -262,7 +262,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         * **mean** of the result (``value`` of `TRANSFER_MEAN` outputState)
         * **variance** of the result (``value`` of `TRANSFER_VARIANCE` outputState)
         * **energy** of the result (``value`` of `RECURRENT_ENERGY` outputState); uses the `Energy` Function
-        * **entropy** of the result (``value`` of `RECURRENT_ENTROPY` outputState); uses the `Entropy` Function
+        * **distance** of the result (``value`` of `RECURRENT_DISTANCE` outputState); uses the `Distance` Function
 
     time_scale :  TimeScale
         specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
@@ -288,7 +288,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
     paramClassDefaults[OUTPUT_STATES].append({NAME:RECURRENT_ENERGY})
-    paramClassDefaults[OUTPUT_STATES].append({NAME:RECURRENT_ENTROPY})
+    paramClassDefaults[OUTPUT_STATES].append({NAME:RECURRENT_DISTANCE})
 
 
     @tc.typecheck
