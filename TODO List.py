@@ -138,23 +138,14 @@
 #                     implements matrix that is constrained to be all negative weights = inhibition
 #                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
-# FIX: Stability and Distance:  name is getting get to TYPY rather than SUBTYPE name
-#               DOCUMENT args and attribs
+# FIX: Stability and Distance:  name is getting set to TYPE rather than to SUBTYPE name
+#                               DOCUMENT args and attribs
 
 # FIX/IMPLEMENT: TransferMechanism:
 #                      - `size` arg/attribute that sets length of variable[0] on init refactor code
 #                           (for it and all subclasses) to use self.size instead of len(variable[0])
-#                      - is `previous_input` parameter documented in Attributes?
 #                      - rename outputStates (get rid of "TRANSFER_";  do same for RecurrentTransferMechanism
 #                      - allow OutputStates to be specifiable using a list in an **outputs** arg
-#                      - implement "BOUNDS" attribute:
-#                              = None, PROBABILISTIC [0,1], or BOUNDED [asymptotic at both eneds]
-#                              set based on range and/or function_object bounded attribute
-
-# FIX: RecurrentTransferMechanism:
-#           Document decay
-#           Add distance
-#           Document Engery and Distance in RecurrentTransferMechanism
 
 # FIX: Backpropagation AND Reinforcement:
 #        ADD TYPECHECKING FOR error_matrix AND THEN CLEAN UP _validate_params
