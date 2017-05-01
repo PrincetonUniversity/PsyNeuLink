@@ -279,7 +279,7 @@ projection (see documentation for subclass).</li>
 <span id="projection-automatic-creation"></span><h3>Automatic creation<a class="headerlink" href="#automatic-creation" title="Permalink to this headline">¶</a></h3>
 <p>Under some circumstances PsyNeuLink will automatically create a projection. For example, a <a class="reference internal" href="Process.html"><span class="doc">process</span></a>
 automatically generates a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> between adjacent mechanisms in its <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> if none is specified;
-and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> are automatically generated when <a class="reference internal" href="Process.html#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> is specified for a
+and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> are automatically generated when <a class="reference internal" href="System.html#System.System_Base.learning" title="System.System_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> is specified for a
 <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>.  Creating a <a class="reference internal" href="State.html"><span class="doc">state</span></a> will also
 automatically generate a projection and a mechanism as the projection&#8217;s <code class="xref any docutils literal"><span class="pre">sender</span></code> if none is
 specified in the constructor for the state (the type of projection and mechanism depend on the type of state &#8211; see
@@ -361,18 +361,7 @@ projection executes, it gets the value of its <code class="xref any docutils lit
 of its <code class="xref any docutils literal"><span class="pre">function</span></code>, calls the function, and provides the result as to its
 <code class="xref any docutils literal"><span class="pre">receiver</span></code>.  The <code class="xref any docutils literal"><span class="pre">function</span></code> of a projection converts the value received
 from its <code class="xref any docutils literal"><span class="pre">sender</span></code> to a form suitable as input for its <code class="xref any docutils literal"><span class="pre">receiver</span></code>.</p>
-<table class="docutils field-list" frame="void" id="projection-class-reference" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">members:</th><td class="field-body"></td>
-</tr>
-<tr class="field-even field"><th class="field-name" colspan="2">exclude-members:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body">Projection_Base, _is_projection_spec, random</td>
-</tr>
-</tbody>
-</table>
-</div>
+<span class="target" id="projection-class-reference"></span></div>
 </div>
 
 

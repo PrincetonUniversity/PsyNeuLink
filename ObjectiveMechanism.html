@@ -92,7 +92,6 @@
 <li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DDM.html">DDM</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">ObjectiveMechanism</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
@@ -102,6 +101,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#creating-a-processingmechanism">Creating a ProcessingMechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html#execution">Execution</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a></li>
@@ -264,7 +267,7 @@ can be helpful in some situations (see <a class="reference internal" href="#obje
 </div>
 <div class="section" id="function">
 <span id="objectivemechanism-function"></span><h3>Function<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
-<p>The ObjectiveMechanism&#8217;s <a class="reference internal" href="Function.html#Function.Integrator.function" title="Function.Integrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> can be customized to implement a wide variety of
+<p>The ObjectiveMechanism&#8217;s <a class="reference internal" href="Function.html#Function.Exponential.function" title="Function.Exponential.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> can be customized to implement a wide variety of
 <a class="reference external" href="https://en.wikipedia.org/wiki/Loss_function">objective (or &#8220;loss&#8221;) functions</a>.  The default is the
 <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function, which simply sums the values of the outputStates listed in <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.monitored_values" title="ObjectiveMechanism.ObjectiveMechanism.monitored_values"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_values</span></code></a>.
 However, this can easily be configured to calculate differnces, ratios, etc. (see
@@ -412,7 +415,7 @@ with a <a class="reference internal" href="LearningMechanism.html"><span class="
 <dt id="ObjectiveMechanism.ObjectiveMechanism.name">
 <code class="descname">name</code><a class="headerlink" href="#ObjectiveMechanism.ObjectiveMechanism.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default ComparatorMechanism-&lt;index&gt;</em> &#8211; the name of the mechanism.
-Specified in the <strong>name</strong> argument of the constructor for the mechanism;
+Specified in the <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.name" title="ObjectiveMechanism.ObjectiveMechanism.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> argument of the constructor for the mechanism;
 if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
@@ -421,7 +424,7 @@ if not is specified, a default is assigned by <code class="xref any docutils lit
 <dt id="ObjectiveMechanism.ObjectiveMechanism.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#ObjectiveMechanism.ObjectiveMechanism.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
-Specified in the <strong>prefs</strong> argument of the constructor for the mechanism;
+Specified in the <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.prefs" title="ObjectiveMechanism.ObjectiveMechanism.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the mechanism;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
