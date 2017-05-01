@@ -275,8 +275,8 @@ class OutputState(State_Base):
     reference_value : number, list or np.ndarray
         a template that specifies the format of the item of the owner mechanism's
         `value <Mechanism.Mechanism_Base.value>` attribute to which the outputState will be assigned (specified by
-        the :keyword:`index` argument).  This must match (in number and type of elements) the outputState's
-        `variable <OutputState.variable>` argument.  It is used to insure the compatibility of the source of the
+        the **index** argument).  This must match (in number and type of elements) the outputState's
+        **variable** argument.  It is used to insure the compatibility of the source of the
         input for the outputState with its `variable <OutputState.variable>`.
 
     value : number, list or np.ndarray
@@ -372,7 +372,7 @@ class OutputState(State_Base):
 
     name : str : default <State subclass>-<index>
         name of the outputState.
-        Specified in the `name` argument of the constructor for the outputState.  If not is specified, a default is
+        Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
         assigned by the StateRegistry of the mechanism to which the outputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
@@ -384,7 +384,7 @@ class OutputState(State_Base):
 
     prefs : PreferenceSet or specification dict : State.classPreferences
         the `PreferenceSet` for the outputState.
-        Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
+        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
