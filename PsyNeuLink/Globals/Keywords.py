@@ -160,6 +160,7 @@ OFF = False
 DEFAULT = False
 AUTO = True
 
+
 # Used by initDirective
 INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
 INIT__EXECUTE__METHOD_ONLY = 'init using only the subclass _execute method'
@@ -355,12 +356,16 @@ WALD_DIST_FUNCTION = "Wald Distribution"
 STABILITY_FUNCTION = 'Stability'
 DISTANCE_FUNCTION = 'Distance'
 
-ENERGY = 'Energy'
-CROSS_ENTROPY = 'Cross Entropy'
-EUCLIDEAN = 'Euclidean'
-ANGLE = 'Angle'
-DIFFERENCE = 'Difference'
-DISTANCE_METRICS = {DIFFERENCE, EUCLIDEAN, CROSS_ENTROPY, ANGLE}
+ENERGY = 'energy'
+ENTROPY = 'entropy'
+
+DIFFERENCE = 'difference'
+EUCLIDEAN = 'euclidean'
+ANGLE = 'angle'
+CORRELATION = 'correlation'
+PEARSON = 'Pearson'
+CROSS_ENTROPY = 'cross-entropy'
+DISTANCE_METRICS = {DIFFERENCE, EUCLIDEAN, ANGLE, CORRELATION, PEARSON, CROSS_ENTROPY}
 
 #endregion
 

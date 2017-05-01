@@ -146,6 +146,10 @@
 #                           (for it and all subclasses) to use self.size instead of len(variable[0])
 #                      - is `previous_input` parameter documented in Attributes?
 #                      - rename outputStates (get rid of "TRANSFER_";  do same for RecurrentTransferMechanism
+#                      - allow OutputStates to be specifiable using a list in an **outputs** arg
+#                      - implement "BOUNDS" attribute:
+#                              = None, PROBABILISTIC [0,1], or BOUNDED [asymptotic at both eneds]
+#                              set based on range and/or function_object bounded attribute
 
 # FIX: RecurrentTransferMechanism:
 #           Document decay
