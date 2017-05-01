@@ -240,7 +240,7 @@ PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             DEFAULT_MATRIX,
                             IDENTITY_MATRIX,
                             FULL_CONNECTIVITY_MATRIX,
-                            OFF_DIAGNOAL_MATRIX,
+                            HOLLOW_MATRIX,
                             RANDOM_CONNECTIVITY_MATRIX,
                             LEARNING_PROJECTION,
                             CONTROL_PROJECTION}
@@ -355,13 +355,13 @@ class Projection_Base(Projection):
 
     name : str : default <Projection subclass>-<index>
         the name of the projection.
-        Specified in the `name` argument of the constructor for the projection;  if not is specified,
+        Specified in the **name** argument of the constructor for the projection;  if not is specified,
         a default is assigned by ProjectionRegistry based on the projection's subclass
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for the projection.
-        Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
+        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 

@@ -1238,7 +1238,6 @@ class Component(object):
             if variable is None:
                 self.variableInstanceDefault = self.variableClassDefault
             else:
-                # MODIFIED 6/9/16 (CONVERT TO np.ndarray)
                 self.variableInstanceDefault = self.variable
 
         # If no params were passed, then done
@@ -1796,13 +1795,11 @@ class Component(object):
                         target_set[param_name] = param_value
                     else:
                         target_set[param_name] = param_value.copy()
-            # MODIFIED 4/3/17 KM adding list/array parameter for noise
 
-
-            # If param is a function_type, allow any other function_type
+            # If param is a function_type (or it has a function attribute that is one), allow any other function_type
             elif callable(param_value):
                 target_set[param_name] = param_value
-            elif callable(param_value.function):
+            elif hasattr(param_value, FUNCTION) and callable(param_value.function):
                 target_set[param_name] = param_value
 
             # Parameter is not a valid type
@@ -1810,9 +1807,9 @@ class Component(object):
                 if type(self.paramClassDefaults[param_name]) is type:
                     type_name = 'the name of a subclass of ' + self.paramClassDefaults[param_name].__base__.__name__
                 else:
-                    type_name = 'an instance of  ' + self.paramClassDefaults[param_name].__name__
-                raise ComponentError("Value of {0} param ({1}) must be {2} ".
-                                    format(param_name, param_value, type_name))
+                    type_name = self.paramClassDefaults[param_name].__class__.__name__
+                raise ComponentError("Value of {} param for {} ({}) must be a {}".
+                                    format(param_name, self.name, param_value, type_name))
 
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of either a ParamValueProjection or an unnamed (value, projection) tuple

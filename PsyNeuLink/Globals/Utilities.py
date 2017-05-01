@@ -26,8 +26,12 @@ TYPE CHECKING VALUE COMPARISON
 .. note::
    PsyNeuLink-specific typechecking functions are in the `Component` module
 
-* `is_numeric_or_none`
+* `parameter_spec`
+* `optional_parameter_spec`
+* `is_matrix
+* `is_matrix_spec`
 * `is_numeric`
+* `is_numeric_or_none`
 * `iscompatible`
 
 ENUM
@@ -138,13 +142,85 @@ class AutoNumber(IntEnum):
 
 TEST_CONDTION = False
 
+
+def optional_parameter_spec(param):
+    """Test whether param is a legal PsyNeuLink parameter specification or `None`
+
+    Calls parameter_spec if param is not `None`
+    Used with typecheck
+
+    Returns
+    -------
+    `True` if it is a legal parameter or `None`.
+    `False` if it is neither.
+
+
+    """
+    if not param:
+        return True
+    return parameter_spec(param)
+
+def parameter_spec(param):
+    """Test whether param is a legal PsyNeuLink parameter specification
+
+    Used with typecheck
+
+    Returns
+    -------
+    `True` if it is a legal parameter.
+    `False` if it is not.
+    """
+    # if isinstance(param, property):
+    #     param = ??
+    # if is_numeric(param):
+    from PsyNeuLink.Components.Functions.Function import function_type
+    from PsyNeuLink.Components.Projections.Projection import Projection, ParamValueProjection
+
+    if (isinstance(param, (numbers.Number,
+                           np.ndarray,
+                           list,
+                           tuple,
+                           function_type,
+                           ParamValueProjection,
+                           Projection)) or
+        (inspect.isclass(param) and issubclass(param, Projection)) or
+        param in parameter_keywords):
+        return True
+    return False
+
+
 def is_numeric_or_none(x):
     if x is None:
         return True
     return is_numeric(x)
 
+
 def is_numeric(x):
     return iscompatible(x, **{kwCompatibilityNumeric:True, kwCompatibilityLength:0})
+
+
+def is_matrix_spec(m):
+    return isinstance(m, str) and m in MATRIX_KEYWORD_VALUES
+
+
+def is_matrix(m):
+    if is_matrix_spec(m):
+        return True
+    if isinstance(m, (list, np.ndarray, np.matrix)):
+        return True
+    if callable(m):
+        try:
+            return is_matrix(m())
+        except:
+            return False
+
+
+def is_distance_metric(s):
+    if s in DISTANCE_METRICS:
+        return True
+    else:
+        return False
+
 
 kwCompatibilityType = "type"
 kwCompatibilityLength = "length"
@@ -260,6 +336,12 @@ def iscompatible(candidate, reference=None, **kargs):
         print("\niscompatible({0}, {1}): length argument must be non-negative; it has been set to 0\n".
               format(candidate, kargs, match_length))
         match_length = 0
+
+    # # FIX??
+    # # Reference is a matrix or a keyword specification for one
+    # # from PsyNeuLink.Components.Functions.Function import matrix_spec
+    if is_matrix_spec(reference):
+        return is_matrix(candidate)
 
     # IMPLEMENTATION NOTE:
     #   modified to allow numeric type mismatches (e.g., int and float;
