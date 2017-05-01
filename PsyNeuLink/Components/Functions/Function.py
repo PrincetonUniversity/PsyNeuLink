@@ -4252,7 +4252,7 @@ class Stability(ObjectiveFunction):
                  variable_default=variableClassDefault,
                  matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
-                 metric:tc.any(is_distance_metric, tc.enum(ENERGY))=ENERGY,
+                 metric:tc.any(tc.enum(ENERGY), is_distance_metric)=ENERGY,
                  normalize:bool=False,
                  params=None,
                  owner=None,
