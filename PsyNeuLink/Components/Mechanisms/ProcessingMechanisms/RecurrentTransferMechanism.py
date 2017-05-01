@@ -382,7 +382,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         energy = Stability(self.variable[0],metric=ENERGY,matrix=self.recurrent_projection.parameterStates[MATRIX])
         self.outputStates[ENERGY].calculate = energy.function
 
-        if self.function_object.bounds is (0,1):
+        if self.function_object.bounds == (0,1) or range == (0,1):
             entropy = Stability(self.variable[0],metric=ENTROPY,matrix=self.recurrent_projection.parameterStates[MATRIX])
             self.outputStates[ENTROPY].calculate = entropy.function
         else:
