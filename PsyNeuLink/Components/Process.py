@@ -785,13 +785,13 @@ class Process_Base(Process):
 
     name : str : default Process-<index>
         the name of the process.
-        Specified in the `name` argument of the constructor for the process;
+        Specified in the **name** argument of the constructor for the process;
         if not is specified, a default is assigned by ProcessRegistry
         (see :ref:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
         the `PreferenceSet` for the process.
-        Specified in the `prefs` argument of the constructor for the process;  if it is not specified, a default is
+        Specified in the **prefs** argument of the constructor for the process;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py (see :ref:`PreferenceSet <LINK>` for details).
 
 
@@ -811,11 +811,7 @@ class Process_Base(Process):
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # Use inputValueSystemDefault as default input to process
 
-    # # MODIFIED 10/2/16 OLD:
-    # variableClassDefault = inputValueSystemDefault
-    # MODIFIED 10/2/16 NEW:
     variableClassDefault = None
-    # MODIFIED 10/2/16 END
 
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL,
@@ -1197,6 +1193,22 @@ class Process_Base(Process):
                 self._mech_tuples.append(pathway[i])
             # self.mechanismNames.append(mech.name)
 
+            # FIX: ADD RECURRENT PROJECTION AND MECHANISM
+            # IMPLEMENTATION NOTE:  THIS IS A TOTAL HACK TO ALLOW RECURRENT MECHANISMS IN THE CURRENT SYSTEM
+            #                       SHOULD BE HANDLED MORE APPROPRIATELY IN COMPOSITION
+            # If this is the last mechanism in the pathway, and it has a recurrent projection,
+            #    add that to the pathway so that it can be identified and assigned for learning if so specified
+            if i+1 == len(pathway):
+                if any(any(proj.receiver.owner is mech
+                           for proj in state.sendsToProjections)
+                       for state in mech.outputStates.values()):
+                    for state in mech.outputStates.values():
+                        for proj in state.sendsToProjections:
+                            if proj.receiver.owner is mech:
+                                pathway.append(MechanismTuple(proj,None,None))
+                                pathway.append(pathway[i-2])
+
+
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
         if self.initial_values:
@@ -1241,16 +1253,16 @@ class Process_Base(Process):
                 # Must be a Mechanism (enforced above)
                 # Assign input(s) from Process to it if it doesn't already have any
                 # Note: does not include learning (even if specified for the process)
-                if i == 0:
+                if i==0:
                     # Relabel for clarity
-                    mechanism = item
+                    mech = item
 
                     # Check if first Mechanism already has any projections and, if so, issue appropriate warning
-                    if mechanism.inputState.receivesFromProjections:
-                        self._issue_warning_about_existing_projections(mechanism, context)
+                    if mech.inputState.receivesFromProjections:
+                        self._issue_warning_about_existing_projections(mech, context)
 
                     # Assign input projection from Process
-                    self._assign_process_input_projections(mechanism, context=context)
+                    self._assign_process_input_projections(mech, context=context)
                     continue
                 #endregion
 

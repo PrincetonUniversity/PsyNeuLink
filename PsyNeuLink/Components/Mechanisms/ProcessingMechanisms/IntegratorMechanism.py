@@ -24,8 +24,8 @@ Creating an IntegratorMechanism
 -------------------------------
 
 An IntegratorMechanism can be created directly by calling its constructor, or using the
-:py:func:`mechanism <Mechanism.mechanism>` function and specifying :keyword:`IntegratorMechanism` as its `mech_spec`
-argument.  Its function is specified in the :keyword:`function` argument, which can be parameterized by calling its
+`mechanism() <Mechanism.mechanism>` function and specifying INTEGRATOR_MECHANISM as its **mech_spec**
+argument.  Its function is specified in the **function** argument, which can be parameterized by calling its
 constructor with parameter values::
 
     my_time_averaging_mechanism = IntegratorMechanism(function=Integrator(integration_type=ADAPTIVE, rate=0.5))
@@ -159,13 +159,13 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
     name : str : default IntegratorMechanism-<index>
         the name of the mechanism.
-        Specified in the :keyword:`name` argument of the constructor for the mechanism;
+        Specified in the :keyword:**name** argument of the constructor for the mechanism;
         if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the `PreferenceSet` for mechanism.
-        Specified in the `prefs` argument of the constructor for the mechanism;
+        Specified in the **prefs** argument of the constructor for the mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
