@@ -46,13 +46,13 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
 # Processes:
 TaskExecutionProcess = process(
     default_input_value=[0],
-    pathway=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
+    pathway=[Input, IDENTITY_MATRIX, Decision],
     prefs = process_prefs,
     name = 'TaskExecutionProcess')
 
 RewardProcess = process(
     default_input_value=[0],
-    pathway=[(Reward, 1)],
+    pathway=[Reward],
     prefs = process_prefs,
     name = 'RewardProcess')
 
