@@ -765,15 +765,16 @@ eng = Energy(variable_default=[0,0],
              normalize=normalize
              )
 
-ent = Distance(variable_default=[0,0],
-              matrix=matrix,
-              normalize=normalize
-              )
+dist = Distance(variable_default=[0,0],
+                matrix=matrix,
+                metric=CROSS_ENTROPY,
+                normalize=normalize
+                )
 
-activity = [10,10]
+activity = [100,0]
 
 print("Energy: ",eng.function(activity))
-print("Entopy: ", ent.function(activity))
+print("Entopy: ", dist.function(activity))
 
 #endregion
 

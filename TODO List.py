@@ -138,7 +138,8 @@
 #                     implements matrix that is constrained to be all negative weights = inhibition
 #                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
-# FIX: Energy:  name is getting get to TYPY rather than SUBTYPE name
+# FIX: Energy and Distance:  name is getting get to TYPY rather than SUBTYPE name
+#               DOCUMENT args and attribs
 
 # FIX/IMPLEMENT: TransferMechanism:
 #                      - `size` arg/attribute that sets length of variable[0] on init refactor code
