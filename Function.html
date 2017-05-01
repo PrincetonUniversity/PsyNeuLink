@@ -184,6 +184,12 @@
 <li><a class="reference internal" href="#Function.WaldDist" title="Function.WaldDist"><code class="xref any py py-class docutils literal"><span class="pre">WaldDist</span></code></a></li>
 </ul>
 </dd>
+<dt>Objective Functions:</dt>
+<dd><ul class="first last simple">
+<li><code class="xref any docutils literal"><span class="pre">Stability</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">Distance</span></code></li>
+</ul>
+</dd>
 <dt>Learning Functions:</dt>
 <dd><ul class="first last simple">
 <li><a class="reference internal" href="#Function.Reinforcement" title="Function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span></code></a></li>
@@ -288,7 +294,7 @@ they are specified by the Function&#8217;s <code class="xref std std-keyword doc
 <dl class="attribute">
 <dt id="Function.Function_Base.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Function_Base.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Function_Base.prefs" title="Function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -345,7 +351,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.ArgumentTherapy.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.ArgumentTherapy.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.ArgumentTherapy.prefs" title="Function.ArgumentTherapy.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -404,7 +410,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="ControlSignal.html#AdaptiveMechanisms.ControlMechanisms.ControlSignal.ControlSignal.function" title="AdaptiveMechanisms.ControlMechanisms.ControlSignal.ControlSignal.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="#Function.Integrator.function" title="Function.Integrator.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -441,7 +447,7 @@ they are specified by the Function&#8217;s <code class="xref std std-keyword doc
 <dl class="attribute">
 <dt id="Function.UserDefinedFunction.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.UserDefinedFunction.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.UserDefinedFunction.prefs" title="Function.UserDefinedFunction.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -493,7 +499,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.Reduce.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Reduce.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Reduce.prefs" title="Function.Reduce.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -628,7 +634,7 @@ product of the arrays in <a class="reference internal" href="#Function.LinearCom
 <dl class="attribute">
 <dt id="Function.LinearCombination.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.LinearCombination.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.LinearCombination.prefs" title="Function.LinearCombination.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -709,6 +715,12 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 </dd></dl>
 
 <dl class="attribute">
+<dt id="Function.Linear.bounds">
+<code class="descname">bounds</code><a class="headerlink" href="#Function.Linear.bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>None</em></p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="Function.Linear.owner">
 <code class="descname">owner</code><a class="headerlink" href="#Function.Linear.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Mechanism</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
@@ -717,7 +729,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.Linear.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Linear.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Linear.prefs" title="Function.Linear.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -805,7 +817,13 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.Exponential.scale">
 <code class="descname">scale</code><a class="headerlink" href="#Function.Exponential.scale" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; value by which the exponentiated value is multipled.</p>
+<dd><p><em>float</em> &#8211; value by which the exponentiated value is multiplied.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Exponential.bounds">
+<code class="descname">bounds</code><a class="headerlink" href="#Function.Exponential.bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>(0, None)</em></p>
 </dd></dl>
 
 <dl class="attribute">
@@ -817,7 +835,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.Exponential.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Exponential.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Exponential.prefs" title="Function.Exponential.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -912,6 +930,12 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 </dd></dl>
 
 <dl class="attribute">
+<dt id="Function.Logistic.bounds">
+<code class="descname">bounds</code><a class="headerlink" href="#Function.Logistic.bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>(0,1)</em></p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="Function.Logistic.owner">
 <code class="descname">owner</code><a class="headerlink" href="#Function.Logistic.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Mechanism</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
@@ -920,7 +944,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.Logistic.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Logistic.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Logistic.prefs" title="Function.Logistic.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -1024,19 +1048,19 @@ values to 1, 0 for all others.</li>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="Function.SoftMax.owner">
-<code class="descname">owner</code><a class="headerlink" href="#Function.SoftMax.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Mechanism</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+<dt id="Function.SoftMax.bounds">
+<code class="descname">bounds</code><a class="headerlink" href="#Function.SoftMax.bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>None if <a href="#id1"><span class="problematic" id="id2">`</span></a>output &lt;SoftMax.output&gt;`==MAX_VAL, else (0,1) : default (0,1)</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="Function.SoftMax.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#Function.SoftMax.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.SoftMax.prefs" title="Function.SoftMax.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dl class="docutils">
+<dt>owner</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Mechanism</span><dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</dd>
+<dt>prefs</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref doc">PreferenceSet</span> for details).</p>
-</dd></dl>
-
+(see <span class="xref doc">PreferenceSet</span> for details).</dd>
+</dl>
 <dl class="method">
 <dt id="Function.SoftMax.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax.function" title="Permalink to this definition">¶</a></dt>
@@ -1106,6 +1130,7 @@ value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, 
 <li><strong>variable</strong> (<em>list or 1d np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
 <li><strong>matrix</strong> (<em>number, list, 1d or 2d np.ndarray, np.matrix, function, or matrix keyword : default IDENTITY_MATRIX</em>) &#8211; specifies matrix used to transform <a class="reference internal" href="#Function.LinearMatrix.variable" title="Function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> for specification details).</li>
+<li><strong>bounds</strong> (<em>None</em>) &#8211; </li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1148,7 +1173,7 @@ columns correspond to elements of the output array (inner index).</p>
 <dl class="attribute">
 <dt id="Function.LinearMatrix.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.LinearMatrix.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.LinearMatrix.prefs" title="Function.LinearMatrix.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -1226,7 +1251,7 @@ integrated.</li>
 <a class="reference internal" href="#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
 <li><strong>time_step_size</strong> (<em>float : default 0.0</em>) &#8211; determines the timing precision of the integration process when <a class="reference internal" href="#Function.Integrator.integration_type" title="Function.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a>
 is set to DIFFUSION (see <a class="reference internal" href="#Function.Integrator.time_step_size" title="Function.Integrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for details.</li>
-<li><strong>float, list or 1d np.array</strong> (<a class="reference internal" href="#Function.Integrator.initializer" title="Function.Integrator.initializer"><em>initializer</em></a>) &#8211; specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>float, list or 1d np.array</strong> (<a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.Integrator.initializer" title="IntegratorMechanism.IntegratorMechanism.Integrator.initializer"><em>initializer</em></a>) &#8211; specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable_default</span></code> (see <a class="reference internal" href="#Function.Integrator.initializer" title="Function.Integrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1328,7 +1353,7 @@ that the function will be executed separately for each variable element.</p>
 <dl class="attribute">
 <dt id="Function.Integrator.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Integrator.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Integrator.prefs" title="Function.Integrator.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -1453,7 +1478,7 @@ Gaussian random process).</p>
 <dl class="attribute">
 <dt id="Function.BogaczEtAl.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.BogaczEtAl.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.BogaczEtAl.prefs" title="Function.BogaczEtAl.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -1609,7 +1634,7 @@ Gaussian random process).</p>
 <dt>owner</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">Mechanism</span><dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</dd>
 <dt>prefs</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="ControlSignal.html#AdaptiveMechanisms.ControlMechanisms.ControlSignal.ControlSignal.prefs" title="AdaptiveMechanisms.ControlMechanisms.ControlSignal.ControlSignal.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+ <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</dd>
 </dl>
@@ -1926,7 +1951,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="ControlSignal.html#AdaptiveMechanisms.ControlMechanisms.ControlSignal.ControlSignal.variable" title="AdaptiveMechanisms.ControlMechanisms.ControlSignal.ControlSignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="#Function.Exponential.variable" title="Function.Exponential.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
@@ -2043,7 +2068,7 @@ system to which it belongs is used. If all are <code class="xref any docutils li
 <dl class="attribute">
 <dt id="Function.Reinforcement.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Reinforcement.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Reinforcement.prefs" title="Function.Reinforcement.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -2130,14 +2155,14 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.BackPropagation.activation_input">
 <code class="descname">activation_input</code><a class="headerlink" href="#Function.BackPropagation.activation_input" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> &#8211; the input to the matrix being modified; same as 1st item of <a href="#id1"><span class="problematic" id="id2">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
+<dd><p><em>1d np.array</em> &#8211; the input to the matrix being modified; same as 1st item of <a href="#id3"><span class="problematic" id="id4">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Function.BackPropagation.activation_output">
 <code class="descname">activation_output</code><a class="headerlink" href="#Function.BackPropagation.activation_output" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>1d np.array</em> &#8211; the output of the function for which the matrix being modified provides the input;
-same as 2nd item of <a href="#id3"><span class="problematic" id="id4">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
+same as 2nd item of <a href="#id5"><span class="problematic" id="id6">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2145,7 +2170,7 @@ same as 2nd item of <a href="#id3"><span class="problematic" id="id4">`</span></
 <code class="descname">error_signal</code><a class="headerlink" href="#Function.BackPropagation.error_signal" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>1d np.array</em> &#8211; the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
 target (training signal) and the output of the last mechanism in the sequence;
-same as 3rd item of <a href="#id5"><span class="problematic" id="id6">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
+same as 3rd item of <a href="#id7"><span class="problematic" id="id8">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2189,7 +2214,7 @@ the system to which it belongs is used. If all are <code class="xref any docutil
 <dl class="attribute">
 <dt id="Function.BackPropagation.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.BackPropagation.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.BackPropagation.prefs" title="Function.BackPropagation.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
