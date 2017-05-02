@@ -252,7 +252,7 @@ class ControlProjection(Projection_Base):
 
     def _instantiate_sender(self, params=None, context=None):
 # FIX: NEEDS TO BE BETTER INTEGRATED WITH super()._instantiate_sender
-        """Check if DefaultController is being assigned and if so configures it for the requested ControlProjection
+        """Check if DefaultController is being assigned and if so configure it for the requested ControlProjection
 
         If self.sender is a Mechanism, re-assign to <Mechanism>.outputState
         Insure that sender.value = self.variable

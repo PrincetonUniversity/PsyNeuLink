@@ -315,57 +315,72 @@ class ControlMechanism_Base(Mechanism_Base):
 
     def _take_over_as_default_controller(self, context=None):
 
-        from PsyNeuLink.Components import DefaultController
+        # # MODIFIED 5/2/17 OLD:
+        # from PsyNeuLink.Components import DefaultController
+        #
+        # # Iterate through old controller's outputStates
+        # to_be_deleted_outputStates = []
+        #
+        # try:
+        #     DefaultController.outputStates
+        # except AttributeError:
+        #     if self.system.verbosePref:
+        #         warnings.warn("No ControlProjections specified for {};  control will be disabled".
+        #                       format(self.system.name))
+        #     self.system.enable_controller = False
+        #     return
+        #
+        # for outputState in DefaultController.outputStates:
+        #
+        #     # Iterate through projections sent for outputState
+        #     for projection in DefaultController.outputStates[outputState].sendsToProjections:
+        #
+        #         if not self.system in projection.receiver.owner.systems:
+        #             continue
+        #
+        #         # Move ControlProjection to self (by creating new outputState)
+        #         # IMPLEMENTATION NOTE: Method 1 -- Move old ControlProjection to self
+        #         #    Easier to implement
+        #         #    - call _instantiate_control_projection directly here (which takes projection as arg)
+        #         #        instead of instantiating a new ControlProjection (more efficient, keeps any settings);
+        #         #    - however, this bypasses call to Projection._instantiate_sender()
+        #         #        which calls Mechanism.sendsToProjections.append(),
+        #         #        so need to do that in _instantiate_control_projection
+        #         #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
+        #         params = projection.control_signal
+        #         self._instantiate_control_projection(projection, params=params, context=context)
+        #
+        #         # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlProjection
+        #         # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlProjection
+        #         # # TBI: Implement and then use Mechanism.add_project_from_mechanism()
+        #         # self._add_projection_from_mechanism(projection, new_output_state, context=context)
+        #
+        #         # Remove corresponding projection from old controller
+        #         DefaultController.outputStates[outputState].sendsToProjections.remove(projection)
+        #
+        #     # Current controller's outputState has no projections left (after removal(s) above)
+        #     if not DefaultController.outputStates[outputState].sendsToProjections:
+        #         # If this is the old controller's primary outputState, set it to None
+        #         if DefaultController.outputState is DefaultController.outputStates[outputState]:
+        #             DefaultController.outputState = None
+        #         # Delete outputState from old controller's outputState dict
+        #         to_be_deleted_outputStates.append(DefaultController.outputStates[outputState])
+        # for item in to_be_deleted_outputStates:
+        #     del DefaultController.outputStates[item.name]
 
-        # Iterate through old controller's outputStates
-        to_be_deleted_outputStates = []
+        # MODIFIED 5/2/17 NEW:
+        # Check the parameterStates of the system's mechanisms for any ControlProjections with deferred_init()
+        for mech in self.system.mechanisms:
+            for parameter_state in mech.parameterStates.values():
+                for projection in parameter_state.receivesFromProjections:
+                    # If projection was deferred for init, initialize it now and instantiate for self
+                    if projection.init_args['sender'] is None:
+                        projection._deferred_init()
+                        # Get params specified to projection for its ControlSignal from its control_signal parameter
+                        params = projection.control_signal
+                        self._instantiate_control_projection(projection, params=params, context=context)
+        # MODIFIED 5/2/17 END
 
-        try:
-            DefaultController.outputStates
-        except AttributeError:
-            if self.system.verbosePref:
-                warnings.warn("No ControlProjections specified for {};  control will be disabled".
-                              format(self.system.name))
-            self.system.enable_controller = False
-            return
-
-        for outputState in DefaultController.outputStates:
-
-            # Iterate through projections sent for outputState
-            for projection in DefaultController.outputStates[outputState].sendsToProjections:
-
-                if not self.system in projection.receiver.owner.systems:
-                    continue
-
-                # Move ControlProjection to self (by creating new outputState)
-                # IMPLEMENTATION NOTE: Method 1 -- Move old ControlProjection to self
-                #    Easier to implement
-                #    - call _instantiate_control_projection directly here (which takes projection as arg)
-                #        instead of instantiating a new ControlProjection (more efficient, keeps any settings);
-                #    - however, this bypasses call to Projection._instantiate_sender()
-                #        which calls Mechanism.sendsToProjections.append(),
-                #        so need to do that in _instantiate_control_projection
-                #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
-                params = projection.control_signal
-                self._instantiate_control_projection(projection, params=params, context=context)
-
-                # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlProjection
-                # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlProjection
-                # # TBI: Implement and then use Mechanism.add_project_from_mechanism()
-                # self._add_projection_from_mechanism(projection, new_output_state, context=context)
-
-                # Remove corresponding projection from old controller
-                DefaultController.outputStates[outputState].sendsToProjections.remove(projection)
-
-            # Current controller's outputState has no projections left (after removal(s) above)
-            if not DefaultController.outputStates[outputState].sendsToProjections:
-                # If this is the old controller's primary outputState, set it to None
-                if DefaultController.outputState is DefaultController.outputStates[outputState]:
-                    DefaultController.outputState = None
-                # Delete outputState from old controller's outputState dict
-                to_be_deleted_outputStates.append(DefaultController.outputStates[outputState])
-        for item in to_be_deleted_outputStates:
-            del DefaultController.outputStates[item.name]
 
 
     def _instantiate_control_projection(self, projection, params=None, context=None):
@@ -393,7 +408,6 @@ class ControlMechanism_Base(Mechanism_Base):
                                               "that is not a ControlProjection, to outputState of {1}".
                                               format(projection, self.name))
 
-
         #  Update self.value by evaluating function
         self._update_value(context=context)
 
@@ -416,7 +430,6 @@ class ControlMechanism_Base(Mechanism_Base):
                                             constraint_value_name='Default control allocation',
                                             # constraint_output_state_index=output_item_output_state_index,
                                             context=context)
-
 
         # Assign outputState as ControlProjection's sender
         projection.sender = state

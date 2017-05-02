@@ -1791,7 +1791,15 @@ class Process_Base(Process):
             # For each parameterState of the mechanism
             for parameter_state in mech.parameterStates.values():
                 parameter_state._deferred_init()
-                self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
+                # MODIFIED 5/2/17 OLD:
+                # self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
+                # MODIFIED 5/2/17 NEW:
+                # Defer instantiation of ControlProjections to System
+                #   and there should not be any other type of projection to the ParameterState of a Mechanism
+                from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+                if not all(isinstance(proj, ControlProjection) for proj in parameter_state.receivesFromProjections):
+                    raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterState for a Mechanism")
+                # MODIFIED 5/2/17 END
 
         # Label monitoring mechanisms and add _monitoring_mech_tuples to _mech_tuples for execution
         if self._monitoring_mech_tuples:
