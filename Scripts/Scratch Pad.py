@@ -621,10 +621,12 @@ class ScratchPadError(Exception):
 
 #region TEST AutoAssociator
 
-my_auto = RecurrentTransferMechanism(default_input_value=[0,0,0],
-                                     function=Logistic
-                                     # matrix=RANDOM_CONNECTIVITY_MATRIX
-                                     )
+my_auto = RecurrentTransferMechanism(
+        default_input_value=[0,0,0],
+        size=3,
+        function=Logistic
+        # matrix=RANDOM_CONNECTIVITY_MATRIX
+)
 #
 # my_auto = TransferMechanism(default_input_value=[0,0,0],
 #                             # function=Logistic
