@@ -334,6 +334,9 @@ class ControlMechanism_Base(Mechanism_Base):
             # Iterate through projections sent for outputState
             for projection in DefaultController.outputStates[outputState].sendsToProjections:
 
+                if not self.system in projection.receiver.owner.systems:
+                    continue
+
                 # Move ControlProjection to self (by creating new outputState)
                 # IMPLEMENTATION NOTE: Method 1 -- Move old ControlProjection to self
                 #    Easier to implement
