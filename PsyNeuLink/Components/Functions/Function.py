@@ -4216,53 +4216,66 @@ class ObjectiveFunction(Function_Base):
 
 class Stability(ObjectiveFunction):
     """
-     Stability(
+    Stability(                                  \
         variable_default=variableCLassDefault,  \
         matrix=HOLLOW_MATRIX,                   \
         metric=EUCLIDEAN                        \
+        transfer_fct=None                       \
         normalize=False,                        \
         params=None,                            \
         owner=None,                             \
         prefs=None                              \
         )
 
-     .. _Stability:
+    .. _Stability:
 
-     Return the stability of a vector based an a weight matrix from each element to every other element in the vector  
+    Return the stability of a vector based an a weight matrix from each element to every other element in the vector.
 
-     Arguments
-     ---------
+    Arguments
+    ---------
 
-     params : Optional[Dict[param keyword, param value]]
-         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-         arguments of the constructor.
+    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
+        weight matrix from each element of `variable <Stability.variablity>` to each other;  if a matrix other
+        than HOLLOW_MATRIX is assigned, it is convolved with HOLLO_MATRIX to eliminate self-connections from the
+        stability calculation.
 
-     owner : Component
-         `component <Component>` to which to assign the Function.
+    metric : ENERGY or ENTROPY : Default ENERGY
+        metric used to compute stability. 
 
-     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    transfer_fct : function or method : Default None
+        function used to transform output of weight `matrix <Stability.matrix>`.
+
+    normalize : bool : Default False
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+    Attributes
+    ----------
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
 
 
-     Attributes
-     ----------
-
-     params : Optional[Dict[param keyword, param value]]
-         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-         arguments of the constructor.
-
-     owner : Component
-         `component <Component>` to which to assign the Function.
-
-     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-
-
-     """
+    """
 
     from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
     from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -4277,7 +4290,6 @@ class Stability(ObjectiveFunction):
     def __init__(self,
                  variable_default=variableClassDefault,
                  matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
-                 # metric:is_distance_metric=ENERGY,
                  metric:tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)=ENERGY,
                  normalize:bool=False,
                  params=None,
@@ -4365,8 +4377,7 @@ class Stability(ObjectiveFunction):
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiate matrix
          
-        Specified matrix specified is convolved with `HOLLOW_MATRIX` 
-            to eliminate the diagonal (self-connections) from the calculation.
+        Specified matrix is convolved with HOLLOW_MATRIX to eliminate the diagonal (self-connections) from calculation.
         The `Distance` Function is used for all calculations except ENERGY (which is not really a distance metric). 
         If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the Distance Function.
             
