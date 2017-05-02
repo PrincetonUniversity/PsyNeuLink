@@ -4,10 +4,11 @@ Processing Mechanism
 .. toctree:: 
    :maxdepth: 1
 
-   TransferMechanism
    IntegratorMechanism
-   RecurrentTransferMechanism
    DDM
+   TransferMechanism
+   RecurrentTransferMechanism
+   LCA
    ObjectiveMechanism
 
 .. automodule:: ProcessingMechansms.ProcessingMechanism

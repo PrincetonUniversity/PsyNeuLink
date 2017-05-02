@@ -810,6 +810,7 @@ class Mechanism_Base(Mechanism):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
     #endregion
 
+    @tc.typecheck
     def __init__(self,
                  variable=None,
                  params=None,

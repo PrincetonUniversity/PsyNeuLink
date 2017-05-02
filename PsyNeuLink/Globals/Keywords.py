@@ -323,10 +323,11 @@ WEIGHTED_ERROR_MECHANISM = "WeightedErrorMechanism"
 OBJECTIVE_MECHANISM = "ObjectiveMechanism"
 
 # ProcessingMechanisms:
-DDM_MECHANISM = "DDM"
 TRANSFER_MECHANISM = "TransferMechanism"
 RECURRENT_TRANSFER_MECHANISM = "RecurrentTransferMechanism"
+LCA = "LCA"
 INTEGRATOR_MECHANISM = "IntegratorMechanmism"
+DDM_MECHANISM = "DDM"
 
 # Function:
 ARGUMENT_THERAPY_FUNCTION = "Contradiction"

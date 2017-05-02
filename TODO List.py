@@ -119,9 +119,18 @@
 # DOCUMENTATION: FOR TransferMechanism AND ALL OF ITS SUBCLASSES:
 #                       document that it uses only the first item of its variable arg/attrib (variable[0])
 
+# DOCUMENTATION: size AND shape ATTRIBUTES in: IntegratorMechanism,
+#                                              TransferMechanism,
+#                                              RecurrentTransferMechansm
+#                                              DDM
+#                                              "developer's notes" in Components
+
+# DOCUMENTATION:  doscstring for EVCMechainms._instantiate_prediction_mechanism
+
+# DOCUMENTATION: add heading for Primary OutputState in States
 
 # IMPLEMENT:  BogcazEtAl:
-#                 add Diti, Dpenalty, RR calculation, and add RR to return value
+#                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
 #
 # IMPLEMENT:  Deferred init for control.
@@ -136,14 +145,18 @@
 #                     implements matrix that is constrained to be all negative weights = inhibition
 #                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
+# FIX: REPLACE: kwConstants must == arg names
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
 # IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)
 # FIX: Stability and Distance:  name is getting set to TYPE rather than to SUBTYPE name
-# FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
+#                               DOCUMENT args and attribs
+
+# FIX: matrix problem for LCA in assign_args_to_dict (MODIFIED 5/2/17)
+
+# FIX: Refactor to use self.size rather than len(variable[0]) ??or len(variable)??
+#        (see Components._instantiate_defaults, ~Line 1202)
 
 # FIX/IMPLEMENT: TransferMechanism:
-#                      - `size` arg/attribute that sets length of variable[0] on init refactor code
-#                           (for it and all subclasses) to use self.size instead of len(variable[0])
 #                      - rename outputStates (get rid of "TRANSFER_";  do same for RecurrentTransferMechanism
 #                      - allow OutputStates to be specifiable using a list in an **outputs** arg
 
@@ -152,6 +165,7 @@
 #        ADD _instantiate_attributes_before_function AND IF MappingProjection IS SPECIFIED FOR error_matrix,
 #                  convert to ParameterState (SEE Stability FOR EXAMPLE)
 
+# FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
 # FIX: printout of intitial_value with brackets (see devel_upstream on Quill)
 # FIX fix _update_parameter_state in Projection as in Mechanism
 
