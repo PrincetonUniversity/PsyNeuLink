@@ -145,6 +145,7 @@
 #                     implements matrix that is constrained to be all negative weights = inhibition
 #                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
+# FIX: REPLACE: kwConstants must == arg names
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
 # IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)
 # FIX: Stability and Distance:  name is getting set to TYPE rather than to SUBTYPE name
