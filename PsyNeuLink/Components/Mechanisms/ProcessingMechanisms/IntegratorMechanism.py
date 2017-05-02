@@ -196,6 +196,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
+                 size:tc.optional(int)=None,
                  function=Integrator(rate=0.5,
                                      integration_type=ADAPTIVE),
                  time_scale=TimeScale.TRIAL,
@@ -204,19 +205,16 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None,
                  context=None):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
-
-        :param default_input_value: (value)
-        :param params: (dict)
-        :param name: (str)
-        :param prefs: (PreferenceSet)
         """
 
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function, params=params)
+        params = self._assign_args_to_param_dicts(function=function,
+                                                  params=params)
 
         # if default_input_value is NotImplemented:
         #     default_input_value = SigmoidLayer_DEFAULT_NET_INPUT
+
+        self.size = size
 
         super(IntegratorMechanism, self).__init__(variable=default_input_value,
                                   params=params,
