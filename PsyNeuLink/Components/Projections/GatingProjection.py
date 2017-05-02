@@ -219,7 +219,7 @@ class GatingProjection(Projection_Base):
                                                   params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if not receiver:
+        if sender is None or receiver is None:
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self
