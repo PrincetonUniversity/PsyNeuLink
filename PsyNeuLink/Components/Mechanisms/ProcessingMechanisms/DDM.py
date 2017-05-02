@@ -324,6 +324,7 @@ Class Reference
 """
 
 # from numpy import sqrt, random, abs, tanh, exp
+import random
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import *
 
@@ -880,7 +881,7 @@ class DDM(ProcessingMechanism_Base):
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
 
             # Convert ER to decision variable:
-            if random() < return_value[DDM_Output.P_LOWER_MEAN.value]:
+            if random.random() < return_value[DDM_Output.P_LOWER_MEAN.value]:
                 return_value[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[DDM_Output.DECISION_VARIABLE.value] = threshold
