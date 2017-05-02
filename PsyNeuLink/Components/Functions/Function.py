@@ -4229,23 +4229,26 @@ class Stability(ObjectiveFunction):
     .. _Stability:
 
     Return the stability of a vector based an a weight matrix from each element to every other element in the vector.
-    The value of `variable <>
+    The value of `variable <Stability.variable>` is passed through the `matrix <Stability.matrix>`, transformed
+    using the `transfer_fct <Stability.transfer_fct>` (if specified), and then compared with its initial value
+    using the specified `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is specified, the result 
+    is normalized by the number of elements in the `variable <Stability.variable>`.
 
     Arguments
     ---------
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
-        weight matrix from each element of `variable <Stability.variablity>` to each other;  if a matrix other
-        than HOLLOW_MATRIX is assigned, it is convolved with HOLLO_MATRIX to eliminate self-connections from the
-        stability calculation.
+        specifies the matrix of recurrent weights;  must be a square matrix with the same width as the 
+        length of `variable <Stability.variable>`. 
 
     metric : ENERGY or ENTROPY : Default ENERGY
-        metric used to compute stability. 
+        specifies the metric used to compute stability. 
 
     transfer_fct : function or method : Default None
-        function used to transform output of weight `matrix <Stability.matrix>`.
+        specifies the function used to transform output of weight `matrix <Stability.matrix>`.
 
     normalize : bool : Default False
+        specifies whether to normalize the stability value by the length of `variable <Stability.variable>`. 
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -4261,6 +4264,25 @@ class Stability(ObjectiveFunction):
 
     Attributes
     ----------
+
+    variable : 1d np.array
+        array for which stability is computed.
+    
+    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
+        weight matrix from each element of `variable <Stability.variablity>` to each other;  if a matrix other
+        than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
+        stability calculation.
+
+    metric : ENERGY, ENTROPY or keyword in DISTANCE_METRICS : Default ENERGY
+        metric used to compute stability.  If ENTROPY or DISTANCE_METRICS keyword is used, the `Distance` Function
+        is used to compute the stability of `variable <Stability.variable>` with respect to its value after  
+        transformation by `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>`.
+
+    transfer_fct : function or method : Default None
+        function used to transform output of weight `matrix <Stability.matrix>` prior to computing stability.
+
+    normalize : bool : Default False
+        if `True`, result of stability calculation is normalized by the length of `variable <Stability.variable>`. 
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -4410,10 +4432,17 @@ class Stability(ObjectiveFunction):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
-        """
+        """Calculate the stability of `variable <Stability.variable>`.
+         
+         Compare the value of `variable <Stability.variable>` with its value after transformation by 
+         `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>`, using the specified
+         `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is `True`, the result is divided
+         by the length of `variable <Stability.variable>`. 
 
         Returns
         -------
+        
+        stability value : scalar
 
         """
         # Validate variable and assign to self.variable, and validate params
