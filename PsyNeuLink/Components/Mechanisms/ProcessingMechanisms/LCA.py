@@ -305,7 +305,7 @@ class LCA(RecurrentTransferMechanism):
     def __init__(self,
                  default_input_value=None,
                  size:tc.optional(int)=None,
-                 # matrix=None,
+                 matrix=None,
                  function=Logistic,
                  initial_value=None,
                  decay:tc.optional(tc.any(int, float))=1.0,
@@ -321,8 +321,8 @@ class LCA(RecurrentTransferMechanism):
         """Instantiate LCA
         """
 
-        # if matrix is not None:
-        #     warnings.warn("Matrix arg for LCA is not used;  matrix will be assigned based on inhibition")
+        if matrix is not None:
+            warnings.warn("Matrix arg for LCA is not used;  matrix will be assigned based on inhibition")
         size = size or len(self.variableClassDefault)
         matrix = np.full((size, size), -inhibition) * get_matrix(HOLLOW_MATRIX,size,size)
 
@@ -355,14 +355,15 @@ class LCA(RecurrentTransferMechanism):
 
         def max_vs_next(x):
             x_part = np.partition(x, -2)
-            max = x_part[-1]
+            max_val = x_part[-1]
             next = x_part[-2]
-            return max - next
+            return max_val - next
 
         def max_vs_avg(x):
             x_part = np.partition(x, -2)
+            max_val = x_part[-1]
             others = x_part[:-1]
-            return max - np.mean(others)
+            return max_val - np.mean(others)
 
         self.outputStates[MAX_VS_NEXT].calculate = max_vs_next
         self.outputStates[MAX_VS_AVG].calculate = max_vs_avg

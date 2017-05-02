@@ -151,6 +151,8 @@
 # FIX: Stability and Distance:  name is getting set to TYPE rather than to SUBTYPE name
 #                               DOCUMENT args and attribs
 
+# FIX: matrix problem for LCA in assign_args_to_dict (MODIFIED 5/2/17)
+
 # FIX: Refactor to use self.size rather than len(variable[0]) ??or len(variable)??
 #        (see Components._instantiate_defaults, ~Line 1202)
 

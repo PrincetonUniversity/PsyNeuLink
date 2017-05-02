@@ -400,11 +400,17 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self.matrix = self.recurrent_projection.matrix
 
-        energy = Stability(self.variable[0],metric=ENERGY,matrix=self.recurrent_projection.parameterStates[MATRIX])
+        energy = Stability(self.variable[0],
+                           metric=ENERGY,
+                           transfer_fct=self.function,
+                           matrix=self.recurrent_projection.parameterStates[MATRIX])
         self.outputStates[ENERGY].calculate = energy.function
 
         if self.function_object.bounds == (0,1) or range == (0,1):
-            entropy = Stability(self.variable[0],metric=ENTROPY,matrix=self.recurrent_projection.parameterStates[MATRIX])
+            entropy = Stability(self.variable[0],
+                                metric=ENTROPY,
+                                transfer_fct=self.function,
+                                matrix=self.recurrent_projection.parameterStates[MATRIX])
             self.outputStates[ENTROPY].calculate = entropy.function
         else:
             del self.outputStates[ENTROPY]
