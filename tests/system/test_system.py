@@ -165,3 +165,30 @@ class TestDocumentationExamples:
         result = my_process.execute()
 
         np.testing.assert_allclose(result, np.array([0.65077768]))
+
+class TestGraphAndInput:
+    def test_branch(self):
+        a = TransferMechanism(name='a', default_input_value=[0,0])
+        b = TransferMechanism(name='b')
+        c = TransferMechanism(name='c')
+        d = TransferMechanism(name='d')
+
+        p1 = process(pathway=[a, b, c], name='p1')
+        p2 = process(pathway=[a, b, d], name='p2')
+
+        s = system(
+            processes=[p1, p2],
+            name='Branch System',
+            initial_values={a:[1,1]},
+        )
+
+        inputs={a:[2,2]}
+        s.run(inputs)
+
+        assert [a] == s.originMechanisms.mechanisms
+        assert ([c, d] == s.terminalMechanisms.mechanisms or [d, c] == s.terminalMechanisms.mechanisms)
+
+        assert a.systems[s] == ORIGIN
+        assert b.systems[s] == INTERNAL
+        assert c.systems[s] == TERMINAL
+        assert d.systems[s] == TERMINAL
