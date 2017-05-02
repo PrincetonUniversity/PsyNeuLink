@@ -301,11 +301,11 @@ class LCA(RecurrentTransferMechanism):
     paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
     paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
 
-
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
                  size:tc.optional(int)=None,
+                 # matrix=None,
                  function=Logistic,
                  initial_value=None,
                  decay:tc.optional(tc.any(int, float))=1.0,
@@ -318,15 +318,17 @@ class LCA(RecurrentTransferMechanism):
                  name=None,
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
-        """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__
+        """Instantiate LCA
         """
+
+        # if matrix is not None:
+        #     warnings.warn("Matrix arg for LCA is not used;  matrix will be assigned based on inhibition")
+        size = size or len(self.variableClassDefault)
+        matrix = np.full((size, size), -inhibition) * get_matrix(HOLLOW_MATRIX,size,size)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(inhibition=inhibition,
                                                   params=params)
-
-        size = size or len(self.variableClassDefault)
-        matrix = np.full((size, size), -inhibition) * get_matrix(HOLLOW_MATRIX,size,size)
 
         super().__init__(
                 default_input_value=default_input_value,

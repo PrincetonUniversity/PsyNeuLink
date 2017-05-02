@@ -308,7 +308,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  name=None,
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
-        """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__
+        """Instantiate RecurrentTransferMechanism
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
