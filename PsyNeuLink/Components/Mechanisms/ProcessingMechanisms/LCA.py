@@ -70,7 +70,7 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import get_matrix, is_matrix, Stability
+from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import *
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
@@ -92,9 +92,9 @@ class LCA(RecurrentTransferMechanism):
     LCA(                                   \
         default_input_value=None,          \
         function=Logistic,                 \
-        inhibition:tc.any(int,float)=1.0,  \
         initial_value=None,                \
-        decay:tc.any(int,float)=1.0,       \
+        decay=1.0,                         \
+        inhibition=1.0,                    \
         noise=0.1,                         \
         time_constant=1.0,                 \
         range=(float:min, float:max),      \
@@ -306,11 +306,11 @@ class LCA(RecurrentTransferMechanism):
     def __init__(self,
                  default_input_value=None,
                  size:tc.optional(int)=None,
-                 function=Linear,
-                 matrix:tc.any(is_matrix, MappingProjection)=FULL_CONNECTIVITY_MATRIX,
+                 function=Logistic,
                  initial_value=None,
-                 decay:is_numeric_or_none=None,
-                 noise:is_numeric_or_none=0.0,
+                 decay:tc.optional(tc.any(int, float))=1.0,
+                 inhibition:tc.optional(tc.any(int, float))=1.0,
+                 noise:is_numeric_or_none=0.1,
                  time_constant:is_numeric_or_none=1.0,
                  range=None,
                  time_scale=TimeScale.TRIAL,
@@ -322,118 +322,45 @@ class LCA(RecurrentTransferMechanism):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  decay=decay)
+        params = self._assign_args_to_param_dicts(inhibition=inhibition,
+                                                  params=params)
 
-        self.size = size
+        size = size or len(self.variableClassDefault)
+        matrix = np.full((size, size), -inhibition) * get_matrix(HOLLOW_MATRIX,size,size)
 
         super().__init__(
-                 default_input_value=default_input_value,
-                 size=size,
-                 function=function,
-                 initial_value=initial_value,
-                 noise=noise,
-                 time_constant=time_constant,
-                 range=range,
-                 time_scale=time_scale,
-                 params=params,
-                 name=name,
-                 prefs=prefs,
-                 context=context)
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate shape and size of matrix and decay.
-
-        """
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
-        # Validate MATRIX
-        if MATRIX in target_set:
-
-            matrix_param = target_set[MATRIX]
-            size = len(self.variable[0])
-
-            if isinstance(matrix_param, MappingProjection):
-                matrix = matrix_param.matrix
-
-            elif isinstance(matrix_param, str):
-                matrix = get_matrix(matrix_param, size, size)
-
-            else:
-                matrix = matrix_param
-
-            if matrix.shape[0] != matrix.shape[0]:
-                if (matrix_param, MappingProjection):
-                    if __name__ == '__main__':
-                        err_msg = ("{} param of {} must be square to be used as recurrent projection for {}".
-                                   format(MATRIX, matrix_param.name, self.name))
-                else:
-                    err_msg = "{} param for must be square".format(MATRIX, self.name)
-                raise RecurrentTransferError(err_msg)
-
-        if DECAY in target_set and target_set[DECAY] is not None:
-
-            decay = target_set[DECAY]
-            if not (0.0 <= decay and decay <= 1.0):
-                raise RecurrentTransferError("{} argument for {} ({}) must be from 0.0 to 1.0".
-                                             format(DECAY, self.name, decay))
+                default_input_value=default_input_value,
+                size=size,
+                matrix=matrix,
+                function=function,
+                initial_value=initial_value,
+                decay=decay,
+                noise=noise,
+                time_constant=time_constant,
+                range=range,
+                time_scale=time_scale,
+                params=params,
+                name=name,
+                prefs=prefs,
+                context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
-        """Instantiate recurrent_projection, matrix, and the functions for the MAX_VS_NEXT and MAX_VS_AVG outputStates
+        """Instantiate matrix, and the functions for the MAX_VS_NEXT and MAX_VS_AVG outputStates
         """
+        # self.matrix = np.full((self.size, self.size), self.inhibition)
 
         super()._instantiate_attributes_after_function(context=context)
 
-        self.matrix = np.full((self.size, self.size), self.inhibition)
-
         def max_vs_next(x):
-
-            return (np.max(x), diff)
-        lambda x: (np.max(x), )
-
+            x_part = np.partition(x, -2)
+            max = x_part[-1]
+            next = x_part[-2]
+            return max - next
 
         def max_vs_avg(x):
+            x_part = np.partition(x, -2)
+            others = x_part[:-1]
+            return max - np.mean(others)
 
         self.outputStates[MAX_VS_NEXT].calculate = max_vs_next
         self.outputStates[MAX_VS_AVG].calculate = max_vs_avg
-
-
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 clock=CentralClock,
-                 time_scale = TimeScale.TRIAL,
-                 context=None):
-        """Implement decay
-        """
-
-        if self.decay is not None and self.decay != 1.0:
-            self.previous_input *= self.decay
-
-        return super()._execute(variable=variable,
-                                runtime_params=runtime_params,
-                                clock=CentralClock,
-                                time_scale=time_scale,
-                                context=context)
-
-
-# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-@tc.typecheck
-def _instantiate_recurrent_projection(mech:Mechanism_Base,
-                                      matrix:is_matrix=FULL_CONNECTIVITY_MATRIX,
-                                      context=None):
-    """Instantiate a MappingProjection from mech to itself
-
-    """
-
-    if isinstance(matrix, str):
-        size = len(mech.variable[0])
-
-    matrix = get_matrix(matrix, size, size)
-
-    return MappingProjection(sender=mech,
-                             receiver=mech,
-                             matrix=matrix,
-                             name = mech.name + ' recurrent projection')
-

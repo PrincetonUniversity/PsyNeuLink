@@ -580,8 +580,7 @@ class DDM(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   time_scale=time_scale,
-                                                  params=params,
-                                                  )
+                                                  params=params)
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 

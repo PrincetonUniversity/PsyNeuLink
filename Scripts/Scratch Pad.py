@@ -25,6 +25,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMech
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA
 
 # COMPOSITIONS:
 from PsyNeuLink.Components.Process import Process, Process_Base, process
@@ -621,13 +622,20 @@ class ScratchPadError(Exception):
 
 #region TEST AutoAssociator
 
-my_auto = RecurrentTransferMechanism(
-        default_input_value=[0,0,0],
+my_auto = LCA(
         size=3,
-        function=Logistic
-        # matrix=RANDOM_CONNECTIVITY_MATRIX
+        # inhibition
 )
-#
+
+# my_auto = RecurrentTransferMechanism(
+#         default_input_value=[0,0,0],
+#         size=3,
+#         function=Logistic,
+#         # matrix=RANDOM_CONNECTIVITY_MATRIX,
+#         matrix=np.array([[1,1,1],[1,1,1],[1,1,1]])
+#         # matrix=[[1,1,1],[1,1,1],[1,1,1]]
+# )
+
 # my_auto = TransferMechanism(default_input_value=[0,0,0],
 #                             # function=Logistic
 #                             )
