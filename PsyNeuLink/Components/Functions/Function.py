@@ -2332,7 +2332,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     continue
 
                 # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
-                elif isinstance(param_value, (np.ndarray, np.matrix)):
+                elif isinstance(param_value, (list, np.ndarray, np.matrix)):
                     # get dimensions specified by:
                     #   variable (sender): width/cols/outer index
                     #   kwReceiver param: height/rows/inner index
@@ -2778,9 +2778,8 @@ class Integrator(
                                                   integration_type=integration_type,
                                                   time_step_size=time_step_size,
                                                   initializer=initializer,
-                                                  params=params,
                                                   noise=noise,
-                                                  )
+                                                  params=params)
 
 
         # Assign here as default, for use in initialization of function
@@ -4216,56 +4215,89 @@ class ObjectiveFunction(Function_Base):
 
 class Stability(ObjectiveFunction):
     """
-     Stability(
+    Stability(                                  \
         variable_default=variableCLassDefault,  \
         matrix=HOLLOW_MATRIX,                   \
         metric=ENERGY                           \
+        transfer_fct=None                       \
         normalize=False,                        \
         params=None,                            \
         owner=None,                             \
         prefs=None                              \
         )
 
-     .. _Stability:
+    .. _Stability:
 
-     Return the stability of a vector based an a weight matrix from each element to every other element in the vector.
-         Supports various metrics of stability, including ENERGY and any metric used by the `Distance` Function.
-         If the latter is used, the value computed is "distance" between the input to the function (its ``variable``
-         attribute) and the value returned after passing the input through the specified `matrix <Stability.matrix>`
-         parameter.
+    Return the stability of a vector based an a weight matrix from each element to every other element in the vector.
+    The value of `variable <Stability.variable>` is passed through the `matrix <Stability.matrix>`, transformed
+    using the `transfer_fct <Stability.transfer_fct>` (if specified), and then compared with its initial value
+    using the specified `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is specified, the result 
+    is normalized by the number of elements in the `variable <Stability.variable>`.
 
-     Arguments
-     ---------
+    Arguments
+    ---------
 
-     params : Optional[Dict[param keyword, param value]]
-         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-         arguments of the constructor.
+    variable : list of numbers or 1d np.array : Default variableClassDefault
+        the array for which stabilty is calculated.
 
-     owner : Component
-         `component <Component>` to which to assign the Function.
+    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
+        specifies the matrix of recurrent weights;  must be a square matrix with the same width as the 
+        length of `variable <Stability.variable>`. 
 
-     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    metric : ENERGY, ENTROPY or keyword in DISTANCE_METRICS : Default ENERGY
+        specifies the metric used to compute stability. 
 
+    transfer_fct : function or method : Default None
+        specifies the function used to transform output of weight `matrix <Stability.matrix>`.
 
-     Attributes
-     ----------
+    normalize : bool : Default False
+        specifies whether to normalize the stability value by the length of `variable <Stability.variable>`. 
 
-     params : Optional[Dict[param keyword, param value]]
-         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-         arguments of the constructor.
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
 
-     owner : Component
-         `component <Component>` to which to assign the Function.
+    owner : Component
+        `component <Component>` to which to assign the Function.
 
-     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
 
+    Attributes
+    ----------
 
+    variable : 1d np.array
+        array for which stability is calculated.
+    
+    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
+        weight matrix from each element of `variable <Stability.variablity>` to each other;  if a matrix other
+        than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
+        stability calculation.
+
+    metric : ENERGY, ENTROPY or keyword in DISTANCE_METRICS
+        metric used to compute stability.  If ENTROPY or DISTANCE_METRICS keyword is used, the `Distance` Function
+        is used to compute the stability of `variable <Stability.variable>` with respect to its value after  
+        transformation by `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>`.
+
+    transfer_fct : function or method
+        function used to transform output of weight `matrix <Stability.matrix>` prior to computing stability.
+
+    normalize : bool
+        if `True`, result of stability calculation is normalized by the length of `variable <Stability.variable>`. 
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
      """
 
     from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
@@ -4283,6 +4315,7 @@ class Stability(ObjectiveFunction):
                  matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
                  metric:tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)=ENERGY,
+                 transfer_fct:tc.optional(tc.any(function_type, method_type))=None,
                  normalize:bool=False,
                  params=None,
                  owner=None,
@@ -4291,6 +4324,7 @@ class Stability(ObjectiveFunction):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   metric=metric,
+                                                  transfer_fct=transfer_fct,
                                                   normalize=normalize,
                                                   params=params)
 
@@ -4305,7 +4339,7 @@ class Stability(ObjectiveFunction):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate matrix param
 
-        `matrix` argument must be one of the following
+        `matrix <Stability.matrix>` argument must be one of the following
             - 2d list, np.ndarray or np.matrix
             - ParameterState for one of the above
             - MappingProjection with a parameterStates[MATRIX] for one of the above
@@ -4369,7 +4403,7 @@ class Stability(ObjectiveFunction):
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiate matrix
          
-        Specified matrix specified is convolved with `HOLLOW_MATRIX` 
+        Specified matrix specified is convolved with HOLLOW_MATRIX 
             to eliminate the diagonal (self-connections) from the calculation.
         The `Distance` Function is used for all calculations except ENERGY (which is not really a distance metric). 
         If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the Distance Function.
@@ -4401,6 +4435,19 @@ class Stability(ObjectiveFunction):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
+        """Calculate the stability of `variable <Stability.variable>`.
+         
+         Compare the value of `variable <Stability.variable>` with its value after transformation by 
+         `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>` (if specified), using the specified
+         `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is `True`, the result is divided
+         by the length of `variable <Stability.variable>`. 
+
+        Returns
+        -------
+        
+        stability : scalar
+
+        """
         # Validate variable and assign to self.variable, and validate params
         self._check_args(variable=variable, params=params, context=context)
 
@@ -4410,13 +4457,16 @@ class Stability(ObjectiveFunction):
         else:
             matrix = self.matrix
 
-        i = self.variable
-        o = np.dot(matrix * self._hollow_matrix, self.variable)
+        current = self.variable
+        if self.transfer_fct is not None:
+            transformed = self.transfer_fct(np.dot(matrix * self._hollow_matrix, self.variable))
+        else:
+            transformed = np.dot(matrix * self._hollow_matrix, self.variable)
 
         if self.metric is ENERGY:
-            result = -np.sum(i * o)
+            result = -np.sum(current * transformed)
         else:
-            result = self._metric_fct.function(variable=[i,o], context=context)
+            result = self._metric_fct.function(variable=[current,transformed], context=context)
 
         if self.normalize:
             result /= len(self.variable)
@@ -4427,58 +4477,68 @@ class Stability(ObjectiveFunction):
 
 class Distance(ObjectiveFunction):
     """
-     Distance(                                  \
-        variable_default=variableCLassDefault,  \
-        metric=EUCLIDEAN                        \
-        normalize=False,                        \
-        params=None,                            \
-        owner=None,                             \
-        prefs=None                              \
-        )
+    Distance(                                  \
+       variable_default=variableCLassDefault,  \
+       metric=EUCLIDEAN                        \
+       normalize=False,                        \
+       params=None,                            \
+       owner=None,                             \
+       prefs=None                              \
+       )
 
-     .. _Distance:
+    .. _Distance:
 
-     Return the distance of a vector based an a weight matrix from each element to every other element in the vector
-       
-     Distance, in this context, is defined as the sum of the differences between each element of the vector
-     and each of the others, weighted by its connection with them. 
+    Return the distance between two vectors based on a specified metric.
+      
+    Arguments
+    ---------
 
-     Arguments
-     ---------
+    variable : 2d np.array with two items : Default variableClassDefault
+        the arrays between which the distance is calculated.
 
-     params : Optional[Dict[param keyword, param value]]
-         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-         arguments of the constructor.
+    metric : keyword in DISTANCE_METRICS : Default EUCLIDEAN
+        specifies the metric used to compute the distance between the two items in `variable <Distance.variable>`. 
 
-     owner : Component
-         `component <Component>` to which to assign the Function.
+    normalize : bool : Default False
+        specifies whether to normalize the distance by the length of `variable <Distance.variable>`. 
 
-     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
 
+    owner : Component
+        `component <Component>` to which to assign the Function.
 
-     Attributes
-     ----------
-
-     params : Optional[Dict[param keyword, param value]]
-         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-         arguments of the constructor.
-
-     owner : Component
-         `component <Component>` to which to assign the Function.
-
-     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
 
 
-     """
+    Attributes
+    ----------
 
-    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-    from PsyNeuLink.Components.States.ParameterState import ParameterState
+    variable : 2d np.array with two items
+        contains the arrays between which the distance is calculated.
+
+    metric : keyword in DISTANCE_METRICS
+        specifies the metric used to compute the distance between the two items in `variable <Distance.variable>`. 
+
+    normalize : bool
+        specifies whether to normalize the distance by the length of `variable <Distance.variable>`. 
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    """
 
     componentName = DISTANCE_FUNCTION
 
@@ -4526,6 +4586,14 @@ class Distance(ObjectiveFunction):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
+        """Calculate the distance between the two arrays in `variable <Stability.variable>`.
+
+        Returns
+        -------
+        
+        distance : scalar
+
+        """
         # Validate variable and assign to self.variable, and validate params
         self._check_args(variable=variable, params=params, context=context)
 

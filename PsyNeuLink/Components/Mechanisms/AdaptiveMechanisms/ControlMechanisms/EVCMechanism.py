@@ -431,23 +431,23 @@ class EVCMechanism(ControlMechanism_Base):
         specifies set of outputState values to monitor (see `ControlMechanism_Monitored_OutputStates` for
         specification options).
 
-    function : function : ControlSignalGridSearch
+    function : function or method : ControlSignalGridSearch
         specifies the function used to determine the `allocation_policy` for the next execution of the system
         (see `function <EVCMechanism.function>` attribute for a description of the default function).
 
-    value_function : function : value_function
+    value_function : function or method : value_function
         specifies the function used to calculate the value of the current `allocation_policy`
         (see `value_function` attribute for additional details).
 
-    outcome_function : function : LinearCombination(operation=PRODUCT)
+    outcome_function : function or method : LinearCombination(operation=PRODUCT)
         specifies the function used to calculate the outcome associated with the current `allocation_policy`
         (see `outcome_function` attribute for additional details).
 
-    cost_function : function : LinearCombination(operation=SUM)
+    cost_function : function or method : LinearCombination(operation=SUM)
         specifies the function used to calculate the cost associated with the current `allocation_policy`
         (see `cost_function` attribute for additional details).
 
-    combine_outcome_and_cost_function : function : LinearCombination(operation=SUM)
+    combine_outcome_and_cost_function : function or method : LinearCombination(operation=SUM)
         specifies the function used to combine the outcome and cost associated with the current `allocation_policy`,
         to determine its value (see `combine_outcome_and_cost_function` attribute for additional details).
 
