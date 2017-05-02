@@ -127,6 +127,7 @@
 
 # DOCUMENTATION:  doscstring for EVCMechainms._instantiate_prediction_mechanism
 
+# DOCUMENTATION: add heading for Primary OutputState in States
 
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
@@ -144,10 +145,13 @@
 #                     implements matrix that is constrained to be all negative weights = inhibition
 #                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
+# FIX: REPLACE: kwConstants must == arg names
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
 # IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)
 # FIX: Stability and Distance:  name is getting set to TYPE rather than to SUBTYPE name
 #                               DOCUMENT args and attribs
+
+# FIX: matrix problem for LCA in assign_args_to_dict (MODIFIED 5/2/17)
 
 # FIX: Refactor to use self.size rather than len(variable[0]) ??or len(variable)??
 #        (see Components._instantiate_defaults, ~Line 1202)
