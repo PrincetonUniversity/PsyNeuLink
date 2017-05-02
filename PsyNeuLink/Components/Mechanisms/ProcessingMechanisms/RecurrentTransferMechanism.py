@@ -296,8 +296,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     def __init__(self,
                  default_input_value=None,
                  size:tc.optional(int)=None,
+                 matrix=FULL_CONNECTIVITY_MATRIX,
                  function=Linear,
-                 matrix:tc.any(is_matrix, MappingProjection)=FULL_CONNECTIVITY_MATRIX,
                  initial_value=None,
                  decay:is_numeric_or_none=None,
                  noise:is_numeric_or_none=0.0,
@@ -313,7 +313,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  decay=decay)
+                                                  decay=decay,
+                                                  params=params)
 
         self.size = size
 
@@ -352,14 +353,31 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 matrix = matrix_param
 
-            if matrix.shape[0] != matrix.shape[0]:
+            rows = np.array(matrix).shape[0]
+            cols = np.array(matrix).shape[1]
+
+            # Shape of matrix must be square
+            if rows != cols:
                 if (matrix_param, MappingProjection):
-                    if __name__ == '__main__':
-                        err_msg = ("{} param of {} must be square to be used as recurrent projection for {}".
-                                   format(MATRIX, matrix_param.name, self.name))
+                    # if __name__ == '__main__':
+                    err_msg = ("{} param of {} must be square to be used as recurrent projection for {}".
+                               format(MATRIX, matrix_param.name, self.name))
                 else:
                     err_msg = "{} param for must be square".format(MATRIX, self.name)
                 raise RecurrentTransferError(err_msg)
+
+            # Size of matrix must equal length of variable:
+            if rows != size:
+                if (matrix_param, MappingProjection):
+                    # if __name__ == '__main__':
+                    err_msg = ("Size of {} param for {} ({}) must be same as variable for {} ({})"
+                               "to be used as recurrent projection for {}".
+                               format(MATRIX, matrix_param.name, rows, self.name, size))
+                else:
+                    err_msg = ("Size of {} param for {} ({}) must same as its variable ({})".
+                               format(MATRIX, self.name, rows, size))
+                raise RecurrentTransferError(err_msg)
+
 
         if DECAY in target_set and target_set[DECAY] is not None:
 
@@ -421,8 +439,7 @@ def _instantiate_recurrent_projection(mech:Mechanism_Base,
 
     if isinstance(matrix, str):
         size = len(mech.variable[0])
-
-    matrix = get_matrix(matrix, size, size)
+        matrix = get_matrix(matrix, size, size)
 
     return MappingProjection(sender=mech,
                              receiver=mech,

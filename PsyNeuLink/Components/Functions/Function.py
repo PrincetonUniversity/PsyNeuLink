@@ -2332,7 +2332,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     continue
 
                 # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
-                elif isinstance(param_value, (np.ndarray, np.matrix)):
+                elif isinstance(param_value, (list, np.ndarray, np.matrix)):
                     # get dimensions specified by:
                     #   variable (sender): width/cols/outer index
                     #   kwReceiver param: height/rows/inner index
@@ -2778,10 +2778,8 @@ class Integrator(
                                                   integration_type=integration_type,
                                                   time_step_size=time_step_size,
                                                   initializer=initializer,
-                                                  params=params,
                                                   noise=noise,
-                                                  )
-
+                                                  params=params)
 
         # Assign here as default, for use in initialization of function
         self.previous_value = self.paramClassDefaults[INITIALIZER]

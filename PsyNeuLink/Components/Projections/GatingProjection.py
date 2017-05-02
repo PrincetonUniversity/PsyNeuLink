@@ -215,8 +215,8 @@ class GatingProjection(Projection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                  gating_signal=gating_signal
-                                                  )
+                                                  gating_signal=gating_signal,
+                                                  params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if not receiver:
