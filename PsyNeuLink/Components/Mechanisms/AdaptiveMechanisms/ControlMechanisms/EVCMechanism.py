@@ -224,7 +224,8 @@ However, this procedure can be modified by specifying a custom function for any 
 The default `function <EVCMechanism.function>` for an EVCMechanism selects an `allocation_policy` by assessing
 the performance of the system under each of the policies in its `controlSignalSearchSpace`, and selecting the
 one that yields the maximum EVC. The `controlSignalSearchSpace` is constructed by creating a set of
-allocationPolicies that represent all permutations of the `allocation` values to be sampled for each ControlSignal.
+allocationPolicies that represent
+        # # Re-instantiate syste all permutations of the `allocation` values to be sampled for each ControlSignal.
 Each `allocation_policy` in the set is constructed by drawing one value from the `allocation_samples` of each
 ControlSignal, and the set contains all combinations of these values.  For each `allocation_policy`, the default
 `function <EVCMechanism.function>` calls the EVCMechanism's `value_function` which, in turn, carries out the
@@ -484,7 +485,7 @@ class EVCMechanism(ControlMechanism_Base):
         ControlSignals.
 
     predictionMechanisms : MechanismList
-        a list of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the system, along with any 
+        a list of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the system, along with any
         `runtime_params <Mechanism.runtime_params>` and the `phase <Mechanism.phase>` in which they execute.
 
     origin_prediction_mechanisms : Dict[ProcessingMechanism, ProcessingMechanism]
@@ -649,8 +650,8 @@ class EVCMechanism(ControlMechanism_Base):
         default `combine_outcome_and_cost_function` is called by a custom `value_function`, the weights and/or
         exponents parameters of the `LinearCombination` function can be used, respectively, to scale and/or exponentiate
         the contribution of the outcome and/or cost to the result.  These must be specified as 1d arrays in a `WEIGHTS`
-        and/or EXPONENTS entry of a  `parameter specifiction dictionary <ParameterState_Specifying_Parameters>` 
-        assigned to the function's `params` argument; each array must have two elements, the first for the outcome 
+        and/or EXPONENTS entry of a  `parameter specifiction dictionary <ParameterState_Specifying_Parameters>`
+        assigned to the function's `params` argument; each array must have two elements, the first for the outcome
         and second for the cost. The default function can also be replaced with any
         `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that returns a scalar value.  If used with
         the EVCMechanism's default `value_function`, a custom combine_outcome_and_cost_function must accomoudate three
@@ -767,8 +768,7 @@ class EVCMechanism(ControlMechanism_Base):
         self._instantiate_prediction_mechanisms(context=context)
         self._instantiate_monitoring_mechanism(context=context)
 
-        # # MODIFIED 2/9/17 NEW:
-        # # Re-instantiate system with predictionMechanism Process(es) and monitoringMechanism added
+        # # MODIFIED 2/9/17 NEW:m with predictionMechanism Process(es) and monitoringMechanism added
         # self.system._instantiate_processes(input=self.system.variable, context=context)
         # self.system._instantiate_graph(context=context)
         # # MODIFIED 2/9/17 END
@@ -906,6 +906,8 @@ class EVCMechanism(ControlMechanism_Base):
                           matrix=AUTO_ASSIGN_MATRIX,
                           name = self.system.name + ' outcome signal'
                           )
+
+        self.system.executionList.append(MechanismTuple(self.monitoring_mechanism, None, self.system.numPhases - 1))
 
     def _get_monitored_states(self, context=None):
         """
@@ -1440,7 +1442,7 @@ class EVCMechanism(ControlMechanism_Base):
         #    = the values of the monitored output states (self.inputStates)
         #    stored in self.inputValue = list(self.variable)
         self.monitoring_mechanism.execute(context=EVC_SIMULATION)
-        self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+        # self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
         for i in range(len(self.controlSignals)):
             self.controlSignalCosts[i] = self.controlSignals[i].cost
