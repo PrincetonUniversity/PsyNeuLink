@@ -4229,6 +4229,7 @@ class Stability(ObjectiveFunction):
     .. _Stability:
 
     Return the stability of a vector based an a weight matrix from each element to every other element in the vector.
+    The value of `variable <>
 
     Arguments
     ---------
