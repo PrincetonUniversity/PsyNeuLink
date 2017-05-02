@@ -190,7 +190,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     ----------
 
     variable : value
-        the input to mechanism's ``function``.  :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        the input to mechanism's `function <RecurrentTransferMechanism.variable>`.
 
     function : Function
         the function used to transform the input.
