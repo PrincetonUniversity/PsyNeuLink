@@ -94,9 +94,6 @@
 # COMMENT
 
 
-# IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
-# IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)
-
 # DOCUMENTATION: items in paramClassDefaults are created as attributes (not properties), and are thus not validated
 #                    when assignments are made to them;  items in user_params are created as properties, and are
 #                    validated (via assign_params) when assignments are made to them.
@@ -122,6 +119,7 @@
 # DOCUMENTATION: FOR TransferMechanism AND ALL OF ITS SUBCLASSES:
 #                       document that it uses only the first item of its variable arg/attrib (variable[0])
 
+
 # IMPLEMENT:  BogcazEtAl:
 #                 add Diti, Dpenalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
@@ -138,8 +136,10 @@
 #                     implements matrix that is constrained to be all negative weights = inhibition
 #                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
+# IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
+# IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)
 # FIX: Stability and Distance:  name is getting set to TYPE rather than to SUBTYPE name
-#                               DOCUMENT args and attribs
+# FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
 
 # FIX/IMPLEMENT: TransferMechanism:
 #                      - `size` arg/attribute that sets length of variable[0] on init refactor code
@@ -152,7 +152,6 @@
 #        ADD _instantiate_attributes_before_function AND IF MappingProjection IS SPECIFIED FOR error_matrix,
 #                  convert to ParameterState (SEE Stability FOR EXAMPLE)
 
-# FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
 # FIX: printout of intitial_value with brackets (see devel_upstream on Quill)
 # FIX fix _update_parameter_state in Projection as in Mechanism
 

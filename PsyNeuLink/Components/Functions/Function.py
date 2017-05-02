@@ -4219,7 +4219,7 @@ class Stability(ObjectiveFunction):
      Stability(
         variable_default=variableCLassDefault,  \
         matrix=HOLLOW_MATRIX,                   \
-        metric=EUCLIDEAN                        \
+        metric=ENERGY                           \
         normalize=False,                        \
         params=None,                            \
         owner=None,                             \
@@ -4228,7 +4228,11 @@ class Stability(ObjectiveFunction):
 
      .. _Stability:
 
-     Return the stability of a vector based an a weight matrix from each element to every other element in the vector  
+     Return the stability of a vector based an a weight matrix from each element to every other element in the vector.
+         Supports various metrics of stability, including ENERGY and any metric used by the `Distance` Function.
+         If the latter is used, the value computed is "distance" between the input to the function (its ``variable``
+         attribute) and the value returned after passing the input through the specified `matrix <Stability.matrix>`
+         parameter.
 
      Arguments
      ---------
