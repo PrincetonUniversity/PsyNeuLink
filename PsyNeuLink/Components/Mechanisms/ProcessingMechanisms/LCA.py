@@ -11,63 +11,58 @@
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
-# ****************************************  RecurrentTransferMechanism *************************************************
+# ****************************************  LCA *************************************************
 
 """
 
 Overview
 --------
 
-A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent 
-network, in which each element is connected to every other element (instantiated in a recurrent MappingProjection
-referenced by the mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).  It also allows its
-previous input to be decayed, and reports the energy and, if appropriate, the entropy of its output.
+An LCA is a subclass of `RecurrentTransferMechanism` that implements a single-layered leaky competitive accumulator 
+network, in which each element is connected to every other element with mutually inhibitory weights.  All of the
+inhibitory weights have the same value, specified by its `inhibition <LCA.inhibition>` parameter.  In the case that 
+it has two elements, the value of its `inhibition <LCA.inhibition>` parameter is equal to its `decay 
+<RecurrentTransferMechanism.decay>` parameter, and the two are of sufficient magnitude, it implements a close 
+approximation of a `DDM` mechanism 
+(see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and 
+`Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
   
 .. _Recurrent_Transfer_Creation:
 
-Creating a RecurrentTransferMechanism
--------------------------------------
+Creating an LCA
+---------------
 
-A RecurrentTransferMechanism can be created directly by calling its constructor, or using the 
-`mechanism() <Mechanism.mechanism>` function and specifying RECURRENT_TRANSFER_MECHANISM as its 
-**mech_spec** argument.  The recurrent projection is created using the **matrix** argument of the mechanism's 
-constructor, which must specify either a square matrix or a `MappingProjection` that uses one (the default is 
-`FULL_CONNECTIVITY_MATRIX`).  In all other respects, a RecurrentTransferMechanism is specified in the same way as a 
-standard `TransferMechanism`.
+An LCA can be created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>` function 
+and specifying LCA as its **mech_spec** argument.  The set of mutually inhibitory connections are implemented as a 
+recurrent `MappingProjection` with a `matrix <LCA.matrix>` of uniform negative weights specified by 
+the **inhibition** argument of the LCA's constructor.  The default format of its `variable <LCA.variable>`, and default 
+values of its `inhibition <LCA.inhibition>`, `decay <RecurrentTransferMechanism.decay>` and 
+`noise <TransferMechanism.noise>` parameters implement an approximation of a `DDM`. 
 
-.. _Recurrent_Transfer_Structure:
+.. _LCA_Structure:
 
 Structure
 ---------
 
-The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>` 
-parameter, which specifies a self-projecting MappingProjection;  that is, one that projects from the mechanism's 
-`primary outputState <OutputState_Primary>` back to it `primary inputState <Mechanism_InputStates>`.  
-In all other respects the mechanism is identical to a standard `TransferMechanism`.  
-
-In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, 
-that decrements its `previous_input <TransferMechanism.previous_input>` value by the specified factor in each 
-`round of execution <LINK>`.  It also has two additional outputStates:  an ENERGY outputState and, if its 
-`function <TransferMechanisms.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an ENTROPY
-outputState, that each report the  respective values of the vector in it its 
-`primary (RESULTS) outputState <OutputState_Primary>`.
+The distinguishing feature of an LCA is its `matrix <LCA.matrix>` of uniform negative weights.  It also has, in 
+addition to its `primary outputState <OutputState_Primary>` (which contains the current value of the elements of the
+LCA) and the outputStates of a RecurrentTransferMechanism, it has two additional outputStates: MAX_VS_NEXT and 
+MAX_VS_AVG.  Both are two element arrays that track the element of the LCA with the currently highest value relative 
+to the value of the others.  The two elements of the MAX_VS_NEXT outputState contain, respectively, the index of the 
+LCA element with the greatest value, and the difference between its value and the next highest one;  MAX_VS_AVG 
+contains the index of the LCA element with the greatest value, and the difference between its value and the average 
+of all the others.  For an LCA with only two element, MAX_VS_NEXT implements a close approximation of the 
+`threshold <DDM.threshold>` parameter of a `DDM`.  For an LCA with more than two elements, MAX_VS_NEXT and 
+MAX_VS_AVERAGE implement threshold approximations with different properties (see `refs <LINK>`_).
  
-.. _Recurrent_Transfer_Execution:
+.. _LCA_Execution:
 
 Execution
 ---------
 
-When a RecurrentTransferMechanism executes, it includes in its input the value of its 
-`primary outputState <OutputState_Primary>` from the last :ref:`round of execution <LINK>`.
+The execution of an LCA is identical to that of `RecurrentTransferMechanism`.
 
-Like a `TransferMechanism`, the function used to update each element can be assigned using its
-`function <TransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed,
-if its `decay <RecurrentTransferMechanism.decay>` parameter is specified (and is not 1.0), it 
-decays the value of its `previous_input <TransferMechanism.previous_input>` parameter by the
-specified factor.  It then transforms its input (including from the recurrent projection) using the specified 
-function and parameters (see `Transfer_Execution`), and returns the results in its outputStates.
-
-.. _Recurrent_Transfer_Class_Reference:
+.. _LCA_Class_Reference:
 
 Class Reference
 ---------------
@@ -76,7 +71,7 @@ Class Reference
 """
 
 from PsyNeuLink.Components.Functions.Function import get_matrix, is_matrix, Stability
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import *
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
 
@@ -87,35 +82,36 @@ class RecurrentTransferError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-DECAY = 'decay'
+MAX_VS_NEXT = 'max_vs_next'
+MAX_VS_AVG = 'max_vs_avg'
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
-class RecurrentTransferMechanism(TransferMechanism):
+class LCA(RecurrentTransferMechanism):
     """
-    RecurrentTransferMechanism(        \
-    default_input_value=None,          \
-    function=Linear,                   \
-    matrix=FULL_CONNECTIVITY_MATRIX,   \
-    initial_value=None,                \
-    decay=None,                        \
-    noise=0.0,                         \
-    time_constant=1.0,                 \
-    range=(float:min, float:max),      \
-    time_scale=TimeScale.TRIAL,        \
-    params=None,                       \
-    name=None,                         \
-    prefs=None)
+    LCA(                                   \
+        default_input_value=None,          \
+        function=Logistic,                 \
+        inhibition:tc.any(int,float)=1.0,  \
+        initial_value=None,                \
+        decay:tc.any(int,float)=1.0,       \
+        noise=0.1,                         \
+        time_constant=1.0,                 \
+        range=(float:min, float:max),      \
+        time_scale=TimeScale.TIME_STEP,    \
+        params=None,                       \
+        name=None,                         \
+        prefs=None)
 
-    Implements RecurrentTransferMechanism subclass of `TransferMechaism`.
+    Implements LCA subclass of `RecurrentTransferMechanism`.
 
     COMMENT:
         Description
         -----------
-            RecurrentTransferMechanism is a Subtype of the TransferMechanism Subtype of the ProcessingMechanisms Type 
-            of the Mechanism Category of the Component class.
-            It implements a TransferMechanism with a recurrent projection (default matrix: FULL_CONNECTIVITY_MATRIX).
-            In all other respects, it is identical to a TransferMechanism.
+            LCA is a Subtype of the RecurrentTransferMechanism Subtype of the TransferMechanism 
+            Subtype of the ProcessingMechanisms Type of the Mechanism Category of the Component class.
+            It implements a RecurrentTransferMechanism with a set of uniform recurrent inhibitory weights.
+            In all other respects, it is identical to a RecurrentTransferMechanism. 
     COMMENT
 
     Arguments
@@ -132,9 +128,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
         or a custom function.
 
-    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default FULL_CONNECTIVITY_MATRIX
-        specifies the matrix to use for creating a `recurrent MappingProjection <Recurrent_Transfer_Structure>`, 
-        or a MappingProjection to use. 
+    inhibition : number : default 1.0
+        specifies the magnitude of the (uniform) negative weights used for the 
+        `matrix <LCA.matrix>` parameter of the `recurrent_projection <LCA.recurrent_projection>`. 
 
     decay : number : default 1.0
         specifies the amount by which to decrement its `previous_input <TransferMechanism.previous_input>`
@@ -190,17 +186,23 @@ class RecurrentTransferMechanism(TransferMechanism):
     ----------
 
     variable : value
-        the input to mechanism's ``function``.  :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        the input to mechanism's `function <LCA.function>`.  :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
     function : Function
         the function used to transform the input.
 
     matrix : 2d np.array
-        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the mechanism.
+        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the mechanism,
+        with a uniform set of negative weights, the magnitude of which are determined by the 
+        `inhibition <LCA.inhibition>` attribute.  
 
     recurrent_projection : MappingProjection
         a `MappingProjection` that projects from the mechanism's `primary outputState <OutputState_Primary>` 
         back to it `primary inputState <Mechanism_InputStates>`.
+
+    inhibition : number : default 1.0
+        determines the magnitude of the (uniform) negative weights for the `matrix <LCA.matrix>` parameter
+        of the `recurrent_projection <LCA.recurrent_projection>`. 
 
     decay : float : default 1.0
         determines the amount by which to multiply the `previous_input <TransferMechanism.previous_input>` value
@@ -241,8 +243,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     COMMENT:
         CORRECTED:
         value : 1d np.array
-            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT outputState
-            and the first item of ``outputValue``.
+            the output of `function <LCA.function>`;  also assigned to :keyword:`value` of the TRANSFER_RESULT outputState
+            and the first item of :keyword:`outputValue`.
     COMMENT
 
     outputStates : Dict[str, OutputState]
@@ -255,15 +257,23 @@ class RecurrentTransferMechanism(TransferMechanism):
         * `ENTROPY`, the :keyword:`value` of which is the entropy of the result,
           calculated using the `Stability` Function with the ENTROPY metric; 
           note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1 
-          (e.g., the `Logistic` function).
+          (e.g., the `Logistic` function);
+        * `MAX_VS_NEXT`, the :keyword:`value` of which is a two element array: the first is the 
+          index of the element of RESULT with the highest value, and the second the difference between that
+          and the next highest one in RESULT;
+        * `MAX_VS_AVG`, the :keyword:`value` of which is a two element array: the first is the 
+          index of the element of RESULT with the highest value, and the second the difference between that
+          and the average of the value of all its other elements;
 
     outputValue : List[array(float64), float, float]
         a list with the following items:
-        * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
-        * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
-        * **variance** of the result (``value`` of TRANSFER_VARIANCE outputState);
-        * **energy** of the result (``value`` of ENERGY outputState);
-        * **entropy** of the result (if the ENTROPY outputState is present).
+        * **result** of the `function <LCA.function>` calculation (value of TRANSFER_RESULT outputState);
+        * **mean** of the result (:keyword:`value` of TRANSFER_MEAN outputState)
+        * **variance** of the result (:keyword:`value` of TRANSFER_VARIANCE outputState);
+        * **energy** of the result (:keyword:`value` of ENERGY outputState);
+        * **entropy** of the result (if the ENTROPY outputState is present);
+        * **max_vs_next** of the result (:keyword:`value` of MAX_VS_NEXT outputState);
+        * **max_vs_avg** of the result (:keyword:`value` of MAX_VS_AVG outputState).
 
     time_scale :  TimeScale
         specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
@@ -282,14 +292,14 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     Returns
     -------
-    instance of RecurrentTransferMechanism : RecurrentTransferMechanism
+    instance of LCA : LCA
 
     """
     componentType = RECURRENT_TRANSFER_MECHANISM
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
-    paramClassDefaults[OUTPUT_STATES].append({NAME:ENERGY})
-    paramClassDefaults[OUTPUT_STATES].append({NAME:ENTROPY})
+    paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
+    paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
 
 
     @tc.typecheck
@@ -333,6 +343,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of matrix and decay.
+
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -369,27 +380,24 @@ class RecurrentTransferMechanism(TransferMechanism):
                                              format(DECAY, self.name, decay))
 
     def _instantiate_attributes_after_function(self, context=None):
-        """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY outputStates
+        """Instantiate recurrent_projection, matrix, and the functions for the MAX_VS_NEXT and MAX_VS_AVG outputStates
         """
 
         super()._instantiate_attributes_after_function(context=context)
 
-        if isinstance(self.matrix, MappingProjection):
-            self.recurrent_projection = self.matrix
+        self.matrix = np.full((self.size, self.size), self.inhibition)
 
-        else:
-            self.recurrent_projection = _instantiate_recurrent_projection(self, self.matrix, context=context)
+        def max_vs_next(x):
 
-        self.matrix = self.recurrent_projection.matrix
+            return (np.max(x), diff)
+        lambda x: (np.max(x), )
 
-        energy = Stability(self.variable[0],metric=ENERGY,matrix=self.recurrent_projection.parameterStates[MATRIX])
-        self.outputStates[ENERGY].calculate = energy.function
 
-        if self.function_object.bounds == (0,1) or range == (0,1):
-            entropy = Stability(self.variable[0],metric=ENTROPY,matrix=self.recurrent_projection.parameterStates[MATRIX])
-            self.outputStates[ENTROPY].calculate = entropy.function
-        else:
-            del self.outputStates[ENTROPY]
+        def max_vs_avg(x):
+
+        self.outputStates[MAX_VS_NEXT].calculate = max_vs_next
+        self.outputStates[MAX_VS_AVG].calculate = max_vs_avg
+
 
     def _execute(self,
                  variable=None,
