@@ -698,11 +698,13 @@ class PreferenceSet(object):
             elif requested_level > self.owner.__class__.classPreferenceLevel:
                 # IMPLEMENTATION NOTE: REMOVE HACK BELOW, ONCE ALL CLASSES ARE ASSIGNED classPreferences ON INIT
                 next_level = self.owner.__class__.__bases__[0]
+                # MODIFIED ~4/30/17 NEW:
                 # If classPreferences for level have not yet been assigned as PreferenceSet, assign them
                 if (not hasattr(next_level, 'classPreferences') or
                         not isinstance(next_level.classPreferences, PreferenceSet)):
                     from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
                     ComponentPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
+                # MODIFIED ~4/30/17 END
                 return_val = next_level.classPreferences.get_pref_setting_for_level(pref_ivar_name, requested_level)
                 return return_val[0],return_val[1]
             # Otherwise, return value for current level
@@ -756,6 +758,14 @@ class PreferenceSet(object):
                                           pref_entry.level.__class__.__name__+'.'+pref_entry.level.name))
                         return pref_value, err_msg
                 else:
+                    # MODIFIED 5/2/17 NEW:
+                    # If classPreferences for level have not yet been assigned as PreferenceSet, assign them
+                    next_level = self.owner.__bases__[0]
+                    if (not hasattr(next_level, 'classPreferences') or
+                            not isinstance(next_level.classPreferences, PreferenceSet)):
+                        from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
+                        ComponentPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
+                    # MODIFIED 5/2/17 END
                     return_val = self.owner.__bases__[0].classPreferences.get_pref_setting_for_level(pref_ivar_name,
                                                                                                requested_level)
                     return return_val[0], return_val[1]

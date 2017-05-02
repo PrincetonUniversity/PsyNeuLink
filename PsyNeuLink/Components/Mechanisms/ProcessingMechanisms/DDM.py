@@ -562,6 +562,7 @@ class DDM(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
+                 size:tc.optional(int)=None,
                  # function:tc.enum(type(BogaczEtAl), type(NavarroAndFuss))=BogaczEtAl(drift_rate=1.0,
                  function=BogaczEtAl(drift_rate=1.0,
                                      starting_point=0.0,
@@ -579,8 +580,7 @@ class DDM(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   time_scale=time_scale,
-                                                  params=params,
-                                                  )
+                                                  params=params)
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
@@ -588,8 +588,12 @@ class DDM(ProcessingMechanism_Base):
             try:
                 default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
             except:
-
                 default_input_value = 0.0
+
+        # # Conflict with above
+        # self.size = size
+
+
 
         super(DDM, self).__init__(variable=default_input_value,
                                   params=params,

@@ -275,7 +275,7 @@ COMMENT
 
 """
 
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 
@@ -544,11 +544,6 @@ class Component(object):
         - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
-        :param variable_default: (anything but a dict) - value to assign as variableInstanceDefault
-        :param param_defaults: (dict) - params to be assigned to paramInstanceDefaults
-        :param log: (ComponentLog enum) - log entry types set in self.componentLog
-        :param name: (string) - optional, overrides assignment of default (componentName of subclass)
-        :return:
         """
 
         # # MODIFIED 8/14/16 NEW:
@@ -578,18 +573,16 @@ class Component(object):
             self.componentName = self.componentName or self.componentType
         except AttributeError:
             self.componentName = self.componentType
-        #endregion
 
-        #region ENFORCE REGISRY
+        # ENFORCE REGISRY
         if self.__class__.__bases__[0].__bases__[0].__bases__[0].__name__ is 'ShellClass':
             try:
                 self.__class__.__bases__[0].registry
             except AttributeError:
                 raise ComponentError("{0} is a category class and so must implement a registry".
                                     format(self.__class__.__bases__[0].__name__))
-        #endregion
 
-        #region ASSIGN PREFS
+        # ASSIGN PREFS
 
         # If a PreferenceSet was provided, assign to instance
         if isinstance(prefs, PreferenceSet):
@@ -598,45 +591,16 @@ class Component(object):
         # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
         else:
             self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
-        #endregion
 
-        # MODIFIED 9/11/16 NEW:
-        # IMPLEMENTATION NOTE:  This is nice and all, but:
-        #                       - property version only works for getter, and for class (can't access instance values)
-        #                       - attribute version works for getter, but setter sets the attribute and not the pref
-        #                       So, for now, hard coding property setters and getters for each preference (see below)
-        # Assign prefs to attributes on object
-        # for pref in self.prefs.prefsList:
-            # # Generate attribute for each pref that returns value of the pref
-            # PROBLEM: MAKING AN ASSIGNMENT TO THE ATTRIBUTE WILL NOT AFFECT THE PREFERENCE, JUST THIS ATTRIBUTE
-            # setattr(self,
-            #         underscore_to_camelCase(pref),
-            #         getattr(getattr(self, 'prefs'), underscore_to_camelCase(pref)))
-            # PROBLEM: THIS REQUIRES THAT THE PROPERTY IS PUT ON THE CLASS, WHICH GENERATES UNDESIRABLE BEHAVIORS
-            #          ALSO, SETTER WON'T WORK PROPERLY HERE EITHER
-            # # IMPLEMENT: WITHOUT SETTER:
-            # setattr(type(self),
-            #         underscore_to_camelCase(pref),
-            #         property(lambda self: getattr(getattr(self, 'prefs'), underscore_to_camelCase(pref))))
-            # # IMPLEMENT: WITH SETTER:
-            # pref_name = underscore_to_camelCase(pref)
-            # setattr(type(self),
-            #         pref_name,
-            #         property(lambda self: getattr(getattr(self, 'prefs'), pref_name),
-            #                  lambda self, value: setattr(getattr(getattr(self, 'prefs'), pref_name),
-            #                                              pref_name,
-            #                                              value)))
-        # MODIFIED 9/11/16 END
+        # ASSIGN LOG
 
-        #region ASSIGN LOG
         self.log = Log(owner=self)
         self.recording = False
         # Used by run to store return value of execute
         self.results = []
-        #endregion
 
 
-        #region ENFORCE REQUIRED CLASS DEFAULTS
+        # ENFORCE REQUIRED CLASS DEFAULTS
 
         # All subclasses must implement variableClassDefault
         # Do this here, as _validate_variable might be overridden by subclass
@@ -647,9 +611,8 @@ class Component(object):
         except AttributeError:
             raise ComponentError("variableClassDefault must be defined for {} or its base class".
                                 format(self.componentName))
-        #endregion
 
-        #region CHECK FOR REQUIRED PARAMS
+        # CHECK FOR REQUIRED PARAMS
 
         # All subclasses must implement, in their paramClassDefaults, params of types specified in
         #     requiredClassParams (either above or in subclass defintion)
@@ -683,9 +646,10 @@ class Component(object):
                                         format(required_param_value.__name__, required_param, self.name, type_names))
             except TypeError:
                 pass
-        #endregion
 
-        #region ASSIGN DEFAULTS
+
+        # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
+
         # Validate the set passed in and assign to paramInstanceDefaults
         # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
         self._instantiate_defaults(variable=variable_default,
@@ -694,9 +658,9 @@ class Component(object):
                target_set=self.paramInstanceDefaults, # destination set to which params are being assigned
                default_set=self.paramClassDefaults,   # source set from which missing params are assigned
                context=context)
-        #endregion
 
-        #region SET CURRENT VALUES OF VARIABLE AND PARAMS
+        # SET CURRENT VALUES OF VARIABLE AND PARAMS
+
         self.variable = self.variableInstanceDefault
         # self.variable = self.variableInstanceDefault.copy()
 
@@ -704,29 +668,22 @@ class Component(object):
         self.paramsCurrent = self.paramInstanceDefaults.copy()
 
         self.runtime_params_in_use = False
-        #endregion
 
-        #region VALIDATE FUNCTION (self.function and/or self.params[function, FUNCTION_PARAMS])
+        # VALIDATE FUNCTION (self.function and/or self.params[function, FUNCTION_PARAMS])
         self._validate_function(context=context)
-        #endregion
 
-        #region INSTANTIATE ATTRIBUTES BEFORE FUNCTION
+        # INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
         #    (e.g., _instantiate_sender and _instantiate_receiver in Projection)
         self._instantiate_attributes_before_function(context=context)
-        #endregion
 
-        #region INSTANTIATE FUNCTION and assign output (by way of self.execute) to self.value
+        # INSTANTIATE FUNCTION and assign output (by way of self.execute) to self.value
         self._instantiate_function(context=context)
-        #endregion
 
-        #region INSTANTIATE ATTRIBUTES AFTER FUNCTION
+        # INSTANTIATE ATTRIBUTES AFTER FUNCTION
         # Stub for methods that need to be executed after instantiating function
         #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
-        #endregion
-
-#endregion
 
     def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
@@ -839,11 +796,22 @@ class Component(object):
                     for item in kwargs[arg]:
                         self.paramClassDefaults[FUNCTION_PARAMS][item] = default(item)
                 else:
-                    if inspect.isclass(default(arg)) and issubclass(default(arg),inspect._empty):
+                    # MODIFIED 5/2/17 OLD:
+                    default_arg = default(arg)
+                    # # MODIFIED 5/2/17 NEW:
+                    # # This is needed to handle case in which subclass does not include an argument in its constructor
+                    # #    for one that appears in the constructor of its parent class
+                    # #    (e.g., **matrix** of RecurrentTransferMechanism not included in constructor for LCA)
+                    # try:
+                    #     default_arg = default(arg)
+                    # except:
+                    #     continue
+                    # MODIFIED 5/2/17 END
+                    if inspect.isclass(default_arg) and issubclass(default_arg,inspect._empty):
                         raise ComponentError("PROGRAM ERROR: \'{}\' parameter of {} must be assigned a default value "
                                              "in its constructor or in paramClassDefaults (it can be \'None\')".
                                              format(arg, self.__class__.__name__))
-                    self.paramClassDefaults[arg] = default(arg)
+                    self.paramClassDefaults[arg] = default_arg
 
             # param corresponding to arg IS already in paramClassDefaults, so ignore
             else:
@@ -985,7 +953,6 @@ class Component(object):
         #    • therefore, assignments of paramInstance defaults to paramsCurrent in __init__ overwrites the
         #         the user-specified vaules (from the constructor args) in user_params
         self.user_params_for_instantiation = OrderedDict()
-        from collections import Iterable
         for param_name in sorted(list(self.user_params.keys())):
             param_value = self.user_params[param_name]
             if isinstance(param_value, (str, np.ndarray, tuple)):
@@ -1217,21 +1184,37 @@ class Component(object):
             if not isinstance(default_set, dict):
                 raise ComponentError("default parameter set must be a dictionary")
 
-        # IMPLEMENTATION NOTE:  REMOVE
-        # # Enforce implementation of variableEncodingDim and valueEncodingDim:
-        # try:
-        #     self.variableEncodingDim
-        # except AttributeError:
-        #     raise ComponentError("{0} or its base class must implement variableEncodingDim".
-        #                         format(self.__class__.__name__))
-        # try:
-        #     self.valueEncodingDim
-        # except AttributeError:
-        #     raise ComponentError("{0} or its base class must implement valueEncodingDim".
-        #                         format(self.__class__.__name__))
 
+        # ASSIGN SIZE OR SHAPE TO VARIABLE if specified
+
+        # If size has been specified, make sure it doesn't conflict with variable arg specification
+        if hasattr(self, 'size') and self.size is not None:
+            # Both variable and size are specified
+            if variable is not None:
+                # If they confict, raise exception, otherwise use variable (it specifies both size and content).
+                if self.size != len(variable):
+                    raise ComponentError("The size arg of {} ({}) conflicts with the length of its variable arg ({})".
+                                         format(self.name, self.size, len(variable)))
+            # Variable is not specified, so set to array of zero with length = size
+            else:
+                variable = np.zeros(self.size)
+
+        elif hasattr(self, 'shape') and self.shape is not None:
+            # Both variable and shape are specified
+            if variable is not None:
+                # If they confict, raise exception, otherwise use variable (it specifies both shape and content)
+                if self.shape != np.array(variable).shape:
+                    raise ComponentError("The shape arg of {} ({}) conflicts the shape of its variable arg ({})".
+                                         format(self.name, self.size, np.array(variable).shape))
+            # Variable is not specified, so set to array of zeros with specified shape
+            else:
+                variable = np.zeros(self.shape)
+
+        # elif isinstance(self.variableClassDefault, Iterable):
+        #     self.size = len(self.variableClassDefault)
 
         # VALIDATE VARIABLE (if not called from assign_params)
+
         if not any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
             # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
             self._validate_variable(variable, context=context)

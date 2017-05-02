@@ -366,7 +366,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_input_value=Transfer_DEFAULT_BIAS,
+                 size:tc.optional(int)=None,
                  function=Linear,
                  initial_value=None,
                  noise=0.0,
@@ -378,12 +379,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
         """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__
-
-        :param default_input_value: (value)
-        :param params: (dict)
-        :param name: (str)
-        :param prefs: (PreferenceSet)
         """
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
@@ -392,8 +389,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   time_scale=time_scale,
                                                   range=range,
                                                   params=params)
-        if default_input_value is None:
-            default_input_value = Transfer_DEFAULT_BIAS
+        # if default_input_value is None:
+        #     default_input_value = Transfer_DEFAULT_BIAS
+        self.size = size
+
         self.integrator_function=None
 
         super(TransferMechanism, self).__init__(variable=default_input_value,
