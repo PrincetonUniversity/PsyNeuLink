@@ -796,11 +796,22 @@ class Component(object):
                     for item in kwargs[arg]:
                         self.paramClassDefaults[FUNCTION_PARAMS][item] = default(item)
                 else:
-                    if inspect.isclass(default(arg)) and issubclass(default(arg),inspect._empty):
+                    # MODIFIED 5/2/17 OLD:
+                    default_arg = default(arg)
+                    # # MODIFIED 5/2/17 NEW:
+                    # # This is needed to handle case in which subclass does not include an argument in its constructor
+                    # #    for one that appears in the constructor of its parent class
+                    # #    (e.g., **matrix** of RecurrentTransferMechanism not included in constructor for LCA)
+                    # try:
+                    #     default_arg = default(arg)
+                    # except:
+                    #     continue
+                    # MODIFIED 5/2/17 END
+                    if inspect.isclass(default_arg) and issubclass(default_arg,inspect._empty):
                         raise ComponentError("PROGRAM ERROR: \'{}\' parameter of {} must be assigned a default value "
                                              "in its constructor or in paramClassDefaults (it can be \'None\')".
                                              format(arg, self.__class__.__name__))
-                    self.paramClassDefaults[arg] = default(arg)
+                    self.paramClassDefaults[arg] = default_arg
 
             # param corresponding to arg IS already in paramClassDefaults, so ignore
             else:

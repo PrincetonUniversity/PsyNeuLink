@@ -2781,6 +2781,7 @@ class Integrator(
                                                   noise=noise,
                                                   params=params)
 
+
         # Assign here as default, for use in initialization of function
         self.previous_value = self.paramClassDefaults[INITIALIZER]
 
@@ -4277,6 +4278,7 @@ class Stability(ObjectiveFunction):
                  matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
                  metric:tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)=ENERGY,
+                 transfer_fct:tc.optional(tc.any(function_type, method_type))=None,
                  normalize:bool=False,
                  params=None,
                  owner=None,
@@ -4285,6 +4287,7 @@ class Stability(ObjectiveFunction):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   metric=metric,
+                                                  transfer_fct=transfer_fct,
                                                   normalize=normalize,
                                                   params=params)
 
@@ -4404,13 +4407,16 @@ class Stability(ObjectiveFunction):
         else:
             matrix = self.matrix
 
-        i = self.variable
-        o = np.dot(matrix * self._hollow_matrix, self.variable)
+        current = self.variable
+        if self.transfer_fct is not None:
+            transformed = self.transfer_fct(np.dot(matrix * self._hollow_matrix, self.variable))
+        else:
+            transformed = np.dot(matrix * self._hollow_matrix, self.variable)
 
         if self.metric is ENERGY:
-            result = -np.sum(i * o)
+            result = -np.sum(current * transformed)
         else:
-            result = self._metric_fct.function(variable=[i,o], context=context)
+            result = self._metric_fct.function(variable=[current,transformed], context=context)
 
         if self.normalize:
             result /= len(self.variable)
