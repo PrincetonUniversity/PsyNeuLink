@@ -190,6 +190,8 @@
 # TEST: learning_rate is assignable and "sticks" at function, mech, process and system levels
 
 # FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)
+# FIX: ADD LCA Test from ScratchPad (search for: my_auto) TO META TEST SCRIPT (ONCE VALIDATED)
+
 # FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
 # FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
 
