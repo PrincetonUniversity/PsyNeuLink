@@ -18,9 +18,9 @@
 Overview
 --------
 
-A RecurrentTransferMechanism is a subclass of TransferMechanism that implements a single-layered recurrent 
-network, in which each element is connected to every other element by way of a recurrent MappingProjection
-(referenced by the mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).  It also allows its
+A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent 
+network, in which each element is connected to every other element (instantiated in a recurrent MappingProjection
+referenced by the mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).  It also allows its
 previous input to be decayed, and reports the energy and, if appropriate, the entropy of its output.
   
 .. _Recurrent_Transfer_Creation:
@@ -47,7 +47,7 @@ In all other respects the mechanism is identical to a standard `TransferMechanis
 
 In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, 
 that decrements its `previous_input <TransferMechanism.previous_input>` value by the specified factor in each 
-`round of execution <LINK>`.  It also additional outputStates:  an ENERGY outputState and, if its 
+`round of execution <LINK>`.  It also has two additional outputStates:  an ENERGY outputState and, if its 
 `function <TransferMechanisms.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an ENTROPY
 outputState, that each report the  respective values of the vector in it its 
 `primary (RESULTS) outputState <OutputState_Primary>`.
@@ -66,8 +66,6 @@ if its `decay <RecurrentTransferMechanism.decay>` parameter is specified (and is
 decays the value of its `previous_input <TransferMechanism.previous_input>` parameter by the
 specified factor.  It then transforms its input (including from the recurrent projection) using the specified 
 function and parameters (see `Transfer_Execution`), and returns the results in its outputStates.
-
-COMMENT
 
 .. _Recurrent_Transfer_Class_Reference:
 
@@ -109,7 +107,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     name=None,                         \
     prefs=None)
 
-    Implements TransferMechanism subclass of `Mechanism`.
+    Implements RecurrentTransferMechanism subclass of `TransferMechaism`.
 
     COMMENT:
         Description
@@ -117,7 +115,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             RecurrentTransferMechanism is a Subtype of the TransferMechanism Subtype of the ProcessingMechanisms Type 
             of the Mechanism Category of the Component class.
             It implements a TransferMechanism with a recurrent projection (default matrix: FULL_CONNECTIVITY_MATRIX).
-            In all other respects, it is identical to a TransferMechanism 
+            In all other respects, it is identical to a TransferMechanism.
     COMMENT
 
     Arguments
@@ -248,7 +246,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     COMMENT
 
     outputStates : Dict[str, OutputState]
-        an OrderedDict with three `outputStates <OutputState>`:
+        an OrderedDict with the following `outputStates <OutputState>`:
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
@@ -298,8 +296,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     def __init__(self,
                  default_input_value=None,
                  size:tc.optional(int)=None,
+                 matrix=FULL_CONNECTIVITY_MATRIX,
                  function=Linear,
-                 matrix:tc.any(is_matrix, MappingProjection)=FULL_CONNECTIVITY_MATRIX,
                  initial_value=None,
                  decay:is_numeric_or_none=None,
                  noise:is_numeric_or_none=0.0,
@@ -310,12 +308,13 @@ class RecurrentTransferMechanism(TransferMechanism):
                  name=None,
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
-        """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__
+        """Instantiate RecurrentTransferMechanism
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  decay=decay)
+                                                  decay=decay,
+                                                  params=params)
 
         self.size = size
 
@@ -335,7 +334,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of matrix and decay.
-
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -355,14 +353,31 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 matrix = matrix_param
 
-            if matrix.shape[0] != matrix.shape[0]:
+            rows = np.array(matrix).shape[0]
+            cols = np.array(matrix).shape[1]
+
+            # Shape of matrix must be square
+            if rows != cols:
                 if (matrix_param, MappingProjection):
-                    if __name__ == '__main__':
-                        err_msg = ("{} param of {} must be square to be used as recurrent projection for {}".
-                                   format(MATRIX, matrix_param.name, self.name))
+                    # if __name__ == '__main__':
+                    err_msg = ("{} param of {} must be square to be used as recurrent projection for {}".
+                               format(MATRIX, matrix_param.name, self.name))
                 else:
                     err_msg = "{} param for must be square".format(MATRIX, self.name)
                 raise RecurrentTransferError(err_msg)
+
+            # Size of matrix must equal length of variable:
+            if rows != size:
+                if (matrix_param, MappingProjection):
+                    # if __name__ == '__main__':
+                    err_msg = ("Size of {} param for {} ({}) must be same as variable for {} ({})"
+                               "to be used as recurrent projection for {}".
+                               format(MATRIX, matrix_param.name, rows, self.name, size))
+                else:
+                    err_msg = ("Size of {} param for {} ({}) must same as its variable ({})".
+                               format(MATRIX, self.name, rows, size))
+                raise RecurrentTransferError(err_msg)
+
 
         if DECAY in target_set and target_set[DECAY] is not None:
 
@@ -372,6 +387,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                                              format(DECAY, self.name, decay))
 
     def _instantiate_attributes_after_function(self, context=None):
+        """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY outputStates
+        """
 
         super()._instantiate_attributes_after_function(context=context)
 
@@ -383,11 +400,17 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self.matrix = self.recurrent_projection.matrix
 
-        energy = Stability(self.variable[0],metric=ENERGY,matrix=self.recurrent_projection.parameterStates[MATRIX])
+        energy = Stability(self.variable[0],
+                           metric=ENERGY,
+                           transfer_fct=self.function,
+                           matrix=self.recurrent_projection.parameterStates[MATRIX])
         self.outputStates[ENERGY].calculate = energy.function
 
         if self.function_object.bounds == (0,1) or range == (0,1):
-            entropy = Stability(self.variable[0],metric=ENTROPY,matrix=self.recurrent_projection.parameterStates[MATRIX])
+            entropy = Stability(self.variable[0],
+                                metric=ENTROPY,
+                                transfer_fct=self.function,
+                                matrix=self.recurrent_projection.parameterStates[MATRIX])
             self.outputStates[ENTROPY].calculate = entropy.function
         else:
             del self.outputStates[ENTROPY]
@@ -422,8 +445,7 @@ def _instantiate_recurrent_projection(mech:Mechanism_Base,
 
     if isinstance(matrix, str):
         size = len(mech.variable[0])
-
-    matrix = get_matrix(matrix, size, size)
+        matrix = get_matrix(matrix, size, size)
 
     return MappingProjection(sender=mech,
                              receiver=mech,
