@@ -639,7 +639,7 @@ my_auto = LCA(
 # my_auto = TransferMechanism(default_input_value=[0,0,0],
 #                             # function=Logistic
 #                             )
-
+#
 # my_auto_matrix = MappingProjection(sender=my_auto,
 #                                    receiver=my_auto,
 #                                    matrix=FULL_CONNECTIVITY_MATRIX)
