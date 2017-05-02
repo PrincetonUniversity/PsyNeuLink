@@ -127,6 +127,7 @@
 
 # DOCUMENTATION:  doscstring for EVCMechainms._instantiate_prediction_mechanism
 
+# DOCUMENTATION: add heading for Primary OutputState in States
 
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
