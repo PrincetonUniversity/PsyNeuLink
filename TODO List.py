@@ -122,6 +122,8 @@
 # DOCUMENTATION: FOR TransferMechanism AND ALL OF ITS SUBCLASSES:
 #                       document that it uses only the first item of its variable arg/attrib (variable[0])
 
+# DOCUMENTATION: size AND shape ATTRIBUTES (DOCUMENT IN Components)
+
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
@@ -138,6 +140,7 @@
 #                     implements matrix that is constrained to be all negative weights = inhibition
 #                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
+# DOCUMENATION:  doscstring for EVCMechainms._instantiate_prediction_mechanism
 # FIX: Stability and Distance:  name is getting set to TYPE rather than to SUBTYPE name
 #                               DOCUMENT args and attribs
 

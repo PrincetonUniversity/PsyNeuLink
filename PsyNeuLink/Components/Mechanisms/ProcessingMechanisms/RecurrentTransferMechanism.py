@@ -297,6 +297,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
+                 size:tc.optional(int)=None,
                  function=Linear,
                  matrix:tc.any(is_matrix, MappingProjection)=FULL_CONNECTIVITY_MATRIX,
                  initial_value=None,
@@ -316,8 +317,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   decay=decay)
 
+        self.size = size
+
         super().__init__(
                  default_input_value=default_input_value,
+                 size=size,
                  function=function,
                  initial_value=initial_value,
                  noise=noise,
