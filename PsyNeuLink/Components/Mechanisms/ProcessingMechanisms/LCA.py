@@ -51,9 +51,13 @@ MAX_VS_AVG.  Both are two element arrays that track the element of the LCA with 
 to the value of the others.  The two elements of the MAX_VS_NEXT outputState contain, respectively, the index of the 
 LCA element with the greatest value, and the difference between its value and the next highest one;  MAX_VS_AVG 
 contains the index of the LCA element with the greatest value, and the difference between its value and the average 
-of all the others.  For an LCA with only two element, MAX_VS_NEXT implements a close approximation of the 
-`threshold <DDM.threshold>` parameter of a `DDM`.  For an LCA with more than two elements, MAX_VS_NEXT and 
-MAX_VS_AVERAGE implement threshold approximations with different properties (see `refs <LINK>`_).
+of all the others.  For an LCA with only two elements, MAX_VS_NEXT implements a close approximation of the 
+`threshold <DDM.threshold>` parameter of a `DDM`  
+(see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and 
+`Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
+For an LCA with more than two elements, MAX_VS_NEXT and 
+MAX_VS_AVERAGE implement threshold approximations with different properties 
+(see `McMillen & Holmes, 2006 <http://www.sciencedirect.com/science/article/pii/S0022249605000891>`_).
  
 .. _LCA_Execution:
 
@@ -186,7 +190,7 @@ class LCA(RecurrentTransferMechanism):
     ----------
 
     variable : value
-        the input to mechanism's `function <LCA.function>`.  :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        the input to mechanism's `function <LCA.function>`.
 
     function : Function
         the function used to transform the input.
@@ -243,8 +247,8 @@ class LCA(RecurrentTransferMechanism):
     COMMENT:
         CORRECTED:
         value : 1d np.array
-            the output of `function <LCA.function>`;  also assigned to :keyword:`value` of the TRANSFER_RESULT outputState
-            and the first item of :keyword:`outputValue`.
+            the output of `function <LCA.function>`;  also assigned to :keyword:`value` of the TRANSFER_RESULT 
+            outputState and the first item of :keyword:`outputValue`.
     COMMENT
 
     outputStates : Dict[str, OutputState]

@@ -1170,10 +1170,11 @@ class State_Base(State):
         #region For each projection: get its params, pass them to it, and get the projection's value
         projection_value_list = []
 
+        from PsyNeuLink.Components.Process import ProcessInputState
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+
         for projection in self.receivesFromProjections:
 
-            from PsyNeuLink.Components.Process import ProcessInputState
-            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
             sender = projection.sender
 
             # MODIFIED 2/19/17 NEW:

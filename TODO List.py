@@ -50,6 +50,11 @@
 # 12) IMPLEMENT LEABRA
 # 13) IMPLEMENT Model fitting
 
+# VALIDATE: (then add to META TEST)
+#  RecurrentTransferMechanism
+#  LCA (Test from ScratchPad (search for: my_auto)
+#  XOR 2 PROCESS
+
 
 # COMPOSITION IMPLEMENTATION NOTE:
 #   add_projection_to and add_projection_from methods
@@ -188,9 +193,6 @@
 # IMPLEMENT: IAC TransferFunction
 # IMPLEMENT: Simple Hebbian learning
 # TEST: learning_rate is assignable and "sticks" at function, mech, process and system levels
-
-# FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)
-# FIX: ADD LCA Test from ScratchPad (search for: my_auto) TO META TEST SCRIPT (ONCE VALIDATED)
 
 # FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
 # FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
