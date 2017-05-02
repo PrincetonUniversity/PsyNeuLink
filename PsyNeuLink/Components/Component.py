@@ -275,7 +275,7 @@ COMMENT
 
 """
 
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 
@@ -942,7 +942,6 @@ class Component(object):
         #    • therefore, assignments of paramInstance defaults to paramsCurrent in __init__ overwrites the
         #         the user-specified vaules (from the constructor args) in user_params
         self.user_params_for_instantiation = OrderedDict()
-        from collections import Iterable
         for param_name in sorted(list(self.user_params.keys())):
             param_value = self.user_params[param_name]
             if isinstance(param_value, (str, np.ndarray, tuple)):
@@ -1199,6 +1198,9 @@ class Component(object):
             # Variable is not specified, so set to array of zeros with specified shape
             else:
                 variable = np.zeros(self.shape)
+
+        # elif isinstance(self.variableClassDefault, Iterable):
+        #     self.size = len(self.variableClassDefault)
 
         # VALIDATE VARIABLE (if not called from assign_params)
 

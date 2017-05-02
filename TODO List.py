@@ -94,9 +94,6 @@
 # COMMENT
 
 
-# IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
-# IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)
-
 # DOCUMENTATION: items in paramClassDefaults are created as attributes (not properties), and are thus not validated
 #                    when assignments are made to them;  items in user_params are created as properties, and are
 #                    validated (via assign_params) when assignments are made to them.
@@ -122,7 +119,14 @@
 # DOCUMENTATION: FOR TransferMechanism AND ALL OF ITS SUBCLASSES:
 #                       document that it uses only the first item of its variable arg/attrib (variable[0])
 
-# DOCUMENTATION: size AND shape ATTRIBUTES (DOCUMENT IN Components)
+# DOCUMENTATION: size AND shape ATTRIBUTES in: IntegratorMechanism,
+#                                              TransferMechanism,
+#                                              RecurrentTransferMechansm
+#                                              DDM
+#                                              "developer's notes" in Components
+
+# DOCUMENTATION:  doscstring for EVCMechainms._instantiate_prediction_mechanism
+
 
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
@@ -140,13 +144,15 @@
 #                     implements matrix that is constrained to be all negative weights = inhibition
 #                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
-# DOCUMENATION:  doscstring for EVCMechainms._instantiate_prediction_mechanism
+# IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
+# IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)
 # FIX: Stability and Distance:  name is getting set to TYPE rather than to SUBTYPE name
 #                               DOCUMENT args and attribs
 
+# FIX: Refactor to use self.size rather than len(variable[0]) ??or len(variable)??
+#        (see Components._instantiate_defaults, ~Line 1202)
+
 # FIX/IMPLEMENT: TransferMechanism:
-#                      - `size` arg/attribute that sets length of variable[0] on init refactor code
-#                           (for it and all subclasses) to use self.size instead of len(variable[0])
 #                      - rename outputStates (get rid of "TRANSFER_";  do same for RecurrentTransferMechanism
 #                      - allow OutputStates to be specifiable using a list in an **outputs** arg
 
