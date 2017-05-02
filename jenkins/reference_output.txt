@@ -1,6 +1,7 @@
 
 RUNNING EVC System Laming Validation Test Script.py
 
+
 ---------------------------------------------------------
 
 EVC Test System
@@ -25,6 +26,7 @@ EVC Test System
 		Phase 1:
 			Reward
 			Reward Prediction Mechanism
+			EVCMechanism-1 Monitoring Mechanism
 			EVCMechanism-1
 
 	Origin mechanisms: 
