@@ -84,21 +84,63 @@ def test_EVC():
     RewardPrediction = mySystem.executionList[3][0]
     InputPrediction = mySystem.executionList[4][0]
 
-    print(Input.outputState.value)
-    print(Decision.outputState.value)
-    print(Reward.outputState.value)
-    print(RewardPrediction.outputState.value)
-    print(InputPrediction.outputState.value)
-
-    from pprint import pprint
-    pprint(mySystem.__dict__)
+    # # Decision
+    # print(Decision.inputState.value, 0.123)
+    # print(Decision.outputState.value, 1.0)
+    #
+    # # Input Prediction
+    # print(InputPrediction.inputState.value, 0.123)
+    # print(InputPrediction.outputState.value, 0.186)
+    #
+    # # RewardPrediction
+    # print(RewardPrediction.inputState.value, 20.0)
+    # print(RewardPrediction.outputState.value, 15.0)
+    #
+    # # Decision
+    # # drift rate
+    # print(mySystem.controller.controlSignals[0].value, 1.0)
+    # # threshold
+    # print(mySystem.controller.controlSignals[1].value, 1.0000000000000002)
+    #
+    # print(Decision.outputStates['DDM_decision_variable'].value, 1.0)
+    # print(Decision.outputStates['DDM_response_time'].value, 0.184)
+    # print(Decision.outputStates['DDM_probability_upperBound'].value, 0.816)
+    # print(Decision.outputStates['DDM_probability_lowerBound'].value, 3.84)
+    #
+    # # Reward
+    # print(Reward.outputStates['transfer_mean '].value, 15.0)
+    # print(Reward.outputStates['transfer_result'].value, 15.0)
+    # print(Reward.outputStates['transfer_variance'].value, 0.0)
+    #
+    #
 
     expected_output = [
-        # (Input.outputState.value, ),
+        (Decision.inputState.value, 0.123),
         (Decision.outputState.value, 1.0),
-        # (Reward.outputState.value, ),
-        (RewardPrediction.outputState.value, 10.0),
-        (InputPrediction.outputState.value, 0.25)
+
+        # Input Prediction
+        (InputPrediction.inputState.value, 0.123),
+        (InputPrediction.outputState.value, 0.186),
+
+        # RewardPrediction
+        (RewardPrediction.inputState.value, 20.0),
+        (RewardPrediction.outputState.value, 15.0),
+
+        # Decision
+        # drift rate
+        (mySystem.controller.controlSignals[0].value, 1.0),
+        # threshold
+        (mySystem.controller.controlSignals[1].value, 1.0000000000000002),
+
+        (Decision.outputStates['DDM_decision_variable'].value, 1.0),
+        (Decision.outputStates['DDM_response_time'].value, 0.184),
+        (Decision.outputStates['DDM_probability_upperBound'].value, 0.816),
+        (Decision.outputStates['DDM_probability_lowerBound'].value, 3.84),
+
+        # Reward
+        (Reward.outputStates['transfer_mean '].value, 15.0),
+        (Reward.outputStates['transfer_result'].value, 15.0),
+        (Reward.outputStates['transfer_variance'].value, 0.0),
     ]
 
     # objective_response = s.mechanisms[3]
@@ -138,3 +180,5 @@ def test_EVC():
         # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
         # which WILL FAIL unless you gather higher precision values to use as reference
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+
+test_EVC()
