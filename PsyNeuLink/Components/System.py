@@ -393,7 +393,7 @@ def system(default_input_value=None,
         list or 1d np.array that must be compatible with the format of the first item of the mechanism's value
         (i.e., mechanism.value[0]).
 
-    controller : ControlMechanism : default DefaultController
+    controller : ControlMechanism : default SystemDefaultControlMechanism
         specifies the `ControlMechanism` used to monitor the value of the outputState(s) for mechanisms specified in
         `monitor_for_control`, and that specify the value of `ControlProjections` in the system.
 
@@ -515,7 +515,7 @@ class System_Base(System):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PROCESSES: [Mechanism_Base.defaultMechanism],
-                                CONTROLLER: DefaultController,
+                                CONTROLLER: SystemDefaultControlMechanism,
                                 TIME_SCALE: TimeScale.TRIAL}
        Class methods
        -------------
@@ -556,7 +556,7 @@ class System_Base(System):
             Derived from self.input and self.processes.
             Used to construct :py:data:`executionGraph <System_Base.executionGraph>` and execute the System
 
-    controller : ControlMechanism : default DefaultController
+    controller : ControlMechanism : default SystemDefaultControlMechanism
         the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
         ``monitor_for_control`` argument, and specify the value of ControlProjections in the system.
 
@@ -801,20 +801,20 @@ class System_Base(System):
 
         # Get/assign controller
 
-        # Controller is DefaultControlMechanism
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
-        if self.paramsCurrent[CONTROLLER] is DefaultControlMechanism:
-            # Get DefaultController from MechanismRegistry
-            from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
-            self.controller = list(MechanismRegistry[DEFAULT_CONTROL_MECHANISM].instanceDict.values())[0]
-        # Controller is not DefaultControlMechanism
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism \
+            import DefaultControlMechanism
+
+        # Existing controller has been assigned
+        if isinstance(self.controller, ControlMechanism_Base):
+            if self.controller.system is None:
+                self.controller.system = self
+            elif not self.controller.system is self:
+                raise SystemError("The controller assigned to {} ({}) already belongs to another system ({})".
+                                  format(self.name, self.controller.name, self.controller.system.name))
+
+        # Instantiate controller from class specification
         else:
-            # Instantiate specified controller
-            # MODIFIED 11/6/16 OLD:
             self.controller = self.controller(system=self)
-            # # MODIFIED 11/6/16 NEW:
-            # self.controller = self.paramsCurrent[CONTROLLER](system=self)
-            # MODIFIED 11/6/16 END
 
         # Check whether controller has input, and if not then disable
         try:

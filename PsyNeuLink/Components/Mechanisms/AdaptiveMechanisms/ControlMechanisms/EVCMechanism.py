@@ -385,7 +385,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # - specification of system:  required param: SYSTEM
         # - kwDefaultController:  True =>
-        #         takes over all projections from default Controller;
+        #         takes over all unassigned ControlProjections (i.e., without a sender) in its system;
         #         does not take monitored states (those are created de-novo)
         # TBI: - CONTROL_PROJECTIONS:
         #         list of projections to add (and for which outputStates should be added)

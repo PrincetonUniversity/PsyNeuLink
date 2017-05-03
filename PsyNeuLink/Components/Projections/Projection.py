@@ -82,6 +82,10 @@ Any of the following can be used to specify a projection in context:
       |
       * CONTROL_PROJECTION -- a `ControlProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
       |
+      COMMENT:
+      * GATING_PROJECTION -- a `GatingProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
+      |
+      COMMENT
       * LEARNING_PROJECTION -- a `LearningProjection`.  At present, this can only be used together with the
         specification of a MappingProjection (see `tuple <Mapping_Matrix_Specification>` format).  If the
         :keyword:`receiver` of the MappingProjection projects to a `MonitoringMechanism <MonitoringMechanism>`,
@@ -160,18 +164,21 @@ is assigned as follows:
     :py:const:`DefaultProcessingMechanism <Components.__init__.DefaultProcessingMechanism LINK>`
     is used, and its `primary outputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
   ..
-  COMMENT:
-     CONFIRM THIS IS TRUE
-  COMMENT
   * `ControlProjection`: if the projection's `receiver <Projection.receiver>` belongs to a system, then the system's
-    `controller` is used as the mechanism for the `sender <Projection.sender>.  Otherwise, the `DefaultControlMechanism`
-    is used.  In either case, an outputState is added to the ControlMechanism and assigned as the
-    projection's `sender <Projection.sender>`.
+    `controller` is used as the mechanism for the `sender <Projection.sender>`, an outputState is added to the 
+    ControlMechanism, and assigned as the projection's `sender <Projection.sender>`.  If the receiver does not
+    belong to a system, the ControlProjection will be ignored. 
+  ..
+  COMMENT:
+  * `GatingProjection`:  DOCUMENT
+  COMMENT
   ..
   * `LearningProjection`: if it is to a MappingProjection that projects to the `TERMINAL` mechanism of a process,
     then a `ComparatorMechanism` is created, and its `primary outputState <OutputState_Primary>` is assigned as the
     `sender <Projection.sender>`.  Otherwise, a `WeightedErrorMechanism` is created and its
     `primary outputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
+    
+    
 
 .. _Projection_Receiver:
 
