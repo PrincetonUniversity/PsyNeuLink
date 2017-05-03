@@ -20,17 +20,22 @@ DDM_prefs = ComponentPreferenceSet(
 process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
+
 # Mechanisms:
 Input = TransferMechanism(name='Input',
                  # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
 
                  )
+
 Reward = TransferMechanism(name='Reward',
                  # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
                   )
+
+
 Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear,
                                                                       control_signal={
-                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
+                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)},
+                                                                      modulation_parameter=slope
                                                                       )),
                                    threshold=(1.0, ControlProjection(function=Linear,
                                                                      control_signal={

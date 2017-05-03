@@ -14,7 +14,10 @@
 Overview
 --------
 
-TransmissiveProjections modulate the parameters of mechanisms or other projections.
+ModulatoryProjections allow information to be passed between mechanisms.  A projection takes its input from the
+`outputState <OutputState>` of one mechanism (its `sender <Projection.sender>`), and does whatever conversion is
+needed to transmit that information to the `inputState <InputState>` of another mechanism (its
+`receiver <Projection.receiver>`).  There are three types of projections that serve difference purposes:
 
 * `MappingProjection`
     XXXX.

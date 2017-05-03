@@ -105,8 +105,8 @@ projection_keywords.update({LEARNING_PROJECTION})
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
 
-    Return :keyword:`true` if spec is LEARNING or a valid projection_spec (see Projection._is_projection_spec
-    Otherwise, return :keyword:`False`
+    Return `True` if spec is LEARNING or a valid projection_spec (see Projection._is_projection_spec.
+    Otherwise, return `False`
 
     """
     if spec is LEARNING:
