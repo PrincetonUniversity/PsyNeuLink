@@ -669,25 +669,20 @@ class Projection_Base(Projection):
         # # If sender is a Mechanism (rather than a State), get relevant outputState and assign it to self.sender
         if isinstance(self.sender, Mechanism):
 
-            # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
-            # #            - kwMATRIX NEEDS TO BE A 3D np.array, EACH 3D ITEM OF WHICH IS A 2D WEIGHT MATRIX
-            # #            - MAKE SURE len(self.sender.value) == len(self.receiver.inputStates.items())
-            # # for i in range (len(self.sender.value)):
-            # #            - CHECK EACH MATRIX AND ASSIGN??
-            # # FOR NOW, ASSUME SENDER HAS ONLY ONE OUTPUT STATE, AND THAT RECEIVER HAS ONLY ONE INPUT STATE
+            # IMPLEMENTATION NOTE: Assumes that sender should be the primary OutputState;
+            #                      if that is not the case, sender should either be explicitly assigned
+            #                      or handled in an overrided of the method by the relevant subclass
+            #                      prior to calling super
             self.sender = self.sender.outputState
 
         # At this point, self.sender should be a OutputState
-        # MODIFIED 2/10/17 OLD: 2/21/17
         if not isinstance(self.sender, OutputState):
-        # # MODIFIED 2/10/17 NEW: [ADDED ParameterState TO ACCOMODATE LEARNING PROJECTION FOR BACKPROPAGATION]
-        # if not isinstance(self.sender, (OutputState, ParameterState)):
-        # MODIFIED 2/10/17 END
-            raise ProjectionError("Sender for MappingProjection must be a Mechanism or State")
+            raise ProjectionError("Sender specified for {} ({}) must be a Mechanism or an OutputState".
+                                  format(self.name, self.sender))
 
         # Assign projection to sender's sendsToProjections list attribute
-        # MODIFIED 8/4/16 OLD:  SHOULD CALL _add_projection_from
-        self.sender.sendsToProjections.append(self)
+        if not self in self.sender.sendsToProjections:
+            self.sender.sendsToProjections.append(self)
 
         # Validate projection's variable (self.variable) against sender.outputState.value
         if iscompatible(self.variable, self.sender.value):
@@ -970,11 +965,22 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
         state (OutputState, str, or value):
         context:
     """
-    # IMPLEMENTATION NOTE: add verification that projection is not already assigned to sender; if so, warn and ignore
+
 
     from PsyNeuLink.Components.States.State import _instantiate_state
     from PsyNeuLink.Components.States.State import State_Base
     from PsyNeuLink.Components.States.OutputState import OutputState
+
+    # Validate that projection is not already assigned to sender; if so, warn and ignore
+
+    if isinstance(projection_spec, Projection):
+        projection = projection_spec
+        if ((isinstance(sender, OutputState) and projection.sender is sender) or
+                (isinstance(sender, Mechanism) and projection.sender is sender.outputState)):
+            if self.verbosePref:
+                warnings.warn("Request to assign {} as sender of {}, but it has already been assigned".
+                              format(sender.name, projection.name))
+                return
 
     if not isinstance(state, (int, str, OutputState)):
         raise ProjectionError("State specification for {0} (as sender of {1}) must be the name, reference to "
@@ -1014,7 +1020,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                               format(projection_spec.name, state, sender.name))
             # return
 
-    # input_state is either the name for a new inputState or kwAddNewInputState
+    # output_state is either the name for a new outputState or kwAddNewOutputState
     if not state is kwAddOutputState:
         if sender.prefs.verbosePref:
             reassign = input("\nAdd new outputState named {0} to {1} (as sender for {2})? (y/n):".
@@ -1032,10 +1038,10 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                                      constraint_value=projection_spec.value,
                                      constraint_value_name='Projection_spec value for new inputState',
                                      context=context)
-    #  Update inputState and inputStates
+    #  Update outputState and outputStates
     try:
         sender.outputStates[output_state.name] = output_state
-    # No inputState(s) yet, so create them
+    # No outputState(s) yet, so create them
     except AttributeError:
         sender.outputStates = OrderedDict({output_state.name:output_state})
         sender.outputState = list(sender.outputStates)[0]

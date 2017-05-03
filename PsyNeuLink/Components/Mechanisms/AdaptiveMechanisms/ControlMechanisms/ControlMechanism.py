@@ -329,9 +329,9 @@ class ControlMechanism_Base(Mechanism_Base):
         self._validate_projection(projection)
         # get name of projection receiver (for use in naming the ControlSignal)
         if projection.value is DEFERRED_INITIALIZATION:
-            receiver_name = projection.init_args['receiver'].name
+            receiver = projection.init_args['receiver']
         else:
-            receiver_name = projection.receiver.name
+            receiver = projection.receiver
 
         from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
         if not isinstance(projection, ControlProjection):
@@ -348,7 +348,7 @@ class ControlMechanism_Base(Mechanism_Base):
         except AttributeError:
             output_state_index = 0
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
-        output_state_name = receiver_name + '_' + ControlSignal.__name__
+        output_state_name = receiver.name + '_' + ControlSignal.__name__
         output_state_value = self.allocation_policy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
@@ -365,6 +365,8 @@ class ControlMechanism_Base(Mechanism_Base):
         # Assign outputState as ControlProjection's sender
         if projection.value is DEFERRED_INITIALIZATION:
             projection.init_args['sender']=state
+            if projection.init_args['name'] is None:
+                projection.init_args['name'] = CONTROL_PROJECTION + ' for ' + receiver.owner.name + ' ' + receiver.name
             projection._deferred_init()
         else:
             projection.sender = state
@@ -380,13 +382,15 @@ class ControlMechanism_Base(Mechanism_Base):
         state.index = output_state_index
 
         # Add ControlProjection to list of outputState's outgoing projections
-        state.sendsToProjections.append(projection)
+        # (note: if it was deferred, it just added itself, skip)
+        if not projection in state.sendsToProjections:
+            state.sendsToProjections.append(projection)
 
         # Add ControlProjection to ControlMechanism's list of ControlProjections
         try:
             self.controlProjections.append(projection)
         except AttributeError:
-            self.controlProjections = []
+            self.controlProjections = [projection]
 
         # Update controlSignalCosts to accommodate instantiated projection
         try:
