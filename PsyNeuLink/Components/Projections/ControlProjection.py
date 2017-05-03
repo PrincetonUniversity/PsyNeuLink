@@ -290,7 +290,7 @@ class ControlProjection(Projection_Base):
 # FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super._instantiate_sender
 # FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP _instantiate_control_projection FOR ControlMechanism)
 # 5/2/17: STILL NEEDED??
-        # If sender is a Mechanism (rather than a State) object, get (or instantiate) its State
+        # If sender is a Mechanism (rather than a State), get (or instantiate) its State
         #    (Note:  this includes ControlMechanism)
         if isinstance(self.sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its ControlSignal projection
