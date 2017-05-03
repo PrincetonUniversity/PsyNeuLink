@@ -159,6 +159,7 @@ Class Reference
 """
 
 from PsyNeuLink.Components.Projections.Projection import *
+from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection import TransmissiveProjection_Base
 from PsyNeuLink.Components.Functions.Function import *
 
 parameter_keywords.update({MAPPING_PROJECTION})
@@ -170,7 +171,7 @@ class MappingError(Exception):
         self.error_value = error_value
 
 
-class MappingProjection(Projection_Base):
+class MappingProjection(TransmissiveProjection_Base):
     """
     MappingProjection(                                      \
         sender=None,                                        \
