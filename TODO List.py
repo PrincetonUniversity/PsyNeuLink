@@ -33,6 +33,12 @@
 #  11) • SHOULD COMPONENT NAMES HAVE SPACES OF UNDERSCORES?
 #  12) • SHOULD learning_rate FOR LearningProjection SET SLOPE OF function OR DIRECTLY MULTIPLY WEIGHTS?
 #  13) HOW TO HANDLE RECURRENT PROJECTIONS RE: LEARNING?
+#  14) EVER ALLOW INSTANTIATION OF SENDER BY PROJECTION (OR ALWAYS RELY ON deferred_init())?
+#  14) HOW TO HANDLE GATING:
+#      • SPECIFICATION (WHERE AND HOW)
+#      • MODULATION (WHO'S RESPONSIBLE FOR THE PARAMETER_MODULATION_OPERATION:  THE STATE OR THE PROJECTION?
+#      • EXECUTION:  "INLINE" (WILL INTRODUCE CYCLES IN GRAPH) OR LIKE CONTROL (PRECLUDES W/IN TRIAL GATING)
+#                       IF "INLINES", WILL IT BE ALLOWED TO EXECUTE ONLY ONCE PER ROUND OF EXECUTION OR TIME_STEP??
 
 # TASKS:
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
@@ -150,6 +156,8 @@
 #                     implements matrix that is constrained to be all negative weights = inhibition
 #                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
+
+# SEARCH & REPLACE: allocation_policy -> control_policy (AND ALL VARIANTS THEREOF)
 
 # FIX FINISH UP X_DEFAULT_CONTROL_MECH / CONTROLLED PROJECTION DEFERRED_INIT:
 # Finish looking at _instantiate_sender for Projection and ControlProjection:

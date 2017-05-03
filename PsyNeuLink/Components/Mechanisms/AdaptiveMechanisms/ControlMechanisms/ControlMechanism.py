@@ -15,9 +15,10 @@ Overview
 A ControlMechanism is an `AdaptiveMechanism` that modifies the parameter(s) of one or more `ProcessingMechanisms`.
 It's function takes a value (usually the output of an `ObjectiveMechanism`) and uses that to calculate an
 `allocation_policy`:  a list of `allocation` values for each of its ControlSignals that specify the value to assign
-to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is conveyed by
-a `ControlProjection` to the `parameterState <ParameterState>` of the corresponding ProcessingMechanism.  A
-ControlMechanism can regulate only the parameters of mechanism in the system for which it is the
+to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is assigned as
+the value of a corresponding `ControlSignal` (a subclass of `OutputState` used by ControlMechanisms), and conveyed by
+the associated `ControlProjection` to the `parameterState <ParameterState>` of the relevant ProcessingMechanism.
+A ControlMechanism can regulate only the parameters of mechanism in the system for which it is the
 `controller <System_Execution_Control>`.  The control components of a system can be displayed using the system's 
 `show_graph` method with its **show_control** argument assigned :keyword:``True`.  The control components of a 
 system are executed after all ProcessingMechanisms and `learning components <LearningMechanism>` in that system have 
@@ -28,7 +29,7 @@ been executed.
 Creating A ControlMechanism
 ---------------------------
 
-ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
+ControlMechanisms can be created using the standard Python method of calling the constructor for the desired type.
 A ControlMechanism is also created automatically whenever a `system is created <System_Creation>`, and assigned as
 the `controller <System_Execution_Control>` for that system. The `outputStates <OutputState>` to be monitored by a
 ControlMechanism are specified in its `monitored_output_states` argument, which can take  a number of
@@ -73,8 +74,8 @@ used by the `ParameterState` to which it projects to update the parameter being 
 .. note::
    A `ParameterState` that receives a `ControlProjection` does not update its value until its owner mechanism
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
-   ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
-   receiver mechanism has executed.
+   ControlMechanism has executed, a parameter that it controls will not assume its new value until the mechanism
+   to which it belongs has executed.
 
 .. _ControlMechanism_Class_Reference:
 
