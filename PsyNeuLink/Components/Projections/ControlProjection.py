@@ -72,9 +72,9 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components import DefaultController
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Projections.Projection import *
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
 projection_keywords.update({CONTROL_PROJECTION})
 parameter_keywords.update({CONTROL_PROJECTION})
@@ -120,7 +120,7 @@ class ControlProjection(Projection_Base):
             + paramClassDefaults:
                 FUNCTION:Linear,
                 FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
-                PROJECTION_SENDER: DefaultController, # ControlProjection (assigned to class ref in __init__ module)
+                PROJECTION_SENDER: ControlMechanism_Base
                 PROJECTION_SENDER_VALUE: [defaultControlAllocation],
                 CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS,
                 ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
@@ -134,8 +134,11 @@ class ControlProjection(Projection_Base):
     sender : Optional[Mechanism or OutputState]
         specifies the source of the input for the ControlProjection;  usually an `outputState <OutputState>` of a
         `ControlMechanism <ControlMechanism>`, and commonly the `ControlSignal` of an `EVCMechanism`.  If it is not
-        specified, an outputState of the `DefaultControlMechanism` for the system to which the receiver belongs will
-        be assigned.
+        specified, the ControlProjection will 
+        COMMENT:
+        remain in DEFER_INITIALIZATION status, and will 
+        COMMENT
+        be ignored during execution.
 
     receiver : Optional[Mechanism or ParameterState]
         specifies the parameterState associated with the parameter to be controlled.  This must be specified,
@@ -207,7 +210,7 @@ class ControlProjection(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        PROJECTION_SENDER: DefaultController,
+        PROJECTION_SENDER: ControlMechanism_Base,
         PROJECTION_SENDER_VALUE: defaultControlAllocation})
 
     @tc.typecheck
@@ -227,12 +230,12 @@ class ControlProjection(Projection_Base):
                                                   params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if not receiver:
+        if sender is None or receiver is None:
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
-            # Delete this as it has breen moved to params dict (so it will not be passed to Projection.__init__)
+            # Delete this as it has been moved to params dict (so it will not be passed to Projection.__init__)
             del self.init_args[CONTROL_SIGNAL]
 
             # Flag for deferred initialization
@@ -251,8 +254,8 @@ class ControlProjection(Projection_Base):
 
 
     def _instantiate_sender(self, params=None, context=None):
-# FIX: NEEDS TO BE BETTER INTEGRATED WITH super()._instantiate_sender
-        """Check if DefaultController is being assigned and if so configures it for the requested ControlProjection
+
+        """Check if DefaultController is being assigned and if so configure it for the requested ControlProjection
 
         If self.sender is a Mechanism, re-assign to <Mechanism>.outputState
         Insure that sender.value = self.variable
@@ -264,44 +267,26 @@ class ControlProjection(Projection_Base):
             - lengthens variable of DefaultController to accommodate the ControlProjection
             - updates value of the DefaultController (in response to the new variable)
         Notes:
-            * the default function of the DefaultController simply maps the inputState value to the outputState
+            * the default function of the DefaultControlMechanism simply maps the inputState value to the outputState
             * the params arg is assumed to be a dictionary of params for the ControlSignal of the ControlMechanism
 
         :return:
         """
 
+        # A Process can't be the sender of a ControlMechanism
         if isinstance(self.sender, Process):
-            raise ProjectionError("Illegal attempt to add a ControlProjection from a Process {0} "
+            raise ProjectionError("PROGRAM ERROR: attempt to add a ControlProjection from a Process {0} "
                                   "to a mechanism {0} in pathway list".format(self.name, self.sender.name))
 
-        # If sender is a class:
-        # - assume it is Mechanism or State class ref (as validated in _validate_params)
-        # - implement default sender of the corresponding type
-        if inspect.isclass(self.sender):
-            # self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
-# FIX 6/28/16:  IF CLASS IS ControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
-            self.sender = self.sender(self.paramsCurrent[PROJECTION_SENDER_VALUE])
-
-# FIX:  THE FOLLOWING CAN BE CONDENSED:
-# FIX:      ONLY TEST FOR ControlMechanism_Base (TO IMPLEMENT PROJECTION)
-# FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super._instantiate_sender
-# FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP _instantiate_control_projection FOR ControlMechanism)
-        # If sender is a Mechanism (rather than a State) object, get (or instantiate) its State
-        #    (Note:  this includes ControlMechanism)
+        # If sender is specified as a Mechanism, validate that it is a ControlMechanism
         if isinstance(self.sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its ControlSignal projection
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignalError
-            if isinstance(self.sender, ControlMechanism_Base):
-                try:
-                    params = params or self.control_signal
-                    self.sender._instantiate_control_projection(self, params=params, context=context)
-                except ControlSignalError as error_msg:
-                    raise FunctionError("Error in attempt to specify ControlSignal for {} of {}".
-                                        format(self.name, self.receiver.owner.name, error_msg))
+            if not isinstance(self.sender, ControlMechanism_Base):
+                raise ControlProjectionErrorError("Mechanism specified as sender for {} ({}) must be a "
+                                                  "ControlMechanism (but it is a {})".
+                                    format(self.name, self.sender.name, self.sender.__class__.__name__))
 
         # Call super to instantiate sender
-
         super(ControlProjection, self)._instantiate_sender(context=context)
 
 

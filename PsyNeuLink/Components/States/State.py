@@ -607,12 +607,16 @@ class State_Base(State):
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.value is DEFERRED_INITIALIZATION:
                     from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-                    if isinstance(projection_spec, LearningProjection):
+                    # from PsyNeuLink.Components.Projections.GatingProjection import GatingProjection
+                    from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+                    # if isinstance(projection_spec, (LearningProjection, GatingProjection, ControlProjection)):
+                    if isinstance(projection_spec, (LearningProjection, ControlProjection)):
                         # Assign projection to parameterState
                         self.receivesFromProjections.append(projection_spec)
                         projection_spec.init_args[kwReceiver] = self
                         # Skip any further initialization for now
-                        #   (remainder will occur as part of deferred init for LearningProjection)
+                        #   (remainder will occur as part of deferred init for
+                        #    LearningProjection, ControlProjection or GatingProjection)
                         continue
                     # Complete init for other projections (e.g., ControlProjection)
                     else:
@@ -1175,9 +1179,16 @@ class State_Base(State):
 
         for projection in self.receivesFromProjections:
 
-            sender = projection.sender
+            if hasattr(projection, 'sender'):
+                sender = projection.sender
+            else:
+                if self.verbosePref:
+                    warnings.warn("{} to {} {} of {} ignored [has no sender]".format(projection.__class__.__name__,
+                                                                                     self.name,
+                                                                                     self.__class__.__name__,
+                                                                                     self.owner.name))
+                continue
 
-            # MODIFIED 2/19/17 NEW:
             # Only update if sender has also executed in this round (i.e., has matching execution_id)
             if isinstance(self.owner, (Mechanism, Process)):
                 if sender.owner._execution_id != self.owner._execution_id:
@@ -1189,8 +1200,6 @@ class State_Base(State):
                 raise StateError("PROGRAM ERROR: Object ({}) of type {} has a {}, but this is only allowed for "
                                  "Mechanisms and MappingProjections".
                                  format(self.owner.name, self.owner.__class__.__name__, self.__class__.__name__,))
-
-            # MODIFIED 2/19/17 END
 
             # FIX: FOR EACH PROJECTION TO INPUT_STATE, CHECK IF SENDER IS FROM PROCESS INPUT OR TARGET INPUT
             # FIX: IF SO, ONLY INCLUDE IF THEY BELONG TO CURRENT PROCESS;

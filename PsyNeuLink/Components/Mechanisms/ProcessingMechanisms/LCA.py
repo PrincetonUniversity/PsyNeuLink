@@ -79,7 +79,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMech
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
 
-class RecurrentTransferError(Exception):
+class LCAError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -326,7 +326,7 @@ class LCA(RecurrentTransferMechanism):
         """
 
         if matrix is not None:
-            warnings.warn("Matrix arg for LCA is not used;  matrix will be assigned based on inhibition")
+            warnings.warn("Matrix arg for LCA is not used; matrix was assigned using inhibition arg")
         size = size or len(self.variableClassDefault)
         matrix = np.full((size, size), -inhibition) * get_matrix(HOLLOW_MATRIX,size,size)
 

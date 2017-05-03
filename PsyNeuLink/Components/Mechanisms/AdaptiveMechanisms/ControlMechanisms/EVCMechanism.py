@@ -385,7 +385,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # - specification of system:  required param: SYSTEM
         # - kwDefaultController:  True =>
-        #         takes over all projections from default Controller;
+        #         takes over all unassigned ControlProjections (i.e., without a sender) in its system;
         #         does not take monitored states (those are created de-novo)
         # TBI: - CONTROL_PROJECTIONS:
         #         list of projections to add (and for which outputStates should be added)
@@ -474,7 +474,8 @@ class EVCMechanism(ControlMechanism_Base):
     ----------
 
     make_default_controller : bool : default True
-        if `True`, assigns EVCMechanism when instantiated as the DefaultController
+        if `True`, calls deferred_init() for each ControlProjection in its system without a sender,
+        creates a ControlSignal for it, and assigns itself as its sender.
 
     system : System
         the `system <System>` for which EVCMechanism is the `controller`.
@@ -711,7 +712,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 # system:System,
+                 system=None,
                  # default_input_value=None,
                  prediction_mechanism_type=IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
@@ -733,17 +734,17 @@ class EVCMechanism(ControlMechanism_Base):
         prediction_mechanism_params = prediction_mechanism_params or {MONITOR_FOR_CONTROL:None}
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(# system=system,
-                                              prediction_mechanism_type=prediction_mechanism_type,
-                                              prediction_mechanism_params=prediction_mechanism_params,
-                                              monitor_for_control=monitor_for_control,
-                                              function=function,
-                                              value_function=value_function,
-                                              outcome_function=outcome_function,
-                                              cost_function=cost_function,
-                                              combine_outcome_and_cost_function=combine_outcome_and_cost_function,
-                                              save_all_values_and_policies=save_all_values_and_policies,
-                                              params=params)
+        params = self._assign_args_to_param_dicts(system=system,
+                                                  prediction_mechanism_type=prediction_mechanism_type,
+                                                  prediction_mechanism_params=prediction_mechanism_params,
+                                                  monitor_for_control=monitor_for_control,
+                                                  function=function,
+                                                  value_function=value_function,
+                                                  outcome_function=outcome_function,
+                                                  cost_function=cost_function,
+                                                  combine_outcome_and_cost_function=combine_outcome_and_cost_function,
+                                                  save_all_values_and_policies=save_all_values_and_policies,
+                                                  params=params)
 
         super(EVCMechanism, self).__init__(# default_input_value=default_input_value,
                                            monitor_for_control=monitor_for_control,
@@ -908,7 +909,6 @@ class EVCMechanism(ControlMechanism_Base):
                           )
 
         self.system.executionList.append(MechanismTuple(self.monitoring_mechanism, None, self.system.numPhases-1))
-
 
     def _get_monitored_states(self, context=None):
         """
