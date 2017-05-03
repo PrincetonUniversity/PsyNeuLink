@@ -150,6 +150,13 @@
 #                     implements matrix that is constrained to be all negative weights = inhibition
 #                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
+
+# FIX FINISH UP X_DEFAULT_CONTROL_MECH / CONTROLLED PROJECTION DEFERRED_INIT:
+# Finish looking at _instantiate_sender for Projection and ControlProjection:
+#     - get rid of both instantiation of projection and of any DefaultController-related stuff
+#     - get rid of duplicate entries in ControlSignal sendsToProjections
+
+
 # FIX: REPLACE: kwConstants must == arg names
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
 # IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)

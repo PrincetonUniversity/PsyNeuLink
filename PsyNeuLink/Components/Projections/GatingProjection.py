@@ -199,7 +199,7 @@ class GatingProjection(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        PROJECTION_SENDER: DefaultGatingMechanism,
+        PROJECTION_SENDER: GatingMechanism,
         PROJECTION_SENDER_VALUE: defaultGatingSignal})
 
     @tc.typecheck
@@ -219,7 +219,7 @@ class GatingProjection(Projection_Base):
                                                   params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if not receiver:
+        if sender is None or receiver is None:
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self
