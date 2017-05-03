@@ -120,7 +120,7 @@ class ControlProjection(Projection_Base):
             + paramClassDefaults:
                 FUNCTION:Linear,
                 FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
-                PROJECTION_SENDER: DefaultController, # ControlProjection (assigned to class ref in __init__ module)
+                PROJECTION_SENDER: ControlMechanism_Base
                 PROJECTION_SENDER_VALUE: [defaultControlAllocation],
                 CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS,
                 ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
@@ -134,8 +134,11 @@ class ControlProjection(Projection_Base):
     sender : Optional[Mechanism or OutputState]
         specifies the source of the input for the ControlProjection;  usually an `outputState <OutputState>` of a
         `ControlMechanism <ControlMechanism>`, and commonly the `ControlSignal` of an `EVCMechanism`.  If it is not
-        specified, an outputState of the `DefaultControlMechanism` for the system to which the receiver belongs will
-        be assigned.
+        specified, the ControlProjection will 
+        COMMENT:
+        remain in DEFER_INITIALIZATION status, and will 
+        COMMENT
+        be ignored during execution.
 
     receiver : Optional[Mechanism or ParameterState]
         specifies the parameterState associated with the parameter to be controlled.  This must be specified,
@@ -207,7 +210,6 @@ class ControlProjection(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # PROJECTION_SENDER: DefaultController,
         PROJECTION_SENDER: ControlMechanism_Base,
         PROJECTION_SENDER_VALUE: defaultControlAllocation})
 
@@ -265,7 +267,7 @@ class ControlProjection(Projection_Base):
             - lengthens variable of DefaultController to accommodate the ControlProjection
             - updates value of the DefaultController (in response to the new variable)
         Notes:
-            * the default function of the DefaultController simply maps the inputState value to the outputState
+            * the default function of the DefaultControlMechanism simply maps the inputState value to the outputState
             * the params arg is assumed to be a dictionary of params for the ControlSignal of the ControlMechanism
 
         :return:
@@ -287,6 +289,7 @@ class ControlProjection(Projection_Base):
 # FIX:      ONLY TEST FOR ControlMechanism_Base (TO IMPLEMENT PROJECTION)
 # FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super._instantiate_sender
 # FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP _instantiate_control_projection FOR ControlMechanism)
+# 5/2/17: STILL NEEDED??
         # If sender is a Mechanism (rather than a State) object, get (or instantiate) its State
         #    (Note:  this includes ControlMechanism)
         if isinstance(self.sender, Mechanism):

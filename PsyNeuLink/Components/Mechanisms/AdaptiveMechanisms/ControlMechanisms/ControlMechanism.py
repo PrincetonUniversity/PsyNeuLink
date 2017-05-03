@@ -248,26 +248,16 @@ class ControlMechanism_Base(Mechanism_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and FUNCTION_PARAMS
 
-        If SYSTEM is not specified:
-        - OK if controller is DefaultControlMechanism
-        - otherwise, raise an exception
+        If system is specified, validate it
         Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputStates for Mechanisms in self.system
         Check that len(WEIGHTS) = len(MONITOR_FOR_CONTROL)
         """
 
-        # DefaultController does not require a system specification
-        #    (it simply passes the defaultControlAllocation for default ConrolSignal Projections)
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
-        if isinstance(self,DefaultControlMechanism):
-            pass
-
-        # For all other ControlMechanisms, validate System specification
-        else:
-            if SYSTEM in request_set:
-                if not isinstance(request_set[SYSTEM], System):
-                    raise KeyError
-                else:
-                    self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
+        if SYSTEM in request_set:
+            if not isinstance(request_set[SYSTEM], System):
+                raise KeyError
+            else:
+                self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
         super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,

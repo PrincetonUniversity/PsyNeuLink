@@ -10,15 +10,12 @@
 
 """
 
-The DefaultControlMechanism is created whenever PsyNeuLink is run.  It is assigned as the ControlMechanism for any
-:doc:`System` that is created for which no ControlMechanism is specified.  The DefaultControlMechanism creates
-an inputState for each ControlProjection it is assigned, and uses :py:data:`defaultControlAllocation` as the value for
-the control signal.  By default,  :py:data:`defaultControlAllocation` = 1, so that ControlProjections from the
-DefaultControlMechanism have no effect on their parameters.  Thus, for the most part, the DefaultControlMechanism
-serves as a place marker for ControlProjections (having on effect on the parameters it "controls"), until the system
-is assigned a more useful ControlMechanism (such as the :doc:`EVCMechanism`).  However, it can be used to uniformly
-control the parameters that receive ControlProjections from it, by manually changing the value of
-:any:`defaultControlAllocation`.  See :doc:`ControlMechanism` for additional details of how ControlMechanisms are
+The DefaultControlMechanism is created for a `System` if no other controller type is specified. The 
+DefaultControlMechanism createsan inputState for each ControlProjection it is assigned, and uses 
+`defaultControlAllocation` as the value for the control signal.  By default,  :py:data:`defaultControlAllocation` =  1, 
+so that ControlProjections from the DefaultControlMechanism have no effect on their parameters.  However, it can be 
+used to uniformly control the parameters that receive ControlProjections from it, by manually changing the value of
+`defaultControlAllocation`.  See :doc:`ControlMechanism` for additional details of how ControlMechanisms are
 created, executed and their attributes.
 
 COMMENT:
@@ -83,8 +80,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({SYSTEM: None,
-                               # MAKE_DEFAULT_CONTROLLER:True  <- No need, it is the default by default
+    paramClassDefaults.update({# MAKE_DEFAULT_CONTROLLER:True  <- No need, it is the default by default
                                FUNCTION:Linear,
                                FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
                                MONITOR_FOR_CONTROL:None
@@ -94,28 +90,16 @@ class DefaultControlMechanism(ControlMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
+                 system=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
-
 
         super(DefaultControlMechanism, self).__init__(default_input_value =default_input_value,
                                                          params=params,
                                                          name=name,
                                                          prefs=prefs,
                                                          context=self)
-
-    def _validate_projection(self, projection, context=None):
-        """Override super method
-
-        DefaultControlMechanism may not have a system assigned, in which case super's method will crash,
-        since it checks whether projection is to a mechanism with the same system as self
-
-        IMPLEMENTATION NOTE:
-        This can be reomved if/when ControlMechanism uses deferred initialization for ControlProjection
-
-        """
-        pass
 
     def _execute(self,
                     variable=None,
