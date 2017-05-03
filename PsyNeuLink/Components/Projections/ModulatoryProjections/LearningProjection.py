@@ -86,11 +86,12 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import \
-    LearningMechanism, ERROR_SIGNAL
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
+                                                                            import LearningMechanism, ERROR_SIGNAL
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -137,7 +138,7 @@ class LearningProjectionError(Exception):
 
 
 
-class LearningProjection(Projection_Base):
+class LearningProjection(ModulatoryProjection_Base):
     """
     LearningProjection(               \
                  sender=None,         \

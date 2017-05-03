@@ -80,7 +80,7 @@ Class Reference
 
 from collections import OrderedDict
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.ShellClasses import *
 
 GatingMechanismRegistry = {}
@@ -91,7 +91,7 @@ class GatingMechanismError(Exception):
         self.error_value = error_value
 
 
-class GatingMechanism_Base(Mechanism_Base):
+class GatingMechanism(AdaptiveMechanism_Base):
     """
     GatingMechanism_Base(     \
     default_input_value=None,  \
@@ -251,7 +251,7 @@ class GatingMechanism_Base(Mechanism_Base):
             else:
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
-        super(GatingMechanism_Base, self)._validate_params(request_set=request_set,
+        super(GatingMechanism, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,
                                                                  context=context)
 
@@ -268,7 +268,7 @@ class GatingMechanism_Base(Mechanism_Base):
                                               format(projection.name, receiver_mech.name, self.system.name))
 
     def _instantiate_monitored_output_states(self, context=None):
-        raise ControlMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
+        raise GatingMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
                                           format(self.__class__.__name__,
                                                  self.__class__.__bases__[0].__name__))
 

@@ -74,6 +74,7 @@ Class Reference
 
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Projections.Projection import *
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
 projection_keywords.update({CONTROL_PROJECTION})
@@ -86,7 +87,7 @@ class ControlProjectionError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-class ControlProjection(Projection_Base):
+class ControlProjection(ModulatoryProjection_Base):
     """
     ControlProjection( \
      sender=None,      \
@@ -282,12 +283,12 @@ class ControlProjection(Projection_Base):
         if isinstance(self.sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its ControlSignal projection
             if not isinstance(self.sender, ControlMechanism_Base):
-                raise ControlProjectionErrorError("Mechanism specified as sender for {} ({}) must be a "
+                raise ControlProjectionError("Mechanism specified as sender for {} ({}) must be a "
                                                   "ControlMechanism (but it is a {})".
                                     format(self.name, self.sender.name, self.sender.__class__.__name__))
 
         # Call super to instantiate sender
-        super(ControlProjection, self)._instantiate_sender(context=context)
+        super()._instantiate_sender(context=context)
 
 
     def _instantiate_receiver(self, context=None):

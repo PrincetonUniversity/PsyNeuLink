@@ -69,7 +69,9 @@ Class Reference
 
 from PsyNeuLink.Components import DefaultGatingMechanism
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Projections.Projection import *
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 
 projection_keywords.update({GATING_PROJECTION})
 parameter_keywords.update({GATING_PROJECTION})
@@ -81,7 +83,7 @@ class GatingProjectionError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-class GatingProjection(Projection_Base):
+class GatingProjection(ModulatoryProjection_Base):
     """
     GatingProjection(  \
      sender=None,      \
@@ -317,7 +319,7 @@ class GatingProjection(Projection_Base):
         if isinstance(self.receiver, Mechanism):
             self.receiver = self.receiver.inputState
 
-        super(ControlProjection, self)._instantiate_receiver(context=context)
+        super()._instantiate_receiver(context=context)
 
     def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
         self.variable = self.sender.value
