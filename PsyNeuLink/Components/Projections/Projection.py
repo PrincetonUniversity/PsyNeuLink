@@ -638,41 +638,34 @@ class Projection_Base(Projection):
         If self.sender is a State class reference, validate that it is a OutputState
         Assign projection to sender's sendsToProjections attribute
         If self.value / self.variable is None, set to sender.value
-
-        Notes:
-        * ControlProjection initially overrides this method to check if sender is DefaultControlMechanism;
-            if so, it assigns a ControlProjection-specific inputState and outputState to it
-        [TBI: * LearningProjection overrides this method to check if sender is kwDefaultSender;
-            if so, it instantiates a default MonitoringMechanism and a projection to it from receiver's outputState]
-
-        :param context: (str)
-        :return:
         """
 
         from PsyNeuLink.Components.States.OutputState import OutputState
         from PsyNeuLink.Components.States.ParameterState import ParameterState
 
-        # If sender is a class, instantiate it:
-        # - assume it is Mechanism or State (as validated in _validate_params)
-        # - implement default sender of the corresponding type
-        if inspect.isclass(self.sender):
-            if issubclass(self.sender, OutputState):
-                # MODIFIED 9/12/16 NEW:
-                # self.paramsCurrent['function_params']['matrix']
-                # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING_PROJECTION??
-                # MODIFIED 9/12/16 END
-                self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
-            else:
-                raise ProjectionError("Sender ({0}) for {1} must be a OutputState".
-                                      format(self.sender.__name__, self.name))
+        # # IMPLEMENTATION NOTE:  The following supported instantiation of a default sender type by a projection, for
+        # #                       projections that did not yet have their sender specified;  however, this should now
+        # #                       be covered by deferred_init(): sender is assigned in that call or bythe time is made.
+        # # If sender is a class, instantiate it:
+        # # - assume it is a Mechanism or State (should have been validated in _validate_params)
+        # # - implement default sender of the corresponding type
+        # if inspect.isclass(self.sender):
+        #     if issubclass(self.sender, OutputState):
+        #         # MODIFIED 9/12/16 NEW:
+        #         # self.paramsCurrent['function_params']['matrix']
+        #         # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING_PROJECTION??
+        #         # MODIFIED 9/12/16 END
+        #         self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
+        #     else:
+        #         raise ProjectionError("Sender ({0}) for {1} must be a OutputState".
+        #                               format(self.sender.__name__, self.name))
 
-        # # If sender is a Mechanism (rather than a State), get relevant outputState and assign it to self.sender
+        # If sender is specified as a Mechanism (rather than a State),
+        #     get relevant outputState and assign it to self.sender
+        # IMPLEMENTATION NOTE: Assume that sender should be the primary OutputState; if that is not the case,
+        #                      sender should either be explicitly assigned, or handled in an override of the
+        #                      method by the relevant subclass prior to calling super
         if isinstance(self.sender, Mechanism):
-
-            # IMPLEMENTATION NOTE: Assumes that sender should be the primary OutputState;
-            #                      if that is not the case, sender should either be explicitly assigned
-            #                      or handled in an overrided of the method by the relevant subclass
-            #                      prior to calling super
             self.sender = self.sender.outputState
 
         # At this point, self.sender should be a OutputState
@@ -718,7 +711,6 @@ class Projection_Base(Projection):
             is evaluated and enforced in _instantiate_function, since that may need to be modified (see below)
         * Verification that projection has not already been assigned to receiver is handled by _add_projection_to;
             if it has, a warning is issued and the assignment request is ignored
-
 
         :param context: (str)
         :return:
