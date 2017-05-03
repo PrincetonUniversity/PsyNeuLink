@@ -16,7 +16,7 @@ A ControlMechanism is an `AdaptiveMechanism` that modifies the parameter(s) of o
 It's function takes a value (usually the output of an `ObjectiveMechanism`) and uses that to calculate an
 `allocation_policy`:  a list of `allocation` values for each of its ControlSignals that specify the value to assign
 to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is conveyed by
-a `ControlProjection` to the `parameterState <ParameterState>` of the corresopnding ProcessingMechanism.  A
+a `ControlProjection` to the `parameterState <ParameterState>` of the corresponding ProcessingMechanism.  A
 ControlMechanism can regulate only the parameters of mechanism in the system for which it is the
 `controller <System_Execution_Control>`.  The control components of a system can be displayed using the system's 
 `show_graph` method with its **show_control** argument assigned :keyword:``True`.  The control components of a 
