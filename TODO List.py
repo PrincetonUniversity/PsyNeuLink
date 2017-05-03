@@ -47,8 +47,8 @@
 #                      CONTROL:   PARAMETER STATE STATE OF MECHANISM (MULTIPLY / SLOPE/GAIN)
 #                 NEED SOME WAY TO SPECIFY WHICH PARAMETER OF THE STATE'S FUNCTION THE MODULATORY PROJECTION MODULATES
 #      ADD SUBCLASSING OF PROJECTIONS:
-#                 TRANSMISSIVE (MAPPINGPROJECTION):  FROM PROCESSING MECHANISM
-#                 ADAPTIVE (LEARNING, GATING, CONTROL: FROM ADAPTIVE MECHANISM
+#                 TRANSMISSIVE (MappingProjection):  FROM PROCESSING MECHANISM
+#                 ADAPTIVE (LearningProjection, GatingProjection, ControlProjection): FROM ADAPTIVE MECHANISM
 
 # TASKS:
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
@@ -1539,7 +1539,7 @@
 #      In projection() and Function:
 #          DefaultProjection
 #      In Process_Base:
-#          kwProcessDefaultProjection: Components.Projections.MappingProjection
+#          kwProcessDefaultProjection: Components.Projections.TransmissiveProjections.MappingProjection
 #          kwProcessDefaultProjectionFunction: Components.Function.LinearMatrix
 #  DefaultMechanism is now being assigned in Process;
 #  -  need to re-instate some form of set_default_mechanism() in Mechanism

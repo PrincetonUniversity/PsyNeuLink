@@ -76,7 +76,7 @@ Class Reference
 
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import *
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
 
 class LCAError(Exception):

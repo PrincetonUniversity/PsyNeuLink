@@ -84,12 +84,9 @@ Class Reference
 """
 
 #
-from collections import OrderedDict
-
-import numpy as np
 
 from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Globals.Registry import  register_category
+from PsyNeuLink.Globals.Registry import register_category
 
 # Note:  This is created only for assignment of default projection types for each state subclass (see .__init__.py)
 #        Individual stateRegistries (used for naming) are created for each mechanism
@@ -606,9 +603,9 @@ class State_Base(State):
             #     note: in that case, projection will be in self.receivesFromProjections list
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.value is DEFERRED_INITIALIZATION:
-                    from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-                    # from PsyNeuLink.Components.Projections.GatingProjection import GatingProjection
-                    from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+                    from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+                    # from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+                    from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
                     # if isinstance(projection_spec, (LearningProjection, GatingProjection, ControlProjection)):
                     if isinstance(projection_spec, (LearningProjection, ControlProjection)):
                         # Assign projection to parameterState
@@ -1175,7 +1172,7 @@ class State_Base(State):
         projection_value_list = []
 
         from PsyNeuLink.Components.Process import ProcessInputState
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
         for projection in self.receivesFromProjections:
 
@@ -1207,9 +1204,9 @@ class State_Base(State):
                 if not sender.owner in self.owner.processes.keys():
                     continue
 
-            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-            from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-            from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 
             # Merge with relevant projection type-specific params
             if isinstance(projection, MappingProjection):
@@ -1651,8 +1648,8 @@ def _instantiate_state(owner,                   # Object to which state will bel
             (inspect.isclass(constraint_value) and
                  issubclass(constraint_value, (Projection)))):
         from PsyNeuLink.Components.Projections.Projection import projection_keywords
-        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         # Disallow if it is not ControlProjection or a LearningProjection
         if (constraint_value in projection_keywords or
                     isinstance(constraint_value, (ControlProjection, LearningProjection)) or

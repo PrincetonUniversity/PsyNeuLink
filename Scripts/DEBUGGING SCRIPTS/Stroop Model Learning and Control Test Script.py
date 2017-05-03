@@ -1,10 +1,11 @@
+import numpy as np
+
 from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import *
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-import numpy as np
 
 process_prefs = {REPORT_OUTPUT_PREF: True,
                  VERBOSE_PREF: False}

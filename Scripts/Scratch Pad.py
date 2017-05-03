@@ -1,35 +1,23 @@
-import numpy as np
-
 # GLOBALS:
+# MECHANISMS:
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA
+# COMPOSITIONS:
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
 
-# FUNCTIONS:
-from PsyNeuLink.Components.Functions.Function import Logistic, Linear, Stability, Distance
 
+# FUNCTIONS:
 # STATES:
 # from PsyNeuLink.Components.States.OutputState import OutputState
 # from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
-
 # PROJECTIONS:
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-# from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-# from PsyNeuLink.Components.Projections.ControlProjection import ControldProjection
+# from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+# from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControldProjection
 # from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
-
-# MECHANISMS:
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA
-
-# COMPOSITIONS:
-from PsyNeuLink.Components.Process import Process, Process_Base, process
-from PsyNeuLink.Components.System import system, System, System_Base
 
 class ScratchPadError(Exception):
     def __init__(self, error_value):
@@ -461,7 +449,7 @@ class ScratchPadError(Exception):
 #
 # from PsyNeuLink.Components.System import System_Base
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-# from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+# from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 #
 # mech = DDM()
 #
@@ -731,7 +719,7 @@ print(my_system.run(inputs=input_list,
 # from PsyNeuLink.Components.Process import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear
-# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+# from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 #
 # my_mech = TransferMechanism(function=Linear())
 # my_mech2 = TransferMechanism(function=Linear())
@@ -791,7 +779,7 @@ print(my_system.run(inputs=input_list,
 # from PsyNeuLink.Components.Process import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+# from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 #
 # color_naming = TransferMechanism(default_input_value=[0,0],
 #                         function=Linear,
@@ -826,8 +814,6 @@ print(my_system.run(inputs=input_list,
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
 #region TEST typecheck: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-import typecheck as tc
 
 # @tc.typecheck
 # def foo2(record:(int,int,bool), rgb:tc.re("^[rgb]$")) -> tc.any(int,float) :

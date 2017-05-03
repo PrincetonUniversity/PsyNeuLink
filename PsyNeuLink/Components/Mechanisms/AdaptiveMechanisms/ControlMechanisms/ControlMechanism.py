@@ -334,7 +334,7 @@ class ControlMechanism_Base(Mechanism_Base):
         else:
             receiver = projection.receiver
 
-        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
         if not isinstance(projection, ControlProjection):
             raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
                                               "that is not a ControlProjection, to outputState of {1}".
