@@ -273,39 +273,20 @@ class ControlProjection(Projection_Base):
         :return:
         """
 
+        # A Process can't be the sender of a ControlMechanism
         if isinstance(self.sender, Process):
-            raise ProjectionError("Illegal attempt to add a ControlProjection from a Process {0} "
+            raise ProjectionError("PROGRAM ERROR: attempt to add a ControlProjection from a Process {0} "
                                   "to a mechanism {0} in pathway list".format(self.name, self.sender.name))
 
-        # If sender is a class:
-        # - assume it is Mechanism or State class ref (as validated in _validate_params)
-        # - implement default sender of the corresponding type
-        if inspect.isclass(self.sender):
-            # self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
-# FIX 6/28/16:  IF CLASS IS ControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
-            self.sender = self.sender(self.paramsCurrent[PROJECTION_SENDER_VALUE])
-
-# FIX:  THE FOLLOWING CAN BE CONDENSED:
-# FIX:      ONLY TEST FOR ControlMechanism_Base (TO IMPLEMENT PROJECTION)
-# FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super._instantiate_sender
-# FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP _instantiate_control_projection FOR ControlMechanism)
-# 5/2/17: STILL NEEDED??
-        # If sender is a Mechanism (rather than a State), get (or instantiate) its State
-        #    (Note:  this includes ControlMechanism)
+        # If sender is specified as a Mechanism, validate that it is a ControlMechanism
         if isinstance(self.sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its ControlSignal projection
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignalError
-            if isinstance(self.sender, ControlMechanism_Base):
-                try:
-                    params = params or self.control_signal
-                    self.sender._instantiate_control_projection(self, params=params, context=context)
-                except ControlSignalError as error_msg:
-                    raise FunctionError("Error in attempt to specify ControlSignal for {} of {}".
-                                        format(self.name, self.receiver.owner.name, error_msg))
+            if not isinstance(self.sender, ControlMechanism_Base):
+                raise ControlProjectionErrorError("Mechanism specified as sender for {} ({}) must be a "
+                                                  "ControlMechanism (but it is a {})".
+                                    format(self.name, self.sender.name, self.sender.__class__.__name__))
 
         # Call super to instantiate sender
-
         super(ControlProjection, self)._instantiate_sender(context=context)
 
 
