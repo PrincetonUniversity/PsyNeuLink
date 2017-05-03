@@ -57,12 +57,11 @@ Execution
 A GatingMechanism executes in the same way as a ProcessingMechanism, based on its place in the system's 
 `graph <System.graph>`.  Because GatingProjections are likely to introduce cycles (loops) in the graph,
 the effects of a GatingMechanism and its projections will generally not be applied in the first
-`??XXX round / time_step of execution <LINK>` (see `initialization <LINK>` for a description of how to configure the 
-initialization
+`round of execution <LINK>` (see `initialization <LINK>` for a description of how to configure the initialization
 of feedback loops in a System).  When executd, a GatingMechanism uses its input to determine the value of its
 `GatingSignals <GatingSignal>` and their corresponding `GatingProjections <GatingProjection>`.  In the subsequent 
-??XXX round / time_step of execution , each GatingProjection's value is used by the state to which it 
-projects to modulate the `value <State.value>` of that state.
+round of execution , each GatingProjection's value is used by the state to which it projects to modulate the 
+`value <State.value>` of that state.
 
 .. note::
    A state that receives a `GatingProjection` does not update its value until its owner mechanism executes 
