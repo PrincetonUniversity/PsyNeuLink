@@ -180,3 +180,4 @@ def test_EVC():
         # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
         # which WILL FAIL unless you gather higher precision values to use as reference
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+test_EVC()

@@ -1441,7 +1441,9 @@ class EVCMechanism(ControlMechanism_Base):
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.inputStates)
         #    stored in self.inputValue = list(self.variable)
+
         # self.monitoring_mechanism.execute(context=EVC_SIMULATION)
+
         self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
         for i in range(len(self.controlSignals)):
