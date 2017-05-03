@@ -12,40 +12,40 @@
 Overview
 --------
 
-A ControlMechanism is an `AdaptiveMechanism` that modifies the parameter(s) of one or more `ProcessingMechanisms`.
+A GatingMechanism is an `AdaptiveMechanism` that modifies the parameter(s) of one or more `ProcessingMechanisms`.
 It's function takes a value (usually the output of an `ObjectiveMechanism`) and uses that to calculate an
 `allocation_policy`:  a list of `allocation` values for each of its ControlSignals that specify the value to assign
 to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is conveyed by
-a `ControlProjection` to the `parameterState <ParameterState>` of the corresopnding ProcessingMechanism.  A
-ControlMechanism can regulate only the parameters of mechanism in the system for which it is the
+a `GatingProjection` to the `parameterState <ParameterState>` of the corresponding ProcessingMechanism.  A
+GatingMechanism can regulate only the parameters of mechanism in the system for which it is the
 `controller <System_Execution_Control>`.  The control components of a system can be displayed using the system's 
 `show_graph` method with its **show_control** argument assigned :keyword:``True`.  The control components of a 
 system are executed after all ProcessingMechanisms and `learning components <LearningMechanism>` in that system have 
 been executed.
 
-.. _ControlMechanism_Creation:
+.. _GatingMechanism_Creation:
 
-Creating A ControlMechanism
+Creating A GatingMechanism
 ---------------------------
 
-ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
-A ControlMechanism is also created automatically whenever a `system is created <System_Creation>`, and assigned as
+GatingMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
+A GatingMechanism is also created automatically whenever a `system is created <System_Creation>`, and assigned as
 the `controller <System_Execution_Control>` for that system. The `outputStates <OutputState>` to be monitored by a
-ControlMechanism are specified in its `monitored_output_states` argument, which can take  a number of
-`forms <ObjectiveMechanism_Monitored_OutputStates>`.  When the ControlMechanism is created, it automatically creates
+GatingMechanism are specified in its `monitored_output_states` argument, which can take  a number of
+`forms <ObjectiveMechanism_Monitored_OutputStates>`.  When the GatingMechanism is created, it automatically creates
 an ObjectiveMechanism that is used to monitor and evaluate the mechanisms and/or outputStates specified in its
 `monitor_for_control <ControlMechanism.monitor_for_control>` attribute.  The result of the evaluation is used to
-specify the value of the ControlMechanism's `ControlProjections <ControlProjection>`. How a ControlMechanism creates its
-ControlProjections and determines their value based on the outcome of its evaluation  depends on the
-`subclass <ControlMechanism>`.
+specify the value of the ControlMechanism's `ControlProjections <ControlProjection>`. How a GatingMechanism creates its
+GatingProjections and determines their value based on the outcome of its evaluation  depends on the
+`subclass <GatingMechanism>`.
 
-.. _ControlMechanism_Specifying_Control:
+.. _GatingMechanism_Specifying_Control:
 
 Specifying control for a parameter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ControlMechanisms are used to control the parameter values of mechanisms and/or their functions.  A parameter can be
-specified for control by assigning a `ControlProjection` as part of its value when creating the mechanism or function
+GatingMechanisms are used to control the parameter values of mechanisms and/or their functions.  A parameter can be
+specified for control by assigning a `GatingProjection` as part of its value when creating the mechanism or function
 to which the parameter belongs (see `Mechanism_Parameters`).
 
 .. _ControlMechanism_Monitored_OutputStates:
@@ -57,7 +57,7 @@ When an ControlMechanism is constructed automatically, it creates an `ObjectiveM
 `montioring_mechanism` attribute) that is used to monitor and evaluate the system's performance.  The
 ObjectiveMechanism monitors each mechanism and/or outputState listed in the ControlMechanism's
 'monitor_for_control <ControlMechanism.monitor_for_control>` attribute, and evaluates them using the its `function`.
-This information is used to set the value of the ControlMechanism's ControlProjections.
+This information is used to set the value of the ControlMechanism's GatingProjections.
 
 .. _ControlMechanism_Execution:
 
@@ -71,12 +71,12 @@ outputStates in its `monitored_output_states` attribute, and uses those to deter
 used by the `ParameterState` to which it projects to update the parameter being controlled.
 
 .. note::
-   A `ParameterState` that receives a `ControlProjection` does not update its value until its owner mechanism
+   A `ParameterState` that receives a `GatingProjection` does not update its value until its owner mechanism
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
    receiver mechanism has executed.
 
-.. _ControlMechanism_Class_Reference:
+.. _GatingMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -84,24 +84,24 @@ Class Reference
 """
 
 # IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
-#                      ADD IN GENERIC CONTROL STUFF FROM DefaultControlMechanism
+#                      ADD IN GENERIC CONTROL STUFF FROM DefaultGatingMechanism
 
 from collections import OrderedDict
 
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.ShellClasses import *
 
-ControlMechanismRegistry = {}
+GatingMechanismRegistry = {}
 
 
-class ControlMechanismError(Exception):
+class GatingMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
 
-class ControlMechanism_Base(Mechanism_Base):
+class GatingMechanism_Base(Mechanism_Base):
     """
-    ControlMechanism_Base(     \
+    GatingMechanism_Base(     \
     default_input_value=None,  \
     monitor_for_control=None,  \
     function=Linear,           \
@@ -109,28 +109,28 @@ class ControlMechanism_Base(Mechanism_Base):
     name=None,                 \
     prefs=None)
 
-    Abstract class for ControlMechanism.
+    Abstract class for GatingMechanism.
 
     .. note::
-       ControlMechanisms should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated using the constructor for a :doc:`subclass <ControlMechanism>`.
+       GatingMechanisms should NEVER be instantiated by a direct call to the base class.
+       They should be instantiated using the constructor for a :doc:`subclass <GatingMechanism>`.
 
     COMMENT:
         Description:
             # DOCUMENTATION NEEDED:
-              ._instantiate_control_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE
+              ._instantiate_gating_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE
              INSTANCE
             .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
             WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
 
-            Protocol for instantiating unassigned ControlProjections (i.e., w/o a sender specified):
-               If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple) 
+            Protocol for instantiating unassigned GatingProjections (i.e., w/o a sender specified):
+               If sender is not specified for a GatingProjection (e.g., in a parameter specification tuple) 
                    it is flagged for deferred_init() in its __init__ method
                When the next ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
                    its _take_over_as_default_controller method is called in _instantiate_attributes_after_function;
                    it then iterates through all of the parameterStates of all of the mechanisms in its system, 
                    identifies ones without a sender specified, calls its deferred_init() method,
-                   instantiates a ControlSignal for it, and assigns it as the ControlProjection's sender.
+                   instantiates a ControlSignal for it, and assigns it as the GatingProjection's sender.
 
             MONITOR_FOR_CONTROL param determines which states will be monitored.
                 specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
@@ -173,7 +173,7 @@ class ControlMechanism_Base(Mechanism_Base):
             specified for parameters in the dictionary override any assigned to those parameters in arguments of the
             constructor.
 
-        name : str : default ControlMechanism-<index>
+        name : str : default GatingMechanism-<index>
             a string used for the name of the mechanism.
             If not is specified, a default is assigned by `MechanismRegistry`
             (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
@@ -188,8 +188,8 @@ class ControlMechanism_Base(Mechanism_Base):
     Attributes
     ----------
 
-    controlProjections : List[ControlProjection]
-        list of `ControlProjections <ControlProjection>` managed by the ControlMechanism.
+    gatingProjections : List[GatingProjection]
+        list of `GatingProjections <GatingProjection>` managed by the GatingMechanism.
         There is one for each ouputState in the `outputStates` dictionary.
 
     controlProjectionCosts : 2d np.array
@@ -202,7 +202,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
     """
 
-    componentType = "ControlMechanism"
+    componentType = "GatingMechanism"
 
     initMethod = INIT__EXECUTE__METHOD_ONLY
 
@@ -210,7 +210,7 @@ class ControlMechanism_Base(Mechanism_Base):
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
+    #     kwPreferenceSetName: 'GatingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
     # variableClassDefault = defaultControlAllocation
@@ -219,7 +219,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({CONTROL_PROJECTIONS: None})
+    paramClassDefaults.update({GATING_PROJECTIONS: None})
 
     @tc.typecheck
     def __init__(self,
@@ -239,7 +239,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                   function=function,
                                                   params=params)
 
-        super(ControlMechanism_Base, self).__init__(variable=default_input_value,
+        super(GatingMechanism_Base, self).__init__(variable=default_input_value,
                                                     params=params,
                                                     name=name,
                                                     prefs=prefs,
@@ -259,7 +259,7 @@ class ControlMechanism_Base(Mechanism_Base):
             else:
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
-        super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
+        super(GatingMechanism_Base, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,
                                                                  context=context)
 
@@ -272,7 +272,7 @@ class ControlMechanism_Base(Mechanism_Base):
         else:
             receiver_mech = projection.receiver.owner
         if not receiver_mech in self.system.mechanisms:
-            raise ControlMechanismError("Attempt to assign ControlProjection {} to a mechanism ({}) that is not in {}".
+            raise GatingMechanismError("Attempt to assign GatingProjection {} to a mechanism ({}) that is not in {}".
                                               format(projection.name, receiver_mech.name, self.system.name))
 
     def _instantiate_monitored_output_states(self, context=None):
@@ -281,7 +281,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                  self.__class__.__bases__[0].__name__))
 
     def _instantiate_attributes_after_function(self, context=None):
-        """Take over as default controller (if specified) and implement any specified ControlProjections
+        """Take over as default controller (if specified) and implement any specified GatingProjections
 
         """
 
@@ -291,15 +291,15 @@ class ControlMechanism_Base(Mechanism_Base):
             if not self.system.enable_controller:
                 return
 
-        # If ControlProjections were specified, implement them
-        if CONTROL_PROJECTIONS in self.paramsCurrent:
-            if self.paramsCurrent[CONTROL_PROJECTIONS]:
-                for key, projection in self.paramsCurrent[CONTROL_PROJECTIONS].items():
-                    self._instantiate_control_projection(projection, context=self.name)
+        # If GatingProjections were specified, implement them
+        if GATING_PROJECTIONS in self.paramsCurrent:
+            if self.paramsCurrent[GATING_PROJECTIONS]:
+                for key, projection in self.paramsCurrent[GATING_PROJECTIONS].items():
+                    self._instantiate_gating_projection(projection, context=self.name)
 
     def _take_over_as_default_controller(self, context=None):
 
-        # Check the parameterStates of the system's mechanisms for any ControlProjections with deferred_init()
+        # Check the parameterStates of the system's mechanisms for any GatingProjections with deferred_init()
         for mech in self.system.mechanisms:
             for parameter_state in mech.parameterStates.values():
                 for projection in parameter_state.receivesFromProjections:
@@ -307,10 +307,10 @@ class ControlMechanism_Base(Mechanism_Base):
                     if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
                         # Get params specified with projection for its ControlSignal (cached in control_signal attrib)
                         params = projection.control_signal
-                        self._instantiate_control_projection(projection, params=params, context=context)
+                        self._instantiate_gating_projection(projection, params=params, context=context)
 
-    def _instantiate_control_projection(self, projection, params=None, context=None):
-        """Add outputState (as ControlSignal) and assign as sender to requesting ControlProjection
+    def _instantiate_gating_projection(self, projection, params=None, context=None):
+        """Add outputState (as ControlSignal) and assign as sender to requesting GatingProjection
 
         # Updates allocation_policy and controlSignalCosts attributes to accommodate instantiated projection
 
@@ -333,25 +333,25 @@ class ControlMechanism_Base(Mechanism_Base):
         else:
             receiver = projection.receiver
 
-        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-        if not isinstance(projection, ControlProjection):
-            raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
-                                              "that is not a ControlProjection, to outputState of {1}".
+        from PsyNeuLink.Components.Projections.GatingProjection import GatingProjection
+        if not isinstance(projection, GatingProjection):
+            raise GatingMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
+                                              "that is not a GatingProjection, to outputState of {1}".
                                               format(projection, self.name))
 
         #  Update self.value by evaluating function
         self._update_value(context=context)
 
-        # Instantiate new outputState and assign as sender of ControlProjection
+        # Instantiate new outputState and assign as sender of GatingProjection
         try:
             output_state_index = len(self.outputStates)
         except AttributeError:
             output_state_index = 0
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.ControlSignal import ControlSignal
         output_state_name = receiver.name + '_' + ControlSignal.__name__
         output_state_value = self.allocation_policy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.ControlSignal import ControlSignal
         state = _instantiate_state(owner=self,
                                             state_type=ControlSignal,
                                             state_name=output_state_name,
@@ -362,11 +362,11 @@ class ControlMechanism_Base(Mechanism_Base):
                                             # constraint_output_state_index=output_item_output_state_index,
                                             context=context)
 
-        # Assign outputState as ControlProjection's sender
+        # Assign outputState as GatingProjection's sender
         if projection.value is DEFERRED_INITIALIZATION:
             projection.init_args['sender']=state
             if projection.init_args['name'] is None:
-                projection.init_args['name'] = CONTROL_PROJECTION + ' for ' + receiver.owner.name + ' ' + receiver.name
+                projection.init_args['name'] = GATING_PROJECTION + ' for ' + receiver.owner.name + ' ' + receiver.name
             projection._deferred_init()
         else:
             projection.sender = state
@@ -381,16 +381,16 @@ class ControlMechanism_Base(Mechanism_Base):
         # Add index assignment to outputState
         state.index = output_state_index
 
-        # Add ControlProjection to list of outputState's outgoing projections
+        # Add GatingProjection to list of outputState's outgoing projections
         # (note: if it was deferred, it just added itself, skip)
         if not projection in state.sendsToProjections:
             state.sendsToProjections.append(projection)
 
-        # Add ControlProjection to ControlMechanism's list of ControlProjections
+        # Add GatingProjection to GatingMechanism's list of GatingProjections
         try:
-            self.controlProjections.append(projection)
+            self.gatingProjections.append(projection)
         except AttributeError:
-            self.controlProjections = [projection]
+            self.gatingProjections = [projection]
 
         # Update controlSignalCosts to accommodate instantiated projection
         try:
@@ -406,11 +406,11 @@ class ControlMechanism_Base(Mechanism_Base):
                     clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
-        """Updates ControlProjections based on inputs
+        """Updates GatingProjections based on inputs
 
         Must be overriden by subclass
         """
-        raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
+        raise GatingMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
 
     def show(self):
 
