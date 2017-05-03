@@ -128,12 +128,12 @@ In addition to its `function <MappingProjection.function>`, MappingProjections u
 
 .. _Mapping_Parameter_Modulation_Operation:
 
-* `param_modulation_operation <MappingProjection.param_modulation_operation>`
+* `matrix_modulation_operation <MappingProjection.matrix_modulation_operation>`
 
   Used to determine how the value of any projections to the `parameterState <ParameterState>` for the
   `matrix <MappingProjection.matrix>` influence it.  For example, this is used for a `LearningProjection` to apply
   weight changes to the `matrix <MappingProjection.matrix>` during learning. The
-  :keyword:`param_modulation_operation` attribute must be assigned a value of `ModulationOperation` and the operation
+  :keyword:`matrix_modulation_operation` attribute must be assigned a value of `ModulationOperation` and the operation
   is always applied in an element-wise (Hadamard) manner. The default operation is ADD.
 
 .. _Projection_Execution:
@@ -176,7 +176,7 @@ class MappingProjection(Projection_Base):
         sender=None,                                        \
         receiver=None,                                      \
         matrix=DEFAULT_MATRIX,                              \
-        param_modulation_operation=ModulationOperation.ADD, \
+        matrix_modulation_operation=ModulationOperation.ADD, \
         params=None,                                        \
         name=None,                                          \
         prefs=None)
@@ -237,7 +237,7 @@ class MappingProjection(Projection_Base):
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
         value of the `sender <MappingProjection.sender>`.
 
-    param_modulation_operation : ModulationOperation : default ModulationOperation.ADD
+    matrix_modulation_operation : ModulationOperation : default ModulationOperation.ADD
         specifies the operation used to combine the value of any projections to the matrix's parameterState with the
         `matrix <MappingProjection.matrix>` itself.  Most commonly used with `LearningProjections <LearningProjection>`.
 
@@ -268,7 +268,7 @@ class MappingProjection(Projection_Base):
     receiver: InputState
         identifies the destination of the projection.
 
-    param_modulation_operation : ModulationOperation
+    matrix_modulation_operation : ModulationOperation
         determines the operation used to combine the value of any projections to the matrix's parameterState with the
         `matrix <MappingProjection.matrix>` itself.
 
@@ -314,7 +314,7 @@ class MappingProjection(Projection_Base):
                  sender=None,
                  receiver=None,
                  matrix=DEFAULT_MATRIX,
-                 param_modulation_operation=ModulationOperation.ADD,
+                 matrix_modulation_operation=ModulationOperation.ADD,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -322,7 +322,7 @@ class MappingProjection(Projection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
-                                                  param_modulation_operation=param_modulation_operation,
+                                                  matrix_modulation_operation=matrix_modulation_operation,
                                                   params=params)
 
         self.learning_mechanism = None
@@ -335,7 +335,7 @@ class MappingProjection(Projection_Base):
             self.init_args['name'] = name
             # Delete these as they have been moved to params dict (and will not be recognized by Projection.__init__)
             del self.init_args['matrix']
-            del self.init_args['param_modulation_operation']
+            del self.init_args['matrix_modulation_operation']
 
             # Flag for deferred initialization
             self.value = DEFERRED_INITIALIZATION
