@@ -9,8 +9,8 @@ from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
 from PsyNeuLink.Components.System import System_Base, system
 from PsyNeuLink.Globals.TimeScale import CentralClock
 
-random.seed(0)
-np.random.seed(0)
+# random.seed(0)
+# np.random.seed(0)
 
 def test_reinforcement():
     input_layer = TransferMechanism(
