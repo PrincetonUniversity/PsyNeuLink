@@ -351,6 +351,13 @@ class MappingProjection(Projection_Base):
 
         self.has_learning_projection = False
 
+    # def _instantiate_sender(self, context=None):
+            # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
+            # #            - kwMATRIX NEEDS TO BE A 3D np.array, EACH 3D ITEM OF WHICH IS A 2D WEIGHT MATRIX
+            # #            - MAKE SURE len(self.sender.value) == len(self.receiver.inputStates.items())
+            # # for i in range (len(self.sender.value)):
+            # #            - CHECK EACH MATRIX AND ASSIGN??
+
     def _instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
