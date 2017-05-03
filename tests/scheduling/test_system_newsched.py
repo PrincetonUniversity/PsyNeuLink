@@ -81,12 +81,14 @@ class TestInit:
         integrator_ColorInputPrediction = mySystem.executionList[7][0]
         integrator_RewardPrediction = mySystem.executionList[8][0]
         integrator_WordInputPrediction = mySystem.executionList[9][0]
+        objective_EVC_mech = mySystem.executionList[10][0]
 
         expected_consideration_queue = [
             {Color_Input, Word_Input, Reward, integrator_ColorInputPrediction, integrator_WordInputPrediction, integrator_RewardPrediction},
             {Color_Hidden, Word_Hidden},
             {Output},
-            {Decision}
+            {Decision},
+            {objective_EVC_mech},
         ]
 
         assert sched.consideration_queue == expected_consideration_queue
