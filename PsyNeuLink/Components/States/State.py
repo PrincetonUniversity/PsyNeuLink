@@ -1189,7 +1189,6 @@ class State_Base(State):
                                                                                      self.owner.name))
                 continue
 
-            # MODIFIED 2/19/17 NEW:
             # Only update if sender has also executed in this round (i.e., has matching execution_id)
             if isinstance(self.owner, (Mechanism, Process)):
                 if sender.owner._execution_id != self.owner._execution_id:
@@ -1201,8 +1200,6 @@ class State_Base(State):
                 raise StateError("PROGRAM ERROR: Object ({}) of type {} has a {}, but this is only allowed for "
                                  "Mechanisms and MappingProjections".
                                  format(self.owner.name, self.owner.__class__.__name__, self.__class__.__name__,))
-
-            # MODIFIED 2/19/17 END
 
             # FIX: FOR EACH PROJECTION TO INPUT_STATE, CHECK IF SENDER IS FROM PROCESS INPUT OR TARGET INPUT
             # FIX: IF SO, ONLY INCLUDE IF THEY BELONG TO CURRENT PROCESS;

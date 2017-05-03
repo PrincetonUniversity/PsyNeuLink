@@ -123,11 +123,14 @@ class ControlMechanism_Base(Mechanism_Base):
             .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
             WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
 
-            Protocol for assigning DefaultController:
-               Initial assignment is to SystemDefaultController (instantiated and assigned in Components.__init__.py)
-               When any other ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
-                   then its _take_over_as_default_controller method is called in _instantiate_attributes_after_function()
-                   which moves all ControlProjections from DefaultController to itself, and deletes them there
+            Protocol for instantiating unassigned ControlProjections (i.e., w/o a sender specified):
+               If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple) 
+                   it is flagged for deferred_init() in its __init__ method
+               When the next ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
+                   its _take_over_as_default_controller method is called in _instantiate_attributes_after_function;
+                   it then iterates through all of the parameterStates of all of the mechanisms in its system, 
+                   identifies ones without a sender specified, calls its deferred_init() method,
+                   instantiates a ControlSignal for it, and assigns it as the ControlProjection's sender.
 
             MONITOR_FOR_CONTROL param determines which states will be monitored.
                 specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
@@ -221,6 +224,7 @@ class ControlMechanism_Base(Mechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
+                 system=None,
                  monitor_for_control:tc.optional(list)=None,
                  function = Linear(slope=1, intercept=0),
                  params=None,
@@ -228,7 +232,7 @@ class ControlMechanism_Base(Mechanism_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        self.system = None
+        # self.system = None
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(monitor_for_control=monitor_for_control,
@@ -273,18 +277,13 @@ class ControlMechanism_Base(Mechanism_Base):
         """Insure that projection is to mechanism within the same system as self
         """
 
-        receiver_mech = projection.receiver.owner
+        if projection.value is DEFERRED_INITIALIZATION:
+            receiver_mech = projection.init_args['receiver'].owner
+        else:
+            receiver_mech = projection.receiver.owner
         if not receiver_mech in self.system.mechanisms:
             raise ControlMechanismError("Attempt to assign ControlProjection {} to a mechanism ({}) that is not in {}".
                                               format(projection.name, receiver_mech.name, self.system.name))
-
-    def _instantiate_attributes_before_function(self, context=None):
-        """Instantiate self.system attribute
-
-        Assign self.system
-        """
-        self.system = self.paramsCurrent[SYSTEM]
-        super()._instantiate_attributes_before_function(context=context)
 
     def _instantiate_monitored_output_states(self, context=None):
         raise ControlMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
@@ -296,111 +295,53 @@ class ControlMechanism_Base(Mechanism_Base):
 
         """
 
-        try:
-            # If specified as DefaultController, reassign ControlProjections from DefaultController
+        if MAKE_DEFAULT_CONTROLLER in self.paramsCurrent:
             if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
                 self._take_over_as_default_controller(context=context)
             if not self.system.enable_controller:
                 return
-        except KeyError:
-            pass
 
         # If ControlProjections were specified, implement them
-        try:
+        if CONTROL_PROJECTIONS in self.paramsCurrent:
             if self.paramsCurrent[CONTROL_PROJECTIONS]:
                 for key, projection in self.paramsCurrent[CONTROL_PROJECTIONS].items():
                     self._instantiate_control_projection(projection, context=self.name)
-        except:
-            pass
 
     def _take_over_as_default_controller(self, context=None):
 
-        # # MODIFIED 5/2/17 OLD:
-        # from PsyNeuLink.Components import DefaultController
-        #
-        # # Iterate through old controller's outputStates
-        # to_be_deleted_outputStates = []
-        #
-        # try:
-        #     DefaultController.outputStates
-        # except AttributeError:
-        #     if self.system.verbosePref:
-        #         warnings.warn("No ControlProjections specified for {};  control will be disabled".
-        #                       format(self.system.name))
-        #     self.system.enable_controller = False
-        #     return
-        #
-        # for outputState in DefaultController.outputStates:
-        #
-        #     # Iterate through projections sent for outputState
-        #     for projection in DefaultController.outputStates[outputState].sendsToProjections:
-        #
-        #         if not self.system in projection.receiver.owner.systems:
-        #             continue
-        #
-        #         # Move ControlProjection to self (by creating new outputState)
-        #         # IMPLEMENTATION NOTE: Method 1 -- Move old ControlProjection to self
-        #         #    Easier to implement
-        #         #    - call _instantiate_control_projection directly here (which takes projection as arg)
-        #         #        instead of instantiating a new ControlProjection (more efficient, keeps any settings);
-        #         #    - however, this bypasses call to Projection._instantiate_sender()
-        #         #        which calls Mechanism.sendsToProjections.append(),
-        #         #        so need to do that in _instantiate_control_projection
-        #         #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
-        #         params = projection.control_signal
-        #         self._instantiate_control_projection(projection, params=params, context=context)
-        #
-        #         # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlProjection
-        #         # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlProjection
-        #         # # TBI: Implement and then use Mechanism.add_project_from_mechanism()
-        #         # self._add_projection_from_mechanism(projection, new_output_state, context=context)
-        #
-        #         # Remove corresponding projection from old controller
-        #         DefaultController.outputStates[outputState].sendsToProjections.remove(projection)
-        #
-        #     # Current controller's outputState has no projections left (after removal(s) above)
-        #     if not DefaultController.outputStates[outputState].sendsToProjections:
-        #         # If this is the old controller's primary outputState, set it to None
-        #         if DefaultController.outputState is DefaultController.outputStates[outputState]:
-        #             DefaultController.outputState = None
-        #         # Delete outputState from old controller's outputState dict
-        #         to_be_deleted_outputStates.append(DefaultController.outputStates[outputState])
-        # for item in to_be_deleted_outputStates:
-        #     del DefaultController.outputStates[item.name]
-
-        # MODIFIED 5/2/17 NEW:
         # Check the parameterStates of the system's mechanisms for any ControlProjections with deferred_init()
         for mech in self.system.mechanisms:
             for parameter_state in mech.parameterStates.values():
                 for projection in parameter_state.receivesFromProjections:
                     # If projection was deferred for init, initialize it now and instantiate for self
-                    if projection.init_args['sender'] is None:
-                        projection._deferred_init()
-                        # Get params specified to projection for its ControlSignal from its control_signal parameter
+                    if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
+                        # Get params specified with projection for its ControlSignal (cached in control_signal attrib)
                         params = projection.control_signal
                         self._instantiate_control_projection(projection, params=params, context=context)
-        # MODIFIED 5/2/17 END
-
-
 
     def _instantiate_control_projection(self, projection, params=None, context=None):
-        """Add outputState and assign as sender to requesting ControlProjection
+        """Add outputState (as ControlSignal) and assign as sender to requesting ControlProjection
 
         # Updates allocation_policy and controlSignalCosts attributes to accommodate instantiated projection
 
-        Note:  params are expected to be params for controlSignal (outputState of ControlMechanism)
+        Notes:  
+        * params are expected to be for (i.e., to be passed to) ControlSignal;
+        * wait to instantiate deferred_init() projections until after ControlSignal is instantiated,
+             so that correct outputState can be assigned as its sender;
+        * index of outputState is incremented based on number of ControlSignals already instantiated;
+        * assume that self.allocation_policy has already been extended 
+            to include the particular (indexed) allocation to be used for the outputState being created here.
 
-        Assume that:
-            # - self.value is populated (in _update_value) with an array of allocations from self.allocation_policy;
-            - self.allocation_policy has already been extended to include the particular (indexed) allocation
-                to be used for the outputState being created here.
-
-        INCREMENT BASED ON TOTAL NUMBER OF OUTPUTSTATES SO FAR
 
         Returns state: (OutputState)
         """
 
         self._validate_projection(projection)
+        # get name of projection receiver (for use in naming the ControlSignal)
+        if projection.value is DEFERRED_INITIALIZATION:
+            receiver_name = projection.init_args['receiver'].name
+        else:
+            receiver_name = projection.receiver.name
 
         from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
         if not isinstance(projection, ControlProjection):
@@ -417,7 +358,7 @@ class ControlMechanism_Base(Mechanism_Base):
         except AttributeError:
             output_state_index = 0
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
-        output_state_name = projection.receiver.name + '_' + ControlSignal.__name__
+        output_state_name = receiver_name + '_' + ControlSignal.__name__
         output_state_value = self.allocation_policy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
@@ -432,7 +373,11 @@ class ControlMechanism_Base(Mechanism_Base):
                                             context=context)
 
         # Assign outputState as ControlProjection's sender
-        projection.sender = state
+        if projection.value is DEFERRED_INITIALIZATION:
+            projection.init_args['sender']=state
+            projection._deferred_init()
+        else:
+            projection.sender = state
 
         # Update self.outputState and self.outputStates
         try:

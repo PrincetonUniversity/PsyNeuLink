@@ -72,9 +72,9 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components import DefaultController
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Projections.Projection import *
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
 projection_keywords.update({CONTROL_PROJECTION})
 parameter_keywords.update({CONTROL_PROJECTION})
@@ -207,7 +207,8 @@ class ControlProjection(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        PROJECTION_SENDER: DefaultController,
+        # PROJECTION_SENDER: DefaultController,
+        PROJECTION_SENDER: ControlMechanism_Base,
         PROJECTION_SENDER_VALUE: defaultControlAllocation})
 
     @tc.typecheck
