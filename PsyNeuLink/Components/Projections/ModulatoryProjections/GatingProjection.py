@@ -14,10 +14,10 @@
 Overview
 --------
 
-A GatingProjection is a subclass of `Projection` that projects to the `inputState <InputState>` or 
-`outputState <OutputState>` of a `ProcessingMechanism`. It takes the value of an `outputState <OutputState> of 
-another mechanism (e.g., usually a `GatingMechanism <GatingMechanism>`), and uses it to modulate the value of the 
-state to which it projects.
+A GatingProjection is a subclass of `Projection` that modulates the function of the `inputState 
+<InputState>` or `outputState <OutputState>` of a `ProcessingMechanism`. It takes the value of an 
+`outputState <OutputState> of another mechanism (e.g., usually a `GatingMechanism <GatingMechanism>`), and uses it 
+to modulate the value of the state to which it projects.
 
 .. _GatingProjection_Creation:
 
