@@ -907,7 +907,8 @@ class EVCMechanism(ControlMechanism_Base):
                           name = self.system.name + ' outcome signal'
                           )
         self.system.executionList.append(MechanismTuple(self.monitoring_mechanism, None, self.system.numPhases - 1))
-        self.system.executionGraph[MechanismTuple(self.monitoring_mechanism, None, self.system.numPhases -1)] = set()
+        self.system.executionGraph[MechanismTuple(self.monitoring_mechanism, None, self.system.numPhases - 1)] = set(
+            self.system.executionList[:-1])
     def _get_monitored_states(self, context=None):
         """
         Parse paramsCurent[MONITOR_FOR_CONTROL] for system, controller, mechanisms and/or their outputStates:
