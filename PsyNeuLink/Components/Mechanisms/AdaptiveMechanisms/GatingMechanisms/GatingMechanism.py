@@ -12,14 +12,17 @@
 Overview
 --------
 
-A GatingMechanism is an `AdaptiveMechanism` that modifies the parameter(s) of one or more `ProcessingMechanisms`.
-It's function takes a value (usually the output of an `ObjectiveMechanism`) and uses that to calculate an
-`allocation_policy`:  a list of `allocation` values for each of its ControlSignals that specify the value to assign
-to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is conveyed by
-a `GatingProjection` to the `parameterState <ParameterState>` of the corresponding ProcessingMechanism.  A
-GatingMechanism can regulate only the parameters of mechanism in the system for which it is the
-`controller <System_Execution_Control>`.  The control components of a system can be displayed using the system's 
-`show_graph` method with its **show_control** argument assigned :keyword:``True`.  The control components of a 
+A GatingMechanism is an `AdaptiveMechanism` that modifies the inputState(s) and/or outputState(s) of one or more 
+`ProcessingMechanisms`.   It's function takes a value and uses that to calculate a `gating_policy`:  a list of 
+`gating` values, one for each of states that it gates.  Each of these values is assigned as the value of a 
+corresponding `GatingSignal` (a subclass of `OutputState` used by ControlMechanisms), and used by the
+associated `GatingProjection` to gate the state to which it projects.  
+COMMENT: TBI
+The gating components of a system can be displayed using the system's 
+`show_graph` method with its **show_gating** argument assigned :keyword:``True`.  
+COMMENT
+?????
+The gating components of a 
 system are executed after all ProcessingMechanisms and `learning components <LearningMechanism>` in that system have 
 been executed.
 
@@ -28,53 +31,43 @@ been executed.
 Creating A GatingMechanism
 ---------------------------
 
-GatingMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
-A GatingMechanism is also created automatically whenever a `system is created <System_Creation>`, and assigned as
-the `controller <System_Execution_Control>` for that system. The `outputStates <OutputState>` to be monitored by a
-GatingMechanism are specified in its `monitored_output_states` argument, which can take  a number of
-`forms <ObjectiveMechanism_Monitored_OutputStates>`.  When the GatingMechanism is created, it automatically creates
-an ObjectiveMechanism that is used to monitor and evaluate the mechanisms and/or outputStates specified in its
-`monitor_for_control <ControlMechanism.monitor_for_control>` attribute.  The result of the evaluation is used to
-specify the value of the ControlMechanism's `ControlProjections <ControlProjection>`. How a GatingMechanism creates its
-GatingProjections and determines their value based on the outcome of its evaluation  depends on the
-`subclass <GatingMechanism>`.
+GatingMechanisms can be created using the standard Python method of calling the constructor for the desired type.
+COMMENT: ??TBI
+A GatingMechanism is also created automatically if a `gating is specified <GatingMechanism_Specifying_Gating>` for a 
+state but its `sender <GatingProjection.sender>` is not assigned.  In that case, a Gating
+COMMENT
+When gating is specified for a state, a `GatingProjection` is automatically instantiated that projects from the
+designated GatingMechanism to the state. How a GatingMechanism creates its `GatingProjections <GatingProjection>` and 
+determines their value depends on the `subclass <GatingMechanism>`.
 
-.. _GatingMechanism_Specifying_Control:
+.. _GatingMechanism_Specifying_Gating:
 
-Specifying control for a parameter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Specifying gating
+~~~~~~~~~~~~~~~~~
 
-GatingMechanisms are used to control the parameter values of mechanisms and/or their functions.  A parameter can be
-specified for control by assigning a `GatingProjection` as part of its value when creating the mechanism or function
-to which the parameter belongs (see `Mechanism_Parameters`).
+Gating can be specified for an `InputState` or `OutputState` in any of the following way:
 
-.. _ControlMechanism_Monitored_OutputStates:
+XXX DOCUMENTATION NEEDED HERE
 
-Monitored OutputStates
-~~~~~~~~~~~~~~~~~~~~~~
-
-When an ControlMechanism is constructed automatically, it creates an `ObjectiveMechanism` (specified in its
-`montioring_mechanism` attribute) that is used to monitor and evaluate the system's performance.  The
-ObjectiveMechanism monitors each mechanism and/or outputState listed in the ControlMechanism's
-'monitor_for_control <ControlMechanism.monitor_for_control>` attribute, and evaluates them using the its `function`.
-This information is used to set the value of the ControlMechanism's GatingProjections.
-
-.. _ControlMechanism_Execution:
+.. _GatingMechanism_Execution:
 
 Execution
 ---------
 
-A ControlMechanism that is a system's `controller` is always the last mechanism to be executed (see `System Control
-<System_Execution_Control>`).  Its `function <ControlMechanism.function>` takes as its input the values of the
-outputStates in its `monitored_output_states` attribute, and uses those to determine the value of its
-`ControlProjections <ControlProjection>`. In the subsequent round of execution, each ControlProjection's value is
-used by the `ParameterState` to which it projects to update the parameter being controlled.
+A GatingMechanism executes in the same way as a ProcessingMechanism, based on its place in the system's 
+`graph <System.graph>`.  Because GatingProjections are likely to introduce cycles (loops) in the graph,
+the effects of a GatingMechanism and its projections will generally not be applied in the first
+`??XXX round / time_step of execution <LINK>` (see `initialization <LINK>` for a description of how to configure the 
+initialization
+of feedback loops in a System).  When executd, a GatingMechanism uses its input to determine the value of its
+`GatingSignals <GatingSignal>` and their corresponding `GatingProjections <GatingProjection>`.  In the subsequent 
+??XXX round / time_step of execution , each GatingProjection's value is used by the state to which it 
+projects to modulate the `value <State.value>` of that state.
 
 .. note::
-   A `ParameterState` that receives a `GatingProjection` does not update its value until its owner mechanism
-   executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
-   ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
-   receiver mechanism has executed.
+   A state that receives a `GatingProjection` does not update its value until its owner mechanism executes 
+   (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a GatingMechanism 
+   has executed, a state that it gates will not assume its new value until the state's owner has executed.
 
 .. _GatingMechanism_Class_Reference:
 
