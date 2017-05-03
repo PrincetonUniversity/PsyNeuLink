@@ -186,9 +186,167 @@ class TestGraphAndInput:
         s.run(inputs)
 
         assert [a] == s.originMechanisms.mechanisms
-        assert ([c, d] == s.terminalMechanisms.mechanisms or [d, c] == s.terminalMechanisms.mechanisms)
+        assert set([c, d]) == set(s.terminalMechanisms.mechanisms)
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INTERNAL
         assert c.systems[s] == TERMINAL
         assert d.systems[s] == TERMINAL
+
+    def test_bypass(self):
+        a = TransferMechanism(name='a', default_input_value=[0,0])
+        b = TransferMechanism(name='b', default_input_value=[0,0])
+        c = TransferMechanism(name='c')
+        d = TransferMechanism(name='d')
+
+        p1 = process(pathway=[a, b, c, d], name='p1')
+        p2 = process(pathway=[a, b, d], name='p2')
+
+        s = system(
+            processes=[p1, p2],
+            name='Bypass System',
+            initial_values={a:[1,1]},
+        )
+
+        inputs={a:[[2,2],[0,0]]}
+        s.run(inputs=inputs)
+
+        assert [a] == s.originMechanisms.mechanisms
+        assert [d] == s.terminalMechanisms.mechanisms
+
+        assert a.systems[s] == ORIGIN
+        assert b.systems[s] == INTERNAL
+        assert c.systems[s] == INTERNAL
+        assert d.systems[s] == TERMINAL
+
+    def test_chain(self):
+        a = TransferMechanism(name='a', default_input_value=[0,0,0])
+        b = TransferMechanism(name='b')
+        c = TransferMechanism(name='c')
+        d = TransferMechanism(name='d')
+        e = TransferMechanism(name='e')
+
+        p1 = process(pathway=[a, b, c], name='p1')
+        p2 = process(pathway=[c, d, e], name='p2')
+
+        s = system(
+            processes=[p1, p2],
+            name='Chain System',
+            initial_values={a:[1,1,1]},
+        )
+
+        inputs={a:[[2,2,2],[0,0,0]]}
+        s.run(inputs=inputs)
+
+        assert [a] == s.originMechanisms.mechanisms
+        assert [e] == s.terminalMechanisms.mechanisms
+
+        assert a.systems[s] == ORIGIN
+        assert b.systems[s] == INTERNAL
+        assert c.systems[s] == INTERNAL
+        assert d.systems[s] == INTERNAL
+        assert e.systems[s] == TERMINAL
+
+    def test_convergent(self):
+        a = TransferMechanism(name='a', default_input_value=[0,0])
+        b = TransferMechanism(name='b')
+        c = TransferMechanism(name='c')
+        c = TransferMechanism(name='c', default_input_value=[0])
+        d = TransferMechanism(name='d')
+        e = TransferMechanism(name='e')
+
+        p1 = process(pathway=[a, b, e], name='p1')
+        p2 = process(pathway=[c, d, e], name='p2')
+
+        s = system(
+            processes=[p1, p2],
+            name='Convergent System',
+            initial_values={a:[1,1]},
+        )
+
+        inputs={a:[[2,2]], c:[[0]]}
+        s.run(inputs=inputs)
+
+        assert set([a, c]) == set(s.originMechanisms.mechanisms)
+        assert [e] == s.terminalMechanisms.mechanisms
+
+        assert a.systems[s] == ORIGIN
+        assert b.systems[s] == INTERNAL
+        assert c.systems[s] == ORIGIN
+        assert d.systems[s] == INTERNAL
+        assert e.systems[s] == TERMINAL
+
+    def cyclic_one_process(self):
+        a = TransferMechanism(name='a', default_input_value=[0,0])
+        b = TransferMechanism(name='b', default_input_value=[0,0])
+
+        p1 = process(pathway=[a, b, a], name='p1')
+
+        s = system(
+            processes=[p1],
+            name='Cyclic System with one Process',
+            initial_values={a:[1,1]},
+        )
+
+        inputs={a:[1,1]}
+        s.run(inputs=inputs)
+
+        assert [a] == s.originMechanisms.mechanisms
+        assert [] == s.terminalMechanisms.mechanisms
+
+        assert a.systems[s] == ORIGIN
+        assert b.systems[s] == INITIALIZE_CYCLE
+
+    def cyclic_two_processes(self):
+        a = TransferMechanism(name='a', default_input_value=[0,0])
+        b = TransferMechanism(name='b', default_input_value=[0,0])
+        c = TransferMechanism(name='c', default_input_value=[0,0])
+
+        p1 = process(pathway=[a, b, a], name='p1')
+        p2 = process(pathway=[a, c, a], name='p2')
+
+        s = system(
+            processes=[p1, p2],
+            name='Cyclic System with two Processes',
+            initial_values={a:[1,1]},
+        )
+
+        inputs={a:[1,1]}
+        s.run(inputs=inputs)
+
+        assert [a] == s.originMechanisms.mechanisms
+        assert [] == s.terminalMechanisms.mechanisms
+
+        assert a.systems[s] == ORIGIN
+        assert b.systems[s] == INITIALIZE_CYCLE
+        assert c.systems[s] == INITIALIZE_CYCLE
+
+    def cyclic_extended_loop(self):
+        a = TransferMechanism(name='a', default_input_value=[0,0])
+        b = TransferMechanism(name='b')
+        c = TransferMechanism(name='c')
+        d = TransferMechanism(name='d')
+        e = TransferMechanism(name='e', default_input_value=[0])
+        f = TransferMechanism(name='f')
+
+        p1 = process(pathway=[a, b, c, d], name='p1')
+        p2 = process(pathway=[e, c, f, b, d], name='p2')
+
+        s = system(
+            processes=[p1, p2],
+            name='Cyclic System with Extended Loop',
+            initial_values={a:[1,1]},
+       )
+
+        inputs={a:[2,2], e:[0]}
+        s.run(inputs=inputs)
+
+        assert set([a, c]) == set(s.originMechanisms.mechanisms)
+        assert [d] == s.terminalMechanisms.mechanisms
+
+        assert a.systems[s] == ORIGIN
+        assert b.systems[s] == CYCLE
+        assert c.systems[s] == INTERNAL
+        assert d.systems[s] == TERMINAL
+        assert e.systems[s] == ORIGIN
+        assert f.systems[s] == INITIALIZE_CYCLE
