@@ -318,7 +318,6 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components import SystemDefaultControlMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 
-
 # System factory method:
 @tc.typecheck
 def system(default_input_value=None,
@@ -812,7 +811,7 @@ class System_Base(System):
         else:
             # Instantiate specified controller
             # MODIFIED 11/6/16 OLD:
-            self.controller = self.paramsCurrent[CONTROLLER](params={SYSTEM: self})
+            self.controller = self.controller(system=self)
             # # MODIFIED 11/6/16 NEW:
             # self.controller = self.paramsCurrent[CONTROLLER](system=self)
             # MODIFIED 11/6/16 END

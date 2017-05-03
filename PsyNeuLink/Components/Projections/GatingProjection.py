@@ -199,7 +199,7 @@ class GatingProjection(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        PROJECTION_SENDER: DefaultGatingMechanism,
+        PROJECTION_SENDER: GatingMechanism,
         PROJECTION_SENDER_VALUE: defaultGatingSignal})
 
     @tc.typecheck
