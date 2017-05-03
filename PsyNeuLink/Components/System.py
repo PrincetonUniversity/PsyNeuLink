@@ -258,17 +258,16 @@ Class Reference
 
 import math
 import re
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
 from collections import OrderedDict
-from collections import UserList, Iterable
+
 from toposort import *
 
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple,\
-                                                       OBJECT_ITEM, PARAMS_ITEM, PHASE_ITEM
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple, \
+    PARAMS_ITEM, PHASE_ITEM
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, ProcessTuple
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
+from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 
@@ -800,9 +799,6 @@ class System_Base(System):
         self._execution_id = None
 
         # Get/assign controller
-
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism \
-            import DefaultControlMechanism
 
         # Existing controller has been assigned
         if isinstance(self.controller, ControlMechanism_Base):
@@ -1511,7 +1507,7 @@ class System_Base(System):
             self.inputs.append(stimulus_input_state.value)
 
             # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
-            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
             MappingProjection(sender=stimulus_input_state,
                     receiver=origin_mech,
                     name=self.name+' Input Projection to '+origin_mech.name)
@@ -1528,7 +1524,7 @@ class System_Base(System):
 
             # MappingProjections are legal recipients of learning projections (hence the call)
             #  but do not send any projections, so no need to consider further
-            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
             if isinstance(sender_mech, MappingProjection):
                 return
 
@@ -1768,7 +1764,7 @@ class System_Base(System):
         self._monitoring_mech_tuples = []
         self._target_mech_tuples = []
 
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
         for item in self.learningExecutionList:
             if isinstance(item, MappingProjection):
                 continue
@@ -1832,7 +1828,7 @@ class System_Base(System):
             self.targetInputStates.append(system_target_input_state)
 
             # Add MappingProjection from system_target_input_state to TARGET mechainsm's target inputState
-            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
             MappingProjection(sender=system_target_input_state,
                     receiver=target_mech_TARGET_input_state,
                     name=self.name+' Input Projection to '+target_mech_TARGET_input_state.name)
@@ -2100,7 +2096,7 @@ class System_Base(System):
         # NEXT, execute all components involved in learning
         for component in self.learningExecutionList:
 
-            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
             if isinstance(component, MappingProjection):
                 continue
 
@@ -2298,7 +2294,7 @@ class System_Base(System):
                              re.sub('[\[,\],\n]','',str(["{:0.3}".
                                                 format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
         if self.learning:
-            from PsyNeuLink.Components.Projections.LearningProjection import TARGET_MSE
+            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import TARGET_MSE
             for mech in self.targetMechanisms:
                 print("\n- MSE: {:0.3}".
                       format(float(mech.outputStates[TARGET_MSE].value)))
@@ -2480,8 +2476,8 @@ class System_Base(System):
                 output_state_names.append(name)
         output_value_array = np.array(output_value_array)
 
-        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         learning_projections = []
         controlled_parameters = []
         for mech in list(self.mechanisms):
@@ -2675,7 +2671,7 @@ class System_Base(System):
 
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
         import graphviz as gv
 

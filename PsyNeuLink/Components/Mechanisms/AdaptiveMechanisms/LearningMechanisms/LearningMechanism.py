@@ -352,16 +352,12 @@ Class Reference
 """
 
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import _objective_mechanism_role
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.Functions.Function import BackPropagation
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.Functions.Function import BackPropagation, Logistic
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
 # Params:
 

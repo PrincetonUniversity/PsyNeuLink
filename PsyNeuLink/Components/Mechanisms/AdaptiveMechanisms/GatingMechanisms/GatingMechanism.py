@@ -325,7 +325,7 @@ class GatingMechanism_Base(Mechanism_Base):
         else:
             receiver = projection.receiver
 
-        from PsyNeuLink.Components.Projections.GatingProjection import GatingProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
         if not isinstance(projection, GatingProjection):
             raise GatingMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
                                               "that is not a GatingProjection, to outputState of {1}".

@@ -129,21 +129,21 @@ from PsyNeuLink.Components.Projections.Projection import Projection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
 
 # MappingProjection
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 register_category(entry=MappingProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
 
 # ControlProjection
-from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 register_category(entry=ControlProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
 
 # LearningProjection
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 register_category(entry=LearningProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,

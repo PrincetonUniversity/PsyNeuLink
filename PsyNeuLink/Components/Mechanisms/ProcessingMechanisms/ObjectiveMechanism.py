@@ -211,10 +211,10 @@ Class Reference
 
 """
 
+from PsyNeuLink.Components.Functions.Function import LinearCombination
 # from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.Functions.Function import LinearCombination
 
 OBJECT = 0
 WEIGHT = 1
@@ -731,7 +731,7 @@ def _is_value_spec(spec):
 
 # IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
 def _instantiate_monitoring_projection(sender, receiver, matrix=DEFAULT_MATRIX):
-    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+    from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
     MappingProjection(sender=sender,
                       receiver=receiver,
                       matrix=matrix,

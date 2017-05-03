@@ -324,15 +324,32 @@ Class Reference
 
 import math
 import re
-from collections import Iterable
 
 import PsyNeuLink.Components
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, _add_projection_to
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
+    _is_learning_spec
+from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, \
+    _add_projection_to
+from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
+from PsyNeuLink.Globals.Registry import register_category
+import math
+import re
+
+import PsyNeuLink.Components
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.Mechanism import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
+    _is_learning_spec
+from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, \
+    _add_projection_to
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
@@ -986,8 +1003,6 @@ class Process_Base(Process):
         self._monitoring_mech_tuples = []
         self._target_mech_tuples = []
 
-        from PsyNeuLink.Globals.Run import _get_unique_id
-
         self._standardize_config_entries(pathway=pathway, context=context)
 
         # VALIDATE PATHWAY THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
@@ -1135,7 +1150,6 @@ class Process_Base(Process):
 
         previous_item_was_projection = False
 
-        from PsyNeuLink.Components.Projections.Projection import Projection_Base
         for i in range(len(pathway)):
             item, params, phase_spec = pathway[i]
 
@@ -1662,7 +1676,7 @@ class Process_Base(Process):
                                                     prefs=self.prefs)
             self.processInputStates.append(process_input_state)
 
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
         # If there is the same number of Process input values and mechanism.inputStates, assign one to each
         if num_process_inputs == num_mechanism_input_states:
@@ -1796,7 +1810,7 @@ class Process_Base(Process):
                 # MODIFIED 5/2/17 NEW:
                 # Defer instantiation of ControlProjections to System
                 #   and there should not be any other type of projection to the ParameterState of a Mechanism
-                from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+                from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
                 if not all(isinstance(proj, ControlProjection) for proj in parameter_state.receivesFromProjections):
                     raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterState for a Mechanism")
                 # MODIFIED 5/2/17 END
@@ -1992,7 +2006,7 @@ class Process_Base(Process):
         self.targetInputStates.append(target_input_state)
 
         # Add MappingProjection from target_input_state to MonitoringMechanism's target inputState
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
         MappingProjection(sender=target_input_state,
                 receiver=target_mech_target,
                 name=self.name+'_Input Projection to '+target_mech_target.name)
@@ -2346,7 +2360,7 @@ class Process_Base(Process):
                      re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.outputState.value]))))
 
         if self.learning:
-            from PsyNeuLink.Components.Projections.LearningProjection import TARGET_MSE
+            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import TARGET_MSE
             print("\n- MSE: {:0.3}".
                   format(float(self.targetMechanism.outputStates[TARGET_MSE].value)))
 

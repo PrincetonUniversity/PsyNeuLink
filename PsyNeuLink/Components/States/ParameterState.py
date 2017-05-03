@@ -371,9 +371,10 @@ Class Reference
 
 """
 
+from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.States.State import _instantiate_state
-from PsyNeuLink.Components.Functions.Function import *
+
 
 class ParameterStateError(Exception):
     def __init__(self, error_value):
@@ -822,16 +823,16 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         pass
     # Allow ControlProjection, LearningProjection
     elif isinstance(param_value, Projection):
-        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         if isinstance(param_value, (ControlProjection, LearningProjection)):
             pass
         else:
             return
     # Allow Projection class
     elif inspect.isclass(param_value) and issubclass(param_value, Projection):
-        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         if issubclass(param_value, (ControlProjection, LearningProjection)):
             pass
         else:

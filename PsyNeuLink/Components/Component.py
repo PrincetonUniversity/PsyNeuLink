@@ -1467,7 +1467,7 @@ class Component(object):
         # # If object is a Mechanism or MappingProjection, instantiate ParameterState for param if required
         # #    (States don't have ParameterStates)
         # from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-        # from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        # from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
         # if isinstance(self, (Mechanism, MappingProjection)):
         #     # NEED TO DO THIS NO MATTER WHAT, SINCE NEED PARAMETER STATES FOR ALL NEW PARAMS
         #     # AS IT IS NOW, _instantiate_parameter_states ignores existing parameterStates
@@ -1676,8 +1676,8 @@ class Component(object):
             #    then simply assign value to paramClassDefault (implication of not specifying it explicitly);
             #    this also allows it to pass the test below and function execution to occur for initialization;
             from PsyNeuLink.Components.Projections.Projection import Projection, ProjectionRegistry
-            # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-            # from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+            # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+            # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
             if (((isinstance(param_value, str) and
                           param_value in {CONTROL_PROJECTION, LEARNING_PROJECTION, LEARNING}) or
                 isinstance(param_value, Projection) or  # These should be just ControlProjection or LearningProjection
@@ -1799,8 +1799,8 @@ class Component(object):
         """
         from PsyNeuLink.Components.Mechanisms.Mechanism import ParamValueProjection
         from PsyNeuLink.Components.Projections.Projection import Projection
-        # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-        # from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        # from PsyNeuLink.Components.Projections.Modulatory.ControlProjection import ControlProjection
+        # from PsyNeuLink.Components.Projections.Modulatory.LearningProjection import LearningProjection
 
         if isinstance(param_spec, ParamValueProjection):
             value =  param_spec.value

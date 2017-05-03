@@ -341,11 +341,12 @@ Class Reference
 
 import numpy as np
 from collections import Iterable
-from PsyNeuLink.Globals.Utilities import *
+
 from PsyNeuLink.Components.Component import function_type
-from PsyNeuLink.Components.System import System
-from PsyNeuLink.Components.Process import Process, ProcessInputState
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.Process import Process, ProcessInputState
+from PsyNeuLink.Components.System import System
+from PsyNeuLink.Globals.Utilities import *
 
 HOMOGENOUS = 1
 HETEROGENOUS = 0
@@ -547,7 +548,7 @@ def run(object,
     # SET LEARNING_RATE, if specified, for all learningProjections in process or system
     if object.learning_rate is not None:
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         for learning_mech in object.monitoringMechanisms.mechanisms:
             for projection in learning_mech.outputState.sendsToProjections:
                 if isinstance(projection, LearningProjection):

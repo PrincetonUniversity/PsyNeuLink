@@ -288,15 +288,13 @@ Class Reference
 ---------------
 
 """
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCAuxiliary import \
     ControlSignalGridSearch, ValueFunction
-
-from PsyNeuLink.Components.Process import Process_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
 OBJECT = 0
 WEIGHT = 1
@@ -936,7 +934,6 @@ class EVCMechanism(ControlMechanism_Base):
 
         """
 
-        from PsyNeuLink.Components.States.OutputState import OutputState
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import validate_monitored_value
 
