@@ -184,6 +184,7 @@
 # FIX:    * doesn't recognize reference to existing specification dict for outputStates in constructor arg
 #            getting packaged by Python interpreter as a tuple in the arg: either look for tuples or use *ref notation?
 #               (see my_mean example in TransferMechanism)
+# IMPLEMENT: Move `calculate` attribute of outputState to function, while preserving index attribute
 # IMPLEMENT: MEANS TO SPECIFY GATING FOR A InputState AND OutputState OF A MECHANISM:
 #         * implement default (RESULTS) for primary outputState
 #               (??and change reference to it in DOCS from "primary" to "results" outputState
