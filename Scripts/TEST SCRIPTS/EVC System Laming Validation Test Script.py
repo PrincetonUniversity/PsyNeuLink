@@ -31,11 +31,9 @@ Reward = TransferMechanism(name='Reward',
                  # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
                   )
 
-
 Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear,
                                                                       control_signal={
                                                                           ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)},
-                                                                      modulation_parameter=slope
                                                                       )),
                                    threshold=(1.0, ControlProjection(function=Linear,
                                                                      control_signal={

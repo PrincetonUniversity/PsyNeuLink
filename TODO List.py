@@ -164,16 +164,38 @@
 
 # IMPLEMENT: LCA (Leaky Competitive Accumulator):  SET DEFAULT PARAMS THAT ~ DDM
 
+
 # SEARCH & REPLACE: allocation_policy -> control_policy (AND ALL VARIANTS THEREOF)
 # SEARCH & REPLACE: baseValue -> base_value
 # SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
 
-# IMPLEMENT function_type or method_type SPECIFICATION IN ADDITION TO ModulationOperation FOR modulation_operation
-#            parameter of ModulatoryFunctions
 
-# DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction, AND MUST SPECIFY WHICH IS THEIR
-#                    ADDITIVE AND WHICH IS THEIR MULTIPLICATIVE PARAMETER (FOR USE BY modulation_operation)
+# MODULATORY COMPONENTS ----------------------------------------------------------
+# IMPLEMENT: modulation_operation FOR ModulatoryProjections
+#            function_type or method_type SPECIFICATION IN ADDITION TO ModulationOperation FOR modulation_operation
+#                 parameter of ModulatoryFunctions
+# IMPLEMENT: additive and multiplicative ATTRIBUTES FOR TransferFunctions (REQIURE THESE, AND DOCUMENT FOR TransferFct)
 # IMPLEMENT: CONSTRAINT ON STATE FUNCTIONS TO BE A TransferFunction
+# DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction
+# DOCUMENTATION: UPDATE ParameterState_Parameter_Modulation_Operation WITH REFACTORING OF modulation_operation arg/param
+# FIX: is_param_spec to allow tuple with projection specification in it TO PASS TYPECHECK
+# FIX: PARSING OF input_state AND output_state ARGS IN Mechanism CONSTRUCTORS:
+# FIX:    * input_states arg crashes
+# FIX:    * doesn't recognize reference to existing specification dict for outputStates in constructor arg
+#            getting packaged by Python interpreter as a tuple in the arg: either look for tuples or use *ref notation?
+#               (see my_mean example in TransferMechanism)
+# IMPLEMENT: MEANS TO SPECIFY GATING FOR A InputState AND OutputState OF A MECHANISM:
+#         * implement default (RESULTS) for primary outputState
+#               (??and change reference to it in DOCS from "primary" to "results" outputState
+#         * create sets of inputStates and outputStates either at top of module or in class (below paramClassDefaults)
+#         * parse input_state and output_state specs for duplicate names or entries, and update dicts accordingly
+#              (so that default versions can be modified)
+#         * implement GatingProjection spec:  can be only value for input_state or output_state arg,
+#              with keywords GATE (==GATE_PRIMARY) GATE_ALL, GATE_PRIMARY
+#              or an entry in the state specification dictionary with the key "GATING", and a value that is the
+#              keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOpearation value, GatingProjection, or its constructor
+# -----------------------------------------------------------------------------------
+
 
 # FIX: REPLACE: kwConstants must == arg names
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)

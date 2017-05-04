@@ -116,6 +116,7 @@ TRANSFER_MEAN = "transfer_mean "
 TRANSFER_VARIANCE = "transfer_variance"
 TRANSFER_DIFFERENTIAL = "transfer_differential"
 
+
 # TransferMechanism output indices (used to index output values):
 class Transfer_Output(AutoNumber):
     """Indices of the `outputValue <TransferMechanism.outputValue>` attribute of the TransferMechanism containing the
@@ -362,11 +363,17 @@ class TransferMechanism(ProcessingMechanism_Base):
         # INTEGRATOR_FUNCTION: Integrator
         })
 
+    my_mean = {NAME:'MY MEAN',
+               CALCULATE:lambda x: np.mean(x)},
+
+
     paramNames = paramClassDefaults.keys()
 
     @tc.typecheck
     def __init__(self,
                  default_input_value=Transfer_DEFAULT_BIAS,
+                 output_states=None,
+                 input_states=None,
                  size:tc.optional(int)=None,
                  function=Linear,
                  initial_value=None,
@@ -384,6 +391,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
+                                                  output_states=output_states,
+                                                  # input_states=input_states,
                                                   noise=noise,
                                                   time_constant=time_constant,
                                                   time_scale=time_scale,
