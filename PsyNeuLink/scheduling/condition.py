@@ -25,6 +25,18 @@ class ConditionSet(object):
     def __contains__(self, item):
         return item in self.conditions
 
+    @property
+    def scheduler(self):
+        return self._scheduler
+
+    @scheduler.setter
+    def scheduler(self, value):
+        logger.debug('ConditionSet ({0}) setting scheduler to {1}'.format(type(self).__name__, value))
+        self._scheduler = value
+
+        for owner, cond in self.conditions.items():
+            cond.scheduler = value
+
     def add_condition(self, owner, condition):
         """
         :param: self:
