@@ -497,7 +497,7 @@ class Projection_Base(Projection):
         # MODIFIED 4/21/17 NEW: [MOVED FROM MappingProjection._instantiate_receiver]
         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
         if isinstance(self.receiver, Mechanism):
-            if (len(self.receiver.inputStates) > 1 and
+            if (len(self.receiver.input_states) > 1 and
                     (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
                 print("{0} has more than one inputState; {1} was assigned to the first one".
                       format(self.receiver.owner.name, self.name))
@@ -846,8 +846,8 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
        * specification of InputState can be any of the following:
                 - INPUT_STATE - assigns projection_spec to (primary) inputState;
                 - InputState object;
-                - index for Mechanism.inputStates OrderedDict;
-                - name of inputState (i.e., key for Mechanism.inputStates OrderedDict));
+                - index for Mechanism.input_states OrderedDict;
+                - name of inputState (i.e., key for Mechanism.input_states OrderedDict));
                 - the keyword kwAddInputState or the name for an inputState to be added;
        * specification of ParameterState must be a ParameterState object
        * projection_spec can be any valid specification of a projection_spec
@@ -871,7 +871,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     if not isinstance(state, (int, str, InputState, ParameterState)):
         raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
                              " that is not a name, reference to an inputState or parameterState object, "
-                             " or an index (for inputStates)".
+                             " or an index (for input_states)".
                              format(receiver.name, projection_spec.name))
 
     # state is State object, so use that
@@ -884,19 +884,19 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
         receiver.inputState._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
-    # input_state is index into inputStates OrderedDict, so get corresponding key and assign to input_state
+    # input_state is index into input_states OrderedDict, so get corresponding key and assign to input_state
     elif isinstance(state, int):
         try:
-            key = list(receiver.inputStates.keys)[state]
+            key = list(receiver.input_states.keys)[state]
         except IndexError:
             raise ProjectionError("Attempt to assign projection_spec ({0}) to inputState {1} of {2} "
-                                 "but it has only {3} inputStates".
-                                 format(projection_spec.name, state, receiver.name, len(receiver.inputStates)))
+                                 "but it has only {3} input_states".
+                                 format(projection_spec.name, state, receiver.name, len(receiver.input_states)))
         else:
             input_state = key
 
     # input_state is string (possibly key retrieved above)
-    #    so try as key in inputStates OrderedDict (i.e., as name of an inputState)
+    #    so try as key in input_states OrderedDict (i.e., as name of an inputState)
     if isinstance(state, str):
         try:
             receiver.inputState[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
@@ -932,13 +932,13 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                                     constraint_value=projection_spec.value,
                                     constraint_value_name='Projection_spec value for new inputState',
                                     context=context)
-        #  Update inputState and inputStates
+        #  Update inputState and input_states
     try:
-        receiver.inputStates[input_state.name] = input_state
+        receiver.input_states[input_state.name] = input_state
     # No inputState(s) yet, so create them
     except AttributeError:
-        receiver.inputStates = OrderedDict({input_state.name:input_state})
-        receiver.inputState = list(receiver.inputStates)[0]
+        receiver.input_states = OrderedDict({input_state.name:input_state})
+        receiver.inputState = list(receiver.input_states)[0]
     input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
 
 def _add_projection_from(sender, state, projection_spec, receiver, context=None):

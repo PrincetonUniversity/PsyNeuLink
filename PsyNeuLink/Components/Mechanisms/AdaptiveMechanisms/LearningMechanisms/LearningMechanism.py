@@ -64,7 +64,7 @@ required to implement learning that do not already exist are also instantiated. 
 Structure
 ---------
 
-A LearningMechanism has three `inputStates <InputState>`, a learning `function <LearningMechanism.function>`,
+A LearningMechanism has three `input_states <InputState>`, a learning `function <LearningMechanism.function>`,
 and two `outputStates <OutputState>` that are used to receive, compute, and transmit the information needed to modify
 the MappingProjection for which it is responsible.
 
@@ -115,7 +115,7 @@ These receive the information required by the LearningMechanism's `function <Lea
 Learning Function
 ~~~~~~~~~~~~~~~~~
 
-This uses the three values received by the LearningMechanism's `inputStates <LearningMechanism_InputStates>` to
+This uses the three values received by the LearningMechanism's `input_states <LearningMechanism_InputStates>` to
 calculate a `learning_signal` and its own `error_signal`.  The `learning_signal` is the set of changes to the
 `matrix <MappingProjection.matrix>` parameter of the MappingProjection required to reduce the value received by the
 LearningMechanism's `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>` inputState .  In
@@ -383,7 +383,7 @@ ACTIVATION_OUTPUT_INDEX = 1
 ERROR_OUTPUT_INDEX = 2
 ERROR_SIGNAL_INDEX = 3
 
-# Used to name inputStates:
+# Used to name input_states:
 ACTIVATION_INPUT = 'activation_input'     # inputState
 ACTIVATION_OUTPUT = 'activation_output'   # inputState
 ERROR_SIGNAL = 'error_signal'             # inputState and outputState
@@ -519,7 +519,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         error_source : ObjectiveMechanism or LearningMechanism
             the mechanism from which the LearningMechanism gets its `error_signal`.  The LearningMechanism receives a
-            projection from the `error_source` to its `ERROR_SIGNAL <LearningMechanism.inputStates>` inputState.
+            projection from the `error_source` to its `ERROR_SIGNAL <LearningMechanism.input_states>` inputState.
             If the `error_source` is an ObjectiveMechanism, the projection is from its
             `primary outputState <OutputState_Primary>`.  If the `error_source` is another LearningMechanism,
             the projection is from its `ERROR_SIGNAL <LearningMechanism.outputStates>` outputState.  In either case,
@@ -734,7 +734,7 @@ def _instantiate_error_signal_projection(sender, receiver):
     Can take as the sender an `ObjectiveMechanism` or a `LearningMechanism`.
     If the sender is an ObjectiveMechanism, uses its `primary outputState <OutputState_Primary>`.
     If the sender is a LearningMechanism, uses its `ERROR_SIGNAL <LearningMechanism.outputStates>` outputState.
-    The receiver must be a LearningMechanism; its `ERROR_SIGNAL <LearningMechanism.inputStates>` inputState is used.
+    The receiver must be a LearningMechanism; its `ERROR_SIGNAL <LearningMechanism.input_states>` inputState is used.
     Uses and IDENTITY_MATRIX for the MappingProjection, so requires that the sender be the same length as the receiver.
 
     """
@@ -749,7 +749,7 @@ def _instantiate_error_signal_projection(sender, receiver):
                                      format(sender))
 
     if isinstance(receiver, LearningMechanism):
-        receiver = receiver.inputStates[ERROR_SIGNAL]
+        receiver = receiver.input_states[ERROR_SIGNAL]
     else:
         raise LearningMechanismError("Receiver of the error signal projection {} must be a LearningMechanism".
                                      format(receiver))

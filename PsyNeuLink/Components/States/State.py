@@ -155,7 +155,7 @@ class State_Base(State):
         -----------
             Represents and updates the state of an input, output or parameter of a mechanism
                 - receives inputs from projections (self.receivesFromProjections, STATE_PROJECTIONS)
-                - inputStates and parameterStates: combines inputs from all projections (mapping, control or learning)
+                - input_states and parameterStates: combines inputs from all projections (mapping, control or learning)
                     and uses this as variable of function to update the value attribute
                 - outputStates: represent values of output of function
             Value attribute:
