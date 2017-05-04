@@ -210,7 +210,7 @@ class LCA(RecurrentTransferMechanism):
 
     decay : float : default 1.0
         determines the amount by which to multiply the `previous_input <TransferMechanism.previous_input>` value
-        in each round of execution.
+        in each round of execution (acts, in effect like the weight on a self-connection).
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
