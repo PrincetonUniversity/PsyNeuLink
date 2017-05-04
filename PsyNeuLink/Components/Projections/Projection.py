@@ -786,7 +786,9 @@ def _is_projection_spec(spec):
         return True
     if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS:
         return True
-    # MODIFIED 9/6/16 NEW:
+    from PsyNeuLink.Components.Functions.Function import get_matrix
+    if get_matrix(spec) is not None:
+        return True
     if isinstance(spec, tuple) and len(spec) == 2:
         # Call recursively on first item, which should be a standard projection spec
         if _is_projection_spec(spec[0]):
