@@ -795,6 +795,7 @@ class Mechanism_Base(Mechanism):
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwMechanismTimeScale: TimeScale.TRIAL,
+        INPUT_STATES: [{NAME:'PRIMARY INPUT STATE'}],
         MONITOR_FOR_CONTROL: NotImplemented,  # This has to be here to "register" it as a valid param for the class
                                               # but is set to NotImplemented so that it is ignored if it is not
                                               # assigned;  setting it to None actively disallows assignment
