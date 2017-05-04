@@ -71,6 +71,8 @@ actions to take, as follows:
     * `ModulatonOperation.DISABLED` - this speifies disabling of any modulation of the state's value, and use only
       of its `base_value <State.base_value>`.
 
+These values can be assigned when a state is created, or at `runtime <>` 
+
 The `modulation_operation <ModulatoryProjection>` parameter can also be specified using a custom function or method, 
 so long as it receives and returns values that are compatible with the `value <State.value>` of the state. 
 If the `modulation_operation <ModulatoryProjection>` parameter is not specified for a ModulatoryProjection,
