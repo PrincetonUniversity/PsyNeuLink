@@ -161,19 +161,19 @@
 #
 # IMPLEMENT: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
 
-# IMPLEMENT: LCA (Leaky Competitive Accumulator):
-#                  RecurrentTransferMechanism with inhibition argument instead of matrix, and
-#                     implements matrix that is constrained to be all negative weights = inhibition
-#                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
 
+# IMPLEMENT: LCA (Leaky Competitive Accumulator):  SET DEFAULT PARAMS THAT ~ DDM
 
 # SEARCH & REPLACE: allocation_policy -> control_policy (AND ALL VARIANTS THEREOF)
+# SEARCH & REPLACE: baseValue -> base_value
+# SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
 
-# FIX FINISH UP X_DEFAULT_CONTROL_MECH / CONTROLLED PROJECTION DEFERRED_INIT:
-# Finish looking at _instantiate_sender for Projection and ControlProjection:
-#     - get rid of both instantiation of projection and of any DefaultController-related stuff
-#     - get rid of duplicate entries in ControlSignal sendsToProjections
+# IMPLEMENT function_type or method_type SPECIFICATION IN ADDITION TO ModulationOperation FOR modulation_operation
+#            parameter of ModulatoryFunctions
 
+# DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction, AND MUST SPECIFY WHICH IS THEIR
+#                    ADDITIVE AND WHICH IS THEIR MULTIPLICATIVE PARAMETER (FOR USE BY modulation_operation)
+# IMPLEMENT: CONSTRAINT ON STATE FUNCTIONS TO BE A TransferFunction
 
 # FIX: REPLACE: kwConstants must == arg names
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)

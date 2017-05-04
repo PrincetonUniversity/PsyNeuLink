@@ -13,25 +13,28 @@
 Overview
 --------
 
-A State provides an interface to a `projection <Projection>`, and represents the `value <Projection>`
-associated with that projection.  There are three types of states, all of which are used by
-`mechanisms <Mechanism>` and one of which is used by `MappingProjections <MappingProjection>`, as summarized below:
+A State provides an interface to one or more `projections <Projection>`, and receives the `value(s) <Projection>`
+provide by them.  The value of a state can be modulated by a `ModulatoryProjection`. There are three types of states, 
+all of which are used by `mechanisms <Mechanism>`, one of which is used by `MappingProjections <MappingProjection>`, 
+and all of which are subject to modulation by particular types of ModulatoryProjections, as summarized below:
 
 * **InputState**:
-     used by a mechanism to represent its input, and as the `receiver` of any incoming
-     `MappingProjections <MappingProjection>`.
+     used by a mechanism to receive input from `MappingProjections <MappingProjection>`;  its value can be modulated 
+     by a `GatingProjection`.
 
 * **ParameterState**:
     * used by a mechanism to represent the value of one of its parameters, or a parameter of its :keyword:`function`,
-      possibly regulated by a `ControlProjection`;
+      possibly modulated by a `ControlProjection`;
     * used by a `MappingProjection` to represent the value of its `matrix <MappingProjection.MappingProjection.matrix>`
-    parameter, possibly regulated by a `LearningProjection`.
+      parameter, possibly modulated by a `LearningProjection`.
 
 * **OutputState**:
-    * used by a mechanism to represent its output, and as the `sender <Projection>` of any outgoing projection(s):
+    * used by a mechanism to send its to any outgoing projection(s):
       * `MappingProjection` for a `ProcessingMechanism <ProcessingMechanism>`;
-      * `ControlProjection` for a `ControlMechanism <ControlMechanism>`;
       * `LearningProjection` for a `MonitoringMechanism <MonitoringMechanism>`.
+      * `GatingProjection` for a `GatingMechanism <GatingMechanism>`;
+      * `ControlProjection` for a `ControlMechanism <ControlMechanism>`.
+      Its value can be modulated by a `GatingProjection`. 
 
 .. _State_Creation:
 
@@ -55,26 +58,30 @@ components, a state has the three following core attributes:
       it is the item of the owner mechanism's :keyword:`value` to which the outputState is assigned (specified by the
       outputStates `index <OutputState_Index>` attribute.
     ..
-    * `function <State.function>`:  for an `inputState <InputState>` and `parameterState <ParameterState>`, this
-      aggregates the values of the projections that the state receives (the default is `LinearCombination` that sums
-      the values).  At present, the `function <OutputState.OutputState.function>` of an outputState is not
-      actively used;  it simply returns the item of the owner mechanism's :keyword:`value` to which the outputState is
-      assigned.
+    * `function <State.function>`:  for an `inputState <InputState>` this aggregates the values of the projections 
+      that the state receives (the default is `LinearCombination` that sums the values), under the potential influence
+      of a `Gating` projection;  for a `parameterState <ParameterState>`, it determines the value of the associated 
+      parameter, under the potential influence of a `ControlProjection` (for a `Mechanism`) or a `LearningProjection`
+      (for a `MappingProjection`);  for an outputState, it conveys the result  of the mechanism's function to its
+      outputValue, under the potential influence of a `GatingProjection`.  
+      See `ModulatoryProjections <ModulatoryProjection_Structure>` for a description of how these can be used to 
+      influence the `function <State.function> of a state.
     ..
-    * `value <State.value>`:  for an `inputState <InputState>` and `parameterState <ParameterState>`, this is the
-      aggregated value of the projections it receives.  For an `outputState <OutputState>`, this is th item of the
-      owner mechanism's :keyword:`value` to which the outputState is assigned, possibly modified by a function
-      assigned to its `calculate <OutputState_Calculate>` attribute.
+    * `value <State.value>`:  for an `inputState <InputState>` this is the aggregated value of the projections it 
+      receives;  for a `parameterState <ParameterState>`, this determines the value of the associated parameter;  
+      for an `outputState <OutputState>`, it is the item of the  owner mechanism's :keyword:`value` to which the 
+      outputState is assigned, possibly modified by its `calculate <OutputState_Calculate>` attribute.
 
 Execution
 ---------
 
-A state cannot be executed directly.  It is executed when the component to which it belongs is executed.
-When this occurs, each inputState and parameterState belonging to the component executes any projections it receives,
-calls its :keyword:`function` to aggregate their values, and then assigns this as that state's :keyword:`value` --
-this conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for a more detailed discussion).
-The :keyword:`value` of an outputState is assigned after the :keyword:`function` of the mechanism that owns it has
-been called (see `Mechanism OutputStates <Mechanism_OutputStates>`).
+State cannot be executed.  They are updated when the component to which they belong is executed.  InputStates and 
+parameterStates belonging to a mechanism are updated before the mechanism's function is called.  OutputStates
+are updated after the mechanism's function is called.  When a state is updated, it executes any projections that 
+project to it (listed in its `receivesFromProjections <State.receivesFromProjections>` attribute), uses the values 
+it receives from them as the variable for its `function <State.function>`, and calls that to determine its own 
+`value <State.value>`. This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for a more 
+detailed discussion).
 
 .. _State_Class_Reference:
 
@@ -249,6 +256,11 @@ class State_Base(State):
 
     sendsToProjections : Optional[List[Projection]]
         list of projections for which the state is a :keyword:`sender`.
+
+    function : TransferFunction : default determined by type
+        used to determine the state's own value from the value of the projection(s) it receives;  the parameters that 
+        the TrasnferFunction identifies as ADDITIVE and MULTIPLICATIVE are subject to modulation by a 
+        `ModualtoryProjection <ModulatoryProjection_Structure>`. 
 
     value : number, list or np.ndarray
         current value of the state (updated by `update <State.update>` method).
