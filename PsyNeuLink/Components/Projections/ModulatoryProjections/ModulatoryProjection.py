@@ -19,27 +19,20 @@ to modulate the function of a `state <State>`.  There are three types of Modulat
 modulate different types of components and their states: 
 
 * `LearningProjection`
-    These take an `learning_signal <LearningMechanism.learning_signal>` (the output of a
-    `LearningMechanism`), and use that to modulate the function of the MATRIX `parameterState <ParameterState>` of a
-    `MappingProjection`, which in turn uses it to modify its `matrix <MappingProjection.MappingProjection.matrix>`
-    parameter. LearningProjections are used when learning has been specified for a `process <Process_Learning>`
-    or `system <System_Execution_Learning>`.
+    This takes a `learning_signal <LearningMechanism.learning_signal>` (the output of a `LearningMechanism`), 
+    and uses it to modulate the value of the `matrix <MappingProjection.MappingProjection.matrix>`
+    parameter of a MappingProjection.
 ..
 * `GatingProjection`
-    These take a `gating_signal <GatingMechanism.gating_signal>` (usually the ouptput of a `GatingMechanism`), 
-    and use that to modulate the function of an `inputState <InputState>` or `outputState <OutputState>` of a 
-    ProcessingMechanism, which in turn modulates that state's value.
+    This takes a `gating_signal <GatingMechanism.gating_signal>` (usually the output of a `GatingMechanism`), 
+    and uses it to modulate the value of an `inputState <InputState>` or `outputState <OutputState>` of a 
+    ProcessingMechanism.
 ..
 * `ControlProjection`
-    These take a `control_signal <ControlProjection.ControlProjection.allocation>` (usually the ouptput
-    of a `ControlMechanism <ControlMechanism>`) and use that to modulate the function of a 
-    `parameterState <ParameterState>` of a ProcessingMechanism, which in turn uses it to modulate the value of
-    a parameter of the mechanism or its function.  ControlProjections are typically used in the context of a `System`.
+    This takes a `control_signal <ControlProjection.ControlProjection.allocation>` (usually the ouptput
+    of a `ControlMechanism <ControlMechanism>`) and uses it to modulate the value of a parameter of a 
+    ProcessingMechanism or its function.
 ..
-
-COMMENT:
-* Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
-COMMENT
 
 .. _Projection_Creation:
 
@@ -57,11 +50,31 @@ for each type.
 Structure
 ---------
 
-A ModulatoryProjection has the same basic structure as a `Projection`.  See the documentation for
-individual subtypes of ModulatoryProjection for more specific information about their structure.  In addition
-to the standard attributes of a projection, it also has a `modulate <ModulatoryProjection.modulation>` attribute
-that determines how it influences the `State` to which it projects.  Specifically, it determines which parameter of 
-the state's `function <State.function>` is modulated by the ModulatryProjection. 
+A ModulatoryProjection has the same basic structure as a `Projection`, augmented by type-specific attributes
+and methods described under each type of projection.  In addition, all ModulatoryProjections have a 
+`modulation_operation <ModulatoryProjection.modulation_operation>` attribute that determines how the projection 
+modifies the value of the state to which it projects.  The modulation_operation is specified using a value of 
+`ModulationOperation`, which designates either a parameter of the state's function to modulate, or one of two other 
+actions to take, as follows:
+
+    * `ModulatonOperation.ADDITIVE` - this specifies use of the parameter designated by the  
+      `TransferFunction's <TransferFunction_ModulationOperation>` :keyword:`additive` attribute
+      (for example, it is the `intercept <Linear.slope>` parameter of the `Linear` Function;    
+      
+    * `ModulatonOperation.MULTIPLICATIVE` - this specifies use of the parameter designated by the  
+      `TransferFunction's <TransferFunction_ModulationOperation>` :keyword:`multiplicative` attribute
+      (for example, it is the `slope <Linear.slope>` parameter of the `Linear` Function;    
+    
+    * `ModulatonOperation.OVERRIDE` - this specifies direct use of the ModulatoryProjection's value, bypassing
+      the state's `function <State.function>` or its `base_value <State.base_value>`. 
+  
+    * `ModulatonOperation.DISABLED` - this speifies disabling of any modulation of the state's value, and use only
+      of its `base_value <State.base_value>`.
+
+The `modulation_operation <ModulatoryProjection>` parameter can also be specified using a custom function or method, 
+so long as it receives and returns values that are compatible with the `value <State.value>` of the state. 
+If the `modulation_operation <ModulatoryProjection>` parameter is not specified for a ModulatoryProjection,
+a default specified by the state itself is used.
 
 .. _ModulatoryProjection_Execution:
 
@@ -74,7 +87,7 @@ A ModulatoryProjection, like any projection, cannot be executed directly.  It is
 which it projects — its `receiver <Projection.receiver>` — is updated;  that occurs when the state's owner mechanism 
 is executed.  When a ModulatoryProjection executes, it gets the value of its `sender <Projection.sender>`, 
 and uses that to adjust the parameter of the state's function (determined by its 
-`modulate <ModulatoryProjection.modulate>` attribute. 
+`modulation_operation <ModulatoryProjection.modulate_operation>` attribute. 
 
 .. note::
    The change made to the parameter of the state's function in response to the execution of a ModulatoryProjection
@@ -93,36 +106,27 @@ from PsyNeuLink.Components.Projections.Projection import Projection_Base
 
 class ModulatoryProjection_Base(Projection_Base):
     """
-    LearningProjection(               \
-                 sender=None,         \
-                 receiver=None,       \
-                 learning_function,   \
-                 learning_rate=None,  \
-                 params=None,         \
-                 name=None,           \
+    ModulatoryProjection(                   \
+                 sender=None,               \
+                 receiver=None,             \
+                 modulation_operation=None, \
+                 params=None,               \
+                 name=None,                 \
                  prefs=None)
 
-    Implements a projection that modifies the matrix parameter of a MappingProjection.
-
+    Implements a projection that modulates the value of a `state <State>`.
 
     Arguments
     ---------
-    sender : Optional[LearningMechanism or LEARNING_SIGNAL OutputState of one]
-        the source of the `error_signal` for the LearningProjection. If it is not specified, one will be
-        `automatically created <LearningProjection_Automatic_Creation>` that is appropriate for the
-        LearningProjection's `errorSource <LearningProjection.errorSource>`.
+    sender : Optional[OutputState or Mechanism]
+        specifies the component from which the ModulatoryProjection projects. 
 
-    receiver : Optional[MappingProjection or ParameterState for ``matrix`` parameter of one]
-        the `parameterState <ParameterState>` (or the `MappingProjection` that owns it) for the
-        `matrix <MappingProjection.MappingProjection.matrix>` to be modified by the LearningProjection.
+    receiver : Optional[State or Mechanism]
+        specifies the state to which the ModulatoryProjection projects, and the value of which is modulated by it.
 
-    learning_function : Optional[LearningFunction or function] : default BackPropagation
-        specifies a function to be used for learning by the `sender <LearningMechanism.sender>` (i.e., its
-        `function <LearningMechanism.function>` attribute).
-
-    learning_rate : Optional[float or int]
-        if specified, it is applied mulitiplicatively to `learning_signal` received from the `LearningMechanism`
-        from which it projects (see `learning_rate <LearningProjection.learning_rate>` for additional details).
+    modulation_operation : Optional[ModulationOperation, function or method] : default determined by State
+        specifies the manner by which the ModulatoryProjection modulates the `value <State.value>` of the 
+        `state <State>` to which it projects.    
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -144,23 +148,25 @@ class ModulatoryProjection_Base(Projection_Base):
     Attributes
     ----------
 
-    componentType : LEARNING_PROJECTION
-
     sender : LEARNING_SIGNAL OutputState of a LearningMechanism
-        source of `learning_signal <LearningProjection.learning_signal>`.
+        the component from which the ModulatoryProjection projects. 
 
     receiver : MATRIX ParameterState of a MappingProjection
-        parameterState for the `matrix <MappingProjection.MappingProjection.matrix>` parameter of
-        the `learned_projection` to be modified by the LearningProjection.
+        the state to which the ModulatoryProjection projects, and the value of which is modulated by it.
 
     variable : 2d np.array
         same as `learning_signal <LearningProjection.learning_signal>`.
 
+    modulation_operation : Optional[Function parameter name]
+        the manner by which the ModulataoryProjection modulates the `value <State.value>` of the state to which it
+        projects - see `ModulatoryProjection_Structure` for a description of specifications.
+
     function : Function : default Linear
-        assigns the learning_signal received from `LearningMechanism` as the value of the projection.
+        assigns the value received from the ModualatoryProjection's `sender <ModualatoryProjection.sender>` to
+        its `value <ModulatoryProjection.value>`.
 
     value : 2d np.array
-        same as `weight_change_matrix`.
+        value used to modulate the value of the `receiver <ModulatoryProjection.receiver>`. 
 
     name : str : default LearningProjection-<index>
         the name of the LearningProjection.
