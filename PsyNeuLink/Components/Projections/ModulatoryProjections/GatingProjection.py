@@ -253,7 +253,7 @@ class GatingProjection(ModulatoryProjection_Base):
         This method overrides the corresponding method of Projection, before calling it, to check if the
             DefaultGatingMechanism is being assigned as sender and, if so:
             - creates a projection-dedicated inputState and outputState in DefaultGatingMechanism
-            - puts them in DefaultGatingMechanism's inputStates and outputStates attributes
+            - puts them in DefaultGatingMechanism's input_states and outputStates attributes
             - lengthens variable of DefaultGatingMechanism to accommodate the GatingProjection channel
             - updates value of DefaultGatingMechanism (in resposne to new variable)
         Notes:

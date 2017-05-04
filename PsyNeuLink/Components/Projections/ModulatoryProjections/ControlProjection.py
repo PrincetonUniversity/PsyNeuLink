@@ -264,7 +264,7 @@ class ControlProjection(ModulatoryProjection_Base):
         This method overrides the corresponding method of Projection, before calling it, to check if the
             DefaultController is being assigned as sender and, if so:
             - creates projection-dedicated inputState and outputState in DefaultController
-            - puts them in DefaultController's inputStates and outputStates attributes
+            - puts them in DefaultController's input_states and outputStates attributes
             - lengthens variable of DefaultController to accommodate the ControlProjection
             - updates value of the DefaultController (in response to the new variable)
         Notes:

@@ -388,7 +388,7 @@ class EVCMechanism(ControlMechanism_Base):
         # TBI: - CONTROL_PROJECTIONS:
         #         list of projections to add (and for which outputStates should be added)
 
-        # - inputStates: one for each performance/environment variable monitiored
+        # - input_states: one for each performance/environment variable monitiored
 
         ControlProjection Specification:
         #    - wherever a ControlProjection is specified, using kwEVC instead of CONTROL_PROJECTION
@@ -396,7 +396,7 @@ class EVCMechanism(ControlMechanism_Base):
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
 
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
-        #   constraint:  if specified, number of items in variable must match number of inputStates in INPUT_STATES
+        #   constraint:  if specified, number of items in variable must match number of input_states in INPUT_STATES
         #                  and names in list in kwMonitor must match those in INPUT_STATES
 
        **********************************************************************************************
@@ -538,7 +538,7 @@ class EVCMechanism(ControlMechanism_Base):
     [TBI]
         monitored_values : 3D np.array
             an array of values of the outputStates in `monitored_output_states` (equivalent to the values of
-            the EVCMechanism's `inputStates <EVCMechanism.inputStates>`).
+            the EVCMechanism's `input_states <EVCMechanism.input_states>`).
     COMMENT
 
     monitor_for_control_weights_and_exponents: List[Tuple[scalar, scalar]]
@@ -815,7 +815,7 @@ class EVCMechanism(ControlMechanism_Base):
             # #           (AS THEY CAN CURRENTLY FOR ObjectiveMechanisms)
             # state_names = []
             # variables = []
-            # for state_name in origin_mech.inputStates.keys():
+            # for state_name in origin_mech.input_states.keys():
             #     state_names.append(state_name)
             #     variables.append(origin_mech_intputStates[state_name].variable)
 
@@ -832,11 +832,11 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Assign projections to prediction_mechanism that duplicate those received by origin_mech
             #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
-            for orig_state_name, prediction_state_name in zip(origin_mech.inputStates.keys(),
-                                                                prediction_mechanism.inputStates.keys()):
-                for projection in origin_mech.inputStates[orig_state_name].receivesFromProjections:
+            for orig_state_name, prediction_state_name in zip(origin_mech.input_states.keys(),
+                                                                prediction_mechanism.input_states.keys()):
+                for projection in origin_mech.input_states[orig_state_name].receivesFromProjections:
                     MappingProjection(sender=projection.sender,
-                                      receiver=prediction_mechanism.inputStates[prediction_state_name],
+                                      receiver=prediction_mechanism.input_states[prediction_state_name],
                                       matrix=projection.matrix)
 
             # Assign list of processes for which prediction_mechanism will provide input during the simulation
@@ -879,7 +879,7 @@ class EVCMechanism(ControlMechanism_Base):
         Notes:
         * self.monitored_output_states is a list, each item of which is a Mechanism.outputState from which a projection
             will be instantiated to a corresponding inputState of the ControlMechanism
-        * self.inputStates is the usual ordered dict of states,
+        * self.input_states is the usual ordered dict of states,
             each of which receives a projection from a corresponding outputState in self.monitored_output_states
         """
 
@@ -929,7 +929,7 @@ class EVCMechanism(ControlMechanism_Base):
             - precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
         * self.monitored_output_states is a list, each item of which is a Mechanism.outputState from which a projection
             will be instantiated to a corresponding inputState of the ControlMechanism
-        * self.inputStates is the usual ordered dict of states,
+        * self.input_states is the usual ordered dict of states,
             each of which receives a projection from a corresponding outputState in self.monitored_output_states
 
         """
@@ -1437,7 +1437,7 @@ class EVCMechanism(ControlMechanism_Base):
         self.system.run(inputs=inputs, clock=sim_clock, time_scale=time_scale, context=context)
 
         # Get outcomes for current allocation_policy
-        #    = the values of the monitored output states (self.inputStates)
+        #    = the values of the monitored output states (self.input_states)
         #    stored in self.inputValue = list(self.variable)
         # self.monitoring_mechanism.execute(context=EVC_SIMULATION)
         self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
