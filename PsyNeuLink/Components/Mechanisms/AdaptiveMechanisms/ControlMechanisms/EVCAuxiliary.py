@@ -143,7 +143,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         -----------
             * Called by ControlSignalGridSearch.
             * Call system.execute for each `allocation_policy` in `controlSignalSearchSpace`.
-            * Store an array of values for outputStates in `monitored_output_states` (i.e., the inputStates in `inputStates`)
+            * Store an array of values for outputStates in `monitored_output_states` (i.e., the input_states in `input_states`)
                 for each `allocation_policy`.
             * Call `_compute_EVC` for each allocation_policy to calculate the EVC, identify the  maximum,
                 and assign to `EVC_max`.
@@ -156,7 +156,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
               it is NOT used for system.execute -- that uses the runtime_params provided for the Mechanisms in each
                 Process.configuration
 
-            Return (2D np.array): value of outputState for each monitored state (in self.inputStates) for EVC_max
+            Return (2D np.array): value of outputState for each monitored state (in self.input_states) for EVC_max
 
         """
 
@@ -358,9 +358,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         # Assign allocations to controlSignals for optimal allocation policy:
         EVC_maxStateValue = iter(controller.EVC_max_state_values)
 
-        # Assign max values for optimal allocation policy to controller.inputStates (for reference only)
-        for i in range(len(controller.inputStates)):
-            controller.inputStates[list(controller.inputStates.keys())[i]].value = np.atleast_1d(next(EVC_maxStateValue))
+        # Assign max values for optimal allocation policy to controller.input_states (for reference only)
+        for i in range(len(controller.input_states)):
+            controller.input_states[list(controller.input_states.keys())[i]].value = np.atleast_1d(next(EVC_maxStateValue))
 
 
         # Report EVC max info

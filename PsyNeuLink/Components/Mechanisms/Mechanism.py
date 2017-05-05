@@ -85,11 +85,11 @@ above, or using one of the following:
     For example, `MonitoringMechanisms <MonitorMechanism>` (and associated `LearningProjections <LearningProjection>`)
     are created automatically when `learing <Process_Learning>` is specified for a process.
 
-Every mechanism has one or more `inputStates <InputState>`, `parameterStates <ParameterState>`, and
+Every mechanism has one or more `input_states <InputState>`, `parameterStates <ParameterState>`, and
 `outputStates <OutputState>` (summarized `below <Mechanism_States>`) that allow it to receive and send projections,
 and to execute its `function <Mechanism_Function>`).  When a mechanism is created, it automatically creates the
 parameterStates it needs to represent its parameters, including those of its `function <Mechanism_Base.function>`.
-It also creates any inputStates and outputStates required for the projections it has been assigned. InputStates and
+It also creates any input_states and outputStates required for the projections it has been assigned. InputStates and
 outputStates, and corresponding projections, can also be specified in the mechanism's params dictionary, using entries
 with the keys INPUT_STATES and OUTPUT_STATES, respectively. The value of each entry can be the name of the state's
 class (to create a default), an existing state, a specification dictionary for one, a value (used as the state's
@@ -152,7 +152,7 @@ COMMENT
 
 The input to a mechanism's `function <Mechanism_Base.function>` is provided by the mechanism's
 `variable <Mechanism_Base.variable>` attribute.  This is a 2d array with one item for each of the mechanism's
-`inputStates <Mechanism_InputStates>.  The result of the :keyword:`function` is placed in the mechanism's
+`input_states <Mechanism_InputStates>.  The result of the :keyword:`function` is placed in the mechanism's
 `value <Mechanism_Base.value>` attribute, which is also a 2d array with one or more items.  The
 mechanism's :keyword:`value` is used by its `outputStates <Mechanism_OutputStates>` to generate their :keyword:`value`
 attributes, each of which is assigned as an item of the list in the mechanism's
@@ -191,7 +191,7 @@ These receive and represent the input to a mechanism. A mechanism usually has on
 <InputState>, identified in its `inputState, <Mechanism_Base.inputState>` attribute.  However some mechanisms have
 more  than one inputState. For example, a `ComparatorMechanism` has one inputState for its `sample` and another for its
 `target` input. If a mechanism has more than one inputState, they are identified in an OrderedDict in the mechanism's
-`inputStates <Mechanism_Base.inputStates>` attribute (note the plural).
+`input_states <Mechanism_Base.input_states>` attribute (note the plural).
 
 COMMENT:
 [TBI:]
@@ -213,7 +213,7 @@ mechanism's `function <Mechanism_Base.function>`, while its :kewyord:`inputValue
 of accessing its individual items.
 
 COMMENT:
-Therefore, the number of inputStates for the mechanism must match the number of tems specified for the mechanism's
+Therefore, the number of input_states for the mechanism must match the number of tems specified for the mechanism's
 ``variable`` (that is, its size along its first dimension, axis 0).  An exception is if the mechanism's ``variable``
 has more than one item, but only a single inputState;  in that case, the ``value`` of that inputState must have the
 same number of items as the mechanisms's ``variable``.
@@ -240,7 +240,7 @@ OutputStates
 ^^^^^^^^^^^^
 These represent the output(s) of a mechanism. A mechanism can have several `outputStates <OutputState>`, and each can
 send projections that transmit its value to other mechanisms and/or the output of the process or system to which the
-mechanism belongs. Similar to inputStates, the ** *primary* (first or only) outputState is assigned to the mechanism's
+mechanism belongs. Similar to input_states, the ** *primary* (first or only) outputState is assigned to the mechanism's
 `outputState <Mechanism_Base.outputState>` attribute, while all of its outputStates (including the primary one) are
 identified in an OrderedDict in its `outputStates <Mechanism_Base.outputStates>` attribute (note the plural).  The
 key for each entry in the :keyword:`outputStates` dict is the name of an outputState, and the value is the outputState
@@ -269,7 +269,7 @@ attribute of the mechanisms (e.g., myMechanism.attribute), in a
 `parameter dictionary <ParameterState_Specifying_Parameters>` assigned to `params` argument in the mechanism's
 constructor, or with the mechanism's `assign_params` method, using the following keywords:
 
-    * INPUT_STATES - specifies specialized inputStates required by a mechanism subclass
+    * INPUT_STATES - specifies specialized input_states required by a mechanism subclass
       (see :ref:`inputState specification <InputState_Creation>` for details of specification).
     ..
     * FUNCTION - specifies the `function <Mechanism_Base.function>` for the mechanism;  can be one of several
@@ -550,17 +550,17 @@ class Mechanism_Base(Mechanism):
         -----------
             Mechanism is a Category of the Component class.
             A mechanism is associated with a name and:
-            - one or more inputStates:
-                two ways to get multiple inputStates, if supported by mechanism subclass being instantiated:
+            - one or more input_states:
+                two ways to get multiple input_states, if supported by mechanism subclass being instantiated:
                     • specify 2d variable for mechanism (i.e., without explicit inputState specifications)
                         once the variable of the mechanism has been converted to a 2d array, an inputState is assigned
                         for each item of axis 0, and the corresponding item is assigned as the inputState's variable
-                    • explicitly specify inputStates in params[INPUT_STATES] (each with its own variable specification);
+                    • explicitly specify input_states in params[INPUT_STATES] (each with its own variable specification);
                         those variables will be concantenated into a 2d array to create the mechanism's variable
                 if both methods are used, they must generate the same sized variable for the mechanims
                 ?? WHERE IS THIS CHECKED?  WHICH TAKES PRECEDENCE: inputState SPECIFICATION (IN _instantiate_state)??
             - an execute method:
-                coordinates updating of inputStates, parameterStates (and params), execution of the function method
+                coordinates updating of input_states, parameterStates (and params), execution of the function method
                 implemented by the subclass, (by calling its _execute method), and updating of the outputStates
             - one or more parameters, each of which must be (or resolve to) a reference to a ParameterState
                 these determine the operation of the function of the mechanism subclass being instantiated
@@ -576,7 +576,7 @@ class Mechanism_Base(Mechanism):
 
         Constraints
         -----------
-            - the number of inputStates must correspond to the length of the variable of the mechanism's execute method
+            - the number of input_states must correspond to the length of the variable of the mechanism's execute method
             - the value of each inputState must be compatible with the corresponding item in the
                 variable of the mechanism's execute method
             - the value of each parameterState must be compatible with the corresponding parameter of  the mechanism's
@@ -633,18 +633,18 @@ class Mechanism_Base(Mechanism):
         .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection
 
     inputState : InputState : default default InputState
-        primary `inputState <Mechanism_InputStates>` for the mechanism;  same as first entry of its `inputStates
-        <Mechanism_Base.inputStates>` attribute.
+        primary `inputState <Mechanism_InputStates>` for the mechanism;  same as first entry of its `input_states
+        <Mechanism_Base.input_states>` attribute.
 
-    inputStates : OrderedDict[str, InputState]
-        a dictionary of the mechanism's `inputStates <Mechanism_InputStates>`.
+    input_states : OrderedDict[str, InputState]
+        a dictionary of the mechanism's `input_states <Mechanism_InputStates>`.
         The key of each entry is the name of an inputState, and its value is the inputState.
         There is always at least one entry, which identifies the mechanism's primary inputState
         (i.e., the one in the its `inputState <Mechanism_Base.inputState>` attribute).
 
     inputValue : List[List or 1d np.array] : default variableInstanceDefault
         a list of values, one for each `inputState <Mechanism_InputStates>` in the mechanism's
-        `inputStates <Mechanism_Base.inputStates>` attribute.  The value of each item is the same as the corresponding
+        `input_states <Mechanism_Base.input_states>` attribute.  The value of each item is the same as the corresponding
         item in the mechanism's `variable <Mechanism_Base.variable>` attribute.  The latter is a 2d np.array;
         the :keyword:`inputValue attribute provides this information in a simpler list format.
 
@@ -795,7 +795,6 @@ class Mechanism_Base(Mechanism):
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwMechanismTimeScale: TimeScale.TRIAL,
-        INPUT_STATES: [{NAME:'PRIMARY INPUT STATE'}],
         MONITOR_FOR_CONTROL: NotImplemented,  # This has to be here to "register" it as a valid param for the class
                                               # but is set to NotImplemented so that it is ignored if it is not
                                               # assigned;  setting it to None actively disallows assignment
@@ -987,14 +986,14 @@ class Mechanism_Base(Mechanism):
             # Convert input_states_spec to list if it is not one
             if not isinstance(input_states_spec, list):
                 input_states_spec = [input_states_spec]
-            # Get inputStates specified in paramClassDefaults
+            # Get input_states specified in paramClassDefaults
             default_input_states = self.paramClassDefaults[INPUT_STATES].copy()
-            # Convert inputStates from paramClassDeafults to a list if it is not one
+            # Convert input_states from paramClassDeafults to a list if it is not one
             if not isinstance(default_input_states, list):
                 default_input_states = [default_input_states]
             # Add inputState specified in params to those in paramClassDefaults
             #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
-            #          the primary inputState which must remain first for the inputStates OrderedDictionary
+            #          the primary inputState which must remain first for the input_states OrderedDictionary
             default_input_states.extend(input_states_spec)
             # Assign full set back to params_arg
             params[INPUT_STATES] = default_input_states
@@ -1103,7 +1102,7 @@ class Mechanism_Base(Mechanism):
                 param_value = [param_value]
             # Validate each item in the list or OrderedDict
             # Note:
-            # * number of inputStates is validated against length of the owner mechanism's execute method variable (EMV)
+            # * number of input_states is validated against length of the owner mechanism's execute method variable (EMV)
             #     in instantiate_inputState, where an inputState is assigned to each item (value) of the EMV
             i = 0
             for key, item in param_value if isinstance(param_value, dict) else enumerate(param_value):
@@ -1114,7 +1113,7 @@ class Mechanism_Base(Mechanism):
                             isinstance(item, InputState) or      # InputState object
                             isinstance(item, dict) or                     # InputState specification dict
                             isinstance(item, ParamValueProjection) or     # ParamValueProjection tuple
-                            isinstance(item, str) or                      # Name (to be used as key in inputStates dict)
+                            isinstance(item, str) or                      # Name (to be used as key in input_states dict)
                             iscompatible(item, **{kwCompatibilityNumeric: True})):   # value
                     # set to None, so it is set to default (self.variable) in instantiate_inputState
                     param_value[key] = None
@@ -1286,7 +1285,7 @@ class Mechanism_Base(Mechanism):
             Update inputState(s) and parameter(s), call subclass _execute, update outputState(s), and assign self.value
 
             Execution sequence:
-            - Call self.inputState.execute() for each entry in self.inputStates:
+            - Call self.inputState.execute() for each entry in self.input_states:
                 + execute every self.inputState.receivesFromProjections.[<Projection>.execute()...]
                 + aggregate results using self.inputState.params[FUNCTION]()
                 + store the result in self.inputState.value
@@ -1313,7 +1312,7 @@ class Mechanism_Base(Mechanism):
             input to use for execution of the mechanism.
             This must be consistent with the format of the mechanism's inputState(s):
             the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
-            of the mechanism's `inputStates  <Mechanism_Base.inputStates>`, and each item must be compatible with the
+            of the mechanism's `input_states  <Mechanism_Base.input_states>`, and each item must be compatible with the
             format (number and type of elements) of the corresponding inputState's
             `variable <InputState.InputState.variable>` (see `Run Inputs <Run_Inputs>` for details of input
             specification formats).
@@ -1427,11 +1426,11 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE INPUT STATE(S)
-        # Executing or simulating process or system, get input by updating inputStates
+        # Executing or simulating process or system, get input by updating input_states
         if input is None and (EXECUTING in context or EVC_SIMULATION in context):
             self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
 
-        # Direct call to execute mechanism with specified input, so assign input to mechanism's inputStates
+        # Direct call to execute mechanism with specified input, so assign input to mechanism's input_states
         else:
             if context is NO_CONTEXT:
                 context = EXECUTING + ' ' + append_type_to_name(self)
@@ -1515,8 +1514,8 @@ class Mechanism_Base(Mechanism):
         #region RE-SET STATE_VALUES AFTER INITIALIZATION
         # If this is (the end of) an initialization run, restore state values to initial condition
         if '_init_' in context:
-            for state in self.inputStates:
-                self.inputStates[state].value = self.inputStates[state].variable
+            for state in self.input_states:
+                self.input_states[state].value = self.input_states[state].variable
             for state in self.parameterStates:
                 self.parameterStates[state].value =  self.parameterStates[state].baseValue
             for state in self.outputStates:
@@ -1579,7 +1578,7 @@ class Mechanism_Base(Mechanism):
 
         input = np.atleast_2d(input)
         num_inputs = np.size(input,0)
-        num_input_states = len(self.inputStates)
+        num_input_states = len(self.input_states)
         if num_inputs != num_input_states:
             # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
             num_inputs = np.size(input)
@@ -1587,10 +1586,10 @@ class Mechanism_Base(Mechanism):
                 pass
             else:
                 raise SystemError("Number of inputs ({0}) to {1} does not match "
-                                  "its number of inputStates ({2})".
+                                  "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
         for i in range(num_input_states):
-            input_state = list(self.inputStates.values())[i]
+            input_state = list(self.input_states.values())[i]
             # input_item = np.ndarray(input[i])
             input_item = input[i]
             if len(input_state.variable) == len(input_item):
@@ -1605,14 +1604,14 @@ class Mechanism_Base(Mechanism):
                                             append_type_to_name(self)))
 
     def _update_input_states(self, runtime_params=None, time_scale=None, context=None):
-        """ Update value for each inputState in self.inputStates:
+        """ Update value for each inputState in self.input_states:
 
         Call execute method for all (MappingProjection) projections in inputState.receivesFromProjections
         Aggregate results (using inputState execute method)
         Update inputState.value
         """
-        for i in range(len(self.inputStates)):
-            state_name, state = list(self.inputStates.items())[i]
+        for i in range(len(self.input_states)):
+            state_name, state = list(self.input_states.items())[i]
             state.update(params=runtime_params, time_scale=time_scale, context=context)
             self.inputValue[i] = state.value
         self.variable = np.array(self.inputValue)
