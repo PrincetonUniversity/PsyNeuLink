@@ -130,6 +130,93 @@ class StateError(Exception):
 #             # from Components.Defaults import DefaultState
 #             return DefaultState(name, params)
 
+
+from collections import UserList
+class StateList(UserList):
+    """Implements dict-like list, that can be indexed by the names of the States in its entries.
+    
+    Supports getting and setting entries in the list using string (in addition to numeric) indices.
+    For getting an entry:
+        the string must match the name of a State in the list; otherwise an excpetion is raised.
+    For setting an entry:
+        the string must match the name of the State being assigned;
+        if there is already a State in the list the name of which matches the string, it is replaced;
+        if there is no State in the list the name of which matches the string, the State is appended to the list.
+        
+    IMPLEMENTATION NOTE:
+        This class allows the states of a mechanism to be maintained in lists, while providing the convenience 
+        (to the user) of access and assignment by name (e.g., akin to a dict).
+        Lists are used (instead of a dict or OrderedDict) since:
+            - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from 
+                collections of states to other variables, such as lists of their values);
+            - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
+                or by index (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for 
+                accessing by key/name less critical;
+            - the number of states in a collection for a given mechanism is likely to be small so that, even when 
+                accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential. 
+    """
+
+    def __init__(self, list=None, name=None, **kwargs):
+        self.name = name or self.__class__.__name__
+        UserList.__init__(self, list, **kwargs)
+        # self._ordered_keys = []
+
+    def __getitem__(self, index):
+        try:
+            return self.data[index]
+        except TypeError:
+            index = self._get_index_for_item(index)
+            return self.data[index]
+
+    def __setitem__(self, index, value):
+        try:
+            self.data[index] = value
+        except TypeError:
+            if not index is value.name:
+                raise StateError("Name of entry for {} ({}) must match the name of its State ({})".
+                                      format(self.name, index, value.name))
+            index_num = self._get_index_for_item(index)
+            if index_num is not None:
+                self.data[index_num] = value
+            else:
+                self.data.append(value)
+
+    def _get_index_for_item(self, index):
+        if isinstance(index, str):
+            # return self.data.index(next(obj for obj in self.data if obj.name is index))
+            obj = next((obj for obj in self.data if obj.name is index), None)
+            if obj is None:
+                return None
+            else:
+                return self.data.index(obj)
+
+        elif isinstance(index, State):
+            return self.data.index(index)
+        else:
+            raise StateError("{} is not a legal index for {} (must be number, string or State".
+                                  format(index, self.name))
+
+    def __delitem__(self, index):
+        del self.data[index]
+
+    def clear(self):
+        super().clear(self)
+
+    # def pop(self, index, *args):
+    #     raise UtilitiesError("{} is read-only".format(self.name))
+    # def popitem(self):
+    #     raise UtilitiesError("{} is read-only".format(self.name))
+
+    def __additem__(self, index, value):
+        if index >= len(self.data):
+            self.data.append(value)
+        else:
+            self.data[index] = value
+    def copy(self):
+        return self.data.copy()
+
+
+
 # DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE STATE'S NAME + kwValueSuffix
 #            THAT IS UPDATED BY THE STATE'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class State_Base(State):
@@ -2036,4 +2123,5 @@ def _check_state_ownership(owner, param_name, mechanism_state):
         # Assign owner to chosen state
         mechanism_state.owner = owner
     return mechanism_state
+
 
