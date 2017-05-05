@@ -355,7 +355,7 @@ class MappingProjection(TransmissiveProjection_Base):
     # def _instantiate_sender(self, context=None):
             # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
             # #            - kwMATRIX NEEDS TO BE A 3D np.array, EACH 3D ITEM OF WHICH IS A 2D WEIGHT MATRIX
-            # #            - MAKE SURE len(self.sender.value) == len(self.receiver.inputStates.items())
+            # #            - MAKE SURE len(self.sender.value) == len(self.receiver.input_states.items())
             # # for i in range (len(self.sender.value)):
             # #            - CHECK EACH MATRIX AND ASSIGN??
 
@@ -363,14 +363,14 @@ class MappingProjection(TransmissiveProjection_Base):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
-        If the Mechanism has more than one inputState, assignment to other inputStates must be done explicitly
+        If the Mechanism has more than one inputState, assignment to other input_states must be done explicitly
             (i.e., by: _instantiate_receiver(State)
 
         """
         # MODIFIED 4/21/17 OLD: [MOVED TO PROJECTION INIT]
         # # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
         # if isinstance(self.receiver, Mechanism):
-        #     if (len(self.receiver.inputStates) > 1 and
+        #     if (len(self.receiver.input_states) > 1 and
         #             (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
         #         print("{0} has more than one inputState; {1} was assigned to the first one".
         #               format(self.receiver.owner.name, self.name))

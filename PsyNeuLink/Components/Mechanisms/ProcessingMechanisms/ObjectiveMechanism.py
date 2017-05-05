@@ -131,14 +131,14 @@ However, this can easily be configured to calculate differnces, ratios, etc. (se
 `example <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  It can also be replaced with any
 `CombinationFunction`, or any python function that takes a 2d array with an arbitrary number of
 items or a number equal to the number of items in the ObjectiveMechanism's variable (and its number of
-inputStates), and returns a 1d array.
+input_states), and returns a 1d array.
 
 .. _ObjectiveMechanism_Execution:
 
 Execution
 ---------
 
-When an ObjectiveMechanism is executed, it updates its inputStates with the values of the outputStates listed in
+When an ObjectiveMechanism is executed, it updates its input_states with the values of the outputStates listed in
 its `monitored_values` attribute, and then uses its `function <ObjectiveMechanism.function>` to
 evaluate these.  The result is assigned as to its `value <ObjectiveMechanism.value>` attribute as the value of its
 `primary outputState <OutputState_Primary>`.
@@ -291,7 +291,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         of `default_input_value` if that is specified.
 
     names: List[str]
-        specifies the names to use for the inputStates created for the list in
+        specifies the names to use for the input_states created for the list in
         `monitored_values <ObjectiveMechanism.monitor>`.  If specified,
         the number of items in the list must equal the number of items in `monitored_values`, and takes precedence
         over any names specified there.
@@ -343,7 +343,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         the function used to compare evaluate the values monitored by the ObjectiveMechanism.  The function can be
         any PsyNeuLink `CombinationFunction` or a python function that takes a 2d array with an arbitrary number of
         items or a number equal to the number of items in the ObjectiveMechanism's variable (and its number of
-        inputStates), and returns a 1d array.
+        input_states), and returns a 1d array.
 
     role : None, LEARNING or CONTROL
         specifies whether the ObjectiveMechanism is being used for learning in a process or system (in conjunction
@@ -378,7 +378,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    # variableClassDefault = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array inputStates
+    # variableClassDefault = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array input_states
     variableClassDefault = None
 
     # ObjectiveMechanism parameter and control signal assignments):
@@ -510,8 +510,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         values = [None] * num_values
         names = self.names or [None] * num_values
 
-        # If default_input_value arg (assigned to variable in __init__) was used to specify the size of inputStates,
-        #   pass those values for use in instantiating inputStates
+        # If default_input_value arg (assigned to variable in __init__) was used to specify the size of input_states,
+        #   pass those values for use in instantiating input_states
         if self.variable is not None:
             input_state_sizes = self.variable
         else:
@@ -522,7 +522,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                                           name,
                                                                           context=context)
 
-        # If self.variable was not specified, construct from values of inputStates
+        # If self.variable was not specified, construct from values of input_states
         if self.variable is None:
             # If all items of self.variable are numeric and of the same length, convert to ndarray
             dim_axis_0 = len(values)
@@ -542,7 +542,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         Validate specification for value to be monitored (using call to validate_monitored_value)
         Instantiate the inputState (assign name if specified, and value of monitored_state)
         Re-specify corresponding item of variable to match the value of the new inputState
-        Update self.inputState and self.inputStates
+        Update self.inputState and self.input_states
         Call _instantiate_monitoring_projection() to instantiate MappingProjection to inputState
             if an outputState has been specified.
 
@@ -648,14 +648,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                          constraint_value_name='ObjectiveMechanism inputState value',
                                          context=context)
 
-        #  Update inputState and inputStates
+        #  Update inputState and input_states
         try:
-            self.inputStates[input_state.name] = input_state
-        except AttributeError:
-            self.inputStates = OrderedDict({input_state_name:input_state})
-            self.inputState = list(self.inputStates.values())[0]
+            self.input_states[input_state.name] = input_state
+        except (AttributeError, TypeError):
+            self.input_states = OrderedDict({input_state_name:input_state})
+            self.inputState = list(self.input_states.values())[0]
 
-        self.inputValue = list(state.value for state in self.inputStates.values())
+        self.inputValue = list(state.value for state in self.input_states.values())
 
         # IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
         if call_for_projection:

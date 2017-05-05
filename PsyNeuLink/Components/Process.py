@@ -158,18 +158,18 @@ or `run <Process_Base.run>` methods, and assigned to its :py:data:`input <Proces
 When a process is created, a set of `ProcessInputStates <processInputStates>` and `MappingProjections
 <MappingProjection>` are automatically generated to transmit the process' input to its `ORIGIN` mechanism, as follows:
 
-* if the number of items in the `input` is the same as the number of `ORIGIN` inputStates:
+* if the number of items in the `input` is the same as the number of `ORIGIN` input_states:
     a MappingProjection is created for each value of the input to an inputState of the `ORIGIN` mechanism;
 
 * if the `input` has only one item but the `ORIGIN` mechanism has more than one inputState:
-    a single ProcessInputState is created with projections to each of the `ORIGIN` mechanism inputStates;
+    a single ProcessInputState is created with projections to each of the `ORIGIN` mechanism input_states;
 
 * if the `input` has more than one item but the `ORIGIN` mechanism has only one inputState:
     a ProcessInputState is created for each input item, and all project to the `ORIGIN` mechanism's inputState;
 
 * otherwise, if both the `input` and `ORIGIN` mechanism have more than one inputState, but the numbers are not equal:
     an error message is generated indicating that the there is an ambiguous mapping from the Process'
-    input value to `ORIGIN` mechanism's inputStates.
+    input value to `ORIGIN` mechanism's input_states.
 
 The output of a process is a 2d np.array containing the values of its `TERMINAL` mechanism's outputStates.
 
@@ -639,7 +639,7 @@ class Process_Base(Process):
 
     processInputStates : Optional[List[ProcessInputState]]
         used to represent the input to the process, and transmit this to the inputState(s) of its `ORIGIN`
-        mechanism.  Each processInputState sends a MappingProjection to one or more inputStates of the
+        mechanism.  Each processInputState sends a MappingProjection to one or more input_states of the
         `ORIGIN` mechanism.
 
     input :  Optional[List[value] or ndarray]
@@ -1626,11 +1626,11 @@ class Process_Base(Process):
         If len(Process.input) == len(mechanism.variable):
             - create one projection for each of the mechanism.inputState(s)
         If len(Process.input) == 1 but len(mechanism.variable) > 1:
-            - create a projection for each of the mechanism.inputStates, and provide Process.input[value] to each
+            - create a projection for each of the mechanism.input_states, and provide Process.input[value] to each
         If len(Process.input) > 1 but len(mechanism.variable) == 1:
             - create one projection for each Process.input[value] and assign all to mechanism.inputState
         Otherwise,  if len(Process.input) != len(mechanism.variable) and both > 1:
-            - raise exception:  ambiguous mapping from Process input values to mechanism's inputStates
+            - raise exception:  ambiguous mapping from Process input values to mechanism's input_states
 
         :param mechanism:
         :return:
@@ -1656,15 +1656,15 @@ class Process_Base(Process):
         # Get number of Process inputs
         num_process_inputs = len(process_input)
 
-        # Get number of mechanism.inputStates
+        # Get number of mechanism.input_states
         #    - assume mechanism.variable is a 2D np.array, and that
         #    - there is one inputState for each item (1D array) in mechanism.variable
         num_mechanism_input_states = len(mechanism.variable)
 
-        # There is a mismatch between number of Process inputs and number of mechanism.inputStates:
+        # There is a mismatch between number of Process inputs and number of mechanism.input_states:
         if num_process_inputs > 1 and num_mechanism_input_states > 1 and num_process_inputs != num_mechanism_input_states:
             raise ProcessError("Mismatch between number of input values ({0}) for {1} and "
-                               "number of inputStates ({2}) for {3}".format(num_process_inputs,
+                               "number of input_states ({2}) for {3}".format(num_process_inputs,
                                                                             self.name,
                                                                             num_mechanism_input_states,
                                                                             mechanism.name))
@@ -1678,12 +1678,12 @@ class Process_Base(Process):
 
         from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
-        # If there is the same number of Process input values and mechanism.inputStates, assign one to each
+        # If there is the same number of Process input values and mechanism.input_states, assign one to each
         if num_process_inputs == num_mechanism_input_states:
             for i in range(num_mechanism_input_states):
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.inputState
                 # MODIFIED 4/3/17 NEW:
-                input_state_variable = list(mechanism.inputStates.values())[i].variable
+                input_state_variable = list(mechanism.input_states.values())[i].variable
                 # MODIFIED 4/3/17 END
                 if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
@@ -1691,16 +1691,16 @@ class Process_Base(Process):
                                        format(i, process_input[i], self.name, mechanism.name))
                 # Create MappingProjection from Process input state to corresponding mechanism.inputState
                 MappingProjection(sender=self.processInputStates[i],
-                        receiver=list(mechanism.inputStates.items())[i][1],
+                        receiver=list(mechanism.input_states.items())[i][1],
                         name=self.name+'_Input Projection',
                         context=context)
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
                           format(i, process_input[i], self.name, mechanism.name))
 
-        # If the number of Process inputs and mechanism.inputStates is unequal, but only a single of one or the other:
-        # - if there is a single Process input value and multiple mechanism.inputStates,
-        #     instantiate a single Process input state with projections to each of the mechanism.inputStates
+        # If the number of Process inputs and mechanism.input_states is unequal, but only a single of one or the other:
+        # - if there is a single Process input value and multiple mechanism.input_states,
+        #     instantiate a single Process input state with projections to each of the mechanism.input_states
         # - if there are multiple Process input values and a single mechanism.inputState,
         #     instantiate multiple Process input states each with a projection to the single mechanism.inputState
         else:
@@ -1713,7 +1713,7 @@ class Process_Base(Process):
                                                   mechanism.variable[i], i, mechanism.name))
                     # Create MappingProjection from Process buffer_intput_state to corresponding mechanism.inputState
                     MappingProjection(sender=self.processInputStates[j],
-                            receiver=list(mechanism.inputStates.items())[i][1],
+                            receiver=list(mechanism.input_states.items())[i][1],
                             name=self.name+'_Input Projection')
                     if self.prefs.verbosePref:
                         print("Assigned input value {0} ({1}) of {2} to inputState {3} of {4}".
@@ -1772,7 +1772,7 @@ class Process_Base(Process):
                 go through _mech_tuples in reverse order of pathway since
                     LearningProjections are processed from the output (where the training signal is provided) backwards
                 exhaustively check all of components of each mechanism,
-                    including all projections to its inputStates and parameterStates
+                    including all projections to its input_states and parameterStates
                 initialize all items that specified deferred initialization
                 construct a _monitoring_mech_tuples of mechanism tuples (mech, params, phase_spec):
                     assign phase_spec for each MonitoringMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
@@ -1790,7 +1790,7 @@ class Process_Base(Process):
             mech._deferred_init()
 
             # For each inputState of the mechanism
-            for input_state in mech.inputStates.values():
+            for input_state in mech.input_states.values():
                 input_state._deferred_init()
                 # Restrict projections to those from mechanisms in the current process
                 projections = []
@@ -1828,7 +1828,7 @@ class Process_Base(Process):
                 # then designate mech as a TARGET
                 if (isinstance(mech, ObjectiveMechanism) and
                         # any(projection.sender.owner.processes[self] == TERMINAL
-                        #     for projection in mech.inputStates[SAMPLE].receivesFromProjections) and
+                        #     for projection in mech.input_states[SAMPLE].receivesFromProjections) and
                         mech._learning_role is TARGET and
                         self.learning
                             ):
@@ -1920,7 +1920,7 @@ class Process_Base(Process):
                    return TARGET ObjectiveMechanism if one is found upstream;
                    return None if no TARGET ObjectiveMechanism is found.
             """
-            for input_state in mech.inputStates.values():
+            for input_state in mech.input_states.values():
                 for projection in input_state.receivesFromProjections:
                     sender = projection.sender.owner
                     # If projection is not from another ObjectiveMechanism, ignore
@@ -1928,7 +1928,7 @@ class Process_Base(Process):
                         continue
                     if isinstance(sender, ObjectiveMechanism) and sender._learning_role is TARGET:
                         return sender
-                    if sender.inputStates:
+                    if sender.input_states:
                         target_mech = trace_learning_objective_mechanism_projections(sender)
                         if target_mech:
                             return target_mech
@@ -1992,7 +1992,7 @@ class Process_Base(Process):
         target = np.atleast_1d(self.target)
 
         # Create ProcessInputState for target and assign to targetMechanism's target inputState
-        target_mech_target = self.targetMechanism.inputStates[TARGET]
+        target_mech_target = self.targetMechanism.input_states[TARGET]
 
         # Check that length of process' target input matches length of targetMechanism's target input
         if len(target) != len(target_mech_target.variable):
@@ -2203,11 +2203,11 @@ class Process_Base(Process):
             params = item.params
 
             # IMPLEMENTATION NOTE:
-            #    This implementation restricts learning to parameterStates of projections to inputStates
+            #    This implementation restricts learning to parameterStates of projections to input_states
             #    That means that other parameters (e.g. object or function parameters) are not currenlty learnable
 
             # For each inputState of the mechanism
-            for input_state in mech.inputStates.values():
+            for input_state in mech.input_states.values():
                 # For each projection in the list
                 for projection in input_state.receivesFromProjections:
 
@@ -2452,13 +2452,13 @@ class ProcessInputState(OutputState):
 
     Each instance encodes one of the following:
     - an item of the `input <Process.input>` to the process (a 1d array in the 2d input array) and provides it to a
-        `MappingProjection` that projects to one or more `inputStates <Mechanism.Mechanism_Base.inputStates>` of the
+        `MappingProjection` that projects to one or more `input_states <Mechanism.Mechanism_Base.input_states>` of the
         `ORIGIN` mechanism in the process.
     - a `target <Process.target>` to the process (also a 1d array) and provides it to a `MappingProjection` that
          projects to the `TARGET` mechanism of the process.
 
     (See :ref:`Process_Input_And_OuputProcess` for an explanation of the mapping from processInputStates to
-    `ORIGIN` mechanism inputStates when there is more than one process input value and/or mechanism inputState)
+    `ORIGIN` mechanism input_states when there is more than one process input value and/or mechanism inputState)
 
     .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
        in Projection._instantiate_sender()

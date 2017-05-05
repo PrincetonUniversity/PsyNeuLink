@@ -157,7 +157,7 @@
 # IMPLEMENT:  Deferred init for control.
 
 # IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
-#           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
+#           Use that to generalize creation of input_states for PredictionMechanism by EVCMechanism
 #
 # IMPLEMENT: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
 
@@ -188,7 +188,7 @@
 # IMPLEMENT: MEANS TO SPECIFY GATING FOR A InputState AND OutputState OF A MECHANISM:
 #         * implement default (RESULTS) for primary outputState
 #               (??and change reference to it in DOCS from "primary" to "results" outputState
-#         * create sets of inputStates and outputStates either at top of module or in class (below paramClassDefaults)
+#         * create sets of input_states and outputStates either at top of module or in class (below paramClassDefaults)
 #         * parse input_state and output_state specs for duplicate names or entries, and update dicts accordingly
 #              (so that default versions can be modified, not just added to -- seee Mechanism._filter_params
 #         * implement GatingProjection spec:  can be only value for input_state or output_state arg,
@@ -309,7 +309,7 @@
 #                                f) parse MonitoredOUtputStates specification for monitored_values arg
 #                                g) Fix EVC use of ObjectiveMechanism (needs to now call for Mapping Projection
 #     4.5): LearningMechanism:
-#              Name inputStates using input_state_names (or create them explicitly using the values of variable?)
+#              Name input_states using input_state_names (or create them explicitly using the values of variable?)
 #              Instantiate the MappingProjection from its ObjectiveMechanism
 #                            (as ObjectiveMechanism does, by calling module function if not None)
 #              Need to change how learning function is specified, since no longer belongs in LearningProjection
@@ -486,7 +486,7 @@
 #
 
 
-# DOCUMENT:  Explain better the relationship of an inputStates variable to its value, and of thes to the
+# DOCUMENT:  Explain better the relationship of an input_states variable to its value, and of thes to the
 #            to the potential for multiple items of a mechanism's variable (with an example:  ComparatorMechanism)
 
 
@@ -553,7 +553,7 @@
 
 # IMPLEMENT / DOCUMENT:
 #             IMPLEMENTATION NOTE:  Process._execute_learning - ~line 1909
-#                This implementation restricts learning to parameterStates of projections to inputStates
+#                This implementation restricts learning to parameterStates of projections to input_states
 #                That means that other parameters (e.g. object or function parameters) are not currenlty learnable
 #             ADD LEARNING TO OF OTHER PARAMETER STATES (E.G., OBJECT ITSELF AND/OR ITS FUNCTION)
 
@@ -1366,7 +1366,7 @@
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
 # DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.outputValue
-# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
+# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.input_states (that receive projections from monitored States) and
 #                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 # DOCUMENT: CURRENTLY, PREDICTION MECHANISMS USE OUTPUT OF CORRESPONDING ORIGIN MECHANISM
 #           (RATHER THAN THEIR INPUT, WHICH == INPUT TO THE PROCESS)
@@ -1663,7 +1663,7 @@
 #     QUESTION: is self.value re-initialized prior to every system execution? process execution?
 #     FIX: Mechanism.inputValue and outputValue should both be lists (not np.arrays)
 #     FIX: WHY BOTHER WITH inputValue ATTRIBUTE?  IF IT IS WORTH KEEPING, ADD TO DOCUMENTATION OF MECHANISM AND INPUTSTATE
-#     IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
+#     IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL input_states
 #     DOCUMENTATION:  inputValue is a list, variable is a 2d np.nparray
 #     FIX:  RECONCILE DOCUMENTATION WITH ACTUALITY:  value == outputValue or just 1st item of outputValue
 #           CURRENTLY:  value = outputValue (DDM doesn't even have an outputValue
@@ -1990,7 +1990,7 @@
 #                execute based on that, rather than dedicated line in System.execute
 # IMPLEMENT: *** sort System.executionList (per System.show() and exeucte based on that, rather than checking modulos
 # IMPLEMENT: *** EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
-#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
+#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (input_states)
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)
 # IMPLEMENT: Store input passed on command line (i.e., at runtime) in self.input attribute (for access by EVC)??
 # IMPLEMENT: run() function (in Systems module) that runs default System
@@ -2154,7 +2154,7 @@
 #               (in Mechanism_Base.@status.setter, ~Line 1746)
 #
 # IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
-#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
+#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (input_states)
 #
 # - IMPLEMENT: CLEAN UP ORGANIZATION OF STATES AND PARAMS
 # Mechanism components:                Params:
@@ -2230,7 +2230,7 @@
 #                                             (that is checked when ControlMechanism is implemented
 #            DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                          it is applied to just that mechanism
-#     DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
+#     DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.input_states (that receive projections from monitored States) and
 #                                   EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 #
 # FIX/DOCUMENT:  WHY SYSTEM: None FOR EVCMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
@@ -2285,7 +2285,7 @@
 #                   - function that returns a 2d array, validate per above.
 #
 # - IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
-#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
+#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (input_states)
 #
 # - IMPLEMENT: .add_projection(Mechanism or State) method:
 #                   - add controlSignal projection from EVC to specified Mechanism/State
@@ -2563,7 +2563,7 @@
 #
 #
 # IMPLEMENTATION NOTE:  ADD DESCRIPTION OF ControlProjection CHANNELS:  ADDED TO ANY SENDER OF A ControlProjection:
-    # USED, AT A MININUM, FOR ALIGNING VALIDATION OF inputStates WITH ITEMS IN variable
+    # USED, AT A MININUM, FOR ALIGNING VALIDATION OF input_states WITH ITEMS IN variable
     #                      ?? AND SAME FOR FOR outputStates WITH value
     # SHOULD BE INCLUDED IN INSTANTIATION OF CONTROL MECHANISM (per SYSTEM DEFAULT CONTROL MECHANISM)
     #     IN OVERRIDES OF _validate_variable AND
@@ -2700,7 +2700,7 @@
 #
 # Two object types:
 # 1) ComparatorMechanism (MonioringMechanism):
-#     - has two inputStates:  i) system output;  ii) training input
+#     - has two input_states:  i) system output;  ii) training input
 #     - computes some objective function on them (default:  Hadamard difference)
 #     - default ComparatorMechanism that is associated with default LearningProjection
 #
@@ -2908,7 +2908,7 @@
 #
 # FIX: NEED TO BE ABLE TO SPECIFY phaseSpec FOR EVC;  EITHER:
 #       ALLOW EVC TO BE IN A PROCESS, AND RECEIVE PROCESS-SPECIFIED PROJECTIONS,
-#       WHICH SHOULD AUTOMATICALLY INSTANTIATE CORRESPONDING MONITORED STATES (EVC.inputStates):
+#       WHICH SHOULD AUTOMATICALLY INSTANTIATE CORRESPONDING MONITORED STATES (EVC.input_states):
 #       THAT IS:
 #           WHEN A PROCESS INSTANTIATES AN PROJECTION TO AN EVC MECHANISM,
 #           IT SHOULD NOT JUST ADD THE PROJECTION TO THE PRIMARY INPUT STATE
@@ -2977,10 +2977,10 @@
 #               either in their _validate_params method, or in class function
 #
 #     Make sure add_monitored_value works
-#     Allow inputStates to be named (so they can be used as ComparatorMechanism)
+#     Allow input_states to be named (so they can be used as ComparatorMechanism)
 #     Move it to ProcessingMechanism
 #  Replace ComparatorMechanmism with ObjectiveMechanism
-#   using a particular function and named inputStates
+#   using a particular function and named input_states
 #   FIX: typechecking
 #   FIX: rename `monitor` and `names` args
 #   - IMPLEMENT call to _instantiate_input_states (not plural) once that is implemented (see State above):

@@ -419,7 +419,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following mechanism outputStates:")
-        for state_name, state in list(self.monitoring_mechanism.inputStates.items()):
+        for state_name, state in list(self.monitoring_mechanism.input_states.items()):
             for projection in state.receivesFromProjections:
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner

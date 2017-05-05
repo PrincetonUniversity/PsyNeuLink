@@ -48,8 +48,8 @@ COMMENT:
                       use error_mech.outputState.valuee to initialize variable[ACTIVITY]
                       use outputState.value of error_mech's objective_mechanism to initialize variable[ERROR]
                 Assign mapping projections:
-                      nextLevel.outputState.value -> inputStates[ACTIVITY] of ObjectiveMechanism
-                      nextLevel.objective_mechanism.outputState.value  -> inputStates[ERROR] of ObjectiveMechanism
+                      nextLevel.outputState.value -> input_states[ACTIVITY] of ObjectiveMechanism
+                      nextLevel.objective_mechanism.outputState.value  -> input_states[ERROR] of ObjectiveMechanism
                 NOTE: For TERMINAL mechanism:
                           error_mech is Process or System InputState (function=Linear, so derivative =1), so that
                              error_mech.outputState.value is the target, and
@@ -64,9 +64,9 @@ COMMENT:
                 Assign error_derivative using function of error_mech
                 Assign error_matrix as runtime_param using projection to error_mech [ALT: ADD TO VARIABLE]
                 Assign mapping projections:
-                      mapping_projection.sender -> inputStates[ACTIVATION_INPUT_INDEX] of LearningMechanism
-                      activation_mech_output.outputState -> inputStates[ACTIVATION_OUTPUT_INDEX] of LearningMechanism
-                      error_mech.objective_mechanism.OutputState.value -> inputStates[ERROR_SIGNAL_INDEX]
+                      mapping_projection.sender -> input_states[ACTIVATION_INPUT_INDEX] of LearningMechanism
+                      activation_mech_output.outputState -> input_states[ACTIVATION_OUTPUT_INDEX] of LearningMechanism
+                      error_mech.objective_mechanism.OutputState.value -> input_states[ERROR_SIGNAL_INDEX]
 
             For TARGET MECHANISM:  Matrix is IDENTITY MATRIX??
             For TARGET MECHANISM:  derivative for ObjectiveMechanism IDENTITY FUNCTION
@@ -321,7 +321,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                 #         so issue warning, assign it as the sender, and return
                 if (receiver_state.name is ACTIVATION_OUTPUT and
                         any(projection.sender.owner is lc.activation_mech_input.owner
-                            for projection in receiver_mech.inputStates[ACTIVATION_INPUT].receivesFromProjections)):
+                            for projection in receiver_mech.input_states[ACTIVATION_INPUT].receivesFromProjections)):
                         warnings.warn("An existing LearningMechanism ({}) was found for and is being assigned to {}".
                                       format(receiver_mech.name, learning_projection.name))
                         learning_projection.sender = receiver_mech
@@ -467,7 +467,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         if objective_mechanism is None:
             # Instantiate ObjectiveMechanism
             # Notes:
-            # * MappingProjections for ObjectiveMechanism's inputStates will be assigned in its own call to Composition
+            # * MappingProjections for ObjectiveMechanism's input_states will be assigned in its own call to Composition
             # * Need to specify both default_input_value and monitored_values since they may not be the same
             #    sizes (e.g., for RL the monitored_value for the sample may be a vector, but its input_value must be scalar)
             # SAMPLE inputState for ObjectiveMechanism should come from activation_mech_output
@@ -547,14 +547,14 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     # Assign MappingProjection from activation_mech_input to LearningMechanism's ACTIVATION_INPUT inputState
     MappingProjection(sender=lc.activation_mech_input,
-                      receiver=learning_mechanism.inputStates[ACTIVATION_INPUT],
+                      receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
                       matrix=IDENTITY_MATRIX,
                       name = lc.activation_mech_input.owner.name + ' to ' + ACTIVATION_INPUT,
                       context=context)
 
     # Assign MappingProjection from activation_mech_output to LearningMechanism's ACTIVATION_OUTPUT inputState
     MappingProjection(sender=lc.activation_mech_output,
-                      receiver=learning_mechanism.inputStates[ACTIVATION_OUTPUT],
+                      receiver=learning_mechanism.input_states[ACTIVATION_OUTPUT],
                       matrix=IDENTITY_MATRIX,
                       name = lc.activation_mech_output.owner.name + ' to ' + ACTIVATION_OUTPUT,
                       context=context)
@@ -1092,7 +1092,7 @@ class LearningComponents(object):
     #                                           "LearningMechanism")
     #         try:
     #             error_obj_mech = next((proj.sender.owner
-    #                                    for proj in learning_mech.inputStates[ERROR_SIGNAL].receivesFromProjections
+    #                                    for proj in learning_mech.input_states[ERROR_SIGNAL].receivesFromProjections
     #                                    if isinstance(proj.sender.owner, ObjectiveMechanism)),None)
     #         except AttributeError:
     #             # return None
