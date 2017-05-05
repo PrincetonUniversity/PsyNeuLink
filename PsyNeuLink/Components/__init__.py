@@ -34,48 +34,34 @@ class InitError(Exception):
 
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism \
+    import DefaultProcessingMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism \
+    import EVCMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism \
+    import ControlMechanism_Base
+register_category(entry=ControlMechanism_Base,
+                  base_class=Mechanism_Base,
+                  registry=MechanismRegistry,
+                  context=kwInitPy)
 
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism \
+    import DefaultControlMechanism
+register_category(entry=DefaultControlMechanism,
+                  base_class=Mechanism_Base,
+                  registry=MechanismRegistry,
+                  context=kwInitPy)
 
-# DDM ------------------------------------------------------------------------------------------------------------------
-
+# DDM (used as DefaultMechanism)
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-# DDM.register_category(DDM)
 register_category(entry=DDM,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
                   context=kwInitPy)
-# DDM_MECHANISM = DDM.__name__
-
-# # ControlMechanisms ----------------------------------------------------------------------------------------------
-#
-# # ControlMechanism
-# from Components.Mechanisms.ControlMechanism import ControlMechanism_Base
-# from Components.Mechanisms.ControlMechanism import ControlMechanismRegistry
-#
-# # DefaultControlMechanism
-# from Components.Mechanisms.DefaultControlMechanism import DefaultControlMechanism
-# register_category(DefaultControlMechanism,
-#                   ControlMechanism_Base,
-#                   ControlMechanismRegistry,
-#                   context=kwInitPy)
-# # DEFAULT_CONTROL_MECHANISM = DefaultControlMechanism.__name__
-#
-# # EVCMechanism
-# from Components.Mechanisms.EVCMechanism  import EVCMechanism
-# register_category(EVCMechanism,
-#                   ControlMechanism_Base,
-#                   ControlMechanismRegistry,
-#                   context=kwInitPy)
-# # EVC_MECHANISM = EVCMechanism.__name__
-#
 
 #endregion
 
 #region *************************************** ASSIGN DEFAULT MECHANISMS **********************************************
-
 
 # Use as default Mechanism in Process and in calls to mechanism()
 # Note: this must be a class (i.e., not an instantiated object)
@@ -85,59 +71,17 @@ Mechanism_Base.defaultMechanism = MechanismRegistry[Mechanism_Base.defaultMechan
 # Note: this must be an instantiated object
 DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=DEFAULT_PROCESSING_MECHANISM)
 
+# Specifies subclass used to instantiate a ControlMechanism if it is not specified for a System being instantiated
+# Note: must be a class
+# SystemDefaultControlMechanism = EVCMechanism
+SystemDefaultControlMechanism = DefaultControlMechanism
+
+
 # MODIFIED 2/22/17 OLD:
 # # Use as DefaultPreferenceSetOwner if owner is not specified for ComponentPreferenceSet (in ComponentPreferenceSet)
 # # Note: this must be an instantiated object
 # DefaultMonitoringMechanism = ComparatorMechanism(name=DEFAULT_MONITORING_MECHANISM)
 # MODIFIED 2/22/17 END
-
-# Use as PROJECTION_SENDER (default sender for ControlProjections) if sender is not specified (in ControlProjection)
-
-# Instantiates DefaultController (ControlMechanism):
-# - automatically assigned as the sender of default ControlProjections (that use the CONTROL_PROJECTION keyword)
-# - instantiated before a System and/or any (other) ControlMechanism (e.g., EVC) has been instantiated
-# - can be overridden in System by CONTROL_MECHANISM
-# - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlProjection intensities
-# Note: this is an instantiated object
-DefaultController = DefaultControlMechanism(name=SYSTEM_DEFAULT_CONTROLLER)
-
-# Specifies subclass of ControlMechanism used as the default class of control mechanism to instantiate and assign,
-#    in place of DefaultController, when instantiating a System for which an existing control mech is specified
-# - if it is either not specified or is None, DefaultController will (continue to) be used (see above)
-# - if it is assigned to another subclass of ControlMechanism, its instantiation moves all of the
-#     existing ControlProjections from DefaultController to that instance of the specified subclass
-# Note: must be a class
-# SystemDefaultControlMechanism = EVCMechanism
-SystemDefaultControlMechanism = DefaultControlMechanism
-
-# MODIFIED 6/28/16 NEW:
-# FIX:  CAN'T INSTANTIATE OBJECT HERE, SINCE system IS NOT YET KNOWN
-#       COULD USE CLASS REFERENCE (HERE AND ABOVE), BUT THEN HAVE TO INSURE A SINGLE OBJECT IS INSTANTIATED
-#       AT SOME POINT AND THAT THAT IS THE ONLY ONE USED THEREAFTER;  WHERE TO DO THAT INSTANTIATION?
-#       WHEN CONTROLLER IS ASSIGNED TO SYSTEM??
-# DefaultController = EVCMechanism(name=EVC_MECHANISM)
-# DefaultController = EVCMechanism
-# MODIFIED END:
-
-# # # MODIFIED 6/28/16: EVC -- COMMENT OUT TO RUN
-# from Components.System import System_Base
-# # Use as default System (by EVC)
-# DefaultSystem = System_Base(name = DEFAULT_SYSTEM)
-
-
-# # Assign default inputState for Mechanism subclasses
-# for mechanism in MechanismRegistry:
-#     try:
-#         mechanism.inputStateTypeDefault = MechanismRegistry[mechanism.inputStateDefault].subclass
-#     except AttributeError:
-#         raise InitError("inputStateDefault not defined for".format(mechanism))
-#     except (KeyError, NameError):
-#         raise InitError("{0} not found in MechanismRegistry".format(mechanism))
-#     else:
-#         if not isinstance(mechanism.inputStateDefault, Mechanism_Base):
-#             raise InitError("inputStateDefault for {0} ({1}) must be a InputState".
-#                             format(mechanism, mechanism.inputStateDefault))
-#endregion
 
 #region ****************************************** REGISTER SUBCLASSES *************************************************
 
@@ -163,7 +107,6 @@ register_category(entry=InputState,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
-# INPUT_STATE = InputState.__name__
 
 # OutputState
 from PsyNeuLink.Components.States.OutputState import OutputState
@@ -171,7 +114,6 @@ register_category(entry=OutputState,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
-# OUTPUT_STATE = OutputState.__name__
 
 # ParameterState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -179,10 +121,6 @@ register_category(entry=ParameterState,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
-# PARAMETER_STATE = ParameterState.__name__
-
-# MODIFIED 9/11/16 END
-
 
 # Projection -----------------------------------------------------------------------------------------------------------
 
@@ -196,7 +134,6 @@ register_category(entry=MappingProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
-# MAPPING_PROJECTION = MappingProjection.__name__
 
 # ControlProjection
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
@@ -204,7 +141,6 @@ register_category(entry=ControlProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
-# CONTROL_PROJECTION = ControlProjection.__name__
 
 # LearningProjection
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
@@ -212,7 +148,6 @@ register_category(entry=LearningProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
-# LEARNING_PROJECTION = LearningProjection.__name__
 
 #endregion
 
@@ -328,6 +263,7 @@ DDM.classPreferences = ComponentPreferenceSet(owner=DDM,
                                              prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
                                              level=PreferenceLevel.TYPE,
                                              context=".__init__.py")
+
 
 from PsyNeuLink.Components.States.State import State
 State.classPreferences = ComponentPreferenceSet(owner=State,

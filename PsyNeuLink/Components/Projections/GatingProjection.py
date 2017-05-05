@@ -174,13 +174,13 @@ class GatingProjection(Projection_Base):
 
     name : str : default GatingProjection-<index>
         the name of the GatingProjection.
-        Specified in the `name` argument of the constructor for the projection;
+        Specified in the **name** argument of the constructor for the projection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for projection.
-        Specified in the `prefs` argument of the constructor for the projection;
+        Specified in the **prefs** argument of the constructor for the projection;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -199,7 +199,7 @@ class GatingProjection(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        PROJECTION_SENDER: DefaultGatingMechanism,
+        PROJECTION_SENDER: GatingMechanism,
         PROJECTION_SENDER_VALUE: defaultGatingSignal})
 
     @tc.typecheck
@@ -215,11 +215,11 @@ class GatingProjection(Projection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                  gating_signal=gating_signal
-                                                  )
+                                                  gating_signal=gating_signal,
+                                                  params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if not receiver:
+        if sender is None or receiver is None:
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self

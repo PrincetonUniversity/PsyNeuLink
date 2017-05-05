@@ -36,6 +36,10 @@ Distribution Functions:
   * `GammaDist`
   * `WaldDist`
 
+Objective Functions:
+  * `Stability`
+  * `Distance`
+
 Learning Functions:
   * `Reinforcement`
   * `BackPropagation`
@@ -86,8 +90,8 @@ Structure
 
 Every Function has a `variable <Function_Base.variable>` that provides the input to its
 `function <Function_Base.function>` method.  It's core attribute is its `function <Function_Base.function>` attribute,
-that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or
-method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be
+that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or 
+method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be 
 "turtles" all the way down!).  A Function also has an attribute for each of the parameters of its `function
 <Function_Base.function>`.   If a Function has been assigned to another component, then it also has an `owner
 <Function_Base.owner>` attribute that refers to that component.  The Function itself is assigned as the component's
@@ -141,6 +145,8 @@ Class Reference
 #            'UniformDist`',
 #            'GammaDist',
 #            'WaldDist',
+#            'Stability`,
+#            'Distance`,
 #            'Reinforcement',
 #            'BackPropagation',
 #            'FunctionError',
@@ -149,7 +155,7 @@ Class Reference
 from functools import reduce
 from operator import *
 from random import randint
-from numpy import sqrt, abs, tanh, exp
+from numpy import sqrt, abs, tanh, exp, finfo
 import numpy as np
 
 import typecheck as tc
@@ -157,7 +163,9 @@ import typecheck as tc
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Utilities import random_matrix
+from PsyNeuLink.Globals.Utilities import random_matrix, is_matrix
+
+EPSILON = np.finfo(float).eps
 
 FunctionRegistry = {}
 
@@ -369,7 +377,7 @@ class Function_Base(Function):
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -530,7 +538,7 @@ class ArgumentTherapy(Function_Base):
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -781,7 +789,7 @@ class UserDefinedFunction(Function_Base):
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -890,7 +898,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -1142,7 +1150,7 @@ class LinearCombination(
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -1347,6 +1355,12 @@ class LinearCombination(
 # endregion
 
 class TransferFunction(Function_Base):
+    """Function that transforms variable but maintains its shape
+    
+    All TransferFunctions must have the attribute `bounds` that specifies the lower and upper limits of the result;
+        if there are none, the attribute is set to `None`;  if it has at least one bound, the attribute is set to a
+        tuple specifying the lower and upper bounds, respectively, with `None` as the entry for no bound.
+    """
     componentType = TRANFER_FUNCTION_TYPE
 
 
@@ -1408,17 +1422,20 @@ class Linear(
         value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
         (if it is specified).
 
+    bounds : None
+
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """
 
     componentName = LINEAR_FUNCTION
+    bounds = None
 
     classPreferences = {
         kwPreferenceSetName: 'LinearClassPreferences',
@@ -1609,19 +1626,23 @@ class Exponential(
         value by which `variable <Exponential.variable>` is multiplied before exponentiation.
 
     scale : float
-        value by which the exponentiated value is multipled.
+        value by which the exponentiated value is multiplied.
+        
+    bounds : (0, None) 
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """
 
     componentName = EXPONENTIAL_FUNCTION
+    bounds = (0, None)
+
 
     variableClassDefault = 0
 
@@ -1757,11 +1778,13 @@ class Logistic(
         value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
         (if it is specified).
 
+    bounds : (0,1)
+
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -1769,6 +1792,8 @@ class Logistic(
 
     componentName = LOGISTIC_FUNCTION
     parameter_keywords.update({GAIN, BIAS})
+
+    bounds = (0,1)
 
     variableClassDefault = 0
 
@@ -1908,11 +1933,14 @@ class SoftMax(
             * **PROB**: probabilistically chosen element based on softmax-transformed values after normalizing sum of
               values to 1, 0 for all others.
 
+    bounds : None if `output <SoftMax.output>`==MAX_VAL, else (0,1) : default (0,1)
+    
+
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -1954,7 +1982,7 @@ class SoftMax(
         Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
         sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
         filtered by `ouptput <SoftMax.output>` specification.
-        
+
         Arguments
         ---------
 
@@ -2125,6 +2153,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
 
+    bounds : None
+
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -2157,7 +2187,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -2165,25 +2195,27 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     componentName = LINEAR_MATRIX_FUNCTION
 
+    bounds = None
+
     DEFAULT_FILLER_VALUE = 0
 
     variableClassDefault = [DEFAULT_FILLER_VALUE]  # Sender vector
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    def matrix_spec(m):
-        if m is None:
-            return True
-        if m in MATRIX_KEYWORD_VALUES:
-            return True
-        if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
-            return True
-        return False
+    # def is_matrix_spec(m):
+    #     if m is None:
+    #         return True
+    #     if m in MATRIX_KEYWORD_VALUES:
+    #         return True
+    #     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+    #         return True
+    #     return False
 
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 matrix: matrix_spec = None,
+                 matrix:tc.optional(is_matrix) = None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -2300,7 +2332,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     continue
 
                 # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
-                elif isinstance(param_value, (np.ndarray, np.matrix)):
+                elif isinstance(param_value, (list, np.ndarray, np.matrix)):
                     # get dimensions specified by:
                     #   variable (sender): width/cols/outer index
                     #   kwReceiver param: height/rows/inner index
@@ -2330,7 +2362,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
-                elif param_value in {IDENTITY_MATRIX, OFF_DIAGNOAL_MATRIX}:
+                elif param_value in {IDENTITY_MATRIX, HOLLOW_MATRIX}:
                     # Receiver length doesn't equal sender length
                     if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
                         # if self.owner.prefs.verbosePref:
@@ -2489,6 +2521,16 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         return function(sender_len, receiver_len)
 
 
+# def is_matrix_spec(m):
+#     if m is None:
+#         return True
+#     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+#         return True
+#     if m in MATRIX_KEYWORD_VALUES:
+#         return True
+#     return False
+
+
 def get_matrix(specification, rows=1, cols=1, context=None):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
 
@@ -2499,13 +2541,17 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         + matrix keyword:
             + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
             + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
-            + OFF_DIAGONAL_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
+            + HOLLOW_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
             + FULL_CONNECTIVITY_MATRIX: all 1's
             + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
         + 2D list or np.ndarray of numbers
 
      Returns 2D np.array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
     """
+
+
+    if isinstance(specification, list):
+        specification = np.array(specification)
 
     # Matrix provided (and validated in _validate_params); convert to np.array
     if isinstance(specification, np.matrix):
@@ -2536,7 +2582,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
                                 format(rows, cols, specification))
         return np.identity(rows)
 
-    if specification is OFF_DIAGNOAL_MATRIX:
+    if specification is HOLLOW_MATRIX:
         if rows != cols:
             raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
                                 format(rows, cols, specification))
@@ -2698,7 +2744,7 @@ class Integrator(
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -2732,9 +2778,8 @@ class Integrator(
                                                   integration_type=integration_type,
                                                   time_step_size=time_step_size,
                                                   initializer=initializer,
-                                                  params=params,
                                                   noise=noise,
-                                                  )
+                                                  params=params)
 
 
         # Assign here as default, for use in initialization of function
@@ -3223,7 +3268,7 @@ class BogaczEtAl(
     ----------
 
     variable : number or 1d np.array
-        holds initial value assigned to :keyword:`variable_default` argument;
+        holds initial value assigned to :keyword:`variable_default` argument;  
         ignored by `function <BogaczEtal.function>`.
 
     drift_rate : float or 1d np.array
@@ -3241,7 +3286,7 @@ class BogaczEtAl(
         Gaussian random process).
 
     t0 : float or 1d np.array
-        determines the assumed non-decision time to determine the response time returned by the solution.
+        determines the assumed non-decision time to determine the response time returned by the solution. 
 
     bias : float or 1d np.array
         normalized starting point:
@@ -3252,7 +3297,7 @@ class BogaczEtAl(
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -3550,7 +3595,7 @@ class NavarroAndFuss(
         `component <Component>` to which the Function has been assigned.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -4055,7 +4100,7 @@ class GammaDist(DistributionFunction):
 
 class WaldDist(DistributionFunction):
     """
-     WaldDist(\
+     WaldDist(             \
               scale=1.0,\
               mean=1.0,\
               params=None,\
@@ -4113,7 +4158,7 @@ class WaldDist(DistributionFunction):
 
      """
 
-    componentName = GAMMA_DIST_FUNCTION
+    componentName = WALD_DIST_FUNCTION
 
     variableClassDefault = [0]
 
@@ -4156,6 +4201,441 @@ class WaldDist(DistributionFunction):
 
         return result
 
+
+# endregion
+
+# region **************************************   OBJECTIVE FUNCTIONS **************************************************
+
+class ObjectiveFunction(Function_Base):
+    """Abstract class of `Function` used for evaluating states.
+    """
+
+    componentType = OBJECTIVE_FUNCTION_TYPE
+
+
+class Stability(ObjectiveFunction):
+    """
+    Stability(                                  \
+        variable_default=variableCLassDefault,  \
+        matrix=HOLLOW_MATRIX,                   \
+        metric=ENERGY                           \
+        transfer_fct=None                       \
+        normalize=False,                        \
+        params=None,                            \
+        owner=None,                             \
+        prefs=None                              \
+        )
+
+    .. _Stability:
+
+    Return the stability of a vector based an a weight matrix from each element to every other element in the vector.
+    The value of `variable <Stability.variable>` is passed through the `matrix <Stability.matrix>`, transformed
+    using the `transfer_fct <Stability.transfer_fct>` (if specified), and then compared with its initial value
+    using the specified `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is specified, the result 
+    is normalized by the number of elements in the `variable <Stability.variable>`.
+
+    Arguments
+    ---------
+
+    variable : list of numbers or 1d np.array : Default variableClassDefault
+        the array for which stabilty is calculated.
+
+    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
+        specifies the matrix of recurrent weights;  must be a square matrix with the same width as the 
+        length of `variable <Stability.variable>`. 
+
+    metric : ENERGY, ENTROPY or keyword in DISTANCE_METRICS : Default ENERGY
+        specifies the metric used to compute stability. 
+
+    transfer_fct : function or method : Default None
+        specifies the function used to transform output of weight `matrix <Stability.matrix>`.
+
+    normalize : bool : Default False
+        specifies whether to normalize the stability value by the length of `variable <Stability.variable>`. 
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+    Attributes
+    ----------
+
+    variable : 1d np.array
+        array for which stability is calculated.
+    
+    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
+        weight matrix from each element of `variable <Stability.variablity>` to each other;  if a matrix other
+        than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
+        stability calculation.
+
+    metric : ENERGY, ENTROPY or keyword in DISTANCE_METRICS
+        metric used to compute stability.  If ENTROPY or DISTANCE_METRICS keyword is used, the `Distance` Function
+        is used to compute the stability of `variable <Stability.variable>` with respect to its value after  
+        transformation by `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>`.
+
+    transfer_fct : function or method
+        function used to transform output of weight `matrix <Stability.matrix>` prior to computing stability.
+
+    normalize : bool
+        if `True`, result of stability calculation is normalized by the length of `variable <Stability.variable>`. 
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+     """
+
+    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+    from PsyNeuLink.Components.States.ParameterState import ParameterState
+
+    componentName = STABILITY_FUNCTION
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
+                 # metric:is_distance_metric=ENERGY,
+                 metric:tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)=ENERGY,
+                 transfer_fct:tc.optional(tc.any(function_type, method_type))=None,
+                 normalize:bool=False,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context=componentName + INITIALIZING):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(matrix=matrix,
+                                                  metric=metric,
+                                                  transfer_fct=transfer_fct,
+                                                  normalize=normalize,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate matrix param
+
+        `matrix <Stability.matrix>` argument must be one of the following
+            - 2d list, np.ndarray or np.matrix
+            - ParameterState for one of the above
+            - MappingProjection with a parameterStates[MATRIX] for one of the above
+
+        Parse matrix specification to insure it resolves to a square matrix
+        (but leave in the form in which it was specified so that, if it is a ParameterState or MappingProjection,
+         its current value can be accessed at runtime (i.e., it can be used as a "pointer")
+        """
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        # Validate error_matrix specification
+        if MATRIX in target_set:
+
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.States.ParameterState import ParameterState
+
+            matrix = target_set[MATRIX]
+
+            if isinstance(matrix, MappingProjection):
+                try:
+                    matrix = matrix.parameterStates[MATRIX].value
+                    param_type_string = "MappingProjection's ParameterState"
+                except KeyError:
+                    raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
+                                        "paramaterState that has been assigned a 2d array or matrix".
+                                        format(MATRIX, self.name, matrix.shape, MATRIX))
+
+            elif isinstance(matrix, ParameterState):
+                try:
+                    matrix = matrix.value
+                    param_type_string = "ParameterState"
+                except KeyError:
+                    raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                                        "must be a 2d array or matrix".
+                                        format(MATRIX, MATRIX, self.name, matrix.shape))
+
+            else:
+                param_type_string = "array or matrix"
+
+            matrix = np.array(matrix)
+            if matrix.ndim != 2:
+                raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
+                                    "must be a 2d array or matrix".
+                                    format(param_type_string, MATRIX, self.name, matrix))
+            rows = matrix.shape[0]
+            cols = matrix.shape[1]
+            size = len(np.squeeze(self.variable))
+
+            if rows != size:
+                raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
+                                    "it is {}x{}, but must be square matrix of size {}".
+                                    format(param_type_string, MATRIX, self.name, rows, cols, size))
+
+            if rows != cols:
+                raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
+                                    "must be a square matrix".
+                                    format(param_type_string, MATRIX, self.name, matrix))
+
+
+    def _instantiate_attributes_before_function(self, context=None):
+        """Instantiate matrix
+         
+        Specified matrix specified is convolved with HOLLOW_MATRIX 
+            to eliminate the diagonal (self-connections) from the calculation.
+        The `Distance` Function is used for all calculations except ENERGY (which is not really a distance metric). 
+        If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the Distance Function.
+            
+        """
+
+        size = len(np.squeeze(self.variable))
+
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        if isinstance(self.matrix,MappingProjection):
+            self.matrix = self.matrix.parameterStates[MATRIX]
+        elif isinstance(self.matrix,ParameterState):
+            pass
+        else:
+            self.matrix = get_matrix(self.matrix, size, size)
+
+        self._hollow_matrix = get_matrix(HOLLOW_MATRIX,size, size)
+
+        if self.metric is ENTROPY:
+            self._metric_fct = Distance(metric=CROSS_ENTROPY)
+
+        elif self.metric in DISTANCE_METRICS:
+            self._metric_fct = Distance(metric=self.metric)
+
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """Calculate the stability of `variable <Stability.variable>`.
+         
+         Compare the value of `variable <Stability.variable>` with its value after transformation by 
+         `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>` (if specified), using the specified
+         `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is `True`, the result is divided
+         by the length of `variable <Stability.variable>`. 
+
+        Returns
+        -------
+        
+        stability : scalar
+
+        """
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        if isinstance(self.matrix, ParameterState):
+            matrix = self.matrix.value
+        else:
+            matrix = self.matrix
+
+        current = self.variable
+        if self.transfer_fct is not None:
+            transformed = self.transfer_fct(np.dot(matrix * self._hollow_matrix, self.variable))
+        else:
+            transformed = np.dot(matrix * self._hollow_matrix, self.variable)
+
+        if self.metric is ENERGY:
+            result = -np.sum(current * transformed)
+        else:
+            result = self._metric_fct.function(variable=[current,transformed], context=context)
+
+        if self.normalize:
+            result /= len(self.variable)
+
+        return result
+
+# endregion
+
+class Distance(ObjectiveFunction):
+    """
+    Distance(                                  \
+       variable_default=variableCLassDefault,  \
+       metric=EUCLIDEAN                        \
+       normalize=False,                        \
+       params=None,                            \
+       owner=None,                             \
+       prefs=None                              \
+       )
+
+    .. _Distance:
+
+    Return the distance between two vectors based on a specified metric.
+      
+    Arguments
+    ---------
+
+    variable : 2d np.array with two items : Default variableClassDefault
+        the arrays between which the distance is calculated.
+
+    metric : keyword in DISTANCE_METRICS : Default EUCLIDEAN
+        specifies the metric used to compute the distance between the two items in `variable <Distance.variable>`. 
+
+    normalize : bool : Default False
+        specifies whether to normalize the distance by the length of `variable <Distance.variable>`. 
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 2d np.array with two items
+        contains the arrays between which the distance is calculated.
+
+    metric : keyword in DISTANCE_METRICS
+        specifies the metric used to compute the distance between the two items in `variable <Distance.variable>`. 
+
+    normalize : bool
+        specifies whether to normalize the distance by the length of `variable <Distance.variable>`. 
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    """
+
+    componentName = DISTANCE_FUNCTION
+
+    variableClassDefault = [[0],[0]]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 metric:tc.enum(EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, ANGLE)=DIFFERENCE,
+                 normalize:bool=False,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context=componentName + INITIALIZING):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(metric=metric,
+                                                  normalize=normalize,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate that variable had two items of equal length
+
+        """
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if len(self.variable) != 2:
+            raise FunctionError("variable for {} ({}) must have two items".format(self.name, self.variable))
+
+        if len(self.variable[0]) != len(self.variable[1]):
+            raise FunctionError("The lengths of the items in the variable for {} ({},{}) must be equal".
+                format(self.name, len(self.variable[0]), len(self.variable[1])))
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """Calculate the distance between the two arrays in `variable <Stability.variable>`.
+
+        Returns
+        -------
+        
+        distance : scalar
+
+        """
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        v1 = self.variable[0]
+        v2 = self.variable[1]
+
+        # Simple Hadamard difference of v1 and v2
+        if self.metric is DIFFERENCE:
+            result = np.sum(np.abs(v1 - v2))
+
+        # Euclidean distance between v1 and v2
+        elif self.metric is EUCLIDEAN:
+            result = np.linalg.norm(v2-v1)
+
+        # Cross-entropy of v1 and v2
+        elif self.metric is CROSS_ENTROPY:
+            # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
+            if context is not None and INITIALIZING in context:
+                v1 = np.where(v1==0, EPSILON, v1)
+                v2 = np.where(v2==0, EPSILON, v2)
+            result = -np.sum(v1*np.log(v2))
+
+        # FIX: NEED SCIPY HERE
+        # # Angle (cosyne) of v1 and v2
+        # elif self.metric is ANGLE:
+        #     result = scipy.spatial.distance.cosine(v1,v2)
+
+        # Correlation of v1 and v2
+        elif self.metric is CORRELATION:
+            result = np.correlate(v1, v2)
+
+        # Pearson Correlation of v1 and v2
+        elif self.metric is PEARSON:
+            result = np.corrcoef(v1, v2)
+
+
+        if self.normalize:
+            # if np.sum(denom):
+            # result /= np.sum(x,y)
+            result /= len(self.variable)
+
+        return result
 
 # endregion
 
@@ -4298,7 +4778,7 @@ class Reinforcement(
         `mechanism <Mechanism>` to which the function belongs.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
     """
@@ -4551,7 +5031,7 @@ class BackPropagation(LearningFunction):
         `mechanism <Mechanism>` to which the function belongs.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -4729,8 +5209,9 @@ class BackPropagation(LearningFunction):
 
         """
 
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
         self._check_args(variable=variable, params=params, context=context)
+
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
         if isinstance(self.error_matrix, ParameterState):
             error_matrix = self.error_matrix.value
         else:
