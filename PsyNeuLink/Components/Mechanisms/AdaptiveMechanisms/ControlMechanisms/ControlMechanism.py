@@ -346,7 +346,7 @@ class ControlMechanism_Base(Mechanism_Base):
         # Instantiate new outputState and assign as sender of ControlProjection
         try:
             output_state_index = len(self.output_states)
-        except AttributeError:
+        except (AttributeError, TypeError):
             output_state_index = 0
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
         output_state_name = receiver.name + '_' + ControlSignal.__name__
@@ -375,7 +375,7 @@ class ControlMechanism_Base(Mechanism_Base):
         # Update self.outputState and self.outputStates
         try:
             self.output_states[state.name] = state
-        except AttributeError:
+        except (AttributeError, TypeError):
             self.output_states = OrderedDict({output_state_name:state})
             self.outputState = self.output_states[output_state_name]
 
