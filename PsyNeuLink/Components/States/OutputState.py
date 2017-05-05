@@ -635,7 +635,7 @@ def _instantiate_output_states(owner, context=None):
     else:
         constraint_value = owner_value
 
-    owner.outputStates = _instantiate_state_list(owner=owner,
+    owner.output_states = _instantiate_state_list(owner=owner,
                                                 state_list=owner.paramsCurrent[OUTPUT_STATES],
                                                 state_type=OutputState,
                                                 state_param_identifier=OUTPUT_STATES,
@@ -643,5 +643,5 @@ def _instantiate_output_states(owner, context=None):
                                                 constraint_value_name="output",
                                                 context=context)
     # Assign self.outputState to first outputState in dict
-    owner.outputState = list(owner.outputStates.values())[0]
+    owner.outputState = list(owner.output_states.values())[0]
 

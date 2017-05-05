@@ -1215,8 +1215,8 @@ class Process_Base(Process):
             if i+1 == len(pathway):
                 if any(any(proj.receiver.owner is mech
                            for proj in state.sendsToProjections)
-                       for state in mech.outputStates.values()):
-                    for state in mech.outputStates.values():
+                       for state in mech.output_states.values()):
+                    for state in mech.output_states.values():
                         for proj in state.sendsToProjections:
                             if proj.receiver.owner is mech:
                                 pathway.append(MechanismTuple(proj,None,None))
@@ -2362,7 +2362,7 @@ class Process_Base(Process):
         if self.learning:
             from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import TARGET_MSE
             print("\n- MSE: {:0.3}".
-                  format(float(self.targetMechanism.outputStates[TARGET_MSE].value)))
+                  format(float(self.targetMechanism.output_states[TARGET_MSE].value)))
 
         elif separator:
             print("\n\n****************************************\n")
@@ -2402,7 +2402,7 @@ class Process_Base(Process):
         print ("\n\tTerminal mechanism: ".format(self.name))
         for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
             print("\t\t{} (phase: {})".format(mech_tuple.mechanism.name, mech_tuple.phase))
-            for output_state_name in mech_tuple.mechanism.outputStates:
+            for output_state_name in mech_tuple.mechanism.output_states:
                 print("\t\t\t{0}".format(output_state_name))
 
         print ("\n---------------------------------------------------------")
@@ -2441,7 +2441,7 @@ class Process_Base(Process):
     @property
     def output(self):
         # FIX: THESE NEED TO BE PROPERLY MAPPED
-        return np.array(list(item.value for item in self.lastMechanism.outputStates.values()))
+        return np.array(list(item.value for item in self.lastMechanism.output_states.values()))
 
     @property
     def numPhases(self):

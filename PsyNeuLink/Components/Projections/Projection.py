@@ -993,11 +993,11 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     # input_state is index into outputStates OrderedDict, so get corresponding key and assign to output_state
     elif isinstance(state, int):
         try:
-            key = list(sender.outputStates.keys)[state]
+            key = list(sender.output_states.keys)[state]
         except IndexError:
             raise ProjectionError("Attempt to assign projection_spec ({0}) to outputState {1} of {2} "
                                  "but it has only {3} outputStates".
-                                 format(projection_spec.name, state, sender.name, len(sender.outputStates)))
+                                 format(projection_spec.name, state, sender.name, len(sender.output_states)))
         else:
             output_state = key
 
@@ -1034,9 +1034,9 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                                      context=context)
     #  Update outputState and outputStates
     try:
-        sender.outputStates[output_state.name] = output_state
+        sender.output_states[output_state.name] = output_state
     # No outputState(s) yet, so create them
     except AttributeError:
-        sender.outputStates = OrderedDict({output_state.name:output_state})
-        sender.outputState = list(sender.outputStates)[0]
+        sender.output_states = OrderedDict({output_state.name:output_state})
+        sender.outputState = list(sender.output_states)[0]
     output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
