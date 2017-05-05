@@ -1,3 +1,155 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+
+
+# ********************************************* Scheduler ***************************************************************
+
+"""
+
+Overview
+--------
+
+A scheduler is an object that can be used to generate an order in which components are to be run, using a set of
+arbitrary `Condition`<Condition>s (`ConditionSet`<ConditionSet>). These Conditions can be specified relative
+to other components, for example, to generate patterns in which some components run at higher frequency than
+others, or in which components wait for others to reach some stopping condition. However, the scheduler is
+designed to be compatible with any Conditions.
+
+Creating a Scheduler
+--------------------
+
+A scheduler is created either explicitly, or implicitly during the creation of a System. When creating a scheduler
+explicitly, you must either provide a System, or a set of components (i.e. vertices) and a topological ordering of
+these components that represents the graph structure of these components, produced by the toposort module. This
+graph structure must be directed and acyclic. When providing a System, the scheduler is created using the System's
+executionList as components and its executionGraph as the topological ordering. Additionally, a ConditionSet may be
+assigned at creation; otherwise, a blank set is initialized. Conditions may be added directly to the scheduler's
+ConditionSet later using the wrapper methods add_condition and add_condition_set.
+If both a System and a set of nodes are specified, the scheduler will initialize based on the System.
+
+Running a Scheduler
+-------------------
+
+Using the run method, which is a generator, the scheduler can specify the ordering in which its nodes should be run
+to meet the conditions specified in the condition set. When calling the run method, if any nodes do not have run
+conditions specified, by default they will be assigned the condition Always, which allows them to run at any time
+they are under consideration. If termination conditions are not specified, by default the scheduler will terminate
+using the AllHaveRun condition, which is true when all of the nodes in the scheduler have been told to run
+at least once. Each generation from the run method will consist of a set of all nodes that can run in the current
+time step, and this set itself represents the time step.
+
+
+Algorithm
+---------
+
+A scheduler first constructs a consideration queue of its nodes using the topological ordering. This consideration
+queue consists of a list of sets of nodes grouped based on their graph dependencies. The first set consists of
+source nodes only. The second set consists of all nodes that have incoming edges only from nodes in the first set.
+The third set consists of all other nodes that have incoming edges only from nodes in the first two sets, and so on.
+
+When running, the scheduler maintains internal state about the number of times its nodes were set to be executed, and
+the total number of steps in each TimeScale that have happened. This information is used by Conditions. The scheduler
+checks each set in order in the consideration queue, and determines which nodes in this set are allowed to run based on
+whether their associated conditions were met; all nodes within a consideration set that are allowed to run comprise a
+`time step`<TimeScale.TIME_STEP>. These nodes are considered to be run simultaneously, and so the running of a node
+within a time step may trigger the running of another node within its consideration set. The ordering of these nodes
+is irrelevant, as it is necessarily the case that no parent and child nodes are within the same consideration set. A
+key feature is that all parents have the chance to run (even if they do not actually run) before their children.
+
+At the beginning of each time step, the scheduler checks whether the specified termination conditions have been met,
+and terminates if so.
+
+Examples
+--------
+
+Please see `Condition`<Condition> documentation for a list of all included Conditions and their behavior.
+
+*Basic phasing in a linear process:*
+    A = TransferMechanism(function = Linear(), name = 'A')
+    B = TransferMechanism(function = Linear(), name = 'B')
+    C = TransferMechanism(function = Linear(), name = 'C')
+
+    p = process(
+        pathway=[A, B, C],
+        name = 'p',
+    )
+    s = system(
+        processes=[p],
+        name='s',
+    )
+    sched = Scheduler(system=s)
+
+    #impicit condition of Always for A
+
+    sched.add_condition(B, EveryNCalls(A, 2))
+    sched.add_condition(C, EveryNCalls(B, 3))
+
+    # implicit AllHaveRun condition
+    output = list(sched.run())
+
+    # output will produce
+    # [A, A, B, A, A, B, A, A, B, C]
+
+*Alternate basic phasing in a linear process:*
+    A = TransferMechanism(function = Linear(), name = 'A')
+    B = TransferMechanism(function = Linear(), name = 'B')
+
+    p = process(
+        pathway=[A, B],
+        name = 'p',
+    )
+    s = system(
+        processes=[p],
+        name='s',
+    )
+    sched = Scheduler(system=s)
+
+    sched.add_condition(A, Any(AtPass(0), EveryNCalls(B, 2)))
+    sched.add_condition(B, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
+
+    termination_conds = {ts: None for ts in TimeScale}
+    termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 4, time_scale=TimeScale.TRIAL)
+    output = list(sched.run(termination_conds=termination_conds))
+
+    # output will produce
+    # [A, B, B, A, B, B]
+
+*Basic phasing in two processes:*
+    A = TransferMechanism(function = Linear(), name = 'A')
+    B = TransferMechanism(function = Linear(), name = 'B')
+    C = TransferMechanism(function = Linear(), name = 'C')
+
+    p = process(
+        pathway=[A, C],
+        name = 'p',
+    )
+    q = process(
+        pathway=[B, C],
+        name = 'q',
+    )
+    s = system(
+        processes=[p, q],
+        name='s',
+    )
+    sched = Scheduler(system=s)
+
+    sched.add_condition(A, EveryNPasses(1))
+    sched.add_condition(B, EveryNCalls(A, 2))
+    sched.add_condition(C, Any(AfterNCalls(A, 3), AfterNCalls(B, 3)))
+
+    termination_conds = {ts: None for ts in TimeScale}
+    termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 4, time_scale=TimeScale.TRIAL)
+    output = list(sched.run(termination_conds=termination_conds))
+
+    # output will produce
+    # [A, set([A,B]), A, C, set([A,B]), C, A, C, set([A,B]), C]
+
+"""
+
 import logging
 
 from toposort import toposort
