@@ -7,6 +7,7 @@ from PsyNeuLink.scheduling.condition import AllHaveRun, Always, ConditionSet
 
 logger = logging.getLogger(__name__)
 
+
 class SchedulerError(Exception):
      def __init__(self, error_value):
          self.error_value = error_value
@@ -15,10 +16,9 @@ class SchedulerError(Exception):
          return repr(self.error_value)
 
 class Scheduler(object):
-    def __init__(self, composition=None, system=None, condition_set=None, nodes=None, toposort_ordering=None):
+    def __init__(self, system=None, condition_set=None, nodes=None, toposort_ordering=None):
         '''
         :param self:
-        :param composition: (Composition) - the Composition this scheduler is scheduling for
         :param condition_set: (ConditionSet) - a :keyword:`ConditionSet` to be scheduled
         '''
         self.condition_set = condition_set if condition_set is not None else ConditionSet(scheduler=self)
@@ -27,10 +27,7 @@ class Scheduler(object):
         self.consideration_queue = []
         self.termination_conds = None
 
-        if composition is not None:
-            self.nodes = [vert.mechanism for vert in composition.graph.vertices]
-            self._init_consideration_queue_from_composition(composition)
-        elif system is not None:
+        if system is not None:
             self.nodes = [m[0] for m in system.executionList]
             self._init_consideration_queue_from_system(system)
         elif nodes is not None:
@@ -39,22 +36,12 @@ class Scheduler(object):
                 raise SchedulerError('Instantiating Scheduler by list of nodes requires a toposort ordering (kwarg toposort_ordering)')
             self.consideration_queue = list(toposort_ordering)
         else:
-            raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition), or a list of Mechanisms (kwarg nodes) and and a toposort ordering over them (kwarg toposort_ordering)')
+            raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system), or a list of Mechanisms (kwarg nodes) and and a toposort ordering over them (kwarg toposort_ordering)')
 
         self._init_counts()
 
     # the consideration queue is the ordered list of sets of nodes in the composition graph, by the
     # order in which they should be checked to ensure that all parents have a chance to run before their children
-    def _init_consideration_queue_from_composition(self, composition):
-        dependencies = {}
-        for vert in composition.graph.vertices:
-            dependencies[vert.mechanism] = set()
-            for parent in composition.graph.get_parents(vert.mechanism):
-                dependencies[vert.mechanism].add(parent)
-
-        self.consideration_queue = list(toposort(dependencies))
-        logger.debug('Consideration queue: {0}'.format(self.consideration_queue))
-
     def _init_consideration_queue_from_system(self, system):
         dependencies = []
         for dependency_set in list(toposort(system.executionGraph)):
