@@ -119,13 +119,10 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
         """
 
-        try:
-            self.input_states
-        except AttributeError:
-            self.inputValue = None
+        if not hasattr(self, INPUT_STATES):
             self.input_states = None
-        else:
-            pass
+        if self.input_states is None:
+            self.inputValue = None
 
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """Instantiate requested controlProjection and associated inputState
