@@ -142,37 +142,46 @@ def test_EVC():
                             [15.0, 15.0, 0.0, 1.0000000000000002, 3.842796481342382, 0.8163782718851771,
                              0.18362172811482289]]
     expected_output = [
-        # (Decision.inputState.value, 0.123),
+        # Decision Output | Second Trial
         (Decision.outputState.value, 1.0),
 
-        # Input Prediction
-        # (InputPrediction.inputState.value, 0.123),
+        # Input Prediction Output | Second Trial
         (InputPrediction.outputState.value, 0.1865),
 
-        # RewardPrediction
-        # (RewardPrediction.inputState.value, 20.0),
+        # RewardPrediction Output | Second Trial
         (RewardPrediction.outputState.value, 15.0),
 
-        # Decision
-        # drift rate
+        # --- Decision Mechanism ---
+
+        #   ControlSignal Values
+        #       drift rate
         (mySystem.controller.controlSignals[0].value, 1.0),
-        # threshold
+        #       threshold
         (mySystem.controller.controlSignals[1].value, 1.0000000000000002),
 
+        #    Output State Values
+        #       decision variable
         (Decision.outputStates['DDM_decision_variable'].value, 1.0),
+        #       response time
         (round(float(Decision.outputStates['DDM_response_time'].value),2), 3.84),
+        #       upper bound
         (round(float(Decision.outputStates['DDM_probability_upperBound'].value),3), 0.816),
+        #       lower bound
         (round(float(Decision.outputStates['DDM_probability_lowerBound'].value),3), 0.184),
 
-        # Reward
+        # --- Reward Mechanism ---
+        #    Output State Values
+        #       transfer mean
         (Reward.outputStates['transfer_mean '].value, 15.0),
+        #       transfer_result
         (Reward.outputStates['transfer_result'].value, 15.0),
+        #       transfer variance
         (Reward.outputStates['transfer_variance'].value, 0.0),
 
+        # System Results Array
+        #   (all intermediate output values of system)
         (results_array, expected_results_array)
     ]
-
-
 
     for i in range(len(expected_output)):
         val, expected = expected_output[i]
