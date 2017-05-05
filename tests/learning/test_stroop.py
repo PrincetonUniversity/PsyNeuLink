@@ -221,7 +221,7 @@ class TestStroop:
 
         target_list_dict = {response:[[1, 1]]}
 
-        s.run(
+        results = s.run(
             num_executions=2,
             inputs=stim_list_dict,
             targets=target_list_dict,
@@ -254,6 +254,18 @@ class TestStroop:
                 [0.01462766, 1.01351195],
                 [2.00220713, 3.00203878]
             ])),
+            # (results, [
+            #     [
+            #         np.array([ 0.50899214,  0.54318254]),
+            #         np.array(0.5260873375534925),
+            #         np.array(0.00029224593876143865)
+            #     ],
+            #     [
+            #         np.array([ 0.51044657,  0.5483048 ]),
+            #         np.array(0.5293756831511783),
+            #         np.array(0.0003583114284782829)]
+            #     ]
+            # ),
         ]
 
         for i in range(len(expected_output)):
