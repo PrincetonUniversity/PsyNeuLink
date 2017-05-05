@@ -542,7 +542,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         Validate specification for value to be monitored (using call to validate_monitored_value)
         Instantiate the inputState (assign name if specified, and value of monitored_state)
         Re-specify corresponding item of variable to match the value of the new inputState
-        Update self.inputState and self.input_states
+        Update self.input_state and self.input_states
         Call _instantiate_monitoring_projection() to instantiate MappingProjection to inputState
             if an outputState has been specified.
 
@@ -653,7 +653,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             self.input_states[input_state.name] = input_state
         except (AttributeError, TypeError):
             self.input_states = OrderedDict({input_state_name:input_state})
-            self.inputState = list(self.input_states.values())[0]
+            self.input_state = list(self.input_states.values())[0]
 
         self.inputValue = list(state.value for state in self.input_states.values())
 

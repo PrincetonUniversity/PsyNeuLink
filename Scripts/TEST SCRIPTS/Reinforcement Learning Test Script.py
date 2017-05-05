@@ -28,7 +28,7 @@ p = process(default_input_value=[0, 0, 0],
             learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)),
             target=0)
 
-print ('reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
+print ('reward prediction weights: \n', action_selection.input_state.receivesFromProjections[0].matrix)
 print ('targetMechanism weights: \n', action_selection.outputState.sendsToProjections[0].matrix)
 
 actions = ['left', 'middle', 'right']
@@ -46,9 +46,9 @@ def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial)
 
 def show_weights():
-    # print ('\nreward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
+    # print ('\nreward prediction weights: \n', action_selection.input_state.receivesFromProjections[0].matrix)
     # print ('action selected: ', action_selection.outputState.value)
-    print ('Reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
+    print ('Reward prediction weights: \n', action_selection.input_state.receivesFromProjections[0].matrix)
     print ('\nAction selected:  {}; predicted reward: {}'.
            format(np.nonzero(action_selection.outputState.value)[0][0],
            action_selection.outputState.value[np.nonzero(action_selection.outputState.value)][0]))

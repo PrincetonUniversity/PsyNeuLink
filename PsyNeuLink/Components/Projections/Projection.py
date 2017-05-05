@@ -205,7 +205,7 @@ COMMENT:
     If the ``receiver`` of a projection is specified as a projection or mechanism, the type of state created and added
     to the mechanism depends on the type of projection:
         MappingProjection:
-            receiver = <Mechanism>.inputState
+            receiver = <Mechanism>.input_state
         ControlProjection:
             sender = <Mechanism>.outputState
             receiver = <Mechanism>.parameterState if there is a corresponding parameter; otherwise, an error occurs
@@ -422,7 +422,7 @@ class Projection_Base(Projection):
         * If sender and/or receiver is a Mechanism, the appropriate State is inferred as follows:
             MappingProjection:
                 sender = <Mechanism>.outputState
-                receiver = <Mechanism>.inputState
+                receiver = <Mechanism>.input_state
             ControlProjection:
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
@@ -501,7 +501,7 @@ class Projection_Base(Projection):
                     (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
                 print("{0} has more than one inputState; {1} was assigned to the first one".
                       format(self.receiver.owner.name, self.name))
-            self.receiver = self.receiver.inputState
+            self.receiver = self.receiver.input_state
         # MODIFIED 4/21/17 END
 
 
@@ -707,7 +707,7 @@ class Projection_Base(Projection):
         * Assume that subclasses implement this method in which they:
           - test whether self.receiver is a Mechanism and, if so, replace with State appropriate for projection
           - calls this method (as super) to assign projection to the Mechanism
-        * Constraint that self.value is compatible with receiver.inputState.value
+        * Constraint that self.value is compatible with receiver.input_state.value
             is evaluated and enforced in _instantiate_function, since that may need to be modified (see below)
         * Verification that projection has not already been assigned to receiver is handled by _add_projection_to;
             if it has, a warning is issued and the assignment request is ignored
@@ -881,7 +881,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     # Generic INPUT_STATE is specified, so use (primary) inputState
     elif state is INPUT_STATE:
-        receiver.inputState._instantiate_projections_to_state(projections=projection_spec, context=context)
+        receiver.input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # input_state is index into input_states OrderedDict, so get corresponding key and assign to input_state
@@ -899,7 +899,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     #    so try as key in input_states OrderedDict (i.e., as name of an inputState)
     if isinstance(state, str):
         try:
-            receiver.inputState[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
+            receiver.input_state[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -938,7 +938,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     # No inputState(s) yet, so create them
     except AttributeError:
         receiver.input_states = OrderedDict({input_state.name:input_state})
-        receiver.inputState = list(receiver.input_states)[0]
+        receiver.input_state = list(receiver.input_states)[0]
     input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
 
 def _add_projection_from(sender, state, projection_spec, receiver, context=None):

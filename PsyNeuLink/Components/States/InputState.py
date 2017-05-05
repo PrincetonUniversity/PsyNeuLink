@@ -401,7 +401,7 @@ def _instantiate_input_states(owner, context=None):
     If INPUT_STATES is not specified, use self.variable to create a default input state
     When completed:
         - self.input_states contains an OrderedDict of one or more input_states
-        - self.inputState contains the `primary inputState <Mechanism_InputStates>`:  first or only one in OrderedDict
+        - self.input_state contains the `primary inputState <Mechanism_InputStates>`:  first or only one in OrderedDict
         - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more input_states)
         - each inputState corresponds to an item in the variable of the owner's function
         - the value of all of the input_states is stored in a list in inputValue
@@ -454,10 +454,10 @@ def _instantiate_input_states(owner, context=None):
     # ??REPLACE THIS WITH owner.inputValue = list(owner.variable) * 0.0??
     owner.inputValue = owner.variable.copy() * 0.0
 
-    # Assign self.inputState to first inputState in dict
+    # Assign self.input_state to first inputState in dict
     try:
-        owner.inputState = list(owner.input_states.values())[0]
+        owner.input_state = list(owner.input_states.values())[0]
     except AttributeError:
-        owner.inputState = None
+        owner.input_state = None
 
 

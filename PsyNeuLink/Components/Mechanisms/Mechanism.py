@@ -188,7 +188,7 @@ InputStates
 ^^^^^^^^^^^
 
 These receive and represent the input to a mechanism. A mechanism usually has only one (**primary**) `inputState
-<InputState>, identified in its `inputState, <Mechanism_Base.inputState>` attribute.  However some mechanisms have
+<InputState>, identified in its `inputState, <Mechanism_Base.input_state>` attribute.  However some mechanisms have
 more  than one inputState. For example, a `ComparatorMechanism` has one inputState for its `sample` and another for its
 `target` input. If a mechanism has more than one inputState, they are identified in an OrderedDict in the mechanism's
 `input_states <Mechanism_Base.input_states>` attribute (note the plural).
@@ -640,7 +640,7 @@ class Mechanism_Base(Mechanism):
         a dictionary of the mechanism's `input_states <Mechanism_InputStates>`.
         The key of each entry is the name of an inputState, and its value is the inputState.
         There is always at least one entry, which identifies the mechanism's primary inputState
-        (i.e., the one in the its `inputState <Mechanism_Base.inputState>` attribute).
+        (i.e., the one in the its `inputState <Mechanism_Base.input_state>` attribute).
 
     inputValue : List[List or 1d np.array] : default variableInstanceDefault
         a list of values, one for each `inputState <Mechanism_InputStates>` in the mechanism's
@@ -1285,17 +1285,17 @@ class Mechanism_Base(Mechanism):
             Update inputState(s) and parameter(s), call subclass _execute, update outputState(s), and assign self.value
 
             Execution sequence:
-            - Call self.inputState.execute() for each entry in self.input_states:
-                + execute every self.inputState.receivesFromProjections.[<Projection>.execute()...]
-                + aggregate results using self.inputState.params[FUNCTION]()
-                + store the result in self.inputState.value
+            - Call self.input_state.execute() for each entry in self.input_states:
+                + execute every self.input_state.receivesFromProjections.[<Projection>.execute()...]
+                + aggregate results using self.input_state.params[FUNCTION]()
+                + store the result in self.input_state.value
             - Call every self.params[<ParameterState>].execute(); for each:
                 + execute self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
                     (usually this is just a single ControlProjection)
                 + aggregate results (if > one) using self.params[<ParameterState>].params[FUNCTION]()
                 + apply the result to self.params[<ParameterState>].value
             - Call subclass' self.execute(params):
-                - use self.inputState.value as its variable,
+                - use self.input_state.value as its variable,
                 - use params[kw<*>] or self.params[<ParameterState>].value for each param of subclass self.execute,
                 - apply the output to self.outputState.value
                 Note:
@@ -1781,7 +1781,7 @@ class Mechanism_Base(Mechanism):
     #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
     #     """
     #
-    #     self._instantiate_defaults(self.inputState, params)
+    #     self._instantiate_defaults(self.input_state, params)
     # # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
     #     return self.outputState.value
 
@@ -1850,6 +1850,14 @@ class Mechanism_Base(Mechanism):
         except:
             self._status = CHANGED
 
+
+    @property
+    def inputState(self):
+        return self._inputState
+
+    @inputState.setter
+    def inputState(self, assignment):
+        self._inputState = assignment
 
     @property
     def inputState(self):

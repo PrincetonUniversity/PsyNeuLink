@@ -114,9 +114,9 @@ COMMENT:
                 Assign:
                     NOTE:  should do these in their own Learning module function, called by LearningMechanaism directly
                         as is done for ObjectiveMechanism
-                    MappingProjection: activation_mech_projection.sender -> LearningMechanism.inputState[ACTIVATION_INPUT]
-                    MappingProjection: activation_mech.outputState -> LearningMechanism.inputState[ACTIVATION_OUTPUT]
-                    MappingProjection: ObjectiveMechanism -> LearningMechanism.inputState[ERROR_SIGNAL]
+                    MappingProjection: activation_mech_projection.sender -> LearningMechanism.input_state[ACTIVATION_INPUT]
+                    MappingProjection: activation_mech.outputState -> LearningMechanism.input_state[ACTIVATION_OUTPUT]
+                    MappingProjection: ObjectiveMechanism -> LearningMechanism.input_state[ERROR_SIGNAL]
 
 
 COMMENT
@@ -503,7 +503,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             objective_mechanism._learning_role = TARGET
 
         try:
-            lc.error_projection = objective_mechanism.inputState.receivesFromProjections[0]
+            lc.error_projection = objective_mechanism.input_state.receivesFromProjections[0]
             # FIX: THIS IS TO FORCE ASSIGNMENT (SINCE IT DOESN'T SEEM TO BE ASSIGNED BY TEST BELOW)
         except AttributeError:
             raise LearningAuxilliaryError("PROGRAM ERROR: problem finding projection to TARGET ObjectiveMechanism "
