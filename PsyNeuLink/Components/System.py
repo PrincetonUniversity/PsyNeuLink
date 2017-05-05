@@ -1222,7 +1222,7 @@ class System_Base(System):
                                 # itself!
                                  projection.receiver.owner is sender_mech
                             for projection in output_state.sendsToProjections)
-                        for output_state in sender_mech.outputStates.values())):
+                        for output_state in sender_mech.output_states.values())):
                 try:
                     if sender_mech.systems[self] is ORIGIN:
                         sender_mech.systems[self] = SINGLETON
@@ -1232,7 +1232,7 @@ class System_Base(System):
                     sender_mech.systems[self] = TERMINAL
                 return
 
-            for outputState in sender_mech.outputStates.values():
+            for outputState in sender_mech.output_states.values():
 
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
@@ -1653,7 +1653,7 @@ class System_Base(System):
                     # and reassign learning_mech.function_object.error_matrix
                     #     (to the one for the projection to which error_signal_mech projects)
                     else:
-                        mp = MappingProjection(sender=error_signal_mech.outputStates[ERROR_SIGNAL],
+                        mp = MappingProjection(sender=error_signal_mech.output_states[ERROR_SIGNAL],
                                                receiver=learning_mech.input_states[ERROR_SIGNAL],
                                                matrix=IDENTITY_MATRIX)
                         if mp is None:
@@ -1663,7 +1663,7 @@ class System_Base(System):
 
                         # Reassign error_matrix to one for the projection to which the error_signal_mech projects
                         learning_mech.function_object.error_matrix = \
-                            error_signal_mech.outputStates['learning_signal'].sendsToProjections[0].receiver
+                            error_signal_mech.output_states['learning_signal'].sendsToProjections[0].receiver
                         # Delete error_matrix parameterState for error_matrix
                         #    (since its value, which was the IDENTITY_MATRIX, is now itself ParameterState,
                         #     and Components are not allowed  as the value of a ParameterState
@@ -1690,7 +1690,7 @@ class System_Base(System):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
-            for outputState in sender_mech.outputStates.values():
+            for outputState in sender_mech.output_states.values():
 
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
@@ -1844,7 +1844,7 @@ class System_Base(System):
 
         """
         for mech in self.terminalMechanisms.mechanisms:
-            self.outputStates[mech.name] = mech.outputStates
+            self.output_states[mech.name] = mech.output_states
 
     def initialize(self):
         """Assign :py:data:`initial_values <System_Base.initialize>` to mechanisms designated as \
@@ -2297,7 +2297,7 @@ class System_Base(System):
             from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import TARGET_MSE
             for mech in self.targetMechanisms:
                 print("\n- MSE: {:0.3}".
-                      format(float(mech.outputStates[TARGET_MSE].value)))
+                      format(float(mech.output_states[TARGET_MSE].value)))
 
 
     # TBI:
@@ -2404,7 +2404,7 @@ class System_Base(System):
         print ("\n\tTerminal mechanisms: ".format(self.name))
         for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
             print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
-            for output_state_name in mech_tuple.mechanism.outputStates:
+            for output_state_name in mech_tuple.mechanism.output_states:
                 print("\t\t\t{0}".format(output_state_name))
 
         # if any(process.learning for process in self.processes):
@@ -2472,7 +2472,7 @@ class System_Base(System):
         output_value_array = []
         for mech in list(self.terminalMechanisms.mechanisms):
             output_value_array.append(mech.outputValue)
-            for name in mech.outputStates:
+            for name in mech.output_states:
                 output_state_names.append(name)
         output_value_array = np.array(output_value_array)
 
@@ -2488,7 +2488,7 @@ class System_Base(System):
                             controlled_parameters.append(parameter_state)
                 except AttributeError:
                     pass
-            for output_state in mech.outputStates:
+            for output_state in mech.output_states:
                 try:
                     for projection in output_state.sendsToProjections:
                         for parameter_state in projection.paramaterStates:

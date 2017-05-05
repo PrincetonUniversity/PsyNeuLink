@@ -371,7 +371,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=Transfer_DEFAULT_BIAS,
-                 output_states=None,
+                 # output_states=None,
                  # input_states=None,
                  size:tc.optional(int)=None,
                  function=Linear,
@@ -390,7 +390,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
-                                                  output_states=output_states,
+                                                  # output_states=output_states,
                                                   # input_states=input_states,
                                                   noise=noise,
                                                   time_constant=time_constant,

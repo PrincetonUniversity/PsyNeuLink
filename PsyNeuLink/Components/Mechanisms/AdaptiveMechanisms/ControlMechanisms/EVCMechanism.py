@@ -1074,7 +1074,7 @@ class EVCMechanism(ControlMechanism_Base):
             # PARSE OUTPUT STATE'S SPECS
 
             # for output_state_name, output_state in list(mech.outputStates.items()):
-            for output_state_name, output_state in mech.outputStates.items():
+            for output_state_name, output_state in mech.output_states.items():
 
                 # Get MONITOR_FOR_CONTROL specification from outputState
                 try:
@@ -1111,14 +1111,14 @@ class EVCMechanism(ControlMechanism_Base):
                         local_specs.append(item)
 
             # Ignore MonitoredOutputStatesOption if any outputStates are explicitly specified for the mechanism
-            for output_state_name, output_state in list(mech.outputStates.items()):
+            for output_state_name, output_state in list(mech.output_states.items()):
                 if (output_state in local_specs or output_state.name in local_specs):
                     option_spec = None
 
 
             # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO self.monitored_output_states
 
-            for output_state_name, output_state in list(mech.outputStates.items()):
+            for output_state_name, output_state in list(mech.output_states.items()):
 
                 # If outputState is named or referenced anywhere, include it
                 if (output_state in local_specs or output_state.name in local_specs):
@@ -1230,7 +1230,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                 context=context)
 
         # Assign controlSignals in the order they are stored of OutputStates
-        self.controlSignals = [self.outputStates[state_name] for state_name in self.outputStates.keys()]
+        self.controlSignals = [self.output_states[state_name] for state_name in self.output_states.keys()]
 
         # # TEST PRINT
         # print("\n{}.controlSignals: ".format(self.name))

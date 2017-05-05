@@ -712,7 +712,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     # IMPLEMENTATION NOTE: Assumes that the LearningMechanism projects to and modifies only a single MappingProjection
     @property
     def learned_projection(self):
-        learning_projections = self.outputStates[LEARNING_SIGNAL].sendsToProjections
+        learning_projections = self.output_states[LEARNING_SIGNAL].sendsToProjections
         if learning_projections:
             return learning_projections[0].receiver.owner
         else:
@@ -742,7 +742,7 @@ def _instantiate_error_signal_projection(sender, receiver):
     if isinstance(sender, ObjectiveMechanism):
         sender = sender.outputState
     elif isinstance(sender, LearningMechanism):
-        sender = sender.outputStates[ERROR_SIGNAL]
+        sender = sender.output_states[ERROR_SIGNAL]
     else:
         raise LearningMechanismError("Sender of the error signal projection {} must be either "
                                      "an ObjectiveMechanism or a LearningMechanism".

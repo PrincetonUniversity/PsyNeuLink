@@ -369,5 +369,5 @@ class LCA(RecurrentTransferMechanism):
             others = x_part[:-1]
             return max_val - np.mean(others)
 
-        self.outputStates[MAX_VS_NEXT].calculate = max_vs_next
-        self.outputStates[MAX_VS_AVG].calculate = max_vs_avg
+        self.output_states[MAX_VS_NEXT].calculate = max_vs_next
+        self.output_states[MAX_VS_AVG].calculate = max_vs_avg

@@ -429,7 +429,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
         else:
             error_output = np.zeros_like(lc.error_mech_output.value)
-            error_signal = np.zeros_like(lc.error_signal_mech.outputStates[ERROR_SIGNAL].value)
+            error_signal = np.zeros_like(lc.error_signal_mech.output_states[ERROR_SIGNAL].value)
             error_matrix = lc.error_matrix
             try:
                 error_derivative = lc.error_derivative
@@ -775,7 +775,7 @@ class LearningComponents(object):
             # If MONITOR_FOR_LEARNING specifies an outputState, use that
             try:
                 sample_state_name = self.activation_mech.paramsCurrent[MONITOR_FOR_LEARNING]
-                self.activation_mech_output = self.activation_mech.outputStates[sample_state_name]
+                self.activation_mech_output = self.activation_mech.output_states[sample_state_name]
                 if not isinstance(self.activation_mech_output, OutputState):
                     raise LearningAuxilliaryError("The specification of the MONITOR_FOR_LEARNING parameter ({}) "
                                                   "for {} is not an outputState".
@@ -1042,7 +1042,7 @@ class LearningComponents(object):
                                                          self.error_signal_mech_output.name))
             elif isinstance(self.error_signal_mech, LearningMechanism):
                 try:
-                    self.error_signal_mech_output = self.error_signal_mech.outputStates[ERROR_SIGNAL]
+                    self.error_signal_mech_output = self.error_signal_mech.output_states[ERROR_SIGNAL]
                 except AttributeError:
                     raise LearningAuxilliaryError("error_signal_mech_output not identified: error_signal_mech ({})"
                                                   "does not appear to have an ERROR_SIGNAL outputState".

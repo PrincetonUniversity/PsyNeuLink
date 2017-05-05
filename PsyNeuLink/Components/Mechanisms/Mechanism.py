@@ -1518,12 +1518,12 @@ class Mechanism_Base(Mechanism):
                 self.input_states[state].value = self.input_states[state].variable
             for state in self.parameterStates:
                 self.parameterStates[state].value =  self.parameterStates[state].baseValue
-            for state in self.outputStates:
+            for state in self.output_states:
                 # Zero outputStates in case of recurrence:
                 #    don't want any non-zero values as a residuum of initialization runs to be
                 #    transmittted back via recurrent projections as initial inputs
 # FIX: IMPLEMENT zero_all_values METHOD
-                self.outputStates[state].value = self.outputStates[state].value * 0.0
+                self.output_states[state].value = self.output_states[state].value * 0.0
         #endregion
 
         #endregion
@@ -1661,13 +1661,13 @@ class Mechanism_Base(Mechanism):
         """Execute function for each outputState and assign result of each to corresponding item of self.outputValue
 
         """
-        for i in range(len(self.outputStates)):
-            state = list(self.outputStates.values())[i]
+        for i in range(len(self.output_states)):
+            state = list(self.output_states.values())[i]
             state.update(params=runtime_params, time_scale=time_scale, context=context)
             # self.outputValue[i] = state.value
 
         # Assign value of each outputState to corresponding item in self.outputValue
-        self.outputValue = list(state.value for state in list(self.outputStates.values()))
+        self.outputValue = list(state.value for state in list(self.output_states.values()))
 
 
     def initialize(self, value):
@@ -1977,7 +1977,7 @@ class MechanismList(UserList):
         """Return names of all outputStates for all mechanisms in MechanismList"""
         names = []
         for item in self.mechanisms:
-            for output_state in item.outputStates:
+            for output_state in item.output_states:
                 names.append(output_state)
         return names
 
@@ -1986,6 +1986,6 @@ class MechanismList(UserList):
         """Return values of outputStates for all mechanisms in MechanismList"""
         values = []
         for item in self.mechanisms:
-            for output_state_name, output_state in list(item.outputStates.items()):
+            for output_state_name, output_state in list(item.output_states.items()):
                 values.append(output_state.value)
         return values
