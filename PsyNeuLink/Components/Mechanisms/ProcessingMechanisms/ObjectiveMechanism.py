@@ -651,7 +651,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         #  Update inputState and input_states
         try:
             self.input_states[input_state.name] = input_state
-        except AttributeError:
+        except (AttributeError, TypeError):
             self.input_states = OrderedDict({input_state_name:input_state})
             self.inputState = list(self.input_states.values())[0]
 
