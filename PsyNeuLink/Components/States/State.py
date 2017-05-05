@@ -1462,7 +1462,7 @@ def _instantiate_state_list(owner,
                            constraint_value,       # value(s) used as default for state and to check compatibility
                            constraint_value_name,  # name of constraint_value type (e.g. variable, output...)
                            context=None):
-    """Instantiate and return an OrderedDictionary of States specified in state_list
+    """Instantiate and return a StateList of states specified in state_list
 
     Arguments:
     - state_type (class): State class to be instantiated
@@ -1502,18 +1502,11 @@ def _instantiate_state_list(owner,
             assign it to the sole state, which is assumed to have a multi-item value
         * if there is more than one state:
             the number of states must match length of mechanisms state_type value or an exception is raised
-
-    :param state_type:
-    :param state_param_identifier:
-    :param constraint_value:
-    :param constraint_value_name:
-    :param context:
-    :return:
     """
 
     state_entries = state_list
 
-    # If kwMechanism<*>States is None, instantiate a default state_type using constraint_value
+    # If no states were passed in, instantiate a default state_type using constraint_value
     if not state_entries:
         # assign constraint_value as single item in a list, to be used as state_spec below
         state_entries = constraint_value
@@ -1526,8 +1519,8 @@ def _instantiate_state_list(owner,
                                          constraint_value_name,
                                          constraint_value))
 
-    # kwMechanism<*>States should now be either a list (possibly constructed in _validate_params) or an OrderedDict:
-    if isinstance(state_entries, (list, OrderedDict, np.ndarray)):
+    # States should now be either in a list (possibly constructed in _validate_params) or an OrderedDict:
+    if isinstance(state_entries, (list, OrderedDict, StateList, np.ndarray)):
 
         # VALIDATE THAT NUMBER OF STATES IS COMPATIBLE WITH NUMBER OF CONSTRAINT VALUES
         num_states = len(state_entries)
