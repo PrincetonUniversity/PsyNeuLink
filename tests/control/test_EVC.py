@@ -9,8 +9,6 @@ from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.scheduling.condition import AfterNCalls
 import numpy as np
 import random
-random.seed(0)
-np.random.seed(0)
 
 def test_EVC():
     # Mechanisms
@@ -70,8 +68,10 @@ def test_EVC():
     )
 
     # Stimuli
-    stim_list_dict = {Input:[0.5, 0.123],
-                      Reward:[20, 20]}
+    stim_list_dict = {
+        Input:[0.5, 0.123],
+        Reward:[20, 20]
+    }
 
     mySystem.run(
         inputs=stim_list_dict,
