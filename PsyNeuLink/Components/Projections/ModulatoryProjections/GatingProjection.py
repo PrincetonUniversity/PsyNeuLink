@@ -317,7 +317,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
         """
         if isinstance(self.receiver, Mechanism):
-            self.receiver = self.receiver.inputState
+            self.receiver = self.receiver.input_state
 
         super()._instantiate_receiver(context=context)
 

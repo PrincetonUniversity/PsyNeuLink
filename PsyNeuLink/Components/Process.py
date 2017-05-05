@@ -976,7 +976,7 @@ class Process_Base(Process):
         Iterate through Pathway, assigning Projections to Mechanisms:
             - first Mechanism in Pathway:
                 if it does NOT already have any projections:
-                    assign projection(s) from ProcessInputState(s) to corresponding Mechanism.inputState(s):
+                    assign projection(s) from ProcessInputState(s) to corresponding Mechanism.input_state(s):
                 if it DOES already has a projection, and it is from:
                     (A) the current Process input, leave intact
                     (B) another Process input, if verbose warn
@@ -1272,7 +1272,7 @@ class Process_Base(Process):
                     mech = item
 
                     # Check if first Mechanism already has any projections and, if so, issue appropriate warning
-                    if mech.inputState.receivesFromProjections:
+                    if mech.input_state.receivesFromProjections:
                         self._issue_warning_about_existing_projections(mech, context)
 
                     # Assign input projection from Process
@@ -1340,7 +1340,7 @@ class Process_Base(Process):
     # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
 
                     # PRECEDING ITEM IS A MECHANISM
-                    projection_list = item.inputState.receivesFromProjections
+                    projection_list = item.input_state.receivesFromProjections
                     projection_found = False
                     for projection in projection_list:
                         # Current mechanism DOES receive a projection from the preceding item
@@ -1553,7 +1553,7 @@ class Process_Base(Process):
     def _issue_warning_about_existing_projections(self, mechanism, context=None):
 
         # Check where the projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
-        for projection in mechanism.inputState.receivesFromProjections:
+        for projection in mechanism.input_state.receivesFromProjections:
 
             # Projection to first Mechanism in Pathway comes from a Process input
             if isinstance(projection.sender, ProcessInputState):
@@ -1620,15 +1620,15 @@ class Process_Base(Process):
         """Create projection(s) for each item in Process input to inputState(s) of the specified Mechanism
 
         For each item in Process input:
-        - create process_input_state, as sender for MappingProjection to the mechanism.inputState
+        - create process_input_state, as sender for MappingProjection to the mechanism.input_state
         - create the MappingProjection (with process_input_state as sender, and mechanism as receiver)
 
         If len(Process.input) == len(mechanism.variable):
-            - create one projection for each of the mechanism.inputState(s)
+            - create one projection for each of the mechanism.input_state(s)
         If len(Process.input) == 1 but len(mechanism.variable) > 1:
             - create a projection for each of the mechanism.input_states, and provide Process.input[value] to each
         If len(Process.input) > 1 but len(mechanism.variable) == 1:
-            - create one projection for each Process.input[value] and assign all to mechanism.inputState
+            - create one projection for each Process.input[value] and assign all to mechanism.input_state
         Otherwise,  if len(Process.input) != len(mechanism.variable) and both > 1:
             - raise exception:  ambiguous mapping from Process input values to mechanism's input_states
 
@@ -1681,7 +1681,7 @@ class Process_Base(Process):
         # If there is the same number of Process input values and mechanism.input_states, assign one to each
         if num_process_inputs == num_mechanism_input_states:
             for i in range(num_mechanism_input_states):
-                # Insure that each Process input value is compatible with corresponding variable of mechanism.inputState
+                # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
                 # MODIFIED 4/3/17 NEW:
                 input_state_variable = list(mechanism.input_states.values())[i].variable
                 # MODIFIED 4/3/17 END
@@ -1689,7 +1689,7 @@ class Process_Base(Process):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                        "variable for corresponding inputState of {3}".
                                        format(i, process_input[i], self.name, mechanism.name))
-                # Create MappingProjection from Process input state to corresponding mechanism.inputState
+                # Create MappingProjection from Process input state to corresponding mechanism.input_state
                 MappingProjection(sender=self.processInputStates[i],
                         receiver=list(mechanism.input_states.items())[i][1],
                         name=self.name+'_Input Projection',
@@ -1701,8 +1701,8 @@ class Process_Base(Process):
         # If the number of Process inputs and mechanism.input_states is unequal, but only a single of one or the other:
         # - if there is a single Process input value and multiple mechanism.input_states,
         #     instantiate a single Process input state with projections to each of the mechanism.input_states
-        # - if there are multiple Process input values and a single mechanism.inputState,
-        #     instantiate multiple Process input states each with a projection to the single mechanism.inputState
+        # - if there are multiple Process input values and a single mechanism.input_state,
+        #     instantiate multiple Process input states each with a projection to the single mechanism.input_state
         else:
             for i in range(num_mechanism_input_states):
                 for j in range(num_process_inputs):
@@ -1711,7 +1711,7 @@ class Process_Base(Process):
                                            "variable ({3}) for inputState {4} of {5}".
                                            format(j, process_input[j], self.name,
                                                   mechanism.variable[i], i, mechanism.name))
-                    # Create MappingProjection from Process buffer_intput_state to corresponding mechanism.inputState
+                    # Create MappingProjection from Process buffer_intput_state to corresponding mechanism.input_state
                     MappingProjection(sender=self.processInputStates[j],
                             receiver=list(mechanism.input_states.items())[i][1],
                             name=self.name+'_Input Projection')

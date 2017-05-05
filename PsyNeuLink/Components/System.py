@@ -1486,21 +1486,21 @@ class System_Base(System):
 
             # Skip if ORIGIN mechanism already has a projection from a SystemInputState in current system
             # (this avoids duplication from multiple passes through _instantiate_graph)
-            if any(self is projection.sender.owner for projection in origin_mech.inputState.receivesFromProjections):
+            if any(self is projection.sender.owner for projection in origin_mech.input_state.receivesFromProjections):
                 continue
 
             # Check, for each ORIGIN mechanism, that the length of the corresponding item of self.variable matches the
             # length of the ORIGIN inputState's variable attribute
-            if len(self.variable[i]) != len(origin_mech.inputState.variable):
+            if len(self.variable[i]) != len(origin_mech.input_state.variable):
                 raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
                                   "corresponding ORIGIN mechanism ()".
                                    format(i,
                                           len(self.variable[i]),
-                                          len(origin_mech.inputState.variable),
+                                          len(origin_mech.input_state.variable),
                                           origin_mech.name))
 
             stimulus_input_state = SystemInputState(owner=self,
-                                                        variable=origin_mech.inputState.variable,
+                                                        variable=origin_mech.input_state.variable,
                                                         prefs=self.prefs,
                                                         name="System Input {}".format(i))
             self.stimulusInputStates.append(stimulus_input_state)
@@ -2753,7 +2753,7 @@ class System_Base(System):
         if show_control:
             controller = self.controller
 
-            connector = controller.inputState.receivesFromProjections[0]
+            connector = controller.input_state.receivesFromProjections[0]
             objmech = connector.sender.owner
 
             # main edge

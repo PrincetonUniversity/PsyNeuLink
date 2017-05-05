@@ -847,7 +847,7 @@ class DDM(ProcessingMechanism_Base):
 
             # # TEST PRINT:
             # print ("\nDDM RUN")
-            # print ("stimulus: {}".format(self.inputState.value))
+            # print ("stimulus: {}".format(self.input_state.value))
             # print ("control signal: {}\n".format(self.parameterStates[DRIFT_RATE].value))
 
             # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)

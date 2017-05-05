@@ -149,7 +149,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
         Extend self.variable by one item to accommodate new inputState
         Instantiate the inputState using input_state_name and input_state_value
-        Update self.inputState and self.input_states
+        Update self.input_state and self.input_states
 
         Args:
             input_state_name (str):
@@ -211,7 +211,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
             self.input_states[input_state.name] = input_state
         else:
             self.input_states = OrderedDict({input_state_name:input_state})
-            self.inputState = list(self.input_states.values())[0]
+            self.input_state = list(self.input_states.values())[0]
 
         self.inputValue = list(state.value for state in self.input_states.values())
 

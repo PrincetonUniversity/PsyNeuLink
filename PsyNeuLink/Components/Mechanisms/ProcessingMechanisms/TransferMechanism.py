@@ -611,14 +611,14 @@ class TransferMechanism(ProcessingMechanism_Base):
             if not self.integrator_function:
 
                 self.integrator_function = Integrator(
-                                            self.inputState.value,
+                                            self.input_state.value,
                                             initializer = self.previous_input,
                                             integration_type= ADAPTIVE,
                                             noise = self.noise,
                                             rate = self.time_constant
                                             )
 
-            current_input = self.integrator_function.execute(self.inputState.value,
+            current_input = self.integrator_function.execute(self.input_state.value,
                                                         # Should we handle runtime params?
                                                              # params={INITIALIZER: self.previous_input,
                                                              #         INTEGRATION_TYPE: ADAPTIVE,
@@ -639,7 +639,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 else:
                     noise = noise()
 
-            current_input = self.inputState.value + noise
+            current_input = self.input_state.value + noise
         else:
             raise MechanismError("time_scale not specified for TransferMechanism")
 

@@ -1381,7 +1381,7 @@
 #           All other Function objects: value is always 1D np.array
 #    - Mechanism.value is always an indexible object of which the first item is a 1D np.array
 #               (corresponding to the value of Mechanism.outputState and Mechanism.outputStates.items()[0]
-#     Mechanism.variable[i] <-> Mechanism.inputState.items()e[i]
+#     Mechanism.variable[i] <-> Mechanism.input_state.items()e[i]
 #     Mechanism.value[i] <-> Mechanism.ouptputState.items()e[i]
 #    - variable = input, value = output
 #    - Function.variable and Function.value are always converted to 2D np.ndarray
@@ -2444,7 +2444,7 @@
     # value (variable) == owner's functionOutputValue since that is where it gets it's value
     #    -- ?? should also do this in Mechanism, as per inputState:
                 # See:
-                # Validate self.inputState.value against variable for FUNCTION
+                # Validate self.input_state.value against variable for FUNCTION
                 # Note:  this is done when inputState is first assigned,
                 #        but needs to be done here in case FUNCTION is changed
     # uses MappingProjetion as default projection
@@ -2474,7 +2474,7 @@
 # QUESTION:  WHERE DOES THIS BELONG (WHERE IS InputState USED AS VARIABLE OR ASSIGNMENT SPECIFICATION)??
 #            (WAS IN Initialization arguments: UNDER __init_ FOR Mechanism_Base)
 #             - variable : value, InputState or specification dict for one
-#                       if value, it will be used as variable (template of self.inputState.value)
+#                       if value, it will be used as variable (template of self.input_state.value)
 #                       if State or specification dict, it's value attribute will be used
 
 # QUESTION:  WHERE DOES THIS BELONG (WHERE ARE ParameterStates SPECIFIED FOR ASSIGNMENT)??
@@ -2672,7 +2672,7 @@
 #                                popls = pop.parameterState.receivesFromProjections[0]
 #                            preceding ErrorMonitoringMechanism (pem):
 #                                pem = popls.sender.owner
-#                            assign MappingProjection from pem.outputState to self.inputState
+#                            assign MappingProjection from pem.outputState to self.input_state
 #                        - Get weight matrix for pop (pwm):
 #                                pwm = pop.parameterState.params[MATRIX]
 #    - update: compute weight changes based on errorSignal received rom ErrorMonitor Mechanism and pwm
@@ -2999,7 +2999,7 @@
 #endregion
 
 #region EVCMechanism -----------------------------------------------------------------------------------
-#     Validate that EVCMechanism.inputState matches outputState from EVCMechanism.monitoring_mechanism
+#     Validate that EVCMechanism.input_state matches outputState from EVCMechanism.monitoring_mechanism
 #     Allow it to take monitoring_mechanism as an argument
 #           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
 #     Make sure add_monitored_value works:
