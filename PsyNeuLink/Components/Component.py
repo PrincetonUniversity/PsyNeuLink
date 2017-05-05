@@ -16,8 +16,8 @@
 Overview
 --------
 
-Component is the base class for all of the objects used to create compositions (`processes <Process>` or
-`systems <System>`) in PsyNeuLink.  It defines a common set of attributes possessed, and methods used by all
+Component is the base class for all of the objects used to create compositions (`processes <Process>` or 
+`systems <System>`) in PsyNeuLink.  It defines a common set of attributes possessed, and methods used by all 
 component objects.
 
 .. _Component_Creation:
@@ -26,7 +26,7 @@ Creating a Component
 --------------------
 
 A Component is never created directly.  However, its __init__() method is always called when a subclass is instantiated;
-that, in turn, calls a standard set of methods (listed `below <Component_Methods>`) as part of the initialization
+that, in turn, calls a standard set of methods (listed `below <Component_Methods>`) as part of the initialization 
 procedure.
 
 .. _Component_Structure:
@@ -43,82 +43,82 @@ Every component has the following set of core attributes that govern its operati
 
 .. _Component_Variable:
 
-* **variable** - the value of the `variable <Component.variable>` attribute is used as the input to its
-  `function <Component.function>`.  Specification of the variable in the constructor for a component determines both
-  its format (e.g., whether it's value is numeric, its dimensionality and shape if it is an array, etc.) as well as
-  its default value (the value used when the component is executed and no input is provided).
+* **variable** - the value of the `variable <Component.variable>` attribute is used as the input to its 
+  `function <Component.function>`.  Specification of the variable in the constructor for a component determines both 
+  its format (e.g., whether it's value is numeric, its dimensionality and shape if it is an array, etc.) as well as 
+  its default value (the value used when the component is executed and no input is provided). 
 
 .. _Component_Function:
 
-* **function** - the `function <Component.function>` attribute determines the computation that a component carries out.
+* **function** - the `function <Component.function>` attribute determines the computation that a component carries out.  
   It is always a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink component).
-
+  
   .. note::
      The `function <Component.function>` of a component can be assigned either a `Function <Function>` object or any
-     other callable object in python.  If the latter is assigned, it will be "wrapped" in a `UserDefinedFunction`.
+     other callable object in python.  If the latter is assigned, it will be "wrapped" in a `UserDefinedFunction`.  
+  
+  All components have a default `function <Component.function>` (with a default set of parameters), that is used if it 
+  is not otherwise specified.  The `function <Component.function>` can be specified in the 
+  function argument of the constructor for the component, using one of the following: 
 
-  All components have a default `function <Component.function>` (with a default set of parameters), that is used if it
-  is not otherwise specified.  The `function <Component.function>` can be specified in the
-  function argument of the constructor for the component, using one of the following:
-
-    * **class** - this must be a subclass of `Function <Function>`, as in the following example::
+    * **class** - this must be a subclass of `Function <Function>`, as in the following example::   
 
         my_component = SomeComponent(function=SomeFunction)
-
-      This will create a default instance of the specified subclass, using default values for its parameters.
+      
+      This will create a default instance of the specified subclass, using default values for its parameters. 
     |
     * **Function** - this can be either an existing `Function <Function>` object or the constructor for one, as in the
       following examples:
-
+            
         my_component = SomeComponent(function=SomeFunction)
-
+        
         or
-
+        
         some_function = SomeFunction(some_param=1)
         my_component = SomeComponent(some_function)
-
-      The specified Function will be used as a template to create a new Function object that is assigned to the
-      `function_object` attribute of the component, the `function <Function.function>` of which will be assigned as
+        
+      The specified Function will be used as a template to create a new Function object that is assigned to the 
+      `function_object` attribute of the component, the `function <Function.function>` of which will be assigned as  
       the 'function <Component.function>` attribute of the component.
-
+    
       .. note::
-
-        In the current implementation of PsyNeuLink, if a `Function <Function>` object (or the constructor for one) is
-        used to specify the `function <Component.function>` attribute of a component, the Function object specified (or
-        created) is used to determine attributes of the Function object created for and assigned to the component, but
-        is not *itself* assigned to the component.  This is so that `Functions <Function>` can be used as templates for
+      
+        In the current implementation of PsyNeuLink, if a `Function <Function>` object (or the constructor for one) is 
+        used to specify the `function <Component.function>` attribute of a component, the Function object specified (or 
+        created) is used to determine attributes of the Function object created for and assigned to the component, but  
+        is not *itself* assigned to the component.  This is so that `Functions <Function>` can be used as templates for 
         more than one component, without being assigned simultaneously to multiple components.
 
-  A `function <Component.function>` can also be specified in an entry of a
+  A `function <Component.function>` can also be specified in an entry of a 
   `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the 
   **params** argument of the constructor for the component, with the keyword FUNCTION as its key, and one of the 
   specifications above as its value, as in the following example::  
 
         my_component = SomeComponent(params={FUNCTION:SomeFunction(some_param=1)})
 
-* **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters
+* **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters 
   for the component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and
   its value the value of that parameter.  This dictionary is read-only. Changes to the value of the function's
   parameters must be made by assigning a value to the corresponding attribute of the component's
   `function_object <Component.function_object>` attribute (e.g., myMechanism.function_object.my_parameter),
   or in a FUNCTION_PARAMS dict using its `assign_params` method.  The parameters for the function can be specified
   when the component is created in one of the following ways:
-
+  
   * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>` argument,
     as in the following example::
 
         my_component = SomeComponent(function=SomeFunction(some_param=1, some_param=2)
 
   * in an argument of the **component's constructor** -- if all of the allowable functions for a component's
-    `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear
+    `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear 
     as arguments in the constructor of the component itself, which can be used to set their values.
 
   * in an entry of a `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the 
     **params** argument of the constructor for the component.  The entry must use the keyword 
     FUNCTION_PARAMS as its key, and its value must be a dictionary containing the parameters and their values.
-    The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the
+    The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the 
     parameter's value, as in the example below::
-
+    
         my_component = SomeComponent(function=SomeFunction
                                      params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
 
@@ -131,9 +131,9 @@ Every component has the following set of core attributes that govern its operati
   The Function's `function <Function.function>` is assigned to the `function <Component>` attribute of the
   component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
   those parameters (see `function_params <Component.function_params>` above).
-
+    
 .. _Component_User_Params:
-
+        
 * **user_params** - the `user_params` attribute contains a dictionary of all of the user-modifiable attributes for the
   the component.  This dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
   value to the attribute directly, or using the component's `assign_params` method.
@@ -145,17 +145,17 @@ COMMENT:
     * **paramInstanceDefaults**
 COMMENT
 
-* **value** - the `value <Component.value>` attribute contains the result (return value) of the component's
+* **value** - the `value <Component.value>` attribute contains the result (return value) of the component's 
   `function <Component.function>` after the function is called.
 ..
-* **name** - the `name <Component.name>` attribute contains the name assigned to the component when it was created.
-  If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for
+* **name** - the `name <Component.name>` attribute contains the name assigned to the component when it was created.  
+  If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for 
   conventions used in assigning default names and handling of duplicate names).
 ..
 * **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the component when
   it was created.  If it was not specified, a default is assigned using `classPreferences` defined in __init__.py
   Each individual preference is accessible as an attribute of the component, the name of which is the name of the
-  preference (see `PreferenceSet <LINK>` for details).
+  preference (see `PreferenceSet <LINK>` for details).  
 
 COMMENT:
 * **log**
@@ -275,7 +275,7 @@ COMMENT
 
 """
 
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 
@@ -544,11 +544,6 @@ class Component(object):
         - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
-        :param variable_default: (anything but a dict) - value to assign as variableInstanceDefault
-        :param param_defaults: (dict) - params to be assigned to paramInstanceDefaults
-        :param log: (ComponentLog enum) - log entry types set in self.componentLog
-        :param name: (string) - optional, overrides assignment of default (componentName of subclass)
-        :return:
         """
 
         # # MODIFIED 8/14/16 NEW:
@@ -578,18 +573,16 @@ class Component(object):
             self.componentName = self.componentName or self.componentType
         except AttributeError:
             self.componentName = self.componentType
-        #endregion
 
-        #region ENFORCE REGISRY
+        # ENFORCE REGISRY
         if self.__class__.__bases__[0].__bases__[0].__bases__[0].__name__ is 'ShellClass':
             try:
                 self.__class__.__bases__[0].registry
             except AttributeError:
                 raise ComponentError("{0} is a category class and so must implement a registry".
                                     format(self.__class__.__bases__[0].__name__))
-        #endregion
 
-        #region ASSIGN PREFS
+        # ASSIGN PREFS
 
         # If a PreferenceSet was provided, assign to instance
         if isinstance(prefs, PreferenceSet):
@@ -598,45 +591,16 @@ class Component(object):
         # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
         else:
             self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
-        #endregion
 
-        # MODIFIED 9/11/16 NEW:
-        # IMPLEMENTATION NOTE:  This is nice and all, but:
-        #                       - property version only works for getter, and for class (can't access instance values)
-        #                       - attribute version works for getter, but setter sets the attribute and not the pref
-        #                       So, for now, hard coding property setters and getters for each preference (see below)
-        # Assign prefs to attributes on object
-        # for pref in self.prefs.prefsList:
-            # # Generate attribute for each pref that returns value of the pref
-            # PROBLEM: MAKING AN ASSIGNMENT TO THE ATTRIBUTE WILL NOT AFFECT THE PREFERENCE, JUST THIS ATTRIBUTE
-            # setattr(self,
-            #         underscore_to_camelCase(pref),
-            #         getattr(getattr(self, 'prefs'), underscore_to_camelCase(pref)))
-            # PROBLEM: THIS REQUIRES THAT THE PROPERTY IS PUT ON THE CLASS, WHICH GENERATES UNDESIRABLE BEHAVIORS
-            #          ALSO, SETTER WON'T WORK PROPERLY HERE EITHER
-            # # IMPLEMENT: WITHOUT SETTER:
-            # setattr(type(self),
-            #         underscore_to_camelCase(pref),
-            #         property(lambda self: getattr(getattr(self, 'prefs'), underscore_to_camelCase(pref))))
-            # # IMPLEMENT: WITH SETTER:
-            # pref_name = underscore_to_camelCase(pref)
-            # setattr(type(self),
-            #         pref_name,
-            #         property(lambda self: getattr(getattr(self, 'prefs'), pref_name),
-            #                  lambda self, value: setattr(getattr(getattr(self, 'prefs'), pref_name),
-            #                                              pref_name,
-            #                                              value)))
-        # MODIFIED 9/11/16 END
+        # ASSIGN LOG
 
-        #region ASSIGN LOG
         self.log = Log(owner=self)
         self.recording = False
         # Used by run to store return value of execute
         self.results = []
-        #endregion
 
 
-        #region ENFORCE REQUIRED CLASS DEFAULTS
+        # ENFORCE REQUIRED CLASS DEFAULTS
 
         # All subclasses must implement variableClassDefault
         # Do this here, as _validate_variable might be overridden by subclass
@@ -647,9 +611,8 @@ class Component(object):
         except AttributeError:
             raise ComponentError("variableClassDefault must be defined for {} or its base class".
                                 format(self.componentName))
-        #endregion
 
-        #region CHECK FOR REQUIRED PARAMS
+        # CHECK FOR REQUIRED PARAMS
 
         # All subclasses must implement, in their paramClassDefaults, params of types specified in
         #     requiredClassParams (either above or in subclass defintion)
@@ -683,9 +646,10 @@ class Component(object):
                                         format(required_param_value.__name__, required_param, self.name, type_names))
             except TypeError:
                 pass
-        #endregion
 
-        #region ASSIGN DEFAULTS
+
+        # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
+
         # Validate the set passed in and assign to paramInstanceDefaults
         # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
         self._instantiate_defaults(variable=variable_default,
@@ -694,9 +658,9 @@ class Component(object):
                target_set=self.paramInstanceDefaults, # destination set to which params are being assigned
                default_set=self.paramClassDefaults,   # source set from which missing params are assigned
                context=context)
-        #endregion
 
-        #region SET CURRENT VALUES OF VARIABLE AND PARAMS
+        # SET CURRENT VALUES OF VARIABLE AND PARAMS
+
         self.variable = self.variableInstanceDefault
         # self.variable = self.variableInstanceDefault.copy()
 
@@ -704,23 +668,19 @@ class Component(object):
         self.paramsCurrent = self.paramInstanceDefaults.copy()
 
         self.runtime_params_in_use = False
-        #endregion
 
-        #region VALIDATE FUNCTION (self.function and/or self.params[function, FUNCTION_PARAMS])
+        # VALIDATE FUNCTION (self.function and/or self.params[function, FUNCTION_PARAMS])
         self._validate_function(context=context)
-        #endregion
 
-        #region INSTANTIATE ATTRIBUTES BEFORE FUNCTION
+        # INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
         #    (e.g., _instantiate_sender and _instantiate_receiver in Projection)
         self._instantiate_attributes_before_function(context=context)
-        #endregion
 
-        #region INSTANTIATE FUNCTION and assign output (by way of self.execute) to self.value
+        # INSTANTIATE FUNCTION and assign output (by way of self.execute) to self.value
         self._instantiate_function(context=context)
-        #endregion
 
-        #region INSTANTIATE ATTRIBUTES AFTER FUNCTION
+        # INSTANTIATE ATTRIBUTES AFTER FUNCTION
         # Stub for methods that need to be executed after instantiating function
         #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
@@ -844,11 +804,22 @@ class Component(object):
                     for item in kwargs[arg]:
                         self.paramClassDefaults[FUNCTION_PARAMS][item] = default(item)
                 else:
-                    if inspect.isclass(default(arg)) and issubclass(default(arg),inspect._empty):
+                    # MODIFIED 5/2/17 OLD:
+                    default_arg = default(arg)
+                    # # MODIFIED 5/2/17 NEW:
+                    # # This is needed to handle case in which subclass does not include an argument in its constructor
+                    # #    for one that appears in the constructor of its parent class
+                    # #    (e.g., **matrix** of RecurrentTransferMechanism not included in constructor for LCA)
+                    # try:
+                    #     default_arg = default(arg)
+                    # except:
+                    #     continue
+                    # MODIFIED 5/2/17 END
+                    if inspect.isclass(default_arg) and issubclass(default_arg,inspect._empty):
                         raise ComponentError("PROGRAM ERROR: \'{}\' parameter of {} must be assigned a default value "
                                              "in its constructor or in paramClassDefaults (it can be \'None\')".
                                              format(arg, self.__class__.__name__))
-                    self.paramClassDefaults[arg] = default(arg)
+                    self.paramClassDefaults[arg] = default_arg
 
             # param corresponding to arg IS already in paramClassDefaults, so ignore
             else:
@@ -990,7 +961,6 @@ class Component(object):
         #    • therefore, assignments of paramInstance defaults to paramsCurrent in __init__ overwrites the
         #         the user-specified vaules (from the constructor args) in user_params
         self.user_params_for_instantiation = OrderedDict()
-        from collections import Iterable
         for param_name in sorted(list(self.user_params.keys())):
             param_value = self.user_params[param_name]
             if isinstance(param_value, (str, np.ndarray, tuple)):
@@ -1222,28 +1192,43 @@ class Component(object):
             if not isinstance(default_set, dict):
                 raise ComponentError("default parameter set must be a dictionary")
 
-        # IMPLEMENTATION NOTE:  REMOVE
-        # # Enforce implementation of variableEncodingDim and valueEncodingDim:
-        # try:
-        #     self.variableEncodingDim
-        # except AttributeError:
-        #     raise ComponentError("{0} or its base class must implement variableEncodingDim".
-        #                         format(self.__class__.__name__))
-        # try:
-        #     self.valueEncodingDim
-        # except AttributeError:
-        #     raise ComponentError("{0} or its base class must implement valueEncodingDim".
-        #                         format(self.__class__.__name__))
 
+        # ASSIGN SIZE OR SHAPE TO VARIABLE if specified
+
+        # If size has been specified, make sure it doesn't conflict with variable arg specification
+        if hasattr(self, 'size') and self.size is not None:
+            # Both variable and size are specified
+            if variable is not None:
+                # If they confict, raise exception, otherwise use variable (it specifies both size and content).
+                if self.size != len(variable):
+                    raise ComponentError("The size arg of {} ({}) conflicts with the length of its variable arg ({})".
+                                         format(self.name, self.size, len(variable)))
+            # Variable is not specified, so set to array of zero with length = size
+            else:
+                variable = np.zeros(self.size)
+
+        elif hasattr(self, 'shape') and self.shape is not None:
+            # Both variable and shape are specified
+            if variable is not None:
+                # If they confict, raise exception, otherwise use variable (it specifies both shape and content)
+                if self.shape != np.array(variable).shape:
+                    raise ComponentError("The shape arg of {} ({}) conflicts the shape of its variable arg ({})".
+                                         format(self.name, self.size, np.array(variable).shape))
+            # Variable is not specified, so set to array of zeros with specified shape
+            else:
+                variable = np.zeros(self.shape)
+
+        # elif isinstance(self.variableClassDefault, Iterable):
+        #     self.size = len(self.variableClassDefault)
 
         # VALIDATE VARIABLE (if not called from assign_params)
+
         if not any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
             # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
             self._validate_variable(variable, context=context)
             if variable is None:
                 self.variableInstanceDefault = self.variableClassDefault
             else:
-                # MODIFIED 6/9/16 (CONVERT TO np.ndarray)
                 self.variableInstanceDefault = self.variable
 
         # If no params were passed, then done
@@ -1801,13 +1786,11 @@ class Component(object):
                         target_set[param_name] = param_value
                     else:
                         target_set[param_name] = param_value.copy()
-            # MODIFIED 4/3/17 KM adding list/array parameter for noise
 
-
-            # If param is a function_type, allow any other function_type
+            # If param is a function_type (or it has a function attribute that is one), allow any other function_type
             elif callable(param_value):
                 target_set[param_name] = param_value
-            elif callable(param_value.function):
+            elif hasattr(param_value, FUNCTION) and callable(param_value.function):
                 target_set[param_name] = param_value
 
             # Parameter is not a valid type
@@ -1815,9 +1798,9 @@ class Component(object):
                 if type(self.paramClassDefaults[param_name]) is type:
                     type_name = 'the name of a subclass of ' + self.paramClassDefaults[param_name].__base__.__name__
                 else:
-                    type_name = 'an instance of  ' + self.paramClassDefaults[param_name].__name__
-                raise ComponentError("Value of {0} param ({1}) must be {2} ".
-                                    format(param_name, param_value, type_name))
+                    type_name = self.paramClassDefaults[param_name].__class__.__name__
+                raise ComponentError("Value of {} param for {} ({}) must be a {}".
+                                    format(param_name, self.name, param_value, type_name))
 
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of either a ParamValueProjection or an unnamed (value, projection) tuple
@@ -2107,7 +2090,7 @@ class Component(object):
             # FUNCTION is a generic function (presumably user-defined), so "wrap" it in UserDefinedFunction:
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
-
+                
 
                 from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
                 self.paramsCurrent[FUNCTION] = UserDefinedFunction(function=function, context=context).function

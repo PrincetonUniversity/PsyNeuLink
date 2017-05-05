@@ -82,6 +82,10 @@ Any of the following can be used to specify a projection in context:
       |
       * CONTROL_PROJECTION -- a `ControlProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
       |
+      COMMENT:
+      * GATING_PROJECTION -- a `GatingProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
+      |
+      COMMENT
       * LEARNING_PROJECTION -- a `LearningProjection`.  At present, this can only be used together with the
         specification of a MappingProjection (see `tuple <Mapping_Matrix_Specification>` format).  If the
         :keyword:`receiver` of the MappingProjection projects to a `MonitoringMechanism <MonitoringMechanism>`,
@@ -160,18 +164,21 @@ is assigned as follows:
     :py:const:`DefaultProcessingMechanism <Components.__init__.DefaultProcessingMechanism LINK>`
     is used, and its `primary outputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
   ..
-  COMMENT:
-     CONFIRM THIS IS TRUE
-  COMMENT
   * `ControlProjection`: if the projection's `receiver <Projection.receiver>` belongs to a system, then the system's
-    `controller` is used as the mechanism for the `sender <Projection.sender>.  Otherwise, the `DefaultControlMechanism`
-    is used.  In either case, an outputState is added to the ControlMechanism and assigned as the
-    projection's `sender <Projection.sender>`.
+    `controller` is used as the mechanism for the `sender <Projection.sender>`, an outputState is added to the 
+    ControlMechanism, and assigned as the projection's `sender <Projection.sender>`.  If the receiver does not
+    belong to a system, the ControlProjection will be ignored. 
+  ..
+  COMMENT:
+  * `GatingProjection`:  DOCUMENT
+  COMMENT
   ..
   * `LearningProjection`: if it is to a MappingProjection that projects to the `TERMINAL` mechanism of a process,
     then a `ComparatorMechanism` is created, and its `primary outputState <OutputState_Primary>` is assigned as the
     `sender <Projection.sender>`.  Otherwise, a `WeightedErrorMechanism` is created and its
     `primary outputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
+
+    
 
 .. _Projection_Receiver:
 
@@ -240,7 +247,7 @@ PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             DEFAULT_MATRIX,
                             IDENTITY_MATRIX,
                             FULL_CONNECTIVITY_MATRIX,
-                            OFF_DIAGNOAL_MATRIX,
+                            HOLLOW_MATRIX,
                             RANDOM_CONNECTIVITY_MATRIX,
                             LEARNING_PROJECTION,
                             CONTROL_PROJECTION}
@@ -355,13 +362,13 @@ class Projection_Base(Projection):
 
     name : str : default <Projection subclass>-<index>
         the name of the projection.
-        Specified in the `name` argument of the constructor for the projection;  if not is specified,
+        Specified in the **name** argument of the constructor for the projection;  if not is specified,
         a default is assigned by ProjectionRegistry based on the projection's subclass
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for the projection.
-        Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
+        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -631,56 +638,44 @@ class Projection_Base(Projection):
         If self.sender is a State class reference, validate that it is a OutputState
         Assign projection to sender's sendsToProjections attribute
         If self.value / self.variable is None, set to sender.value
-
-        Notes:
-        * ControlProjection initially overrides this method to check if sender is DefaultControlMechanism;
-            if so, it assigns a ControlProjection-specific inputState and outputState to it
-        [TBI: * LearningProjection overrides this method to check if sender is kwDefaultSender;
-            if so, it instantiates a default MonitoringMechanism and a projection to it from receiver's outputState]
-
-        :param context: (str)
-        :return:
         """
 
         from PsyNeuLink.Components.States.OutputState import OutputState
         from PsyNeuLink.Components.States.ParameterState import ParameterState
 
-        # If sender is a class, instantiate it:
-        # - assume it is Mechanism or State (as validated in _validate_params)
-        # - implement default sender of the corresponding type
-        if inspect.isclass(self.sender):
-            if issubclass(self.sender, OutputState):
-                # MODIFIED 9/12/16 NEW:
-                # self.paramsCurrent['function_params']['matrix']
-                # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING_PROJECTION??
-                # MODIFIED 9/12/16 END
-                self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
-            else:
-                raise ProjectionError("Sender ({0}) for {1} must be a OutputState".
-                                      format(self.sender.__name__, self.name))
+        # # IMPLEMENTATION NOTE:  The following supported instantiation of a default sender type by a projection, for
+        # #                       projections that did not yet have their sender specified;  however, this should now
+        # #                       be covered by deferred_init(): sender is assigned in that call or bythe time is made.
+        # # If sender is a class, instantiate it:
+        # # - assume it is a Mechanism or State (should have been validated in _validate_params)
+        # # - implement default sender of the corresponding type
+        # if inspect.isclass(self.sender):
+        #     if issubclass(self.sender, OutputState):
+        #         # MODIFIED 9/12/16 NEW:
+        #         # self.paramsCurrent['function_params']['matrix']
+        #         # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING_PROJECTION??
+        #         # MODIFIED 9/12/16 END
+        #         self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
+        #     else:
+        #         raise ProjectionError("Sender ({0}) for {1} must be a OutputState".
+        #                               format(self.sender.__name__, self.name))
 
-        # # If sender is a Mechanism (rather than a State), get relevant outputState and assign it to self.sender
+        # If sender is specified as a Mechanism (rather than a State),
+        #     get relevant outputState and assign it to self.sender
+        # IMPLEMENTATION NOTE: Assume that sender should be the primary OutputState; if that is not the case,
+        #                      sender should either be explicitly assigned, or handled in an override of the
+        #                      method by the relevant subclass prior to calling super
         if isinstance(self.sender, Mechanism):
-
-            # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
-            # #            - kwMATRIX NEEDS TO BE A 3D np.array, EACH 3D ITEM OF WHICH IS A 2D WEIGHT MATRIX
-            # #            - MAKE SURE len(self.sender.value) == len(self.receiver.inputStates.items())
-            # # for i in range (len(self.sender.value)):
-            # #            - CHECK EACH MATRIX AND ASSIGN??
-            # # FOR NOW, ASSUME SENDER HAS ONLY ONE OUTPUT STATE, AND THAT RECEIVER HAS ONLY ONE INPUT STATE
             self.sender = self.sender.outputState
 
         # At this point, self.sender should be a OutputState
-        # MODIFIED 2/10/17 OLD: 2/21/17
         if not isinstance(self.sender, OutputState):
-        # # MODIFIED 2/10/17 NEW: [ADDED ParameterState TO ACCOMODATE LEARNING PROJECTION FOR BACKPROPAGATION]
-        # if not isinstance(self.sender, (OutputState, ParameterState)):
-        # MODIFIED 2/10/17 END
-            raise ProjectionError("Sender for MappingProjection must be a Mechanism or State")
+            raise ProjectionError("Sender specified for {} ({}) must be a Mechanism or an OutputState".
+                                  format(self.name, self.sender))
 
         # Assign projection to sender's sendsToProjections list attribute
-        # MODIFIED 8/4/16 OLD:  SHOULD CALL _add_projection_from
-        self.sender.sendsToProjections.append(self)
+        if not self in self.sender.sendsToProjections:
+            self.sender.sendsToProjections.append(self)
 
         # Validate projection's variable (self.variable) against sender.outputState.value
         if iscompatible(self.variable, self.sender.value):
@@ -716,7 +711,6 @@ class Projection_Base(Projection):
             is evaluated and enforced in _instantiate_function, since that may need to be modified (see below)
         * Verification that projection has not already been assigned to receiver is handled by _add_projection_to;
             if it has, a warning is issued and the assignment request is ignored
-
 
         :param context: (str)
         :return:
@@ -963,11 +957,22 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
         state (OutputState, str, or value):
         context:
     """
-    # IMPLEMENTATION NOTE: add verification that projection is not already assigned to sender; if so, warn and ignore
+
 
     from PsyNeuLink.Components.States.State import _instantiate_state
     from PsyNeuLink.Components.States.State import State_Base
     from PsyNeuLink.Components.States.OutputState import OutputState
+
+    # Validate that projection is not already assigned to sender; if so, warn and ignore
+
+    if isinstance(projection_spec, Projection):
+        projection = projection_spec
+        if ((isinstance(sender, OutputState) and projection.sender is sender) or
+                (isinstance(sender, Mechanism) and projection.sender is sender.outputState)):
+            if self.verbosePref:
+                warnings.warn("Request to assign {} as sender of {}, but it has already been assigned".
+                              format(sender.name, projection.name))
+                return
 
     if not isinstance(state, (int, str, OutputState)):
         raise ProjectionError("State specification for {0} (as sender of {1}) must be the name, reference to "
@@ -1007,7 +1012,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                               format(projection_spec.name, state, sender.name))
             # return
 
-    # input_state is either the name for a new inputState or kwAddNewInputState
+    # output_state is either the name for a new outputState or kwAddNewOutputState
     if not state is kwAddOutputState:
         if sender.prefs.verbosePref:
             reassign = input("\nAdd new outputState named {0} to {1} (as sender for {2})? (y/n):".
@@ -1025,10 +1030,10 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                                      constraint_value=projection_spec.value,
                                      constraint_value_name='Projection_spec value for new inputState',
                                      context=context)
-    #  Update inputState and inputStates
+    #  Update outputState and outputStates
     try:
         sender.outputStates[output_state.name] = output_state
-    # No inputState(s) yet, so create them
+    # No outputState(s) yet, so create them
     except AttributeError:
         sender.outputStates = OrderedDict({output_state.name:output_state})
         sender.outputState = list(sender.outputStates)[0]

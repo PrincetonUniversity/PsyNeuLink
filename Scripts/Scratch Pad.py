@@ -2,9 +2,9 @@ import numpy as np
 
 # GLOBALS:
 from PsyNeuLink.Globals.Keywords import *
+
 # FUNCTIONS:
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Functions.Function import Linear
+from PsyNeuLink.Components.Functions.Function import Logistic, Linear, Stability, Distance
 
 # STATES:
 # from PsyNeuLink.Components.States.OutputState import OutputState
@@ -20,10 +20,12 @@ from PsyNeuLink.Components.Projections.MappingProjection import MappingProjectio
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA
 
 # COMPOSITIONS:
 from PsyNeuLink.Components.Process import Process, Process_Base, process
@@ -620,19 +622,35 @@ class ScratchPadError(Exception):
 
 #region TEST AutoAssociator
 
-my_auto = TransferMechanism(default_input_value=[0,0,0],
-                            # function=Logistic
-                            )
+my_auto = LCA(
+        size=3,
+        # inhibition
+)
 
-my_auto_matrix = MappingProjection(sender=my_auto,
-                                   receiver=my_auto,
-                                   matrix=FULL_CONNECTIVITY_MATRIX)
+# my_auto = RecurrentTransferMechanism(
+#         default_input_value=[0,0,0],
+#         size=3,
+#         function=Logistic,
+#         # matrix=RANDOM_CONNECTIVITY_MATRIX,
+#         matrix=np.array([[1,1,1],[1,1,1],[1,1,1]])
+#         # matrix=[[1,1,1],[1,1,1],[1,1,1]]
+# )
+
+# my_auto = TransferMechanism(default_input_value=[0,0,0],
+#                             # function=Logistic
+#                             )
+#
+# my_auto_matrix = MappingProjection(sender=my_auto,
+#                                    receiver=my_auto,
+#                                    matrix=FULL_CONNECTIVITY_MATRIX)
+
 # THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
 #                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
 my_process = process(pathway=[my_auto],
 
 # THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
 # my_process = process(pathway=[my_auto, my_auto_matrix],
+                     target=[0,0,0],
                      learning=LEARNING
                      )
 
@@ -656,7 +674,6 @@ my_system = system(processes=[my_process],
 print(my_system.run(inputs=input_list,
                     targets=target_list,
                     num_executions=5))
-
 
 #endregion
 
@@ -709,7 +726,6 @@ print(my_system.run(inputs=input_list,
 
 #endregion
 
-
 #region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Process import *
@@ -730,7 +746,7 @@ print(my_system.run(inputs=input_list,
 
 #endregion
 
-#region TEST matrix
+#region TEST matrix @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
 # Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
@@ -745,6 +761,28 @@ print(my_system.run(inputs=input_list,
 # b = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 # c = np.dot(b, a, )
 # print(c)
+
+#endregion  ********
+
+#region TEST Stability and Distance @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# matrix = [[0,-1],[-1,0]]
+# normalize = False
+# activity = [100,0]
+#
+#
+# eng = Stability(variable_default=activity,
+#              matrix=matrix,
+#              normalize=normalize
+#              )
+#
+# dist = Distance(variable_default=[activity,activity],
+#                 metric=CROSS_ENTROPY,
+#                 # normalize=normalize
+#                 )
+#
+# print("Stability: ",eng.function(activity))
+# print("Distance: ", dist.function(activity))
 
 #endregion
 
@@ -784,7 +822,6 @@ print(my_system.run(inputs=input_list,
 # Stroop_process.execute()
 #
 # endregion
-
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 

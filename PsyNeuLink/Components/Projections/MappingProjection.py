@@ -286,13 +286,13 @@ class MappingProjection(Projection_Base):
 
     name : str : default MappingProjection-<index>
         the name of the MappingProjection.
-        Specified in the `name` argument of the constructor for the projection;
+        Specified in the **name** argument of the constructor for the projection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for projection.
-        Specified in the `prefs` argument of the constructor for the projection;
+        Specified in the **prefs** argument of the constructor for the projection;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -328,8 +328,7 @@ class MappingProjection(Projection_Base):
         self.learning_mechanism = None
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        # if sender is NotImplemented or receiver is NotImplemented:
-        if not sender or not receiver:
+        if sender is None or receiver is None:
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self
@@ -351,6 +350,13 @@ class MappingProjection(Projection_Base):
                                       context=self)
 
         self.has_learning_projection = False
+
+    # def _instantiate_sender(self, context=None):
+            # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
+            # #            - kwMATRIX NEEDS TO BE A 3D np.array, EACH 3D ITEM OF WHICH IS A 2D WEIGHT MATRIX
+            # #            - MAKE SURE len(self.sender.value) == len(self.receiver.inputStates.items())
+            # # for i in range (len(self.sender.value)):
+            # #            - CHECK EACH MATRIX AND ASSIGN??
 
     def _instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
@@ -409,7 +415,7 @@ class MappingProjection(Projection_Base):
             else:
                 projection_string = 'projection'
 
-            if self._matrix_spec in {IDENTITY_MATRIX, OFF_DIAGNOAL_MATRIX}:
+            if self._matrix_spec in {IDENTITY_MATRIX, HOLLOW_MATRIX}:
                 # Identity matrix is not reshapable
                 raise ProjectionError("Output length ({}) of \'{}{}\' from {} to mechanism \'{}\'"
                                       " must equal length of it inputState ({}) to use {}".
