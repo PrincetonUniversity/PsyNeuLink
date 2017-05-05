@@ -106,10 +106,10 @@ class ScratchPadError(Exception):
 
 #region TEST arg vs. paramClassDefault @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-myTransfer = TransferMechanism(output_states=[*TransferMechanism.my_mean, {NAME: 'NEW_STATE'}],
-                               # input_states={NAME: 'MY INPUT'}
-                               )
-TEST_CONDITION = True
+# myTransfer = TransferMechanism(output_states=[*TransferMechanism.my_mean, {NAME: 'NEW_STATE'}],
+#                                # input_states={NAME: 'MY INPUT'}
+#                                )
+# TEST_CONDITION = True
 
 #endregion
 
@@ -2081,6 +2081,31 @@ TEST_CONDITION = True
 # #
 #
 # #endregion
+
+#region TEST OF List indexed by string @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+from PsyNeuLink.Components.States.InputState import InputState
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+
+my_mech = DDM()
+my_state = InputState(owner=my_mech, name='hello')
+my_state_2 = InputState(owner=my_mech, name='goodbye')
+my_state_3 = InputState(owner=my_mech, name='goodbye')
+
+my_list = StateListAddressableByName()
+# my_list.append(my_state)
+my_list['hello'] = my_state
+my_list['goodbye'] = my_state_2
+print(my_list, len(my_list))
+print(my_list[0])
+print(my_list['hello'])
+print(my_list['goodbye'])
+my_list['goodbye'] = my_state_3
+print(my_list['goodbye'])
+
+
+#endregion
 
 #region PREFERENCE TESTS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
