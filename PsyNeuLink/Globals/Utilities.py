@@ -352,6 +352,8 @@ def iscompatible(candidate, reference=None, **kargs):
             (isinstance(candidate, numbers.Number) and issubclass(match_type,numbers.Number)) or
             # IMPLEMENTATION NOTE: Allow UserDict types to match dict (make this an option in the future)
             (isinstance(candidate, UserDict) and match_type is dict) or
+            # IMPLEMENTATION NOTE: Allow UserList types to match list (make this an option in the future)
+            (isinstance(candidate, UserList) and match_type is list) or
             # IMPLEMENTATION NOTE: This is needed when kwCompatiblityType is not specified
             #                      and so match_type==list as default
             (isinstance(candidate, numbers.Number) and issubclass(match_type,list)) or
@@ -706,6 +708,8 @@ class ContentAddressableList(UserList):
         UserList.__init__(self, list, **kwargs)
 
     def __getitem__(self, index):
+        if index is None:
+            raise KeyError("None is not a legal index for {}".format(self.__class__.__name__))
         try:
             return self.data[index]
         except TypeError:

@@ -970,7 +970,7 @@ class Component(object):
                 if isinstance(param_value, dict):
                     for k, v in param_value.items():
                         self.user_params_for_instantiation[param_name][k] = v
-                elif isinstance(param_value, ReadOnlyOrderedDict):
+                elif isinstance(param_value, (ReadOnlyOrderedDict, ContentAddressableList)):
                     for k in sorted(list(param_value.keys())):
                         self.user_params_for_instantiation[param_name].__additem__(k,param_value[k])
                 # SET
@@ -1222,7 +1222,7 @@ class Component(object):
 
         # VALIDATE VARIABLE (if not called from assign_params)
 
-        if not any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
+        if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
             # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
             self._validate_variable(variable, context=context)
             if variable is None:
@@ -1243,7 +1243,7 @@ class Component(object):
             raise ComponentError("Altering paramClassDefaults not permitted")
 
         if default_set is None:
-            if any(context_string in context for context_string in {COMMAND_LINE, 'ATTRIBUTE_SETTER'}):
+            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
                 default_set = {}
                 for param_name in request_set:
                     default_set[param_name] = self.paramInstanceDefaults[param_name]
@@ -1492,9 +1492,9 @@ class Component(object):
         if FUNCTION in validated_set and inspect.isclass(self.function):
             self._instantiate_function(context=COMMAND_LINE)
 
+        # MODIFIED 5/5/17 OLD:
         if OUTPUT_STATES in validated_set:
             self._instantiate_attributes_after_function()
-
 
 
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
@@ -2343,10 +2343,19 @@ def make_property(name, default_value):
 
     def setter(self, val):
 
-        # if self.paramValidationPref and hasattr(self, backing_field):
+        # # MODIFIED 5/5/17 OLD:
+        # # if self.paramValidationPref and hasattr(self, backing_field):
+        # if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
+        #     self._assign_params(request_set={backing_field[1:]:val}, context=SET_ATTRIBUTE)
+
+        # MODIFIED 5/5/17 NEW:
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            self._assign_params(request_set={backing_field[1:]:val},
-                                context='ATTRIBUTE_SETTER')
+            val_str = 'None' or val
+            curr_context = SET_ATTRIBUTE + ': ' + val_str + ' for ' + backing_field[1:] + ' of ' + self.name
+            self._assign_params(request_set={backing_field[1:]:val}, context=curr_context)
+
+        # MODIFIED 5/5/17 END
+
         else:
             setattr(self, backing_field, val)
 
