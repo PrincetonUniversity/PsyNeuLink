@@ -1991,7 +1991,7 @@ class System_Base(System):
 
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context and self.learning:
-            self._execute_learning(clock=clock, context=context + LEARNING)
+            self._execute_learning(clock=clock, context=context + ' ' + LEARNING)
         # endregion
 
 
