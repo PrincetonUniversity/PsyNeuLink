@@ -354,10 +354,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         # TIME_SCALE: TimeScale.TRIAL,
         NOISE: None,
         OUTPUT_STATES:[
-            {NAME:TRANSFER_RESULT},
-            {NAME:TRANSFER_MEAN,
+            {NAME:RESULT},
+            {NAME:MEAN,
              CALCULATE:lambda x: np.mean(x)},
-            {NAME:TRANSFER_VARIANCE,
+            {NAME:VARIANCE,
              CALCULATE:lambda x: np.var(x)}],
         # INTEGRATOR_FUNCTION: Integrator
         })
@@ -371,8 +371,8 @@ class TransferMechanism(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=Transfer_DEFAULT_BIAS,
-                 # output_states=None,
-                 # input_states=None,
+                 input_states=None,
+                 output_states=None,
                  size:tc.optional(int)=None,
                  function=Linear,
                  initial_value=None,
@@ -390,8 +390,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
-                                                  # output_states=output_states,
                                                   # input_states=input_states,
+                                                  # output_states=output_states,
                                                   noise=noise,
                                                   time_constant=time_constant,
                                                   time_scale=time_scale,

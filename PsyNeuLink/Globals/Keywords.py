@@ -426,6 +426,8 @@ MONITORING = 'MONITORING'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 
+RESULT = 'result'
+
 kwStateValue = "State value"   # Used in State specification dict
                                                  #  to specify State value
 STATE_PARAMS = "State params" # Used in State specification dict
@@ -539,6 +541,7 @@ INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
 
 MEAN = 'mean'
+VARIANCE = 'variance'
 STANDARD_DEV = 'standard_dev'
 
 LOW = 'low'

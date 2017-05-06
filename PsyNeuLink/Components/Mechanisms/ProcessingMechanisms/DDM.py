@@ -328,12 +328,12 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism i
 from PsyNeuLink.Components.Functions.Function import *
 
 # DDM outputs (used to create and name outputStates):
-DDM_DECISION_VARIABLE = "DDM_decision_variable"
-DDM_RESPONSE_TIME = "DDM_response_time"
-DDM_PROBABILITY_UPPER_THRESHOLD = "DDM_probability_upperBound"
-DDM_PROBABILITY_LOWER_THRESHOLD = "DDM_probability_lowerBound"
-DDM_RT_CORRECT_MEAN = "DDM_RT_Correct_Mean"
-DDM_RT_CORRECT_VARIANCE = "DDM_RT_correct_variance"
+DDM_DECISION_VARIABLE = "decision variable"
+DDM_RESPONSE_TIME = "response time"
+DDM_PROBABILITY_UPPER_THRESHOLD = "probability upperBound"
+DDM_PROBABILITY_LOWER_THRESHOLD = "probability lowerBound"
+DDM_RT_CORRECT_MEAN = "RT correct mean"
+DDM_RT_CORRECT_VARIANCE = "RT correct variance"
 
 
 # Indices for results used in return value tuple; auto-numbered to insure sequentiality
