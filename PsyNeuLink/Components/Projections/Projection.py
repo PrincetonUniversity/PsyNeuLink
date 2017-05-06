@@ -1043,6 +1043,10 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
         sender.output_states[output_state.name] = output_state
     # No outputState(s) yet, so create them
     except AttributeError:
-        sender.output_states = OrderedDict({output_state.name:output_state})
-        sender.outputState = list(sender.output_states)[0]
+        # sender.output_states = OrderedDict({output_state.name:output_state})
+        # sender.outputState = list(sender.output_states)[0]
+        from PsyNeuLink.Components.States.State import State_Base
+        sender.output_states = ContentAddressableList(cls=State_Base, list=[output_state])
+        sender.output_state = sender.output_states[0]
+
     output_state._instantiate_projections_to_state(projections=projection_spec, context=context)

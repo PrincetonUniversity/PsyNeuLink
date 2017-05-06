@@ -184,6 +184,7 @@ kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
 VALIDATE = 'Validate'
 COMMAND_LINE = "COMMAND_LINE"
+SET_ATTRIBUTE = "SET ATTRIBUTE"
 kwParams = 'params'
 CHANGED = 'CHANGED'
 UNCHANGED = 'UNCHANGED'

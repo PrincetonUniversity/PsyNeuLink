@@ -1674,7 +1674,7 @@ class System_Base(System):
                         sender_mech = error_signal_mech
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
-            for input_state in sender_mech.input_states.values():
+            for input_state in sender_mech.input_states:
                 for projection in input_state.receivesFromProjections:
                     sender = projection.sender.owner
                     system_processes = self.processes
@@ -1686,11 +1686,11 @@ class System_Base(System):
 
             # If sender_mech has no projections left, raise exception
             if not any(any(projection for projection in input_state.receivesFromProjections)
-                       for input_state in sender_mech.input_states.values()):
+                       for input_state in sender_mech.input_states):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
-            for outputState in sender_mech.output_states.values():
+            for outputState in sender_mech.output_states:
 
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
