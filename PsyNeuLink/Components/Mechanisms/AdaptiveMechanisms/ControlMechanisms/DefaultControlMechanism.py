@@ -210,9 +210,11 @@ class DefaultControlMechanism(ControlMechanism_Base):
         if self.input_states:
             self.input_states[input_state.name] = input_state
         else:
-            self.input_states = OrderedDict({input_state_name:input_state})
+            # self.input_states = OrderedDict({input_state_name:input_state})
+            from PsyNeuLink.Components.States.State import State_Base
+            self.input_states = ContentAddressableList(cls=State_Base, list=[input_state])
             self.input_state = list(self.input_states.values())[0]
 
-        self.inputValue = list(state.value for state in self.input_states.values())
+        self.inputValue = [state.value for state in self.input_states]
 
         return input_state

@@ -649,14 +649,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                          context=context)
 
         #  Update inputState and input_states
-        try:
+        if self.input_states:
             self.input_states[input_state.name] = input_state
-        except (AttributeError, TypeError):
-            self.input_states = OrderedDict({input_state_name:input_state})
+        else:
+            # self.input_states = OrderedDict({input_state_name:input_state})
             # self.input_state = list(self.input_states.values())[0]
-            self.input_state = self.input_states[input_state_name]
+            from PsyNeuLink.Components.States.State import State_Base
+            self.input_states = ContentAddressableList(cls=State_Base, list=[input_state])
+            self.input_state = self.input_states[0]
 
-        self.inputValue = list(state.value for state in self.input_states.values())
+        self.inputValue = [state.value for state in self.input_states]
 
         # IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
         if call_for_projection:

@@ -709,8 +709,8 @@ class ContentAddressableList(UserList):
         try:
             return self.data[index]
         except TypeError:
-            index = self._get_index_for_item(index)
-            return self.data[index]
+            index_num = self._get_index_for_item(index)
+            return self.data[index_num]
 
     def __setitem__(self, index, value):
         # For efficiency, first assume the index is numeric (duck typing in action!)
@@ -723,7 +723,7 @@ class ContentAddressableList(UserList):
                 raise UtilitiesError("Non-numer index used for {} ({})must be a string)".
                                       format(self.__class__.__name__, index))
             # The specified string must also match the value of the attribute of the class used for addressing
-            if not index is value.name:
+            if not index == value.name:
                 raise UtilitiesError("The index of the entry for {} {} ({}) "
                                      "must match the value of its {} attribute ({})".
                                       format(self.__class__.__name__,
@@ -742,21 +742,20 @@ class ContentAddressableList(UserList):
         if super().__contains__(item):
             return True
         else:
-            return any(item is obj.name for obj in self.data)
+            return any(item == obj.name for obj in self.data)
 
     def _get_index_for_item(self, index):
         if isinstance(index, str):
             # return self.data.index(next(obj for obj in self.data if obj.name is index))
-            obj = next((obj for obj in self.data if obj.name is index), None)
+            obj = next((obj for obj in self.data if obj.name == index), None)
             if obj is None:
                 return None
             else:
                 return self.data.index(obj)
-
         elif isinstance(index, self.cls):
             return self.data.index(index)
         else:
-            raise UtilitiesError("{} is not a legal index for {} (must be number, string or State".
+            raise UtilitiesError("{} is not a legal index for {} (must be number, string or State)".
                                   format(index, self.attrib))
 
     def __delitem__(self, index):
@@ -777,4 +776,7 @@ class ContentAddressableList(UserList):
             self.data[index] = value
     def copy(self):
         return self.data.copy()
+    
+    def keys(self):
+        return [getattr(item, self.attrib) for item in self.data]
 

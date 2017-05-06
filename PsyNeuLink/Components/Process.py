@@ -1215,7 +1215,7 @@ class Process_Base(Process):
             if i+1 == len(pathway):
                 if any(any(proj.receiver.owner is mech
                            for proj in state.sendsToProjections)
-                       for state in mech.output_states.values()):
+                       for state in mech.output_states):
                     for state in mech.output_states.values():
                         for proj in state.sendsToProjections:
                             if proj.receiver.owner is mech:
@@ -1683,7 +1683,7 @@ class Process_Base(Process):
             for i in range(num_mechanism_input_states):
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
                 # MODIFIED 4/3/17 NEW:
-                input_state_variable = list(mechanism.input_states.values())[i].variable
+                input_state_variable = mechanism.input_states[i].variable
                 # MODIFIED 4/3/17 END
                 if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
@@ -1691,7 +1691,7 @@ class Process_Base(Process):
                                        format(i, process_input[i], self.name, mechanism.name))
                 # Create MappingProjection from Process input state to corresponding mechanism.input_state
                 MappingProjection(sender=self.processInputStates[i],
-                        receiver=list(mechanism.input_states.items())[i][1],
+                        receiver=mechanism.input_states[i],
                         name=self.name+'_Input Projection',
                         context=context)
                 if self.prefs.verbosePref:
@@ -1790,7 +1790,7 @@ class Process_Base(Process):
             mech._deferred_init()
 
             # For each inputState of the mechanism
-            for input_state in mech.input_states.values():
+            for input_state in mech.input_states:
                 input_state._deferred_init()
                 # Restrict projections to those from mechanisms in the current process
                 projections = []
