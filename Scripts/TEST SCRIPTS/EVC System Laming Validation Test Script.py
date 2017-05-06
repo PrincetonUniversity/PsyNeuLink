@@ -103,9 +103,8 @@ def show_trial_header():
 def show_results():
     import re
     print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
-    results_for_decision = \
-        [result for result in sorted(zip(mySystem.terminalMechanisms.outputStateNames,
-                                           mySystem.terminalMechanisms.outputStateValues)) if 'DDM' in result[0]]
+    results_for_decision = [(state.name, state.value) for state in Decision.output_states]
+
     print("\tDecision:")
     print('\t\tControlSignal values:')
     print ('\t\t\tDrift rate control signal (from EVC): {}'.
@@ -120,9 +119,7 @@ def show_results():
     for result in results_for_decision:
         print("\t\t\t{}: {}".format(result[0],
                                 re.sub('[\[,\],\n]','',str("{:0.3}".format(float(result[1]))))))
-    results_for_reward = \
-        [result for result in sorted(zip(mySystem.terminalMechanisms.outputStateNames,
-                                           mySystem.terminalMechanisms.outputStateValues)) if 'transfer' in result[0]]
+    results_for_reward = [(state.name, state.value) for state in Reward.output_states]
     print("\tReward:\n\t\tOutput:")
     for result in results_for_reward:
         print("\t\t\t{}: {}".format(result[0],
