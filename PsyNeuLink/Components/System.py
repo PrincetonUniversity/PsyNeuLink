@@ -2404,8 +2404,8 @@ class System_Base(System):
         print ("\n\tTerminal mechanisms: ".format(self.name))
         for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
             print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
-            for output_state_name in mech_tuple.mechanism.output_states:
-                print("\t\t\t{0}".format(output_state_name))
+            for output_state in mech_tuple.mechanism.output_states:
+                print("\t\t\t{0}".format(output_state.name))
 
         # if any(process.learning for process in self.processes):
         if self.learning:

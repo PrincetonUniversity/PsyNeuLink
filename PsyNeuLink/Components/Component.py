@@ -1427,7 +1427,14 @@ class Component(object):
         if self.prev_context == context:
             return
         self.prev_context = context
-        # # MODIFIED 5/6/17 END
+        # MODIFIED 5/6/17 END
+        # import uuid
+        # try:
+        #     if self.prev_id == self.curr_id:
+        #         return
+        # except AttributeError:
+        #     pass
+        # self.curr_id = uuid.uuid4()
 
         if not request_set:
             if self.verbosePref:
@@ -1486,7 +1493,6 @@ class Component(object):
         # MODIFIED 5/5/17 OLD:
         if OUTPUT_STATES in validated_set:
             self._instantiate_attributes_after_function(context=COMMAND_LINE)
-
 
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
         """Reset current and/or instance defaults
@@ -2379,7 +2385,6 @@ def make_property(name, default_value):
             # except AttributeError:
             #     pass
             # # MODIFIED 4/20/17 END
-
 
     # Create the property
     prop = property(getter).setter(setter)
