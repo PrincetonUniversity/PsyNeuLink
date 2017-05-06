@@ -2,14 +2,14 @@
 
 # MECHANISMS:
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA
 
 # COMPOSITIONS:
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import *
+# from PsyNeuLink.Components.Process import process
+# from PsyNeuLink.Components.System import system
+# from PsyNeuLink.Globals.Keywords import *
 
 
 # FUNCTIONS:
@@ -2085,24 +2085,132 @@ class ScratchPadError(Exception):
 #region TEST OF List indexed by string @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
-from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+# a = MyClass()
+# b = MyClass()
+# # a.name = 'hello'
+# a.name.append('hello')
+# print(a.name)
+# print(b.name)
 
-my_mech = DDM()
-my_state = InputState(owner=my_mech, name='hello')
-my_state_2 = InputState(owner=my_mech, name='goodbye')
-my_state_3 = InputState(owner=my_mech, name='goodbye')
 
-my_list = StateListAddressableByName()
+# from collections import UserList
+#
+# class ClassListTest(UserList):
+#     """Implements dict-like list, that can be indexed by the names of the States in its entries.
+#
+#     Supports getting and setting entries in the list using string (in addition to numeric) indices.
+#     For getting an entry:
+#         the string must match the name of a State in the list; otherwise an excpetion is raised.
+#     For setting an entry:
+#         the string must match the name of the State being assigned;
+#         if there is already a State in the list the name of which matches the string, it is replaced;
+#         if there is no State in the list the name of which matches the string, the State is appended to the list.
+#
+#     IMPLEMENTATION NOTE:
+#         This class allows the states of a mechanism to be maintained in lists, while providing the convenience
+#         (to the user) of access and assignment by name (e.g., akin to a dict).
+#         Lists are used (instead of a dict or OrderedDict) since:
+#             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
+#                 collections of states to other variables, such as lists of their values);
+#             - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
+#                 or by index (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for
+#                 accessing by key/name less critical;
+#             - the number of states in a collection for a given mechanism is likely to be small so that, even when
+#                 accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
+#     """
+#
+#     def __init__(self, list=None, name=None, **kwargs):
+#         self.name = name or self.__class__.__name__
+#         UserList.__init__(self, list, **kwargs)
+#         # self._ordered_keys = []
+#
+#     def __getitem__(self, index):
+#         try:
+#             return self.data[index]
+#         except TypeError:
+#             index = self._get_index_for_item(index)
+#             return self.data[index]
+#
+#     def __setitem__(self, index, value):
+#         try:
+#             self.data[index] = value
+#         except TypeError:
+#             if not index is value.name:
+#                 raise ScratchPadError("Name of entry for {} ({}) must match the name of its State ({})".
+#                                       format(self.name, index, value.name))
+#             index_num = self._get_index_for_item(index)
+#             if index_num is not None:
+#                 self.data[index_num] = value
+#             else:
+#                 self.data.append(value)
+#
+#     def _get_index_for_item(self, index):
+#         if isinstance(index, str):
+#             # return self.data.index(next(obj for obj in self.data if obj.name is index))
+#             obj = next((obj for obj in self.data if obj.name is index), None)
+#             if obj is None:
+#                 return None
+#             else:
+#                 return self.data.index(obj)
+#
+#         elif isinstance(index, MyClass):
+#             return self.data.index(index)
+#         else:
+#             raise ScratchPadError("{} is not a legal index for {} (must be number, string or State".
+#                                   format(index, self.name))
+#
+#     def __delitem__(self, index):
+#         del self.data[index]
+#
+#     def clear(self):
+#         super().clear(self)
+#
+#     # def pop(self, index, *args):
+#     #     raise UtilitiesError("{} is read-only".format(self.name))
+#     # def popitem(self):
+#     #     raise UtilitiesError("{} is read-only".format(self.name))
+#
+#     def __additem__(self, index, value):
+#         if index >= len(self.data):
+#             self.data.append(value)
+#         else:
+#             self.data[index] = value
+#
+#
+#     def __contains__(self, item):
+#         if super().__contains__(item):
+#             return True
+#         else:
+#             return any(item is obj.name for obj in self.data)
+#
+#     def copy(self):
+#         return self.data.copy()
+
+
+
+class MyClass():
+    name = None
+    def __init__(self, name=None):
+        self.name = name
+        # self.name = name
+
+my_obj = MyClass(name='hello')
+my_obj_2 = MyClass(name='goodbye')
+my_obj_3 = MyClass(name='goodbye')
+
+from PsyNeuLink.Globals.Utilities import ContentAddressableList
+
+my_list = ContentAddressableList(cls=MyClass)
 # my_list.append(my_state)
-my_list['hello'] = my_state
-my_list['goodbye'] = my_state_2
+my_list['hello'] = my_obj
+my_list['goodbye'] = my_obj_2
 print(my_list, len(my_list))
 print(my_list[0])
 print(my_list['hello'])
 print(my_list['goodbye'])
-my_list['goodbye'] = my_state_3
+my_list['goodbye'] = my_obj_3
 print(my_list['goodbye'])
+print('hello' in my_list)
 
 
 #endregion

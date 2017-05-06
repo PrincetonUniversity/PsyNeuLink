@@ -531,6 +531,13 @@ class Component(object):
     paramClassDefaults = {}
     #endregion
 
+    # IMPLEMENTATION NOTE: This is needed so that the State class can be used with ContentAddressableList,
+    #                      which requires that the attribute used for addressing is on the class;
+    #                      it is also declared as a property, so that any assignments are validated to be strings,
+    #                      insuring that assignment by one instance will not affect the value of others.
+    name = None
+
+
     def __init__(self,
                  variable_default,
                  param_defaults,
@@ -2172,6 +2179,18 @@ class Component(object):
     # @variable.setter
     # def variable(self, value):
     #     self._variable = value
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        if not isinstance(value, str):
+            raise ComponentError("Name assigned to {} ({}) must be a string constant".
+                                 format(self.__class__.__name__, value))
+
+        self._name = value
 
     @property
     def prefs(self):
