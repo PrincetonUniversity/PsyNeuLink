@@ -1033,9 +1033,9 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             if any(len(mech.input_states) != num_states_in_first_mech for mech in object.originMechanisms):
                 states_per_mech_heterog = True
             # Determine whether the size of all states is homogenous
-            size_of_first_state = len(list(object.originMechanisms[0].input_states.values())[0].value)
+            size_of_first_state = len(object.originMechanisms[0].input_states[0].value)
             for origin_mech in object.originMechanisms:
-                if any(len(state.value) != size_of_first_state for state in origin_mech.input_states.values()):
+                if any(len(state.value) != size_of_first_state for state in origin_mech.input_states):
                     size_of_states_heterog = True
         else:
             raise RunError("Unknown data type for inputs in {}".format(object.name))

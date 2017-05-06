@@ -1230,7 +1230,7 @@ class Component(object):
 
         # VALIDATE VARIABLE (if not called from assign_params)
 
-        if not any(context_string in context for context_string in {ASSIGN_PARAMS, SET_ATTRIBUTE}):
+        if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
             # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
             self._validate_variable(variable, context=context)
             if variable is None:
@@ -1251,7 +1251,7 @@ class Component(object):
             raise ComponentError("Altering paramClassDefaults not permitted")
 
         if default_set is None:
-            if any(context_string in context for context_string in {ASSIGN_PARAMS, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
                 default_set = {}
                 for param_name in request_set:
                     default_set[param_name] = self.paramInstanceDefaults[param_name]
@@ -1352,7 +1352,7 @@ class Component(object):
                 # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
                 if param_name is FUNCTION:
                     try:
-                        if function_class != default_function_class and ASSIGN_PARAMS in context:
+                        if function_class != default_function_class and COMMAND_LINE in context:
                             from PsyNeuLink.Components.Functions.Function import Function_Base
                             if isinstance(function, Function_Base):
                                 request_set[FUNCTION] = function.__class__
@@ -1360,7 +1360,7 @@ class Component(object):
                     # function not yet defined, so allow FUNCTION_PARAMS)
                     except UnboundLocalError:
                         pass
-                # FIX: MAY NEED TO ALSO ALLOW assign_default_FUNCTION_PARAMS FOR ASSIGN_PARAMS IN CONTEXT
+                # FIX: MAY NEED TO ALSO ALLOW assign_default_FUNCTION_PARAMS FOR COMMAND_LINE IN CONTEXT
                 # MODIFIED 11/30/16 END
 
                 if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
@@ -1406,12 +1406,12 @@ class Component(object):
     def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
 
-        Call _instantiate_defaults with context = ASSIGN_PARAMS, and "validated_set" as target_set.
+        Call _instantiate_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
         Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
         Instantiate any items in request set that require it (i.e., function or states).
 
         """
-        context = context or ASSIGN_PARAMS
+        context = context or COMMAND_LINE
 
         self._assign_params(request_set=request_set, context=context)
 
@@ -1421,10 +1421,13 @@ class Component(object):
 
         from PsyNeuLink.Components.Functions.Function import Function
 
+        # FIX: Hack to prevent recursion in calls to setter and assign_params
+        # MODIFIED 5/6/17 NEW:
         # Prevent recursive calls from setters
         if self.prev_context == context:
             return
         self.prev_context = context
+        # # MODIFIED 5/6/17 END
 
         if not request_set:
             if self.verbosePref:
@@ -1451,17 +1454,10 @@ class Component(object):
 
         pref_buffer = self.prefs._param_validation_pref
         self.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-        # pref_buffer = self.prefs
-        # self.prefs = suppress_validation_preference_set
-        # self.prefs = ComponentPreferenceSet(prefs = {
-        #     kpParamValidationPref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
-        #     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
-        #     kpReportOutputPref: PreferenceEntry(False,PreferenceLevel.INSTANCE)})
 
         self.paramsCurrent.update(validated_set)
 
         self.paramValidationPref = pref_buffer
-        # self.prefs = pref_buffer
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
         # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
@@ -1483,31 +1479,13 @@ class Component(object):
                  for param_value in validated_set.values()):
             self._instantiate_attributes_before_function()
 
-        # MODIFIED 4/17/17 OLD:
-        # # If object is a Mechanism or MappingProjection, instantiate ParameterState for param if required
-        # #    (States don't have ParameterStates)
-        # from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-        # from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
-        # if isinstance(self, (Mechanism, MappingProjection)):
-        #     # NEED TO DO THIS NO MATTER WHAT, SINCE NEED PARAMETER STATES FOR ALL NEW PARAMS
-        #     # AS IT IS NOW, _instantiate_parameter_states ignores existing parameterStates
-        #     #               but this may cause it to ignore FUNCTION_PARAMS when FUNCTION has changed
-        #     from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_state
-        #     for param_name in validated_set_param_names:
-        #         if not param_name in self.user_params_for_instantiation:
-        #             _instantiate_parameter_state(owner=self,
-        #                                          param_name=param_name,
-        #                                          param_value=validated_set[param_name],
-        #                                          context=context)
-        # MODIFIED 4/17/17 END
-
         # If the object's function is being assigned, and it is a class, instantiate it as a Function object
         if FUNCTION in validated_set and inspect.isclass(self.function):
-            self._instantiate_function(context=ASSIGN_PARAMS)
+            self._instantiate_function(context=COMMAND_LINE)
 
         # MODIFIED 5/5/17 OLD:
         if OUTPUT_STATES in validated_set:
-            self._instantiate_attributes_after_function(context=ASSIGN_PARAMS)
+            self._instantiate_attributes_after_function(context=COMMAND_LINE)
 
 
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
@@ -2363,7 +2341,7 @@ def make_property(name, default_value):
 
         # MODIFIED 5/5/17 NEW:
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            val_str = 'None' or val
+            val_str = val.__class__.__name__
             curr_context = SET_ATTRIBUTE + ': ' + val_str + ' for ' + backing_field[1:] + ' of ' + self.name
             self._assign_params(request_set={backing_field[1:]:val}, context=curr_context)
 

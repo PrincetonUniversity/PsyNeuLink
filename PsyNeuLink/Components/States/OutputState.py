@@ -644,7 +644,8 @@ def _instantiate_output_states(owner, context=None):
                                          context=context)
 
     # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
-    if 'ASSIGN_PARAMS' in context:
+    # FIX: Hack to prevent recursion in calls to setter and assign_params
+    if 'COMMAND_LINE' in context:
         owner._output_states = state_list
         return
     else:

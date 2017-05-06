@@ -505,6 +505,10 @@ class MappingProjection(TransmissiveProjection_Base):
             raise MappingError("Matrix parameter for {} ({}) MappingProjection must be "
                                "an np.matrix, a 2d np.array, or a correspondingly configured list".
                                format(self.name, matrix))
+
+        # FIX: Hack to prevent recursion in calls to setter and assign_params
+        self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+
         self.function.__self__.matrix = matrix
 
     @property
