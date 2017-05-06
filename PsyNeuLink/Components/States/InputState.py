@@ -427,7 +427,7 @@ def _instantiate_input_states(owner, context=None):
     # Check that number of input_states and their variables are consistent with owner.variable,
     #    and adjust the latter if not
     for i in range (len(owner.input_states)):
-        input_state = list(owner.input_states.values())[i]
+        input_state = owner.input_states[i]
         try:
             variable_item_is_OK = iscompatible(owner.variable[i], input_state.value)
             if not variable_item_is_OK:

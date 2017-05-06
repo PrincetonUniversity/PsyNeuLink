@@ -643,5 +643,5 @@ def _instantiate_output_states(owner, context=None):
                                                 constraint_value_name="output",
                                                 context=context)
     # Assign self.outputState to first outputState in dict
-    owner.outputState = list(owner.output_states.values())[0]
+    owner.outputState = owner.output_states[0]
 

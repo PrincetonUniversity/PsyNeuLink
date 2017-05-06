@@ -61,6 +61,7 @@ OTHER
 * `underscore_to_camelCase`
 * `append_type_to_name`
 * `ReadOnlyOrderedDict`
+* `ContentAddressableList`
 
 """
 
@@ -630,3 +631,150 @@ class ReadOnlyOrderedDict(UserDict):
         return self._ordered_keys
     def copy(self):
         return self.data.copy()
+
+from collections import UserList
+class ContentAddressableList(UserList):
+    """
+    ContentAddressableList( cls, attrib=None, list=None)
+    
+    Implements dict-like list, that can be indexed by the names of the States in its entries.
+    
+    Supports getting and setting entries in the list using string (in addition to numeric) indices.
+    For getting an entry:
+        the string must match the name of a State in the list; otherwise an excpetion is raised.
+    For setting an entry:
+        the string must match the name of the State being assigned;
+        if there is already a State in the list the name of which matches the string, it is replaced;
+        if there is no State in the list the name of which matches the string, the State is appended to the list.
+        
+    IMPLEMENTATION NOTE:
+        This class allows the states of a mechanism to be maintained in lists, while providing the convenience 
+        (to the user) of access and assignment by name (e.g., akin to a dict).
+        Lists are used (instead of a dict or OrderedDict) since:
+            - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from 
+                collections of states to other variables, such as lists of their values);
+            - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
+                or by index (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for 
+                accessing by key/name less critical;
+            - the number of states in a collection for a given mechanism is likely to be small so that, even when 
+                accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
+                 
+    Arguments
+    ---------
+    
+    cls : Class
+        specifies the class of the items in the list.
+
+    attrib : str : default `name`
+        specifies the attribute of **cls** used to index items in the list by content;
+        **cls** must have this attribute or, if it is not provided, an attribute with the name `name`.
+
+    list : List : default None
+        specifies a list used to initialize the list;  
+        all of the items must be of type **cls** and have the **attrib** attribute.   
+
+    Attributes
+    ----------
+
+    cls : Class
+        the class of the items in the list.
+
+    attrib : str
+        the attribute of `cls <ContentAddressableList.cls>` used to index items in the list by content;
+
+    data : List
+        the actual list of items.      
+    
+    """
+
+    def __init__(self, cls, attrib=None, list=None, **kwargs):
+        self.cls = cls
+        self.attrib = attrib or 'name'
+        if not isinstance(cls, type):
+            raise UtilitiesError("cls arg for {} ({}) must be a class".format(self.__class__.__name__, cls))
+        if not isinstance(self.attrib, str):
+            raise UtilitiesError("attrib arg for {} ({}) must be a string".format(self.__class__.__name__, self.attrib))
+        if not hasattr(cls, self.attrib):
+            raise UtilitiesError("attrib arg for {} (\'{}\') must be an attribute of {}".format(self.__class__.__name__,
+                                                                                            self.attrib,
+                                                                                            cls.__name__))
+        if list is not None:
+            if not all(isinstance(obj, self.cls) for obj in list):
+                raise UtilitiesError("All of the items in the list arg for {} "
+                                     "must be of the type specified in the cls arg ({})"
+                                     .format(self.__class__.__name__, self.cls.__name__))
+        UserList.__init__(self, list, **kwargs)
+
+    def __getitem__(self, index):
+        try:
+            return self.data[index]
+        except TypeError:
+            index = self._get_index_for_item(index)
+            return self.data[index]
+
+    def __setitem__(self, index, value):
+        # For efficiency, first assume the index is numeric (duck typing in action!)
+        try:
+            self.data[index] = value
+        # If it is not
+        except TypeError:
+            # It must be a string
+            if not isinstance(index, str):
+                raise UtilitiesError("Non-numer index used for {} ({})must be a string)".
+                                      format(self.__class__.__name__, index))
+            # The specified string must also match the value of the attribute of the class used for addressing
+            if not index is value.name:
+                raise UtilitiesError("The index of the entry for {} {} ({}) "
+                                     "must match the value of its {} attribute ({})".
+                                      format(self.__class__.__name__,
+                                             value.__class__.__name__,
+                                             index,
+                                             self.attrib,
+                                             getattr(value, self.attrib)))
+            #
+            index_num = self._get_index_for_item(index)
+            if index_num is not None:
+                self.data[index_num] = value
+            else:
+                self.data.append(value)
+
+    def __contains__(self, item):
+        if super().__contains__(item):
+            return True
+        else:
+            return any(item is obj.name for obj in self.data)
+
+    def _get_index_for_item(self, index):
+        if isinstance(index, str):
+            # return self.data.index(next(obj for obj in self.data if obj.name is index))
+            obj = next((obj for obj in self.data if obj.name is index), None)
+            if obj is None:
+                return None
+            else:
+                return self.data.index(obj)
+
+        elif isinstance(index, self.cls):
+            return self.data.index(index)
+        else:
+            raise UtilitiesError("{} is not a legal index for {} (must be number, string or State".
+                                  format(index, self.attrib))
+
+    def __delitem__(self, index):
+        del self.data[index]
+
+    def clear(self):
+        super().clear()
+
+    # def pop(self, index, *args):
+    #     raise UtilitiesError("{} is read-only".format(self.name))
+    # def popitem(self):
+    #     raise UtilitiesError("{} is read-only".format(self.name))
+
+    def __additem__(self, index, value):
+        if index >= len(self.data):
+            self.data.append(value)
+        else:
+            self.data[index] = value
+    def copy(self):
+        return self.data.copy()
+
