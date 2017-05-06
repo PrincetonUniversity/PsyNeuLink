@@ -1713,7 +1713,7 @@ class Process_Base(Process):
                                                   mechanism.variable[i], i, mechanism.name))
                     # Create MappingProjection from Process buffer_intput_state to corresponding mechanism.input_state
                     MappingProjection(sender=self.processInputStates[j],
-                            receiver=list(mechanism.input_states.items())[i][1],
+                            receiver=mechanism.input_states[i],
                             name=self.name+'_Input Projection')
                     if self.prefs.verbosePref:
                         print("Assigned input value {0} ({1}) of {2} to inputState {3} of {4}".
@@ -2207,7 +2207,7 @@ class Process_Base(Process):
             #    That means that other parameters (e.g. object or function parameters) are not currenlty learnable
 
             # For each inputState of the mechanism
-            for input_state in mech.input_states.values():
+            for input_state in mech.input_states:
                 # For each projection in the list
                 for projection in input_state.receivesFromProjections:
 
