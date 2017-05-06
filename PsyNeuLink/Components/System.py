@@ -915,7 +915,7 @@ class System_Base(System):
             super(System_Base, self)._instantiate_function(context=context)
         # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
-            self.value = self.processes[-1].outputState.value
+            self.value = self.processes[-1].output_state.value
 
     def _instantiate_processes(self, input=None, context=None):
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN PATHWAY
@@ -1232,9 +1232,9 @@ class System_Base(System):
                     sender_mech.systems[self] = TERMINAL
                 return
 
-            for outputState in sender_mech.output_states:
+            for output_state in sender_mech.output_states:
 
-                for projection in outputState.sendsToProjections:
+                for projection in output_state.sendsToProjections:
                     receiver = projection.receiver.owner
                     receiver_tuple = self._allMechanisms._get_tuple_for_mech(receiver)
 
@@ -1574,7 +1574,7 @@ class System_Base(System):
                                      not receiver_mech is sender_mech)
                                 # receivers of senders to sender_mech
                                 for receiver_mech in [proj.receiver.owner for proj in
-                                                      mech.outputState.sendsToProjections])
+                                                      mech.output_state.sendsToProjections])
                         # senders to sender_mech
                         for mech in [proj.sender.owner
                                      for proj in sender_mech.input_states[SAMPLE].receivesFromProjections]):
@@ -1584,7 +1584,7 @@ class System_Base(System):
 
                     # Get the other ObjectiveMechanism to which the error_source projects (in addition to sender_mech)
                     other_obj_mech = next((projection.receiver.owner for projection in
-                                           error_source_mech.outputState.sendsToProjections if
+                                           error_source_mech.output_state.sendsToProjections if
                                            isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
                     sender_mech = other_obj_mech
 
@@ -1596,7 +1596,7 @@ class System_Base(System):
 
                     # Get the LearningMechanism to which the sender_mech projected
                     try:
-                        learning_mech = sender_mech.outputState.sendsToProjections[0].receiver.owner
+                        learning_mech = sender_mech.output_state.sendsToProjections[0].receiver.owner
                         if not isinstance(learning_mech, LearningMechanism):
                             raise AttributeError
                     except AttributeError:
@@ -1611,7 +1611,7 @@ class System_Base(System):
 
                     # Get the other LearningMechanism to which the error_source projects (in addition to sender_mech)
                     error_signal_mech = next((projection.receiver.owner for projection in
-                                              error_source_mech.outputState.sendsToProjections if
+                                              error_source_mech.output_state.sendsToProjections if
                                               projection.receiver.name is ACTIVATION_INPUT), None)
 
 
@@ -1690,9 +1690,9 @@ class System_Base(System):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
-            for outputState in sender_mech.output_states:
+            for output_state in sender_mech.output_states:
 
-                for projection in outputState.sendsToProjections:
+                for projection in output_state.sendsToProjections:
                     receiver = projection.receiver.owner
                     try:
                         self.learningGraph[receiver].add(sender_mech)
@@ -2166,7 +2166,7 @@ class System_Base(System):
                 print("- error for target {}': {}".
                       format(append_type_to_name(target_mech),
                              re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i)))
-                                                         for i in target_mech.outputState.value])),
+                                                         for i in target_mech.output_state.value])),
                              ))
                              # process_names))
 
@@ -2292,7 +2292,7 @@ class System_Base(System):
                 print("- output for {0}: {1}".
                       format(mech_tuple.mechanism.name,
                              re.sub('[\[,\],\n]','',str(["{:0.3}".
-                                                format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
+                                                format(float(i)) for i in mech_tuple.mechanism.output_state.value]))))
         if self.learning:
             from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import TARGET_MSE
             for mech in self.targetMechanisms:
@@ -2702,7 +2702,7 @@ class System_Base(System):
                 sndr_label = sndr_name
 
                 # find edge name
-                projs = sndr[0].outputState.sendsToProjections
+                projs = sndr[0].output_state.sendsToProjections
                 for proj in projs:
                     if proj.receiver.owner == rcvr[0]:
                         edge_name = proj.name
@@ -2741,7 +2741,7 @@ class System_Base(System):
                     else:
                         sndrs = learning_graph[rcvr]
                         for sndr in sndrs:
-                            projs = sndr.outputState.sendsToProjections
+                            projs = sndr.output_state.sendsToProjections
                             for proj in projs:
                                 if proj.receiver.owner == rcvr:
                                     edge_name = proj.name

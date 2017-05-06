@@ -666,7 +666,7 @@ class Projection_Base(Projection):
         #                      sender should either be explicitly assigned, or handled in an override of the
         #                      method by the relevant subclass prior to calling super
         if isinstance(self.sender, Mechanism):
-            self.sender = self.sender.outputState
+            self.sender = self.sender.output_state
 
         # At this point, self.sender should be a OutputState
         if not isinstance(self.sender, OutputState):
@@ -976,7 +976,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     if isinstance(projection_spec, Projection):
         projection = projection_spec
         if ((isinstance(sender, OutputState) and projection.sender is sender) or
-                (isinstance(sender, Mechanism) and projection.sender is sender.outputState)):
+                (isinstance(sender, Mechanism) and projection.sender is sender.output_state)):
             if self.verbosePref:
                 warnings.warn("Request to assign {} as sender of {}, but it has already been assigned".
                               format(sender.name, projection.name))
@@ -993,7 +993,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
 
     # Generic OUTPUT_STATE is specified, so use (primary) outputState
     elif state is OUTPUT_STATE:
-        sender.outputState._instantiate_projections_to_state(projections=projection_spec, context=context)
+        sender.output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # input_state is index into outputStates OrderedDict, so get corresponding key and assign to output_state
@@ -1011,7 +1011,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     #    so try as key in outputStates OrderedDict (i.e., as name of an outputState)
     if isinstance(state, str):
         try:
-            sender.outputState[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
+            sender.output_state[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:

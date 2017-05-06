@@ -1142,14 +1142,14 @@ class EVCMechanism(ControlMechanism_Base):
 
                     # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it
                     if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
-                        if output_state is mech.outputState:
+                        if output_state is mech.output_state:
                             self.monitored_output_states.append(output_state)
                             continue
                     # If MonitoredOutputStatesOption is ALL_OUTPUT_STATES, include it
                     elif option_spec is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
                         self.monitored_output_states.append(output_state)
                     elif mech.name in local_specs or mech in local_specs:
-                        if output_state is mech.outputState:
+                        if output_state is mech.output_state:
                             self.monitored_output_states.append(output_state)
                             continue
                     elif option_spec is None:

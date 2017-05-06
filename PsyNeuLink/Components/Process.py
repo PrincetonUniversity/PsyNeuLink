@@ -951,7 +951,7 @@ class Process_Base(Process):
             super(Process_Base, self)._instantiate_function(context=context)
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
         else:
-            self.value = self.pathway[-1][OBJECT_ITEM].outputState.value
+            self.value = self.pathway[-1][OBJECT_ITEM].output_state.value
 
 # DOCUMENTATION:
 #         Uses paramClassDefaults[PATHWAY] == [Mechanism_Base.defaultMechanism] as default
@@ -2130,7 +2130,7 @@ class Process_Base(Process):
             self._report_process_completion(separator=True)
 
         # FIX:  SHOULD THIS BE JUST THE VALUE OF THE PRIMARY OUTPUTSTATE, OR OF ALL OF THEM?
-        return self.outputState.value
+        return self.output_state.value
 
     def _execute_learning(self, target=None, clock=CentralClock, context=None):
     # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
@@ -2357,7 +2357,7 @@ class Process_Base(Process):
 
         print("\n\'{}' completed:\n- output: {}".
               format(append_type_to_name(self),
-                     re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.outputState.value]))))
+                     re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.value]))))
 
         if self.learning:
             from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import TARGET_MSE
@@ -2435,8 +2435,8 @@ class Process_Base(Process):
         return self.variable
 
     @property
-    def outputState(self):
-        return self.lastMechanism.outputState
+    def output_state(self):
+        return self.lastMechanism.output_state
 
     @property
     def output(self):

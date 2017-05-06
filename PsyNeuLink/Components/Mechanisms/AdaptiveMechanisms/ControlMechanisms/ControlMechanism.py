@@ -377,7 +377,7 @@ class ControlMechanism_Base(Mechanism_Base):
             # self.output_states = OrderedDict({output_state_name:state})
             from PsyNeuLink.Components.States.State import State_Base
             self.output_states = ContentAddressableList(cls=State_Base, list=[state])
-            self.outputState = self.output_states[0]
+            self.output_state = self.output_states[0]
 
         # Add index assignment to outputState
         state.index = output_state_index

@@ -1508,7 +1508,7 @@ class Mechanism_Base(Mechanism):
 
         #region REPORT EXECUTION
         if self.prefs.reportOutputPref and context and EXECUTING in context:
-            self._report_mechanism_execution(self.inputValue, self.user_params, self.outputState.value)
+            self._report_mechanism_execution(self.inputValue, self.user_params, self.output_state.value)
         #endregion
 
         #region RE-SET STATE_VALUES AFTER INITIALIZATION
@@ -1705,7 +1705,7 @@ class Mechanism_Base(Mechanism):
         if input_val is None:
             input_val = self.inputValue
         if output is None:
-            output = self.outputState.value
+            output = self.output_state.value
         params = params or self.user_params
 
         import re
@@ -1852,27 +1852,27 @@ class Mechanism_Base(Mechanism):
 
 
     @property
-    def inputState(self):
+    def input_state(self):
         return self._inputState
 
-    @inputState.setter
-    def inputState(self, assignment):
+    @input_state.setter
+    def input_state(self, assignment):
         self._inputState = assignment
 
     @property
-    def inputState(self):
+    def input_state(self):
         return self._inputState
 
-    @inputState.setter
-    def inputState(self, assignment):
+    @input_state.setter
+    def input_state(self, assignment):
         self._inputState = assignment
 
     @property
-    def outputState(self):
+    def output_state(self):
         return self._outputState
 
-    @outputState.setter
-    def outputState(self, assignment):
+    @output_state.setter
+    def output_state(self, assignment):
         self._outputState = assignment
 
 def _is_mechanism_spec(spec):
