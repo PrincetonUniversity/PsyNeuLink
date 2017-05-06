@@ -612,7 +612,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # - match inputState to the value of its primary outputState
         # - and specify the need for a projection from it
         elif isinstance(monitored_value, Mechanism):
-            value = monitored_value.outputState.value
+            value = monitored_value.output_state.value
             input_state_name = name or monitored_value.name + MONITORED_VALUE_NAME_SUFFIX
             call_for_projection = True
             

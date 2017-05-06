@@ -652,5 +652,5 @@ def _instantiate_output_states(owner, context=None):
         owner.output_states = state_list
 
     # Assign self.outputState to first outputState in dict
-    owner.outputState = owner.output_states[0]
+    owner.output_state = owner.output_states[0]
 

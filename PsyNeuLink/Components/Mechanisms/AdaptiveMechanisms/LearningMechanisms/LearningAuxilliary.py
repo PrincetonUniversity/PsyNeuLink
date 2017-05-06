@@ -347,7 +347,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                 #     learning_projection, raise exception as this function should not have been called
                 elif (isinstance(learning_projection.sender, LearningMechanism) and
                           any(learning_projection.sender.owner is project.receiver.owner
-                              for projection in receiver_mech.outputState.sendsToProjections)):
+                              for projection in receiver_mech.output_state.sendsToProjections)):
                     raise LearningAuxilliaryError("PROGRAM ERROR:  {} already has an "
                                                   "ObjectiveMechanism ({}) and a "
                                                   "LearningMechanism ({}) assigned to it".
@@ -564,7 +564,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     #       however, this requires that it's variable be assigned (which occurs in the rest of its
     #       _instantiate_sender method, from which this was called) and that its value be assigned
     #       (which occurs in its _instantiate_function method).
-    learning_projection.sender = learning_mechanism.outputState
+    learning_projection.sender = learning_mechanism.output_state
 
 
 class LearningComponents(object):
@@ -783,12 +783,12 @@ class LearningComponents(object):
             except KeyError:
                 # No outputState specified so use primary outputState
                 try:
-                    self.activation_mech_output = self.activation_mech.outputState
+                    self.activation_mech_output = self.activation_mech.output_state
                 except AttributeError:
                     raise LearningAuxilliaryError("activation_mech_output not identified: activation_mech ({})"
                                                   "not appear to have been assigned a primary outputState.".
                                                   format(self.learning_projection))
-            return self.activation_mech.outputState
+            return self.activation_mech.output_state
 
         return self._activation_mech_output or _get_act_sample()
 
@@ -935,7 +935,7 @@ class LearningComponents(object):
             if not self.error_mech:
                 return None
             try:
-                self.error_mech_output = self.error_mech.outputState
+                self.error_mech_output = self.error_mech.output_state
             except AttributeError:
                 raise LearningAuxilliaryError("error_mech_output not identified: error_mech ({})"
                                               "does not appear to have an outputState".
@@ -944,7 +944,7 @@ class LearningComponents(object):
                 raise LearningAuxilliaryError("error_mech_output found ({}) but it does not "
                                               "appear to be an OutputState".
                                               format(self.error_mech_output.name))
-            return self.error_mech.outputState
+            return self.error_mech.output_state
         return self._error_mech_output or _get_err_mech_out()
 
     @error_mech_output.setter
@@ -995,7 +995,7 @@ class LearningComponents(object):
             if learning_mech.processes and not any(process in self.activation_mech_input.owner.processes
                                                    for process in learning_mech.processes):
                 new_learning_proj = next((projection for projection in
-                                          self.activation_mech.outputState.sendsToProjections
+                                          self.activation_mech.output_state.sendsToProjections
                                           if isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
                 if new_learning_proj is None:
                     return None
@@ -1030,7 +1030,7 @@ class LearningComponents(object):
                 return None
             if isinstance(self.error_signal_mech, ObjectiveMechanism):
                 try:
-                    self.error_signal_mech_output = self.error_signal_mech.outputState
+                    self.error_signal_mech_output = self.error_signal_mech.output_state
                 except AttributeError:
                     raise LearningAuxilliaryError("error_signal_mech_output not identified: error_signal_mech ({})"
                                                   "does not appear to have an outputState".
@@ -1052,7 +1052,7 @@ class LearningComponents(object):
                                                   "appear to be an OutputState".
                                                   format(self.error_signal_mech.name,
                                                          self.error_signal_mech_output.name))
-            return self.error_signal_mech.outputState
+            return self.error_signal_mech.output_state
         return self._error_signal_mech_output or _get_err_sig_mech_out()
 
     @error_signal_mech_output.setter

@@ -368,7 +368,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             self.output_states[state.name] = state
         except AttributeError:
             self.output_states = OrderedDict({output_state_name:state})
-            self.outputState = self.output_states[output_state_name]
+            self.output_state = self.output_states[output_state_name]
 
         # Add index assignment to outputState
         state.index = output_state_index

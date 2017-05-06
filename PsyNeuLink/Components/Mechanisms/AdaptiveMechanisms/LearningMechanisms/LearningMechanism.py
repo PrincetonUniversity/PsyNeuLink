@@ -740,7 +740,7 @@ def _instantiate_error_signal_projection(sender, receiver):
     """
 
     if isinstance(sender, ObjectiveMechanism):
-        sender = sender.outputState
+        sender = sender.output_state
     elif isinstance(sender, LearningMechanism):
         sender = sender.output_states[ERROR_SIGNAL]
     else:

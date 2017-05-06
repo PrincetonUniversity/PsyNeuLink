@@ -354,7 +354,7 @@ class LearningProjection(ModulatoryProjection_Base):
             # VALIDATE SENDER
             sender = self.sender
             if isinstance(sender, LearningMechanism):
-                sender = self.sender = sender.outputState
+                sender = self.sender = sender.output_state
 
             if any(s in {OutputState, LearningMechanism} for s in {sender, type(sender)}):
                 # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array

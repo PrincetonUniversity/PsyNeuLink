@@ -550,7 +550,7 @@ def run(object,
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         for learning_mech in object.monitoringMechanisms.mechanisms:
-            for projection in learning_mech.outputState.sendsToProjections:
+            for projection in learning_mech.output_state.sendsToProjections:
                 if isinstance(projection, LearningProjection):
                     projection.function_object.learning_rate = object.learning_rate
 
@@ -851,11 +851,11 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         for mech in stimuli.keys():
             # If any mechanism in the stimulus dict does not have a projection to the target, raise an exception
             if not any(target is projection.receiver.owner for
-                       projection in mech.outputState.sendsToProjections
+                       projection in mech.output_state.sendsToProjections
                        for target in object.targetMechanisms):
                 raise RunError("{} is not a target mechanism in {}".format(mech.name, object.name))
             # Get target mech (comparator) for each entry in stimuli dict:
-            terminal_to_target_mapping[mech] = mech.outputState.sendsToProjections[0]
+            terminal_to_target_mapping[mech] = mech.output_state.sendsToProjections[0]
 
         # Insure that target lists in dict are accessed in the same order as the
         #   targets in the system's targetMechanisms list, by reassigning targets to an OrderedDict:

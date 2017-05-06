@@ -26,23 +26,23 @@ p = process(default_input_value=[0, 0, 0],
             target=0)
 
 print ('reward prediction weights: \n', action_selection.input_state.receivesFromProjections[0].matrix)
-print ('targetMechanism weights: \n', action_selection.outputState.sendsToProjections[0].matrix)
+print ('targetMechanism weights: \n', action_selection.output_state.sendsToProjections[0].matrix)
 
 actions = ['left', 'middle', 'right']
 reward_values = [15, 7, 13]
 first_reward = 0
 
 # Must initialize reward (won't be used, but needed for declaration of lambda function)
-action_selection.outputState.value = [0, 0, 1]
+action_selection.output_state.value = [0, 0, 1]
 # Get reward value for selected action)
-reward = lambda : [reward_values[int(np.nonzero(action_selection.outputState.value)[0])]]
+reward = lambda : [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
 
 def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial)
 
 def show_weights():
     print ('\nreward prediction weights: \n', action_selection.input_state.receivesFromProjections[0].matrix)
-    print ('action selected: ', action_selection.outputState.value)
+    print ('action selected: ', action_selection.output_state.value)
 
 p.run(num_executions=10,
       # inputs=[[[1, 1, 1]]],
