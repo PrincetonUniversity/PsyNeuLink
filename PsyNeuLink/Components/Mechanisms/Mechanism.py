@@ -1064,7 +1064,7 @@ class Mechanism_Base(Mechanism):
         try:
             param_value = params[TIME_SCALE]
         except KeyError:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {ASSIGN_PARAMS, SET_ATTRIBUTE}):
                 pass
             else:
                 self.timeScale = timeScaleSystemDefault
@@ -1087,7 +1087,7 @@ class Mechanism_Base(Mechanism):
             param_value = params[INPUT_STATES]
 
         except KeyError:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {ASSIGN_PARAMS, SET_ATTRIBUTE}):
                 pass
             else:
                 # INPUT_STATES not specified:
@@ -1136,7 +1136,7 @@ class Mechanism_Base(Mechanism):
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {ASSIGN_PARAMS, SET_ATTRIBUTE}):
                 pass
             elif self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
@@ -1179,7 +1179,7 @@ class Mechanism_Base(Mechanism):
             param_value = params[OUTPUT_STATES]
 
         except KeyError:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {ASSIGN_PARAMS, SET_ATTRIBUTE}):
                 pass
             else:
                 # OUTPUT_STATES not specified:

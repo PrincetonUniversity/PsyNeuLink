@@ -466,8 +466,13 @@ class Component(object):
         + componentCategory - category of Component (i.e., process, mechanism, projection, learning, function)
         + componentType - type of component within a category
                              (e.g., TransferMechanism, MappingProjection, ControlProjection, etc.)
-        + requiredParamClassDefaultTypes - dict of param names and types that all subclasses of Component must
-        implement;
+        + requiredParamClassDefaultTypes - dict of param names & types that all subclasses of Component must implement;
+        + prev_context - str (primarily used to track and prevent recursive calls to assign_params from setters)
+
+        # Prevent recursive calls from setters
+        if self.prev_context == context:
+            return
+        
 
     Class methods:
         - _validate_variable(variable)
@@ -537,6 +542,9 @@ class Component(object):
     #                      insuring that assignment by one instance will not affect the value of others.
     name = None
 
+
+    # IMPLEMENTATION NOTE: Primarily used to track and prevent recursive calls to assign_params from setters.
+    prev_context = None
 
     def __init__(self,
                  variable_default,
@@ -1222,7 +1230,7 @@ class Component(object):
 
         # VALIDATE VARIABLE (if not called from assign_params)
 
-        if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+        if not any(context_string in context for context_string in {ASSIGN_PARAMS, SET_ATTRIBUTE}):
             # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
             self._validate_variable(variable, context=context)
             if variable is None:
@@ -1243,7 +1251,7 @@ class Component(object):
             raise ComponentError("Altering paramClassDefaults not permitted")
 
         if default_set is None:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {ASSIGN_PARAMS, SET_ATTRIBUTE}):
                 default_set = {}
                 for param_name in request_set:
                     default_set[param_name] = self.paramInstanceDefaults[param_name]
@@ -1344,7 +1352,7 @@ class Component(object):
                 # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
                 if param_name is FUNCTION:
                     try:
-                        if function_class != default_function_class and COMMAND_LINE in context:
+                        if function_class != default_function_class and ASSIGN_PARAMS in context:
                             from PsyNeuLink.Components.Functions.Function import Function_Base
                             if isinstance(function, Function_Base):
                                 request_set[FUNCTION] = function.__class__
@@ -1352,7 +1360,7 @@ class Component(object):
                     # function not yet defined, so allow FUNCTION_PARAMS)
                     except UnboundLocalError:
                         pass
-                # FIX: MAY NEED TO ALSO ALLOW assign_default_FUNCTION_PARAMS FOR COMMAND_LINE IN CONTEXT
+                # FIX: MAY NEED TO ALSO ALLOW assign_default_FUNCTION_PARAMS FOR ASSIGN_PARAMS IN CONTEXT
                 # MODIFIED 11/30/16 END
 
                 if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
@@ -1398,12 +1406,12 @@ class Component(object):
     def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
 
-        Call _instantiate_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
+        Call _instantiate_defaults with context = ASSIGN_PARAMS, and "validated_set" as target_set.
         Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
         Instantiate any items in request set that require it (i.e., function or states).
 
         """
-        context = context or COMMAND_LINE
+        context = context or ASSIGN_PARAMS
 
         self._assign_params(request_set=request_set, context=context)
 
@@ -1412,6 +1420,11 @@ class Component(object):
     def _assign_params(self, request_set:tc.optional(dict)=None, context=None):
 
         from PsyNeuLink.Components.Functions.Function import Function
+
+        # Prevent recursive calls from setters
+        if self.prev_context == context:
+            return
+        self.prev_context = context
 
         if not request_set:
             if self.verbosePref:
@@ -1490,11 +1503,11 @@ class Component(object):
 
         # If the object's function is being assigned, and it is a class, instantiate it as a Function object
         if FUNCTION in validated_set and inspect.isclass(self.function):
-            self._instantiate_function(context=COMMAND_LINE)
+            self._instantiate_function(context=ASSIGN_PARAMS)
 
         # MODIFIED 5/5/17 OLD:
         if OUTPUT_STATES in validated_set:
-            self._instantiate_attributes_after_function()
+            self._instantiate_attributes_after_function(context=ASSIGN_PARAMS)
 
 
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
