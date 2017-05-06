@@ -456,7 +456,7 @@ def _instantiate_input_states(owner, context=None):
 
     # Assign self.input_state to first inputState in dict
     try:
-        owner.input_state = list(owner.input_states.values())[0]
+        owner.input_state = owner.input_states[0]
     except AttributeError:
         owner.input_state = None
 

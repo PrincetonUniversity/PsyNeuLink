@@ -1183,7 +1183,7 @@ class System_Base(System):
                 return
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
-            for input_state in sender_mech.input_states.values():
+            for input_state in sender_mech.input_states:
                 for projection in input_state.receivesFromProjections:
                     sender = projection.sender.owner
                     system_processes = self.processes
@@ -1195,7 +1195,7 @@ class System_Base(System):
 
             # If sender_mech has no projections left, raise exception
             if not any(any(projection for projection in input_state.receivesFromProjections)
-                       for input_state in sender_mech.input_states.values()):
+                       for input_state in sender_mech.input_states):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
@@ -1222,7 +1222,7 @@ class System_Base(System):
                                 # itself!
                                  projection.receiver.owner is sender_mech
                             for projection in output_state.sendsToProjections)
-                        for output_state in sender_mech.output_states.values())):
+                        for output_state in sender_mech.output_states)):
                 try:
                     if sender_mech.systems[self] is ORIGIN:
                         sender_mech.systems[self] = SINGLETON
@@ -1232,7 +1232,7 @@ class System_Base(System):
                     sender_mech.systems[self] = TERMINAL
                 return
 
-            for outputState in sender_mech.output_states.values():
+            for outputState in sender_mech.output_states:
 
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
@@ -1344,7 +1344,7 @@ class System_Base(System):
                         # For all the projections to each inputState
                         for projection in input_state.receivesFromProjections)
                     # For all input_states for the first_mech
-                    for input_state in first_mech.input_states.values()):
+                    for input_state in first_mech.input_states):
                 # Assign its set value as empty, marking it as a "leaf" in the graph
                 mech_tuple = self._allMechanisms._get_tuple_for_mech(first_mech)
                 self.graph[mech_tuple] = set()
@@ -1452,7 +1452,7 @@ class System_Base(System):
         self.variable = []
         for mech in self.originMechanisms:
             orig_mech_input = []
-            for input_state in mech.input_states.values():
+            for input_state in mech.input_states:
                 orig_mech_input.extend(input_state.value)
             self.variable.append(orig_mech_input)
         self.variable = convert_to_np_array(self.variable, 2)
@@ -1919,7 +1919,7 @@ class System_Base(System):
             learning_mech._execution_id = self._execution_id
         self.controller._execution_id = self._execution_id
         if self.controller.input_states:
-            for state in self.controller.input_states.values():
+            for state in self.controller.input_states:
                 for projection in state.receivesFromProjections:
                     projection.sender.owner._execution_id = self._execution_id
 
@@ -1959,10 +1959,10 @@ class System_Base(System):
             # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
             for i, origin_mech in zip(range(num_origin_mechs), self.originMechanisms):
                 # For each inputState of the ORIGIN mechansim
-                input_states = list(origin_mech.input_states.values())
-                for j, input_state in zip(range(len(origin_mech.input_states)), input_states):
+                for j in range(len(origin_mech.input_states)):
                    # Get the input from each projection to that inputState (from the corresponding SystemInputState)
-                    system_input_state = next(projection.sender for projection in input_state.receivesFromProjections
+                    system_input_state = next(projection.sender
+                                              for projection in origin_mech.input_states[j].receivesFromProjections
                                               if isinstance(projection.sender, SystemInputState))
                     if system_input_state:
                         system_input_state.value = input[i][j]

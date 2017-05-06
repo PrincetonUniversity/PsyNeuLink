@@ -87,8 +87,6 @@ Class Reference
 # IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
 #                      ADD IN GENERIC CONTROL STUFF FROM DefaultControlMechanism
 
-from collections import OrderedDict
-
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.ShellClasses import *
 
@@ -376,8 +374,10 @@ class ControlMechanism_Base(Mechanism_Base):
         try:
             self.output_states[state.name] = state
         except (AttributeError, TypeError):
-            self.output_states = OrderedDict({output_state_name:state})
-            self.outputState = self.output_states[output_state_name]
+            # self.output_states = OrderedDict({output_state_name:state})
+            from PsyNeuLink.Components.States.State import State_Base
+            self.output_states = ContentAddressableList(cls=State_Base, list=[state])
+            self.outputState = self.output_states[0]
 
         # Add index assignment to outputState
         state.index = output_state_index
@@ -419,7 +419,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following mechanism outputStates:")
-        for state_name, state in list(self.monitoring_mechanism.input_states.items()):
+        for state in self.monitoring_mechanism.input_states:
             for projection in state.receivesFromProjections:
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner

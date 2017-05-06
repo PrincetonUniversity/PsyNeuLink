@@ -1611,7 +1611,7 @@ class Mechanism_Base(Mechanism):
         Update inputState.value
         """
         for i in range(len(self.input_states)):
-            state_name, state = list(self.input_states.items())[i]
+            state = self.input_states[i]
             state.update(params=runtime_params, time_scale=time_scale, context=context)
             self.inputValue[i] = state.value
         self.variable = np.array(self.inputValue)
@@ -1661,13 +1661,13 @@ class Mechanism_Base(Mechanism):
         """Execute function for each outputState and assign result of each to corresponding item of self.outputValue
 
         """
-        for i in range(len(self.output_states)):
-            state = list(self.output_states.values())[i]
+        for state in self.output_states:
             state.update(params=runtime_params, time_scale=time_scale, context=context)
+            TEST_CONDTION = True
             # self.outputValue[i] = state.value
 
         # Assign value of each outputState to corresponding item in self.outputValue
-        self.outputValue = list(state.value for state in list(self.output_states.values()))
+        self.outputValue = [state.value for state in self.output_states]
 
 
     def initialize(self, value):
@@ -1938,7 +1938,7 @@ class MechanismList(UserList):
         return self.mech_tuples[item].mechanism
 
     def __setitem__(self, key, value):
-        raise ("MyList is read only ")
+        raise ("MechanismList is read only ")
 
     def __len__(self):
         return (len(self.mech_tuples))
@@ -1978,7 +1978,7 @@ class MechanismList(UserList):
         names = []
         for item in self.mechanisms:
             for output_state in item.output_states:
-                names.append(output_state)
+                names.append(output_state.name)
         return names
 
     @property
@@ -1986,6 +1986,6 @@ class MechanismList(UserList):
         """Return values of outputStates for all mechanisms in MechanismList"""
         values = []
         for item in self.mechanisms:
-            for output_state_name, output_state in list(item.output_states.items()):
+            for output_state in item.output_states:
                 values.append(output_state.value)
         return values

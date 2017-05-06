@@ -932,13 +932,19 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                                     constraint_value=projection_spec.value,
                                     constraint_value_name='Projection_spec value for new inputState',
                                     context=context)
-        #  Update inputState and input_states
-    try:
+
+    #  Update inputState and input_states
+    if receiver.input_states:
         receiver.input_states[input_state.name] = input_state
+
     # No inputState(s) yet, so create them
-    except AttributeError:
-        receiver.input_states = OrderedDict({input_state.name:input_state})
-        receiver.input_state = list(receiver.input_states)[0]
+    else:
+        # receiver.input_states = OrderedDict({input_state.name:input_state})
+        # receiver.input_state = list(receiver.input_states)[0]
+        receiver.input_states = ContentAddressableList(cls=State_Base, list=[input_state])
+        receiver.input_state = receiver.input_states[0]
+
+
     input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
 
 def _add_projection_from(sender, state, projection_spec, receiver, context=None):

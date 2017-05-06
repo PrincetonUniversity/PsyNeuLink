@@ -832,11 +832,11 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Assign projections to prediction_mechanism that duplicate those received by origin_mech
             #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
-            for orig_state_name, prediction_state_name in zip(origin_mech.input_states.keys(),
-                                                                prediction_mechanism.input_states.keys()):
-                for projection in origin_mech.input_states[orig_state_name].receivesFromProjections:
+            for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
+                                                            prediction_mechanism.input_states):
+                for projection in orig_input_state.receivesFromProjections:
                     MappingProjection(sender=projection.sender,
-                                      receiver=prediction_mechanism.input_states[prediction_state_name],
+                                      receiver=prediction_input_state,
                                       matrix=projection.matrix)
 
             # Assign list of processes for which prediction_mechanism will provide input during the simulation
@@ -1074,7 +1074,7 @@ class EVCMechanism(ControlMechanism_Base):
             # PARSE OUTPUT STATE'S SPECS
 
             # for output_state_name, output_state in list(mech.outputStates.items()):
-            for output_state_name, output_state in mech.output_states.items():
+            for output_state in mech.output_states:
 
                 # Get MONITOR_FOR_CONTROL specification from outputState
                 try:
@@ -1111,14 +1111,14 @@ class EVCMechanism(ControlMechanism_Base):
                         local_specs.append(item)
 
             # Ignore MonitoredOutputStatesOption if any outputStates are explicitly specified for the mechanism
-            for output_state_name, output_state in list(mech.output_states.items()):
+            for output_state in mech.output_states:
                 if (output_state in local_specs or output_state.name in local_specs):
                     option_spec = None
 
 
             # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO self.monitored_output_states
 
-            for output_state_name, output_state in list(mech.output_states.items()):
+            for output_state in mech.output_states:
 
                 # If outputState is named or referenced anywhere, include it
                 if (output_state in local_specs or output_state.name in local_specs):
@@ -1157,7 +1157,7 @@ class EVCMechanism(ControlMechanism_Base):
                     else:
                         raise EVCError("PROGRAM ERROR: unrecognized specification of MONITOR_FOR_CONTROL for "
                                        "{0} of {1}".
-                                       format(output_state_name, mech.name))
+                                       format(output_state.name, mech.name))
 
 
         # ASSIGN WEIGHTS AND EXPONENTS TO OUTCOME_FUNCTION
@@ -1230,7 +1230,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                 context=context)
 
         # Assign controlSignals in the order they are stored of OutputStates
-        self.controlSignals = [self.output_states[state_name] for state_name in self.output_states.keys()]
+        self.controlSignals = self.output_states
 
         # # TEST PRINT
         # print("\n{}.controlSignals: ".format(self.name))
