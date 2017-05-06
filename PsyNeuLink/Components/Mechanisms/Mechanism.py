@@ -1663,7 +1663,7 @@ class Mechanism_Base(Mechanism):
         """
         for state in self.output_states:
             state.update(params=runtime_params, time_scale=time_scale, context=context)
-            TEST_CONDTION = True
+            pass
             # self.outputValue[i] = state.value
 
         # Assign value of each outputState to corresponding item in self.outputValue
