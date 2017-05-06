@@ -1853,27 +1853,27 @@ class Mechanism_Base(Mechanism):
 
     @property
     def input_state(self):
-        return self._inputState
+        return self._input_state
 
     @input_state.setter
     def input_state(self, assignment):
-        self._inputState = assignment
+        self._input_state = assignment
 
     @property
     def input_state(self):
-        return self._inputState
+        return self._input_state
 
     @input_state.setter
     def input_state(self, assignment):
-        self._inputState = assignment
+        self._input_state = assignment
 
     @property
     def output_state(self):
-        return self._outputState
+        return self._output_state
 
     @output_state.setter
     def output_state(self, assignment):
-        self._outputState = assignment
+        self._output_state = assignment
 
 def _is_mechanism_spec(spec):
     """Evaluate whether spec is a valid Mechanism specification
