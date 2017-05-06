@@ -1242,6 +1242,8 @@ class State_Base(State):
                 else:
                     projection_value = projection.value
 
+                TEST = True
+
             else:
                 # Update all non-LearningProjections and get value
                 projection_value = projection.execute(params=projection_params,
