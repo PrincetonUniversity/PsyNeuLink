@@ -652,11 +652,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if self.input_states:
             self.input_states[input_state.name] = input_state
         else:
-            # self.input_states = OrderedDict({input_state_name:input_state})
-            # self.input_state = list(self.input_states.values())[0]
             from PsyNeuLink.Components.States.State import State_Base
             self.input_states = ContentAddressableList(component_type=State_Base, list=[input_state])
-            self.input_state = self.input_states[0]
 
         self.inputValue = [state.value for state in self.input_states]
 

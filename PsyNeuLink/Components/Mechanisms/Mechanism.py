@@ -632,7 +632,7 @@ class Mechanism_Base(Mechanism):
 
         .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection
 
-    inputState : InputState : default default InputState
+    input_state : InputState : default default InputState
         primary `inputState <Mechanism_InputStates>` for the mechanism;  same as first entry of its `input_states
         <Mechanism_Base.input_states>` attribute.
 
@@ -681,11 +681,11 @@ class Mechanism_Base(Mechanism):
                set equal to the value attribute when the mechanism is first initialized;
                maintains its value even when value is reset to None when (re-)initialized prior to execution.
 
-    outputState : OutputState : default default OutputState
+    output_state : OutputState : default default OutputState
         primary `outputState <Mechanism_OutputStates>` for the mechanism;  same as first entry of its
         `outputStates <Mechanism_Base.outputStates>` attribute.
 
-    outputStates : OrderedDict[str, InputState]
+    output_states : OrderedDict[str, OutputState]
         a dictionary of the mechanism's `outputStates <Mechanism_OutputStates>`.
         The key of each entry is the name of an outputState, and its value is the outputState.  There is always
         at least one entry, which identifies the mechanism's `primary outputState <OutputState_Primary>`.
@@ -1818,9 +1818,16 @@ class Mechanism_Base(Mechanism):
         # # MODIFIED 1/28/17 END
 
     @property
+    def input_state(self):
+        return self.input_states[0]
+
+    @property
     def input_values(self):
         return self.input_states.values
 
+    @property
+    def output_state(self):
+        return self.output_states[0]
 
     @property
     def output_values(self):
@@ -1843,29 +1850,6 @@ class Mechanism_Base(Mechanism):
         except:
             self._status = CHANGED
 
-    # @property
-    # def input_state(self):
-    #     return self._input_state
-    #
-    # @input_state.setter
-    # def input_state(self, assignment):
-    #     self._input_state = assignment
-    #
-    # @property
-    # def input_state(self):
-    #     return self._input_state
-    #
-    # @input_state.setter
-    # def input_state(self, assignment):
-    #     self._input_state = assignment
-    #
-    # @property
-    # def output_state(self):
-    #     return self._output_state
-    #
-    # @output_state.setter
-    # def output_state(self, assignment):
-    #     self._output_state = assignment
 
 def _is_mechanism_spec(spec):
     """Evaluate whether spec is a valid Mechanism specification

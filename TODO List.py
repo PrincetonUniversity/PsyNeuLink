@@ -173,6 +173,9 @@
 # SEARCH & REPLACE: baseValue -> base_value
 # SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
 
+# FIX: FINISH input/output refactoring:
+#     inputValue -> input_values
+#     DOCUMENTATION for inputState(s) and outputState(s)
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
 # IMPLEMENT: modulation_operation FOR ModulatoryProjections
@@ -201,6 +204,21 @@
 #              keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOpearation value, GatingProjection, or its constructor
 # -----------------------------------------------------------------------------------
 
+# FIX: Recursion loop problem for setters / assign_params
+#         init():  instantiate_output_states (context = INITIALIZING):
+#             setter (context => SET_ATTRIBUTE)
+#             assign_params (context = SET_ATTRIBUTE)
+#             instantiate_output_state (context = None or SET_ATTRIBUTE)
+#             setter (context => SET_ATTRIBUTE)…
+#             assign_params (context = SET_ATTRIBUTE)
+#
+#         COMMAND LINE:
+#             init():  instantiate_output_states (context = COMMAND_LINE):
+#             setter (context => SET_ATTRIBUTE)
+#             assign_params (context = SET_ATTRIBUTE)
+#             instantiate_output_state (context = None or SET_ATTRIBUTE)
+#             setter (context => SET_ATTRIBUTE)…
+#             assign_params (context = SET_ATTRIBUTE)
 
 # FIX: REPLACE: kwConstants must == arg names
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
