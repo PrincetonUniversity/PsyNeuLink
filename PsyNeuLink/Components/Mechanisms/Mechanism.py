@@ -156,7 +156,7 @@ The input to a mechanism's `function <Mechanism_Base.function>` is provided by t
 `value <Mechanism_Base.value>` attribute, which is also a 2d array with one or more items.  The
 mechanism's :keyword:`value` is used by its `outputStates <Mechanism_OutputStates>` to generate their :keyword:`value`
 attributes, each of which is assigned as an item of the list in the mechanism's
-`outputValue <Mechanism_Base.outputValue>` attribute.
+`output_values <Mechanism_Base.output_values>` attribute.
 
 .. note::
    The input to a mechanism is not necessarily the same as the input to its `function <Mechanism_Base.function>`.
@@ -164,7 +164,7 @@ attributes, each of which is assigned as an item of the list in the mechanism's
    `variable <Mechanism_Base>` attribute, which is used as the input to its `function <Mechanism_Base.function>`.
    Similarly, the result of a mechanism's function is not necessarily the same as the mechanism's output.  The result
    of the `function <Mechanism_Base.function>` is assigned to the mechanism's  `value <Mechanism_Base.value>` attribute,
-   which is then used by its outputStates to assign items to its `outputValue <Mechanism_Base.outputValue>` attribute.
+   which is then used by its outputStates to assign items to its `output_values <Mechanism_Base.output_values>` attribute.
 
 .. _Mechanism_States:
 
@@ -254,7 +254,7 @@ values derived from the value of their `primary outputState <OutputState_Primary
 `value <Mechanism_Base.value>` attribute using the outputState's `index` parameter, and its `calculate` parameter can 
 be used to modify that item before assigning it as the outputState's :keyword:`value` (see `OutputStates_Creation`). 
 The :keyword:`value` attributes of all of a mechanism's outputStates  are assigned to the mechanism's 
-`outputValue <Mechanism_Base.outputValue>` attribute (a list), in the same order in which they appear in mechanism's
+`output_values <Mechanism_Base.output_values>` attribute (a list), in the same order in which they appear in mechanism's
 `outputStates <Mechanism_Base.outputStates>`  attribute.  Note that this is distinct from the mechanism's `value
 <Mechanism_Base.value>` attribute, which contains the full and unmodified results of its
 `function <Mechanism_Base.function>`.
@@ -343,8 +343,8 @@ Mechanisms that are part of one or more processes are assigned designations that
 any systems to which they belong. These designations are listed in the mechanism's `processes` and `systems`
 attributes, respectively.  Any mechanism designated as `ORIGIN` receives a projection to its primary inputState from
 the process(es) to which it belongs.  Accordingly, when the process (or system of which the process is a part) is
-executed, those mechainsms receive the input provided to the process (or system).  The `outputValue
-<Mechanism_Base.outputValue>` of any mechanism designated as the `TERMINAL` mechanism for a process is assigned as
+executed, those mechainsms receive the input provided to the process (or system).  The `output_values
+<Mechanism_Base.output_values>` of any mechanism designated as the `TERMINAL` mechanism for a process is assigned as
 the `output` of that process, and similarly for systems to which it belongs.
 
 .. note:: A mechanism can be the `ORIGIN` or `TERMINAL` of a process but not of a system to which that
@@ -673,7 +673,7 @@ class Mechanism_Base(Mechanism):
 
     value : 2d np.array : default None
         output of the mechanism's `function <Mechanism_Base.function>`.
-        Note: this is not necessarily the same as the mechanism's `outputValue <Mechanism_Base.outputValue>` attribute,
+        Note: this is not necessarily the same as the mechanism's `output_values <Mechanism_Base.output_values>` attribute,
         which lists the values of its `outputStates <Mechanism_Base.outputStates>`.
         The keyword:`value` is `None` until the mechanism has been executed at least once.
 
@@ -690,23 +690,23 @@ class Mechanism_Base(Mechanism):
         The key of each entry is the name of an outputState, and its value is the outputState.  There is always
         at least one entry, which identifies the mechanism's `primary outputState <OutputState_Primary>`.
 
-    outputValue : List[value] : default mechanism.function(variableInstanceDefault)
+    output_values : List[value] : default mechanism.function(variableInstanceDefault)
         a list of values, one for each `outputState <Mechanism_OutputStates>` in the mechanism's
         :keyword:`outputStates` attribute.
 
-        .. note:: The :keyword:`outputValue` of a mechanism is not necessarily the same as its
+        .. note:: The :keyword:`output_values` of a mechanism is not necessarily the same as its
                   `value <Mechanism_Base.value>` attribute, since the outputState's
                   `function <OutputState.OutputState.function>` and/or its `calculate <Mechanism_Base.calculate>`
                   attribute may use the mechanism's `value <Mechanism_Base.value>` to generate a derived quantity for
                   the `value <OutputState.OutputState.value>` of the outputState and its corresponding item in the
-                  the mechanism's :keyword:`outputValue` attribute.
+                  the mechanism's :keyword:`output_values` attribute.
 
         COMMENT:
             EXAMPLE HERE
         COMMENT
 
         .. _outputStateValueMapping : Dict[str, int]:
-               contains the mappings of outputStates to their indices in the outputValue list
+               contains the mappings of outputStates to their indices in the output_values list
                The key of each entry is the name of an outputState, and the value is its position in the
                     :py:data:`outputStates <Mechanism_Base.outputStates>` OrderedDict.
                Used in ``_update_output_states`` to assign the value of each outputState to the correct item of
@@ -1331,7 +1331,7 @@ class Mechanism_Base(Mechanism):
         Returns
         -------
 
-        mechanism's outputValue : List[value]
+        mechanism's output_values : List[value]
             list of the :keyword:`value` of each of the mechanism's `outputStates <Mechanism_OutputStates>` after
             either one time_step or a trial.
 
@@ -1561,7 +1561,7 @@ class Mechanism_Base(Mechanism):
         Returns
         -------
 
-        mechanism's outputValue : List[value]
+        mechanism's output_values : List[value]
             list of the :keyword:`value` of each of the mechanism's `outputStates <Mechanism_OutputStates>` for
             each execution of the mechanism.
 
@@ -1658,17 +1658,11 @@ class Mechanism_Base(Mechanism):
             params[state_name] = type_match(state.value, param_type)
 
     def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
-        """Execute function for each outputState and assign result of each to corresponding item of self.outputValue
+        """Execute function for each outputState and assign result of each to corresponding item of self.output_values
 
         """
         for state in self.output_states:
             state.update(params=runtime_params, time_scale=time_scale, context=context)
-            pass
-            # self.outputValue[i] = state.value
-
-        # Assign value of each outputState to corresponding item in self.outputValue
-        self.outputValue = [state.value for state in self.output_states]
-
 
     def initialize(self, value):
         """Assign an initial value to the mechanism's `value <Mechanism_Base.value>` attribute and update its
@@ -1832,6 +1826,15 @@ class Mechanism_Base(Mechanism):
         #         (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
         #     self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
         # # MODIFIED 1/28/17 END
+
+    @property
+    def input_value(self):
+        return self.input_states.values
+
+
+    @property
+    def output_values(self):
+        return self.output_states.values
 
     @property
     def status(self):

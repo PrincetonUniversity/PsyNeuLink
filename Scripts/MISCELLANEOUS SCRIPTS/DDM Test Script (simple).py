@@ -23,7 +23,7 @@ simple_ddm_process = process(pathway=[myMechanism],
                              prefs={REPORT_OUTPUT_PREF: True})
 simple_ddm_process.execute(1.0)
 
-print ('Decision variable: ', myMechanism.outputValue[0])
-print ('RT mean: ', myMechanism.outputValue[1])
-print ('ER mean: ', myMechanism.outputValue[2])
+print ('Decision variable: ', myMechanism.output_values[0])
+print ('RT mean: ', myMechanism.output_values[1])
+print ('ER mean: ', myMechanism.output_values[2])
 

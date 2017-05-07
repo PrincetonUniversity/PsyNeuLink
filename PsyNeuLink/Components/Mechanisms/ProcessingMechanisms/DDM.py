@@ -92,7 +92,7 @@ OUTPUT MEASURE?? OUTCOME MEASURE?? RESULT?? TYPE OF RESULT??
 If only a single decision process was run, then the value of each outputState is the corresponding output of
 the decision process.  If there is more than one decision process (i.e., the input has more than one item), then
 the content of the outputStates is determined by the ``average_output_states`` argument.  If it is :keyword:`True`,
-then each outputState (and item of ``outputValue``) contains a single value, which is the average of the output
+then each outputState (and item of ``output_values``) contains a single value, which is the average of the output
 values of that type over all of the processes run.  If ``average_output_states`` is :keyword:`False` (the default),
 then the value of each ouputState is a 1d array, each element of which is the outcome of that type for the
 corresponding decision process.
@@ -252,10 +252,10 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
 After each execution of the mechanism:
 
     * the value of the **decision variable** is assigned to the mechanism's `value <DDM.value>` attribute, the value of
-      the 1st item of its `outputValue <DDM.outputState>` attribute, and as the value of its `DDM_DECISION_VARIABLE`
+      the 1st item of its `output_values <DDM.outputState>` attribute, and as the value of its `DDM_DECISION_VARIABLE`
       outputState.
     ..
-    * **response time** is assigned as the value of the 2nd item of the mechanism's `outputValue <DDM.outputValue>`
+    * **response time** is assigned as the value of the 2nd item of the mechanism's `output_values <DDM.output_values>`
       attribute and as the value of its `RESPONSE_TIME` outputState.  If `time_scale <DDM.time_scale>` is
       `TimeScale.TRIAL`, the value is the mean response time (in seconds) estimated by the analytic solution used in
       `function <DDM.function>`.
@@ -273,7 +273,7 @@ After each execution of the mechanism:
     :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>`;  otherwise the value of the corresponding
     attributes is `None`.
     * **probability of reaching the upper threshold** is assigned to the 3rd item of the mechanism's
-      `outputValue <DDM.outputValue>` attribute, and as the value of its `PROBABILITY_UPPER_THRESHOLD` outputState.
+      `output_values <DDM.output_values>` attribute, and as the value of its `PROBABILITY_UPPER_THRESHOLD` outputState.
       If `time_scale <DDM.time_scale>` is `TimeScale.TRIAL`, the value is the probability (calculated by the analytic
       solution used in `function <DDM.function>`) that the value of the decision variable reached the upper (
       positive) threshold. Often, by convention, the upper threshold is associated with the ccorrect response,
@@ -288,7 +288,7 @@ After each execution of the mechanism:
 
     ..
     * **probability of reaching the lower threshold** is assigned to the 4th item of the mechanism's
-      `outputValue <DDM.outputValue>` attribute and as the value of its `PROBABILITY_LOWER_THRESHOLD` outputState.
+      `output_values <DDM.output_values>` attribute and as the value of its `PROBABILITY_LOWER_THRESHOLD` outputState.
       If `time_scale <DDM.time_scale>` is `TimeScale.TRIAL`, the value is the probability (calculated by the analytic
       solution used in `function <DDM.function>`) that the value of the decision variable reached the lower (negative)
       threshold.  Often, by convention, the lower threshold is associated with the incorrect response, in which case
@@ -303,14 +303,14 @@ After each execution of the mechanism:
 
     ..
     The following assignments are made only assigned if the `NavarroAndFuss` function is used, and
-    `time_scale <DDM.time_scale>` is `TimeScale.TRIAL`.  Otherwise, neither the `outputValue <DDM.outputValue>`
+    `time_scale <DDM.time_scale>` is `TimeScale.TRIAL`.  Otherwise, neither the `output_values <DDM.output_values>`
     nor the `outputState` attribute have a 6th item (if another function is assigned) or they are asssigned
     `None` if `time_scale <DDM.time_scale>` is `TimeScale.TIME_STEP`.
     * **mean correct response time** (in seconds) is assigned to the 5th item of the mechanism's
-    `outputValue <DDM.outputValue>` attribute and as  the value of its `RT_CORRECT_MEAN` outputState.
+    `output_values <DDM.output_values>` attribute and as  the value of its `RT_CORRECT_MEAN` outputState.
     ..
     * **variance of correct response time** is assigned to the 6th item of the mechanism's
-      `outputValue <DDM.outputValue>` attribute and as the value of its `RT_CORRECT_VARIANCE` outputState.
+      `output_values <DDM.output_values>` attribute and as the value of its `RT_CORRECT_VARIANCE` outputState.
 
         In time_step mode, compute and report variance of the path
         (e.g., as confirmation of /deviation from noise param??)??
@@ -458,15 +458,15 @@ class DDM(ProcessingMechanism_Base):
         contains one entry for each parameter of the mechanism's function.
         The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
     value : 2d np.array[array(float64),array(float64),array(float64),array(float64)]
-        result of executing DDM `function <DDM.function>`; same items as `outputValue <DDM.outputValue>`.
+        result of executing DDM `function <DDM.function>`; same items as `output_values <DDM.output_values>`.
 
     COMMENT:
         CORRECTED:
         value : 1d np.array
             the output of `function <DDM.function>`;  also assigned to `value <DDM.value>` of the
-            `DDM_DECISION_VARIABLE` outputState and the first item of `outputValue <DDM.outputValue>`.
+            `DDM_DECISION_VARIABLE` outputState and the first item of `output_values <DDM.output_values>`.
     COMMENT
-    outputValue : List[array(float64),array(float64),array(float64),array(float64)]
+    output_values : List[array(float64),array(float64),array(float64),array(float64)]
         a list with the following items:
         * **decision variable** (value of `DDM_DECISION_VARIABLE` outputState);
         * **response time** (value of `DDM_RESPONSE_TIME` outputState);
@@ -840,10 +840,10 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif self.timeScale == TimeScale.TRIAL:
 
-            # # Get length of self.outputValue from OUTPUT_STATES
+            # # Get length of self.output_values from OUTPUT_STATES
             # # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
-            # #       is run (to evaluate self.outputValue) before outputStates have been instantiated
-            # self.outputValue = [None] * len(self.paramsCurrent[OUTPUT_STATES])
+            # #       is run (to evaluate self.output_values) before outputStates have been instantiated
+            # self.output_values = [None] * len(self.paramsCurrent[OUTPUT_STATES])
 
             # # TEST PRINT:
             # print ("\nDDM RUN")

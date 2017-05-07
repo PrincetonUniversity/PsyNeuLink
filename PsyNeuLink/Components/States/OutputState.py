@@ -191,7 +191,7 @@ specified by its `calculate <OutputState_Calculate>` attribute with the designat
 `value <Mechanism.Mechanism_Base.value>` as its input.  This is possibly modified by the result of the outputState's
 `function <OutputState.function>` (though see `note <OutputState_Function_Note_2>`).  The final result is assigned as
 the outputState's `value <OutputState.value>`, as well as to a corresponding item of the mechanism's
-`outputValue  <Mechanism.Mechanism_Base.outputValue>` attribute. It is also used as the input to any projections for
+`output_values  <Mechanism.Mechanism_Base.output_values>` attribute. It is also used as the input to any projections for
 which the outputState is the `sender <Projection.Projection.sender>`.
 
 .. _OutputState_Class_Reference:
@@ -342,14 +342,14 @@ class OutputState(State_Base):
         the outputState's `index <OutputState.index>` attribute.  The result is combined with the result of the
         outputState's `function <OutputState.function>` ((though see `note below <OutputState_Function_Note_2>`)
         to determine both the `value <OutputState.value>` of the outputState, as well as the value of the
-        corresponding item of the owner mechanism's `outputValue <Mechanism.Mechanism_Base.outputValue>`.
+        corresponding item of the owner mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
         The default (`Linear`) transfers the value unmodified.
 
     function : CombinationFunction : default LinearCombination(operation=SUM))
         performs an element-wise (Hadamard) aggregation  of the values of the projections received by the
         outputState.  The result is combined with the result of the function specified by
         `calculate <OutputState.calculate>`, and assigned as both the outputState's `value <OutputState.value>`
-        and the corresponding item of the owner's `outputValue <Mechanism.Mechanism_Base.outputValue>`.
+        and the corresponding item of the owner's `output_values <Mechanism.Mechanism_Base.output_values>`.
 
         .. _OutputState_Function_Note_2:
 
@@ -368,7 +368,7 @@ class OutputState(State_Base):
         assigned the result of `function <OutputState.function>`
         (though see note under `function <OutputState.function>) combined with the result of the function specified
         by `calculate <OutputState.calculate>`;  the same value is assigned to the corresponding item of the owner
-        mechanism's `outputValue <Mechanism.Mechanism_Base.outputValue>`.
+        mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
 
     name : str : default <State subclass>-<index>
         name of the outputState.
@@ -483,8 +483,8 @@ class OutputState(State_Base):
                 self.owner.value[target_set[INDEX]]
             except IndexError:
                 raise OutputStateError("Value of {} argument for {} is greater than the number of items in "
-                                       "the outputValue ({}) for its owner mechanism ({})".
-                                       format(INDEX, self.name, self.owner.outputValue, self.owner.name))
+                                       "the output_values ({}) for its owner mechanism ({})".
+                                       format(INDEX, self.name, self.owner.output_values, self.owner.name))
 
         # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE

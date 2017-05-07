@@ -94,7 +94,7 @@ def show_target():
     print ('\nInput Weights: \n', Input_Weights.matrix)
     print ('Middle Weights: \n', Middle_Weights.matrix)
     print ('Output Weights: \n', Output_Weights.matrix)
-    # print ('MSE: \n', Output_Layer.outputValue[])
+    # print ('MSE: \n', Output_Layer.output_values[])
 
 stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 

@@ -682,7 +682,7 @@ class System_Base(System):
         COMMENT
 
     value : 3D ndarray
-        contains an array of 2D arrays, each of which is the `outputValue `of a `TERMINAL` mechanism in the system.
+        contains an array of 2D arrays, each of which is the `output_values `of a `TERMINAL` mechanism in the system.
 
         .. _phaseSpecMax : int
             Maximum phase specified for any mechanism in system.  Determines the phase of the last (set of)
@@ -1836,7 +1836,7 @@ class System_Base(System):
     def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
 
-        Assign the outputs of terminal Mechanisms in the graph to the system's outputValue
+        Assign the outputs of terminal Mechanisms in the graph to the system's output_values
 
         Note:
         * Current implementation simply assigns terminal mechanisms as outputStates
@@ -2276,7 +2276,7 @@ class System_Base(System):
                   format(self.name, system_string, clock.time_step))
 
     def _report_system_completion(self, clock=CentralClock):
-        """Prints completion message and outputValue of system
+        """Prints completion message and output_values of system
         """
 
         if 'system' in self.name or 'System' in self.name:
@@ -2471,7 +2471,7 @@ class System_Base(System):
         output_state_names = []
         output_value_array = []
         for mech in list(self.terminalMechanisms.mechanisms):
-            output_value_array.append(mech.outputValue)
+            output_value_array.append(mech.output_values)
             for name in mech.output_states:
                 output_state_names.append(name)
         output_value_array = np.array(output_value_array)
