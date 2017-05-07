@@ -152,6 +152,8 @@
 
 # DOCUMENTATION: input_states, parameter_states and output_states as ContentAddressableList
 
+# DOCUMENTATION:rst pages for Gating components
+
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??

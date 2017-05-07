@@ -645,15 +645,14 @@ class ContentAddressableList(UserList):
       * getting and setting entries in the list using keys (string), in addition to numeric indices.
         the key to use is specified by the **key** arg of the constructor, and must be a string attribute;
         * for getting an entry:
-            the key must match the keyed attribute of a component in the list; otherwise an exception is raised;
+          the key must match the keyed attribute of a component in the list; otherwise an exception is raised;
         * for setting an entry:
-            the key must match the key of the component being assigned;
-            if there is already a component in the list the keyed vaue of which matches the key, it is replaced;
-            if there is no component in the list the keyed attribute of which matches the key, 
-            the component is appended to the list;
-      * names() method: returns a list of the values of the `name <Component>` attribute of components in the list;
-      * keys() method: returns a list of the values of the keyed attribute of each component in the list;
-      * values() method: returns a list of the values of the `value <Component>` attribute of components in the list;
+            - the key must match the key of the component being assigned;
+            - if there is already a component in the list the keyed vaue of which matches the key, it is replaced;
+            - if there is no component in the list the keyed attribute of which matches the key, 
+              the component is appended to the list;
+        * for getting lists of the names, values of the keyed attributes, and values of the `value <Component.value>`
+            attributes of components in the list.  
         
     IMPLEMENTATION NOTE:
         This class allows components to be maintained in lists, while providing ordered storage 
@@ -679,7 +678,7 @@ class ContentAddressableList(UserList):
 
     list : List : default None
         specifies a list used to initialize the list;  
-        all of the items must be of type **component_type** and have the **key** attribute.   
+        all of the items must be of type **component_type** and have the **key** attribute.
 
     Attributes
     ----------
@@ -690,8 +689,17 @@ class ContentAddressableList(UserList):
     key : str
         the attribute of `component_type <ContentAddressableList.component_type>` used to key items in the list by content;
 
-    data : List
+    data : List (property)
         the actual list of items.      
+
+    names : List (property)
+        values of the `name <Component>` attribute of components in the list.
+
+    key_values : List (property)
+        values of the keyed attribute of each component in the list.
+        
+    values : List (property)
+        values of the `value <Component>` attribute of components in the list.
     
     """
 
@@ -790,7 +798,8 @@ class ContentAddressableList(UserList):
 
     def copy(self):
         return self.data.copy()
-    
+
+    @property
     def names(self):
         """Return list of `values <Component.value>` of the name attribute of components in the list.
         
@@ -803,7 +812,8 @@ class ContentAddressableList(UserList):
         """
         return [getattr(item, NAME) for item in self.data]
 
-    def keys(self):
+    @property
+    def key_values(self):
         """Return list of `values <Component.value>` of the keyed attribute of components in the list.
         
         Returns
@@ -815,6 +825,7 @@ class ContentAddressableList(UserList):
         """
         return [getattr(item, self.key) for item in self.data]
 
+    @property
     def values(self):
         """Return list of values of components in the list.
         
