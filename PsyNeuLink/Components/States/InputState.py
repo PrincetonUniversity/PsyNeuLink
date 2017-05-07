@@ -397,8 +397,10 @@ class InputState(State_Base):
 def _instantiate_input_states(owner, context=None):
     """Call State._instantiate_state_list() to instantiate orderedDict of inputState(s)
 
-    Create OrderedDict of inputState(s) specified in paramsCurrent[INPUT_STATES]
+    Create ContentAddressableList of inputState(s) specified in paramsCurrent[INPUT_STATES]
+
     If INPUT_STATES is not specified, use self.variable to create a default input state
+
     When completed:
         - self.input_states contains an OrderedDict of one or more input_states
         - self.input_state contains the `primary inputState <Mechanism_InputStates>`:  first or only one in OrderedDict
@@ -412,17 +414,23 @@ def _instantiate_input_states(owner, context=None):
               into individual 1D arrays, one for each input state
 
     (See State._instantiate_state_list() for additional details)
-
-    :param context:
-    :return:
     """
-    owner.input_states = _instantiate_state_list(owner=owner,
-                                               state_list=owner.paramsCurrent[INPUT_STATES],
-                                               state_type=InputState,
-                                               state_param_identifier=INPUT_STATES,
-                                               constraint_value=owner.variable,
-                                               constraint_value_name="function variable",
-                                               context=context)
+
+    state_list = _instantiate_state_list(owner=owner,
+                                         state_list=owner.input_states,
+                                         state_type=InputState,
+                                         state_param_identifier=INPUT_STATES,
+                                         constraint_value=owner.variable,
+                                         constraint_value_name="function variable",
+                                         context=context)
+
+    # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
+    # FIX: Hack to prevent recursion in calls to setter and assign_params
+    # if context and 'COMMAND_LINE' in context:
+    #     owner._input_states = state_list
+    # else:
+    #     owner.input_states = state_list
+    owner.input_states = state_list
 
     # Check that number of input_states and their variables are consistent with owner.variable,
     #    and adjust the latter if not

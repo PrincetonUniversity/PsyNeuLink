@@ -1115,7 +1115,7 @@ class Mechanism_Base(Mechanism):
         else:
             # INPUT_STATES is specified, so validate:
             # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_inputState)
-            if not isinstance(param_value, (list, OrderedDict)):
+            if not isinstance(param_value, (list, OrderedDict, ContentAddressableList)):
                 param_value = [param_value]
             # Validate each item in the list or OrderedDict
             # Note:
