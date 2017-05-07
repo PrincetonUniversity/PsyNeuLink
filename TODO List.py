@@ -174,10 +174,11 @@
 # SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
 
 # FIX: FINISH input/output refactoring:
-#     DOCUMENTATION for inputState(s) and outputState(s)
+#     DOCUMENTATION for input_state(s) and output_state(s)
 #                   variable and value: 2d np.arrays
 #                   input_values and output_values:  lists of values, but each value may be an np.ndarray
 #                   XXput_states.values_as_lists: lists of values, each of which has been conerted to a list
+#                   Only appear in user_params if specified in arg of constructor
 # np.ndarray
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
