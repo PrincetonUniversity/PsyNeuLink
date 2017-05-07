@@ -736,7 +736,7 @@ def _instantiate_parameter_states(owner, context=None):
 
     # TBI / IMPLEMENT: use specs to implement paramterStates below
 
-    owner.parameterStates = {}
+    owner._parameter_states = {}
     #
     # Check that parameterStates for owner have not been explicitly suppressed (by assigning to None)
     try:
@@ -872,7 +872,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                       constraint_value_name=function_param_name,
                                       context=context)
             if state:
-                owner.parameterStates[function_param_name] = state
+                owner._parameter_states[function_param_name] = state
             continue
 
     else:
@@ -885,5 +885,5 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                   constraint_value_name=param_name,
                                   context=context)
         if state:
-            owner.parameterStates[param_name] = state
+            owner._parameter_states[param_name] = state
 

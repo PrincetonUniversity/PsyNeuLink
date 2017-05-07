@@ -736,7 +736,7 @@ class Projection_Base(Projection):
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
-        for state_name, state in self.parameterStates.items():
+        for state_name, state in self._parameter_states.items():
 
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 

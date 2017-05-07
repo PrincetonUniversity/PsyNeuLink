@@ -1668,8 +1668,8 @@ class System_Base(System):
                         #    (since its value, which was the IDENTITY_MATRIX, is now itself ParameterState,
                         #     and Components are not allowed  as the value of a ParameterState
                         #     -- see ParameterState._instantiate_parameter_state())
-                        if 'error_matrix' in learning_mech.parameterStates:
-                            del learning_mech.parameterStates['error_matrix']
+                        if 'error_matrix' in learning_mech._parameter_states:
+                            del learning_mech._parameter_states['error_matrix']
 
                         sender_mech = error_signal_mech
 
@@ -2147,7 +2147,7 @@ class System_Base(System):
                                      component.name,
                                      re.sub('[\[,\],\n]','',str(process_names))))
 
-            component.parameterStates[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
+            component._parameter_states[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
 
             # TEST PRINT:
             # print ("EXECUTING WEIGHT UPDATES: ", component.name)
@@ -2481,7 +2481,7 @@ class System_Base(System):
         learning_projections = []
         controlled_parameters = []
         for mech in list(self.mechanisms):
-            for parameter_state in mech.parameterStates:
+            for parameter_state in mech._parameter_states:
                 try:
                     for projection in parameter_state.receivesFromProjections:
                         if isinstance(projection, ControlProjection):
@@ -2736,7 +2736,7 @@ class System_Base(System):
                         # for each sndr of rcvr
                         sndrs = learning_graph[rcvr]
                         for sndr in sndrs:
-                            edge_label = rcvr.parameterStates['matrix'].receivesFromProjections[0].name
+                            edge_label = rcvr._parameter_states['matrix'].receivesFromProjections[0].name
                             G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
                     else:
                         sndrs = learning_graph[rcvr]

@@ -4359,7 +4359,7 @@ class Stability(ObjectiveFunction):
 
             if isinstance(matrix, MappingProjection):
                 try:
-                    matrix = matrix.parameterStates[MATRIX].value
+                    matrix = matrix._parameter_states[MATRIX].value
                     param_type_string = "MappingProjection's ParameterState"
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
@@ -4413,7 +4413,7 @@ class Stability(ObjectiveFunction):
         from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         if isinstance(self.matrix,MappingProjection):
-            self.matrix = self.matrix.parameterStates[MATRIX]
+            self.matrix = self.matrix._parameter_states[MATRIX]
         elif isinstance(self.matrix,ParameterState):
             pass
         else:
@@ -5125,7 +5125,7 @@ class BackPropagation(LearningFunction):
 
             if isinstance(error_matrix, MappingProjection):
                 try:
-                    error_matrix = error_matrix.parameterStates[MATRIX].value
+                    error_matrix = error_matrix._parameter_states[MATRIX].value
                     param_type_string = "MappingProjection's ParameterState"
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "

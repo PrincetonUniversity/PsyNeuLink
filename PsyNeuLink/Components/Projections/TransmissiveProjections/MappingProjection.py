@@ -470,7 +470,7 @@ class MappingProjection(TransmissiveProjection_Base):
 
             # Assume that if monitoringMechanism attribute is assigned,
             #    both a LearningProjection and parameterState[MATRIX] to receive it have been instantiated
-            matrix_parameter_state = self.parameterStates[MATRIX]
+            matrix_parameter_state = self._parameter_states[MATRIX]
 
             # Assign current MATRIX to parameter state's baseValue, so that it is updated in call to execute()
             matrix_parameter_state.baseValue = self.matrix

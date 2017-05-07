@@ -300,7 +300,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Check the parameterStates of the system's mechanisms for any ControlProjections with deferred_init()
         for mech in self.system.mechanisms:
-            for parameter_state in mech.parameterStates.values():
+            for parameter_state in mech._parameter_states.values():
                 for projection in parameter_state.receivesFromProjections:
                     # If projection was deferred for init, initialize it now and instantiate for self
                     if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
