@@ -584,18 +584,14 @@ class ParameterState(State_Base):
         Parameter can be either owner's, or owner's function_object
         """
 
-        # # MODIFIED 11/29/16 OLD:
-        # if not self.name in self.owner.function_params.keys():
-        # MODIFIED 11/29/16 NEW:
         # If the parameter is not in either the owner's user_params dict or its function_params dict, throw exception
         if not self.name in self.owner.user_params.keys() and not self.name in self.owner.function_params.keys():
-        # MODIFIED 11/29/16 END
             raise ParameterStateError("Name of requested parameterState ({}) does not refer to a valid parameter "
                                       "of the component ({}) or it function ({})".
                                       format(self.name,
                                              # self.owner.function_object.__class__.__name__,
                                              self.owner.name,
-                                             self.owner.function_object.componentName))
+                                             self.owner.function.componentName))
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 

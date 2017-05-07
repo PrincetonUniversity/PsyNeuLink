@@ -854,6 +854,7 @@ class Mechanism_Base(Mechanism):
         # Create mechanism's _stateRegistry and state type entries
         from PsyNeuLink.Components.States.State import State_Base
         self._stateRegistry = {}
+
         # InputState
         from PsyNeuLink.Components.States.InputState import InputState
         register_category(entry=InputState,
@@ -1210,7 +1211,7 @@ class Mechanism_Base(Mechanism):
         else:
             # OUTPUT_STATES is specified, so validate:
             # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_outputState)
-            if not isinstance(param_value, (list, OrderedDict)):
+            if not isinstance(param_value, (ContentAddressableList, list, OrderedDict)):
                 param_value = [param_value]
             # Validate each item in the list or OrderedDict
             i = 0

@@ -1424,7 +1424,7 @@ def _instantiate_state_list(owner,
                                          constraint_value))
 
     # States should be either in a list, or possibly an np.array (from constraint_value assignment above):
-    if isinstance(state_entries, (list, np.ndarray)):
+    if isinstance(state_entries, (ContentAddressableList, list, np.ndarray)):
 
         # VALIDATE THAT NUMBER OF STATES IS COMPATIBLE WITH NUMBER OF CONSTRAINT VALUES
         num_states = len(state_entries)
@@ -1554,9 +1554,9 @@ def _instantiate_state_list(owner,
 
     else:
         # This shouldn't happen, as kwMechanism<*>States was validated to be one of the above in _validate_params
-        raise StateError("PROGRAM ERROR: {0} for is not a recognized {1} specification for {2}; "
+        raise StateError("PROGRAM ERROR: {} for {} is not a recognized \'{}\' specification for {}; "
                          "it should have been converted to a list in Mechanism._validate_params)".
-                         format(state_entries, state_param_identifier, owner.__class__.__name__))
+                         format(state_entries, owner.name, state_param_identifier, owner.__class__.__name__))
 
 
 def _instantiate_state(owner,                   # Object to which state will belong
