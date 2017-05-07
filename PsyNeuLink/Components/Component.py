@@ -1481,8 +1481,8 @@ class Component(object):
 
         validated_set_param_names = list(validated_set.keys())
 
-        if INPUT_STATES in validated_set_param_names:
-            self._instantiate_attributes_before_function()
+        if INPUT_STATES in validated_set_param_names and COMMAND_LINE in context:
+            self._instantiate_attributes_before_function(context=COMMAND_LINE)
 
         # Give owner a chance to instantiate function and/or function params
         # (e.g., wrap in UserDefineFunction, as per EVCMechanism)
@@ -1497,6 +1497,9 @@ class Component(object):
 
         # MODIFIED 5/5/17 OLD:
         if OUTPUT_STATES in validated_set:
+        # # MODIFIED 5/5/17 NEW:
+        # if OUTPUT_STATES in validated_set and COMMAND_LINE in context:
+        # MODIFIED 5/5/17 END
             self._instantiate_attributes_after_function(context=COMMAND_LINE)
 
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):

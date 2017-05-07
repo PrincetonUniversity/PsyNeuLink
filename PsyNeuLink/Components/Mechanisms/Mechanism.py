@@ -1739,8 +1739,10 @@ class Mechanism_Base(Mechanism):
             # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
             for param_name in params_keys_sorted:
-                # No need to report these here, as they will be reported for the function itself below
-                if param_name is FUNCTION_PARAMS:
+                # No need to report:
+                #    function_params here, as they will be reported for the function itself below;
+                #    input_states or output_states, as these are not really params
+                if param_name in {FUNCTION_PARAMS, INPUT_STATES, OUTPUT_STATES}:
                     continue
                 param_is_function = False
                 param_value = params[param_name]
@@ -1764,14 +1766,7 @@ class Mechanism_Base(Mechanism):
                                format(fct_param_name,
                                       str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
 
-        # # MODIFIED 2/20/17 OLD:
-        # if not isinstance(output, Iterable):
-        #     output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
-        # else:
-        #     output_string = output
-        # MODIFIED 2/20/17 NEW:
         output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
-        # MODIFIED 2/20/17 END
 
         print("- output: {}".format(output_string))
 
