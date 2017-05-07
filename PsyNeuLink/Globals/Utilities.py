@@ -826,4 +826,3 @@ class ContentAddressableList(UserList):
 
         """
         return [getattr(item, VALUE) for item in self.data]
-
