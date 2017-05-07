@@ -650,7 +650,3 @@ def _instantiate_output_states(owner, context=None):
         return
     else:
         owner.output_states = state_list
-
-    # Assign self.outputState to first outputState in dict
-    owner.output_state = owner.output_states[0]
-

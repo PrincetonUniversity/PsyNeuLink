@@ -453,11 +453,3 @@ def _instantiate_input_states(owner, context=None):
 # FIX:  IS THIS A LIST OR np.array (SHOULD BE A LIST)
     # ??REPLACE THIS WITH owner.inputValue = list(owner.variable) * 0.0??
     owner.inputValue = owner.variable.copy() * 0.0
-
-    # Assign self.input_state to first inputState in dict
-    try:
-        owner.input_state = owner.input_states[0]
-    except AttributeError:
-        owner.input_state = None
-
-
