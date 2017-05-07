@@ -442,7 +442,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         print ("\n\tControlling the following mechanism parameters:".format(self.name))
         # Sort for consistency of output:
-        state_names_sorted = sorted(self.output_states.keys())
+        state_names_sorted = sorted(self.output_states.names)
         for state_name in state_names_sorted:
             for projection in self.output_states[state_name].sendsToProjections:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
