@@ -33,7 +33,7 @@ word_process = process(pathway=[word_input_linear_transfer_mechanism, word_logis
 Reward = TransferMechanism(name='Reward')
 RewardProcess = process(default_input_value=[1], pathway=[(Reward, 1)], name = 'RewardProcess')
 #mySystem = system(processes = [color_process, word_process])
-mySystem = system(processes = [color_process, word_process, RewardProcess], controller = EVCMechanism, enable_controller = True, monitor_for_control=[Reward, (DDM_DECISION_VARIABLE,1,1), (DDM_RESPONSE_TIME, -1, 1)], name='Stroop Model') #output, difference between color / word unit activation  #outputValue attribute?
+mySystem = system(processes = [color_process, word_process, RewardProcess], controller = EVCMechanism, enable_controller = True, monitor_for_control=[Reward, (DDM_DECISION_VARIABLE,1,1), (DDM_RESPONSE_TIME, -1, 1)], name='Stroop Model') #output, difference between color / word unit activation  #output_values attribute?
 mySystem.execute(input=[[1],[-1],[1]])
 
 mySystem.controller.show()
@@ -44,7 +44,7 @@ mySystem.show()
 # mySystem.execute(input=[[.1],[-0.1]])[0]
 
 
-#outputValue for color, separate for word process, and then combine?
+#output_values for color, separate for word process, and then combine?
 # decision_DDM = DDM(function=BogaczEtAl(drift_rate= difference_output*, threshold=(1, ControlProjection)) #or could use params = {DRIFT_RATE:(0.2, ControlProjection), STARTING_POINT:-0.5}
 #DDM, drift rate = output, EVC regulates threshold 
 # DDM_PROBABILITY_UPPER_THRESHOLD      # what does this mean?: if time_scale is TimeScale.TIME_STEP, this is `None;
@@ -81,12 +81,12 @@ mySystem.show()
 #color transfer mechanism, EVC regulates bias   ##TransferMechanism
     #e.g. color_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4) #?bias = control_signal_bias
     #range 0 to 1? 
-    #outputValue for color, separate for word process, and then combine?
+    #output_values for color, separate for word process, and then combine?
 
 #word process 
 #word input        ## ?Mapping Projection    ORIGIN 
 #word transfer mechanism, EVC regulates bias    ##TransferMechanism
-#output, difference between color / word unit activation  #outputValue attribute?
+#output, difference between color / word unit activation  #output_values attribute?
  
 #DDM, drift rate = output, EVC regulates threshold 
 # decision_DDM = DDM(function=BogaczEtAl(drift_rate= difference_output*, threshold=(1, ControlProjection)) #or could use params = {DRIFT_RATE:(0.2, ControlProjection), STARTING_POINT:-0.5}

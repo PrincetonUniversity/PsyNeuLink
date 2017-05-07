@@ -448,7 +448,7 @@
 #             controlSignal.allocation_samples: set of samples specified for that controlSignal
 #             [TBI:] controlSignal.allocation_range: range that the controlSignal value can take
 #             controller.allocation_policy: current allocation_policy
-#             controller.outputValue: list of current controlSignal values
+#             controller.output_values: list of current controlSignal values
 #             controller.value_function: calls the three following functions (done explicitly, so each can be specified)
 #             controller.outcome_aggregation function: aggregates outcomes (using specified weights and exponentiation)
 #             controller.cost_function:  aggregate costs of control signals
@@ -485,7 +485,7 @@
 #                which are simply convenience string constants that are the same as the name of the argument
 #                for the parameter in the component's constructor. (see :ref:`EVCMechanism_Creation` for text)
 
-# DOCUMENT: inputValue and outputValue are lists for convenience of user access, whereas
+# DOCUMENT: inputValue and output_values are lists for convenience of user access, whereas
 #           variable and value are 2d np.arrays that are used as internal datastructures
 #
 
@@ -496,13 +496,13 @@
 
 # DOCUMENT:  FIGURES FOR:
 #                   inputState: inputValue vs. variable
-#                   OutputState: function vs. calculate, value vs. outputState.value vs. outputValue
+#                   OutputState: function vs. calculate, value vs. outputState.value vs. output_values
 
 # DOCUMENT:  IN MECHANISM, CLARIFY:
 #                DISTINCTION BETWEEN THE RESULT OF ITS FUNCTION,
 #                                     AND ITS ``value`` ATTRIBUTE, WHICH IS WHAT IS RETURNED BY ITS EXECUTE METHOD
 #                DISTINCTION BETWEEN ``value``, WHICH IS THE RESULT OF THE MECHANISM'S EXECUTION,
-#                                AND ``outputValue``, WHICH IS A SUMMARY OF THE ``value`` OF EACH OF ITS outputStates
+#                                AND ``output_values``, WHICH IS A SUMMARY OF THE ``value`` OF EACH OF ITS outputStates
 #
 # DOCUMENTATION: add show to Systsem and Process
 #
@@ -1369,7 +1369,7 @@
 # DOCUMENT: System.mechanisms:  DICT:
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
-# DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.outputValue
+# DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.output_values
 # DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.input_states (that receive projections from monitored States) and
 #                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 # DOCUMENT: CURRENTLY, PREDICTION MECHANISMS USE OUTPUT OF CORRESPONDING ORIGIN MECHANISM
@@ -1663,16 +1663,16 @@
 # FIX!!: Get straight ComponentName vs. ComponentType (e.g.,. EVCMechanism, ComparatorMechanism)
 #
 # FIX!!: VARIABLE VS. VALUE BUSINESS:
-#     QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)
+#     QUESTION: is mechanism.value always == mechanism.output_values (if not, document example)
 #     QUESTION: is self.value re-initialized prior to every system execution? process execution?
-#     FIX: Mechanism.inputValue and outputValue should both be lists (not np.arrays)
+#     FIX: Mechanism.inputValue and output_values should both be lists (not np.arrays)
 #     FIX: WHY BOTHER WITH inputValue ATTRIBUTE?  IF IT IS WORTH KEEPING, ADD TO DOCUMENTATION OF MECHANISM AND INPUTSTATE
 #     IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL input_states
 #     DOCUMENTATION:  inputValue is a list, variable is a 2d np.nparray
-#     FIX:  RECONCILE DOCUMENTATION WITH ACTUALITY:  value == outputValue or just 1st item of outputValue
-#           CURRENTLY:  value = outputValue (DDM doesn't even have an outputValue
-#     FIX:  MAKE IT SO THAT value = output of function, and outputValue is what is returned by execute
-#     FIX:                  check that outputValue is concatenation of outputState values
+#     FIX:  RECONCILE DOCUMENTATION WITH ACTUALITY:  value == output_values or just 1st item of output_values
+#           CURRENTLY:  value = output_values (DDM doesn't even have an output_values
+#     FIX:  MAKE IT SO THAT value = output of function, and output_values is what is returned by execute
+#     FIX:                  check that output_values is concatenation of outputState values
 #     IMPLEMENT .input FOR Component:  == ndarray of all inputState.variables
 #     IMPLEMENT .output FOR Component:  == ndarray of all outputState.variables
 #     FIX: GET STRAIGHT system.input vs. system.inputValue
@@ -2127,7 +2127,7 @@
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 #          #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 #
-# TEST: MAKE SURE THAT outputValue IS GETTING SET PROPERLY
+# TEST: MAKE SURE THAT output_values IS GETTING SET PROPERLY
 #                  (IN Mechanism.execute OR Mecchanism._update_output_states)
 #
 # IMPLEMENT: dictionaries for receivesFromProjections and sendsToProjections;
@@ -2400,7 +2400,7 @@
 #
 # IMPLEMENT:  ?? ADD OPTION TO OVERRIDE "LAZY UPDATING" OF PARAMETER STATES, SO THAT ANY CHANGES CAN BE SEEN IN A PRINT
 #                STATEMENT AS SOON AS THEY HAVE OCCURRED)
-# IMPLEMENT: ADD OPTION TO SPECIFY WHICH OUTPUT STATES (self.outputValue) TO INCLUDE IN REPORT_OUTPUT
+# IMPLEMENT: ADD OPTION TO SPECIFY WHICH OUTPUT STATES (self.output_values) TO INCLUDE IN REPORT_OUTPUT
 #            (e.g., DDM)
 # IMPLEMENT:  ParamsDict - > .<param>:
 #             In update parameter states, assign self.param.value == parameterState[<param>].value
@@ -2852,7 +2852,7 @@
 #     CYCLE WARNING:  if verbose, on run() warn about any un-initialized recurrent projections
 #     Equivalent of run() for initialize()
 #
-# IMPLEMENT: show function for results of system.execute (integrate with system.outputValues) and process.execute
+# IMPLEMENT: show function for results of system.execute (integrate with system.output_values) and process.execute
 # IMPLEMENT: show function for system and process that shows inputs
 # IMPLEMENT: ??change specification of inputs in construct_inputs to name of process rather than mechanism
 # IMPLEMENT: help function for process.run and system.run that explains required structure of inputs

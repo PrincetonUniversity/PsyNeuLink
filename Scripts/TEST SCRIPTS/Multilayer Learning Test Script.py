@@ -135,7 +135,7 @@ def show_target():
     print ('- Middle 1: \n', Hidden_Layer_1.value)
     print ('- Middle 2: \n', Hidden_Layer_2.value)
     print ('- Output:\n', Output_Layer.value)
-    # print ('MSE: \n', Output_Layer.outputValue[0])
+    # print ('MSE: \n', Output_Layer.output_values[0])
 
 if COMPOSITION is PROCESS:
     # z.execute()

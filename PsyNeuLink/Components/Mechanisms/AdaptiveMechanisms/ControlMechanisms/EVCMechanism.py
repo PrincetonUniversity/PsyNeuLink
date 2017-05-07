@@ -575,7 +575,7 @@ class EVCMechanism(ControlMechanism_Base):
             controlSignal.allocation_samples is the set of samples specified for that controlSignal
             [TBI:] controlSignal.allocation_range is the range that the controlSignal value can take
             controller.allocation_policy - holds current allocation_policy
-            controller.outputValue is a list of current controlSignal values
+            controller.output_values is a list of current controlSignal values
             controller.value_function - calls the three following functions (done explicitly, so each can be specified)
             controller.outcome_function - aggregates monitored outcomes (using specified weights and exponentiation)
             controller.cost_function - aggregate costs of control signals

@@ -65,6 +65,6 @@ for i in range(10):
     print ('Middle Weights: \n', Middle_Weights.matrix)
     print ('Output Weights: \n', Output_Weights.matrix)
 
-    # print ('MSE: \n', Output_Layer.outputValue[])
+    # print ('MSE: \n', Output_Layer.output_values[])
 
 print(results)

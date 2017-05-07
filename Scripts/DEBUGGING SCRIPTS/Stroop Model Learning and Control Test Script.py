@@ -86,7 +86,7 @@ def show_target():
     print ('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.
            # format(word_reading_process.input, word_reading_process.target))
            format(words.inputValue, mySystem.targets))
-    print ('Response: \n', response.outputValue[0])
+    print ('Response: \n', response.output_values[0])
     print ('Hidden-Output:')
     print (HO_Weights.matrix)
     print ('Color-Hidden:')

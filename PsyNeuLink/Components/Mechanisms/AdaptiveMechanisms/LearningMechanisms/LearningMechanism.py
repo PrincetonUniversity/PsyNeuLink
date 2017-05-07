@@ -147,7 +147,7 @@ These receive the output of the LearningMechanism's `function <LearningMechanism
    of the MappingProjection being learned.  It is assigned as the `sender <LearningProjection.sender>` for the
    LearningProjection that projects to the MappingProjection.  It's value is accessible as the LearningMechanism's
    `learning_signal` attribute, and as the first item of the LearningMechanism's
-   `outputValue <LearningMechanism.outputValue>` attribute.
+   `output_values <LearningMechanism.output_values>` attribute.
 
 .. _LearningMechanism_Output_Error_Signal:
 
@@ -158,7 +158,7 @@ These receive the output of the LearningMechanism's `function <LearningMechanism
    `multilayer learning sequence <LearningMechanism_Multi_Layer>`, it serves as the `sender <MappingProjection.sender>`
    for a MappingProjection to the LearningMechanism for the MappingProjection before it in the sequence (i.e.,
    the layer "below" it).  It's value is accessible as the LearningMechanism's `learning_signal` attribute,
-   and as the first item of the LearningMechanism's `outputValue <LearningMechanism.outputValue>` attribute.
+   and as the first item of the LearningMechanism's `output_values <LearningMechanism.output_values>` attribute.
 
 .. _LearningMechanism_Additional_Attributes:
 
@@ -336,13 +336,13 @@ been executed, including the ObjectiveMechanism(s) that provide the `error_signa
 LearningMechanism is executed, it uses the value of its `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>`
 inputState to calculate changes to the `matrix <MappingProjection.MappingProjection.matrix>` of its
 `MappingProjection`.  The changes are assigned as the value of its `learning_signal` attribute (as well as the 1st item
-of its `outputValue <LearningMechanism.outputValue>` attribute) and used as the `value <LearningProjection.value>` of
-the `LearningProjection` from the LearningMechanism to the `MATRIX` parameterState of its `learned_projection`.
+of its `output_values <LearningMechanism.output_values>` attribute) and used as the `value <LearningProjection.value>` 
+of the `LearningProjection` from the LearningMechanism to the `MATRIX` parameterState of its `learned_projection`.
 However, these but are not applied to the `matrix <MappingProjection.MappingProjection.matrix>` itself until the next
 time the `learned_projection` is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 In addition, the LearningMechanism assigns the `error_signal` signal computed by its
 `function <LearningMechanism.function>` to its `error_signal` attribute (as well as the 2nd item of its
-`outputValue <LearningMechanism.outputValue>` attribute).
+`output_values <LearningMechanism.output_values>` attribute).
 
 .. _LearningMechanism_Class_Reference:
 
@@ -551,7 +551,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         matrix of changes to be used by recipient of `LearningProjection` to adjust its parameters (e.g.,
         matrix weights, in rows correspond to sender, columns to receiver); same as `value <LearningMechanism.value>`.
 
-    outputValue : 2d np.array
+    output_values : 2d np.array
         the 1st item is the same as `learning_signal`;  the 2nd item is the same as `error_signal`.
 
     name : str : default LearningProjection-<index>

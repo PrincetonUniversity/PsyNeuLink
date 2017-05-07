@@ -63,7 +63,7 @@ components, a state has the three following core attributes:
       of a `Gating` projection;  for a `parameterState <ParameterState>`, it determines the value of the associated 
       parameter, under the potential influence of a `ControlProjection` (for a `Mechanism`) or a `LearningProjection`
       (for a `MappingProjection`);  for an outputState, it conveys the result  of the mechanism's function to its
-      outputValue, under the potential influence of a `GatingProjection`.  
+      output_values, under the potential influence of a `GatingProjection`.  
       See `ModulatoryProjections <ModulatoryProjection_Structure>` for a description of how these can be used to 
       influence the `function <State.function> of a state.
     ..

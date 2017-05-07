@@ -242,13 +242,13 @@ class LCA(RecurrentTransferMechanism):
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of
-        `outputValue <TransferMechanism.outputValue>`.    
+        `output_values <TransferMechanism.output_values>`.    
 
     COMMENT:
         CORRECTED:
         value : 1d np.array
             the output of `function <LCA.function>`;  also assigned to :keyword:`value` of the TRANSFER_RESULT 
-            outputState and the first item of :keyword:`outputValue`.
+            outputState and the first item of :keyword:`output_values`.
     COMMENT
 
     outputStates : Dict[str, OutputState]
@@ -269,7 +269,7 @@ class LCA(RecurrentTransferMechanism):
           index of the element of RESULT with the highest value, and the second the difference between that
           and the average of the value of all its other elements;
 
-    outputValue : List[array(float64), float, float]
+    output_values : List[array(float64), float, float]
         a list with the following items:
         * **result** of the `function <LCA.function>` calculation (value of TRANSFER_RESULT outputState);
         * **mean** of the result (:keyword:`value` of TRANSFER_MEAN outputState)

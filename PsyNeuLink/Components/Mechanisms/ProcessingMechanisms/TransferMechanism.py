@@ -84,13 +84,13 @@ After each execution of the mechanism:
 
     * **result** of `function <TransferMechanism.function>` is assigned to the mechanism's
       `value <TransferMechanism.value>` attribute, the :keyword:`value` of its TRANSFER_RESULT outputState,
-      and to the 1st item of the mechanism's `outputValue <TransferMechanism.outputValue>` attribute;
+      and to the 1st item of the mechanism's `output_values <TransferMechanism.output_values>` attribute;
     ..
     * **mean** of the result is assigned to the the :keyword:`value` of the mechanism's TRANSFER_MEAN outputState,
-      and to the 2nd item of its `outputValue <TransferMechanism.outputValue>` attribute;
+      and to the 2nd item of its `output_values <TransferMechanism.output_values>` attribute;
     ..
     * **variance** of the result is assigned to the :keyword:`value` of the mechanism's TRANSFER_VARIANCE outputState,
-      and to the 3rd item of its `outputValue <TransferMechanism.outputValue>` attribute.
+      and to the 3rd item of its `output_values <TransferMechanism.output_values>` attribute.
 
 COMMENT
 
@@ -119,7 +119,7 @@ TRANSFER_DIFFERENTIAL = "transfer_differential"
 
 # TransferMechanism output indices (used to index output values):
 class Transfer_Output(AutoNumber):
-    """Indices of the `outputValue <TransferMechanism.outputValue>` attribute of the TransferMechanism containing the
+    """Indices of the `output_values <TransferMechanism.output_values>` attribute of the TransferMechanism containing the
     values described below."""
     RESULT = ()
     """Result of the TransferMechanism's `function <TransferMechanism.function>`."""
@@ -297,13 +297,13 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of
-        `outputValue <TransferMechanism.outputValue>`.
+        `output_values <TransferMechanism.output_values>`.
 
     COMMENT:
         CORRECTED:
         value : 1d np.array
             the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT outputState
-            and the first item of ``outputValue``.
+            and the first item of ``output_values``.
     COMMENT
 
     outputStates : Dict[str, OutputState]
@@ -312,7 +312,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
 
-    outputValue : List[array(float64), float, float]
+    output_values : List[array(float64), float, float]
         a list with the following items:
         * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
         * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
@@ -545,7 +545,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 context=None):
         """Execute TransferMechanism function and return transform of input
 
-        Execute TransferMechanism function on input, and assign to outputValue:
+        Execute TransferMechanism function on input, and assign to output_values:
             - Activation value for all units
             - Mean of the activation values across units
             - Variance of the activation values across units

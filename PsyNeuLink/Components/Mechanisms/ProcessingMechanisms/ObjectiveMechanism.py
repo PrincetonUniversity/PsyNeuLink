@@ -352,7 +352,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     value : 1d np.array
         the output of the evaluation carried out by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
 
-    outputValue : 2d np.array
+    output_values : 2d np.array
         1st and only item is same as `value <ObjectiveMechanisms.value>`.
 
     name : str : default ComparatorMechanism-<index>

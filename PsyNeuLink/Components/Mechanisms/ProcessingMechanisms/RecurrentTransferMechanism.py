@@ -236,13 +236,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of
-        `outputValue <TransferMechanism.outputValue>`.    
+        `output_values <TransferMechanism.output_values>`.    
 
     COMMENT:
         CORRECTED:
         value : 1d np.array
             the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT outputState
-            and the first item of ``outputValue``.
+            and the first item of ``output_values``.
     COMMENT
 
     outputStates : Dict[str, OutputState]
@@ -257,7 +257,7 @@ class RecurrentTransferMechanism(TransferMechanism):
           note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1 
           (e.g., the `Logistic` function).
 
-    outputValue : List[array(float64), float, float]
+    output_values : List[array(float64), float, float]
         a list with the following items:
         * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
         * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
