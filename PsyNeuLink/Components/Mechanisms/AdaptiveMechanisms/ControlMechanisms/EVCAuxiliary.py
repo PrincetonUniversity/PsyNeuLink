@@ -257,7 +257,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             result = None
             EVC_max = float('-Infinity')
             EVC_max_policy = np.empty_like(controller.controlSignalSearchSpace[0])
-            EVC_max_state_values = np.empty_like(controller.inputValue)
+            EVC_max_state_values = np.empty_like(controller.input_values)
             max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             EVC_values = np.array([])
@@ -306,7 +306,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     # Keep track of state values and allocation policy associated with EVC max
                     # EVC_max_state_values = controller.inputValue.copy()
                     # EVC_max_policy = allocation_vector.copy()
-                    EVC_max_state_values = controller.inputValue
+                    EVC_max_state_values = controller.input_values
                     EVC_max_policy = allocation_vector
                     max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
 
@@ -416,7 +416,11 @@ def _compute_EVC(args):
                         context=context)
 
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
-                                                              outcome=ctlr.inputValue,
+                                                              # MODIFIED 5/7/17 OLD:
+                                                              # outcome=ctlr.input_values,
+                                                              # MODIFIED 5/7/17 NEW:
+                                                              outcome=ctlr.variable,
+                                                              # MODIFIED 5/7/17 END
                                                               costs=ctlr.controlSignalCosts,
                                                               context=context)
 

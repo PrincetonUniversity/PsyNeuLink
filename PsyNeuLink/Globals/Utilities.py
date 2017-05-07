@@ -802,38 +802,40 @@ class ContentAddressableList(UserList):
     @property
     def names(self):
         """Return list of `values <Component.value>` of the name attribute of components in the list.
-        
         Returns
         -------
-
-        keys :  list
+        names :  list
             list of the values of the `name <Component.name>` attributes of components in the list.
-
         """
         return [getattr(item, NAME) for item in self.data]
 
     @property
     def key_values(self):
         """Return list of `values <Component.value>` of the keyed attribute of components in the list.
-        
         Returns
         -------
-
-        keys :  list
+        key_values :  list
             list of the values of the `keyed <Component.name>` attributes of components in the list.
-
         """
         return [getattr(item, self.key) for item in self.data]
 
     @property
     def values(self):
         """Return list of values of components in the list.
-        
         Returns
         -------
-
-        keys :  list
+        values :  list
             list of the values of the `value <Component.value>` attributes of components in the list.
-
         """
         return [getattr(item, VALUE) for item in self.data]
+
+    @property
+    def values_as_lists(self):
+        """Return list of values of components in the list, each converted to a list.
+        Returns
+        -------
+        values :  list
+            list of list values of the `value <Component.value>` attributes of components in the list,
+        """
+        return [np.ndarray.tolist(getattr(item, VALUE)) for item in self.data]
+

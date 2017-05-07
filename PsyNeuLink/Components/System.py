@@ -2055,7 +2055,7 @@ class System_Base(System):
                     process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                     for process in process_keys_sorted:
                         if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
-                            process._report_process_initiation(input=mechanism.inputValue[0])
+                            process._report_process_initiation(input=mechanism.input_values[0])
 
                     # REPORT COMPLETION OF PROCESS IF TERMINAL:
                     # Report completion of process(es) for which mechanism is a TERMINAL

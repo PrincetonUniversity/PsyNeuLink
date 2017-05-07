@@ -1089,19 +1089,19 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
                                    format(len(inputs_for_phase), phase_num, num_mechs))
                 for mech_num in range(num_mechs):
                     input_for_mech = inputs_for_phase[mech_num]
-                    if len(input_for_mech) != len(mechs[mech_num].inputValue):
+                    if len(input_for_mech) != len(mechs[mech_num].input_values):
                         raise RunError("Number of states ({}) in input for {} should be {}".
                                        format(len(input_for_mech),
                                               mechs[mech_num].name,
-                                              len(mechs[mech_num].inputValue)))
+                                              len(mechs[mech_num].input_values)))
                     for state_num in range(len(input_for_mech)):
-                        input_for_state = mechs[mech_num].inputValue[state_num]
-                        if len(input_for_state) != len(mechs[mech_num].inputValue[state_num]):
+                        input_for_state = mechs[mech_num].input_values[state_num]
+                        if len(input_for_state) != len(mechs[mech_num].input_values[state_num]):
                             raise RunError("Length of state {} ({}) in input for {} should be {}".
                                            format(list(mechs[mech_num].input_states)[state_num],
                                                   len(input_for_state),
                                                   mechs[mech_num].name,
-                                                  len(mechs[mech_num].inputValue[state_num])))
+                                                  len(mechs[mech_num].input_values[state_num])))
         return num_execution_sets
 
     else:
