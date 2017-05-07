@@ -1468,7 +1468,7 @@ def _instantiate_state_list(owner,
         # Iterate through list or state_dict:
         # - instantiate each item or entry as state_type State
         # - get name, and use as key to assign as entry in self.<*>states
-        states = ContentAddressableList(cls=State_Base)
+        states = ContentAddressableList(component_type=State_Base)
 
         # Instantiate state for entry in list or dict
         # Note: if state_entries is a list, state_spec is the item, and key is its index in the list

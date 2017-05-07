@@ -236,11 +236,12 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------
 
-# General:
-PREFS_ARG = "prefs"
+# Standard arg / attribute names:
 VARIABLE = "variable"
-NAME = "name"
+VALUE = "value"
 PARAMS = "params"
+NAME = "name"
+PREFS_ARG = "prefs"
 CONTEXT = "context"
 
 INITIAL_VALUES = 'initial_values'

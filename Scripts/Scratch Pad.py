@@ -2200,7 +2200,7 @@ my_obj_3 = MyClass(name='goodbye')
 
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
 
-my_list = ContentAddressableList(cls=MyClass)
+my_list = ContentAddressableList(component_type=MyClass)
 # my_list.append(my_state)
 my_list['hello'] = my_obj
 my_list['goodbye'] = my_obj_2
