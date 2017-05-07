@@ -174,7 +174,6 @@
 # SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
 
 # FIX: FINISH input/output refactoring:
-#     inputValue -> input_values
 #     DOCUMENTATION for inputState(s) and outputState(s)
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
