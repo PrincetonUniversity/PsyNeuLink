@@ -129,12 +129,12 @@ class AutoNumber(IntEnum):
     * Start of numbering changed to 0 (from 1 in example)
     * obj based on int rather than object
     """
-    def __new__(cls):
+    def __new__(component_type):
         # Original example:
-        # value = len(cls.__members__) + 1
-        # obj = object.__new__(cls)
-        value = len(cls.__members__)
-        obj = int.__new__(cls)
+        # value = len(component_type.__members__) + 1
+        # obj = object.__new__(component_type)
+        value = len(component_type.__members__)
+        obj = int.__new__(component_type)
         obj._value_ = value
         return obj
 
@@ -637,26 +637,32 @@ class ReadOnlyOrderedDict(UserDict):
 from collections import UserList
 class ContentAddressableList(UserList):
     """
-    ContentAddressableList( cls, attrib=None, list=None)
+    ContentAddressableList( component_type, key=None, list=None)
     
-    Implements dict-like list, that can be indexed by the names of the States in its entries.
+    Implements dict-like list, that can be keyed by the names of the `compoments <Component>` in its entries.
     
-    Supports getting and setting entries in the list using string (in addition to numeric) indices.
-    For getting an entry:
-        the string must match the name of a State in the list; otherwise an excpetion is raised.
-    For setting an entry:
-        the string must match the name of the State being assigned;
-        if there is already a State in the list the name of which matches the string, it is replaced;
-        if there is no State in the list the name of which matches the string, the State is appended to the list.
+    Supports:
+      * getting and setting entries in the list using keys (string), in addition to numeric indices.
+        the key to use is specified by the **key** arg of the constructor, and must be a string attribute;
+        * for getting an entry:
+            the key must match the keyed attribute of a component in the list; otherwise an exception is raised;
+        * for setting an entry:
+            the key must match the key of the component being assigned;
+            if there is already a component in the list the keyed vaue of which matches the key, it is replaced;
+            if there is no component in the list the keyed attribute of which matches the key, 
+            the component is appended to the list;
+      * names() method: returns a list of the values of the `name <Component>` attribute of components in the list;
+      * keys() method: returns a list of the values of the keyed attribute of each component in the list;
+      * values() method: returns a list of the values of the `value <Component>` attribute of components in the list;
         
     IMPLEMENTATION NOTE:
-        This class allows the states of a mechanism to be maintained in lists, while providing the convenience 
-        (to the user) of access and assignment by name (e.g., akin to a dict).
+        This class allows components to be maintained in lists, while providing ordered storage 
+        and the convenience access and assignment by name (e.g., akin to a dict).
         Lists are used (instead of a dict or OrderedDict) since:
             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from 
                 collections of states to other variables, such as lists of their values);
             - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
-                or by index (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for 
+                or by key (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for 
                 accessing by key/name less critical;
             - the number of states in a collection for a given mechanism is likely to be small so that, even when 
                 accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
@@ -664,81 +670,84 @@ class ContentAddressableList(UserList):
     Arguments
     ---------
     
-    cls : Class
+    component_type : Class
         specifies the class of the items in the list.
 
-    attrib : str : default `name`
-        specifies the attribute of **cls** used to index items in the list by content;
-        **cls** must have this attribute or, if it is not provided, an attribute with the name `name`.
+    key : str : default `name`
+        specifies the attribute of **component_type** used to key items in the list by content;
+        **component_type** must have this attribute or, if it is not provided, an attribute with the name 'name'.
 
     list : List : default None
         specifies a list used to initialize the list;  
-        all of the items must be of type **cls** and have the **attrib** attribute.   
+        all of the items must be of type **component_type** and have the **key** attribute.   
 
     Attributes
     ----------
 
-    cls : Class
+    component_type : Class
         the class of the items in the list.
 
-    attrib : str
-        the attribute of `cls <ContentAddressableList.cls>` used to index items in the list by content;
+    key : str
+        the attribute of `component_type <ContentAddressableList.component_type>` used to key items in the list by content;
 
     data : List
         the actual list of items.      
     
     """
 
-    def __init__(self, cls, attrib=None, list=None, **kwargs):
-        self.cls = cls
-        self.attrib = attrib or 'name'
-        if not isinstance(cls, type):
-            raise UtilitiesError("cls arg for {} ({}) must be a class".format(self.__class__.__name__, cls))
-        if not isinstance(self.attrib, str):
-            raise UtilitiesError("attrib arg for {} ({}) must be a string".format(self.__class__.__name__, self.attrib))
-        if not hasattr(cls, self.attrib):
-            raise UtilitiesError("attrib arg for {} (\'{}\') must be an attribute of {}".format(self.__class__.__name__,
-                                                                                            self.attrib,
-                                                                                            cls.__name__))
+    def __init__(self, component_type, key=None, list=None, **kwargs):
+        self.component_type = component_type
+        self.key = key or 'name'
+        if not isinstance(component_type, type):
+            raise UtilitiesError("component_type arg for {} ({}) must be a class"
+                                 .format(self.__class__.__name__, component_type))
+        if not isinstance(self.key, str):
+            raise UtilitiesError("key arg for {} ({}) must be a string".
+                                 format(self.__class__.__name__, self.key))
+        if not hasattr(component_type, self.key):
+            raise UtilitiesError("key arg for {} (\'{}\') must be an attribute of {}".
+                                 format(self.__class__.__name__,
+                                        self.key,
+                                        component_type.__name__))
         if list is not None:
-            if not all(isinstance(obj, self.cls) for obj in list):
+            if not all(isinstance(obj, self.component_type) for obj in list):
                 raise UtilitiesError("All of the items in the list arg for {} "
-                                     "must be of the type specified in the cls arg ({})"
-                                     .format(self.__class__.__name__, self.cls.__name__))
+                                     "must be of the type specified in the component_type arg ({})"
+                                     .format(self.__class__.__name__, self.component_type.__name__))
         UserList.__init__(self, list, **kwargs)
 
-    def __getitem__(self, index):
-        if index is None:
-            raise KeyError("None is not a legal index for {}".format(self.__class__.__name__))
+    def __getitem__(self, key):
+        if key is None:
+            raise KeyError("None is not a legal key for {}".format(self.__class__.__name__))
         try:
-            return self.data[index]
+            return self.data[key]
         except TypeError:
-            index_num = self._get_index_for_item(index)
-            return self.data[index_num]
+            key_num = self._get_key_for_item(key)
+            return self.data[key_num]
 
-    def __setitem__(self, index, value):
-        # For efficiency, first assume the index is numeric (duck typing in action!)
+    def __setitem__(self, key, value):
+        # For efficiency, first assume the key is numeric (duck typing in action!)
         try:
-            self.data[index] = value
+            self.data[key] = value
         # If it is not
         except TypeError:
             # It must be a string
-            if not isinstance(index, str):
-                raise UtilitiesError("Non-numer index used for {} ({})must be a string)".
-                                      format(self.__class__.__name__, index))
+            if not isinstance(key, str):
+                raise UtilitiesError("Non-numer key used for {} ({})must be a string)".
+                                      format(self.__class__.__name__, key))
             # The specified string must also match the value of the attribute of the class used for addressing
-            if not index == value.name:
-                raise UtilitiesError("The index of the entry for {} {} ({}) "
+            if not key == value.name:
+                raise UtilitiesError("The key of the entry for {} {} ({}) "
                                      "must match the value of its {} attribute ({})".
                                       format(self.__class__.__name__,
                                              value.__class__.__name__,
-                                             index,
-                                             self.attrib,
-                                             getattr(value, self.attrib)))
+                                             key,
+                                             self.key,
+                                             getattr(value, self.key)))
             #
-            index_num = self._get_index_for_item(index)
-            if index_num is not None:
-                self.data[index_num] = value
+            key_num = self._get_key_for_item(key)
+            if key_num is not None:
+                self.data[key_num] = value
             else:
                 self.data.append(value)
 
@@ -748,39 +757,73 @@ class ContentAddressableList(UserList):
         else:
             return any(item == obj.name for obj in self.data)
 
-    def _get_index_for_item(self, index):
-        if isinstance(index, str):
-            # return self.data.index(next(obj for obj in self.data if obj.name is index))
-            obj = next((obj for obj in self.data if obj.name == index), None)
+    def _get_key_for_item(self, key):
+        if isinstance(key, str):
+            obj = next((obj for obj in self.data if obj.name == key), None)
             if obj is None:
                 return None
             else:
                 return self.data.index(obj)
-        elif isinstance(index, self.cls):
-            return self.data.index(index)
+        elif isinstance(key, self.component_type):
+            return self.data.index(key)
         else:
-            raise UtilitiesError("{} is not a legal index for {} (must be number, string or State)".
-                                  format(index, self.attrib))
+            raise UtilitiesError("{} is not a legal key for {} (must be number, string or State)".
+                                  format(key, self.key))
 
-    def __delitem__(self, index):
-        del self.data[index]
+    def __delitem__(self, key):
+        del self.data[key]
 
     def clear(self):
         super().clear()
 
-    # def pop(self, index, *args):
+    # def pop(self, key, *args):
     #     raise UtilitiesError("{} is read-only".format(self.name))
+    #
     # def popitem(self):
     #     raise UtilitiesError("{} is read-only".format(self.name))
 
-    def __additem__(self, index, value):
-        if index >= len(self.data):
+    def __additem__(self, key, value):
+        if key >= len(self.data):
             self.data.append(value)
         else:
-            self.data[index] = value
+            self.data[key] = value
+
     def copy(self):
         return self.data.copy()
     
+    def names(self):
+        """Return list of `values <Component.value>` of the name attribute of components in the list.
+        
+        Returns
+        -------
+
+        keys :  list
+            list of the values of the `name <Component.name>` attributes of components in the list.
+
+        """
+        return [getattr(item, NAME) for item in self.data]
+
     def keys(self):
-        return [getattr(item, self.attrib) for item in self.data]
+        """Return list of `values <Component.value>` of the keyed attribute of components in the list.
+        
+        Returns
+        -------
+
+        keys :  list
+            list of the values of the `keyed <Component.name>` attributes of components in the list.
+
+        """
+        return [getattr(item, self.key) for item in self.data]
+
+    def values(self):
+        """Return list of values of components in the list.
+        
+        Returns
+        -------
+
+        keys :  list
+            list of the values of the `value <Component.value>` attributes of components in the list.
+
+        """
+        return [getattr(item, VALUE) for item in self.data]
 
