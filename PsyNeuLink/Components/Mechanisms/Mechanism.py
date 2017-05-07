@@ -986,17 +986,34 @@ class Mechanism_Base(Mechanism):
             # Convert input_states_spec to list if it is not one
             if not isinstance(input_states_spec, list):
                 input_states_spec = [input_states_spec]
-            # Get input_states specified in paramClassDefaults
-            default_input_states = self.paramClassDefaults[INPUT_STATES].copy()
-            # Convert input_states from paramClassDeafults to a list if it is not one
-            if not isinstance(default_input_states, list):
-                default_input_states = [default_input_states]
-            # Add inputState specified in params to those in paramClassDefaults
-            #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
-            #          the primary inputState which must remain first for the input_states OrderedDictionary
-            default_input_states.extend(input_states_spec)
-            # Assign full set back to params_arg
-            params[INPUT_STATES] = default_input_states
+            # # Get input_states specified in paramClassDefaults
+            # if self.paramClassDefaults[INPUT_STATES] is not None:
+            #     default_input_states = self.paramClassDefaults[INPUT_STATES].copy()
+            # else:
+            #     default_input_states = None
+            # # Convert input_states from paramClassDefaults to a list if it is not one
+            # if default_input_states is not None and not isinstance(default_input_states, list):
+            #     default_input_states = [default_input_states]
+            # # Add inputState specified in params to those in paramClassDefaults
+            # #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
+            # #          the primary inputState which must remain first for the input_states ContentAddressableList
+            # default_input_states.extend(input_states_spec)
+            # # Assign full set back to params_arg
+            # params[INPUT_STATES] = default_input_states
+
+            # Get inputStates specified in paramClassDefaults
+            if self.paramClassDefaults[INPUT_STATES] is not None:
+                default_input_states = self.paramClassDefaults[INPUT_STATES].copy()
+                # Convert inputStates from paramClassDefaults to a list if it is not one
+                if not isinstance(default_input_states, list):
+                    default_input_states = [default_input_states]
+                # Add input_states specified in params to those in paramClassDefaults
+                #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
+                #          the primary inputState which must remain first for the input_states ContentAddressableList
+                default_input_states.extend(input_states_spec)
+                # Assign full set back to params_arg
+                params[INPUT_STATES] = default_input_states
+
 
         # OUTPUT_STATES:
         try:
@@ -1009,12 +1026,12 @@ class Mechanism_Base(Mechanism):
                 output_states_spec = [output_states_spec]
             # Get outputStates specified in paramClassDefaults
             default_output_states = self.paramClassDefaults[OUTPUT_STATES].copy()
-            # Convert outputStates from paramClassDeafults to a list if it is not one
+            # Convert outputStates from paramClassDefaults to a list if it is not one
             if not isinstance(default_output_states, list):
                 default_output_states = [default_output_states]
-            # Add outputState specified in params to those in paramClassDefaults
+            # Add output_states specified in params to those in paramClassDefaults
             #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
-            #          the primary outputState which must remain first for the outputStates OrderedDictionary
+            #          the primary outputState which must remain first for the output_states ContentAddressableList
             default_output_states.extend(output_states_spec)
             # Assign full set back to params_arg
             params[OUTPUT_STATES] = default_output_states

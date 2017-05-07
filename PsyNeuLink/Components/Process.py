@@ -2430,9 +2430,9 @@ class Process_Base(Process):
             pass
         self._variableInstanceDefault = value
 
-    @property
-    def inputValue(self):
-        return self.variable
+    # @property
+    # def input_value(self):
+    #     return self.variable
 
     @property
     def output_state(self):

@@ -23,6 +23,8 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 
 # Mechanisms:
 Input = TransferMechanism(name='Input',
+                          input_states=['HELLO']
+                          # output_states=['HELLO']
                  # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
 
                  )

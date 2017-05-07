@@ -175,6 +175,10 @@
 
 # FIX: FINISH input/output refactoring:
 #     DOCUMENTATION for inputState(s) and outputState(s)
+#                   variable and value: 2d np.arrays
+#                   input_values and output_values:  lists of values, but each value may be an np.ndarray
+#                   XXput_states.values_as_lists: lists of values, each of which has been conerted to a list
+# np.ndarray
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
 # IMPLEMENT: modulation_operation FOR ModulatoryProjections
