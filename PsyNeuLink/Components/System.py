@@ -2579,15 +2579,15 @@ class System_Base(System):
     # def processes(self):
     #     return sorted(self._processList.processes)
 
-    @property
-    def inputValue(self):
-        """Value of input to system
-
-        Returns
-        -------
-        value of input to system : ndarray
-        """
-        return self.variable
+    # @property
+    # def input_value(self):
+    #     """Value of input to system
+    #
+    #     Returns
+    #     -------
+    #     value of input to system : ndarray
+    #     """
+    #     return self.variable
 
     @property
     def numPhases(self):
