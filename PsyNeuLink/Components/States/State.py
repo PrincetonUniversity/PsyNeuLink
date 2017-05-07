@@ -1640,6 +1640,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
 
     # Projection class, object, or keyword: set to paramClassDefaults (of owner or owner's function)
     # FIX: ADD TEST FOR STR AND IN projection_keywords HERE
+    # IMPLEMENT:  ADD GatingPojection HERE 5/7/17
     if (isinstance(constraint_value, (str, Projection)) or
             (inspect.isclass(constraint_value) and
                  issubclass(constraint_value, (Projection)))):

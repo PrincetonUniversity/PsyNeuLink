@@ -567,30 +567,12 @@ def _instantiate_output_states(owner, context=None):
     (See State._instantiate_state_list() for additional details)
 
     IMPLEMENTATION NOTE:
-        default(s) for self.paramsCurrent[OUTPUT_STATES] (self.value) is assigned here
+        default(s) for self.paramsCurrent[OUTPUT_STATES] (self.value) are assigned here
         rather than in _validate_params, as it requires function to have been instantiated first
-
-    :param context:
-    :return:
     """
 
     constraint_value = []
 
-    # # MODIFIED 3/3/17 OLD:
-    # owner_value = np.atleast_2d(owner.value)
-
-    # MODIFIED 3/3/17 NEW:
-    # # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?
-    # owner_value = owner.value
-    # converted_to_2d = np.atleast_2d(owner.value)
-    # # If owner_value is a list of heterogenous elements, use as is
-    # if converted_to_2d.dtype == object:
-    #     owner_value = owner.value
-    # # Otherwise, use value converted to 2d np.array
-    # else:
-    #     owner_value = converted_to_2d
-
-    # MODIFIED 3/7/17 NEWER
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
     owner_value = owner.value
     # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
@@ -612,14 +594,12 @@ def _instantiate_output_states(owner, context=None):
         else:
             owner_value = converted_to_2d
 
-    # MODIFIED 3/3/17 END
-
     # IMPLEMENTATION NOTE:
     # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_STATES]
     #        (that is, there is the same number of items in owner_value as there are outputStates)
     #        then increment index so as to assign each item of owner_value to each outputState
-    if owner.paramsCurrent[OUTPUT_STATES]:
-        for output_state in owner.paramsCurrent[OUTPUT_STATES]:
+    if owner.output_states:
+        for output_state in owner.output_states:
             # Default is PRIMARY_OUTPUT_STATE
             index = PRIMARY_OUTPUT_STATE
             # If output_state is already an OutputState object, get its index attribute
@@ -636,7 +616,7 @@ def _instantiate_output_states(owner, context=None):
         constraint_value = owner_value
 
     state_list = _instantiate_state_list(owner=owner,
-                                         state_list=owner.paramsCurrent[OUTPUT_STATES],
+                                         state_list=owner.output_states,
                                          state_type=OutputState,
                                          state_param_identifier=OUTPUT_STATES,
                                          constraint_value=constraint_value,
@@ -647,6 +627,5 @@ def _instantiate_output_states(owner, context=None):
     # FIX: Hack to prevent recursion in calls to setter and assign_params
     if 'COMMAND_LINE' in context:
         owner._output_states = state_list
-        return
     else:
         owner.output_states = state_list
