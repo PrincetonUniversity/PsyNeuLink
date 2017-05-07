@@ -390,8 +390,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
-                                                  # input_states=input_states,
-                                                  # output_states=output_states,
+                                                  input_states=input_states,
+                                                  output_states=output_states,
                                                   noise=noise,
                                                   time_constant=time_constant,
                                                   time_scale=time_scale,

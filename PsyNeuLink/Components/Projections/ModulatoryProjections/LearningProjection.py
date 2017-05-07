@@ -379,7 +379,7 @@ class LearningProjection(ModulatoryProjection_Base):
             receiver = self.receiver
             if isinstance(receiver, MappingProjection):
                 try:
-                    receiver = self.receiver = receiver.parameterStates[MATRIX]
+                    receiver = self.receiver = receiver._parameter_states[MATRIX]
                 except KeyError:
                     raise LearningProjectionError("The MappingProjection {} specified as the receiver for {} "
                                                   "has no MATRIX parameter state".format(receiver.name, self.name))

@@ -924,7 +924,12 @@ class Component(object):
                     params[FUNCTION_PARAMS].__additem__(param_name,kwargs[arg][param_name])
                 # MODIFIED 4/9/17 END
 
-            # For standard params, assign arg and its default value to paramClassDefaults
+            # If no input_states or output_states are specified, ignore
+            #   (ones in paramClassDefaults will be assigned to paramsCurrent in Component.__init__
+            elif arg in {INPUT_STATES, OUTPUT_STATES} and kwargs[arg] is None:
+                continue
+
+            # For all other params, assign arg and its default value to paramClassDefaults
             else:
                 params[arg] = kwargs[arg]
 

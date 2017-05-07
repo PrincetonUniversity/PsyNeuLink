@@ -87,8 +87,8 @@ def show_results():
 
     results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
     print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
-    print ('\tDrift rate control signal (from EVC): {}'.format(Decision.parameterStates[DRIFT_RATE].value))
-    print ('\tThreshold control signal (from EVC): {}'.format(Decision.parameterStates[THRESHOLD].value))
+    print ('\tDrift rate control signal (from EVC): {}'.format(Decision._parameter_states[DRIFT_RATE].value))
+    print ('\tThreshold control signal (from EVC): {}'.format(Decision._parameter_states[THRESHOLD].value))
     import re
     for result in results:
         result_0 = re.sub('[\[,\],\n]','',str(result[0]))

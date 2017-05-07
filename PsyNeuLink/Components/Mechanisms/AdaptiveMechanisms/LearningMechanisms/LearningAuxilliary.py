@@ -812,8 +812,8 @@ class LearningComponents(object):
             if not self.error_projection:
                 return None
             try:
-                self.error_matrix = self.error_projection.parameterStates[MATRIX]
-                return self.error_projection.parameterStates[MATRIX]
+                self.error_matrix = self.error_projection._parameter_states[MATRIX]
+                return self.error_projection._parameter_states[MATRIX]
             except AttributeError:
                 raise LearningAuxilliaryError("error_matrix not identified: error_projection ({})"
                                               "not not have a {} parameterState".

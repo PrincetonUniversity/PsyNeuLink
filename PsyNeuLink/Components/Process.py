@@ -1296,13 +1296,13 @@ class Process_Base(Process):
                             try:
                                 learning_projections = list(projection for
                                                         projection in
-                                                        preceding_item.parameterStates[MATRIX].receivesFromProjections
+                                                        preceding_item._parameter_states[MATRIX].receivesFromProjections
                                                         if isinstance(projection, LearningProjection))
 
                             # preceding_item doesn't have a parameterStates attrib, so assign one with self.learning
                             except AttributeError:
                                 # Instantiate parameterStates Ordered dict with ParameterState and self.learning
-                                preceding_item.parameterStates = _instantiate_state_list(
+                                preceding_item._parameter_states = _instantiate_state_list(
                                                                                 owner=preceding_item,
                                                                                 state_list=[(MATRIX,
                                                                                              self.learning)],
@@ -1315,7 +1315,7 @@ class Process_Base(Process):
                             # preceding_item has parameterStates but not (yet!) one for MATRIX, so instantiate it
                             except KeyError:
                                 # Instantiate ParameterState for MATRIX
-                                preceding_item.parameterStates[MATRIX] = _instantiate_state(
+                                preceding_item._parameter_states[MATRIX] = _instantiate_state(
                                                                                 owner=preceding_item,
                                                                                 state_type=ParameterState,
                                                                                 state_name=MATRIX,
@@ -1329,7 +1329,7 @@ class Process_Base(Process):
                                 if not learning_projections:
                                     # Add learningProjection to projection if it doesn't have one
                                     _add_projection_to(preceding_item,
-                                                      preceding_item.parameterStates[MATRIX],
+                                                      preceding_item._parameter_states[MATRIX],
                                                       projection_spec=self.learning)
                         continue
 
@@ -1349,12 +1349,12 @@ class Process_Base(Process):
                             if self.learning:
                                 # Make sure projection includes a learningSignal and add one if it doesn't
                                 try:
-                                    matrix_param_state = projection.parameterStates[MATRIX]
+                                    matrix_param_state = projection._parameter_states[MATRIX]
 
                                 # projection doesn't have a parameterStates attrib, so assign one with self.learning
                                 except AttributeError:
                                     # Instantiate parameterStates Ordered dict with ParameterState for self.learning
-                                    projection.parameterStates = _instantiate_state_list(
+                                    projection._parameter_states = _instantiate_state_list(
                                                                                 owner=preceding_item,
                                                                                 state_list=[(MATRIX,
                                                                                              self.learning)],
@@ -1368,7 +1368,7 @@ class Process_Base(Process):
                                 #    so instantiate it with self.learning
                                 except KeyError:
                                     # Instantiate ParameterState for MATRIX
-                                    projection.parameterStates[MATRIX] = _instantiate_state(
+                                    projection._parameter_states[MATRIX] = _instantiate_state(
                                                                                 owner=preceding_item,
                                                                                 state_type=ParameterState,
                                                                                 state_name=MATRIX,
@@ -1803,7 +1803,7 @@ class Process_Base(Process):
                 self._instantiate__deferred_init_projections(projections, context=context)
 
             # For each parameterState of the mechanism
-            for parameter_state in mech.parameterStates.values():
+            for parameter_state in mech._parameter_states.values():
                 parameter_state._deferred_init()
                 # MODIFIED 5/2/17 OLD:
                 # self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
@@ -1860,7 +1860,7 @@ class Process_Base(Process):
             # FIX:  WHY DOESN'T THE PROJECTION HANDLE THIS? (I.E., IN ITS deferred_init() METHOD?)
             # For each parameter_state of the projection
             try:
-                for parameter_state in projection.parameterStates.values():
+                for parameter_state in projection._parameter_states.values():
                     # Initialize each projection to the parameterState (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
                     for param_projection in parameter_state.receivesFromProjections:
@@ -2221,7 +2221,7 @@ class Process_Base(Process):
 
                     # For each parameter_state of the projection
                     try:
-                        for parameter_state in projection.parameterStates.values():
+                        for parameter_state in projection._parameter_states.values():
                             # Call parameter_state.update with LEARNING in context to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params

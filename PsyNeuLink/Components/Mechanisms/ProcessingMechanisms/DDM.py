@@ -851,12 +851,12 @@ class DDM(ProcessingMechanism_Base):
             # print ("control signal: {}\n".format(self.parameterStates[DRIFT_RATE].value))
 
             # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
-            drift_rate = float((self.variable * self.parameterStates[DRIFT_RATE].value))
+            drift_rate = float((self.variable * self._parameter_states[DRIFT_RATE].value))
 
-            starting_point = float(self.parameterStates[STARTING_POINT].value)
-            threshold = float(self.parameterStates[THRESHOLD].value)
-            noise = float(self.parameterStates[NOISE].value)
-            t0 = float(self.parameterStates[NON_DECISION_TIME].value)
+            starting_point = float(self._parameter_states[STARTING_POINT].value)
+            threshold = float(self._parameter_states[THRESHOLD].value)
+            noise = float(self._parameter_states[NOISE].value)
+            t0 = float(self._parameter_states[NON_DECISION_TIME].value)
 
             result = self.function(params={DRIFT_RATE: drift_rate,
                                            STARTING_POINT: starting_point,

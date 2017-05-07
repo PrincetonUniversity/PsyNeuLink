@@ -1516,8 +1516,8 @@ class Mechanism_Base(Mechanism):
         if '_init_' in context:
             for state in self.input_states:
                 self.input_states[state].value = self.input_states[state].variable
-            for state in self.parameterStates:
-                self.parameterStates[state].value =  self.parameterStates[state].baseValue
+            for state in self._parameter_states:
+                self._parameter_states[state].value =  self._parameter_states[state].baseValue
             for state in self.output_states:
                 # Zero outputStates in case of recurrence:
                 #    don't want any non-zero values as a residuum of initialization runs to be
@@ -1618,7 +1618,7 @@ class Mechanism_Base(Mechanism):
 
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
 
-        for state_name, state in self.parameterStates.items():
+        for state_name, state in self._parameter_states.items():
 
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
