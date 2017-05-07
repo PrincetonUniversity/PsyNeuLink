@@ -1447,21 +1447,11 @@ class Mechanism_Base(Mechanism):
 
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
-        # # MODIFIED 2/23/17 OLD:
-        # self.value = self._execute(variable=self.inputValue,
-        # MODIFIED 2/23/17 NEW:
         self.value = self._execute(variable=self.variable,
-        # MODIFIED 2/23/17 END
                                       runtime_params=runtime_params,
                                       clock=clock,
                                       time_scale=time_scale,
                                       context=context)
-
-        # MODIFIED 1/28/17 NEW:
-        # # context = context + ' ' + ASSIGN_VALUE
-        # context = EXECUTING + ' ' + self.name + ASSIGN_VALUE
-        # MODIFIED 1/28/17 END
-
 
         # # MODIFIED 3/3/17 OLD:
         # self.value = np.atleast_2d(self.value)
@@ -1522,7 +1512,7 @@ class Mechanism_Base(Mechanism):
                 # Zero outputStates in case of recurrence:
                 #    don't want any non-zero values as a residuum of initialization runs to be
                 #    transmittted back via recurrent projections as initial inputs
-# FIX: IMPLEMENT zero_all_values METHOD
+                # FIX: IMPLEMENT zero_all_values METHOD
                 self.output_states[state].value = self.output_states[state].value * 0.0
         #endregion
 
@@ -1828,7 +1818,7 @@ class Mechanism_Base(Mechanism):
         # # MODIFIED 1/28/17 END
 
     @property
-    def input_value(self):
+    def input_values(self):
         return self.input_states.values
 
 
