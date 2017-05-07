@@ -1420,7 +1420,11 @@ class Mechanism_Base(Mechanism):
 
         # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
-        self._check_args(variable=self.inputValue,
+        # # MODIFIED 5/7/17 OLD:
+        # self._check_args(variable=self.inputValue,
+        # MODIFIED 5/7/17 NEW:
+        self._check_args(variable=self.variable,
+        # MODIFIED 5/7/17 END
                         params=runtime_params,
                         target_set=runtime_params)
         #endregion
@@ -1498,7 +1502,7 @@ class Mechanism_Base(Mechanism):
 
         #region REPORT EXECUTION
         if self.prefs.reportOutputPref and context and EXECUTING in context:
-            self._report_mechanism_execution(self.inputValue, self.user_params, self.output_state.value)
+            self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
         #endregion
 
         #region RE-SET STATE_VALUES AFTER INITIALIZATION
@@ -1603,8 +1607,8 @@ class Mechanism_Base(Mechanism):
         for i in range(len(self.input_states)):
             state = self.input_states[i]
             state.update(params=runtime_params, time_scale=time_scale, context=context)
-            self.inputValue[i] = state.value
-        self.variable = np.array(self.inputValue)
+            # self.inputValue[i] = state.value
+        self.variable = np.array(self.input_values)
 
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
 
@@ -1687,7 +1691,7 @@ class Mechanism_Base(Mechanism):
     def _report_mechanism_execution(self, input_val=None, params=None, output=None):
 
         if input_val is None:
-            input_val = self.inputValue
+            input_val = self.input_values
         if output is None:
             output = self.output_state.value
         params = params or self.user_params
@@ -1823,7 +1827,10 @@ class Mechanism_Base(Mechanism):
 
     @property
     def input_values(self):
-        return self.input_states.values
+        try:
+            return self.input_states.values
+        except (TypeError, AttributeError):
+            return None
 
     @property
     def output_state(self):

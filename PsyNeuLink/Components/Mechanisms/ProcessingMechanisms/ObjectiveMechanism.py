@@ -534,7 +534,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 self.variable = values.copy()
 
         self.variableClassDefault = self.variable.copy()
-        self.inputValue = list(self.variable)
+        # MODIFIED 5/7/17 OLD:
+        # self.inputValue = list(self.variable)
+        # MODIFIED 5/7/17 END
 
     def _instantiate_input_state_for_monitored_value(self, variable, monitored_value, name=None, context=None):
         """Instantiate inputState with projection from monitoredOutputState
@@ -655,7 +657,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             from PsyNeuLink.Components.States.State import State_Base
             self.input_states = ContentAddressableList(component_type=State_Base, list=[input_state])
 
-        self.inputValue = [state.value for state in self.input_states]
+        # self.inputValue = [state.value for state in self.input_states]
 
         # IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
         if call_for_projection:

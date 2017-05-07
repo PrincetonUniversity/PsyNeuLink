@@ -77,11 +77,10 @@ def print_header():
 
 def show_target():
     print ('\nColor Naming\n\tInput: {}\n\tTarget: {}'.
-           # format(color_naming_process.input, color_naming_process.target))
-           format(colors.inputValue, mySystem.targets))
+           format(colors.input_states.values_as_lists, mySystem.targets))
     print ('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.
            # format(word_reading_process.input, word_reading_process.target))
-           format(words.inputValue, mySystem.targets))
+           format(words.input_states.values_as_lists, mySystem.targets))
     print ('Response: \n', response.output_values[0])
     print ('Hidden-Output:')
     print (HO_Weights.matrix)

@@ -108,7 +108,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
                     time_scale=TimeScale.TRIAL,
                     context=None):
 
-        return self.inputValue or [defaultControlAllocation]
+        return self.input_values or [defaultControlAllocation]
 
     def _instantiate_input_states(self, context=None):
         """Instantiate inputValue attribute
@@ -121,8 +121,8 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
         if not hasattr(self, INPUT_STATES):
             self.input_states = None
-        if self.input_states is None:
-            self.inputValue = None
+        # if self.input_states is None:
+        #     self.inputValue = None
 
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """Instantiate requested controlProjection and associated inputState
@@ -131,7 +131,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # Instantiate input_states and allocation_policy attribute for controlSignal allocations
         input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
         self._instantiate_default_input_state(input_name, defaultControlAllocation, context=context)
-        self.allocation_policy = self.inputValue
+        self.allocation_policy = self.input_values
 
         # Call super to instantiate outputStates
         # Note: params carries any specified with ControlProjection for the control_signal
@@ -214,6 +214,6 @@ class DefaultControlMechanism(ControlMechanism_Base):
             from PsyNeuLink.Components.States.State import State_Base
             self.input_states = ContentAddressableList(component_type=State_Base, list=[input_state])
 
-        self.inputValue = [state.value for state in self.input_states]
+        # self.inputValue = [state.value for state in self.input_states]
 
         return input_state
