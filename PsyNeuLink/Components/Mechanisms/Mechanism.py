@@ -1000,71 +1000,89 @@ class Mechanism_Base(Mechanism):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    # def _filter_params(self, params):
-    #     """Add rather than override INPUT_STATES and/or OUTPUT_STATES
-    #
-    #     Allows specification of INPUT_STATES or OUTPUT_STATES in params dictionary to be added to,
-    #     rather than override those in paramClassDefaults (the default behavior)
-    #     """
-    #
-    #     # INPUT_STATES:
-    #     try:
-    #         input_states_spec = params[INPUT_STATES]
-    #     except KeyError:
-    #         pass
-    #     else:
-    #         # Convert input_states_spec to list if it is not one
-    #         if not isinstance(input_states_spec, list):
-    #             input_states_spec = [input_states_spec]
-    #         # # Get input_states specified in paramClassDefaults
-    #         # if self.paramClassDefaults[INPUT_STATES] is not None:
-    #         #     default_input_states = self.paramClassDefaults[INPUT_STATES].copy()
-    #         # else:
-    #         #     default_input_states = None
-    #         # # Convert input_states from paramClassDefaults to a list if it is not one
-    #         # if default_input_states is not None and not isinstance(default_input_states, list):
-    #         #     default_input_states = [default_input_states]
-    #         # # Add inputState specified in params to those in paramClassDefaults
-    #         # #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
-    #         # #          the primary inputState which must remain first for the input_states ContentAddressableList
-    #         # default_input_states.extend(input_states_spec)
-    #         # # Assign full set back to params_arg
-    #         # params[INPUT_STATES] = default_input_states
-    #
-    #         # Get inputStates specified in paramClassDefaults
-    #         if self.paramClassDefaults[INPUT_STATES] is not None:
-    #             default_input_states = self.paramClassDefaults[INPUT_STATES].copy()
-    #             # Convert inputStates from paramClassDefaults to a list if it is not one
-    #             if not isinstance(default_input_states, list):
-    #                 default_input_states = [default_input_states]
-    #             # Add input_states specified in params to those in paramClassDefaults
-    #             #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
-    #             #          the primary inputState which must remain first for the input_states ContentAddressableList
-    #             default_input_states.extend(input_states_spec)
-    #             # Assign full set back to params_arg
-    #             params[INPUT_STATES] = default_input_states
-    #
-    #
-    #     # OUTPUT_STATES:
-    #     try:
-    #         output_states_spec = params[OUTPUT_STATES]
-    #     except KeyError:
-    #         pass
-    #     else:
-    #         # Convert output_states_spec to list if it is not one
-    #         if not isinstance(output_states_spec, list):
-    #             output_states_spec = [output_states_spec]
-    #         # Get outputStates specified in paramClassDefaults
-    #         default_output_states = self.paramClassDefaults[OUTPUT_STATES].copy()
-    #         # Convert outputStates from paramClassDefaults to a list if it is not one
-    #         if not isinstance(default_output_states, list):
-    #             default_output_states = [default_output_states]
-    #         # Add output_states specified in params to those in paramClassDefaults
-    #         #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
-    #         #          the primary outputState which must remain first for the output_states ContentAddressableList
-    #         default_output_states.extend(output_states_spec)
-    #         # Assign full set back to params_arg
-    #         params[OUTPUT_STATES] = default_output_states
+    def _filter_params(self, params):
+        """Add rather than override INPUT_STATES and/or OUTPUT_STATES
+
+        Allows specification of INPUT_STATES or OUTPUT_STATES in params dictionary to be added to,
+        rather than override those in paramClassDefaults (the default behavior)
+        """
+
+        # INPUT_STATES:
+
+        # Check if input_states is in params (i.e., was specified in arg of contructor)
+        if not INPUT_STATES in params or params[INPUT_STATES] is None:
+            params[INPUT_STATES] = self.paramClassDefaults[INPUT_STATES]
+        # Convert input_states_spec to list if it is not one
+        if not isinstance(params[INPUT_STATES], list):
+            params[INPUT_STATES] = [params[INPUT_STATES]]
+        self.user_params.__additem__(INPUT_STATES, params[INPUT_STATES])
+
+        # OUTPUT_STATES:
+
+        # Check if OUTPUT_STATES is in params (i.e., was specified in arg of contructor)
+        if not OUTPUT_STATES in params or params[OUTPUT_STATES] is None:
+            params[OUTPUT_STATES] = self.paramClassDefaults[OUTPUT_STATES]
+        # Convert OUTPUT_STATES_spec to list if it is not one
+        if not isinstance(params[OUTPUT_STATES], list):
+            params[OUTPUT_STATES] = [params[OUTPUT_STATES]]
+        self.user_params.__additem__(OUTPUT_STATES, params[OUTPUT_STATES])
+
+        # try:
+        #     input_states_spec = params[INPUT_STATES]
+        # except KeyError:
+        #     pass
+        # else:
+        #     # Convert input_states_spec to list if it is not one
+        #     if not isinstance(input_states_spec, list):
+        #         input_states_spec = [input_states_spec]
+        #     # # Get input_states specified in paramClassDefaults
+        #     # if self.paramClassDefaults[INPUT_STATES] is not None:
+        #     #     default_input_states = self.paramClassDefaults[INPUT_STATES].copy()
+        #     # else:
+        #     #     default_input_states = None
+        #     # # Convert input_states from paramClassDefaults to a list if it is not one
+        #     # if default_input_states is not None and not isinstance(default_input_states, list):
+        #     #     default_input_states = [default_input_states]
+        #     # # Add inputState specified in params to those in paramClassDefaults
+        #     # #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
+        #     # #          the primary inputState which must remain first for the input_states ContentAddressableList
+        #     # default_input_states.extend(input_states_spec)
+        #     # # Assign full set back to params_arg
+        #     # params[INPUT_STATES] = default_input_states
+        #
+        #     # Get inputStates specified in paramClassDefaults
+        #     if self.paramClassDefaults[INPUT_STATES] is not None:
+        #         default_input_states = self.paramClassDefaults[INPUT_STATES].copy()
+        #         # Convert inputStates from paramClassDefaults to a list if it is not one
+        #         if not isinstance(default_input_states, list):
+        #             default_input_states = [default_input_states]
+        #         # Add input_states specified in params to those in paramClassDefaults
+        #         #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
+        #         #          the primary inputState which must remain first for the input_states ContentAddressableList
+        #         default_input_states.extend(input_states_spec)
+        #         # Assign full set back to params_arg
+        #         params[INPUT_STATES] = default_input_states
+
+        # # OUTPUT_STATES:
+        # try:
+        #     output_states_spec = params[OUTPUT_STATES]
+        # except KeyError:
+        #     pass
+        # else:
+        #     # Convert output_states_spec to list if it is not one
+        #     if not isinstance(output_states_spec, list):
+        #         output_states_spec = [output_states_spec]
+        #     # Get outputStates specified in paramClassDefaults
+        #     default_output_states = self.paramClassDefaults[OUTPUT_STATES].copy()
+        #     # Convert outputStates from paramClassDefaults to a list if it is not one
+        #     if not isinstance(default_output_states, list):
+        #         default_output_states = [default_output_states]
+        #     # Add output_states specified in params to those in paramClassDefaults
+        #     #    Note: order is important here;  new ones should be last, as paramClassDefaults defines the
+        #     #          the primary outputState which must remain first for the output_states ContentAddressableList
+        #     default_output_states.extend(output_states_spec)
+        #     # Assign full set back to params_arg
+        #     params[OUTPUT_STATES] = default_output_states
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITOR_FOR_CONTROL
