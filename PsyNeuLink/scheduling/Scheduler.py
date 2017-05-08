@@ -168,6 +168,16 @@ class SchedulerError(Exception):
          return repr(self.error_value)
 
 class Scheduler(object):
+    """
+        An object that can be used to generate an order in which components are to be run, using a set of
+        arbitrary `Condition`<Condition>s (`ConditionSet`<ConditionSet>).
+
+        Attributes:
+            condition_set (ConditionSet): the set of Conditions this scheduler will use when running
+            execution_list (list): the full history of time steps this scheduler has produced
+            consideration_queue (list): a list form of the scheduler's toposort ordering of its nodes
+            termination_conds (dict): a mapping from :keyword:`TimeScale`s to :keyword:`Condition`s that when met terminate the execution of the specified :keyword:`TimeScale`
+    """
     def __init__(self, system=None, condition_set=None, nodes=None, toposort_ordering=None):
         '''
         :param self:
