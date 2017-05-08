@@ -407,10 +407,15 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         #     default_input_value = self.variableClassDefault
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(monitored_values=monitored_values,
-                                                  names=names,
-                                                  function=function,
-                                                  params=params)
+        params = self._assign_args_to_param_dicts(
+                # # MODIFIED 5/8/17 OLD:
+                # monitored_values=monitored_values,
+                # MODIFIED 5/8/17 NEW:
+                input_states=monitored_values,
+                # MODIFIED 5/8/17 END
+                names=names,
+                function=function,
+                params=params)
 
         self._learning_role = None
 
@@ -438,7 +443,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate `monitored_values`, `role` and `names <ObjectiveMechanism.names>` arguments
+        """Validate `role`, `monitored_values`, `input_states`, and `names <ObjectiveMechanism.names>` arguments
 
         """
 
@@ -450,11 +455,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             raise ObjectiveMechanismError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
                                  format(target_set[ROLE], self.name))
 
-        if NAMES in target_set and target_set[NAMES]:
-            if len(target_set[NAMES]) != len(target_set[MONITORED_VALUES]):
+        if INPUT_STATES in target_set and target_set[INPUT_STATES]:
+            if len(target_set[INPUT_STATES]) != len(target_set[MONITORED_VALUES]):
                 raise ObjectiveMechanismError("The number of items in \'names\'arg ({}) must equal of the number in the "
                                      "\`monitored_values\` arg for {}".
-                                     format(len(target_set[NAMES]), len(target_set[MONITORED_VALUES]), self.name))
+                                     format(len(target_set[INPUT_STATES]), len(target_set[MONITORED_VALUES]),
+                                            self.name))
 
             for name in target_set[NAMES]:
                 if not isinstance(name, str):
@@ -549,7 +555,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         Parameters
         ----------
-        monitored_value (value, InputState, OutputState, Mechanisms, str, dict, or MonitoredOutputStateOption)
+        monitored_value (value, InputState, OutputState, Mechanism, str, dict, or MonitoredOutputStateOption)
         name (str)
         context (str)
 
