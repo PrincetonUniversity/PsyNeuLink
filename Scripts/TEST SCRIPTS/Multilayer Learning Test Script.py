@@ -9,7 +9,10 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection i
 
 Input_Layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,
+                                input_states=['HELLO'],
                                 default_input_value = np.zeros((2,)))
+
+Input_Layer.output_states[0].value
 
 Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
