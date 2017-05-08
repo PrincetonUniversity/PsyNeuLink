@@ -225,7 +225,6 @@ MONITORED_VALUES = 'monitored_values'
 MONITORED_VALUE_NAME_SUFFIX = '_Monitor'
 DEFAULT_MONITORED_VALUE = [0]
 
-OBJECTIVE_RESULT = "ObjectiveResult"
 
 
 class ObjectiveMechanismError(Exception):
@@ -386,7 +385,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
-        OUTPUT_STATES:[{NAME:OBJECTIVE_RESULT}]})
+        OUTPUT_STATES:[{NAME:RESULT}]})
         # MODIFIED 12/7/16 NEW:
 
     paramNames = paramClassDefaults.keys()

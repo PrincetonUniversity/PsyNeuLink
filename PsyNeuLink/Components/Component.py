@@ -916,13 +916,9 @@ class Component(object):
                 # If function was instantiated object, FUNCTION_PARAMS came from it, so ignore additional specification
                 if ignore_FUNCTION_PARAMS:
                     continue
-                # # MODIFIED 4/9/17 OLD:
-                # params[FUNCTION_PARAMS] = kwargs[arg]
-                # MODIFIED 4/9/17 NEW:
                 params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
                 for param_name in sorted(list(kwargs[arg].keys())):
                     params[FUNCTION_PARAMS].__additem__(param_name,kwargs[arg][param_name])
-                # MODIFIED 4/9/17 END
 
             # If no input_states or output_states are specified, ignore
             #   (ones in paramClassDefaults will be assigned to paramsCurrent in Component.__init__
@@ -1481,6 +1477,11 @@ class Component(object):
 
         validated_set_param_names = list(validated_set.keys())
 
+        # If an input_state is being added from the command line,
+        #    must _instantiate_attributes_before_function to parse input_states specification
+        # Otherwise, should not be run,
+        #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_states),
+        #    that causes name-repetition problems when it is called as part of the standard init procedure
         if INPUT_STATES in validated_set_param_names and COMMAND_LINE in context:
             self._instantiate_attributes_before_function(context=COMMAND_LINE)
 
@@ -1495,10 +1496,11 @@ class Component(object):
         if FUNCTION in validated_set and inspect.isclass(self.function):
             self._instantiate_function(context=COMMAND_LINE)
 
-        # MODIFIED 5/5/17 OLD:
-        if OUTPUT_STATES in validated_set:
-        # # MODIFIED 5/5/17 NEW:
-        # if OUTPUT_STATES in validated_set and COMMAND_LINE in context:
+        # FIX: WHY SHOULD IT BE CALLED DURING STANDRD INIT PROCEDURE?
+        # # MODIFIED 5/5/17 OLD:
+        # if OUTPUT_STATES in validated_set:
+        # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_states ARG OF CONSTRUCTOR]
+        if OUTPUT_STATES in validated_set and COMMAND_LINE in context:
         # MODIFIED 5/5/17 END
             self._instantiate_attributes_after_function(context=COMMAND_LINE)
 

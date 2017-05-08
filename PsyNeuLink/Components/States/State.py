@@ -186,7 +186,7 @@ class State_Base(State):
         Class attributes
         ----------------
             + componentCategory = kwStateFunctionCategory
-            + className = kwState
+            + className = STATE
             + suffix
             + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
@@ -291,7 +291,7 @@ class State_Base(State):
 
     kpState = "State"
     componentCategory = kwStateComponentCategory
-    className = kwState
+    className = STATE
     suffix = " " + className
     paramsType = None
 
@@ -1397,9 +1397,9 @@ def _instantiate_state_list(owner,
             instantiate each entry value (if necessary)
     In each case, generate an OrderedDict with one or more entries, assigning:
         the key for each entry the name of the outputState if provided,
-            otherwise, use kwMechanism<state_type>States-n (incrementing n for each additional entry)
+            otherwise, use MECHANISM<state_type>States-n (incrementing n for each additional entry)
         the state value for each entry to the corresponding item of the mechanism's state_type state's value
-        the dict to both self.<state_type>States and paramsCurrent[kwMechanism<state_type>States]
+        the dict to both self.<state_type>States and paramsCurrent[MECHANISM<state_type>States]
         self.<state_type>State to self.<state_type>States[0] (the first entry of the dict)
     Notes:
         * if there is only one state, but the value of the mechanism's state_type has more than one item:
@@ -1553,7 +1553,7 @@ def _instantiate_state_list(owner,
         return states
 
     else:
-        # This shouldn't happen, as kwMechanism<*>States was validated to be one of the above in _validate_params
+        # This shouldn't happen, as MECHANISM<*>States was validated to be one of the above in _validate_params
         raise StateError("PROGRAM ERROR: {} for {} is not a recognized \'{}\' specification for {}; "
                          "it should have been converted to a list in Mechanism._validate_params)".
                          format(state_entries, owner.name, state_param_identifier, owner.__class__.__name__))
@@ -1741,7 +1741,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #region Specification dict
     # If state_spec is a specification dict:
     # - check that kwStateValue matches constraint_value and assign to state_variable
-    # - add/assign kwState params to state_params
+    # - add/assign STATE params to state_params
     if isinstance(state_spec, dict):
         try:
             state_variable =  state_spec[kwStateValue]

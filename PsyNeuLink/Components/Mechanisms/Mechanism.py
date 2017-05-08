@@ -598,7 +598,7 @@ class Mechanism_Base(Mechanism):
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
             + variableClassDefault (list)
             + paramClassDefaults (dict):
-                + kwMechanismTimeScale (TimeScale): TimeScale.TRIAL (timeScale at which mechanism executes)
+                + MECHANISM_TIME_SCALE (TimeScale): TimeScale.TRIAL (timeScale at which mechanism executes)
                 + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
                     specifies order in which types of States are executed;  used by self.execute]
             + paramNames (dict)
@@ -794,16 +794,18 @@ class Mechanism_Base(Mechanism):
     # Category specific defaults:
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwMechanismTimeScale: TimeScale.TRIAL,
+        INPUT_STATES:[PRIMARY],
+        OUTPUT_STATES:[PRIMARY],
         MONITOR_FOR_CONTROL: NotImplemented,  # This has to be here to "register" it as a valid param for the class
                                               # but is set to NotImplemented so that it is ignored if it is not
                                               # assigned;  setting it to None actively disallows assignment
                                               # (see EVCMechanism_instantiate_input_states for more details)
-        MONITOR_FOR_LEARNING: None
+        MONITOR_FOR_LEARNING: None,
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Components.States.InputState.InputState,
         #     Components.States.ParameterState.ParameterState,
         #     Components.States.OutputState.OutputState]
+        MECHANISM_TIME_SCALE: TimeScale.TRIAL
         })
 
     # def __new__(cls, *args, **kwargs):
@@ -839,7 +841,34 @@ class Mechanism_Base(Mechanism):
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
                                  "use mechanism() or a subclass")
 
-# IMPLEMENT **args (PER State)
+        # IMPLEMENT **kwargs (PER State)
+
+
+        # Ensure that all input_states and output_states, whether from paramClassDefaults or constructor arg,
+        #    have been included in user_params and implemented as properties
+        #    (in case the subclass did not include one and/or the other as an argument in its constructor)
+
+        kwargs = {}
+
+        input_states = []
+        if INPUT_STATES in self.paramClassDefaults and self.paramClassDefaults[INPUT_STATES]:
+            input_states.extend(self.paramClassDefaults[INPUT_STATES])
+        if INPUT_STATES in self.user_params and self.user_params[INPUT_STATES]:
+            input_states.extend(self.user_params[INPUT_STATES])
+        if input_states:
+            kwargs[INPUT_STATES] = input_states
+
+        output_states = []
+        if OUTPUT_STATES in self.paramClassDefaults and self.paramClassDefaults[OUTPUT_STATES]:
+            output_states.extend(self.paramClassDefaults[OUTPUT_STATES])
+        if OUTPUT_STATES in self.user_params and self.user_params[OUTPUT_STATES]:
+            output_states.extend(self.user_params[OUTPUT_STATES])
+        if output_states:
+            kwargs[OUTPUT_STATES] = output_states
+
+        kwargs[PARAMS] = params
+
+        params = self._assign_args_to_param_dicts(**kwargs)
 
         self._execution_id = None
 
