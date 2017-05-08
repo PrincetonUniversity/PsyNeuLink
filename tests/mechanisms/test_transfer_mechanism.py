@@ -1,32 +1,91 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Functions.Function import Logistic
+import numpy as np
 from PsyNeuLink.Globals.Keywords import *
 import pytest
 
-# def test_recursion_depth():
-#     with pytest.raises(RuntimeError) as excinfo:
-#         def f():
-#             f()
-#         f()
-#     assert 'maximum recursion' in str(excinfo.value)
 
-def test_transfer_mech():
+#  MECHANISMS WITH VALID NOISE:
+
+def test_transfer_mech_array_var_float_noise():
+
+    T = TransferMechanism(name='T',
+                                   default_input_value = [0,0,0,0],
+                                   function=Linear(),
+                                   noise=5.0,
+                                   time_constant = 1.0,
+                                   time_scale=TimeScale.TIME_STEP
+                                   )
+    val = T.execute([0,0,0,0]).tolist()
+    assert val == [[5.0,5.0,5.0,5.0]]
+
+def test_transfer_mech_array_var_normal_len_1_noise():
+
+    T = TransferMechanism(name='T',
+                                   default_input_value = [0,0,0,0],
+                                   function=Linear(),
+                                   noise=NormalDist().function,
+                                   time_constant = 1.0,
+                                   time_scale=TimeScale.TIME_STEP
+                                   )
+    val = T.execute([0,0,0,0]).tolist()
+
+    assert val == [[2.240893199201458, 2.240893199201458, 2.240893199201458, 2.240893199201458]]
+
+def test_transfer_mech_array_var_normal_array_noise():
+
+    T = TransferMechanism(name='T',
+                                   default_input_value = [0,0,0,0],
+                                   function=Linear(),
+                                   noise=[NormalDist().function, NormalDist().function, NormalDist().function, NormalDist().function] ,
+                                   time_constant = 1.0,
+                                   time_scale=TimeScale.TIME_STEP
+                                   )
+    val = T.execute([0,0,0,0]).tolist()
+
+    assert val == [[0.7610377251469934, 0.12167501649282841, 0.44386323274542566, 0.33367432737426683]]
+
+def test_transfer_mech_integer_noise():
     with pytest.raises(MechanismError) as error_text:
-        my_Transfer_Test = TransferMechanism(name='my_Transfer_Test',
+        T = TransferMechanism(name='T',
                                    default_input_value = [0,0],
                                    function=Logistic(gain=0.1, bias=0.2),
                                    noise=5,
                                    time_constant = 0.1,
                                    time_scale=TimeScale.TIME_STEP
                                    )
-        my_Transfer_Test.execute([0,0])
+        T.execute([0,0])
+    assert 'noise parameter' in str(error_text.value)
+
+def test_transfer_mech_mismatched_shape_noise():
+    with pytest.raises(MechanismError) as error_text:
+        T = TransferMechanism(name='T',
+                                   default_input_value = [0,0],
+                                   function=Logistic(gain=0.1, bias=0.2),
+                                   noise=[5.0,5.0,5.0],
+                                   time_constant = 0.1,
+                                   time_scale=TimeScale.TIME_STEP
+                                   )
+        T.execute()
+    assert 'noise parameter' in str(error_text.value)
+
+def test_transfer_mech_mismatched_shape_noise():
+    with pytest.raises(MechanismError) as error_text:
+        T = TransferMechanism(name='T',
+                                   default_input_value = [0,0],
+                                   function=Logistic(gain=0.1, bias=0.2),
+                                   noise=[5.0,5.0,5.0],
+                                   time_constant = 0.1,
+                                   time_scale=TimeScale.TIME_STEP
+                                   )
+        T.execute()
     assert 'noise parameter' in str(error_text.value)
 
 
-#     my_Transfer_Test.execute([1,2])
+#     T.execute([1,2])
 #     except MechanismError as error_text:
 #
-#     my_Transfer_Test2 = TransferMechanism(name='my_Transfer_Test2',
+#     T2 = TransferMechanism(name='my_Transfer_Test2',
 #                             default_input_value = [0,0],
 #                             function=Logistic(gain=0.1, bias=0.2),
 #                             noise=2.0,
