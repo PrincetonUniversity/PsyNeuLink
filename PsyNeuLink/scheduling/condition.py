@@ -12,7 +12,7 @@ class ConditionError(Exception):
         return repr(self.error_value)
 
 class ConditionSet(object):
-    def __init__(self, scheduler=None, conditions={}):
+    def __init__(self, scheduler=None, conditions=None):
         '''
         :param self:
         :param scheduler: a :keyword:`Scheduler` that these conditions are associated with, which maintains any state necessary for these conditions
@@ -20,7 +20,8 @@ class ConditionSet(object):
         '''
         self.scheduler = scheduler
         # even though conditions may be added in arbitrary iterables, they are stored internally as dicts of sets
-        self.conditions = conditions
+        if conditions is None:
+            self.conditions = {}
 
     def __contains__(self, item):
         return item in self.conditions

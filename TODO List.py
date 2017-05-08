@@ -2,7 +2,7 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# Bryn:
+ # Bryn:
 #  1) Programmatic creation of @property
 #  2) Plug & play
 
@@ -32,6 +32,7 @@
 #  10) DOCUMENTATION: INCLUDE EXAMPLES "INLINE" OR IN THEIR OWN SECTION AT THE END?
 #  11) • SHOULD COMPONENT NAMES HAVE SPACES OF UNDERSCORES?
 #  12) • SHOULD learning_rate FOR LearningProjection SET SLOPE OF function OR DIRECTLY MULTIPLY WEIGHTS?
+#  13) HOW TO HANDLE RECURRENT PROJECTIONS RE: LEARNING?
 
 # TASKS:
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
@@ -43,11 +44,16 @@
 #  6) IMPLEMENT Recurrent layer / KWTA??
 #  7) IMPLEMENT TD learning
 #  8) IMPLEMENT CLS / NMPH
-#  9) IMPLEMENT Conflict (energy / entropy)
+#  9) IMPLEMENT Conflict (stability / distance)
 # 10) IMPLEMENT TensorFLow wrapper
 # 11) IMPLEMENT Production System model (using scheduler??)
 # 12) IMPLEMENT LEABRA
 # 13) IMPLEMENT Model fitting
+
+# VALIDATE: (then add to META TEST)
+#  RecurrentTransferMechanism
+#  LCA (Test from ScratchPad (search for: my_auto)
+#  XOR 2 PROCESS
 
 
 # COMPOSITION IMPLEMENTATION NOTE:
@@ -59,25 +65,39 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
-# IMPLEMENT:  BogcazEtAl:
-#                 add Diti, Dpenalty, RR calculation, and add RR to return value
-#                 modify variable to accept drift_rate??
+# FIX / TEST: runtime_params:
+# COMMENT:
+# ?? DO PROJECTION DICTIONARIES PERTAIN TO INCOMING OR OUTGOING PROJECTIONS OR BOTH??
+# ?? CAN THE KEY FOR A STATE DICTIONARY REFERENCE A SPECIFIC STATE BY NAME, OR ONLY STATE-TYPE??
 #
-# IMPLEMENT:  Deferred init for control.
+# state keyword: dict for state's params
+#     function or projection keyword: dict for funtion or projection's params
+#         parameter keyword: vaue of param
 #
+#     dict: can be one (or more) of the following:
+#         + INPUT_STATE_PARAMS:<dict>
+#         + PARAMETER_STATE_PARAMS:<dict>
+#    [TBI + OUTPUT_STATE_PARAMS:<dict>]
+#         - each dict will be passed to the corresponding State
+#         - params can be any permissible executeParamSpecs for the corresponding State
+#         - dicts can contain the following embedded dicts:
+#             + FUNCTION_PARAMS:<dict>:
+#                  will be passed the State's execute method,
+#                      overriding its paramInstanceDefaults for that call
+#             + PROJECTION_PARAMS:<dict>:
+#                  entry will be passed to all of the State's projections, and used by
+#                  by their execute methods, overriding their paramInstanceDefaults for that call
+#             + MAPPING_PROJECTION_PARAMS:<dict>:
+#                  entry will be passed to all of the State's MappingProjections,
+#                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+#             + CONTROL_PROJECTION_PARAMS:<dict>:
+#                  entry will be passed to all of the State's ControlProjections,
+#                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+#             + <projectionName>:<dict>:
+#                  entry will be passed to the State's projection with the key's name,
+#                  along with any in the PROJECTION_PARAMS and MappingProjection or ControlProjection dicts
+# COMMENT
 
-# IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
-#           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
-
-# FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
-# FIX: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
-# FIX: printout of intial_value (see devel_upstream on Quill)
-# FIX fix _update_parameter_state in Projection as in Mechanism
-
-# FIX: Flip names of Xxxx() and Xxxx_Base()
-
-# IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
-# IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)
 
 # DOCUMENTATION: items in paramClassDefaults are created as attributes (not properties), and are thus not validated
 #                    when assignments are made to them;  items in user_params are created as properties, and are
@@ -101,6 +121,78 @@
 
 # DOCUMENTATION: ?? MOVE `parameter specification dictionary <Mechanism_Creation>` TO Component??
 
+# DOCUMENTATION: FOR TransferMechanism AND ALL OF ITS SUBCLASSES:
+#                       document that it uses only the first item of its variable arg/attrib (variable[0])
+
+# DOCUMENTATION: size AND shape ATTRIBUTES in: IntegratorMechanism,
+#                                              TransferMechanism,
+#                                              RecurrentTransferMechansm
+#                                              DDM
+#                                              "developer's notes" in Components
+
+# DOCUMENTATION:  doscstring for EVCMechainms._instantiate_prediction_mechanism
+
+# DOCUMENTATION: add heading for Primary OutputState in States
+
+# IMPLEMENT:  BogcazEtAl:
+#                 add D_iti, D_penalty, RR calculation, and add RR to return value
+#                 modify variable to accept drift_rate??
+#
+# IMPLEMENT:  Deferred init for control.
+
+# IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
+#           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
+#
+# IMPLEMENT: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
+
+# IMPLEMENT: LCA (Leaky Competitive Accumulator):
+#                  RecurrentTransferMechanism with inhibition argument instead of matrix, and
+#                     implements matrix that is constrained to be all negative weights = inhibition
+#                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
+
+
+# FIX FINISH UP X_DEFAULT_CONTROL_MECH / CONTROLLED PROJECTION DEFERRED_INIT:
+# Finish looking at _instantiate_sender for Projection and ControlProjection:
+#     - get rid of both instantiation of projection and of any DefaultController-related stuff
+#     - get rid of duplicate entries in ControlSignal sendsToProjections
+
+
+# FIX: REPLACE: kwConstants must == arg names
+# IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
+# IMPLEMENT: function{} and owner_name IN exception messages (as for SoftMax derivative exception)
+# FIX: Stability and Distance:  name is getting set to TYPE rather than to SUBTYPE name
+#                               DOCUMENT args and attribs
+
+# FIX: matrix problem for LCA in assign_args_to_dict (MODIFIED 5/2/17)
+
+# FIX: Refactor to use self.size rather than len(variable[0]) ??or len(variable)??
+#        (see Components._instantiate_defaults, ~Line 1202)
+
+# FIX/IMPLEMENT: TransferMechanism:
+#                      - rename outputStates (get rid of "TRANSFER_";  do same for RecurrentTransferMechanism
+#                      - allow OutputStates to be specifiable using a list in an **outputs** arg
+
+# FIX: Backpropagation AND Reinforcement:
+#        ADD TYPECHECKING FOR error_matrix AND THEN CLEAN UP _validate_params
+#        ADD _instantiate_attributes_before_function AND IF MappingProjection IS SPECIFIED FOR error_matrix,
+#                  convert to ParameterState (SEE Stability FOR EXAMPLE)
+
+# FIX: WHY IS EVCMechanism GETTING NAMED "EVCMechanism-1"?  IS IT GETTING INSTANTIATED TWICE?
+# FIX: printout of intitial_value with brackets (see devel_upstream on Quill)
+# FIX fix _update_parameter_state in Projection as in Mechanism
+
+# FIX: Flip names of Xxxx() and Xxxx_Base()
+
+# FIX: ALLOW Projection PARAM SPECIFICATION TO MAKE IT THROUGH Component._validate_params
+#         (e.g., FOR Stability AND Backpropagation FUNCTIONS)
+
+# FIX: SEARCH FOR "` argument" and replace with "**<arg>** argument"
+# FIX: SEARCH FOR ALL MATRIX KEYWORDS AND REPLACE WITH `MATRIX KEYWORD`
+# FIX: DOCUMENTATION OF RESULTS OF TransferMechanism EXECUTION (AND OTHERS), REGARDING WHAT GOES IN THE value ATTRIBUTE
+
+# FIX: Component._validate_params: if param is a string, check for keywords before raising excpetion
+#                                  (will require consoliation of all keywords?)
+
 # TEST: Autoassociative SOFT_CLAMP
 # TEST: Autoassociative learning:  fix [auto_mech] version
 # FIX: ADD PredictionMechanisms TO system.graph AND ASK NATE TO RENDER THEM IN BLUE
@@ -109,7 +201,6 @@
 # IMPLEMENT: Simple Hebbian learning
 # TEST: learning_rate is assignable and "sticks" at function, mech, process and system levels
 
-# FIX: ADD XOR 2 PROCESS TO META TEST SCRIPT (ONCE VALIDATED)
 # FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
 # FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
 

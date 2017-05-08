@@ -1,4 +1,3 @@
-import logging
 import numpy
 
 from PsyNeuLink.Components.System import system
@@ -12,8 +11,6 @@ from PsyNeuLink.Components.Functions.Function import Linear, Logistic, BogaczEtA
 from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.scheduling.condition import *
 from PsyNeuLink.Globals.Keywords import SIMPLE
-
-logger = logging.getLogger(__name__)
 
 class TestInit:
     def test_create_scheduler_from_system_StroopDemo(self):
@@ -81,12 +78,14 @@ class TestInit:
         integrator_ColorInputPrediction = mySystem.executionList[7][0]
         integrator_RewardPrediction = mySystem.executionList[8][0]
         integrator_WordInputPrediction = mySystem.executionList[9][0]
+        objective_EVC_mech = mySystem.executionList[10][0]
 
         expected_consideration_queue = [
             {Color_Input, Word_Input, Reward, integrator_ColorInputPrediction, integrator_WordInputPrediction, integrator_RewardPrediction},
             {Color_Hidden, Word_Hidden},
             {Output},
-            {Decision}
+            {Decision},
+            {objective_EVC_mech},
         ]
 
         assert sched.consideration_queue == expected_consideration_queue

@@ -7,7 +7,7 @@
 
 
 # ***************************************************  DDM *************************************************************
-#
+
 """
 ..
     Sections:
@@ -31,7 +31,7 @@ mode), or integrated numerically (in `TIME_STEP` mode).
 Creating a DDM Mechanism
 -----------------------------
 A DDM Mechanism can be instantiated directly by calling its constructor, or by using the `mechanism` function
-and specifying DDM as its `mech_spec` argument.  The analytic solution used in `TRIAL` mode is selected
+and specifying DDM as its **mech_spec** argument.  The analytic solution used in `TRIAL` mode is selected
 using the `function <DDM.function>` argument, which can be simply the name of a DDM function (first example below),
 or a call to the function with arguments specifying its parameters (see `DDM_Execution` below for a description of
 DDM function parameters) and, optionally, a `ControlProjection` (second example)::
@@ -565,11 +565,12 @@ class DDM(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
+                 size:tc.optional(int)=None,
                  # function:tc.enum(type(BogaczEtAl), type(NavarroAndFuss))=BogaczEtAl(drift_rate=1.0,
                  function=BogaczEtAl(drift_rate=1.0,
                                      starting_point=0.0,
                                      threshold=1.0,
-                                     noise=0.5,
+                                     noise=0.5, 
                                      t0=.200),
                  params=None,
                  time_scale=TimeScale.TRIAL,
@@ -583,8 +584,7 @@ class DDM(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   time_scale=time_scale,
-                                                  params=params,
-                                                  )
+                                                  params=params)
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
@@ -592,9 +592,11 @@ class DDM(ProcessingMechanism_Base):
             try:
                 default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
             except:
-
                 default_input_value = 0.0
 
+        # # Conflict with above
+        # self.size = size
+            
         self.threshold = thresh
 
         super(DDM, self).__init__(variable=default_input_value,
@@ -822,7 +824,7 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        # PLACEHOLDER for a time_step_size parameter when time_step_mode/scheduling is implemented:
+        # PLACEHOLDER for a time_step_size parameter when time_step_mode/scheduling is implemented: 
         time_step_size = 1.0
 
         if variable is None or np.isnan(variable):

@@ -3,22 +3,14 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
 
-# does not run a system, can be used to ensure that running processes alone still work
+# does not run a system, can be used to ensure that running processes alone still works
 def test_DDM():
-    DDM_prefs = ComponentPreferenceSet(
-        prefs = {
-            kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
-            kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
-        }
-    )
-
     myMechanism = DDM(
         function=BogaczEtAl(
-            drift_rate=(1.0),#, CONTROL_PROJECTION),
-            threshold=(10.0),#, CONTROL_PROJECTION),
+            drift_rate=(1.0),
+            threshold=(10.0),
             starting_point=0.0,
         ),
-        prefs = DDM_prefs,
         name='My_DDM',
     )
 
@@ -26,7 +18,6 @@ def test_DDM():
         function=BogaczEtAl(
             drift_rate=2.0,
             threshold=20.0),
-        prefs = DDM_prefs,
         name='My_DDM_2'
     )
 
@@ -35,16 +26,8 @@ def test_DDM():
             drift_rate=3.0,
             threshold=30.0
         ),
-        prefs = DDM_prefs,
         name='My_DDM_3',
     )
-
-    process_prefs = ComponentPreferenceSet(
-        reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
-        verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
-    )
-
-    process_prefs.show()
 
     z = process(
         default_input_value=[[30], [10]],
@@ -55,9 +38,23 @@ def test_DDM():
             (FULL_CONNECTIVITY_MATRIX),
             myMechanism_3
         ],
-        prefs = process_prefs,
     )
 
-    z.execute([[30], [10]])
+    result = z.execute([[30], [10]])
 
-    myMechanism.log.print_entries(ALL_ENTRIES, kwTime, kwValue)
+    expected_output = [
+        (myMechanism.inputState.value, np.array([40.])),
+        (myMechanism.outputState.value, np.array([10.])),
+        (myMechanism_2.inputState.value, np.array([10.])),
+        (myMechanism_2.outputState.value, np.array([20.])),
+        (myMechanism_3.inputState.value, np.array([20.])),
+        (myMechanism_3.outputState.value, np.array([30.])),
+        (result, np.array([30.])),
+    ]
+
+    for i in range(len(expected_output)):
+        val, expected = expected_output[i]
+        # setting absolute tolerance to be in accordance with reference_output precision
+        # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
+        # which WILL FAIL unless you gather higher precision values to use as reference
+        np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
