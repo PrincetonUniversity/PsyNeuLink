@@ -427,9 +427,9 @@ def _instantiate_input_states(owner, context=None):
     # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
     # FIX: Hack to prevent recursion in calls to setter and assign_params
     if context and 'COMMAND_LINE' in context:
-        owner._input_states = state_list
-    else:
         owner.input_states = state_list
+    else:
+        owner._input_states = state_list
     # owner.input_states = state_list
 
     # Check that number of input_states and their variables are consistent with owner.variable,

@@ -174,15 +174,28 @@
 # SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
 
 # FIX: FINISH input/output refactoring:
-#     Mechanism implements PRIMARY input_state and output_state in paramClassDefaults for base_class;
-#        it can then be relabeled by subclasses if desired.
-#     DECIDE WHETHER OR NOT input_states AND output_states SHOULD BE properties (at bottom of assign_args_to_params):
+#      PROTOCOL:
+#          a) Mechanism implements PRIMARY input_state and output_state in paramClassDefaults
+#          b) If any are specified in constructor args (input_states or output_states), they totally override
+#                paramClassDefaults [??CURRENTLY DEALT WITH IN Mechanism._filter_params??]
+#          c) Subclass implements default set in module, and uses those as defaults for constructor args
+#                (??standard way of overriding paramClassDefault or need to implement in assign_args_to_dicts)?
+
+# DECIDE WHETHER OR NOT input_states AND output_states SHOULD BE properties (at bottom of assign_args_to_params):
 #          IF SO, make sure paramClassDefaults ones get done if input_states/output_states aren't args or are None
 #                   and/or enforce as args in inits of all mechanisms?
 #          IF NOT, make sure they are removed from user_params
+
+#     Mechanism implements PRIMARY input_state and output_state in paramClassDefaults for base_class;
+#        it can then be relabeled by subclasses if desired.
+#      Replace output_states construtor arg with control_signals, gating_signals, learning_signals
+#               subclasss __init__ should intercept and rename as output_states,
+#                  and a property that accesses output_states
+#      Implement list of possible states, named, and usable in the arg
+#      Do same for input_states ObjectiveMechanism that gets subclassed (Comparator for learning, Monitor for control),
+#               that replaces input_states with SAMPLE and TARGET (Comparator), or monitored_states (Monitor)
 #     TEST USING assign_params ON COMMAND LINE TO ADD AN inputState or outputState
-#     Name of primary input_state and output_state:  PRIMARY
-#     Replace names parameter of objective mechanism with input_states arg
+#     Replace `names` arg of objective mechanism with input_states arg (and subclass-specific default entries)
 #     DOCUMENTATION for input_state(s) and output_state(s)
 #                   variable and value: 2d np.arrays
 #                   input_values and output_values:  lists of values, but each value may be an np.ndarray
