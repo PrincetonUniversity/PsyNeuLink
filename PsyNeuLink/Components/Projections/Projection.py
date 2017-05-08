@@ -645,7 +645,7 @@ class Projection_Base(Projection):
 
         # # IMPLEMENTATION NOTE:  The following supported instantiation of a default sender type by a projection, for
         # #                       projections that did not yet have their sender specified;  however, this should now
-        # #                       be covered by deferred_init(): sender is assigned in that call or bythe time is made.
+        # #                       be covered by deferred_init(): sender is assigned in that call or by the time is made.
         # # If sender is a class, instantiate it:
         # # - assume it is a Mechanism or State (should have been validated in _validate_params)
         # # - implement default sender of the corresponding type

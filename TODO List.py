@@ -174,6 +174,15 @@
 # SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
 
 # FIX: FINISH input/output refactoring:
+#     Mechanism implements PRIMARY input_state and output_state in paramClassDefaults for base_class;
+#        it can then be relabeled by subclasses if desired.
+#     DECIDE WHETHER OR NOT input_states AND output_states SHOULD BE properties (at bottom of assign_args_to_params):
+#          IF SO, make sure paramClassDefaults ones get done if input_states/output_states aren't args or are None
+#                   and/or enforce as args in inits of all mechanisms?
+#          IF NOT, make sure they are removed from user_params
+#     TEST USING assign_params ON COMMAND LINE TO ADD AN inputState or outputState
+#     Name of primary input_state and output_state:  PRIMARY
+#     Replace names parameter of objective mechanism with input_states arg
 #     DOCUMENTATION for input_state(s) and output_state(s)
 #                   variable and value: 2d np.arrays
 #                   input_values and output_values:  lists of values, but each value may be an np.ndarray

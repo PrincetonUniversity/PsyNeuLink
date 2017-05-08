@@ -406,7 +406,6 @@ kpMechanismExecutedLogEntry = "Mechanism Executed"
 #region ---------------------------------------------    MECHANISM   ---------------------------------------------------
 
 MECHANISM = 'MECHANISM'
-kwMechanism = "MECHANISM"
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
@@ -434,7 +433,7 @@ kwStateValue = "State value"   # Used in State specification dict
 STATE_PARAMS = "State params" # Used in State specification dict
 
 # ParamClassDefaults:
-kwMechanismTimeScale = "Mechanism Time Scale"
+MECHANISM_TIME_SCALE = "Mechanism Time Scale"
 kwMechanismExecutionSequenceTemplate = "Mechanism Execution Sequence Template"
 
 # Entries for output OrderedDict, describing the current state of the Mechanism
@@ -475,13 +474,14 @@ ALLOCATION_SAMPLES = "allocation_samples"
 
 #region ----------------------------------------------    STATES  ------------------------------------------------------
 
-kwState = "State"
+STATE = "State"
 # These are use for dict specification of State
 STATE_PROJECTIONS = "StateProjections"  # Used to specify projection list to State
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
 
+PRIMARY = 'Primary'
 INPUT_STATES = 'input_states'
 INPUT_STATE_PARAMS = 'input_state_params'
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
