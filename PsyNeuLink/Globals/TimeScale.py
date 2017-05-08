@@ -9,6 +9,27 @@
 from enum import Enum
 from PsyNeuLink.Globals.Keywords import CENTRAL_CLOCK
 
+# ********************************************* TimeScale ***************************************************************
+
+"""
+TimeScale (Enum) represents the various divisions of time used elsewhere in PsyNeuLink, and are defined as follows
+(in order of increasingly coarse granularity):
+
+    - TIME_STEP
+        The nuclear unit of time, consisting of a set of mechanisms that are considered to run simultaneously
+    - PASS
+        A PASS consists of an entire iteration through the `Scheduler`<Scheduler>'s consideration queue (i.e. its
+        toposort ordering), during which zero or more TIME_STEPs will occur and mechanisms set to execute
+    - TRIAL
+        An open-ended unit of time consisting of all activity occurring within the scope of a single input to a
+        `System`<System> (or similar composition)
+    - RUN
+        A loosely-defined unit of time consisting of zero or more TRIALs
+    - LIFE
+        LIFE consists of all time since the creation of an object
+
+"""
+
 # Time scale modes
 class TimeScale(Enum):
     """Values used to specify ``time_scale`` argument for mechanisms, processes, and systems.
