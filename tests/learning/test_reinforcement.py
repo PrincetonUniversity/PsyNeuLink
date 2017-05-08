@@ -9,17 +9,16 @@ from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
 from PsyNeuLink.Components.System import System_Base, system
 from PsyNeuLink.Globals.TimeScale import CentralClock
 
-random.seed(0)
-np.random.seed(0)
-
 def test_reinforcement():
     input_layer = TransferMechanism(
-        default_input_value=[0,0,0],
+        default_input_value=[0,0,0
+            ],
         name='Input Layer',
     )
 
     action_selection = TransferMechanism(
-        default_input_value=[0,0,0],
+        default_input_value=[0,0,0
+            ],
         function=SoftMax(
             output=PROB,
             gain=1.0,
@@ -28,8 +27,10 @@ def test_reinforcement():
     )
 
     p = process(
-        default_input_value=[0, 0, 0],
-        pathway=[input_layer,action_selection],
+        default_input_value=[0, 0, 0
+            ],
+        pathway=[input_layer,action_selection
+            ],
         learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)),
         target=0,
     )
@@ -50,20 +51,24 @@ def test_reinforcement():
     def show_weights():
         print ('Reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
         print ('\nAction selected:  {}; predicted reward: {}'.format(
-            np.nonzero(action_selection.outputState.value)[0][0],
-            action_selection.outputState.value[np.nonzero(action_selection.outputState.value)][0],
+            np.nonzero(action_selection.outputState.value)[0][0
+            ],
+            action_selection.outputState.value[np.nonzero(action_selection.outputState.value)][0
+            ],
             )
         )
 
     input_list = {input_layer:[[1, 1, 1]]}
 
     s = system(
-        processes=[p],
+        processes=[p
+            ],
         # learning_rate=0.05,
-        targets=[0],
+        targets=[0
+            ],
     )
 
-    s.run(
+    results = s.run(
         num_executions=10,
         inputs=input_list,
         targets=reward,
@@ -81,15 +86,51 @@ def test_reinforcement():
         (action_selection.outputState.value, np.array([ 0., 3.38417298, 0.])),
         (mech_objective_action.outputState.value, np.array([6.61582702])),
         (mech_learning_input_to_action.outputState.value, np.array([
-            [0.        , 0.        , 0.        ],
-            [0.        , 0.33079135, 0.        ],
+            [0.        , 0.        , 0.
+            ],
+            [0.        , 0.33079135, 0.
+            ],
             [0.        , 0.        , 0.        ]])
         ),
         (reward_prediction_weights.matrix, np.array([
-            [1.        , 0.        , 0.        ],
-            [0.        , 3.38417298, 0.        ],
+            [1.        , 0.        , 0.
+            ],
+            [0.        , 3.38417298, 0.
+            ],
             [0.        , 0.        , 2.283625  ]])
         ),
+        # (results, [
+        #     [
+        #         np.array([ 0., 0., 2.283625]), np.array(0.7612083333333333), np.array(1.1588762534722221)
+        #     ],
+        #     [
+        #         np.array([ 0., 3.71496434, 0.]), np.array(1.2383214450520832), np.array(3.066880002551759)
+        #     ],
+        #     [
+        #         np.array([ 0., 4.02921612, 0.]), np.array(1.3430720394661455), np.array(3.607685006391504)
+        #     ],
+        #     [
+        #         np.array([ 1., 0., 0.]), np.array(0.3333333333333333), np.array(0.22222222222222224)
+        #     ],
+        #     [
+        #         np.array([ 0., 4.32775531, 0.]), np.array(1.442585104159505), np.array(4.162103565485778)
+        #     ],
+        #     [
+        #         np.array([ 0., 4.61136755, 0.]), np.array(1.5371225156181962), np.array(4.725491256040825)
+        #     ],
+        #     [
+        #         np.array([ 0., 4.88079917, 0.]), np.array(1.626933056503953), np.array(5.29382234069059)
+        #     ],
+        #     [
+        #         np.array([ 0., 0., 2.66944375]), np.array(0.8898145833333332), np.array(1.583539985425347)
+        #     ],
+        #     [
+        #         np.array([ 0., 5.13675921, 0.]), np.array(1.7122530703454222), np.array(5.863621153814649)
+        #     ],
+        #     [
+        #         np.array([ 0., 5.37992125, 0.]), np.array(1.7933070834948177), np.array(6.431900591425378)
+        #     ],
+        # ])
     ]
 
     for i in range(len(expected_output)):

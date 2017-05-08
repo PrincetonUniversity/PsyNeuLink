@@ -24,8 +24,8 @@ Creating an IntegratorMechanism
 -------------------------------
 
 An IntegratorMechanism can be created directly by calling its constructor, or using the
-:py:func:`mechanism <Mechanism.mechanism>` function and specifying :keyword:`IntegratorMechanism` as its `mech_spec`
-argument.  Its function is specified in the :keyword:`function` argument, which can be parameterized by calling its
+`mechanism() <Mechanism.mechanism>` function and specifying INTEGRATOR_MECHANISM as its **mech_spec**
+argument.  Its function is specified in the **function** argument, which can be parameterized by calling its
 constructor with parameter values::
 
     my_time_averaging_mechanism = IntegratorMechanism(function=Integrator(integration_type=ADAPTIVE, rate=0.5))
@@ -159,13 +159,13 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
     name : str : default IntegratorMechanism-<index>
         the name of the mechanism.
-        Specified in the :keyword:`name` argument of the constructor for the mechanism;
+        Specified in the :keyword:**name** argument of the constructor for the mechanism;
         if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the `PreferenceSet` for mechanism.
-        Specified in the `prefs` argument of the constructor for the mechanism;
+        Specified in the **prefs** argument of the constructor for the mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -196,6 +196,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
+                 size:tc.optional(int)=None,
                  function=Integrator(rate=0.5,
                                      integration_type=ADAPTIVE),
                  time_scale=TimeScale.TRIAL,
@@ -204,19 +205,16 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None,
                  context=None):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
-
-        :param default_input_value: (value)
-        :param params: (dict)
-        :param name: (str)
-        :param prefs: (PreferenceSet)
         """
 
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function, params=params)
+        params = self._assign_args_to_param_dicts(function=function,
+                                                  params=params)
 
         # if default_input_value is NotImplemented:
         #     default_input_value = SigmoidLayer_DEFAULT_NET_INPUT
+
+        self.size = size
 
         super(IntegratorMechanism, self).__init__(variable=default_input_value,
                                   params=params,

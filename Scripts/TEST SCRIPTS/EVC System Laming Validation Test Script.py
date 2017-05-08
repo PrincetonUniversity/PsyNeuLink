@@ -141,5 +141,4 @@ mySystem.run(
     call_before_trial=show_trial_header,
     # call_after_time_step=show_results
     call_after_trial=show_results,
-    termination_processing={TimeScale.TRIAL: AfterNCalls(Decision, 1)}
 )

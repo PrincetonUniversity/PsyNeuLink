@@ -785,13 +785,13 @@ class Process_Base(Process):
 
     name : str : default Process-<index>
         the name of the process.
-        Specified in the `name` argument of the constructor for the process;
+        Specified in the **name** argument of the constructor for the process;
         if not is specified, a default is assigned by ProcessRegistry
         (see :ref:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
         the `PreferenceSet` for the process.
-        Specified in the `prefs` argument of the constructor for the process;  if it is not specified, a default is
+        Specified in the **prefs** argument of the constructor for the process;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py (see :ref:`PreferenceSet <LINK>` for details).
 
 
@@ -811,11 +811,7 @@ class Process_Base(Process):
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # Use inputValueSystemDefault as default input to process
 
-    # # MODIFIED 10/2/16 OLD:
-    # variableClassDefault = inputValueSystemDefault
-    # MODIFIED 10/2/16 NEW:
     variableClassDefault = None
-    # MODIFIED 10/2/16 END
 
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL,
@@ -894,7 +890,7 @@ class Process_Base(Process):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate initial_values args
            Note: validation of target (for learning) is deferred until _instantiate_target since,
-                 if it doesn't have a TARGET mechanism (see _check_for_target_mechanism),
+                 if it doesn't have a TARGET mechanism (see _check_for_target_mechanism), 
                  it will not need a target.
         """
 
@@ -1213,6 +1209,22 @@ class Process_Base(Process):
                 self._mech_tuples.append(pathway[i])
             # self.mechanismNames.append(mech.name)
 
+            # FIX: ADD RECURRENT PROJECTION AND MECHANISM
+            # IMPLEMENTATION NOTE:  THIS IS A TOTAL HACK TO ALLOW RECURRENT MECHANISMS IN THE CURRENT SYSTEM
+            #                       SHOULD BE HANDLED MORE APPROPRIATELY IN COMPOSITION
+            # If this is the last mechanism in the pathway, and it has a recurrent projection,
+            #    add that to the pathway so that it can be identified and assigned for learning if so specified
+            if i+1 == len(pathway):
+                if any(any(proj.receiver.owner is mech
+                           for proj in state.sendsToProjections)
+                       for state in mech.outputStates.values()):
+                    for state in mech.outputStates.values():
+                        for proj in state.sendsToProjections:
+                            if proj.receiver.owner is mech:
+                                pathway.append(MechanismTuple(proj,None,None))
+                                pathway.append(pathway[i-2])
+
+
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
         if self.initial_values:
@@ -1259,14 +1271,14 @@ class Process_Base(Process):
                 # Note: does not include learning (even if specified for the process)
                 if i == 0:
                     # Relabel for clarity
-                    mechanism = item
+                    mech = item
 
                     # Check if first Mechanism already has any projections and, if so, issue appropriate warning
-                    if mechanism.inputState.receivesFromProjections:
-                        self._issue_warning_about_existing_projections(mechanism, context)
+                    if mech.inputState.receivesFromProjections:
+                        self._issue_warning_about_existing_projections(mech, context)
 
                     # Assign input projection from Process
-                    self._assign_process_input_projections(mechanism, context=context)
+                    self._assign_process_input_projections(mech, context=context)
                     continue
                 #endregion
 
@@ -1795,7 +1807,15 @@ class Process_Base(Process):
             # For each parameterState of the mechanism
             for parameter_state in mech.parameterStates.values():
                 parameter_state._deferred_init()
-                self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
+                # MODIFIED 5/2/17 OLD:
+                # self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
+                # MODIFIED 5/2/17 NEW:
+                # Defer instantiation of ControlProjections to System
+                #   and there should not be any other type of projection to the ParameterState of a Mechanism
+                from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+                if not all(isinstance(proj, ControlProjection) for proj in parameter_state.receivesFromProjections):
+                    raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterState for a Mechanism")
+                # MODIFIED 5/2/17 END
 
         # Label monitoring mechanisms and add _monitoring_mech_tuples to _mech_tuples for execution
         if self._monitoring_mech_tuples:
