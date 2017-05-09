@@ -379,7 +379,26 @@ class AfterPass(Condition):
         def func(n, time_scale):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
-            return self.scheduler.times[time_scale][TimeScale.PASS] >= n+1
+            return self.scheduler.times[time_scale][TimeScale.PASS] > n
+        super().__init__(n, func, time_scale)
+
+class AfterNPasses(Condition):
+    """
+    AfterPass
+
+    Parameters:
+        - n (int): the number of TimeScale.PASSes after which this condition will be satisfied
+        - time_scale (TimeScale): the TimeScale used as basis for counting passes. Defaults to TimeScale.TRIAL
+
+    Satisfied when:
+        - the count of TimeScale.PASSes within time_scale is at least n
+
+    """
+    def __init__(self, n, time_scale=TimeScale.TRIAL):
+        def func(n, time_scale):
+            if self.scheduler is None:
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+            return self.scheduler.times[time_scale][TimeScale.PASS] >= n
         super().__init__(n, func, time_scale)
 
 class EveryNPasses(Condition):
@@ -403,6 +422,84 @@ class EveryNPasses(Condition):
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] % n == 0
         super().__init__(n, func, time_scale)
+
+class BeforeTrial(Condition):
+    """
+    BeforeTrial
+
+    Parameters:
+        - n (int): the trial after which this condition will be satisfied
+        - time_scale (TimeScale): the TimeScale used as basis for counting trials. Defaults to TimeScale.RUN
+
+    Satisfied when:
+        - within the scope of time_scale, at most n-1 trials have occurred
+
+    Notes:
+        Counts of TimeScales are zero-indexed (that is, the first Trial is trial 0, the second Trial is trial 1, etc.). So,
+        BeforeTrial(2) is satisfied at trial 0 and trial 1
+
+    """
+    def __init__(self, n, time_scale=TimeScale.RUN):
+        def func(n):
+            if self.scheduler is None:
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+            try:
+                return self.scheduler.times[time_scale][TimeScale.TRIAL] < n
+            except KeyError as e:
+                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.format(type(self).__name__, e, time_scale))
+        super().__init__(n, func)
+
+class AtTrial(Condition):
+    """
+    AtTrial
+
+    Parameters:
+        - n (int): the trial at which this condition will be satisfied
+        - time_scale (TimeScale): the TimeScale used as basis for counting trials. Defaults to TimeScale.RUN
+
+    Satisfied when:
+        - within the scope of time_scale, exactly n trials have occurred
+
+    Notes:
+        Counts of TimeScales are zero-indexed (that is, the first Trial is trial 0, the second Trial is trial 1, etc.). So,
+        AtTrial(1) is satisfied when one trial (trial 0) has already occurred.
+
+    """
+    def __init__(self, n, time_scale=TimeScale.RUN):
+        def func(n):
+            if self.scheduler is None:
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+            try:
+                return self.scheduler.times[time_scale][TimeScale.TRIAL] == n
+            except KeyError as e:
+                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.format(type(self).__name__, e, time_scale))
+        super().__init__(n, func)
+
+class AfterTrial(Condition):
+    """
+    AfterTrial
+
+    Parameters:
+        - n (int): the trial after which this condition will be satisfied
+        - time_scale (TimeScale): the TimeScale used as basis for counting trials. Defaults to TimeScale.RUN
+
+    Satisfied when:
+        - within the scope of time_scale, at least n+1 trials have occurred
+
+    Notes:
+        Counts of TimeScales are zero-indexed (that is, the first Trial is trial 0, the second Trial is trial 1, etc.). So,
+        AfterTrial(1) is satisfied after trial 1 has occurred, at trial 2, trial 3, trial 4, etc.
+
+    """
+    def __init__(self, n, time_scale=TimeScale.RUN):
+        def func(n):
+            if self.scheduler is None:
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+            try:
+                return self.scheduler.times[time_scale][TimeScale.TRIAL] > n
+            except KeyError as e:
+                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.format(type(self).__name__, e, time_scale))
+        super().__init__(n, func)
 
 class AfterNTrials(Condition):
     """
@@ -430,6 +527,35 @@ class AfterNTrials(Condition):
 #   - satisfied based on executions or state of Components
 ######################################################################
 
+class BeforeNCalls(Condition):
+    """
+    BeforeNCalls
+
+    Parameters:
+        - dependency (Component):
+        - n (int): the number of executions of dependency at which this condition will be satisfied
+        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency. Defaults to TimeScale.TRIAL
+
+    Satisfied when:
+        - dependency has been executed exactly n times within the scope of time_scale
+
+    Notes:
+
+    """
+    def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
+        def func(dependency, n):
+            if self.scheduler is None:
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+            num_calls = self.scheduler.counts_total[time_scale][dependency]
+            logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
+            return num_calls < n
+        super().__init__(dependency, func, n)
+
+# NOTE:
+# The behavior is not desired (i.e. depending on the order mechanisms are checked, B running AtNCalls(A, x))
+# may run on both the xth and x+1st call of A; if A and B are not parent-child
+# A fix could invalidate key assumptions and affect many other conditions
+# Since this condition is unlikely to be used, it's best to leave it for now
 class AtNCalls(Condition):
     """
     AtNCalls
