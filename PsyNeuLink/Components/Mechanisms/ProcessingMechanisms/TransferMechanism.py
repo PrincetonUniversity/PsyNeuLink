@@ -472,8 +472,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Noise is a list or array
         if isinstance(noise, (np.ndarray, list)):
             # Variable is a list/array
-            if isinstance(self.variable, (np.ndarray, list)):
-                if len(noise) != np.array(self.variable).size:
+            if isinstance(self.variable[0], (np.ndarray, list)):
+                if len(noise) != np.array(self.variable[0]).size:
                     try:
                         formatted_noise = list(map(lambda x: x.__qualname__, noise))
                     except AttributeError:
@@ -481,8 +481,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                     raise MechanismError("The length ({}) of the array specified for the noise parameter ({}) of {} "
                                         "must match the length ({}) of the default input ({}). If noise is specified as"
                                         " an array or list, it must be of the same size as the input."
-                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
-                                                self.variable))
+                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable[0]).size,
+                                                self.variable[0]))
                 else:
                     # Noise is a list or array of functions
                     if callable(noise[0]):
@@ -500,11 +500,15 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         elif callable(noise):
             self.noise_function = True
-            if isinstance(self.variable, (np.ndarray, list)):
+            if isinstance(self.variable[0], (np.ndarray, list)):
+
                 new_noise = []
-                for i in self.variable:
-                    new_noise.append(self.noise)
+                for v in self.variable[0]:
+
+                    new_noise.append(noise)
+
                 noise = new_noise
+
         elif isinstance(noise, float):
             self.noise_function = False
         else:
@@ -589,6 +593,17 @@ class TransferMechanism(ProcessingMechanism_Base):
         time_constant = self.time_constant
         range = self.range
         noise = self.noise
+        if self.noise_function:
+            print("NOISE  = ", self.noise)
+            if isinstance(variable, (list, np.ndarray)):
+                print("HELLO")
+                new_noise = []
+                for v in variable[0]:
+                    new_noise.append(noise())
+                noise = new_noise
+                print(new_noise)
+            else:
+                noise = noise()
 
         #endregion
 
@@ -606,8 +621,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                             self.inputState.value,
                                             initializer = self.previous_input,
                                             integration_type= ADAPTIVE,
-                                            noise = self.noise,
-                                            rate = self.time_constant
+                                            noise = noise,
+                                            rate = time_constant
                                             )
 
             current_input = self.integrator_function.execute(self.inputState.value,
@@ -621,15 +636,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                              )
 
         elif time_scale is TimeScale.TRIAL:
-
-            if self.noise_function:
-                if isinstance(noise, (list, np.ndarray)):
-                    new_noise = []
-                    for n in noise:
-                        new_noise.append(n())
-                    noise = new_noise
-                else:
-                    noise = noise()
 
             current_input = self.inputState.value + noise
         else:
