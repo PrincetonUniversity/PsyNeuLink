@@ -148,8 +148,48 @@ class Condition(object):
             return self.func(self.dependencies, **self.kwargs)
         return self.func(self.dependencies)
 
-######################################################################
+#########################################################################################################
 # Included Conditions
+#########################################################################################################
+
+######################################################################
+# Static Conditions
+#   - independent of components and time
+######################################################################
+
+class Always(Condition):
+    """
+    Always
+
+    Parameters:
+
+    Satisfied when:
+        - always satisfied
+
+    Notes:
+
+    """
+    def __init__(self):
+        super().__init__(True, lambda x: x)
+
+class Never(Condition):
+    """
+    Never
+
+    Parameters:
+
+    Satisfied when:
+        - never satisfied
+
+    Notes:
+
+    """
+    def __init__(self):
+        super().__init__(False, lambda x: x)
+
+######################################################################
+# Relative Conditions
+#   - based on other Conditions
 ######################################################################
 
 # TODO: create this class to subclass All and Any from
@@ -265,35 +305,33 @@ class Not(Condition):
     def owner(self, value):
         self.dependencies.owner = value
 
-class Always(Condition):
+######################################################################
+# Time-based Conditions
+#   - satisfied based only on TimeScales
+######################################################################
+
+class BeforePass(Condition):
     """
-    Always
+    BeforePass
 
     Parameters:
+        - n (int): the pass after which this condition will be satisfied
+        - time_scale (TimeScale): the TimeScale used as basis for counting passes. Defaults to TimeScale.TRIAL
 
     Satisfied when:
-        - always satisfied
+        - within the scope of time_scale, at most n-1 passes have occurred
 
     Notes:
+        Counts of TimeScales are zero-indexed (that is, the first Pass is pass 0, the second Pass is pass 1, etc.). So,
+        BeforePass(2) is satisfied at pass 0 and pass 1
 
     """
-    def __init__(self):
-        super().__init__(True, lambda x: x)
-
-class Never(Condition):
-    """
-    Never
-
-    Parameters:
-
-    Satisfied when:
-        - never satisfied
-
-    Notes:
-
-    """
-    def __init__(self):
-        super().__init__(False, lambda x: x)
+    def __init__(self, n, time_scale=TimeScale.TRIAL):
+        def func(n, time_scale):
+            if self.scheduler is None:
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+            return self.scheduler.times[time_scale][TimeScale.PASS] < n
+        super().__init__(n, func, time_scale)
 
 class AtPass(Condition):
     """
@@ -343,6 +381,78 @@ class AfterPass(Condition):
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] >= n+1
         super().__init__(n, func, time_scale)
+
+class EveryNPasses(Condition):
+    """
+    EveryNPasses
+
+    Parameters:
+        - n (int): the frequency of passes with which this condition will be satisfied
+        - time_scale (TimeScale): the TimeScale used as basis for counting passes. Defaults to TimeScale.TRIAL
+
+    Satisfied when:
+        - the number of passes that has occurred within time_scale is evenly divisible by n
+
+    Notes:
+        All EveryNPasses conditions will be satisfied at pass 0
+
+    """
+    def __init__(self, n, time_scale=TimeScale.TRIAL):
+        def func(n, time_scale):
+            if self.scheduler is None:
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+            return self.scheduler.times[time_scale][TimeScale.PASS] % n == 0
+        super().__init__(n, func, time_scale)
+
+class AfterNTrials(Condition):
+    """
+    AfterNTrials
+
+    Parameters:
+        - n (int): the number of TimeScale.TRIALs after which this condition will be satisfied
+        - time_scale (TimeScale): the TimeScale used as basis for counting trials. Defaults to TimeScale.RUN
+
+    Satisfied when:
+        - the count of TimeScale.TRIALs within time_scale is at least n
+
+    Notes:
+
+    """
+    def __init__(self, n, time_scale=TimeScale.RUN):
+        def func(n, time_scale):
+            if self.scheduler is None:
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+            return self.scheduler.times[time_scale][TimeScale.TRIAL] >= n
+        super().__init__(n, func, time_scale)
+
+######################################################################
+# Component-based Conditions
+#   - satisfied based on executions or state of Components
+######################################################################
+
+class AtNCalls(Condition):
+    """
+    AtNCalls
+
+    Parameters:
+        - dependency (Component):
+        - n (int): the number of executions of dependency at which this condition will be satisfied
+        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency. Defaults to TimeScale.TRIAL
+
+    Satisfied when:
+        - dependency has been executed exactly n times within the scope of time_scale
+
+    Notes:
+
+    """
+    def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
+        def func(dependency, n):
+            if self.scheduler is None:
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+            num_calls = self.scheduler.counts_total[time_scale][dependency]
+            logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
+            return num_calls == n
+        super().__init__(dependency, func, n)
 
 class AfterNCalls(Condition):
     """
@@ -397,122 +507,6 @@ class AfterNCallsCombined(Condition):
             return count_sum >= n
         super().__init__(None, func, *dependencies, n=n)
 
-class AfterNTrials(Condition):
-    """
-    AfterNTrials
-
-    Parameters:
-        - n (int): the number of TimeScale.TRIALs after which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting trials. Defaults to TimeScale.RUN
-
-    Satisfied when:
-        - the count of TimeScale.TRIALs within time_scale is at least n
-
-    Notes:
-
-    """
-    def __init__(self, n, time_scale=TimeScale.RUN):
-        def func(n, time_scale):
-            if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
-            return self.scheduler.times[time_scale][TimeScale.TRIAL] >= n
-        super().__init__(n, func, time_scale)
-
-class AllHaveRun(Condition):
-    """
-    AllHaveRun
-
-    Parameters:
-        - *dependencies (Components): variable length
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependencies. Defaults to TimeScale.TRIAL
-
-    Satisfied when:
-        - All dependencies have been executed at least 1 time within the scope of time_scale
-
-    Notes:
-
-    """
-    def __init__(self, *dependencies, time_scale=TimeScale.TRIAL):
-        def func(_none, *dependencies):
-            if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
-            if len(dependencies) == 0:
-                dependencies = self.scheduler.nodes
-            for d in dependencies:
-                if self.scheduler.counts_total[time_scale][d] < 1:
-                    return False
-            return True
-        super().__init__(None, func, *dependencies)
-
-class AtNCalls(Condition):
-    """
-    AtNCalls
-
-    Parameters:
-        - dependency (Component):
-        - n (int): the number of executions of dependency at which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency. Defaults to TimeScale.TRIAL
-
-    Satisfied when:
-        - dependency has been executed exactly n times within the scope of time_scale
-
-    Notes:
-
-    """
-    def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
-        def func(dependency, n):
-            if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
-            num_calls = self.scheduler.counts_total[time_scale][dependency]
-            logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
-            return num_calls == n
-        super().__init__(dependency, func, n)
-
-class BeforePass(Condition):
-    """
-    BeforePass
-
-    Parameters:
-        - n (int): the pass after which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting passes. Defaults to TimeScale.TRIAL
-
-    Satisfied when:
-        - within the scope of time_scale, at most n-1 passes have occurred
-
-    Notes:
-        Counts of TimeScales are zero-indexed (that is, the first Pass is pass 0, the second Pass is pass 1, etc.). So,
-        BeforePass(2) is satisfied at pass 0 and pass 1
-
-    """
-    def __init__(self, n, time_scale=TimeScale.TRIAL):
-        def func(n, time_scale):
-            if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
-            return self.scheduler.times[time_scale][TimeScale.PASS] < n
-        super().__init__(n, func, time_scale)
-
-class EveryNPasses(Condition):
-    """
-    EveryNPasses
-
-    Parameters:
-        - n (int): the frequency of passes with which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting passes. Defaults to TimeScale.TRIAL
-
-    Satisfied when:
-        - the number of passes that has occurred within time_scale is evenly divisible by n
-
-    Notes:
-        All EveryNPasses conditions will be satisfied at pass 0
-
-    """
-    def __init__(self, n, time_scale=TimeScale.TRIAL):
-        def func(n, time_scale):
-            if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
-            return self.scheduler.times[time_scale][TimeScale.PASS] % n == 0
-        super().__init__(n, func, time_scale)
-
 class EveryNCalls(Condition):
     """
     EveryNCalls
@@ -564,6 +558,33 @@ class JustRan(Condition):
                 return dependency == self.scheduler.execution_list[-1]
         super().__init__(dependency, func)
 
+class AllHaveRun(Condition):
+    """
+    AllHaveRun
+
+    Parameters:
+        - *dependencies (Components): variable length
+        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependencies. Defaults to TimeScale.TRIAL
+
+    Satisfied when:
+        - All dependencies have been executed at least 1 time within the scope of time_scale
+
+    Notes:
+
+    """
+    def __init__(self, *dependencies, time_scale=TimeScale.TRIAL):
+        def func(_none, *dependencies):
+            if self.scheduler is None:
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+            if len(dependencies) == 0:
+                dependencies = self.scheduler.nodes
+            for d in dependencies:
+                if self.scheduler.counts_total[time_scale][d] < 1:
+                    return False
+            return True
+        super().__init__(None, func, *dependencies)
+
+# dynamic condition
 class WhenFinished(Condition):
     """
     WhenFinished
@@ -588,6 +609,7 @@ class WhenFinished(Condition):
 
         super().__init__(dependency, func)
 
+# dynamic condition
 class WhenFinishedAny(Condition):
     """
     WhenFinishedAny
@@ -616,6 +638,7 @@ class WhenFinishedAny(Condition):
 
         super().__init__(None, *dependencies, func)
 
+# dynamic condition
 class WhenFinishedAll(Condition):
     """
     WhenFinishedAll
