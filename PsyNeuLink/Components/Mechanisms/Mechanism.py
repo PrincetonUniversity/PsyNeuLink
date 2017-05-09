@@ -815,6 +815,8 @@ class Mechanism_Base(Mechanism):
     @tc.typecheck
     def __init__(self,
                  variable=None,
+                 input_states=None,
+                 output_states=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -1013,7 +1015,7 @@ class Mechanism_Base(Mechanism):
         if not INPUT_STATES in params or params[INPUT_STATES] is None:
             params[INPUT_STATES] = self.paramClassDefaults[INPUT_STATES]
         # Convert input_states_spec to list if it is not one
-        if not isinstance(params[INPUT_STATES], list):
+        if not isinstance(params[INPUT_STATES], (list, dict)):
             params[INPUT_STATES] = [params[INPUT_STATES]]
         self.user_params.__additem__(INPUT_STATES, params[INPUT_STATES])
 

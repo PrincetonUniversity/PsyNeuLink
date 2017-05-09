@@ -5,6 +5,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
+# NEW DOCUMENTATION:
+#  input_states is used to name and/or specify the value of the input_states; it can be:
+#      just a list of strings (used as names)
+#      just a list of values (used as values of inputState, overrides use of monitored_values such as for RL)
+#      if both, use dict with NAME and VARIABLE entries
+#      # if input_states must == monitored_values
+#  monitored_values no longer takes an inputState specification (that must be in input_states)
+
 # *********************************************  ObjectiveMechanism *******************************************************
 
 """
@@ -393,9 +401,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 # MODIFIED 5/8/17 OLD:
+                 # default_input_value=None,
+                 # MODIFIED 5/8/17 END
                  monitored_values=None,
-                 names:tc.optional(list)=None,
+                 input_states=None,
+                 # names:tc.optional(list)=None,
                  function=LinearCombination,
                  # role:tc.optional(str)=None,
                  params=None,
@@ -403,23 +414,21 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # if default_input_value is None:
-        #     default_input_value = self.variableClassDefault
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(
-                # # MODIFIED 5/8/17 OLD:
-                # monitored_values=monitored_values,
-                # MODIFIED 5/8/17 NEW:
-                input_states=monitored_values,
-                # MODIFIED 5/8/17 END
-                names=names,
-                function=function,
-                params=params)
+        params = self._assign_args_to_param_dicts(monitored_values=monitored_values,
+                                                  input_states=input_states,
+                                                  function=function,
+                                                  params=params)
 
         self._learning_role = None
 
-        super().__init__(variable=default_input_value,
+        super().__init__(
+                         # MODIFIED 5/8/17 OLD:
+                         # variable=default_input_value,
+                         # MODIFIED 5/8/17 NEW:
+                         variable=None,
+                         # MODIFIED 5/8/17 END
+                         input_states=input_states,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -443,7 +452,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate `role`, `monitored_values`, `input_states`, and `names <ObjectiveMechanism.names>` arguments
+        """Validate `role`, `monitored_values`, amd `input_states <ObjectiveMechanism.input_states>` arguments
 
         """
 
@@ -453,19 +462,27 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         if ROLE in target_set and target_set[ROLE] and not target_set[ROLE] in {LEARNING, CONTROL}:
             raise ObjectiveMechanismError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
-                                 format(target_set[ROLE], self.name))
+                                          format(target_set[ROLE], self.name))
 
+        # if not all(item in target_set for item in {INPUT_STATES, MONITORED_VALUES}):
         if INPUT_STATES in target_set and target_set[INPUT_STATES]:
             if len(target_set[INPUT_STATES]) != len(target_set[MONITORED_VALUES]):
-                raise ObjectiveMechanismError("The number of items in \'names\'arg ({}) must equal of the number in the "
-                                     "\`monitored_values\` arg for {}".
-                                     format(len(target_set[INPUT_STATES]), len(target_set[MONITORED_VALUES]),
-                                            self.name))
+                raise ObjectiveMechanismError("The number of items in the \'{}\'arg for {} ({}) "
+                                              "must equal of the number in the \`{}\` arg ({})".
+                                     format(INPUT_STATES,
+                                            self.name,
+                                            len(target_set[INPUT_STATES]),
+                                            MONITORED_VALUES,
+                                            len(target_set[MONITORED_VALUES])))
 
-            for name in target_set[NAMES]:
-                if not isinstance(name, str):
-                    raise ObjectiveMechanismError("it in \'names\'arg ({}) of {} is not a string".
-                                         format(target_set[NAMES], self.name))
+            #FIX: IS THIS HANDLED BY _instantiate_input_states??
+            for state_spec in target_set[INPUT_STATES]:
+                if not isinstance(state_spec, (str, InputState, Mechanism, dict)):
+                    raise ObjectiveMechanismError("Item in \'{}\'arg for {} is not a "
+                                                  "valid specificaton for an InputState".
+                                                  format(INPUT_STATES,
+                                                         self.name,
+                                                         target_set[INPUT_STATES]))
 
         #region VALIDATE MONITORED VALUES
         # FIX: IS THE FOLLOWING STILL TRUE:
@@ -484,6 +501,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                     # Validate each item of MONITORED_VALUES
                     for item in target_set[MONITORED_VALUES]:
                         validate_monitored_value(self, item, context=context)
+
                     # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
                     # FIX:  INDICATING THAT IT WILL BE IGNORED;
                     # FIX:  weights AND exponents ARE SPECIFIED IN TUPLES
@@ -503,6 +521,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                     #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
                     #                        "does not match the number of monitored states ({1})".
                     #                        format(num_weights, num_monitored_states))
+
             except KeyError:
                 pass
 
@@ -511,40 +530,31 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.variable
 
         """
-        num_values = len(self.monitored_values)
-        values = [None] * num_values
-        names = self.names or [None] * num_values
+        input_states = self.input_states or [None] * len(self.monitored_values)
+        num_states = len(input_states)
+        state_values = [None] * num_states
 
-        # If default_input_value arg (assigned to variable in __init__) was used to specify the size of input_states,
-        #   pass those values for use in instantiating input_states
-        if self.variable is not None:
-            input_state_sizes = self.variable
-        else:
-            input_state_sizes = values
-        for i, monitored_value, name in zip(range(num_values), self.monitored_values, names):
-            values[i] = self._instantiate_input_state_for_monitored_value(input_state_sizes[i],
-                                                                          monitored_value,
-                                                                          name,
-                                                                          context=context)
+        for i, monitored_value, input_state in zip(range(num_states), self.monitored_values, self.input_states):
+            state_values[i] = self._instantiate_input_state_for_monitored_value(monitored_value=monitored_value,
+                                                                                input_state=input_state,
+                                                                                context=context)
 
-        # If self.variable was not specified, construct from values of input_states
-        if self.variable is None:
-            # If all items of self.variable are numeric and of the same length, convert to ndarray
-            dim_axis_0 = len(values)
-            dim_axis_1 = len(values[0])
-            if all((is_numeric(values[i]) and len(values[i])==dim_axis_1) for i in range(dim_axis_0)):
-                self.variable = np.zeros((dim_axis_0,dim_axis_1), dtype=float)
-            # Otherwise, just use list of values returned from instantiation above
-            else:
-                self.variable = values.copy()
-
+        # # If all items of state_values are numeric and of the same length, convert to ndarray
+        # dim_axis_0 = num_states
+        # dim_axis_1 = len(state_values[0])
+        # if all((is_numeric(state_values[i]) and len(state_values[i])==dim_axis_1) for i in range(dim_axis_0)):
+        #     self.variable = np.zeros((dim_axis_0,dim_axis_1), dtype=float)
+        # # Otherwise, just use list of values returned from instantiation above
+        # else:
+        #     self.variable = state_values.copy()
+        self.variable = state_values.copy()
         self.variableClassDefault = self.variable.copy()
         # MODIFIED 5/7/17 OLD:
         # self.inputValue = list(self.variable)
         # MODIFIED 5/7/17 END
 
-    def _instantiate_input_state_for_monitored_value(self, variable, monitored_value, name=None, context=None):
-        """Instantiate inputState with projection from monitoredOutputState
+    def _instantiate_input_state_for_monitored_value(self, monitored_value, input_state=None, context=None):
+        """Instantiate inputState with projection from outputState specified by monitored_value
 
         Validate specification for value to be monitored (using call to validate_monitored_value)
         Instantiate the inputState (assign name if specified, and value of monitored_state)
@@ -555,10 +565,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         Parameters
         ----------
-        monitored_value (value, InputState, OutputState, Mechanism, str, dict, or MonitoredOutputStateOption)
-        name (str)
-        context (str)
-
+        monitored_value (value, OutputState, Mechanism, str, dict, or MonitoredOutputStateOption)
         Returns
         -------
 
@@ -567,60 +574,66 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         from PsyNeuLink.Components.States.InputState import InputState
         from PsyNeuLink.Components.States.OutputState import OutputState
 
+
+        # First, parse input_state to determine whether its specifications need to be derived from monitored_value
+
+        # if isinstance(input_state, InputState):
+        #     return input_state.value
+
+        def parse_input_state_spec(input_state_spec):
+            variable = DEFAULT_MONITORED_VALUE
+            name = None
+            params = None
+
+            # string, so use as name (value will be derived from monitored_values)
+            if isinstance(input_state_spec, str):
+                name = input_state
+
+            # value, so use as value of input_state (name will be derived from monitored_values)
+            elif _is_value_spec(input_state_spec):
+                variable = input_state_spec
+
+            # dict, so get entries
+            elif isinstance(input_state_spec, dict):
+                if NAME in input_state_spec:
+                    name = input_state_spec[NAME]
+                if VARIABLE in input_state_spec:
+                    variable = input_state_spec[VARIABLE]
+                if PARAMS in input_state_spec:
+                    params = input_state_spec[PARAMS]
+
+            # tuple, so call for (and return result of) parse of first item
+            elif isinstance(input_state, tuple):
+                return parse_input_state_spec(input_state[0])
+
+            else:
+                raise ObjectiveMechanismError("Illegal inputState specification found in first item of tuple "
+                                              "specified in {} arg of {} ({})".
+                                              format(INPUT_STATES, self.name, input_state_spec))
+            return name, variable, params
+
+        if not isinstance(input_state, InputState):
+            input_state_name, input_state_variable, input_state_params = parse_input_state_spec(input_state=input_state)
+
+        # Then parse monitored_value to determine its specifications, including whether it needs a projection
+
         call_for_projection = False
-        value = DEFAULT_MONITORED_VALUE
-        input_state_name = name
-        input_state_params = None
 
-        # If monitored_value is a value:
-        # - create default InputState using monitored_value as its variable specification
+        # monitored_value is a value:
         if _is_value_spec(monitored_value):
-            value = monitored_value
-            input_state_name = name or self.name + MONITORED_VALUE_NAME_SUFFIX
+            monitored_value_spec = monitored_value
+            monitored_value_name = self.name + MONITORED_VALUE_NAME_SUFFIX
 
-        # If monitored_value is an InputState:
-        # - use InputState's variable, params, and name
-        elif isinstance(monitored_value, InputState):
-            value = monitored_value.variable
-            # Note: name specified in names argument of constructor takes precedence over existing name of inputState
-            input_state_name = name or monitored_value.name
-            input_state_params = monitored_value.params
-
-        # If monitored_value is a specification dictionary for an InputState:
-        elif isinstance(monitored_value, InputState):
-            try:
-                value = monitored_value[VARIABLE]
-                # Note: name specified in a specification dictionary takes precedence over names argument in constructor
-                input_state_name = monitored_value[NAME]
-                input_state_params = monitored_value[INPUT_STATE_PARAMS]
-            except KeyError:
-                if (value == DEFAULT_MONITORED_VALUE and
-                            input_state_name is name and
-                            input_state_params is None):
-                    raise ObjectiveMechanismError("Specification dictionary in monitored_values arg for {}"
-                                         "did not contain any entries relevant to an inputState".format(self.name))
-                else:
-                    pass
-
-        # elif isinstance(monitored_value, tuple):
-        #     monitored_value = monitored_value[0]
-        #     # FIX:
-        #     # IF IT IS A STRING, LOOK FOR OUTPUTSTATE OR MECHANISM WITH THAT NAME AND REASSIGN??
-
-        # If monitored_value is an OutputState:
-        # - match inputState to the value of the outputState's value
-        # - and specify the need for a projection from it
+        #  monitored_value is an OutputState:
         elif isinstance(monitored_value, OutputState):
-            value = monitored_value.value
-            input_state_name = name or monitored_value.owner.name + MONITORED_VALUE_NAME_SUFFIX
+            monitored_value_spec = monitored_value.value
+            monitored_value_name = monitored_value.owner.name + MONITORED_VALUE_NAME_SUFFIX
             call_for_projection = True
             
-        # If monitored_value is a Mechanism:
-        # - match inputState to the value of its primary outputState
-        # - and specify the need for a projection from it
+        # monitored_value is a Mechanism:
         elif isinstance(monitored_value, Mechanism):
-            value = monitored_value.output_state.value
-            input_state_name = name or monitored_value.name + MONITORED_VALUE_NAME_SUFFIX
+            monitored_value_spec = monitored_value.output_state.value
+            monitored_value_name = monitored_value.name + MONITORED_VALUE_NAME_SUFFIX
             call_for_projection = True
             
         # # If monitored_value is a MonitoredOutputStatesOption:
@@ -633,17 +646,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # - use as name of inputState
         # - instantiate InputState with defalut value (1d array with single scalar item??)
 
+        # monitored_value is a str:
         elif isinstance(monitored_value, str):
-            input_state_name = monitored_value
-            value = DEFAULT_MONITORED_VALUE
+            monitored_value_spec = DEFAULT_MONITORED_VALUE
+            monitored_value_name = monitored_value
 
-        # Format the item of self.variable that corresponds to the inputState
-        # Give precedence to item specified in self.variable for inputState's variable
-        if variable is not None:
-            input_state_variable = variable
-        # Otherwise, set to value derived from monitored_value above
-        else:
-            input_state_variable = value
+        # Give precedence to input_state specifications;  otherwise use values derived from monitored_value
+        input_state_name = input_state_name or monitored_value_name
+        input_state_variable = input_state_variable or monitored_value_spec
 
         from PsyNeuLink.Components.States.State import _instantiate_state
         input_state = _instantiate_state(owner=self,
@@ -655,7 +665,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                          constraint_value_name='ObjectiveMechanism inputState value',
                                          context=context)
 
-        #  Update inputState and input_states
+        #  Update input_states
         if self.input_states:
             self.input_states[input_state.name] = input_state
         else:
@@ -689,34 +699,37 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 def validate_monitored_value(objective_mech, state_spec, context=None):
     """Validate specification for monitored_value arg
 
-    Validate that each item of monitored_value arg is an inputState, OutputState, mechanism, string,
-    or a MonitoredOutpuStatesOption value.
+    Validate that each item of monitored_value arg is: 
+        * OutputState
+        * Mechanism, 
+        * string, or 
+        * MonitoredOutpuStatesOption value.
     
     Called by both self._validate_variable(), self.add_monitored_value(), and EVCMechanism._get_monitored_states()
     """
-    state_spec_is_OK = False
+    # state_spec_is_OK = False
 
-    if _is_value_spec(state_spec):
-        state_spec_is_OK = True
+    # if _is_value_spec(state_spec):
+    #     state_spec_is_OK = True
 
     from PsyNeuLink.Components.States.OutputState import OutputState
-    if isinstance(state_spec, (InputState, OutputState, Mechanism)):
+    if not isinstance(state_spec, (OutputState, Mechanism, MonitoredOutputStatesOption)):
         state_spec_is_OK = True
 
-    if isinstance(state_spec, dict):
-        state_spec_is_OK = True
+    # if isinstance(state_spec, dict):
+    #     state_spec_is_OK = True
+    #
+    # if isinstance(state_spec, str):
+    #     # Will be used as the name of the inputState
+    #     state_spec_is_OK = True
 
-    if isinstance(state_spec, str):
-        # Will be used as the name of the inputState
-        state_spec_is_OK = True
-
-    if isinstance(state_spec, MonitoredOutputStatesOption):
-        state_spec_is_OK = True
-
-    if not state_spec_is_OK:
-        raise ObjectiveMechanismError("Specification of state to be monitored ({0}) by {1} is not "
-                             "a value, Mechanism, OutputState, string, dict, or a value of MonitoredOutputStatesOption".
-                             format(state_spec, self.name))
+    # if isinstance(state_spec, MonitoredOutputStatesOption):
+    #     state_spec_is_OK = True
+    #
+    # if not state_spec_is_OK:
+        raise ObjectiveMechanismError("Specification of {} arg for {} ({}) must be"
+                             "an OutputState, Mechanism, or a MonitoredOutputStatesOption value".
+                             format(MONITORED_VALUES, objective_mech.name, state_spec))
 
 
 def _objective_mechanism_role(mech, role):
