@@ -18,10 +18,9 @@ class ConditionSet(object):
         :param scheduler: a :keyword:`Scheduler` that these conditions are associated with, which maintains any state necessary for these conditions
         :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to :keyword:`iterable`s of :keyword:`Condition`s, can be added later with :keyword:`add_condition`
         """
-        self.scheduler = scheduler
         # even though conditions may be added in arbitrary iterables, they are stored internally as dicts of sets
-        if conditions is None:
-            self.conditions = {}
+        self.conditions = conditions if conditions is not None else {}
+        self.scheduler = scheduler
 
     def __contains__(self, item):
         return item in self.conditions
