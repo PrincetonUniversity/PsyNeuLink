@@ -362,7 +362,7 @@ class AfterNCallsCombined(Condition):
     AfterNCallsCombined
 
     Parameters:
-        - dependencies (Component):
+        - *dependencies (Components): variable length
         - n (int): the number of executions of all dependencies after which this condition will be satisfied. Defaults to None
         - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependencies. Defaults to TimeScale.TRIAL
 
@@ -412,7 +412,7 @@ class AllHaveRun(Condition):
     AllHaveRun
 
     Parameters:
-        - dependencies (Component):
+        - *dependencies (Components): variable length
         - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependencies. Defaults to TimeScale.TRIAL
 
     Satisfied when:
@@ -554,6 +554,20 @@ class JustRan(Condition):
         super().__init__(dependency, func)
 
 class WhenFinished(Condition):
+    """
+    WhenFinished
+
+    Parameters:
+        - dependency (Component):
+
+    Satisfied when:
+        - dependency has "finished" (i.e. its is_finished attribute is True)
+
+    Notes:
+        The is_finished concept varies among components, and is currently implemented in:
+            `DDM`<DDM>
+
+    """
     def __init__(self, dependency):
         def func(dependency):
             try:
@@ -564,6 +578,21 @@ class WhenFinished(Condition):
         super().__init__(dependency, func)
 
 class WhenFinishedAny(Condition):
+    """
+    WhenFinishedAny
+
+    Parameters:
+        - *dependencies (Components): variable length
+
+    Satisfied when:
+        - any of the dependencies have "finished" (i.e. its is_finished attribute is True)
+
+    Notes:
+        This is a convenience class; WhenFinishedAny(A, B, C) is equivalent to Any(WhenFinished(A), WhenFinished(B), WhenFinished(C))
+        The is_finished concept varies among components, and is currently implemented in:
+            `DDM`<DDM>
+
+    """
     def __init__(self, *dependencies):
         def func(_none, *dependencies):
             for d in dependencies:
@@ -577,6 +606,21 @@ class WhenFinishedAny(Condition):
         super().__init__(None, *dependencies, func)
 
 class WhenFinishedAll(Condition):
+    """
+    WhenFinishedAll
+
+    Parameters:
+        - *dependencies (Components): variable length
+
+    Satisfied when:
+        - all of the dependencies have "finished" (i.e. its is_finished attribute is True)
+
+    Notes:
+        This is a convenience class; WhenFinishedAll(A, B, C) is equivalent to All(WhenFinished(A), WhenFinished(B), WhenFinished(C))
+        The is_finished concept varies among components, and is currently implemented in:
+            `DDM`<DDM>
+
+    """
     def __init__(self, *dependencies):
         def func(_none, *dependencies):
             for d in dependencies:
