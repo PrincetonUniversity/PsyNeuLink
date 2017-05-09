@@ -533,7 +533,7 @@ class Component(object):
     # * kwComponentCategory (below) is used as placemarker for Component.Function class; replaced in __init__ below
     #              (can't reference own class directly class block)
     requiredParamClassDefaultTypes = {}
-    paramClassDefaults = {}
+    paramClassDefaults = {VARIABLE: None}
     #endregion
 
     # IMPLEMENTATION NOTE: This is needed so that the State class can be used with ContentAddressableList,
