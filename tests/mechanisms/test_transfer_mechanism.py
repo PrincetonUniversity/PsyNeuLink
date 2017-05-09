@@ -19,31 +19,30 @@ def test_transfer_mech_array_var_float_noise():
     val = T.execute([0,0,0,0]).tolist()
     assert val == [[5.0,5.0,5.0,5.0]]
 
-def test_transfer_mech_array_var_normal_len_1_noise():
-
-    T = TransferMechanism(name='T',
-                                   default_input_value = [0,0,0,0],
-                                   function=Linear(),
-                                   noise=NormalDist().function,
-                                   time_constant = 1.0,
-                                   time_scale=TimeScale.TIME_STEP
-                                   )
-    val = T.execute([0,0,0,0]).tolist()
-
-    assert val == [[2.240893199201458, 2.240893199201458, 2.240893199201458, 2.240893199201458]]
-
-def test_transfer_mech_array_var_normal_array_noise():
-
-    T = TransferMechanism(name='T',
-                                   default_input_value = [0,0,0,0],
-                                   function=Linear(),
-                                   noise=[NormalDist().function, NormalDist().function, NormalDist().function, NormalDist().function] ,
-                                   time_constant = 1.0,
-                                   time_scale=TimeScale.TIME_STEP
-                                   )
-    val = T.execute([0,0,0,0]).tolist()
-
-    assert val == [[0.7610377251469934, 0.12167501649282841, 0.44386323274542566, 0.33367432737426683]]
+# def test_transfer_mech_array_var_normal_len_1_noise():
+#
+#     T = TransferMechanism(name='T',
+#                                    default_input_value = [0,0,0,0],
+#                                    function=Linear(),
+#                                    noise=NormalDist().function,
+#                                    time_constant = 1.0,
+#                                    time_scale=TimeScale.TIME_STEP
+#                                    )
+#     val = T.execute([0,0,0,0]).tolist()
+#     assert val == [[2.240893199201458, 2.240893199201458, 2.240893199201458, 2.240893199201458]]
+#
+# def test_transfer_mech_array_var_normal_array_noise():
+#
+#     T = TransferMechanism(name='T',
+#                                    default_input_value = [0,0,0,0],
+#                                    function=Linear(),
+#                                    noise=[NormalDist().function, NormalDist().function, NormalDist().function, NormalDist().function] ,
+#                                    time_constant = 1.0,
+#                                    time_scale=TimeScale.TIME_STEP
+#                                    )
+#     val = T.execute([0,0,0,0]).tolist()
+#
+#     assert val == [[0.7610377251469934, 0.12167501649282841, 0.44386323274542566, 0.33367432737426683]]
 
 def test_transfer_mech_integer_noise():
     with pytest.raises(MechanismError) as error_text:
