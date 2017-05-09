@@ -540,28 +540,36 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # num_states = len(input_states)
         # state_values = [None] * num_states
         #
-        input_state_list = self._input_state_list_for_monitored_values(monitored_values=self.monitored_values,
-                                                                       input_state_specs=self.input_states,
-                                                                       context=context)
+        input_state_list, call_for_projections = self._input_state_list_for_monitored_values(
+                                                                                monitored_values=self.monitored_values,
+                                                                                input_state_specs=self.input_states,
+                                                                                context=context)
+        constraint_value = []
+        for spec in input_state_list:
+            constraint_value.append(spec[VARIABLE])
 
         from PsyNeuLink.Components.States.State import _instantiate_state_list
         self.input_states = _instantiate_state_list(owner=self,
                                                     state_list=input_state_list,
                                                     state_type=InputState,
                                                     state_param_identifier=INPUT_STATE,
-                                                    constraint_value=self.variable, # <- FIX: CORRECT??
+                                                    constraint_value=constraint_value,
                                                     constraint_value_name=self.__class__.__name__ + ' variable',
                                                     context=context)
 
-        ??ARE THESE DONE SOMEWHERE ELSE (E.G. IN super()._instantiate_input_states????
+        # ??ARE THESE DONE SOMEWHERE ELSE (E.G. IN super()._instantiate_input_states????
         self.variable = self.input_states.values.copy()
         self.variableClassDefault = self.variable.copy()
 
-        # Instantiate inputState with projection from outputState specified by monitored_value
         # IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
-        for monitored_value, input_state in zip(self.monitored_values, self.input_states):
+        # Instantiate inputState with projection from outputState specified by monitored_value
+        for monitored_value, input_state, call_for_projection in zip(self.monitored_values,
+                                                                     self.input_states,
+                                                                     call_for_projections):
             if call_for_projection:
-                _instantiate_monitoring_projection(sender=monitored_value, receiver=input_state, matrix=AUTO_ASSIGN_MATRIX)
+                _instantiate_monitoring_projection(sender=monitored_value,
+                                                   receiver=input_state,
+                                                   matrix=AUTO_ASSIGN_MATRIX)
 
     def _input_state_list_for_monitored_values(self, monitored_values, input_state_specs, context=None):
         """Return list of inputState specifications based on input_states and monitored_values specified in constructor. 
@@ -570,37 +578,45 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             get relevant specs (name and value) for its inputState.
 
         """
-        from PsyNeuLink.Components.States.InputState import InputState
+        from PsyNeuLink.Components.States.State import _parse_state_spec
 
         # if isinstance(input_state, InputState):
         #     return input_state.value
 
         input_state_list = [None] * len(monitored_values)
         num_input_states = len(input_state_list)
+        call_for_projections = [None] * len(monitored_values)
 
-        for i, monitored_value, input_state_spec in zip(monitored_values,
-                                                        input_state_specs,
-                                                        range(num_input_states)):
+        for i, monitored_value, input_state_spec in zip(range(num_input_states),
+                                                        monitored_values,
+                                                        input_state_specs):
 
             # Parse input_state to determine whether its specifications need to be derived from monitored_value
             if isinstance(input_state_spec, InputState):
                 input_state_list[i] = input_state_spec
                 continue
 
-            input_state_name, input_state_variable, input_state_params = \
-                _parse_input_state_spec(self, input_state_spec=input_state_spec)
+            input_state_dict = _parse_state_spec(self, input_state_spec, DEFAULT_MONITORED_VALUE)
+
+            # FIX: IF input_state_spec IS A DICT,
+            # FIX: NEED TO DETERMINE WHETHER IT IS ONE OF THE FORM:  STATE_NAME:{STATE SPEC DICT}, OR ALREADY
+            # FIX:          A STATE SPECIFICATION DICT OF THE FORM: {NAME: state_name, VARIABLE: variable_value, etc.}
 
             # Parse monitored_value to determine its specifications, including whether it needs a projection
             monitored_value_name, monitored_value_spec, call_for_projection = \
                 self._parse_monitored_value(monitored_value=monitored_value)
 
             # Give precedence to input_state specifications;  otherwise use values derived from monitored_value
-            input_state_name = input_state_name or monitored_value_name
-            input_state_variable = input_state_variable or monitored_value_spec
+            input_state_dict[NAME] = input_state_dict[NAME] or monitored_value_name
+            if input_state_dict[VARIABLE] is not None:
+                input_state_dict[VARIABLE] = input_state_dict[VARIABLE]
+            else:
+                input_state_dict[VARIABLE] = monitored_value_spec
 
-            input_state_list[i] = {input_state_name:input_state_variable}
+            input_state_list[i] = input_state_dict
+            call_for_projections[i] = call_for_projection
 
-        return input_state_list
+        return input_state_list, call_for_projections
 
     def _parse_monitored_value(self, monitored_value):
 
@@ -642,7 +658,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             name = monitored_value
 
         else:
-            raise <ClassTypeError>("<message>".format(<args>))
+            raise ObjectiveMechanismError("Specification for {} arg of {} ({}) must be an "
+                                          "OutputState, Mechanism, value or string".
+                                          format(MONITORED_VALUES, self.name, monitored_value))
 
         return name, spec, call_for_projection
 

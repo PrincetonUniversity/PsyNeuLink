@@ -1618,6 +1618,8 @@ def _instantiate_state(owner,                   # Object to which state will bel
 
     # IMPLEMENTATION NOTE: CONSIDER MOVING MUCH IF NOT ALL OF THIS TO State.__init__()
 
+    # FIX: IF VARIABLE IS IN state_params EXTRACT IT AND ASSIGN IT TO constraint_value 5/9/17
+
     #region VALIDATE ARGS
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
         raise StateError("state_type arg ({0}) to _instantiate_state "
@@ -1630,15 +1632,23 @@ def _instantiate_state(owner,                   # Object to which state will bel
                              format(constraint_value_name))
     #endregion
 
-    # Assume state is specified as a value, so set state_variable to it; if otherwise, will be overridden below
-    state_variable = state_spec
-
     if state_params is None:
         state_params = {}
 
     # Used locally to report type of specification for State
     #  if value is not compatible with constraint_value
     spec_type = None
+
+
+    # MODIFIED 5/9/17 NEW:
+    # If variable for state is specified in state_params, use that
+    if VARIABLE in state_params and state_params[VARIABLE] is not None:
+        state_variable = state_params[VARIABLE]
+    # Otherwise, assume state is specified as a value, so set state_variable to it;
+    #    if otherwise, will be overridden below
+    else:
+    # MODIFIED 5/9/17 END
+        state_variable = state_spec
 
     #region CHECK FORMAT OF constraint_value AND CONVERT TO SIMPLE VALUE
 
@@ -2029,6 +2039,8 @@ def _check_state_ownership(owner, param_name, mechanism_state):
 
 # FIX: MOVE THIS TO InputState module??
 def _parse_state_spec(owner, state_spec, default_value):
+    """Return state specification dictionary for state_spec
+    """
     variable = default_value
     name = None
     params = None
@@ -2041,24 +2053,25 @@ def _parse_state_spec(owner, state_spec, default_value):
     elif is_value_spec(state_spec):
         variable = state_spec
 
-    # dict, so get entries
-    elif isinstance(state_spec, dict):
-        if NAME in state_spec:
-            name = state_spec[NAME]
-        if VARIABLE in state_spec:
-            variable = state_spec[VARIABLE]
-        if PARAMS in state_spec:
-            params = state_spec[PARAMS]
-            
     # tuple, so call for (and return result of) parse of first item
     elif isinstance(state_spec, tuple):
         return _parse_state_spec(owner, state_spec[0])
+
+    # already a dict, so add any missing params and return dict
+    elif isinstance(state_spec, dict):
+        if not NAME in state_spec:
+            state_spec[NAME] = None
+        if not VARIABLE in state_spec:
+            state_spec[VARIABLE] = default_value
+        return state_spec
 
     else:
         from PsyNeuLink.Components.States.InputState import InputStateError
         raise InputStateError("Illegal state specification found in first item of tuple "
                                       "specified in {} arg of {} ({})".
                                       format(INPUT_STATES, owner.name, state_spec))
-    return name, variable, params
+    return {NAME: name,
+            VARIABLE: variable,
+            PARAMS: params}
 
 
