@@ -188,6 +188,8 @@
 #                   and/or enforce as args in inits of all mechanisms?
 #          IF NOT, make sure they are removed from user_params
 
+#     input_states and output_states can be specificed by a dict, in which the key is the name and value is the
+#           value to use as its variable, or a dict of params
 #     Mechanism implements PRIMARY input_state and output_state in paramClassDefaults for base_class;
 #        it can then be relabeled by subclasses if desired.
 #      Replace output_states construtor arg with control_signals, gating_signals, learning_signals

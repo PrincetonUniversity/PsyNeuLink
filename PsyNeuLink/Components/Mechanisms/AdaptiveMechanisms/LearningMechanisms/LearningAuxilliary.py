@@ -491,8 +491,8 @@ def _instantiate_learning_components(learning_projection, context=None):
 
             objective_mechanism = ObjectiveMechanism(monitored_values=[lc.activation_mech_output,
                                                                        TARGET],
-                                                     input_states={SAMPLE:sample_input,
-                                                                   TARGET:target_input},
+                                                     input_states=[{SAMPLE:sample_input},
+                                                                   {TARGET:target_input}],
                                                      function=LinearCombination(weights=[[-1], [1]]),
                                                      params=object_mech_params,
                                                      name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM,
