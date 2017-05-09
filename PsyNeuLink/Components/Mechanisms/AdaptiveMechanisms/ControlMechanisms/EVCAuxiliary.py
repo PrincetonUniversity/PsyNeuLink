@@ -372,7 +372,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                                         controller.EVC_max_policy[i]))
             print()
 
-        #endregion
+        #endregionj
 
         # # TEST PRINT:
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(controller.outputState.value))

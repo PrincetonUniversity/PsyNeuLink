@@ -489,11 +489,10 @@ def _instantiate_learning_components(learning_projection, context=None):
                                        {NAME:TARGET_MSE,
                                         CALCULATE:lambda x: np.sum(x*x)/len(x)}]}
 
-            objective_mechanism = ObjectiveMechanism(default_input_value=[sample_input,
-                                                                          target_input],
-                                                     monitored_values=[lc.activation_mech_output,
+            objective_mechanism = ObjectiveMechanism(monitored_values=[lc.activation_mech_output,
                                                                        TARGET],
-                                                     names=['SAMPLE','TARGET'],
+                                                     input_states={SAMPLE:sample_input,
+                                                                   TARGET:target_input},
                                                      function=LinearCombination(weights=[[-1], [1]]),
                                                      params=object_mech_params,
                                                      name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM,

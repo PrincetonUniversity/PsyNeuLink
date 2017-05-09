@@ -173,13 +173,15 @@
 # SEARCH & REPLACE: baseValue -> base_value
 # SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
 
-# FIX: FINISH input/output refactoring:
+# FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
 #      PROTOCOL:
 #          a) Mechanism implements PRIMARY input_state and output_state in paramClassDefaults
 #          b) If any are specified in constructor args (input_states or output_states), they totally override
 #                paramClassDefaults [??CURRENTLY DEALT WITH IN Mechanism._filter_params??]
 #          c) Subclass implements default set in module, and uses those as defaults for constructor args
 #                (??standard way of overriding paramClassDefault or need to implement in assign_args_to_dicts)?
+
+#          See ObjectiveMechanism._instantiate_input_state_for_monitored_value for parse of input_state specification
 
 # DECIDE WHETHER OR NOT input_states AND output_states SHOULD BE properties (at bottom of assign_args_to_params):
 #          IF SO, make sure paramClassDefaults ones get done if input_states/output_states aren't args or are None
@@ -199,9 +201,9 @@
 #     DOCUMENTATION for input_state(s) and output_state(s)
 #                   variable and value: 2d np.arrays
 #                   input_values and output_values:  lists of values, but each value may be an np.ndarray
-#                   XXput_states.values_as_lists: lists of values, each of which has been conerted to a list
+#                   XXput_states.values_as_lists: lists of values, each of which has been converted to a list
 #                   Only appear in user_params if specified in arg of constructor
-# np.ndarray
+# ------------------------------------------------------------------------------------------------------------------
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
 # IMPLEMENT: modulation_operation FOR ModulatoryProjections
