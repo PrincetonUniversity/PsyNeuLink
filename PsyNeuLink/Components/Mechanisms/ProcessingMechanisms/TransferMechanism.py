@@ -500,14 +500,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         elif callable(noise):
             self.noise_function = True
-            if isinstance(self.variable[0], (np.ndarray, list)):
-
-                new_noise = []
-                for v in self.variable[0]:
-
-                    new_noise.append(noise)
-
-                noise = new_noise
 
         elif isinstance(noise, float):
             self.noise_function = False
@@ -594,14 +586,15 @@ class TransferMechanism(ProcessingMechanism_Base):
         range = self.range
         noise = self.noise
         if self.noise_function:
-            print("NOISE  = ", self.noise)
             if isinstance(variable, (list, np.ndarray)):
-                print("HELLO")
                 new_noise = []
-                for v in variable[0]:
-                    new_noise.append(noise())
+                if isinstance(noise, (list, np.ndarray)):
+                    for n in noise:
+                        new_noise.append(n())
+                else:
+                    for v in variable[0]:
+                        new_noise.append(noise())
                 noise = new_noise
-                print(new_noise)
             else:
                 noise = noise()
 
