@@ -360,7 +360,6 @@ class Scheduler(object):
 
                                 for ts in TimeScale:
                                     self.counts_total[ts][current_node] += 1
-                                    self.times[ts][TimeScale.TIME_STEP] += 1
                                 # current_node's node is added to the execution queue, so we now need to
                                 # reset all of the counts useable by current_node's node to 0
                                 for n in self.counts_useable:
