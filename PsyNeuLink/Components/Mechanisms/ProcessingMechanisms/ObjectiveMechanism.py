@@ -234,7 +234,6 @@ MONITORED_VALUE_NAME_SUFFIX = '_Monitor'
 DEFAULT_MONITORED_VALUE = [0]
 
 
-
 class ObjectiveMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -500,7 +499,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 else:
                     # Validate each item of MONITORED_VALUES
                     for item in target_set[MONITORED_VALUES]:
-                        validate_monitored_value(self, item, context=context)
+                        _validate_monitored_value(self, item, context=context)
 
                     # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
                     # FIX:  INDICATING THAT IT WILL BE IGNORED;
@@ -528,114 +527,105 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.variable
-
-        """
-        input_states = self.input_states or [None] * len(self.monitored_values)
-        num_states = len(input_states)
-        state_values = [None] * num_states
-
-        for i, monitored_value, input_state in zip(range(num_states), self.monitored_values, self.input_states):
-            state_values[i] = self._instantiate_input_state_for_monitored_value(monitored_value=monitored_value,
-                                                                                input_state=input_state,
-                                                                                context=context)
-
-        # # If all items of state_values are numeric and of the same length, convert to ndarray
-        # dim_axis_0 = num_states
-        # dim_axis_1 = len(state_values[0])
-        # if all((is_numeric(state_values[i]) and len(state_values[i])==dim_axis_1) for i in range(dim_axis_0)):
-        #     self.variable = np.zeros((dim_axis_0,dim_axis_1), dtype=float)
-        # # Otherwise, just use list of values returned from instantiation above
-        # else:
-        #     self.variable = state_values.copy()
-        self.variable = state_values.copy()
-        self.variableClassDefault = self.variable.copy()
-        # MODIFIED 5/7/17 OLD:
-        # self.inputValue = list(self.variable)
-        # MODIFIED 5/7/17 END
-
-    def _instantiate_input_state_for_monitored_value(self, monitored_value, input_state=None, context=None):
-        """Instantiate inputState with projection from outputState specified by monitored_value
-
-        Validate specification for value to be monitored (using call to validate_monitored_value)
-        Instantiate the inputState (assign name if specified, and value of monitored_state)
-        Re-specify corresponding item of variable to match the value of the new inputState
-        Update self.input_state and self.input_states
+        
+        Parse specifications for input_states, using monitored_values where relevant, and instantiate input_states. 
+        Re-specify corresponding items of variable to match the values of the inputStates in input_states.
+        Update self.input_state and self.input_states.
         Call _instantiate_monitoring_projection() to instantiate MappingProjection to inputState
             if an outputState has been specified.
 
-        Parameters
-        ----------
-        monitored_value (value, OutputState, Mechanism, str, dict, or MonitoredOutputStateOption)
-        Returns
-        -------
+        """
+
+        # input_states = self.input_states or [None] * len(self.monitored_values)
+        # num_states = len(input_states)
+        # state_values = [None] * num_states
+        #
+        input_state_list = self._input_state_list_for_monitored_values(monitored_values=self.monitored_values,
+                                                                       input_state_specs=self.input_states,
+                                                                       context=context)
+
+        from PsyNeuLink.Components.States.State import _instantiate_state_list
+        self.input_states = _instantiate_state_list(owner=self,
+                                                    state_list=input_state_list,
+                                                    state_type=InputState,
+                                                    state_param_identifier=INPUT_STATE,
+                                                    constraint_value=self.variable, # <- FIX: CORRECT??
+                                                    constraint_value_name=self.__class__.__name__ + ' variable',
+                                                    context=context)
+
+        ??ARE THESE DONE SOMEWHERE ELSE (E.G. IN super()._instantiate_input_states????
+        self.variable = self.input_states.values.copy()
+        self.variableClassDefault = self.variable.copy()
+
+        # Instantiate inputState with projection from outputState specified by monitored_value
+        # IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
+        for monitored_value, input_state in zip(self.monitored_values, self.input_states):
+            if call_for_projection:
+                _instantiate_monitoring_projection(sender=monitored_value, receiver=input_state, matrix=AUTO_ASSIGN_MATRIX)
+
+    def _input_state_list_for_monitored_values(self, monitored_values, input_state_specs, context=None):
+        """Return list of inputState specifications based on input_states and monitored_values specified in constructor. 
+
+        Validate specification for value to be monitored (using call to validate_monitored_value), and
+            get relevant specs (name and value) for its inputState.
 
         """
-        from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
         from PsyNeuLink.Components.States.InputState import InputState
-        from PsyNeuLink.Components.States.OutputState import OutputState
-
-
-        # First, parse input_state to determine whether its specifications need to be derived from monitored_value
 
         # if isinstance(input_state, InputState):
         #     return input_state.value
 
-        def parse_input_state_spec(input_state_spec):
-            variable = DEFAULT_MONITORED_VALUE
-            name = None
-            params = None
+        input_state_list = [None] * len(monitored_values)
+        num_input_states = len(input_state_list)
 
-            # string, so use as name (value will be derived from monitored_values)
-            if isinstance(input_state_spec, str):
-                name = input_state
+        for i, monitored_value, input_state_spec in zip(monitored_values,
+                                                        input_state_specs,
+                                                        range(num_input_states)):
 
-            # value, so use as value of input_state (name will be derived from monitored_values)
-            elif _is_value_spec(input_state_spec):
-                variable = input_state_spec
+            # Parse input_state to determine whether its specifications need to be derived from monitored_value
+            if isinstance(input_state_spec, InputState):
+                input_state_list[i] = input_state_spec
+                continue
 
-            # dict, so get entries
-            elif isinstance(input_state_spec, dict):
-                if NAME in input_state_spec:
-                    name = input_state_spec[NAME]
-                if VARIABLE in input_state_spec:
-                    variable = input_state_spec[VARIABLE]
-                if PARAMS in input_state_spec:
-                    params = input_state_spec[PARAMS]
+            input_state_name, input_state_variable, input_state_params = \
+                _parse_input_state_spec(self, input_state_spec=input_state_spec)
 
-            # tuple, so call for (and return result of) parse of first item
-            elif isinstance(input_state, tuple):
-                return parse_input_state_spec(input_state[0])
+            # Parse monitored_value to determine its specifications, including whether it needs a projection
+            monitored_value_name, monitored_value_spec, call_for_projection = \
+                self._parse_monitored_value(monitored_value=monitored_value)
 
-            else:
-                raise ObjectiveMechanismError("Illegal inputState specification found in first item of tuple "
-                                              "specified in {} arg of {} ({})".
-                                              format(INPUT_STATES, self.name, input_state_spec))
-            return name, variable, params
+            # Give precedence to input_state specifications;  otherwise use values derived from monitored_value
+            input_state_name = input_state_name or monitored_value_name
+            input_state_variable = input_state_variable or monitored_value_spec
 
-        if not isinstance(input_state, InputState):
-            input_state_name, input_state_variable, input_state_params = parse_input_state_spec(input_state=input_state)
+            input_state_list[i] = {input_state_name:input_state_variable}
 
-        # Then parse monitored_value to determine its specifications, including whether it needs a projection
+        return input_state_list
+
+    def _parse_monitored_value(self, monitored_value):
+
+        from PsyNeuLink.Components.States.OutputState import OutputState
 
         call_for_projection = False
+        name = spec = None
 
         # monitored_value is a value:
-        if _is_value_spec(monitored_value):
-            monitored_value_spec = monitored_value
-            monitored_value_name = self.name + MONITORED_VALUE_NAME_SUFFIX
+        if is_value_spec(monitored_value):
+            spec = monitored_value
+            name = self.name + MONITORED_VALUE_NAME_SUFFIX
 
         #  monitored_value is an OutputState:
         elif isinstance(monitored_value, OutputState):
-            monitored_value_spec = monitored_value.value
-            monitored_value_name = monitored_value.owner.name + MONITORED_VALUE_NAME_SUFFIX
+            spec = monitored_value.value
+            name = monitored_value.owner.name + MONITORED_VALUE_NAME_SUFFIX
             call_for_projection = True
-            
+
         # monitored_value is a Mechanism:
-        elif isinstance(monitored_value, Mechanism):
-            monitored_value_spec = monitored_value.output_state.value
-            monitored_value_name = monitored_value.name + MONITORED_VALUE_NAME_SUFFIX
+        elif isinstance(monitored_value, Mechanism_Base):
+            spec = monitored_value.output_state.value
+            name = monitored_value.name + MONITORED_VALUE_NAME_SUFFIX
             call_for_projection = True
-            
+
         # # If monitored_value is a MonitoredOutputStatesOption:
         # # FIX: NOT SURE WHAT TO DO HERE YET
         # elif isinstance(montiored_value, MonitoredOutputStateOption):
@@ -648,55 +638,33 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # monitored_value is a str:
         elif isinstance(monitored_value, str):
-            monitored_value_spec = DEFAULT_MONITORED_VALUE
-            monitored_value_name = monitored_value
+            spec = DEFAULT_MONITORED_VALUE
+            name = monitored_value
 
-        # Give precedence to input_state specifications;  otherwise use values derived from monitored_value
-        input_state_name = input_state_name or monitored_value_name
-        input_state_variable = input_state_variable or monitored_value_spec
-
-        from PsyNeuLink.Components.States.State import _instantiate_state
-        input_state = _instantiate_state(owner=self,
-                                         state_type=InputState,
-                                         state_name=input_state_name,
-                                         state_spec=input_state_variable,
-                                         state_params=input_state_params,
-                                         constraint_value=input_state_variable,
-                                         constraint_value_name='ObjectiveMechanism inputState value',
-                                         context=context)
-
-        #  Update input_states
-        if self.input_states:
-            self.input_states[input_state.name] = input_state
         else:
-            from PsyNeuLink.Components.States.State import State_Base
-            self.input_states = ContentAddressableList(component_type=State_Base, list=[input_state])
+            raise <ClassTypeError>("<message>".format(<args>))
 
-        # self.inputValue = [state.value for state in self.input_states]
-
-        # IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
-        if call_for_projection:
-            _instantiate_monitoring_projection(sender=monitored_value, receiver=input_state, matrix=AUTO_ASSIGN_MATRIX)
-
-        return input_state.value
-
-    def add_monitored_values(self, states_spec, context=None):
-        """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
-
-        Use by other objects to add a state or list of states to be monitored by EVC
-        states_spec can be a Mechanism, OutputState or list of either or both
-        If item is a Mechanism, each of its outputStates will be used
-
-        Args:
-            states_spec (Mechanism, MechanimsOutputState or list of either or both:
-            context:
-        """
-        states_spec = list(states_spec)
-        validate_monitored_value(self, states_spec, context=context)
-        self._instantiate_monitored_output_states(states_spec, context=context)
+        return name, spec, call_for_projection
 
 
-def validate_monitored_value(objective_mech, state_spec, context=None):
+
+    # def add_monitored_values(self, states_spec, context=None):
+    #     """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
+    #
+    #     Use by other objects to add a state or list of states to be monitored by EVC
+    #     states_spec can be a Mechanism, OutputState or list of either or both
+    #     If item is a Mechanism, each of its outputStates will be used
+    #
+    #     Args:
+    #         states_spec (Mechanism, MechanimsOutputState or list of either or both:
+    #         context:
+    #     """
+    #     states_spec = list(states_spec)
+    #     validate_monitored_value(self, states_spec, context=context)
+    #     self._instantiate_monitored_output_states(states_spec, context=context)
+
+
+def _validate_monitored_value(objective_mech, state_spec, context=None):
     """Validate specification for monitored_value arg
 
     Validate that each item of monitored_value arg is: 
@@ -713,7 +681,7 @@ def validate_monitored_value(objective_mech, state_spec, context=None):
     #     state_spec_is_OK = True
 
     from PsyNeuLink.Components.States.OutputState import OutputState
-    if not isinstance(state_spec, (OutputState, Mechanism, MonitoredOutputStatesOption)):
+    if not isinstance(state_spec, (str, OutputState, Mechanism, MonitoredOutputStatesOption)):
         state_spec_is_OK = True
 
     # if isinstance(state_spec, dict):
@@ -738,13 +706,6 @@ def _objective_mechanism_role(mech, role):
             return True
         else:
             return False
-    else:
-        return False
-
-
-def _is_value_spec(spec):
-    if isinstance(spec, (int, float, list, np.ndarray)):
-        return True
     else:
         return False
 

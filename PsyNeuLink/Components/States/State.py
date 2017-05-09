@@ -1366,13 +1366,18 @@ def _instantiate_state_list(owner,
                            constraint_value,       # value(s) used as default for state and to check compatibility
                            constraint_value_name,  # name of constraint_value type (e.g. variable, output...)
                            context=None):
-    """Instantiate and return a StateList of states specified in state_list
+    """Instantiate and return a ContentAddressableList of states specified in state_list
 
     Arguments:
     - state_type (class): State class to be instantiated
     - state_list (list): List of State specifications (generally from owner.paramsCurrent[kw<State>]),
-                         (state_spec, params_dict) tuple(s), or None
-                         if None, instantiate a default using constraint_value as state_spec
+                             each itme of which must be a:
+                                 string (used as name)
+                                 value (used as constraint value)
+                                 # ??CORRECT: (state_spec, params_dict) tuple  
+                                     SHOULDN'T IT BE: (state_spec, projection) tuple?
+                                 dict (key=name, value=constraint_value or param dict) 
+                         if None, instantiate a single default state using constraint_value as state_spec
     - state_param_identifier (str): kw used to identify set of states in params;  must be one of:
         - INPUT_STATE
         - OUTPUT_STATE
@@ -1387,20 +1392,18 @@ def _instantiate_state_list(owner,
 
     If state_list is None:
         - instantiate a default State using constraint_value,
-        - place as the single entry in the OrderedDict
+        - place as the single entry of the list returned.
     Otherwise, if state_list is:
         - a single value:
             instantiate it (if necessary) and place as the single entry in an OrderedDict
         - a list:
-            instantiate each item (if necessary) and place in an OrderedDict
-        - an OrderedDict:
-            instantiate each entry value (if necessary)
-    In each case, generate an OrderedDict with one or more entries, assigning:
-        the key for each entry the name of the outputState if provided,
-            otherwise, use MECHANISM<state_type>States-n (incrementing n for each additional entry)
-        the state value for each entry to the corresponding item of the mechanism's state_type state's value
-        the dict to both self.<state_type>States and paramsCurrent[MECHANISM<state_type>States]
-        self.<state_type>State to self.<state_type>States[0] (the first entry of the dict)
+            instantiate each item (if necessary) and place in a ContentAddressableList
+    In each case, generate a ContentAddressableList with one or more entries, assigning:
+        # the key for each entry the name of the outputState if provided,
+        #     otherwise, use MECHANISM<state_type>States-n (incrementing n for each additional entry)
+        # the state value for each entry to the corresponding item of the mechanism's state_type state's value
+        # the dict to both self.<state_type>States and paramsCurrent[MECHANISM<state_type>States]
+        # self.<state_type>State to self.<state_type>States[0] (the first entry of the dict)
     Notes:
         * if there is only one state, but the value of the mechanism's state_type has more than one item:
             assign it to the sole state, which is assumed to have a multi-item value
@@ -1409,6 +1412,7 @@ def _instantiate_state_list(owner,
     """
 
     state_entries = state_list
+    # FIX: INSTANTIATE DICT SPEC BELOW FOR ENTRIES IN state_list
 
     # If no states were passed in, instantiate a default state_type using constraint_value
     if not state_entries:
@@ -2021,5 +2025,40 @@ def _check_state_ownership(owner, param_name, mechanism_state):
         # Assign owner to chosen state
         mechanism_state.owner = owner
     return mechanism_state
+
+
+# FIX: MOVE THIS TO InputState module??
+def _parse_state_spec(owner, state_spec, default_value):
+    variable = default_value
+    name = None
+    params = None
+
+    # string, so use as name (value will be derived from monitored_values)
+    if isinstance(state_spec, str):
+        name = state_spec
+
+    # value, so use as value of input_state (name will be derived from monitored_values)
+    elif is_value_spec(state_spec):
+        variable = state_spec
+
+    # dict, so get entries
+    elif isinstance(state_spec, dict):
+        if NAME in state_spec:
+            name = state_spec[NAME]
+        if VARIABLE in state_spec:
+            variable = state_spec[VARIABLE]
+        if PARAMS in state_spec:
+            params = state_spec[PARAMS]
+            
+    # tuple, so call for (and return result of) parse of first item
+    elif isinstance(state_spec, tuple):
+        return _parse_state_spec(owner, state_spec[0])
+
+    else:
+        from PsyNeuLink.Components.States.InputState import InputStateError
+        raise InputStateError("Illegal state specification found in first item of tuple "
+                                      "specified in {} arg of {} ({})".
+                                      format(INPUT_STATES, owner.name, state_spec))
+    return name, variable, params
 
 

@@ -935,7 +935,7 @@ class EVCMechanism(ControlMechanism_Base):
         """
 
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import validate_monitored_value
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import _validate_monitored_value
 
         # PARSE SPECS
 
@@ -983,7 +983,7 @@ class EVCMechanism(ControlMechanism_Base):
                 item = item[0]
             # MODIFIED 2/22/17 END
             # Validate by ObjectiveMechanism:
-            validate_monitored_value(self, item, context=context)
+            _validate_monitored_value(self, item, context=context)
             # Extract references from specification tuples
             if isinstance(item, tuple):
                 all_specs_extracted_from_tuples.append(item[OBJECT])
