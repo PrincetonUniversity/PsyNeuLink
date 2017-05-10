@@ -748,12 +748,15 @@ class WhenFinishedAny(Condition):
 
     Notes:
         This is a convenience class; WhenFinishedAny(A, B, C) is equivalent to Any(WhenFinished(A), WhenFinished(B), WhenFinished(C))
+        If no dependencies are specified, the condition will default to checking all of its scheduler's Components.
         The is_finished concept varies among components, and is currently implemented in:
             `DDM`<DDM>
 
     """
     def __init__(self, *dependencies):
         def func(_none, *dependencies):
+            if len(dependencies) == 0:
+                dependencies = self.scheduler.nodes
             for d in dependencies:
                 try:
                     if d.is_finished:
@@ -777,12 +780,15 @@ class WhenFinishedAll(Condition):
 
     Notes:
         This is a convenience class; WhenFinishedAll(A, B, C) is equivalent to All(WhenFinished(A), WhenFinished(B), WhenFinished(C))
+        If no dependencies are specified, the condition will default to checking all of its scheduler's Components.
         The is_finished concept varies among components, and is currently implemented in:
             `DDM`<DDM>
 
     """
     def __init__(self, *dependencies):
         def func(_none, *dependencies):
+            if len(dependencies) == 0:
+                dependencies = self.scheduler.nodes
             for d in dependencies:
                 try:
                     if not d.is_finished:
