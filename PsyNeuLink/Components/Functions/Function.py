@@ -3998,7 +3998,7 @@ class GammaDist(DistributionFunction):
     """
     GammaDist(\
              scale=1.0,\
-             shape=1.0,\
+             dist_shape=1.0,\
              params=None,\
              owner=None,\
              prefs=None\
@@ -4012,10 +4012,10 @@ class GammaDist(DistributionFunction):
     ---------
 
     scale : float : default 1.0
-        The shape of the gamma distribution. Should be greater than zero.
-
-    shape : float : default 1.0
         The scale of the gamma distribution. Should be greater than zero.
+
+    dist_shape : float : default 1.0
+        The shape of the gamma distribution. Should be greater than zero.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -4034,9 +4034,9 @@ class GammaDist(DistributionFunction):
     ----------
 
     scale : float : default 1.0
-        The shape of the gamma distribution. Should be greater than zero.
+        The dist_shape of the gamma distribution. Should be greater than zero.
 
-    shape : float : default 1.0
+    dist_shape : float : default 1.0
         The scale of the gamma distribution. Should be greater than zero.
 
     params : Optional[Dict[param keyword, param value]]
@@ -4064,14 +4064,14 @@ class GammaDist(DistributionFunction):
     def __init__(self,
                  variable_default=variableClassDefault,
                  scale=1.0,
-                 shape=1.0,
+                 dist_shape=1.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
                  context=componentName + INITIALIZING):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(scale=scale,
-                                                  shape=shape,
+                                                  dist_shape=dist_shape,
                                                   params=params)
 
         super().__init__(variable_default=variable_default,
@@ -4091,9 +4091,9 @@ class GammaDist(DistributionFunction):
         self._check_args(variable=variable, params=params, context=context)
 
         scale = self.paramsCurrent[SCALE]
-        shape = self.paramsCurrent[SHAPE]
+        dist_shape = self.paramsCurrent[DIST_SHAPE]
 
-        result = np.random.gamma(shape, scale)
+        result = np.random.gamma(dist_shape, scale)
 
         return result
 
