@@ -341,7 +341,8 @@ class State_Base(State):
             - prefs (dict): dictionary containing system preferences (default: Prefs.DEFAULTS)
             - context (str)
             - **kargs (dict): dictionary of arguments using the following keywords for each of the above kargs:
-                + kwStateValue = value
+                # + STATE_VALUE = value
+                + VARIABLE = variable
                 + STATE_PARAMS = params
                 + kwStateName = name
                 + kwStatePrefs = prefs
@@ -352,7 +353,11 @@ class State_Base(State):
         """
         if kargs:
             try:
-                variable = kargs[kwStateValue]
+                # # MODIFIED 5/10/17 OLD:
+                # variable = kargs[STATE_VALUE]
+                # MODIFIED 5/10/17 NEW:
+                variable = kargs[VARIABLE]
+                # MODIFIED 5/10/17 END
             except (KeyError, NameError):
                 pass
             try:
@@ -1479,7 +1484,7 @@ def _instantiate_state_list(owner,
         for key, state_spec in state_entries if isinstance(state_entries, dict) else enumerate(state_entries):
             state_name = ""
 
-            # State_entries is already an OrderedDict, so use:
+            # State_entries is a dict, so use:
             # - entry key as state's name
             # - entry value as state_spec
             if isinstance(key, str):
@@ -1589,7 +1594,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
         assign constraint_value to value
         assign projection class spec to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
     + specification dict for State (see XXX for context):
-        check compatibility of kwStateValue with constraint_value
+        check compatibility of STATE_VALUE with constraint_value
     + ParamValueProjection tuple: (only allowed for ParameterState spec)
         assign ParamValueProjection.value to state_spec
             if it is a string:
@@ -1640,14 +1645,12 @@ def _instantiate_state(owner,                   # Object to which state will bel
     spec_type = None
 
 
-    # MODIFIED 5/9/17 NEW:
     # If variable for state is specified in state_params, use that
     if VARIABLE in state_params and state_params[VARIABLE] is not None:
         state_variable = state_params[VARIABLE]
     # Otherwise, assume state is specified as a value, so set state_variable to it;
     #    if otherwise, will be overridden below
     else:
-    # MODIFIED 5/9/17 END
         state_variable = state_spec
 
     #region CHECK FORMAT OF constraint_value AND CONVERT TO SIMPLE VALUE
@@ -1684,7 +1687,11 @@ def _instantiate_state(owner,                   # Object to which state will bel
 
     # Specification dict; presumably it is for a State
     elif isinstance(constraint_value, dict):
-        constraint_value = constraint_value[kwStateValue]
+        # # MODIFIED 5/10/17 OLD:
+        # constraint_value = constraint_value[STATE_VALUE]
+        # MODIFIED 5/10/17 NEW:
+        constraint_value = constraint_value[VARIABLE]
+        # MODIFIED 5/10/17 END
 
     # ParamValueProjection tuple, set to ParamValueProjection.value:
     elif isinstance(constraint_value, ParamValueProjection):
@@ -1754,19 +1761,34 @@ def _instantiate_state(owner,                   # Object to which state will bel
 
     #region Specification dict
     # If state_spec is a specification dict:
-    # - check that kwStateValue matches constraint_value and assign to state_variable
+    # - check that STATE_VALUE / VARIABLE matches constraint_value and assign to state_variable
     # - add/assign STATE params to state_params
     if isinstance(state_spec, dict):
-        try:
-            state_variable =  state_spec[kwStateValue]
-        except KeyError:
+        # # MODIFIED 5/10/17 OLD:
+        # try:
+        #     state_variable =  state_spec[STATE_VALUE]
+        # except KeyError:
+        #     state_variable = constraint_value
+        #     if owner.prefs.verbosePref:
+        #         print("{0} missing from inputState specification dict for {1};  default ({2}) will be used".
+        #                              format(STATE_VALUE, owner.name, constraint_value))
+        # MODIFIED 5/10/17 NEW:
+        if VARIABLE in state_spec:
+            state_variable =  state_spec[VARIABLE]
+        else:
             state_variable = constraint_value
             if owner.prefs.verbosePref:
-                print("{0} missing from inputState specification dict for {1};  default ({2}) will be used".
-                                     format(kwStateValue, owner.name, constraint_value))
+                print("{} missing from inputState specification dict for {};  default ({}) will be used".
+                                     format(VARIABLE, owner.name, constraint_value))
+        # MODIFIED 5/10/17 END
+
         if not iscompatible(state_variable, constraint_value):
             state_variable = constraint_value
-            spec_type = kwStateValue
+            # # MODIFIED 5/10/17 OLD:
+            # spec_type = STATE_VALUE
+            # MODIFIED 5/10/17 NEW:
+            spec_type = VARIABLE
+            # MODIFIED 5/10/17 END
 
         # Add state_spec[STATE_PARAMS] to state_params
         try:
@@ -1774,23 +1796,18 @@ def _instantiate_state(owner,                   # Object to which state will bel
         # state_spec[STATE_PARAMS] was not specified
         except KeyError:
             pass
-        # MODIFIED 12/7/16 OLD:
-        # try:
-        #     state_name = state_spec[NAME]
-        #     del state_spec[NAME]
-        # except KeyError:
-        #     pass
-        # MODIFIED 12/7/16 NEW:
         # Add state_spec[STATE_PARAMS] to state_params
         for spec in state_spec:
             if spec is NAME:
                 # Assign state name
                 state_name = state_spec[spec]
-                # Do not include in params dict for state
+                # But don't include in params dict for state
                 #  (IMPLEMENTATION NOTE: but don't delete, as apparently still yoked to paramClassDefaults)
                 continue
+            if spec is VARIABLE:
+                # Don't include VARIABLE in state_params
+                continue
             state_params[spec] = state_spec[spec]
-        # MODIFIED 12/7/16 END
 
     #endregion
 
@@ -2037,12 +2054,12 @@ def _check_state_ownership(owner, param_name, mechanism_state):
     return mechanism_state
 
 
-# FIX: MOVE THIS TO InputState module??
-def _parse_state_spec(owner, state_spec, default_value):
+def _parse_state_spec(owner, state_spec, default_name, default_value, projections=None):
     """Return state specification dictionary for state_spec
     """
+
+    name = default_name
     variable = default_value
-    name = None
     params = None
 
     # string, so use as name (value will be derived from monitored_values)
@@ -2053,14 +2070,14 @@ def _parse_state_spec(owner, state_spec, default_value):
     elif is_value_spec(state_spec):
         variable = state_spec
 
-    # tuple, so call for (and return result of) parse of first item
+    # tuple, so call for (and return result of) parse of first item, and add projection spec to STATE_PROJECTIONS
     elif isinstance(state_spec, tuple):
-        return _parse_state_spec(owner, state_spec[0])
+        return _parse_state_spec(owner, state_spec[0], default_name, default_value, projections=state_spec[1])
 
     # already a dict, so add any missing params and return dict
     elif isinstance(state_spec, dict):
         if not NAME in state_spec:
-            state_spec[NAME] = None
+            state_spec[NAME] = default_name
         if not VARIABLE in state_spec:
             state_spec[VARIABLE] = default_value
         return state_spec
@@ -2070,8 +2087,40 @@ def _parse_state_spec(owner, state_spec, default_value):
         raise InputStateError("Illegal state specification found in first item of tuple "
                                       "specified in {} arg of {} ({})".
                                       format(INPUT_STATES, owner.name, state_spec))
-    return {NAME: name,
-            VARIABLE: variable,
-            PARAMS: params}
 
+    state_dict = {NAME: name,
+                  VARIABLE: variable,
+                  PARAMS: params}
+
+    if projection:
+        state_dict[STATE_PROJECTIONS] = projections
+
+    return state_dict
+
+
+        #  RECURSIVELY PARSE DICT SPEC
+        #     name = None
+        #     for k, v in spec.items():
+        #         # Key is not a spec keyword, so dict must be of the following form: STATE_NAME_ASSIGNMENT:STATE_SPEC
+        #         #
+        #         if not k in {NAME, VALUE, STATE_PROJECTIONS}:
+        #             name = k
+        #             value = v
+        #
+        #     if NAME in spec:
+        #         name = spec[NAME]
+        #
+        #     call_for_projection = False
+        #     if STATE_PROJECTIONS in spec:
+        #         call_for_projection = spec[STATE_PROJECTIONS]
+        #
+        #     if isinstance(spec[VALUE], dict):
+        #         entry_name, value, call_for_projection = parse_spec(spec[VALUE])
+        #     else:
+        #         value = spec[VALUE]
+        #
+        # else:
+        #     raise ObjectiveMechanismError("Specification for {} arg of {} ({}) must be an "
+        #                                   "OutputState, Mechanism, value or string".
+        #                                   format(MONITORED_VALUES, owner.name, spec))
 

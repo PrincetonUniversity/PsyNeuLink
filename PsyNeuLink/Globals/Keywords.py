@@ -254,6 +254,7 @@ INPUTS_DIM = 3
 
 COMPONENT_INIT = 'Component.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
+DEFERRED_ASSIGNMENT = 'Deferred Assignment'
 DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
 USER_PARAMS = 'user_params' # Params available to user for inspection in user_params dict
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
@@ -428,7 +429,7 @@ TARGET = 'TARGET'
 
 RESULT = 'result'
 
-kwStateValue = "State value"   # Used in State specification dict
+STATE_VALUE = "State value"   # Used in State specification dict
                                                  #  to specify State value
 STATE_PARAMS = "State params" # Used in State specification dict
 

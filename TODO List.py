@@ -201,6 +201,7 @@
 #     TEST USING assign_params ON COMMAND LINE TO ADD AN inputState or outputState
 #     Replace `names` arg of objective mechanism with input_states arg (and subclass-specific default entries)
 #     DOCUMENTATION for input_state(s) and output_state(s)
+#                   finish "NEW DOCUMENTATION" in ObjectiveMechanism
 #                   variable and value: 2d np.arrays
 #                   input_values and output_values:  lists of values, but each value may be an np.ndarray
 #                   XXput_states.values_as_lists: lists of values, each of which has been converted to a list
@@ -2226,7 +2227,7 @@
 # - Implement: allow list of names, that will be used to instantiate states using self.value
 # - Implement: allow dict entry values to be types (that should be checked against self.value)
 #
-# - NEED TO INITIALIZE:            kwStateValue: NotImplemented,
+# - NEED TO INITIALIZE:            STATE_VALUE: NotImplemented,
 # - IMPLEMENTATION NOTE: move defaultMechanism to a preference (in Mechanism.__init__() or Process.__init())
 # - IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING RELEVANT PROJECTIONS?
 # -    ASSGIGN  *** HANDLE SAME AS MECHANISM STATE AND PROJECTION STATE DEFAULTS:

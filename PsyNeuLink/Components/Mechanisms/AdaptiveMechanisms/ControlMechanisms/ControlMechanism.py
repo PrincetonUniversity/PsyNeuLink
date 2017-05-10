@@ -33,7 +33,7 @@ ControlMechanisms can be created using the standard Python method of calling the
 A ControlMechanism is also created automatically whenever a `system is created <System_Creation>`, and assigned as
 the `controller <System_Execution_Control>` for that system. The `outputStates <OutputState>` to be monitored by a
 ControlMechanism are specified in its `monitored_output_states` argument, which can take  a number of
-`forms <ObjectiveMechanism_Monitored_OutputStates>`.  When the ControlMechanism is created, it automatically creates
+`forms <ObjectiveMechanism_Monitored_States>`.  When the ControlMechanism is created, it automatically creates
 an ObjectiveMechanism that is used to monitor and evaluate the mechanisms and/or outputStates specified in its
 `monitor_for_control <ControlMechanism.monitor_for_control>` attribute.  The result of the evaluation is used to
 specify the value of the ControlMechanism's `ControlProjections <ControlProjection>`. How a ControlMechanism creates its
