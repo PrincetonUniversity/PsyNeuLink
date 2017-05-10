@@ -338,7 +338,7 @@ if run_distribution_test:
     my_Transfer2 = TransferMechanism(name='my_Transfer2',
                            default_input_value = [0,0],
                            function=Logistic(gain=0.1, bias=0.2),
-                           noise=GammaDist(scale = 1.0, shape = 1.0).function,
+                           noise=GammaDist(scale = 1.0, dist_shape = 1.0).function,
                            time_constant = 0.1,
                            time_scale=TimeScale.TIME_STEP
                            )
