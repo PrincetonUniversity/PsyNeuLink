@@ -580,6 +580,30 @@ class AtNCalls(Condition):
             return num_calls == n
         super().__init__(dependency, func, n)
 
+class AfterCall(Condition):
+    """
+    AfterCall
+
+    Parameters:
+        - dependency (Component):
+        - n (int): the number of executions of dependency after which this condition will be satisfied
+        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency. Defaults to TimeScale.TRIAL
+
+    Satisfied when:
+        - dependency has been executed at least n+1 times within the scope of time_scale
+
+    Notes:
+
+    """
+    def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
+        def func(dependency, n):
+            if self.scheduler is None:
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+            num_calls = self.scheduler.counts_total[time_scale][dependency]
+            logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
+            return num_calls > n
+        super().__init__(dependency, func, n)
+
 class AfterNCalls(Condition):
     """
     AfterNCalls
