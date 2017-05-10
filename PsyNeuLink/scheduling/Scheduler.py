@@ -331,7 +331,9 @@ class Scheduler(object):
                 cur_index_consideration_queue < len(self.consideration_queue)
                 and not self.termination_conds[TimeScale.TRIAL].is_satisfied()
             ):
+                # all nodes to be added during this time step
                 cur_time_step_exec = set()
+                # the current "layer/group" of nodes that MIGHT be added during this time step
                 cur_consideration_set = self.consideration_queue[cur_index_consideration_queue]
                 try:
                     iter(cur_consideration_set)
@@ -340,6 +342,8 @@ class Scheduler(object):
                 logger.debug('trial, num passes in trial {0}, consideration_queue {1}'.format(self.times[TimeScale.TRIAL][TimeScale.PASS], ' '.join([str(x) for x in cur_consideration_set])))
 
                 # do-while, on cur_consideration_set_has_changed
+                # we check whether each node in the current consideration set is allowed to run,
+                # and nodes can cause cascading adds within this set
                 while True:
                     cur_consideration_set_has_changed = False
                     for current_node in cur_consideration_set:
@@ -350,6 +354,8 @@ class Scheduler(object):
                                 logger.debug('\t{0}: {1}'.format(n2, self.counts_useable[n][n2]))
 
                         if self.condition_set.conditions[current_node].is_satisfied():
+                            # only add each node once during a single time step, this also serves
+                            # to prevent infinitely cascading adds
                             if current_node not in cur_time_step_exec:
                                 logger.debug('adding {0} to execution list'.format(current_node))
                                 logger.debug('cur time_step exec pre add: {0}'.format(cur_time_step_exec))
@@ -372,6 +378,7 @@ class Scheduler(object):
                     if not cur_consideration_set_has_changed:
                         break
 
+                # add a new time step at each step in a pass, if the time step would not be empty
                 if len(cur_time_step_exec) >= 1:
                     self.execution_list.append(cur_time_step_exec)
                     yield self.execution_list[-1]
@@ -380,6 +387,7 @@ class Scheduler(object):
 
                 cur_index_consideration_queue += 1
 
+            # if an entire pass occurs with nothing running, add an empty time step
             if not execution_list_has_changed:
                 self.execution_list.append(set())
                 yield self.execution_list[-1]
