@@ -353,10 +353,10 @@ class Scheduler(object):
                             for n2 in self.counts_useable[n]:
                                 logger.debug('\t{0}: {1}'.format(n2, self.counts_useable[n][n2]))
 
-                        if self.condition_set.conditions[current_node].is_satisfied():
-                            # only add each node once during a single time step, this also serves
-                            # to prevent infinitely cascading adds
-                            if current_node not in cur_time_step_exec:
+                        # only add each node once during a single time step, this also serves
+                        # to prevent infinitely cascading adds
+                        if current_node not in cur_time_step_exec:
+                            if self.condition_set.conditions[current_node].is_satisfied():
                                 logger.debug('adding {0} to execution list'.format(current_node))
                                 logger.debug('cur time_step exec pre add: {0}'.format(cur_time_step_exec))
                                 cur_time_step_exec.add(current_node)
