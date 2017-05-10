@@ -813,10 +813,15 @@ class System_Base(System):
             self.controller = self.controller(system=self)
 
         # Check whether controller has input, and if not then disable
-        try:
-            has_input_states = bool(self.controller.input_states)
-        except:
-            has_input_states = False
+        # # MODIFIED 5/10/17 OLD:
+        # try:
+        #     has_input_states = bool(self.controller.input_states)
+        # except:
+        #     has_input_states = False
+        # MODIFIED 5/10/17 NEW:
+        has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
+        # MODIFIED 5/10/17 END
+
         if not has_input_states:
             # If controller was enabled (and verbose is set), warn that it has been disabled
             if self.enable_controller and self.prefs.verbosePref:
@@ -1918,7 +1923,7 @@ class System_Base(System):
         for learning_mech in self.learningExecutionList:
             learning_mech._execution_id = self._execution_id
         self.controller._execution_id = self._execution_id
-        if self.controller.input_states:
+        if self.enable_controller and self.controller.input_states:
             for state in self.controller.input_states:
                 for projection in state.receivesFromProjections:
                     projection.sender.owner._execution_id = self._execution_id

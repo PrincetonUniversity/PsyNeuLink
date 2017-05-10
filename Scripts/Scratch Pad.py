@@ -2085,132 +2085,277 @@ class ScratchPadError(Exception):
 #region TEST OF List indexed by string @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
-# a = MyClass()
-# b = MyClass()
-# # a.name = 'hello'
-# a.name.append('hello')
-# print(a.name)
-# print(b.name)
+# # a = MyClass()
+# # b = MyClass()
+# # # a.name = 'hello'
+# # a.name.append('hello')
+# # print(a.name)
+# # print(b.name)
+#
+#
+# # from collections import UserList
+# #
+# # class ClassListTest(UserList):
+# #     """Implements dict-like list, that can be indexed by the names of the States in its entries.
+# #
+# #     Supports getting and setting entries in the list using string (in addition to numeric) indices.
+# #     For getting an entry:
+# #         the string must match the name of a State in the list; otherwise an excpetion is raised.
+# #     For setting an entry:
+# #         the string must match the name of the State being assigned;
+# #         if there is already a State in the list the name of which matches the string, it is replaced;
+# #         if there is no State in the list the name of which matches the string, the State is appended to the list.
+# #
+# #     IMPLEMENTATION NOTE:
+# #         This class allows the states of a mechanism to be maintained in lists, while providing the convenience
+# #         (to the user) of access and assignment by name (e.g., akin to a dict).
+# #         Lists are used (instead of a dict or OrderedDict) since:
+# #             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
+# #                 collections of states to other variables, such as lists of their values);
+# #             - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
+# #                 or by index (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for
+# #                 accessing by key/name less critical;
+# #             - the number of states in a collection for a given mechanism is likely to be small so that, even when
+# #                 accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
+# #     """
+# #
+# #     def __init__(self, list=None, name=None, **kwargs):
+# #         self.name = name or self.__class__.__name__
+# #         UserList.__init__(self, list, **kwargs)
+# #         # self._ordered_keys = []
+# #
+# #     def __getitem__(self, index):
+# #         try:
+# #             return self.data[index]
+# #         except TypeError:
+# #             index = self._get_index_for_item(index)
+# #             return self.data[index]
+# #
+# #     def __setitem__(self, index, value):
+# #         try:
+# #             self.data[index] = value
+# #         except TypeError:
+# #             if not index is value.name:
+# #                 raise ScratchPadError("Name of entry for {} ({}) must match the name of its State ({})".
+# #                                       format(self.name, index, value.name))
+# #             index_num = self._get_index_for_item(index)
+# #             if index_num is not None:
+# #                 self.data[index_num] = value
+# #             else:
+# #                 self.data.append(value)
+# #
+# #     def _get_index_for_item(self, index):
+# #         if isinstance(index, str):
+# #             # return self.data.index(next(obj for obj in self.data if obj.name is index))
+# #             obj = next((obj for obj in self.data if obj.name is index), None)
+# #             if obj is None:
+# #                 return None
+# #             else:
+# #                 return self.data.index(obj)
+# #
+# #         elif isinstance(index, MyClass):
+# #             return self.data.index(index)
+# #         else:
+# #             raise ScratchPadError("{} is not a legal index for {} (must be number, string or State".
+# #                                   format(index, self.name))
+# #
+# #     def __delitem__(self, index):
+# #         del self.data[index]
+# #
+# #     def clear(self):
+# #         super().clear(self)
+# #
+# #     # def pop(self, index, *args):
+# #     #     raise UtilitiesError("{} is read-only".format(self.name))
+# #     # def popitem(self):
+# #     #     raise UtilitiesError("{} is read-only".format(self.name))
+# #
+# #     def __additem__(self, index, value):
+# #         if index >= len(self.data):
+# #             self.data.append(value)
+# #         else:
+# #             self.data[index] = value
+# #
+# #
+# #     def __contains__(self, item):
+# #         if super().__contains__(item):
+# #             return True
+# #         else:
+# #             return any(item is obj.name for obj in self.data)
+# #
+# #     def copy(self):
+# #         return self.data.copy()
+#
+# class MyClass():
+#     name = None
+#     def __init__(self, name=None):
+#         self.name = name
+#         # self.name = name
+#
+# my_obj = MyClass(name='hello')
+# my_obj_2 = MyClass(name='goodbye')
+# my_obj_3 = MyClass(name='goodbye')
+#
+# from PsyNeuLink.Globals.Utilities import ContentAddressableList
+#
+# my_list = ContentAddressableList(component_type=MyClass)
+# # my_list.append(my_state)
+# my_list['hello'] = my_obj
+# my_list['goodbye'] = my_obj_2
+# print(my_list, len(my_list))
+# print(my_list[0])
+# print(my_list['hello'])
+# print(my_list['goodbye'])
+# my_list['goodbye'] = my_obj_3
+# print(my_list['goodbye'])
+# print('hello' in my_list)
+
+#endregion
+
+# region TEST parse_monitored_value
+
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import *
+from PsyNeuLink.Components.States.OutputState import OutputState
+
+def _parse_monitored_value(owner, monitored_values):
+    """Parse specifications contained in monitored_values list or dict, 
+    
+    Can take either a list or dict of specifications.
+    If it is a list, each item must be one of the following:
+        - OuptutState
+        - Mechanism
+        - string
+        - value
+        - dict
+
+    If it is a dict, each item must be an entry, the key of which must be a string that is used as a name
+        specification, and the value of which can be any of the above. 
+        
+    Return a list of specification dicts, one for each item of monitored_values
+    """
 
 
-# from collections import UserList
-#
-# class ClassListTest(UserList):
-#     """Implements dict-like list, that can be indexed by the names of the States in its entries.
-#
-#     Supports getting and setting entries in the list using string (in addition to numeric) indices.
-#     For getting an entry:
-#         the string must match the name of a State in the list; otherwise an excpetion is raised.
-#     For setting an entry:
-#         the string must match the name of the State being assigned;
-#         if there is already a State in the list the name of which matches the string, it is replaced;
-#         if there is no State in the list the name of which matches the string, the State is appended to the list.
-#
-#     IMPLEMENTATION NOTE:
-#         This class allows the states of a mechanism to be maintained in lists, while providing the convenience
-#         (to the user) of access and assignment by name (e.g., akin to a dict).
-#         Lists are used (instead of a dict or OrderedDict) since:
-#             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
-#                 collections of states to other variables, such as lists of their values);
-#             - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
-#                 or by index (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for
-#                 accessing by key/name less critical;
-#             - the number of states in a collection for a given mechanism is likely to be small so that, even when
-#                 accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
-#     """
-#
-#     def __init__(self, list=None, name=None, **kwargs):
-#         self.name = name or self.__class__.__name__
-#         UserList.__init__(self, list, **kwargs)
-#         # self._ordered_keys = []
-#
-#     def __getitem__(self, index):
-#         try:
-#             return self.data[index]
-#         except TypeError:
-#             index = self._get_index_for_item(index)
-#             return self.data[index]
-#
-#     def __setitem__(self, index, value):
-#         try:
-#             self.data[index] = value
-#         except TypeError:
-#             if not index is value.name:
-#                 raise ScratchPadError("Name of entry for {} ({}) must match the name of its State ({})".
-#                                       format(self.name, index, value.name))
-#             index_num = self._get_index_for_item(index)
-#             if index_num is not None:
-#                 self.data[index_num] = value
-#             else:
-#                 self.data.append(value)
-#
-#     def _get_index_for_item(self, index):
-#         if isinstance(index, str):
-#             # return self.data.index(next(obj for obj in self.data if obj.name is index))
-#             obj = next((obj for obj in self.data if obj.name is index), None)
-#             if obj is None:
-#                 return None
-#             else:
-#                 return self.data.index(obj)
-#
-#         elif isinstance(index, MyClass):
-#             return self.data.index(index)
-#         else:
-#             raise ScratchPadError("{} is not a legal index for {} (must be number, string or State".
-#                                   format(index, self.name))
-#
-#     def __delitem__(self, index):
-#         del self.data[index]
-#
-#     def clear(self):
-#         super().clear(self)
-#
-#     # def pop(self, index, *args):
-#     #     raise UtilitiesError("{} is read-only".format(self.name))
-#     # def popitem(self):
-#     #     raise UtilitiesError("{} is read-only".format(self.name))
-#
-#     def __additem__(self, index, value):
-#         if index >= len(self.data):
-#             self.data.append(value)
-#         else:
-#             self.data[index] = value
-#
-#
-#     def __contains__(self, item):
-#         if super().__contains__(item):
-#             return True
-#         else:
-#             return any(item is obj.name for obj in self.data)
-#
-#     def copy(self):
-#         return self.data.copy()
+    def parse_spec(spec):
+
+        # OutputState:
+        if isinstance(spec, OutputState):
+            name = spec.owner.name + MONITORED_VALUE_NAME_SUFFIX
+            value = spec.value
+            call_for_projection = True
+
+        # Mechanism:
+        elif isinstance(spec, Mechanism_Base):
+            name = spec.name + MONITORED_VALUE_NAME_SUFFIX
+            value = spec.output_state.value
+            call_for_projection = True
+
+        # # If spec is a MonitoredOutputStatesOption:
+        # # FIX: NOT SURE WHAT TO DO HERE YET
+        # elif isinstance(montiored_value, MonitoredOutputStateOption):
+        #     value = ???
+        #     call_for_projection = True
+
+        # If spec is a string:
+        # - use as name of inputState
+        # - instantiate InputState with defalut value (1d array with single scalar item??)
+
+        # str:
+        elif isinstance(spec, str):
+            name = spec
+            value = DEFAULT_MONITORED_VALUE
+            call_for_projection = False
+
+        # value:
+        elif is_value_spec(spec):
+            name = owner.name + MONITORED_VALUE_NAME_SUFFIX
+            value = spec
+            call_for_projection = False
+
+        elif isinstance(spec, tuple):
+            # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
+            name = owner.name + MONITORED_VALUE_NAME_SUFFIX
+            value = spec[0]
+            call_for_projection = spec[1]
+
+        # dict:
+        elif isinstance(spec, dict):
+
+            name = None
+            for k, v in spec.items():
+                # Key is not a spec keyword, so dict must be of the following form: STATE_NAME_ASSIGNMENT:STATE_SPEC
+                #
+                if not k in {NAME, VALUE, STATE_PROJECTIONS}:
+                    name = k
+                    value = v
+
+            if NAME in spec:
+                name = spec[NAME]
+
+            call_for_projection = False
+            if STATE_PROJECTIONS in spec:
+                call_for_projection = spec[STATE_PROJECTIONS]
+
+            if isinstance(spec[VALUE], (dict, tuple)):
+                # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
+                entry_name, value, call_for_projection = parse_spec(spec[VALUE])
+
+            else:
+                value = spec[VALUE]
+
+        else:
+            raise ObjectiveMechanismError("Specification for {} arg of {} ({}) must be an "
+                                          "OutputState, Mechanism, value or string".
+                                          format(MONITORED_VALUES, owner.name, spec))
+
+        return name, value, call_for_projection
+
+    # If it is a dict, convert to list by:
+    #    - assigning the key of each entry to a NAME entry of the dict
+    #    - placing the value in a VALUE entry of the dict
+    if isinstance(monitored_values, dict):
+        monitored_values_list = []
+        for name, spec in monitored_values.items():
+            monitored_values_list.append({NAME: name, VALUE: spec})
+        monitored_values = monitored_values_list
+
+    if isinstance(monitored_values, list):
+
+        for i, monitored_value in enumerate(monitored_values):
+            name, value, call_for_projection = parse_spec(monitored_value)
+            monitored_values[i] = {NAME: name,
+                                   VALUE: value,
+                                   PROJECTION: call_for_projection}
+
+    else:
+        raise ObjectiveMechanismError("{} arg for {} ({} )must be a list or dict".
+                                      format(MONITORED_VALUES, owner.name, monitored_values))
+
+    return monitored_values
 
 
 
-class MyClass():
-    name = None
-    def __init__(self, name=None):
-        self.name = name
-        # self.name = name
+    # def add_monitored_values(self, states_spec, context=None):
+    #     """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
+    #
+    #     Use by other objects to add a state or list of states to be monitored by EVC
+    #     states_spec can be a Mechanism, OutputState or list of either or both
+    #     If item is a Mechanism, each of its outputStates will be used
+    #
+    #     Args:
+    #         states_spec (Mechanism, MechanimsOutputState or list of either or both:
+    #         context:
+    #     """
+    #     states_spec = list(states_spec)
+    #     validate_monitored_value(self, states_spec, context=context)
+    #     self._instantiate_monitored_output_states(states_spec, context=context)
 
-my_obj = MyClass(name='hello')
-my_obj_2 = MyClass(name='goodbye')
-my_obj_3 = MyClass(name='goodbye')
+class SCRATCH_PAD():
+    name = 'SCRATCH_PAD'
 
-from PsyNeuLink.Globals.Utilities import ContentAddressableList
+print(_parse_monitored_value(SCRATCH_PAD, {'TEST_STATE_NAME':{VALUE: (32, 'Projection')}}))
 
-my_list = ContentAddressableList(component_type=MyClass)
-# my_list.append(my_state)
-my_list['hello'] = my_obj
-my_list['goodbye'] = my_obj_2
-print(my_list, len(my_list))
-print(my_list[0])
-print(my_list['hello'])
-print(my_list['goodbye'])
-my_list['goodbye'] = my_obj_3
-print(my_list['goodbye'])
-print('hello' in my_list)
+
+
 
 
 #endregion

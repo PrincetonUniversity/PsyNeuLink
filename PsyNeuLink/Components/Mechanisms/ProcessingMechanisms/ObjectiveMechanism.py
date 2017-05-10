@@ -11,7 +11,10 @@
 #      just a list of values (used as values of inputState, overrides use of monitored_values such as for RL)
 #      if both, use dict with NAME and VARIABLE entries
 #      # if input_states must == monitored_values
+#      if none are specified, they will autojatically be created based on the monitored_values spec
 #  monitored_values no longer takes an inputState specification (that must be in input_states)
+#      if it is a name or value, not projection is called for (assumes that it is a TARGET, and that the projection
+#                    will be implemented by Composition
 
 # *********************************************  ObjectiveMechanism *******************************************************
 
@@ -46,8 +49,14 @@ for each of those values, and assigned a `MappingProjection` from the outputStat
 ObjectiveMechanism's `function  <ObjectiveMechanism.function>` uses these values to compute an `objective (or "loss")
 function <https://en.wikipedia.org/wiki/Loss_function>`_, that is assigned as the value of its outputState.
 
-.. _ObjectiveMechanism_Monitored_OutputStates:
 
+COMMENT:
+Input States
+~~~~~~~~~~~~~~~~
+ADD DOCUMENTATION HERE (SEE NEW DOCUMENTATION ABOVE)
+COMMENT
+
+.. _ObjectiveMechanism_Monitored_States:
 
 Monitored Values
 ~~~~~~~~~~~~~~~~
@@ -57,8 +66,13 @@ constructor.  These can be specified in a variety of ways, each of which must ev
 value of which is to be monitored.  Those outputStates are listed in the ObjectiveMechanism's `monitored_values`
 attribute.
 
-The number of items in `monotired_values` must match the length of the `default_input_value
-<ObjectiveMechanism.Additional_Attributes>` if it is specified.  Note that some forms of
+The number of items in `monitored_values` must match the length of the number of items in the 
+**input_states** argument if it is specified
+COMMENT:
+, or the `default_input_value
+<ObjectiveMechanism.Additional_Attributes>` if it is specified
+COMMENT
+.  Note that some forms of
 specification may depend on specifications made for the outputState referenced, the mechanism to which it belongs,
 and/or the process or system to which that mechanism belongs. These interactions (and the precedence afforded to
 each) are described below.
@@ -72,8 +86,8 @@ ignored.
 
 The specification of item in `monitored_values` can take any of the following forms:
 
-* **OutputState**:  a reference to the `outputState <OutputState>` of a mechanism.  This will create an inputState
-  using the outputState's value as the template for its variable.
+* **OutputState**:  a reference to the `outputState <OutputState>` of a mechanism.  This will create a
+  `MappingProjection` from it to the corresponding inputState in `input_states <ObjectiveMechanism.input_states>`.
 COMMENT: TBI
     Note that an outputState can be *excluded* from being monitored by assigning `None` as the value of its
     `monitoring_status` attribute.  This specification takes precedence over any others;  that is, it will suppress
@@ -85,21 +99,23 @@ COMMENT
   if the mechanism has any outputStates specified in its `monitored_states` attribute, those will be used (except for
   any that specify `None` as their `monitoring_status`). This specification takes precedence over any of the other
   types listed below:  if it is `None`, then none of that mechanism's outputStates will be monitored; if it
-  specifies outputStates to be monitored, those will be monitored even if they do not satisify any of the conditions
+  specifies outputStates to be monitored, those will be monitored even if they do not satisfy any of the conditions
   described in the specifications below.
 ..
-* **InputState**:  this creates a "placemarker" inputState, that will later be assigned to an outputState to be
-  monitored and a projection from it.  It can be any of the following:
-
-  * **existing inputState**:  its name, value, and parameters will be used to create an identical
-    inputState for the ObjectiveMechanism;
-  |
-  * `specification dictionary <InputState_Creation>` **for an inputState**:  the specifications will be used to
-    create an inputState for the ObjectiveMechanism;
-  |
-  * **value**: a default inputState will be created using that value;
-  |
-  * **string**: a default inputState will be created using the string as its name, and a scalar as its value.
+COMMENT: [OLD - REPLACED BY input_states ARG]
+    * **InputState**:  this creates a "placemarker" inputState, that will later be assigned to an outputState to be
+      monitored and a projection from it.  It can be any of the following:
+    
+      * **existing inputState**:  its name, value, and parameters will be used to create an identical
+        inputState for the ObjectiveMechanism;
+      |
+      * `specification dictionary <InputState_Creation>` **for an inputState**:  the specifications will be used to
+        create an inputState for the ObjectiveMechanism;
+      |
+      * **value**: a default inputState will be created using that value;
+      |
+      * **string**: a default inputState will be created using the string as its name, and a scalar as its value.
+COMMENT
 
 COMMENT: TBI
     .. _ObjectiveMechanism_OutputState_Tuple:
@@ -114,6 +130,12 @@ COMMENT: TBI
           ..
           * an exponent (int) - exponentiates the value of the outputState;
 COMMENT
+* **string**, **value** or **dict**: These can be used as placemarkers for a monitored_state that will be instantiated
+  later (for example, for the TARGET input of a Composition).  If a string is specified, it is used as the
+  default name of the corresponding inputState (specified in the `input_states <ObjectiveMechanism.input_states>`
+  attribute of the ObjectiveMechanism) If a value is specified, it is used as the default value for the corresponding
+  inputState.  If a dict is specified, it must have a single entry, the key of which will be used a string
+  specification and the value as a value specification. 
 
 Additional Attributes
 ~~~~~~~~~~~~~~~~~~~~~
@@ -245,8 +267,8 @@ class ObjectiveMechanismError(Exception):
 class ObjectiveMechanism(ProcessingMechanism_Base):
     """
     ObjectiveMechanism(           \
-    default_input_value=None,     \
-    monitored_values=None,        \
+    monitored_values,             \
+    input_states=None,            \
     names=None,                   \
     function=LinearCombination,   \
     params=None,                  \
@@ -284,14 +306,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
+    COMMENT:
     default_input_value : Optional[List[array] or 2d np.array]
         specifies the format of the values monitored by the ObjectiveMechanism;  each item corresponds to the value
         of an outputState monitored, and to the value of the corresponding inputState of the ObjectiveMechanism.  It
         must have the same length as the number items in monitored_values.  The values specified here take precedence
         over those in :keyword:`monitored_values`;  if none are provided, the ones in :keyword:`monitored_values`
         will be used.
+    COMMENT
 
-    monitored_values : [List[value, InputState, OutputState, Mechanism, string, or MonitoredOutputStateOption]
+    monitored_values : [List[OutputState, Mechanism, string, value, dict or MonitoredOutputStateOption]
         specifies the values that will will be monitored, and evaluated by the `function <ObjectiveMechanism>`
         (see `monitored_values` for details of specification).  The number of items must equal the length
         of `default_input_value` if that is specified.
@@ -340,7 +364,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     default_input_value : Optional[List[array] or 2d np.array]
     COMMENT
 
-    monitored_values : [List[OutputState, Mechanism, InputState, dict, value, or str]
+    monitored_values : [List[OutputState]
         determines  the values monitored, and evaluated by `function <ObjectiveMechanism>`.  Once the
         ObjectiveMechanism is fully instantiated, each item in the list refers to an outputState containing the
         value to be monitored, with a `MappingProjection` from it to the corresponding inputState.
@@ -390,6 +414,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
+        MONITORED_VALUES: None,
         TIME_SCALE: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
         OUTPUT_STATES:[{NAME:RESULT}]})
@@ -403,7 +428,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  # MODIFIED 5/8/17 OLD:
                  # default_input_value=None,
                  # MODIFIED 5/8/17 END
-                 monitored_values=None,
+                 monitored_values,
                  input_states=None,
                  # names:tc.optional(list)=None,
                  function=LinearCombination,
@@ -464,8 +489,15 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                           format(target_set[ROLE], self.name))
 
         # if not all(item in target_set for item in {INPUT_STATES, MONITORED_VALUES}):
-        if INPUT_STATES in target_set and target_set[INPUT_STATES]:
-            if len(target_set[INPUT_STATES]) != len(target_set[MONITORED_VALUES]):
+        if INPUT_STATES in target_set and target_set[INPUT_STATES] is not None:
+            if MONITORED_VALUES in target_set:
+                monitored_values = target_set[MONITORED_VALUES]
+            elif hasattr(self, 'monitored_values'):
+                monitored_values = self.monitored_values
+            else:
+                raise ObjectiveMechanismError("PROGRAM ERROR:  monitored_values not instantiated as param or attirb")
+
+            if len(target_set[INPUT_STATES]) != len(monitored_values):
                 raise ObjectiveMechanismError("The number of items in the \'{}\'arg for {} ({}) "
                                               "must equal of the number in the \`{}\` arg ({})".
                                      format(INPUT_STATES,
@@ -536,134 +568,182 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         """
 
-        # input_states = self.input_states or [None] * len(self.monitored_values)
-        # num_states = len(input_states)
-        # state_values = [None] * num_states
-        #
-        input_state_list, call_for_projections = self._input_state_list_for_monitored_values(
-                                                                                monitored_values=self.monitored_values,
-                                                                                input_state_specs=self.input_states,
-                                                                                context=context)
+        # # FIX: THIS SHOULD DETERMINE WHETHER ARG IS A LIST OR A DICT (OF THE FORM: STATE_NAME:STATE_VALUE:
+        # super()._instantiate_input_states(context=context)
+
+        from PsyNeuLink.Components.States.State import _parse_state_spec
+
+        # Parse monitored_values
+        monitored_values = _parse_monitored_values(owner=self, monitored_values=self.monitored_values)
+
+        # Parse input_states to determine whether its specifications need to be derived from monitored_value
+        for i, input_state, monitored_value in zip(range(len(self.input_states)),
+                                                   self.input_states,
+                                                   monitored_values):
+
+            # Parse input_state to determine its specifications and assign values from monitored_values
+            #    to any missing projections, including any projections requested.
+            self.input_states[i] = _parse_state_spec(self,
+                                                     state_spec=input_state,
+                                                     default_name=monitored_values[i][NAME],
+                                                     default_value=monitored_values[i][VALUE],
+                                                     projections=monitored_values[i][PROJECTION])
+
         constraint_value = []
-        for spec in input_state_list:
-            constraint_value.append(spec[VARIABLE])
+        for input_state in self.input_states:
+            constraint_value.append(input_state[VARIABLE])
 
         from PsyNeuLink.Components.States.State import _instantiate_state_list
-        self.input_states = _instantiate_state_list(owner=self,
-                                                    state_list=input_state_list,
-                                                    state_type=InputState,
-                                                    state_param_identifier=INPUT_STATE,
-                                                    constraint_value=constraint_value,
-                                                    constraint_value_name=self.__class__.__name__ + ' variable',
-                                                    context=context)
+        self._input_states = _instantiate_state_list(owner=self,
+                                                     state_list=self.input_states,
+                                                     state_type=InputState,
+                                                     state_param_identifier=INPUT_STATE,
+                                                     constraint_value=constraint_value,
+                                                     constraint_value_name=self.__class__.__name__ + ' variable',
+                                                     context=context)
+
+
 
         # ??ARE THESE DONE SOMEWHERE ELSE (E.G. IN super()._instantiate_input_states????
         self.variable = self.input_states.values.copy()
         self.variableClassDefault = self.variable.copy()
 
         # IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
+        #                      SHOULD PROBABLY BE INTEGRATED INTO State MODULE (IN _instantate_state)
         # Instantiate inputState with projection from outputState specified by monitored_value
-        for monitored_value, input_state, call_for_projection in zip(self.monitored_values,
-                                                                     self.input_states,
-                                                                     call_for_projections):
-            if call_for_projection:
-                _instantiate_monitoring_projection(sender=monitored_value,
+        for monitored_value, input_state in zip(self.monitored_values, self.input_states):
+            if monitored_value[PROJECTION]:
+                _instantiate_monitoring_projection(sender=monitored_value[OUTPUT_STATE],
                                                    receiver=input_state,
                                                    matrix=AUTO_ASSIGN_MATRIX)
 
-    def _input_state_list_for_monitored_values(self, monitored_values, input_state_specs, context=None):
-        """Return list of inputState specifications based on input_states and monitored_values specified in constructor. 
 
-        Validate specification for value to be monitored (using call to validate_monitored_value), and
-            get relevant specs (name and value) for its inputState.
+@tc.typecheck
+def _parse_monitored_values(owner, monitored_values:tc.any(list, dict)):
+    """Parse specifications contained in monitored_values list or dict, 
+    
+    Can take either a list or dict of specifications.
+    If it is a list, each item must be one of the following:
+        - OuptutState
+        - Mechanism
+        - string
+        - value
+        - dict
 
-        """
-        from PsyNeuLink.Components.States.State import _parse_state_spec
+    If it is a dict, each item must be an entry, the key of which must be a string that is used as a name
+        specification, and the value of which can be any of the above. 
+        
+    Return a list of specification dicts, one for each item of monitored_values
+    """
 
-        # if isinstance(input_state, InputState):
-        #     return input_state.value
+    from PsyNeuLink.Components.States.OutputState import OutputState
 
-        input_state_list = [None] * len(monitored_values)
-        num_input_states = len(input_state_list)
-        call_for_projections = [None] * len(monitored_values)
+    def parse_spec(spec):
 
-        for i, monitored_value, input_state_spec in zip(range(num_input_states),
-                                                        monitored_values,
-                                                        input_state_specs):
-
-            # Parse input_state to determine whether its specifications need to be derived from monitored_value
-            if isinstance(input_state_spec, InputState):
-                input_state_list[i] = input_state_spec
-                continue
-
-            input_state_dict = _parse_state_spec(self, input_state_spec, DEFAULT_MONITORED_VALUE)
-
-            # FIX: IF input_state_spec IS A DICT,
-            # FIX: NEED TO DETERMINE WHETHER IT IS ONE OF THE FORM:  STATE_NAME:{STATE SPEC DICT}, OR ALREADY
-            # FIX:          A STATE SPECIFICATION DICT OF THE FORM: {NAME: state_name, VARIABLE: variable_value, etc.}
-
-            # Parse monitored_value to determine its specifications, including whether it needs a projection
-            monitored_value_name, monitored_value_spec, call_for_projection = \
-                self._parse_monitored_value(monitored_value=monitored_value)
-
-            # Give precedence to input_state specifications;  otherwise use values derived from monitored_value
-            input_state_dict[NAME] = input_state_dict[NAME] or monitored_value_name
-            if input_state_dict[VARIABLE] is not None:
-                input_state_dict[VARIABLE] = input_state_dict[VARIABLE]
-            else:
-                input_state_dict[VARIABLE] = monitored_value_spec
-
-            input_state_list[i] = input_state_dict
-            call_for_projections[i] = call_for_projection
-
-        return input_state_list, call_for_projections
-
-    def _parse_monitored_value(self, monitored_value):
-
-        from PsyNeuLink.Components.States.OutputState import OutputState
-
-        call_for_projection = False
-        name = spec = None
-
-        # monitored_value is a value:
-        if is_value_spec(monitored_value):
-            spec = monitored_value
-            name = self.name + MONITORED_VALUE_NAME_SUFFIX
-
-        #  monitored_value is an OutputState:
-        elif isinstance(monitored_value, OutputState):
-            spec = monitored_value.value
-            name = monitored_value.owner.name + MONITORED_VALUE_NAME_SUFFIX
+        # OutputState:
+        if isinstance(spec, OutputState):
+            name = spec.owner.name + MONITORED_VALUE_NAME_SUFFIX
+            output_state = spec
+            value = spec.value
             call_for_projection = True
 
-        # monitored_value is a Mechanism:
-        elif isinstance(monitored_value, Mechanism_Base):
-            spec = monitored_value.output_state.value
-            name = monitored_value.name + MONITORED_VALUE_NAME_SUFFIX
+        # Mechanism:
+        elif isinstance(spec, Mechanism_Base):
+            name = spec.name + MONITORED_VALUE_NAME_SUFFIX
+            output_state = spec.output_state
+            value = spec.output_state.value
             call_for_projection = True
 
-        # # If monitored_value is a MonitoredOutputStatesOption:
+        # # If spec is a MonitoredOutputStatesOption:
         # # FIX: NOT SURE WHAT TO DO HERE YET
         # elif isinstance(montiored_value, MonitoredOutputStateOption):
         #     value = ???
         #     call_for_projection = True
 
-        # If monitored_value is a string:
+        # If spec is a string:
         # - use as name of inputState
         # - instantiate InputState with defalut value (1d array with single scalar item??)
 
-        # monitored_value is a str:
-        elif isinstance(monitored_value, str):
-            spec = DEFAULT_MONITORED_VALUE
-            name = monitored_value
+        # str:
+        elif isinstance(spec, str):
+            name = spec
+            output_state = DEFERRED_ASSIGNMENT
+            value = DEFAULT_MONITORED_VALUE
+            call_for_projection = False
+
+        # value:
+        elif is_value_spec(spec):
+            name = owner.name + MONITORED_VALUE_NAME_SUFFIX
+            output_state = DEFERRED_ASSIGNMENT
+            value = spec
+            call_for_projection = False
+
+        elif isinstance(spec, tuple):
+            # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
+            name = owner.name + MONITORED_VALUE_NAME_SUFFIX
+            output_state = DEFERRED_ASSIGNMENT
+            value = spec[0]
+            call_for_projection = spec[1]
+
+        # dict:
+        elif isinstance(spec, dict):
+
+            name = None
+            for k, v in spec.items():
+                # Key is not a spec keyword, so dict must be of the following form: STATE_NAME_ASSIGNMENT:STATE_SPEC
+                #
+                if not k in {NAME, VALUE, STATE_PROJECTIONS}:
+                    name = k
+                    value = v
+
+            if NAME in spec:
+                name = spec[NAME]
+
+            call_for_projection = False
+            if STATE_PROJECTIONS in spec:
+                call_for_projection = spec[STATE_PROJECTIONS]
+
+            output_state = DEFERRED_ASSIGNMENT
+            if OUTPUT_STATE in spec:
+                output_state = spec[OUTPUT_STATE]
+
+            if isinstance(spec[VALUE], (dict, tuple)):
+                # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
+                entry_name, value, call_for_projection = parse_spec(spec[VALUE])
+
+            else:
+                value = spec[VALUE]
 
         else:
             raise ObjectiveMechanismError("Specification for {} arg of {} ({}) must be an "
                                           "OutputState, Mechanism, value or string".
-                                          format(MONITORED_VALUES, self.name, monitored_value))
+                                          format(MONITORED_VALUES, owner.name, spec))
 
-        return name, spec, call_for_projection
+        return name, output_state, value, call_for_projection
 
+    # If it is a dict, convert to list by:
+    #    - assigning the key of each entry to a NAME entry of the dict
+    #    - placing the value in a VALUE entry of the dict
+    if isinstance(monitored_values, dict):
+        monitored_values_list = []
+        for name, spec in monitored_values.items():
+            monitored_values_list.append({NAME: name, VALUE: spec})
+        monitored_values = monitored_values_list
+
+    if isinstance(monitored_values, list):
+
+        for i, monitored_value in enumerate(monitored_values):
+            name, output_state, value, call_for_projection = parse_spec(monitored_value)
+            monitored_values[i] = {NAME: name,
+                                   OUTPUT_STATE: output_state,
+                                   VALUE: value,
+                                   PROJECTION: call_for_projection}
+
+    else:
+        raise ObjectiveMechanismError("{} arg for {} ({} )must be a list or dict".
+                                      format(MONITORED_VALUES, owner.name, monitored_values))
+
+    return monitored_values
 
 
     # def add_monitored_values(self, states_spec, context=None):

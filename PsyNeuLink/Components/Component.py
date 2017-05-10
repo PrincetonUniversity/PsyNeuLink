@@ -507,7 +507,7 @@ class Component(object):
         + function (implementation is optional; aliased to params[FUNCTION] by default)
     """
 
-    #region CLASS ATTRIBUTES
+    #CLASS ATTRIBUTES
     className = "COMPONENT"
     suffix = " " + className
 # IMPLEMENTATION NOTE:  *** CHECK THAT THIS DOES NOT CAUSE ANY CHANGES AT SUBORDNIATE LEVELS TO PROPOGATE EVERYWHERE
@@ -533,8 +533,8 @@ class Component(object):
     # * kwComponentCategory (below) is used as placemarker for Component.Function class; replaced in __init__ below
     #              (can't reference own class directly class block)
     requiredParamClassDefaultTypes = {}
-    paramClassDefaults = {VARIABLE: None}
-    #endregion
+
+    paramClassDefaults = {}
 
     # IMPLEMENTATION NOTE: This is needed so that the State class can be used with ContentAddressableList,
     #                      which requires that the attribute used for addressing is on the class;
@@ -664,6 +664,7 @@ class Component(object):
 
 
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
+
 
         # Validate the set passed in and assign to paramInstanceDefaults
         # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
@@ -1201,9 +1202,14 @@ class Component(object):
                 raise ComponentError("default parameter set must be a dictionary")
 
 
+        # # GET VARIABLE FROM PARAM DICT IF SPECIFIED
+        # #    (give precedence to that over variable arg specificadtion)
+        # if VARIABLE in request_set and request_set[VARIABLE] is not None:
+        #     variable = request_set[VARIABLE]
+
         # ASSIGN SIZE OR SHAPE TO VARIABLE if specified
 
-        # If size has been specified, make sure it doesn't conflict with variable arg specification
+        # If size has been specified, make sure it doesn't conflict with variable arg or param specification
         if hasattr(self, 'size') and self.size is not None:
             # Both variable and size are specified
             if variable is not None:
@@ -1218,16 +1224,13 @@ class Component(object):
         elif hasattr(self, 'shape') and self.shape is not None:
             # Both variable and shape are specified
             if variable is not None:
-                # If they confict, raise exception, otherwise use variable (it specifies both shape and content)
+                # If they conflict, raise exception, otherwise use variable (it specifies both shape and content)
                 if self.shape != np.array(variable).shape:
                     raise ComponentError("The shape arg of {} ({}) conflicts the shape of its variable arg ({})".
                                          format(self.name, self.size, np.array(variable).shape))
             # Variable is not specified, so set to array of zeros with specified shape
             else:
                 variable = np.zeros(self.shape)
-
-        # elif isinstance(self.variableClassDefault, Iterable):
-        #     self.size = len(self.variableClassDefault)
 
         # VALIDATE VARIABLE (if not called from assign_params)
 
@@ -1640,14 +1643,13 @@ class Component(object):
         for param_name, param_value in request_set.items():
 
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
-            try:
-                self.paramClassDefaults[param_name]
-            except KeyError:
-                # MODIFIED 11/30/16 NEW:
+            if not param_name in self.paramClassDefaults:
+                # these are always allowable since they are attribs of every component
+                if param_name in {VARIABLE, NAME, PARAMS}:
+                    continue
                 # function is a class, so function_params has not yet been implemented
                 if param_name is FUNCTION_PARAMS and inspect.isclass(self.function):
                     continue
-                # MODIFIED 11/30/16 END
                 raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
 
             # The value of the param is None in paramClassDefaults: suppress type checking
