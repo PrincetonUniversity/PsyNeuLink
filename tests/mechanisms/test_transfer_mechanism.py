@@ -460,9 +460,9 @@ def test_transfer_mech_reduce_fun():
 
 # ------------------------------------------------------------------------------------------------
 # TEST 1
-# rate = 0.8
+# time_constant = 0.8
 
-def test_transfer_mech_time_constant_0_2():
+def test_transfer_mech_time_constant_0_8():
     T = TransferMechanism(name='T',
                           default_input_value=[0, 0, 0, 0],
                           function=Linear(),
@@ -471,3 +471,103 @@ def test_transfer_mech_time_constant_0_2():
                           )
     val = T.execute([1,1,1,1]).tolist()
     assert val == [[0.8, 0.8, 0.8, 0.8]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 2
+# time_constant = 1.0
+
+def test_transfer_mech_time_constant_1_0():
+    T = TransferMechanism(name='T',
+                          default_input_value=[0, 0, 0, 0],
+                          function=Linear(),
+                          time_constant=1.0,
+                          time_scale=TimeScale.TIME_STEP
+                          )
+    val = T.execute([1,1,1,1]).tolist()
+    assert val == [[1.0,1.0,1.0,1.0]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 1
+# time_constant = 0.0
+
+def test_transfer_mech_time_constant_0_0():
+    T = TransferMechanism(name='T',
+                          default_input_value=[0, 0, 0, 0],
+                          function=Linear(),
+                          time_constant=0.0,
+                          time_scale=TimeScale.TIME_STEP
+                          )
+    val = T.execute([1,1,1,1]).tolist()
+    assert val == [[0.0,0.0,0.0,0.0]]
+
+# ------------------------------------------------------------------------------------------------
+
+    # INVALID TIME_CONSTANT PARAMS:
+
+# ------------------------------------------------------------------------------------------------
+# TEST 1
+# time_constant = [0.8,0.8,0.8,0.8]
+
+# *******
+# Should PNL support a time_constant list with a separate value for each input?
+# *******
+def test_transfer_mech_time_constant_0_8_list():
+    with pytest.raises(ComponentError) as error_text:
+        T = TransferMechanism(name='T',
+                              default_input_value=[0, 0, 0, 0],
+                              function=Linear(),
+                              time_constant=[0.8,0.8,0.8,0.8],
+                              time_scale=TimeScale.TIME_STEP
+                              )
+        val = T.execute([1,1,1,1]).tolist()
+    assert "Value of time_constant param" in str(error_text.value) \
+           and "must be a float" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 2
+# time_constant = 2
+
+def test_transfer_mech_time_constant_2():
+    with pytest.raises(TransferError) as error_text:
+        T = TransferMechanism(name='T',
+                              default_input_value=[0, 0, 0, 0],
+                              function=Linear(),
+                              time_constant=2,
+                              time_scale=TimeScale.TIME_STEP
+                              )
+        val = T.execute([1,1,1,1]).tolist()
+    assert "time_constant parameter" in str(error_text.value) \
+           and "must be a float between 0 and 1" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 3
+# time_constant = 1
+
+def test_transfer_mech_time_constant_1():
+    with pytest.raises(TransferError) as error_text:
+        T = TransferMechanism(name='T',
+                              default_input_value=[0, 0, 0, 0],
+                              function=Linear(),
+                              time_constant=1,
+                              time_scale=TimeScale.TIME_STEP
+                              )
+        val = T.execute([1, 1, 1, 1]).tolist()
+    assert "time_constant parameter" in str(error_text.value) \
+           and "must be a float between 0 and 1" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 4
+# time_constant = 1
+
+def test_transfer_mech_time_constant_0():
+    with pytest.raises(TransferError) as error_text:
+        T = TransferMechanism(name='T',
+                              default_input_value=[0, 0, 0, 0],
+                              function=Linear(),
+                              time_constant=0,
+                              time_scale=TimeScale.TIME_STEP
+                              )
+        val = T.execute([1, 1, 1, 1]).tolist()
+    assert "time_constant parameter" in str(error_text.value) \
+           and "must be a float between 0 and 1" in str(error_text.value)
+# ------------------------------------------------------------------------------------------------
