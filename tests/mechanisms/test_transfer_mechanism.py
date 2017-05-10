@@ -5,9 +5,107 @@ from PsyNeuLink.Globals.Keywords import *
 import pytest
 
 
+# ======================================= INPUT TESTS ============================================
+
+        # VALID INPUTS
+
+# ------------------------------------------------------------------------------------------------
+# TEST 1
+# variable = list of ints
+
+def test_transfer_mech_inputs_list_of_ints():
+
+    T = TransferMechanism(name='T',
+                                   default_input_value = [0,0,0,0],
+                                   time_scale=TimeScale.TIME_STEP
+                                   )
+    val = T.execute([10,10,10,10]).tolist()
+    assert val == [[10.0,10.0,10.0,10.0]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 2
+# variable = list of floats
+
+def test_transfer_mech_inputs_list_of_floats():
+
+    T = TransferMechanism(name='T',
+                                   default_input_value = [0,0,0,0],
+                                   time_scale=TimeScale.TIME_STEP
+                                   )
+    val = T.execute([10.0,10.0,10.0,10.0]).tolist()
+    assert val == [[10.0,10.0,10.0,10.0]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 3
+# variable = list of fns
+
+# ******
+# Should transfer mech specifically support taking the output of a PNL function as input & reformat it to make sense?
+# AND/OR Should transfer mech allow functions to be passed in as input and know how to execute them
+# ******
+
+def test_transfer_mech_inputs_list_of_fns():
+
+    T = TransferMechanism(name='T',
+                                   default_input_value = [0,0,0,0],
+                                   time_scale=TimeScale.TIME_STEP
+                                   )
+    val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
+    print(val)
+    assert val == [[np.array([ 0.]), 0.4001572083672233, np.array([ 1.]), 0.7872011523172707]]
+
+# ------------------------------------------------------------------------------------------------
+
+        # INVALID INPUTS
+
+# ------------------------------------------------------------------------------------------------
+
+# TEST 1
+# variable = list of strings
+
+def test_transfer_mech_inputs_list_of_strings():
+    with pytest.raises(UtilitiesError) as error_text:
+        T = TransferMechanism(name='T',
+                                       default_input_value = [0,0,0,0],
+                                       time_scale=TimeScale.TIME_STEP
+                                       )
+        val = T.execute(["one", "two", "three", "four"]).tolist()
+
+    assert "has non-numeric entries" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+
+# TEST 2
+# variable = list of greater length than default input
+
+def test_transfer_mech_inputs_mismatched_with_default():
+    with pytest.raises(MechanismError) as error_text:
+        T = TransferMechanism(name='T',
+                                       default_input_value = [0,0,0,0],
+                                       time_scale=TimeScale.TIME_STEP
+                                       )
+        val = T.execute([1,2,3,4,5]).tolist()
+
+    assert "does not match required length" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+
+# TEST 3
+# variable = list of shorter length than default input
+
+def test_transfer_mech_inputs_mismatched_with_default():
+    with pytest.raises(MechanismError) as error_text:
+        T = TransferMechanism(name='T',
+                                       default_input_value = [0,0,0,0,0,0],
+                                       time_scale=TimeScale.TIME_STEP
+                                       )
+        val = T.execute([1,2,3,4,5]).tolist()
+
+    assert "does not match required length" in str(error_text.value)
+
 # ======================================= NOISE TESTS ============================================
 
-# VALID NOISE:
+        # VALID NOISE:
 
 # ------------------------------------------------------------------------------------------------
 # TEST 1
@@ -93,7 +191,7 @@ def test_transfer_mech_normal_noise():
     assert val == [[0.4001572083672233, 0.9787379841057392, 2.240893199201458, 1.8675579901499675]]
 
 # ------------------------------------------------------------------------------------------------
-# TEST 5
+# TEST 6
 # Noise distribution: Exponential
 
 def test_transfer_mech_exponential_noise():
@@ -109,7 +207,7 @@ def test_transfer_mech_exponential_noise():
     assert val == [[1.2559307629658378, 0.9232231458040688, 0.7872011523172707, 0.5510484910954992]]
 
 # ------------------------------------------------------------------------------------------------
-# TEST 5
+# TEST 7
 # Noise distribution: Uniform
 
 def test_transfer_mech_Uniform_noise():
@@ -125,7 +223,7 @@ def test_transfer_mech_Uniform_noise():
     assert val == [[0.7151893663724195, 0.6027633760716439, 0.5448831829968969, 0.4236547993389047]]
 
 # ------------------------------------------------------------------------------------------------
-# TEST 5
+# TEST 8
 # Noise distribution: Gamma
 
 def test_transfer_mech_Gamma_noise():
@@ -141,7 +239,7 @@ def test_transfer_mech_Gamma_noise():
     assert val == [[1.2559307629658378, 0.9232231458040688, 0.7872011523172707, 0.5510484910954992]]
 
 # ------------------------------------------------------------------------------------------------
-# TEST 5
+# TEST 9
 # Noise distribution: Wald
 
 def test_transfer_mech_Wald_noise():
@@ -158,7 +256,7 @@ def test_transfer_mech_Wald_noise():
 
 # ------------------------------------------------------------------------------------------------
 
-# INVALID NOISE:
+        # INVALID NOISE:
 
 # ------------------------------------------------------------------------------------------------
 
@@ -221,7 +319,7 @@ def test_transfer_mech_mismatched_shape_noise_2():
 
 # ====================================== FUNCTION TESTS ==========================================
 
-# VALID FUNCTIONS:
+        # VALID FUNCTIONS:
 
 # ------------------------------------------------------------------------------------------------
 # TEST 1
@@ -285,7 +383,7 @@ def test_transfer_mech_softmax_fun():
 
 # ------------------------------------------------------------------------------------------------
 
-# INVALID FUNCTIONS:
+        # INVALID FUNCTIONS:
 
 # ------------------------------------------------------------------------------------------------
 # TEST 1
@@ -356,199 +454,20 @@ def test_transfer_mech_reduce_fun():
     assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
 
 
-# ------------------------------------------------------------------------------------------------
+# ======================================= TIME_CONSTANT TESTS ============================================
+
+    # VALID TIME_CONSTANT PARAMS:
 
 # ------------------------------------------------------------------------------------------------
+# TEST 1
+# rate = 0.8
 
-#
-#     my_Transfer_Test3 = TransferMechanism(name='my_Transfer_Test3',
-#                             default_input_value = [0,0,0,0,0],
-#                             function=Logistic(gain=1.0, bias=0.0),
-#                             time_constant = 0.2,
-#                             time_scale=TimeScale.TIME_STEP
-#                             )
-#
-#     print(my_Transfer_Test3.execute([10,20,30,40,50]))
-#
-#     my_Transfer_Test4 = TransferMechanism(name='my_Transfer_Test4',
-#                             default_input_value = [0,0,0,0,0],
-#                             function=Logistic(gain=0.1, bias=0.2),
-#                             time_constant = 0.2,
-#                             noise = [1.0,2.0,3.0,4.0,5.0],
-#                             time_scale=TimeScale.TIME_STEP
-#                             )
-#     print(my_Transfer_Test4.execute([10,20,30,40,50]))
-#
-#     my_Transfer_Test5 = TransferMechanism(name='my_Transfer_Test5',
-#                             default_input_value = [0,0,0,0,0],
-#                             function=Logistic(gain=0.1, bias=0.2),
-#                             time_constant = 0.2,
-#                             noise = [NormalDist().function, UniformDist().function, ExponentialDist().function, WaldDist().function, GammaDist().function ],
-#                             time_scale=TimeScale.TIME_STEP
-#                             )
-#     print(my_Transfer_Test5.execute([10,20,30,40,50]))
-#
-#     my_Transfer_Test6 = TransferMechanism(name='my_Transfer_Test6',
-#                             default_input_value = [0,0,0,0,0],
-#                             function=Logistic(gain=0.1, bias=0.2),
-#                             time_constant = 0.2,
-#                             noise = NormalDist().function,
-#                             time_scale=TimeScale.TIME_STEP
-#                             )
-#     print(my_Transfer_Test6.execute([10,10,10,10,10]))
-#
-#     my_Transfer_Test8 = TransferMechanism(name='my_Transfer_Test8',
-#                             default_input_value = [0,0,0,0,0],
-#                             function=Logistic(gain=0.1, bias=0.2),
-#                             time_constant = 0.2,
-#                             noise = 5.0,
-#                             time_scale=TimeScale.TIME_STEP
-#                             )
-#     print(my_Transfer_Test8.execute([10,10,10,10,10]))
-#
-#     my_Transfer_Test9 = TransferMechanism(name='my_Transfer_Test9',
-#                             default_input_value = 0.0,
-#                             function=Logistic(gain=0.1, bias=0.2),
-#                             time_constant = 0.2,
-#                             noise = 5.0,
-#                             time_scale=TimeScale.TIME_STEP
-#                             )
-#     print(my_Transfer_Test9.execute(1.0))
-#
-#     try:
-#         my_Transfer_Test10 = TransferMechanism(name='my_Transfer_Test10',
-#                                 default_input_value = 0.0,
-#                                 function=Logistic(gain=0.1, bias=0.2),
-#                                 time_constant = 0.2,
-#                                 noise = [5.0, 5.0],
-#                                 time_scale=TimeScale.TIME_STEP
-#                                 )
-#         print(my_Transfer_Test10.execute(1.0))
-#     except MechanismError as error_text:
-#
-#     try:
-#         my_Transfer_Test11 = TransferMechanism(name='my_Transfer_Test11',
-#                                 default_input_value = 0.0,
-#                                 function=Logistic(gain=0.1, bias=0.2),
-#                                 time_constant = 0.2,
-#                                 noise = [NormalDist().function, UniformDist().function],
-#                                 time_scale=TimeScale.TIME_STEP
-#                                 )
-#         print(my_Transfer_Test11.execute(1.0))
-#     except MechanismError as error_text:
-# =
-#     try:
-#         my_Transfer_Test12 = TransferMechanism(name='my_Transfer_Test12',
-#                                 default_input_value = [0, 0, 0],
-#                                 function=Logistic(gain=0.1, bias=0.2),
-#                                 time_constant = 0.2,
-#                                 noise = [1,2,3],
-#                                 time_scale=TimeScale.TIME_STEP
-#                                 )
-#         print(my_Transfer_Test12.execute([1,1,1]))
-#     except MechanismError as error_text:
-#     my_Transfer_Test13 = TransferMechanism(name='my_Transfer_Test13',
-#                             default_input_value = 0.0,
-#                             function=Logistic(gain=0.1, bias=0.2),
-#                             time_constant = 0.2,
-#                             noise = [1.0],
-#                             time_scale=TimeScale.TIME_STEP
-#                             )
-#     print(my_Transfer_Test13.execute(1.0))
-#     print("Passed")
-#
-#     print("")
-#
-#     print("-------------------------------------------------")
-#
-#     print("Transfer Test #14: Execute Transfer with noise= list of len 1 function, input = float ")
-#     my_Transfer_Test14 = TransferMechanism(name='my_Transfer_Test14',
-#                             default_input_value = 0.0,
-#                             function=Logistic(gain=0.1, bias=0.2),
-#                             time_constant = 0.2,
-#                             noise = [NormalDist().function],
-#                             time_scale=TimeScale.TIME_STEP
-#                             )
-#     print(my_Transfer_Test14.execute(1.0))
-#
-# if run_distribution_test:
-#     print("Distribution Test #1: Execute Transfer with noise = WaldDist(scale = 2.0, mean = 2.0).function")
-#
-#
-#     my_Transfer = TransferMechanism(name='my_Transfer',
-#                            default_input_value = [0,0],
-#                            function=Logistic(gain=0.1, bias=0.2),
-#                            noise=WaldDist(scale = 2.0, mean = 2.0).function,
-#                            time_constant = 0.1,
-#                            time_scale=TimeScale.TIME_STEP
-#                            )
-#     my_Transfer.execute([1,1])
-#
-#     print("Passed")
-#     print("")
-#
-#     print("-------------------------------------------------")
-#
-#     print("Distribution Test #2: Execute Transfer with noise = GammaDist(scale = 1.0, shape = 1.0).function")
-#
-#
-#     my_Transfer2 = TransferMechanism(name='my_Transfer2',
-#                            default_input_value = [0,0],
-#                            function=Logistic(gain=0.1, bias=0.2),
-#                            noise=GammaDist(scale = 1.0, shape = 1.0).function,
-#                            time_constant = 0.1,
-#                            time_scale=TimeScale.TIME_STEP
-#                            )
-#     my_Transfer2.execute([1,1])
-#
-#     print("Passed")
-#     print("")
-#
-#     print("-------------------------------------------------")
-#
-#     print("Distribution Test #3: Execute Transfer with noise = UniformDist(low = 2.0, high = 3.0).function")
-#
-#     my_Transfer3 = TransferMechanism(name='my_Transfer3',
-#                            default_input_value = [0,0],
-#                            function=Logistic(gain=0.1, bias=0.2),
-#                            noise=UniformDist(low = 2.0, high = 3.0).function,
-#                            time_constant = 0.1,
-#                            time_scale=TimeScale.TIME_STEP
-#                            )
-#     my_Transfer3.execute([1,1])
-#
-#     print("Passed")
-#     print("")
-#
-#     print("-------------------------------------------------")
-#
-#     print("Distribution Test #4: Execute Transfer with noise = ExponentialDist(beta=1.0).function")
-#
-#     my_Transfer4 = TransferMechanism(name='my_Transfer4',
-#                            default_input_value = [0,0],
-#                            function=Logistic(gain=0.1, bias=0.2),
-#                            noise=ExponentialDist(beta=1.0).function,
-#                            time_constant = 0.1,
-#                            time_scale=TimeScale.TIME_STEP
-#                            )
-#     my_Transfer4.execute([1,1])
-#
-#     print("Passed")
-#     print("")
-#
-#     print("-------------------------------------------------")
-#
-#     print("Distribution Test #5: Execute Transfer with noise = NormalDist(mean=1.0, standard_dev = 2.0).function")
-#
-#     my_Transfer5 = TransferMechanism(name='my_Transfer5',
-#                            default_input_value = [0,0],
-#                            function=Logistic(gain=0.1, bias=0.2),
-#                            noise=NormalDist(mean=1.0, standard_dev = 2.0).function,
-#                            time_constant = 0.1,
-#                            time_scale=TimeScale.TIME_STEP
-#                            )
-#     my_Transfer5.execute([1,1])
-#
-#     print("Passed")
-#     print("")
-#
+def test_transfer_mech_time_constant_0_2():
+    T = TransferMechanism(name='T',
+                          default_input_value=[0, 0, 0, 0],
+                          function=Linear(),
+                          time_constant=0.8,
+                          time_scale=TimeScale.TIME_STEP
+                          )
+    val = T.execute([1,1,1,1]).tolist()
+    assert val == [[0.8, 0.8, 0.8, 0.8]]
