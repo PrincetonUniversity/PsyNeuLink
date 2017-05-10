@@ -762,7 +762,7 @@ class WhenFinishedAny(Condition):
                     raise ConditionError('WhenFinishedAny: Unsupported dependency type: {0}; ({1})'.format(type(dependency), e))
             return False
 
-        super().__init__(None, *dependencies, func)
+        super().__init__(None, func, *dependencies)
 
 # dynamic condition
 class WhenFinishedAll(Condition):
