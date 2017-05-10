@@ -228,9 +228,25 @@ class TestStroop:
             call_before_trial=print_header,
             call_after_trial=show_target,
         )
-        # import code
-        # code.interact(local=locals())
 
+        results_list = []
+        for elem in s.results:
+            for nested_elem in elem:
+                nested_elem = nested_elem.tolist()
+                try:
+                    iter(nested_elem)
+                except TypeError:
+                    nested_elem = [nested_elem]
+                results_list.extend(nested_elem)
+
+        expected_results_list = [
+            0.50899214,  0.54318254,
+            0.5260873375534925,
+            0.00029224593876143865,
+            0.51044657,  0.5483048,
+            0.5293756831511783,
+            0.0003583114284782829,
+        ]
 
         objective_response = s.mechanisms[3]
         objective_hidden = s.mechanisms[7]
@@ -254,18 +270,7 @@ class TestStroop:
                 [0.01462766, 1.01351195],
                 [2.00220713, 3.00203878]
             ])),
-            # (results, [
-            #     [
-            #         np.array([ 0.50899214,  0.54318254]),
-            #         np.array(0.5260873375534925),
-            #         np.array(0.00029224593876143865)
-            #     ],
-            #     [
-            #         np.array([ 0.51044657,  0.5483048 ]),
-            #         np.array(0.5293756831511783),
-            #         np.array(0.0003583114284782829)]
-            #     ]
-            # ),
+            (results_list, expected_results_list),
         ]
 
         for i in range(len(expected_output)):
