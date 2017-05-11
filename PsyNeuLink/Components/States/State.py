@@ -2088,6 +2088,8 @@ def _parse_state_spec(owner, state_spec, default_name, default_value, projection
 
     # tuple, so call for (and return result of) parse of first item, and add projection spec to STATE_PROJECTIONS
     elif isinstance(state_spec, tuple):
+        # return _parse_state_spec(owner, state_spec[0], default_name, default_value, projections=state_spec[1])
+        # return _parse_state_spec(owner, state_spec[0], default_name, default_value, projections=state_spec[1])
         return _parse_state_spec(owner, state_spec[0], default_name, default_value, projections=state_spec[1])
 
     # already a dict, so add any missing params and return dict
@@ -2113,7 +2115,10 @@ def _parse_state_spec(owner, state_spec, default_name, default_value, projection
                   VARIABLE: variable,
                   PARAMS: params}
 
-    if projections:
-        state_dict[STATE_PROJECTIONS] = projections
+    # MODIFIED 5/11/17 OLD:
+    # [COMMENTING THIS OUT SUPPRESSES INSTANTIATION OF PROJECTIONS IN State._instantiate_projections_to_state]
+    # if projections:
+    #     state_dict[STATE_PROJECTIONS] = projections
+    # MODIFIED 5/11/17 END
 
     return state_dict
