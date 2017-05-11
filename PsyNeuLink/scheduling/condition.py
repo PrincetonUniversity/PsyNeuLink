@@ -1,62 +1,10 @@
-import logging
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
 
-from PsyNeuLink.Globals.TimeScale import TimeScale
-
-logger = logging.getLogger(__name__)
-
-class ConditionError(Exception):
-     def __init__(self, error_value):
-        self.error_value = error_value
-
-     def __str__(self):
-        return repr(self.error_value)
-
-class ConditionSet(object):
-    def __init__(self, scheduler=None, conditions=None):
-        """
-        :param self:
-        :param scheduler: a :keyword:`Scheduler` that these conditions are associated with, which maintains any state necessary for these conditions
-        :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to :keyword:`iterable`s of :keyword:`Condition`s, can be added later with :keyword:`add_condition`
-        """
-        # even though conditions may be added in arbitrary iterables, they are stored internally as dicts of sets
-        self.conditions = conditions if conditions is not None else {}
-        self.scheduler = scheduler
-
-    def __contains__(self, item):
-        return item in self.conditions
-
-    @property
-    def scheduler(self):
-        return self._scheduler
-
-    @scheduler.setter
-    def scheduler(self, value):
-        logger.debug('ConditionSet ({0}) setting scheduler to {1}'.format(type(self).__name__, value))
-        self._scheduler = value
-
-        for owner, cond in self.conditions.items():
-            cond.scheduler = value
-
-    def add_condition(self, owner, condition):
-        """
-        :param: self:
-        :param owner: the :keyword:`Component` that is dependent on the :param conditions:
-        :param conditions: a :keyword:`Condition` (including All or Any)
-        """
-        logger.debug('add_condition: Setting scheduler of {0}, (owner {2}) to self.scheduler ({1})'.format(condition, self.scheduler, owner))
-        condition.owner = owner
-        condition.scheduler = self.scheduler
-        self.conditions[owner] = condition
-
-    def add_condition_set(self, conditions):
-        """
-        :param: self:
-        :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to :keyword:`Condition`s, can be added later with :keyword:`add_condition`
-        """
-        for owner in conditions:
-            conditions[owner].owner = owner
-            conditions[owner].scheduler = self.scheduler
-            self.conditions[owner] = conditions[owner]
 
 # ********************************************* Condition ***************************************************************
 
@@ -64,13 +12,16 @@ class ConditionSet(object):
 
 Overview
 --------
+
 `Condition`<Condition>s represent any conditions that can be satisfied. Each Condition is associated with an owner (a
 `Component`<Component> that the Condition "belongs" to, relevant for relative conditions such as `EveryNCalls`), and
 a `Scheduler`<Scheduler>, which maintains most of the data required to test satisfaction. These properties can usually
 be determined automatically based on the context in which Conditions are created.
 
+
 Creating new Conditions
 -----------------------
+
 Each Condition must
     - be a subclass of `Condition`<Condition>
     - pass `dependencies` as the first argument to the __init__ function of Condition
@@ -98,7 +49,85 @@ Hint:
 
 """
 
+import logging
+
+from PsyNeuLink.Globals.TimeScale import TimeScale
+
+logger = logging.getLogger(__name__)
+
+class ConditionError(Exception):
+     def __init__(self, error_value):
+        self.error_value = error_value
+
+     def __str__(self):
+        return repr(self.error_value)
+
+class ConditionSet(object):
+    """
+    An object used in conjunction with `Scheduler`<Scheduler> to store all the associated conditions with their owners.
+    """
+    def __init__(self, scheduler=None, conditions=None):
+        """
+        :param self:
+        :param scheduler: a :keyword:`Scheduler` that these conditions are associated with, which maintains any state necessary for these conditions
+        :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to :keyword:`iterable`s of :keyword:`Condition`s, can be added later with :keyword:`add_condition`
+        """
+        self.conditions = conditions if conditions is not None else {}
+        self.scheduler = scheduler
+
+    def __contains__(self, item):
+        return item in self.conditions
+
+    @property
+    def scheduler(self):
+        return self._scheduler
+
+    @scheduler.setter
+    def scheduler(self, value):
+        logger.debug('ConditionSet ({0}) setting scheduler to {1}'.format(type(self).__name__, value))
+        self._scheduler = value
+
+        for owner, cond in self.conditions.items():
+            cond.scheduler = value
+
+    def add_condition(self, owner, condition):
+        """
+        :param self:
+        :param owner: the :keyword:`Component` that is dependent on the :param conditions:
+        :param conditions: a :keyword:`Condition` (including All or Any)
+        """
+        logger.debug('add_condition: Setting scheduler of {0}, (owner {2}) to self.scheduler ({1})'.format(condition, self.scheduler, owner))
+        condition.owner = owner
+        condition.scheduler = self.scheduler
+        self.conditions[owner] = condition
+
+    def add_condition_set(self, conditions):
+        """
+        :param self:
+        :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to :keyword:`Condition`s, can be added later with :keyword:`add_condition`
+        """
+        for owner in conditions:
+            conditions[owner].owner = owner
+            conditions[owner].scheduler = self.scheduler
+            self.conditions[owner] = conditions[owner]
+
 class Condition(object):
+    """
+    An object used in conjunction with `Scheduler`<Scheduler> to specify a running pattern for PNL objects.
+    Each Condition will be satisfied based on some criteria.
+
+    Properties:
+        scheduler (Scheduler): a Scheduler object that this condition is associated with. This condition will
+            use scheduler's state for its satisfaction checks
+        owner (Component): the PNL object this condition is associated with.
+
+    Attributes:
+        dependencies: one or more PNL objects over which func is evaluated to determine satisfaction of the :keyword:`Condition`
+            user must ensure that dependencies are suitable as func parameters
+        func: parameters over which func is evaluated to determine satisfaction of the :keyword:`Condition`
+        args: additional formal arguments passed to func
+        kwargs: additional keyword arguments passed to func
+    """
     def __init__(self, dependencies, func, *args, **kwargs):
         """
         :param self:
@@ -207,9 +236,10 @@ class All(Condition):
         - All args are satisfied
 
     Notes:
-        To initialize with a list (for example), conditions = [AfterNCalls(mechanism, 5) for mechanism in mechanism_list], unpack the list to supply its members as args
-
-        composite_condition = All(*conditions)
+        To initialize with a list (for example),
+            conditions = [AfterNCalls(mechanism, 5) for mechanism in mechanism_list]
+        unpack the list to supply its members as args
+            composite_condition = All(*conditions)
     """
     def __init__(self, *args):
         """
