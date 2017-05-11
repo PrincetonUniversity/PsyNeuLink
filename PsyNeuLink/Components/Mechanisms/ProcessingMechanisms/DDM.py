@@ -834,7 +834,7 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
             if self.function_params['integration_type'] == 'diffusion':
-                result = self.function(self.inputState.value, context=context)
+                result = self.function(self.variable, context=context)
                 if INITIALIZING not in context:
                     logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
                 if abs(result) >= self.threshold:
