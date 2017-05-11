@@ -1,14 +1,16 @@
-Processing Mechanisms
-=====================
+Processing Mechanism
+====================
 
 .. toctree:: 
    :maxdepth: 1
 
-   TransferMechanism
    IntegratorMechanism
    DDM
+   TransferMechanism
+   RecurrentTransferMechanism
+   LCA
    ObjectiveMechanism
 
-.. automodule:: ProcessingMechanism
+.. automodule:: ProcessingMechansms.ProcessingMechanism
    :members:
    :exclude-members: ProcessingMechanism_Base, MechanismTuple, MechanismList, random

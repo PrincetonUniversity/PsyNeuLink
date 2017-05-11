@@ -177,6 +177,8 @@ is assigned as follows:
     then a `ComparatorMechanism` is created, and its `primary outputState <OutputState_Primary>` is assigned as the
     `sender <Projection.sender>`.  Otherwise, a `WeightedErrorMechanism` is created and its
     `primary outputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
+    
+    
 
     
 
