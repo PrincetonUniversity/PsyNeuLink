@@ -206,6 +206,15 @@
 #                   input_values and output_values:  lists of values, but each value may be an np.ndarray
 #                   XXput_states.values_as_lists: lists of values, each of which has been converted to a list
 #                   Only appear in user_params if specified in arg of constructor
+
+# FIX:   In LearningAuxiliary:
+#                  # input_states=[{NAME:SAMPLE,
+#                  #                VARIABLE:sample_input},
+#                  #               {NAME:TARGET,
+#                  #                VARIABLE:target_input}],
+#                  input_states=[{SAMPLE:sample_input},
+#                                {TARGET:target_input}],
+
 # ------------------------------------------------------------------------------------------------------------------
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
