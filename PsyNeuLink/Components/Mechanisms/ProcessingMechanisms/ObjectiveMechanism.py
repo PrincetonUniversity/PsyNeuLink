@@ -586,7 +586,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
             # Parse input_state to determine its specifications and assign values from monitored_values
             #    to any missing projections, including any projections requested.
-            self.input_states[i] = _parse_state_spec(self,
+            self._input_states[i] = _parse_state_spec(self,
                                                      state_spec=input_state,
                                                      default_name=monitored_values[i][NAME],
                                                      default_value=monitored_values[i][VALUE],
