@@ -2863,53 +2863,57 @@ class Integrator(
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
     def _validate_noise(self, noise):
-        # Noise is a list or array
-        if isinstance(noise, (np.ndarray, list)):
-            # Variable is a list/array
-            if isinstance(self.variable, (np.ndarray, list)):
-                if len(noise) != np.array(self.variable).size:
-                    try:
-                        formatted_noise = list(map(lambda x: x.__qualname__, noise))
-                    except AttributeError:
-                        formatted_noise = noise
-                    raise FunctionError("The length ({}) of the array specified for the noise parameter ({}) of {} "
-                                        "must match the length ({}) of the default input ({}). If noise is specified as"
-                                        " an array or list, it must be of the same size as the input."
-                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
-                                                self.variable))
-                else:
-                    # Noise is a list or array of functions
-                    if callable(noise[0]):
-                        self.noise_function = True
-                    # Noise is a list or array of floats
-                    elif isinstance(noise[0], float):
-                        self.noise_function = False
-                    # Noise is a list or array of invalid elements
-                    else:
-                        raise FunctionError("The elements of a noise list or array must be floats or functions.")
-            # Variable is not a list/array
-            else:
-                raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
-                                    "default input value is also a list or array.".format(noise, self.name))
-
-        elif callable(noise):
-            self.noise_function = True
-            if isinstance(self.variable, (np.ndarray, list)):
-                new_noise = []
-                for i in self.variable:
-                    new_noise.append(self.noise)
-                noise = new_noise
-        elif isinstance(noise, float):
-            self.noise_function = False
-        else:
-            raise FunctionError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
-                                "array or list of functions.".format(noise, self.name))
-
-        if self.noise_function and self.integration_type == "diffusion":
-
-            raise FunctionError("Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
+        self.noise_function = False
+        if self.integration_type == "diffusion":
+            if not isinstance(noise, float):
+                raise FunctionError("Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
                                 " float. Noise parameter is used to construct the standard DDM noise distribution"
                                 .format(self.name))
+
+        else:
+
+            # Noise is a list or array
+            if isinstance(noise, (np.ndarray, list)):
+                # Variable is a list/array
+                if isinstance(self.variable, (np.ndarray, list)):
+                    if len(noise) != np.array(self.variable).size:
+                        try:
+                            formatted_noise = list(map(lambda x: x.__qualname__, noise))
+                        except AttributeError:
+                            formatted_noise = noise
+                        raise FunctionError("The length ({}) of the array specified for the noise parameter ({}) of {} "
+                                            "must match the length ({}) of the default input ({}). If noise is specified as"
+                                            " an array or list, it must be of the same size as the input."
+                                            .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
+                                                    self.variable))
+                    else:
+                        # Noise is a list or array of functions
+                        if callable(noise[0]):
+                            self.noise_function = True
+                        # Noise is a list or array of floats
+                        elif isinstance(noise[0], float):
+                            self.noise_function = False
+                        # Noise is a list or array of invalid elements
+                        else:
+                            raise FunctionError("The elements of a noise list or array must be floats or functions.")
+                # Variable is not a list/array
+                else:
+                    raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
+                                        "default input value is also a list or array.".format(noise, self.name))
+
+            elif callable(noise):
+                self.noise_function = True
+                if isinstance(self.variable, (np.ndarray, list)):
+                    new_noise = []
+                    for i in self.variable:
+                        new_noise.append(self.noise)
+                    noise = new_noise
+            elif isinstance(noise, float):
+                self.noise_function = False
+            else:
+                raise FunctionError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
+                                    "array or list of functions.".format(noise, self.name))
+
 
     def _validate_initializer(self, initializer):
         # Initializer is a list or array
@@ -3998,7 +4002,7 @@ class GammaDist(DistributionFunction):
     """
     GammaDist(\
              scale=1.0,\
-             shape=1.0,\
+             dist_shape=1.0,\
              params=None,\
              owner=None,\
              prefs=None\
@@ -4012,10 +4016,10 @@ class GammaDist(DistributionFunction):
     ---------
 
     scale : float : default 1.0
-        The shape of the gamma distribution. Should be greater than zero.
-
-    shape : float : default 1.0
         The scale of the gamma distribution. Should be greater than zero.
+
+    dist_shape : float : default 1.0
+        The shape of the gamma distribution. Should be greater than zero.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -4034,9 +4038,9 @@ class GammaDist(DistributionFunction):
     ----------
 
     scale : float : default 1.0
-        The shape of the gamma distribution. Should be greater than zero.
+        The dist_shape of the gamma distribution. Should be greater than zero.
 
-    shape : float : default 1.0
+    dist_shape : float : default 1.0
         The scale of the gamma distribution. Should be greater than zero.
 
     params : Optional[Dict[param keyword, param value]]
@@ -4064,14 +4068,14 @@ class GammaDist(DistributionFunction):
     def __init__(self,
                  variable_default=variableClassDefault,
                  scale=1.0,
-                 shape=1.0,
+                 dist_shape=1.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
                  context=componentName + INITIALIZING):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(scale=scale,
-                                                  shape=shape,
+                                                  dist_shape=dist_shape,
                                                   params=params)
 
         super().__init__(variable_default=variable_default,
@@ -4091,9 +4095,9 @@ class GammaDist(DistributionFunction):
         self._check_args(variable=variable, params=params, context=context)
 
         scale = self.paramsCurrent[SCALE]
-        shape = self.paramsCurrent[SHAPE]
+        dist_shape = self.paramsCurrent[DIST_SHAPE]
 
-        result = np.random.gamma(shape, scale)
+        result = np.random.gamma(dist_shape, scale)
 
         return result
 
