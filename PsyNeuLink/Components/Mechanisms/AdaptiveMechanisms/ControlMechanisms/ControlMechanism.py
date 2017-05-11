@@ -231,8 +231,6 @@ class ControlMechanism_Base(Mechanism_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # self.system = None
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(monitor_for_control=monitor_for_control,
                                                   function=function,
@@ -352,14 +350,14 @@ class ControlMechanism_Base(Mechanism_Base):
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
         state = _instantiate_state(owner=self,
-                                            state_type=ControlSignal,
-                                            state_name=output_state_name,
-                                            state_spec=defaultControlAllocation,
-                                            state_params=params,
-                                            constraint_value=output_state_value,
-                                            constraint_value_name='Default control allocation',
-                                            # constraint_output_state_index=output_item_output_state_index,
-                                            context=context)
+                                   state_type=ControlSignal,
+                                   state_name=output_state_name,
+                                   state_spec=defaultControlAllocation,
+                                   state_params=params,
+                                   constraint_value=output_state_value,
+                                   constraint_value_name='Default control allocation',
+                                   # constraint_output_state_index=output_item_output_state_index,
+                                   context=context)
 
         # Assign outputState as ControlProjection's sender
         if projection.value is DEFERRED_INITIALIZATION:
@@ -430,7 +428,6 @@ class ControlMechanism_Base(Mechanism_Base):
                 #     monitored_state_index])
                 # weight = \
                 #     np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].__self__.weights[monitored_state_index])
-
                 # MODIFIED 1/9/16 NEW:
                 weight = self.monitor_for_control_weights_and_exponents[monitored_state_index][0]
                 exponent = self.monitor_for_control_weights_and_exponents[monitored_state_index][1]

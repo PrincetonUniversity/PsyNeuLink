@@ -794,8 +794,8 @@ class Mechanism_Base(Mechanism):
     # Category specific defaults:
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
-        INPUT_STATES:[PRIMARY],
-        OUTPUT_STATES:[PRIMARY],
+        INPUT_STATES:None,
+        OUTPUT_STATES:None,
         MONITOR_FOR_CONTROL: NotImplemented,  # This has to be here to "register" it as a valid param for the class
                                               # but is set to NotImplemented so that it is ignored if it is not
                                               # assigned;  setting it to None actively disallows assignment
@@ -944,44 +944,6 @@ class Mechanism_Base(Mechanism):
         self.processes = {}
         self.systems = {}
 
-    def plot(self,x_range = None):
-        """
-        Generate a plot of the mechanism's function using the specified parameter values. See (see
-        `DDM.plot <DDM.plot>` for details of the animated DDM plot).
-
-        Arguments
-        ---------
-
-        x_range: List
-             specify the range over which the function should be plotted. x_range must be provides as a list containing
-             two floats: lowest value of x and highest value of x.  Default values depend on the mechanism's function.
-
-            - Logistic Function: default x_range = [-5.0, 5.0]
-            - Exponential Function: default x_range = [0.1, 5.0]
-            - All Other Functions: default x_range = [-10.0, 10.0]
-
-
-
-        Returns
-        -------
-        mechanism's function plot : Matplotlib window
-            Matplotlib window of the mechanism's function plotted with specified parameters over the specified x_range
-
-        """
-
-        import matplotlib.pyplot as plt
-
-        if not x_range:
-            if "Logistic" in str(self.function):
-                x_range= [-5.0, 5.0]
-            elif "Exponential" in str(self.function):
-                x_range = [0.1, 5.0]
-            else:
-                x_range = [-10.0, 10.0]
-        x_space = np.linspace(x_range[0],x_range[1])
-        plt.plot(x_space, self.function(x_space), lw=3.0, c='r')
-        plt.show()
-
     def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
@@ -1011,11 +973,12 @@ class Mechanism_Base(Mechanism):
 
         # INPUT_STATES:
 
-        # Check if input_states is in params (i.e., was specified in arg of contructor)
+        # Check if input_states is in params (i.e., was specified in arg of constructor)
         if not INPUT_STATES in params or params[INPUT_STATES] is None:
+            # If it wasn't, assign from paramClassDefaults (even if it is None) to force creation of input_states attrib
             params[INPUT_STATES] = self.paramClassDefaults[INPUT_STATES]
         # Convert input_states_spec to list if it is not one
-        if not isinstance(params[INPUT_STATES], (list, dict)):
+        if params[INPUT_STATES] is not None and not isinstance(params[INPUT_STATES], (list, dict)):
             params[INPUT_STATES] = [params[INPUT_STATES]]
         self.user_params.__additem__(INPUT_STATES, params[INPUT_STATES])
 
@@ -1025,7 +988,7 @@ class Mechanism_Base(Mechanism):
         if not OUTPUT_STATES in params or params[OUTPUT_STATES] is None:
             params[OUTPUT_STATES] = self.paramClassDefaults[OUTPUT_STATES]
         # Convert OUTPUT_STATES_spec to list if it is not one
-        if not isinstance(params[OUTPUT_STATES], list):
+        if params[OUTPUT_STATES] is not None and not isinstance(params[OUTPUT_STATES], (list, dict)):
             params[OUTPUT_STATES] = [params[OUTPUT_STATES]]
         self.user_params.__additem__(OUTPUT_STATES, params[OUTPUT_STATES])
 
@@ -1146,24 +1109,65 @@ class Mechanism_Base(Mechanism):
 
         #region VALIDATE INPUT STATE(S)
 
-        # MODIFIED 6/10/16
-        # FIX: SHOULD CHECK LENGTH OF INPUT_STATES PARAM (LIST OF NAMES OR SPECIFICATION DICT) AGAINST LENGTH OF
-        # FIX: self.variable 2D ARRAY AND COMPARE variable SPECS, IF PROVIDED, WITH CORRESPONDING ELEMENTS OF
-        # FIX: self.variable 2D ARRAY
-        try:
+        # # MODIFIED 6/10/16
+        # # FIX: SHOULD CHECK LENGTH OF INPUT_STATES PARAM (LIST OF NAMES OR SPECIFICATION DICT) AGAINST LENGTH OF
+        # # FIX: self.variable 2D ARRAY AND COMPARE variable SPECS, IF PROVIDED, WITH CORRESPONDING ELEMENTS OF
+        # # FIX: self.variable 2D ARRAY
+        # try:
+        #     param_value = params[INPUT_STATES]
+        #
+        # except KeyError:
+        #     if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+        #         pass
+        #     else:
+        #         # INPUT_STATES not specified:
+        #         # - set to None, so that it is set to default (self.variable) in instantiate_inputState
+        #         # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
+        #         params[INPUT_STATES] = None
+        #
+        # else:
+        #     # INPUT_STATES is specified, so validate:
+        #     # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_inputState)
+        #     if not isinstance(param_value, (list, OrderedDict, ContentAddressableList)):
+        #         param_value = [param_value]
+        #     # Validate each item in the list or OrderedDict
+        #     # Note:
+        #     # * number of input_states is validated against length of the owner mechanism's execute method variable (EMV)
+        #     #     in instantiate_inputState, where an inputState is assigned to each item (value) of the EMV
+        #     i = 0
+        #     for key, item in param_value if isinstance(param_value, dict) else enumerate(param_value):
+        #         from PsyNeuLink.Components.States.InputState import InputState
+        #         # If not valid...
+        #         if not ((isclass(item) and (issubclass(item, InputState) or # InputState class ref
+        #                                         issubclass(item, Projection))) or    # Project class ref
+        #                     isinstance(item, InputState) or      # InputState object
+        #                     isinstance(item, dict) or                     # InputState specification dict
+        #                     isinstance(item, ParamValueProjection) or     # ParamValueProjection tuple
+        #                     isinstance(item, str) or                      # Name (to be used as key in input_states dict)
+        #                     iscompatible(item, **{kwCompatibilityNumeric: True})):   # value
+        #             # set to None, so it is set to default (self.variable) in instantiate_inputState
+        #             param_value[key] = None
+        #             if self.prefs.verbosePref:
+        #                 print("Item {0} of {1} param ({2}) in {3} is not a"
+        #                       " InputState, specification dict or value, nor a list of dict of them; "
+        #                       "variable ({4}) of execute method for {5} will be used"
+        #                       " to create a default outputState for {3}".
+        #                       format(i,
+        #                              INPUT_STATES,
+        #                              param_value,
+        #                              self.__class__.__name__,
+        #                              self.variable,
+        #                              self.execute.__self__.name))
+        #         i += 1
+        #     params[INPUT_STATES] = param_value
+        #
+
+        # MODIFIED 5/10/17 NEW:
+        # INPUT_STATES is specified, so validate:
+        if INPUT_STATES in params and params[INPUT_STATES] is not None:
+
             param_value = params[INPUT_STATES]
 
-        except KeyError:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
-                pass
-            else:
-                # INPUT_STATES not specified:
-                # - set to None, so that it is set to default (self.variable) in instantiate_inputState
-                # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
-                params[INPUT_STATES] = None
-
-        else:
-            # INPUT_STATES is specified, so validate:
             # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_inputState)
             if not isinstance(param_value, (list, OrderedDict, ContentAddressableList)):
                 param_value = [param_value]
@@ -1197,6 +1201,21 @@ class Mechanism_Base(Mechanism):
                                      self.execute.__self__.name))
                 i += 1
             params[INPUT_STATES] = param_value
+
+        # INPUT_STATES is not specified
+        else:
+            # pass if call is from assign_params (i.e., not from an init method)
+            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+                pass
+            else:
+                # INPUT_STATES not specified:
+                # - set to None, so that it is set to default (self.variable) in instantiate_inputState
+                # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
+                params[INPUT_STATES] = None
+        # MODIFIED 5/10/17 END
+
+
+
         #endregion
 
         #region VALIDATE EXECUTE METHOD PARAMS
@@ -1242,23 +1261,59 @@ class Mechanism_Base(Mechanism):
         #region VALIDATE OUTPUT STATE(S)
 
         # FIX: MAKE SURE # OF OUTPUTS == LENGTH OF OUTPUT OF EXECUTE FUNCTION / SELF.VALUE
-        try:
+        # # MODIFIED 5/10/17 OLD:
+        # try:
+        #     param_value = params[OUTPUT_STATES]
+        #
+        # except KeyError:
+        #     if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+        #         pass
+        #     else:
+        #         # OUTPUT_STATES not specified:
+        #         # - set to None, so that it is set to default (self.value) in instantiate_outputState
+        #         # Notes:
+        #         # * if in VERBOSE mode, warning will be issued in instantiate_outputState, where default value is known
+        #         # * number of outputStates is validated against length of owner mechanism's execute method output (EMO)
+        #         #     in instantiate_outputState, where an outputState is assigned to each item (value) of the EMO
+        #         params[OUTPUT_STATES] = None
+        #
+        # else:
+        #     # OUTPUT_STATES is specified, so validate:
+        #     # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_outputState)
+        #     if not isinstance(param_value, (ContentAddressableList, list, OrderedDict)):
+        #         param_value = [param_value]
+        #     # Validate each item in the list or OrderedDict
+        #     i = 0
+        #     for key, item in param_value if isinstance(param_value, dict) else enumerate(param_value):
+        #         from PsyNeuLink.Components.States.OutputState import OutputState
+        #         # If not valid...
+        #         if not ((isclass(item) and issubclass(item, OutputState)) or # OutputState class ref
+        #                     isinstance(item, OutputState) or   # OutputState object
+        #                     isinstance(item, dict) or                   # OutputState specification dict
+        #                     isinstance(item, str) or                    # Name (to be used as key in outputStates dict)
+        #                     iscompatible(item, **{kwCompatibilityNumeric: True})):  # value
+        #             # set to None, so it is set to default (self.value) in instantiate_outputState
+        #             param_value[key] = None
+        #             if self.prefs.verbosePref:
+        #                 print("Item {0} of {1} param ({2}) in {3} is not a"
+        #                       " OutputState, specification dict or value, nor a list of dict of them; "
+        #                       "output ({4}) of execute method for {5} will be used"
+        #                       " to create a default outputState for {3}".
+        #                       format(i,
+        #                              OUTPUT_STATES,
+        #                              param_value,
+        #                              self.__class__.__name__,
+        #                              self.value,
+        #                              self.execute.__self__.name))
+        #         i += 1
+        #     params[OUTPUT_STATES] = param_value
+        # MODIFIED 5/10/17 NEW:
+
+        # OUTPUT_STATES is specified, so validate:
+        if OUTPUT_STATES in params and params[OUTPUT_STATES] is not None:
+
             param_value = params[OUTPUT_STATES]
 
-        except KeyError:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
-                pass
-            else:
-                # OUTPUT_STATES not specified:
-                # - set to None, so that it is set to default (self.value) in instantiate_outputState
-                # Notes:
-                # * if in VERBOSE mode, warning will be issued in instantiate_outputState, where default value is known
-                # * number of outputStates is validated against length of owner mechanism's execute method output (EMO)
-                #     in instantiate_outputState, where an outputState is assigned to each item (value) of the EMO
-                params[OUTPUT_STATES] = None
-
-        else:
-            # OUTPUT_STATES is specified, so validate:
             # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_outputState)
             if not isinstance(param_value, (ContentAddressableList, list, OrderedDict)):
                 param_value = [param_value]
@@ -1287,6 +1342,23 @@ class Mechanism_Base(Mechanism):
                                      self.execute.__self__.name))
                 i += 1
             params[OUTPUT_STATES] = param_value
+
+        # OUTPUT_STATES is not specified
+        else:
+            # pass if call is from assign_params (i.e., not from an init method)
+            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+                pass
+            else:
+                # OUTPUT_STATES not specified:
+                # - set to None, so that it is set to default (self.value) in instantiate_outputState
+                # Notes:
+                # * if in VERBOSE mode, warning will be issued in instantiate_outputState, where default value is known
+                # * number of outputStates is validated against length of owner mechanism's execute method output (EMO)
+                #     in instantiate_outputState, where an outputState is assigned to each item (value) of the EMO
+                params[OUTPUT_STATES] = None
+        # MODIFIED 5/10/17 END
+
+
 
     def _validate_inputs(self, inputs=None):
         # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and MonitoringMechanism do not
@@ -1818,6 +1890,45 @@ class Mechanism_Base(Mechanism):
         output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
 
         print("- output: {}".format(output_string))
+
+    def plot(self,x_range = None):
+        """
+        Generate a plot of the mechanism's function using the specified parameter values. See (see
+        `DDM.plot <DDM.plot>` for details of the animated DDM plot).
+
+        Arguments
+        ---------
+
+        x_range: List
+             specify the range over which the function should be plotted. x_range must be provides as a list containing
+             two floats: lowest value of x and highest value of x.  Default values depend on the mechanism's function.
+
+            - Logistic Function: default x_range = [-5.0, 5.0]
+            - Exponential Function: default x_range = [0.1, 5.0]
+            - All Other Functions: default x_range = [-10.0, 10.0]
+
+
+
+        Returns
+        -------
+        mechanism's function plot : Matplotlib window
+            Matplotlib window of the mechanism's function plotted with specified parameters over the specified x_range
+
+        """
+
+        import matplotlib.pyplot as plt
+
+        if not x_range:
+            if "Logistic" in str(self.function):
+                x_range= [-5.0, 5.0]
+            elif "Exponential" in str(self.function):
+                x_range = [0.1, 5.0]
+            else:
+                x_range = [-10.0, 10.0]
+        x_space = np.linspace(x_range[0],x_range[1])
+        plt.plot(x_space, self.function(x_space), lw=3.0, c='r')
+        plt.show()
+
 
     # def adjust_function(self, params, context=None):
     #     """Modify control_signal_allocations while process is executing

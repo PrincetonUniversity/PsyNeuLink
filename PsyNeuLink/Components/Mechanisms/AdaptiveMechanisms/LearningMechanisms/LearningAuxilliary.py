@@ -495,6 +495,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                                     VARIABLE:sample_input},
                                                                    {NAME:TARGET,
                                                                     VARIABLE:target_input}],
+                                                     # input_states=[{SAMPLE:sample_input},
+                                                     #               {TARGET:target_input}],
                                                      function=LinearCombination(weights=[[-1], [1]]),
                                                      params=object_mech_params,
                                                      name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM,

@@ -416,8 +416,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     paramClassDefaults.update({
         MONITORED_VALUES: None,
         TIME_SCALE: TimeScale.TRIAL,
-        FUNCTION: LinearCombination,
-        OUTPUT_STATES:[{NAME:RESULT}]})
+        FUNCTION: LinearCombination
+        # OUTPUT_STATES:[{NAME:RESULT}]
+        })
         # MODIFIED 12/7/16 NEW:
 
     paramNames = paramClassDefaults.keys()
@@ -488,14 +489,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             raise ObjectiveMechanismError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
                                           format(target_set[ROLE], self.name))
 
-        # if not all(item in target_set for item in {INPUT_STATES, MONITORED_VALUES}):
         if INPUT_STATES in target_set and target_set[INPUT_STATES] is not None:
             if MONITORED_VALUES in target_set:
                 monitored_values = target_set[MONITORED_VALUES]
             elif hasattr(self, 'monitored_values'):
                 monitored_values = self.monitored_values
             else:
-                raise ObjectiveMechanismError("PROGRAM ERROR:  monitored_values not instantiated as param or attirb")
+                raise ObjectiveMechanismError("PROGRAM ERROR: monitored_values not instantiated as param or attirb")
 
             if len(target_set[INPUT_STATES]) != len(monitored_values):
                 raise ObjectiveMechanismError("The number of items in the \'{}\'arg for {} ({}) "
@@ -504,7 +504,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                             self.name,
                                             len(target_set[INPUT_STATES]),
                                             MONITORED_VALUES,
-                                            len(target_set[MONITORED_VALUES])))
+                                        len(target_set[MONITORED_VALUES])))
 
             #FIX: IS THIS HANDLED BY _instantiate_input_states??
             for state_spec in target_set[INPUT_STATES]:
@@ -572,6 +572,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # super()._instantiate_input_states(context=context)
 
         from PsyNeuLink.Components.States.State import _parse_state_spec
+
+        # If input_states were not specified, instantiate empty list (to invoke default assignments)
+        if self.input_states is None:
+            self._input_states = [None] * len(self.monitored_values)
 
         # Parse monitored_values
         monitored_values = _parse_monitored_values(owner=self, monitored_values=self.monitored_values)

@@ -474,19 +474,31 @@ class State_Base(State):
         :return:
         """
 
-        # Check params[STATE_PROJECTIONS] before calling validate_param:
-        # - if projection specification is an object or class reference, needs to be wrapped in a list
-        try:
-            projections = target_set[STATE_PROJECTIONS]
-        except KeyError:
-            # If no projections, ignore (none will be created)
-            projections = None
-        else:
-            # If specification is not a list, wrap it in one:
+        # # Check params[STATE_PROJECTIONS] before calling validate_param:
+        # MODIFIED 5/10/17 OLD:
+        # try:
+        #     projections = target_set[STATE_PROJECTIONS]
+        # except KeyError:
+        #     # If no projections, ignore (none will be created)
+        #     projections = None
+        # else:
+        #     # If specification is not a list, wrap it in one:
+        #     # - to be consistent with paramClassDefaults
+        #     # - for consistency of treatment below
+        #     if not isinstance(projections, list):
+        #         projections = [projections]
+        # MODIFIED 5/10/17 NEW:
+        if STATE_PROJECTIONS in target_set:
+            # if projection specification is an object or class reference, needs to be wrapped in a list
             # - to be consistent with paramClassDefaults
             # - for consistency of treatment below
+            projections = target_set[STATE_PROJECTIONS]
             if not isinstance(projections, list):
                 projections = [projections]
+        else:
+            # If no projections, ignore (none will be created)
+            projections = None
+        # MODIFIED 5/10/17 END
 
         super(State, self)._validate_params(request_set, target_set, context=context)
 
@@ -507,6 +519,10 @@ class State_Base(State):
                                        self.__class__.__name__,
                                        target_set[PROJECTION_TYPE],
                                        self.owner.name))
+
+
+
+
 
     def _instantiate_function(self, context=None):
         """Insure that output of function (self.value) is compatible with its input (self.variable)
@@ -2062,11 +2078,11 @@ def _parse_state_spec(owner, state_spec, default_name, default_value, projection
     variable = default_value
     params = None
 
-    # string, so use as name (value will be derived from monitored_values)
+    # string, so use as name
     if isinstance(state_spec, str):
         name = state_spec
 
-    # value, so use as value of input_state (name will be derived from monitored_values)
+    # value, so use as value of input_state
     elif is_value_spec(state_spec):
         variable = state_spec
 
@@ -2082,6 +2098,11 @@ def _parse_state_spec(owner, state_spec, default_name, default_value, projection
             state_spec[VARIABLE] = default_value
         return state_spec
 
+    elif state_spec is None:
+        name = default_name
+        variable = default_value
+        params = None
+
     else:
         from PsyNeuLink.Components.States.InputState import InputStateError
         raise InputStateError("Illegal state specification found in first item of tuple "
@@ -2092,35 +2113,7 @@ def _parse_state_spec(owner, state_spec, default_name, default_value, projection
                   VARIABLE: variable,
                   PARAMS: params}
 
-    if projection:
+    if projections:
         state_dict[STATE_PROJECTIONS] = projections
 
     return state_dict
-
-
-        #  RECURSIVELY PARSE DICT SPEC
-        #     name = None
-        #     for k, v in spec.items():
-        #         # Key is not a spec keyword, so dict must be of the following form: STATE_NAME_ASSIGNMENT:STATE_SPEC
-        #         #
-        #         if not k in {NAME, VALUE, STATE_PROJECTIONS}:
-        #             name = k
-        #             value = v
-        #
-        #     if NAME in spec:
-        #         name = spec[NAME]
-        #
-        #     call_for_projection = False
-        #     if STATE_PROJECTIONS in spec:
-        #         call_for_projection = spec[STATE_PROJECTIONS]
-        #
-        #     if isinstance(spec[VALUE], dict):
-        #         entry_name, value, call_for_projection = parse_spec(spec[VALUE])
-        #     else:
-        #         value = spec[VALUE]
-        #
-        # else:
-        #     raise ObjectiveMechanismError("Specification for {} arg of {} ({}) must be an "
-        #                                   "OutputState, Mechanism, value or string".
-        #                                   format(MONITORED_VALUES, owner.name, spec))
-
