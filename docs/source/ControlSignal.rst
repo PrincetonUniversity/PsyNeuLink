@@ -4,6 +4,8 @@ ControlSignal
 .. toctree::
    :maxdepth: 3
 
-.. automodule:: EVC.ControlSignal
+   ControlSignal
+
+.. automodule:: AdaptiveMechanisms.ControlMechanisms.ControlSignal
    :members:
    :exclude-members: random, execute

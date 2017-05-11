@@ -34,8 +34,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="next" title="Run" href="Run.html"/>
-        <link rel="prev" title="MappingProjection" href="MappingProjection.html"/> 
+        <link rel="prev" title="Component" href="Component.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -85,12 +84,13 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Functions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-function">Creating a Function</a></li>
@@ -99,7 +99,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 </ul>
 
             
@@ -178,11 +177,17 @@
 </dd>
 <dt>Distribution Functions:</dt>
 <dd><ul class="first last simple">
-<li><code class="xref any docutils literal"><span class="pre">NormalDist</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">ExponentialDist</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">UniformDist</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">GammaDist</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">WaldDist</span></code></li>
+<li><a class="reference internal" href="#Function.NormalDist" title="Function.NormalDist"><code class="xref any py py-class docutils literal"><span class="pre">NormalDist</span></code></a></li>
+<li><a class="reference internal" href="#Function.ExponentialDist" title="Function.ExponentialDist"><code class="xref any py py-class docutils literal"><span class="pre">ExponentialDist</span></code></a></li>
+<li><a class="reference internal" href="#Function.UniformDist" title="Function.UniformDist"><code class="xref any py py-class docutils literal"><span class="pre">UniformDist</span></code></a></li>
+<li><a class="reference internal" href="#Function.GammaDist" title="Function.GammaDist"><code class="xref any py py-class docutils literal"><span class="pre">GammaDist</span></code></a></li>
+<li><a class="reference internal" href="#Function.WaldDist" title="Function.WaldDist"><code class="xref any py py-class docutils literal"><span class="pre">WaldDist</span></code></a></li>
+</ul>
+</dd>
+<dt>Objective Functions:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="#Function.Stability" title="Function.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a></li>
+<li><a class="reference internal" href="#Function.Distance" title="Function.Distance"><code class="xref any py py-class docutils literal"><span class="pre">Distance</span></code></a></li>
 </ul>
 </dd>
 <dt>Learning Functions:</dt>
@@ -195,22 +200,23 @@
 <div class="section" id="overview">
 <span id="function-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A Function is a <a class="reference internal" href="Component.html"><span class="doc">component</span></a> that &#8220;packages&#8221; a function (in its <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> method)
-for use by PsyNeuLink components.  Every <a class="reference internal" href="Component.html"><span class="doc">component</span></a> in PsyNeuLink is assigned a Function, and when that
-component is executed, that Function&#8217;s <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;Function_Base.function</span></code> is executed.  The
-<code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;Function_Base.function</span></code> can be any callable operation, although most commonly it is a mathematical operation
-(and, for those, almost always uses calls to numpy function).</p>
-<p>There are two reasons PsyNeuLink packages functions in a Function component. The first is to <strong>manage parameters</strong>.
-Parameters are attributes of a function that either remain stable over multiple calls to the
-function (e.g., the gain or bias of a logistic function, or the learning rate of a learning function);
-or, if they change, they do less frequently or under the control of different factors than the function&#8217;s variable
-(i.e., its input).  As a consequence, it is useful to manage these separately from the function&#8217;s variable,
-and not have to provide them every time the function is called.  To address this, every PsyNeuLink Function has a
-set of attributes corresponding to the parameters of the function, that can be specified at the time the Function is
-created (in arguments to its constructor), and can be modified independently of a call to its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>.
-Modifications can be directly (e.g., in a script), or by the operation of other PsyNeuLink components (e.g.,
-<code class="xref any docutils literal"><span class="pre">AdaptiveMechanisms</span></code>).  The second to reason PsyNeuLink uses Functions is for  <strong>modularity</strong>. By providing a standard
-interface, any Function assigned to a components in PsyNeuLink can be replaced with other PsyNeuLink Functions, or with
-user-written custom functions (so long as they adhere to certain standards (the PsyNeuLink <code class="xref any docutils literal"><span class="pre">Function</span> <span class="pre">API</span></code>).</p>
+for use by other PsyNeuLink components.  Every <a class="reference internal" href="Component.html"><span class="doc">component</span></a> in PsyNeuLink is assigned a Function; when thata
+component is executed, its Function&#8217;s <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is executed.  The
+<a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be any callable operation, although most commonly it is a mathematical operation
+(and, for those, almost always uses a call to one or more numpy functions).  There are two reasons PsyNeuLink
+packages functions in a Function component: to <em>manage parameters</em>, and for <em>modularity</em>.</p>
+<p><strong>Manage parameters</strong>. Parameters are attributes of a function that either remain stable over multiple calls to the
+function (e.g., the <a class="reference internal" href="#Function.Logistic.gain" title="Function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> or <a class="reference internal" href="#Function.Logistic.bias" title="Function.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a> of a <a class="reference internal" href="#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function, or the learning rate
+of a learning function); or, if they change, they do so less frequently or under the control of different factors
+than the function&#8217;s variable (i.e., its input).  As a consequence, it is useful to manage these separately from the
+function&#8217;s variable, and not have to provide them every time the function is called.  To address this, every
+PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at
+the time the Function is created (in arguments to its constructor), and can be modified independently
+of a call to its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>. Modifications can be directly (e.g., in a script), or by the operation of other
+PsyNeuLink components (e.g., <code class="xref any docutils literal"><span class="pre">AdaptiveMechanisms</span></code>) by way of <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>.</p>
+<p><strong>Modularity</strong>. By providing a standard interface, any Function assigned to a components in PsyNeuLink can be replaced
+with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain standards
+(the PsyNeuLink <span class="xref std std-ref">Function API</span>).</p>
 </div>
 <div class="section" id="creating-a-function">
 <span id="function-creation"></span><h2>Creating a Function<a class="headerlink" href="#creating-a-function" title="Permalink to this headline">¶</a></h2>
@@ -228,18 +234,20 @@ below.</p>
 <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> method.  It&#8217;s core attribute is its <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute,
 that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or
 method of some kind). Unlike other PsyNeuLink <code class="xref any docutils literal"><span class="pre">Components</span></code>, it <em>cannot</em> be (another) Function object (it can&#8217;t be
-&#8220;turtles&#8221; all the way down!).  A Function also has an attribute for each of the parameters of its <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.   If a Function has been assigned to another component, then it also has an <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> attribute that refers to that component. Each of the Function&#8217;s attributes is also assigned
+&#8220;turtles&#8221; all the way down!).  A Function also has an attribute for each of the parameters of its <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.   If a Function has been assigned to another component, then it also has an <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> attribute that refers to that component.  The Function itself is assigned as the component&#8217;s
+<code class="xref any docutils literal"><span class="pre">function_object</span></code> attribute.  Each of the Function&#8217;s attributes is also assigned
 as an attribute of the <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, and those are each associated with with a
-<a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of the <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>. Projections to those parameterStates can be
-used to modify the Function&#8217;s parameters.</p>
+<a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of the <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.  Projections to those parameterStates can be
+used by <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modify the Function&#8217;s parameters.</p>
 </div>
 <div class="section" id="execution">
 <span id="function-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>Functions are not executable objects, but their <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be called.   This can be done
 directly.  More commonly, however, they are called when their <a class="reference internal" href="#Function.Function_Base.owner" title="Function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> is executed.  The parameters
 of the <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be modified when it is executed, by assigning a
-<a class="reference internal" href="Mechanism.html#mechanism-creation"><span class="std std-ref">parameter specification dictionary</span></a> to the <code class="xref any docutils literal"><span class="pre">Function.params</span></code> argument in the call to the
-<a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  For <a class="reference internal" href="Mechanism.html"><span class="doc">mechanisms</span></a>, this can also be done by specifying <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime_params</span></a> for the mechanism when it is <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">executed</span></code></a>.</p>
+<a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter specification dictionary</span></a> to the <strong>params</strong> argument in the
+call to the <a class="reference internal" href="#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  For <a class="reference internal" href="Mechanism.html"><span class="doc">mechanisms</span></a>, this can also be done by specifying
+<a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime_params</span></a> for the mechanism when it is <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">executed</span></code></a>.</p>
 </div>
 <div class="section" id="class-reference">
 <h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -286,7 +294,7 @@ they are specified by the Function&#8217;s <code class="xref std std-keyword doc
 <dl class="attribute">
 <dt id="Function.Function_Base.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Function_Base.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Function_Base.prefs" title="Function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -343,7 +351,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.ArgumentTherapy.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.ArgumentTherapy.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.ArgumentTherapy.prefs" title="Function.ArgumentTherapy.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -402,7 +410,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="InputState.html#InputState.InputState.function" title="InputState.InputState.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="LearningProjection.html#LearningProjection.LearningProjection.function" title="LearningProjection.LearningProjection.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -439,7 +447,7 @@ they are specified by the Function&#8217;s <code class="xref std std-keyword doc
 <dl class="attribute">
 <dt id="Function.UserDefinedFunction.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.UserDefinedFunction.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.UserDefinedFunction.prefs" title="Function.UserDefinedFunction.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -491,7 +499,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.Reduce.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Reduce.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Reduce.prefs" title="Function.Reduce.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -626,7 +634,7 @@ product of the arrays in <a class="reference internal" href="#Function.LinearCom
 <dl class="attribute">
 <dt id="Function.LinearCombination.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.LinearCombination.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.LinearCombination.prefs" title="Function.LinearCombination.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -707,6 +715,12 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 </dd></dl>
 
 <dl class="attribute">
+<dt id="Function.Linear.bounds">
+<code class="descname">bounds</code><a class="headerlink" href="#Function.Linear.bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>None</em></p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="Function.Linear.owner">
 <code class="descname">owner</code><a class="headerlink" href="#Function.Linear.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Mechanism</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
@@ -715,7 +729,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.Linear.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Linear.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Linear.prefs" title="Function.Linear.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -803,7 +817,13 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.Exponential.scale">
 <code class="descname">scale</code><a class="headerlink" href="#Function.Exponential.scale" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; value by which the exponentiated value is multipled.</p>
+<dd><p><em>float</em> &#8211; value by which the exponentiated value is multiplied.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Exponential.bounds">
+<code class="descname">bounds</code><a class="headerlink" href="#Function.Exponential.bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>(0, None)</em></p>
 </dd></dl>
 
 <dl class="attribute">
@@ -815,7 +835,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.Exponential.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Exponential.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Exponential.prefs" title="Function.Exponential.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -910,6 +930,12 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 </dd></dl>
 
 <dl class="attribute">
+<dt id="Function.Logistic.bounds">
+<code class="descname">bounds</code><a class="headerlink" href="#Function.Logistic.bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>(0,1)</em></p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="Function.Logistic.owner">
 <code class="descname">owner</code><a class="headerlink" href="#Function.Logistic.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Mechanism</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
@@ -918,7 +944,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.Logistic.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Logistic.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Logistic.prefs" title="Function.Logistic.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -971,7 +997,7 @@ arguments of the constructor.</li>
 <dl class="class">
 <dt id="Function.SoftMax">
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">SoftMax</code><span class="sig-paren">(</span><em>variable_default</em>, <em>gain=1.0</em>, <em>output=ALL</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax" title="Permalink to this definition">¶</a></dt>
-<dd><p id="softmax">SoftMax transform of variable.</p>
+<dd><p id="softmax">SoftMax transform of variable (see <a class="reference external" href="http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/">The Softmax function and its derivative</a> for a nice discussion).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1012,7 +1038,7 @@ the &#8220;sharpness&#8221; of the distribution.</p>
 in the array returned by <code class="xref any docutils literal"><span class="pre">function</span></code>:</p>
 <blockquote>
 <div><ul class="simple">
-<li><strong>ALL</strong>: array of all softmax-transformed values;</li>
+<li><strong>ALL</strong>: array of all softmax-transformed values (the default);</li>
 <li><strong>MAX_VAL</strong>: softmax-transformed value for the element with the maximum such value, 0 for all others;</li>
 <li><strong>MAX_INDICATOR</strong>: 1 for the element with the maximum softmax-transformed value, 0 for all others;</li>
 <li><strong>PROB</strong>: probabilistically chosen element based on softmax-transformed values after normalizing sum of
@@ -1022,19 +1048,19 @@ values to 1, 0 for all others.</li>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="Function.SoftMax.owner">
-<code class="descname">owner</code><a class="headerlink" href="#Function.SoftMax.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Mechanism</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+<dt id="Function.SoftMax.bounds">
+<code class="descname">bounds</code><a class="headerlink" href="#Function.SoftMax.bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>None if <a href="#id1"><span class="problematic" id="id2">`</span></a>output &lt;SoftMax.output&gt;`==MAX_VAL, else (0,1) : default (0,1)</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="Function.SoftMax.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#Function.SoftMax.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.SoftMax.prefs" title="Function.SoftMax.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dl class="docutils">
+<dt>owner</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Mechanism</span><dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</dd>
+<dt>prefs</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref doc">PreferenceSet</span> for details).</p>
-</dd></dl>
-
+(see <span class="xref doc">PreferenceSet</span> for details).</dd>
+</dl>
 <dl class="method">
 <dt id="Function.SoftMax.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax.function" title="Permalink to this definition">¶</a></dt>
@@ -1067,14 +1093,21 @@ arguments of the constructor.</li>
 <dl class="method">
 <dt id="Function.SoftMax.derivative">
 <code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.SoftMax.derivative" title="Permalink to this definition">¶</a></dt>
-<dd><p>Derivative of <a class="reference internal" href="#Function.SoftMax.function" title="Function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</p>
+<dd><p>Calculate the derivative of <a class="reference internal" href="#Function.SoftMax.function" title="Function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.  If OUTPUT_TYPE for the SoftMax Function is ALL,
+return Jacobian matrix (derivative for each element of the output array with respect to each of the others):</p>
+<blockquote>
+<div>D<sub>j</sub>S<sub>i</sub> = S<sub>i</sub>(𝜹<sub>i,j</sub> - S<sub>j</sub>),
+where 𝜹<sub>i,j</sub>=1 if i=j and 𝜹<sub>i,j</sub>=0 if i≠j.</div></blockquote>
+<p>If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
+value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
+(since it is ambiguous as to which element would have been chosen by the SoftMax function)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivative</strong> &#8211; output - maximum value.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivative</strong> &#8211; derivative of values returns by SoftMax.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">number</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)</td>
 </tr>
 </tbody>
 </table>
@@ -1097,6 +1130,7 @@ arguments of the constructor.</li>
 <li><strong>variable</strong> (<em>list or 1d np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
 <li><strong>matrix</strong> (<em>number, list, 1d or 2d np.ndarray, np.matrix, function, or matrix keyword : default IDENTITY_MATRIX</em>) &#8211; specifies matrix used to transform <a class="reference internal" href="#Function.LinearMatrix.variable" title="Function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> for specification details).</li>
+<li><strong>bounds</strong> (<em>None</em>) &#8211; </li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1139,7 +1173,7 @@ columns correspond to elements of the output array (inner index).</p>
 <dl class="attribute">
 <dt id="Function.LinearMatrix.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.LinearMatrix.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.LinearMatrix.prefs" title="Function.LinearMatrix.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -1215,9 +1249,9 @@ integrated.</li>
 <li><strong>integration_type</strong> (<em>CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT</em>) &#8211; specifies type of integration (see <a class="reference internal" href="#Function.Integrator.integration_type" title="Function.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a> for details).</li>
 <li><strong>noise</strong> (<em>float, PsyNeuLink Function, list or 1d np.array : default 0.0</em>) &#8211; specifies random value to be added in each call to <a class="reference internal" href="#Function.Integrator.function" title="Function.Integrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>time_step_size</strong> (<em>float : default 0.0</em>) &#8211; determines the timing precision of the integration process when <a class="reference internal" href="#Function.Integrator.integration_type" title="Function.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a> is set to
-DIFFUSION (see <a class="reference internal" href="#Function.Integrator.time_step_size" title="Function.Integrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for details.</li>
-<li><strong>float, list or 1d np.array</strong> (<a class="reference internal" href="#Function.Integrator.initializer" title="Function.Integrator.initializer"><em>initializer</em></a>) &#8211; specifies starting value for integration.  If it is a list or array, it must be the same length as
+<li><strong>time_step_size</strong> (<em>float : default 0.0</em>) &#8211; determines the timing precision of the integration process when <a class="reference internal" href="#Function.Integrator.integration_type" title="Function.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a>
+is set to DIFFUSION (see <a class="reference internal" href="#Function.Integrator.time_step_size" title="Function.Integrator.time_step_size"><code class="xref any py py-attr docutils literal"><span class="pre">time_step_size</span></code></a> for details.</li>
+<li><strong>float, list or 1d np.array</strong> (<a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.Integrator.initializer" title="IntegratorMechanism.IntegratorMechanism.Integrator.initializer"><em>initializer</em></a>) &#8211; specifies starting value for integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable_default</span></code> (see <a class="reference internal" href="#Function.Integrator.initializer" title="Function.Integrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1253,8 +1287,8 @@ applies to the corresponding element of <a class="reference internal" href="#Fun
 <dl class="docutils">
 <dt>specifies type of integration:</dt>
 <dd><ul class="first last simple">
-<li><strong>CONSTANT</strong>: <a class="reference internal" href="#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> + <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> + <a class="reference internal" href="#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>
-(ignores <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>);</li>
+<li><strong>CONSTANT</strong>: <a class="reference internal" href="#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> + <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> +
+<a class="reference internal" href="#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> (ignores <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>);</li>
 <li><strong>SIMPLE</strong>: <a class="reference internal" href="#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> + <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> *
 <code class="xref any docutils literal"><span class="pre">variable</span></code> + <a class="reference internal" href="#Function.Integrator.noise" title="Function.Integrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>;</li>
 <li><strong>ADAPTIVE</strong>: (1-<a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) * <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> +
@@ -1296,8 +1330,8 @@ is set to DIFFUSION (and used to scale the <a class="reference internal" href="#
 <dl class="attribute">
 <dt id="Function.Integrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#Function.Integrator.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array or list</em> &#8211; determines the starting value for integration (i.e., the value to which <a class="reference internal" href="#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>
-is set.</p>
+<dd><p><em>1d np.array or list</em> &#8211; determines the starting value for integration (i.e., the value to which
+<a class="reference internal" href="#Function.Integrator.previous_value" title="Function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
 <p>If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>. If
 initializer is specified as a single float or function, while <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or
 array, initializer will be applied to each variable element. In the case of an initializer function, this means
@@ -1319,7 +1353,7 @@ that the function will be executed separately for each variable element.</p>
 <dl class="attribute">
 <dt id="Function.Integrator.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Integrator.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Integrator.prefs" title="Function.Integrator.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -1444,7 +1478,7 @@ Gaussian random process).</p>
 <dl class="attribute">
 <dt id="Function.BogaczEtAl.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.BogaczEtAl.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.BogaczEtAl.prefs" title="Function.BogaczEtAl.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -1452,7 +1486,8 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="method">
 <dt id="Function.BogaczEtAl.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return: terminal value of decision variable, mean accuracy (error rate; ER) and mean response time (RT)</p>
+<dd><p>Return: terminal value of decision variable (equal to threshold), mean accuracy (error rate; ER) and mean
+response time (RT)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1471,6 +1506,40 @@ arguments of the constructor.</li>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(float, float, float)</p>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.BogaczEtAl.derivative">
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the derivative of 1/(reward rate) with respect to the threshold (<strong>output</strong> arg)
+and drift_rate (<strong>input</strong> arg).  Reward rate (RR) is assumed to be:</p>
+<blockquote>
+<div>RR = (delay<sub>ITI</sub> + Z/A + ED);</div></blockquote>
+<p>the derivative of 1/RR with respect to the <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> is:</p>
+<blockquote>
+<div>1/A - E/A - (2A/c<sup>2</sup>)ED;</div></blockquote>
+<p>and the derivative of 1/RR with respect to the <a class="reference internal" href="#Function.BogaczEtAl.drift_rate" title="Function.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a> is:</p>
+<blockquote>
+<div>-Z/A<sup>2</sup> + (Z/A<sup>2</sup>)E - (2Z/c<sup>2</sup>)ED</div></blockquote>
+<p>where:</p>
+<blockquote>
+<div><p>A = <a class="reference internal" href="#Function.BogaczEtAl.drift_rate" title="Function.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a>,</p>
+<p>Z = <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>,</p>
+<p>c = <a class="reference internal" href="#Function.BogaczEtAl.noise" title="Function.BogaczEtAl.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>,</p>
+<p>E = exp(-2ZA/c<sup>2</sup>), and</p>
+<p>D = delay<sub>ITI</sub> + delay<sub>penalty</sub> - Z/A</p>
+<p>delay<sub>ITI</sub> is the intertrial interval and delay<sub>penalty</sub> is a penalty delay.</p>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivatives</strong> &#8211; of 1/RR with respect to <a class="reference internal" href="#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> and <a class="reference internal" href="#Function.BogaczEtAl.drift_rate" title="Function.BogaczEtAl.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">List[float, float)</td>
 </tr>
 </tbody>
 </table>
@@ -1565,7 +1634,7 @@ Gaussian random process).</p>
 <dt>owner</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">Mechanism</span><dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</dd>
 <dt>prefs</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.UserDefinedFunction.prefs" title="Function.UserDefinedFunction.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+ <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Projection.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</dd>
 </dl>
@@ -1600,11 +1669,744 @@ arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="class">
+<dt id="Function.NormalDist">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NormalDist</code><span class="sig-paren">(</span><em>mean=0.0</em>, <em>standard_dev=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NormalDist" title="Permalink to this definition">¶</a></dt>
+<dd><p id="normaldist">Return a random sample from a normal distribution using numpy.random.normal</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mean</strong> (<em>float : default 0.0</em>) &#8211; The mean or center of the normal distribution</li>
+<li><strong>standard_dev</strong> (<em>float : default 1.0</em>) &#8211; Standard deviation of the normal distribution</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.NormalDist.mean">
+<code class="descname">mean</code><a class="headerlink" href="#Function.NormalDist.mean" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> &#8211; The mean or center of the normal distribution</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NormalDist.standard_dev">
+<code class="descname">standard_dev</code><a class="headerlink" href="#Function.NormalDist.standard_dev" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; Standard deviation of the normal distribution</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NormalDist.params">
+<code class="descname">params</code><a class="headerlink" href="#Function.NormalDist.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Dict[param keyword, param value]]</em> &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NormalDist.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.NormalDist.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.NormalDist.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.NormalDist.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.ExponentialDist">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">ExponentialDist</code><span class="sig-paren">(</span><em>beta=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.ExponentialDist" title="Permalink to this definition">¶</a></dt>
+<dd><p id="exponentialdist">Return a random sample from a exponential distribution using numpy.random.exponential</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>beta</strong> (<em>float : default 1.0</em>) &#8211; The scale parameter of the exponential distribution</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.ExponentialDist.beta">
+<code class="descname">beta</code><a class="headerlink" href="#Function.ExponentialDist.beta" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; The scale parameter of the exponential distribution</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.ExponentialDist.params">
+<code class="descname">params</code><a class="headerlink" href="#Function.ExponentialDist.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Dict[param keyword, param value]]</em> &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.ExponentialDist.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.ExponentialDist.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.ExponentialDist.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.ExponentialDist.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.UniformDist">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">UniformDist</code><span class="sig-paren">(</span><em>low=0.0</em>, <em>high=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.UniformDist" title="Permalink to this definition">¶</a></dt>
+<dd><p id="uniformdist">Return a random sample from a uniform distribution using numpy.random.uniform</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>low</strong> (<em>float : default 0.0</em>) &#8211; Lower bound of the uniform distribution</li>
+<li><strong>high</strong> (<em>float : default 1.0</em>) &#8211; Upper bound of the uniform distribution</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.UniformDist.low">
+<code class="descname">low</code><a class="headerlink" href="#Function.UniformDist.low" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 0.0</em> &#8211; Lower bound of the uniform distribution</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.UniformDist.high">
+<code class="descname">high</code><a class="headerlink" href="#Function.UniformDist.high" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; Upper bound of the uniform distribution</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.UniformDist.params">
+<code class="descname">params</code><a class="headerlink" href="#Function.UniformDist.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Dict[param keyword, param value]]</em> &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.UniformDist.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.UniformDist.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.UniformDist.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.UniformDist.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.GammaDist">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">GammaDist</code><span class="sig-paren">(</span><em>scale=1.0</em>, <em>shape=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.GammaDist" title="Permalink to this definition">¶</a></dt>
+<dd><p id="gammadist">Return a random sample from a gamma distribution using numpy.random.gamma</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>scale</strong> (<em>float : default 1.0</em>) &#8211; The shape of the gamma distribution. Should be greater than zero.</li>
+<li><strong>shape</strong> (<em>float : default 1.0</em>) &#8211; The scale of the gamma distribution. Should be greater than zero.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.GammaDist.scale">
+<code class="descname">scale</code><a class="headerlink" href="#Function.GammaDist.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; The shape of the gamma distribution. Should be greater than zero.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.GammaDist.shape">
+<code class="descname">shape</code><a class="headerlink" href="#Function.GammaDist.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; The scale of the gamma distribution. Should be greater than zero.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.GammaDist.params">
+<code class="descname">params</code><a class="headerlink" href="#Function.GammaDist.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Dict[param keyword, param value]]</em> &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.GammaDist.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.GammaDist.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.GammaDist.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.GammaDist.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.WaldDist">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">WaldDist</code><span class="sig-paren">(</span><em>scale=1.0</em>, <em>mean=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.WaldDist" title="Permalink to this definition">¶</a></dt>
+<dd><p id="walddist">Return a random sample from a wald distribution using numpy.random.wald</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>scale</strong> (<em>float : default 1.0</em>) &#8211; Scale parameter of the wald distribution. Should be greater than zero.</li>
+<li><strong>mean</strong> (<em>float : default 1.0</em>) &#8211; Mean of the wald distribution. Should be greater than or equal to zero.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.WaldDist.scale">
+<code class="descname">scale</code><a class="headerlink" href="#Function.WaldDist.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; Scale parameter of the wald distribution. Should be greater than zero.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.WaldDist.mean">
+<code class="descname">mean</code><a class="headerlink" href="#Function.WaldDist.mean" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> &#8211; Mean of the wald distribution. Should be greater than or equal to zero.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.WaldDist.params">
+<code class="descname">params</code><a class="headerlink" href="#Function.WaldDist.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Dict[param keyword, param value]]</em> &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.WaldDist.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.WaldDist.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.WaldDist.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.WaldDist.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.Stability">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Stability</code><span class="sig-paren">(</span><em>variable_default=variableCLassDefault</em>, <em>matrix=HOLLOW_MATRIX</em>, <em>metric=ENERGY                                   transfer_fct=None                               normalize=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Stability" title="Permalink to this definition">¶</a></dt>
+<dd><p id="stability">Return the stability of a vector based an a weight matrix from each element to every other element in the vector.
+The value of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is passed through the <a class="reference internal" href="#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>, transformed
+using the <a class="reference internal" href="#Function.Stability.transfer_fct" title="Function.Stability.transfer_fct"><code class="xref any py py-attr docutils literal"><span class="pre">transfer_fct</span></code></a> (if specified), and then compared with its initial value
+using the specified <a class="reference internal" href="#Function.Stability.metric" title="Function.Stability.metric"><code class="xref any py py-attr docutils literal"><span class="pre">metric</span></code></a>.  If <a class="reference internal" href="#Function.Stability.normalize" title="Function.Stability.normalize"><code class="xref any py py-attr docutils literal"><span class="pre">normalize</span></code></a> is specified, the result
+is normalized by the number of elements in the <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>list of numbers or 1d np.array : Default variableClassDefault</em>) &#8211; the array for which stabilty is calculated.</li>
+<li><strong>matrix</strong> (<em>list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX</em>) &#8211; specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
+length of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>metric</strong> (<em>ENERGY, ENTROPY or keyword in DISTANCE_METRICS : Default ENERGY</em>) &#8211; specifies the metric used to compute stability.</li>
+<li><strong>transfer_fct</strong> (<em>function or method : Default None</em>) &#8211; specifies the function used to transform output of weight <a class="reference internal" href="#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
+<li><strong>normalize</strong> (<em>bool : Default False</em>) &#8211; specifies whether to normalize the stability value by the length of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.Stability.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Function.Stability.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> &#8211; array for which stability is calculated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.matrix">
+<code class="descname">matrix</code><a class="headerlink" href="#Function.Stability.matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX</em> &#8211; weight matrix from each element of <code class="xref any docutils literal"><span class="pre">variable</span></code> to each other;  if a matrix other
+than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
+stability calculation.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.metric">
+<code class="descname">metric</code><a class="headerlink" href="#Function.Stability.metric" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ENERGY, ENTROPY or keyword in DISTANCE_METRICS</em> &#8211; metric used to compute stability.  If ENTROPY or DISTANCE_METRICS keyword is used, the <a class="reference internal" href="#Function.Distance" title="Function.Distance"><code class="xref any py py-class docutils literal"><span class="pre">Distance</span></code></a> Function
+is used to compute the stability of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> with respect to its value after
+transformation by <a class="reference internal" href="#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> and <a class="reference internal" href="#Function.Stability.transfer_fct" title="Function.Stability.transfer_fct"><code class="xref any py py-attr docutils literal"><span class="pre">transfer_fct</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.transfer_fct">
+<code class="descname">transfer_fct</code><a class="headerlink" href="#Function.Stability.transfer_fct" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function or method</em> &#8211; function used to transform output of weight <a class="reference internal" href="#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> prior to computing stability.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.normalize">
+<code class="descname">normalize</code><a class="headerlink" href="#Function.Stability.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; if <code class="xref any docutils literal"><span class="pre">True</span></code>, result of stability calculation is normalized by the length of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.params">
+<code class="descname">params</code><a class="headerlink" href="#Function.Stability.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Dict[param keyword, param value]]</em> &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.Stability.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.Stability.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.Stability.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Stability.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the stability of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+<blockquote>
+<div>Compare the value of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> with its value after transformation by
+<a class="reference internal" href="#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> and <a class="reference internal" href="#Function.Stability.transfer_fct" title="Function.Stability.transfer_fct"><code class="xref any py py-attr docutils literal"><span class="pre">transfer_fct</span></code></a> (if specified), using the specified
+<a class="reference internal" href="#Function.Stability.metric" title="Function.Stability.metric"><code class="xref any py py-attr docutils literal"><span class="pre">metric</span></code></a>.  If <a class="reference internal" href="#Function.Stability.normalize" title="Function.Stability.normalize"><code class="xref any py py-attr docutils literal"><span class="pre">normalize</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, the result is divided
+by the length of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>stability</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">scalar</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.Stability.MappingProjection">
+<em class="property">class </em><code class="descname">MappingProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>matrix=DEFAULT_MATRIX</em>, <em>param_modulation_operation=ModulationOperation.ADD</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Stability.MappingProjection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements a projection that transmits the output of one mechanism to the input of another.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sender</strong> (<em>Optional[OutputState or Mechanism]</em>) &#8211; specifies the source of the projection&#8217;s input. If a mechanism is specified, its
+<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> will be used. If it is not specified, it will be assigned in
+the context in which the projection is used.</li>
+<li><strong>receiver</strong> (<em>Optional[InputState or Mechanism]</em>) &#8211; specifies the destination of the projection&#8217;s output.  If a mechanism is specified, its
+<a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">primary inputState</span></a> will be used. If it is not specified, it will be assigned in
+the context in which the projection is used.</li>
+<li><strong>matrix</strong> (<em>list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX</em>) &#8211; the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform the
+value of the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.sender" title="MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</li>
+<li><strong>param_modulation_operation</strong> (<em>ModulationOperation : default ModulationOperation.ADD</em>) &#8211; specifies the operation used to combine the value of any projections to the matrix&#8217;s parameterState with the
+<a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> itself.  Most commonly used with <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a>.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+the projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
+the projection&#8217;s default assignment (<a class="reference internal" href="#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>).  Values specified for parameters in the dictionary
+override any assigned to those parameters in arguments of the constructor.</li>
+<li><strong>name</strong> (<em>str : default MappingProjection-&lt;index&gt;</em>) &#8211; a string used for the name of the MappingProjection.
+If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">ProjectionRegistry</span></code>
+(see <code class="xref any docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Projection.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the MappingProjection.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.Stability.MappingProjection.componentType">
+<code class="descname">componentType</code><a class="headerlink" href="#Function.Stability.MappingProjection.componentType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>MAPPING_PROJECTION</em></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.MappingProjection.sender">
+<code class="descname">sender</code><a class="headerlink" href="#Function.Stability.MappingProjection.sender" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OutputState</em> &#8211; identifies the source of the projection&#8217;s input.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.MappingProjection.receiver">
+<code class="descname">receiver</code><a class="headerlink" href="#Function.Stability.MappingProjection.receiver" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>InputState</em> &#8211; identifies the destination of the projection.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.MappingProjection.param_modulation_operation">
+<code class="descname">param_modulation_operation</code><a class="headerlink" href="#Function.Stability.MappingProjection.param_modulation_operation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ModulationOperation</em> &#8211; determines the operation used to combine the value of any projections to the matrix&#8217;s parameterState with the
+<a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> itself.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.MappingProjection.monitoringMechanism">
+<code class="descname">monitoringMechanism</code><a class="headerlink" href="#Function.Stability.MappingProjection.monitoringMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>MonitoringMechanism</em> &#8211; source of error signal for that determine changes to the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> when
+<a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a> is used.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.MappingProjection.matrix">
+<code class="descname">matrix</code><a class="headerlink" href="#Function.Stability.MappingProjection.matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> &#8211; matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> to transform input from the
+<a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.sender" title="MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to the value provided to the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.receiver" title="MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.MappingProjection.has_learning_projection">
+<code class="descname">has_learning_projection</code><a class="headerlink" href="#Function.Stability.MappingProjection.has_learning_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool : False</em> &#8211; identifies whether the MappingProjection&#8217;s <code class="xref any docutils literal"><span class="pre">MATRIX</span></code> <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> has been assigned a
+<a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.MappingProjection.name">
+<code class="descname">name</code><a class="headerlink" href="#Function.Stability.MappingProjection.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default MappingProjection-&lt;index&gt;</em> &#8211; the name of the MappingProjection.
+Specified in the <strong>name</strong> argument of the constructor for the projection;
+if not is specified, a default is assigned by ProjectionRegistry
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.MappingProjection.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.Stability.MappingProjection.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for projection.
+Specified in the <strong>prefs</strong> argument of the constructor for the projection;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.Stability.MappingProjection.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>clock=&lt;PsyNeuLink.Globals.TimeScale.Clock object&gt;</em>, <em>time_scale=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Stability.MappingProjection.execute" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>If there is a functionParameterStates[LEARNING_PROJECTION], update the matrix parameterState:</dt>
+<dd><blockquote class="first">
+<div>it should set params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
+and then call its super().execute</div></blockquote>
+<ul class="last simple">
+<li>use its value to update MATRIX using CombinationOperation (see State update ??execute method??)</li>
+</ul>
+</dd>
+</dl>
+<p>Assumes that if self.monitoringMechanism is assigned <em>and</em> parameterState[MATRIX] has been instantiated
+then learningSignal exists;  this averts duck typing which otherwise would be required for the most
+frequent cases (i.e., <em>no</em> learningSignal).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.Stability.ParameterState">
+<em class="property">class </em><code class="descclassname">Stability.</code><code class="descname">ParameterState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=None                                             value=None</em>, <em>function=LinearCombination(operation=PRODUCT)</em>, <em>parameter_modulation_operation=ModulationOperation.MULTIPLY</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Stability.ParameterState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements a subclass of <a class="reference internal" href="State.html"><span class="doc">States</span></a> that represents and possibly modifies the value of a parameter for a mechanism,
+projection, or function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>owner</strong> (<em>Mechanism or Projection</em>) &#8211; the <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> or <a class="reference internal" href="Projection.html"><span class="doc">projection</span></a> to which to which the parameterState belongs; it must
+be specified or determinable from the context in which the parameterState is created. The owner of a
+parameterState for the parameter of a <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> should be specified as the mechanism or projection
+to which the function belongs.</li>
+<li><strong>reference_value</strong> (<em>number, list or np.ndarray</em>) &#8211; specifies the default value of the parameter for which the parameterState is responsible.</li>
+<li><strong>value</strong> (<em>number, list or np.ndarray</em>) &#8211; specifies the template for the parametersState&#8217;s <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (since a parameterState&#8217;s
+<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attributes must have the same format
+(number and type of elements).</li>
+<li><strong>function</strong> (<em>Function or method : default LinearCombination(operation=SUM)</em>) &#8211; specifies the function used to aggregate the values of the projections received by the parameterState.
+It must produce a result that has the same format (number and type of elements) as its input.</li>
+<li><strong>parameter_modulation_operation</strong> (<em>ModulationOperation : default ModulationOperation.MULTIPLY</em>) &#8211; specifies the operation by which the values of the projections received by the parameterState are used
+to modify its <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref any py py-attr docutils literal"><span class="pre">baseValue</span></code></a> before assigning it as the value of the parameter for
+which the parameterState is responsible.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+the parameterState or its function, and/or a custom function and its parameters.  Values specified for
+parameters in the dictionary override any assigned to those parameters in arguments of the constructor.</li>
+<li><strong>name</strong> (<em>str : default InputState-&lt;index&gt;</em>) &#8211; a string used for the name of the inputState.
+If not is specified, a default is assigned by StateRegistry of the mechanism to which the inputState belongs
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : State.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the inputState.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.Stability.ParameterState.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.Stability.ParameterState.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> &#8211; the mechanism to which the parameterState belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.ParameterState.receivesFromProjections">
+<code class="descname">receivesFromProjections</code><a class="headerlink" href="#Function.Stability.ParameterState.receivesFromProjections" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[List[Projection]]</em> &#8211; a list of the projections received by the parameterState (i.e., for which it is a
+<code class="xref any docutils literal"><span class="pre">receiver</span></code>); generally these are <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a>
+and/or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.ParameterState.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Function.Stability.ParameterState.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> &#8211; the template for the <code class="xref any docutils literal"><span class="pre">value</span></code> of each projection that the parameterState receives,
+each of which must match the format (number and types of elements) of the parameterState&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.ParameterState.function">
+<code class="descname">function</code><a class="headerlink" href="#Function.Stability.ParameterState.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>CombinationFunction : default LinearCombination(operation=PRODUCT))</em> &#8211; performs an element-wise (Hadamard) aggregation  of the <code class="xref any docutils literal"><span class="pre">value</span></code> of each
+projection received by the parameterState.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.ParameterState.baseValue">
+<code class="descname">baseValue</code><a class="headerlink" href="#Function.Stability.ParameterState.baseValue" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> &#8211; the default value for the parameterState.  It is combined with the aggregated value of any projections it
+receives using its <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.parameterModulationOperation" title="ParameterState.ParameterState.parameterModulationOperation"><code class="xref any py py-attr docutils literal"><span class="pre">parameterModulationOperation</span></code></a>
+and then assigned to <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.ParameterState.parameterModulationOperation">
+<code class="descname">parameterModulationOperation</code><a class="headerlink" href="#Function.Stability.ParameterState.parameterModulationOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ModulationOperation : default ModulationOperation.PRODUCT</em> &#8211; the arithmetic operation used to combine the aggregated value of any projections is receives
+(the result of the parameterState&#8217;s <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>) with its
+<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref any py py-attr docutils literal"><span class="pre">baseValue</span></code></a>, the result of which is assigned to <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.ParameterState.value">
+<code class="descname">value</code><a class="headerlink" href="#Function.Stability.ParameterState.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> &#8211; the aggregated value of the projections received by the ParameterState, combined with the
+<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref any py py-attr docutils literal"><span class="pre">baseValue</span></code></a> using its
+<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.parameterModulationOperation" title="ParameterState.ParameterState.parameterModulationOperation"><code class="xref any py py-attr docutils literal"><span class="pre">parameterModulationOperation</span></code></a>
+.  This is the value assigned to the parameter for which the parameterState is responsible.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.ParameterState.name">
+<code class="descname">name</code><a class="headerlink" href="#Function.Stability.ParameterState.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> &#8211; the name of the inputState.
+Specified in the <strong>name</strong> argument of the constructor for the outputState.  If not is specified, a default is
+assigned by the StateRegistry of the mechanism to which the outputState belongs
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Unlike other PsyNeuLink components, states names are &#8220;scoped&#8221; within a mechanism, meaning that states with
+the same name are permitted in different mechanisms.  However, they are <em>not</em> permitted in the same
+mechanism: states within a mechanism with the same base name are appended an index in the order of their
+creation.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Stability.ParameterState.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.Stability.ParameterState.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the inputState.
+Specified in the <strong>prefs</strong> argument of the constructor for the projection;  if it is not specified, a default is
+assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.Stability.ParameterState.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Stability.ParameterState.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse params for parameterState params and XXX <a href="#id3"><span class="problematic" id="id4">**</span></a><a href="#id5"><span class="problematic" id="id6">*</span></a></p>
+<dl class="docutils">
+<dt># DOCUMENTATION:  MORE HERE:</dt>
+<dd><ul class="first simple">
+<li>get ParameterStateParams</li>
+<li>pass params to super, which aggregates inputs from projections</li>
+<li>combine input from projections (processed in super) with baseValue using paramModulationOperation</li>
+<li>combine result with value specified at runtime in PARAMETER_STATE_PARAMS</li>
+<li>assign result to self.value</li>
+</ul>
+<table class="last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param params:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">param time_scale:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param context:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">return:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Function.Distance">
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Distance</code><span class="sig-paren">(</span><em>variable_default=variableCLassDefault</em>, <em>metric=EUCLIDEAN                               normalize=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Distance" title="Permalink to this definition">¶</a></dt>
+<dd><p id="distance">Return the distance between two vectors based on a specified metric.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>2d np.array with two items : Default variableClassDefault</em>) &#8211; the two arrays between which the distance is calculated.</li>
+<li><strong>metric</strong> (<em>keyword in DISTANCE_METRICS : Default EUCLIDEAN</em>) &#8211; specifies the metric used to compute the distance between the two items in <a class="reference internal" href="#Function.Distance.variable" title="Function.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>normalize</strong> (<em>bool : Default False</em>) &#8211; specifies whether to normalize the distance by the length of <a class="reference internal" href="#Function.Distance.variable" title="Function.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Function.Distance.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Function.Distance.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array with two items</em> &#8211; contains the two arrays between which the distance is calculated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Distance.metric">
+<code class="descname">metric</code><a class="headerlink" href="#Function.Distance.metric" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>keyword in DISTANCE_METRICS</em> &#8211; specifies the metric used to compute the distance between the two items in <a class="reference internal" href="#Function.Distance.variable" title="Function.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Distance.normalize">
+<code class="descname">normalize</code><a class="headerlink" href="#Function.Distance.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; specifies whether to normalize the distance by the length of <a class="reference internal" href="#Function.Distance.variable" title="Function.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Distance.params">
+<code class="descname">params</code><a class="headerlink" href="#Function.Distance.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Dict[param keyword, param value]]</em> &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Distance.owner">
+<code class="descname">owner</code><a class="headerlink" href="#Function.Distance.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> &#8211; <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Function.Distance.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Function.Distance.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[PreferenceSet or specification dict : Function.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
+defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Function.Distance.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Distance.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the distance between the two arrays in <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>distance</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">scalar</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="Function.LearningFunction">
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="#Function.Function_Base.variable" title="Function.Function_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="#Function.Logistic.variable" title="Function.Logistic.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
@@ -1721,7 +2523,7 @@ system to which it belongs is used. If all are <code class="xref any docutils li
 <dl class="attribute">
 <dt id="Function.Reinforcement.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.Reinforcement.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.Reinforcement.prefs" title="Function.Reinforcement.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -1808,14 +2610,14 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dl class="attribute">
 <dt id="Function.BackPropagation.activation_input">
 <code class="descname">activation_input</code><a class="headerlink" href="#Function.BackPropagation.activation_input" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> &#8211; the input to the matrix being modified; same as 1st item of <a href="#id1"><span class="problematic" id="id2">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
+<dd><p><em>1d np.array</em> &#8211; the input to the matrix being modified; same as 1st item of <a href="#id7"><span class="problematic" id="id8">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Function.BackPropagation.activation_output">
 <code class="descname">activation_output</code><a class="headerlink" href="#Function.BackPropagation.activation_output" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>1d np.array</em> &#8211; the output of the function for which the matrix being modified provides the input;
-same as 2nd item of <a href="#id3"><span class="problematic" id="id4">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
+same as 2nd item of <a href="#id9"><span class="problematic" id="id10">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1823,7 +2625,7 @@ same as 2nd item of <a href="#id3"><span class="problematic" id="id4">`</span></
 <code class="descname">error_signal</code><a class="headerlink" href="#Function.BackPropagation.error_signal" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>1d np.array</em> &#8211; the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
 target (training signal) and the output of the last mechanism in the sequence;
-same as 3rd item of <a href="#id5"><span class="problematic" id="id6">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
+same as 3rd item of <a href="#id11"><span class="problematic" id="id12">`</span></a>variable &lt;BackPropagation.variable&gt;.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1867,7 +2669,7 @@ the system to which it belongs is used. If all are <code class="xref any docutil
 <dl class="attribute">
 <dt id="Function.BackPropagation.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Function.BackPropagation.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <a class="reference internal" href="#Function.BackPropagation.prefs" title="Function.BackPropagation.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the function;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function. Specified in the <strong>prefs</strong> argument of the constructor for the function;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
@@ -1917,10 +2719,8 @@ arguments of the constructor.</li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Run.html" class="btn btn-neutral float-right" title="Run" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="MappingProjection.html" class="btn btn-neutral" title="MappingProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Component.html" class="btn btn-neutral" title="Component" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
