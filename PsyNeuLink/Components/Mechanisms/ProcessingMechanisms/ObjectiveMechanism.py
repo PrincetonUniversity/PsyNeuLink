@@ -416,9 +416,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     paramClassDefaults.update({
         MONITORED_VALUES: None,
         TIME_SCALE: TimeScale.TRIAL,
-        FUNCTION: LinearCombination
-        # OUTPUT_STATES:[{NAME:RESULT}]
-        })
+        FUNCTION: LinearCombination,
+        OUTPUT_STATES:[{NAME:RESULT}]})
         # MODIFIED 12/7/16 NEW:
 
     paramNames = paramClassDefaults.keys()
