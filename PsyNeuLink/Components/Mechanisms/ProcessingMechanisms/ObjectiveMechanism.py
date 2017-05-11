@@ -619,6 +619,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 _instantiate_monitoring_projection(sender=monitored_value[OUTPUT_STATE],
                                                    receiver=input_state,
                                                    matrix=AUTO_ASSIGN_MATRIX)
+        TEST = True
 
 
 @tc.typecheck
