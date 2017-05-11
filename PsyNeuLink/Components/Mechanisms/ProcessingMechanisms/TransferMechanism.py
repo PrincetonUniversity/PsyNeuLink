@@ -362,10 +362,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # INTEGRATOR_FUNCTION: Integrator
         })
 
-    my_mean = {NAME:'MY MEAN',
-               CALCULATE:lambda x: np.mean(x)},
-
-
     paramNames = paramClassDefaults.keys()
 
     @tc.typecheck
@@ -513,6 +509,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 for i in self.variable:
                     new_noise.append(self.noise)
                 noise = new_noise
+
         elif isinstance(noise, float):
             self.noise_function = False
         else:

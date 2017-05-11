@@ -551,7 +551,7 @@ HIGH = 'high'
 
 BETA = 'beta'
 
-SHAPE = 'shape'
+DIST_SHAPE = 'dist_shape'
 
 OUTPUT_TYPE = 'output'
 ALL = 'all'
