@@ -1098,11 +1098,13 @@ class Component(object):
         runtime_params = params
         if runtime_params and runtime_params is not None:
             for param_name in self.user_params:
-                # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-                #    At present, assignment of ``function`` as runtime param is not supported
+                # Ignore input_states and output_states -- they should not be modified during run
+                # IMPLEMENTATION NOTE:
+                #    FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED:
+                #        At present, assignment of ``function`` as runtime param is not supported
                 #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
                 #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
-                if param_name is FUNCTION:
+                if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
                     continue
                 # If param is specified in runtime_params, then assign it
                 if param_name in runtime_params:
