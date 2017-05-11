@@ -206,7 +206,8 @@
 #                   input_values and output_values:  lists of values, but each value may be an np.ndarray
 #                   XXput_states.values_as_lists: lists of values, each of which has been converted to a list
 #                   Only appear in user_params if specified in arg of constructor
-
+#
+# FIX: Duplicated MappingProjections:  State, Line 423 vs. ObjectiveMechanism Line 617
 # FIX:   In LearningAuxiliary:
 #                  # input_states=[{NAME:SAMPLE,
 #                  #                VARIABLE:sample_input},
