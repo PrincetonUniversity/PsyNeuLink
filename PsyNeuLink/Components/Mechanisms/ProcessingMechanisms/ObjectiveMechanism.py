@@ -584,6 +584,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                    self.input_states,
                                                    monitored_values):
 
+            # if monitored_values[i][PROJECTION]:
+            #     projections = {SENDER: monitored_values[OUTPUT_STATE],
+            #                    RECEIVER: inputState}
+
+
             # Parse input_state to determine its specifications and assign values from monitored_values
             #    to any missing projections, including any projections requested.
             self.input_states[i] = _parse_state_spec(self,
@@ -619,7 +624,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 _instantiate_monitoring_projection(sender=monitored_value[OUTPUT_STATE],
                                                    receiver=input_state,
                                                    matrix=AUTO_ASSIGN_MATRIX)
-        TEST = True
 
 
 @tc.typecheck
@@ -649,20 +653,20 @@ def _parse_monitored_values(owner, monitored_values:tc.any(list, dict)):
             name = spec.owner.name + MONITORED_VALUE_NAME_SUFFIX
             output_state = spec
             value = spec.value
-            call_for_projection = True
+            projections = True
 
         # Mechanism:
         elif isinstance(spec, Mechanism_Base):
             name = spec.name + MONITORED_VALUE_NAME_SUFFIX
             output_state = spec.output_state
             value = spec.output_state.value
-            call_for_projection = True
+            projections = True
 
         # # If spec is a MonitoredOutputStatesOption:
         # # FIX: NOT SURE WHAT TO DO HERE YET
         # elif isinstance(montiored_value, MonitoredOutputStateOption):
         #     value = ???
-        #     call_for_projection = True
+        #     projections = True
 
         # If spec is a string:
         # - use as name of inputState
@@ -673,21 +677,21 @@ def _parse_monitored_values(owner, monitored_values:tc.any(list, dict)):
             name = spec
             output_state = DEFERRED_ASSIGNMENT
             value = DEFAULT_MONITORED_VALUE
-            call_for_projection = False
+            projections = False
 
         # value:
         elif is_value_spec(spec):
             name = owner.name + MONITORED_VALUE_NAME_SUFFIX
             output_state = DEFERRED_ASSIGNMENT
             value = spec
-            call_for_projection = False
+            projections = False
 
         elif isinstance(spec, tuple):
             # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
             name = owner.name + MONITORED_VALUE_NAME_SUFFIX
             output_state = DEFERRED_ASSIGNMENT
             value = spec[0]
-            call_for_projection = spec[1]
+            projections = spec[1]
 
         # dict:
         elif isinstance(spec, dict):
@@ -703,9 +707,9 @@ def _parse_monitored_values(owner, monitored_values:tc.any(list, dict)):
             if NAME in spec:
                 name = spec[NAME]
 
-            call_for_projection = False
+            projections = False
             if STATE_PROJECTIONS in spec:
-                call_for_projection = spec[STATE_PROJECTIONS]
+                projections = spec[STATE_PROJECTIONS]
 
             output_state = DEFERRED_ASSIGNMENT
             if OUTPUT_STATE in spec:
@@ -713,7 +717,7 @@ def _parse_monitored_values(owner, monitored_values:tc.any(list, dict)):
 
             if isinstance(spec[VALUE], (dict, tuple)):
                 # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
-                entry_name, value, call_for_projection = parse_spec(spec[VALUE])
+                entry_name, value, projections = parse_spec(spec[VALUE])
 
             else:
                 value = spec[VALUE]
@@ -723,7 +727,7 @@ def _parse_monitored_values(owner, monitored_values:tc.any(list, dict)):
                                           "OutputState, Mechanism, value or string".
                                           format(MONITORED_VALUES, owner.name, spec))
 
-        return name, output_state, value, call_for_projection
+        return name, output_state, value, projections
 
     # If it is a dict, convert to list by:
     #    - assigning the key of each entry to a NAME entry of the dict
@@ -737,11 +741,11 @@ def _parse_monitored_values(owner, monitored_values:tc.any(list, dict)):
     if isinstance(monitored_values, list):
 
         for i, monitored_value in enumerate(monitored_values):
-            name, output_state, value, call_for_projection = parse_spec(monitored_value)
+            name, output_state, value, projections = parse_spec(monitored_value)
             monitored_values[i] = {NAME: name,
                                    OUTPUT_STATE: output_state,
                                    VALUE: value,
-                                   PROJECTION: call_for_projection}
+                                   PROJECTION: projections}
 
     else:
         raise ObjectiveMechanismError("{} arg for {} ({} )must be a list or dict".
