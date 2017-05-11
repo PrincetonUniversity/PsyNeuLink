@@ -2113,7 +2113,12 @@ def _parse_state_spec(owner, state_spec, default_name, default_value, projection
                   VARIABLE: variable,
                   PARAMS: params}
 
-    if projections:
-        state_dict[STATE_PROJECTIONS] = projections
+    # MODIFIED 5/11/17 OLD:
+    # [COMMENTING THIS OUT SUPPRESSES INSTANTIATION OF PROJECTIONS IN State._instantiate_projections_to_state]
+    # if projections:
+    #     state_dict[STATE_PROJECTIONS] = projections
+    # MODIFIED 5/11/17 END
+
+
 
     return state_dict
