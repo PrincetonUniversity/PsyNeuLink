@@ -1,17 +1,18 @@
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
-                       function=Logistic,
-                       default_input_value = np.zeros((2,)))
+                                function=Logistic,
+                                input_states=['HELLO'],
+                                default_input_value = np.zeros((2,)))
+
+Input_Layer.output_states[0].value
 
 Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
@@ -137,7 +138,7 @@ def show_target():
     print ('- Middle 1: \n', Hidden_Layer_1.value)
     print ('- Middle 2: \n', Hidden_Layer_2.value)
     print ('- Output:\n', Output_Layer.value)
-    # print ('MSE: \n', Output_Layer.outputValue[0])
+    # print ('MSE: \n', Output_Layer.output_values[0])
 
 if COMPOSITION is PROCESS:
     # z.execute()
@@ -162,7 +163,7 @@ elif COMPOSITION is SYSTEM:
     x.reportOutputPref = True
     composition = x
 
-    # x.show_graph_with_learning()
+    # x.show_graph(show_learning=True)
     results = x.run(num_executions=10,
                     # inputs=stim_list,
                     # inputs=[[-1, 30],[2, 10]],

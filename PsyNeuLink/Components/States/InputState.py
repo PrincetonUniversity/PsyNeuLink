@@ -21,7 +21,7 @@ listed in its `receivesFromProjections <InputState.receivesFromProjections>` att
 `function <InputState.function>` combines the values of these inputs, and the result is assigned to an item
 corresponding to the inputState in the owner mechanism's :keyword:`variable <Mechanism.Mechanism_Base.variable>` and
 `inputValue <Mechanism.Mechanism_Base.inputValue>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
-for additional details about the role of inputStates in mechanisms).
+for additional details about the role of input_states in mechanisms).
 
 
 .. _InputState_Creation:
@@ -33,7 +33,7 @@ InputStates are created automatically when a mechanism is created.  For example,
 the `pathway` of a process`, the inputState for that mechanism will be created and assigned as the
 `receiver <MappingProjection.MappingProjection.receiver>` of a `MappingProjection` from the  preceding mechanism in the
 pathway;  and a `ControlMechanism <ControlMechanism>` automatically creates an inputState for each mechanism that it
-monitors. PsyNeuLink does not currently support the explicit creation of inputStates (this may be implemented in the
+monitors. PsyNeuLink does not currently support the explicit creation of input_states (this may be implemented in the
 future). However they can modified as described below.
 
 COMMENT:
@@ -46,10 +46,10 @@ An inputState must be owned by a mechanism. Therefore, if the inputState is crea
 must be specified in the ``owner`` argument of its constructor; if the inputState is specified in the
 INPUT_STATES entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.
 
-If one or more custom inputStates need to be specified when a mechanism is created, or added to an existing mechanism,
+If one or more custom input_states need to be specified when a mechanism is created, or added to an existing mechanism,
 they can be specified in an entry of the mechanism's parameter dictionary, using the key :keyword`INPUT_STATES`
-and a value that specifies one or more inputStates. For a single inputState, the value can be any of the
-specifications in the the list below.  To create multiple inputStates, the value of the INPUT_STATES entry
+and a value that specifies one or more input_states. For a single inputState, the value can be any of the
+specifications in the the list below.  To create multiple input_states, the value of the INPUT_STATES entry
 can be either a list, each item of which can be any of the specifications below;  or, it can be an OrderedDict,
 in which the key for each entry is a string specifying the name for the inputState to be created, and its value is
 one of the specifications below:
@@ -104,17 +104,17 @@ COMMENT:
 COMMENT
 
 COMMENT:
-Assigning inputStates using the INPUT_STATES entry of a mechanism's parameter dictionary adds them to any
+Assigning input_states using the INPUT_STATES entry of a mechanism's parameter dictionary adds them to any
 that are automatically generated for that mechanism;  if the name of one explicitly specified is them same as one
 automatically generated, the name will be suffixed with a numerical index and added (that is, it will *not* replace
 the one automatically generated). InputStates can also be added by using the
-:py:func:`assign_output_state <OutputState.assign_output_state>`. If the mechanism requires multiple inputStates
+:py:func:`assign_output_state <OutputState.assign_output_state>`. If the mechanism requires multiple input_states
 (i.e., it's ``variable`` attribute has more than on item), it assigns the ``value`` of each inputState to an item of
-its ``variable`` (see :ref:`Mechanism Variable <Mechanism_Variable>`). Therefore, the number of inputStates
+its ``variable`` (see :ref:`Mechanism Variable <Mechanism_Variable>`). Therefore, the number of input_states
 specified must equal the number of items in the mechanisms's ``variable``.  An exception is if the mechanism's
 ``variable`` has more than one item, it may still be assigned a single inputState;  in that case, the ``value`` of
 that inputState must have the same number of items as the  mechanisms's ``variable``.  For cases in which there are
-multiple inputStates, the order in which they are specified in the list or OrderedDict must parallel the order of
+multiple input_states, the order in which they are specified in the list or OrderedDict must parallel the order of
 the items to which they will be assined in the mechanism's ``variable``; furthemore, as noted above, the ``value`` for
 each inputState must match (in number and types of elements) the item of ``variable`` to which it will be assigned.
 COMMENT
@@ -397,14 +397,16 @@ class InputState(State_Base):
 def _instantiate_input_states(owner, context=None):
     """Call State._instantiate_state_list() to instantiate orderedDict of inputState(s)
 
-    Create OrderedDict of inputState(s) specified in paramsCurrent[INPUT_STATES]
+    Create ContentAddressableList of inputState(s) specified in paramsCurrent[INPUT_STATES]
+
     If INPUT_STATES is not specified, use self.variable to create a default input state
+
     When completed:
-        - self.inputStates contains an OrderedDict of one or more inputStates
-        - self.inputState contains the `primary inputState <Mechanism_InputStates>`:  first or only one in OrderedDict
-        - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more inputStates)
+        - self.input_states contains an OrderedDict of one or more input_states
+        - self.input_state contains the `primary inputState <Mechanism_InputStates>`:  first or only one in OrderedDict
+        - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more input_states)
         - each inputState corresponds to an item in the variable of the owner's function
-        - the value of all of the inputStates is stored in a list in inputValue
+        - the value of all of the input_states is stored in a list in inputValue
         - if there is only one inputState, it is assigned the full value
 
     Note: State._instantiate_state_list()
@@ -412,22 +414,28 @@ def _instantiate_input_states(owner, context=None):
               into individual 1D arrays, one for each input state
 
     (See State._instantiate_state_list() for additional details)
-
-    :param context:
-    :return:
     """
-    owner.inputStates = _instantiate_state_list(owner=owner,
-                                               state_list=owner.paramsCurrent[INPUT_STATES],
-                                               state_type=InputState,
-                                               state_param_identifier=INPUT_STATES,
-                                               constraint_value=owner.variable,
-                                               constraint_value_name="function variable",
-                                               context=context)
 
-    # Check that number of inputStates and their variables are consistent with owner.variable,
+    state_list = _instantiate_state_list(owner=owner,
+                                         state_list=owner.input_states,
+                                         state_type=InputState,
+                                         state_param_identifier=INPUT_STATES,
+                                         constraint_value=owner.variable,
+                                         constraint_value_name="function variable",
+                                         context=context)
+
+    # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
+    # FIX: Hack to prevent recursion in calls to setter and assign_params
+    if context and 'COMMAND_LINE' in context:
+        owner.input_states = state_list
+    else:
+        owner._input_states = state_list
+    # owner.input_states = state_list
+
+    # Check that number of input_states and their variables are consistent with owner.variable,
     #    and adjust the latter if not
-    for i in range (len(owner.inputStates)):
-        input_state = list(owner.inputStates.values())[i]
+    for i in range (len(owner.input_states)):
+        input_state = owner.input_states[i]
         try:
             variable_item_is_OK = iscompatible(owner.variable[i], input_state.value)
             if not variable_item_is_OK:
@@ -439,25 +447,17 @@ def _instantiate_input_states(owner, context=None):
     if not variable_item_is_OK:
         old_variable = owner.variable
         new_variable = []
-        for state_name, state in owner.inputStates:
+        for state_name, state in owner.input_states:
             new_variable.append(state.value)
         owner.variable = np.array(new_variable)
         if owner.verbosePref:
             warnings.warn("Variable for {} ({}) has been adjusted "
-                          "to match number and format of its inputStates: ({})".
+                          "to match number and format of its input_states: ({})".
                           format(old_variable, append_type_to_name(owner),owner.variable))
 
 
-    # Initialize self.inputValue to correspond to format of owner's variable, and zero it
-# FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
-# FIX:  IS THIS A LIST OR np.array (SHOULD BE A LIST)
-    # ??REPLACE THIS WITH owner.inputValue = list(owner.variable) * 0.0??
-    owner.inputValue = owner.variable.copy() * 0.0
-
-    # Assign self.inputState to first inputState in dict
-    try:
-        owner.inputState = list(owner.inputStates.values())[0]
-    except AttributeError:
-        owner.inputState = None
-
-
+#     # Initialize self.inputValue to correspond to format of owner's variable, and zero it
+# # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
+# # FIX:  IS THIS A LIST OR np.array (SHOULD BE A LIST)
+#     # ??REPLACE THIS WITH owner.inputValue = list(owner.variable) * 0.0??
+#     owner.inputValue = owner.variable.copy() * 0.0

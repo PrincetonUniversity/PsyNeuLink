@@ -75,9 +75,9 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import get_matrix, is_matrix, Stability
+from PsyNeuLink.Components.Functions.Function import get_matrix, Stability
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
 
 class RecurrentTransferError(Exception):
@@ -236,13 +236,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of
-        `outputValue <TransferMechanism.outputValue>`.    
+        `output_values <TransferMechanism.output_values>`.    
 
     COMMENT:
         CORRECTED:
         value : 1d np.array
             the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT outputState
-            and the first item of ``outputValue``.
+            and the first item of ``output_values``.
     COMMENT
 
     outputStates : Dict[str, OutputState]
@@ -257,7 +257,7 @@ class RecurrentTransferMechanism(TransferMechanism):
           note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1 
           (e.g., the `Logistic` function).
 
-    outputValue : List[array(float64), float, float]
+    output_values : List[array(float64), float, float]
         a list with the following items:
         * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
         * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
@@ -403,17 +403,17 @@ class RecurrentTransferMechanism(TransferMechanism):
         energy = Stability(self.variable[0],
                            metric=ENERGY,
                            transfer_fct=self.function,
-                           matrix=self.recurrent_projection.parameterStates[MATRIX])
-        self.outputStates[ENERGY].calculate = energy.function
+                           matrix=self.recurrent_projection._parameter_states[MATRIX])
+        self.output_states[ENERGY].calculate = energy.function
 
         if self.function_object.bounds == (0,1) or range == (0,1):
             entropy = Stability(self.variable[0],
                                 metric=ENTROPY,
                                 transfer_fct=self.function,
-                                matrix=self.recurrent_projection.parameterStates[MATRIX])
-            self.outputStates[ENTROPY].calculate = entropy.function
+                                matrix=self.recurrent_projection._parameter_states[MATRIX])
+            self.output_states[ENTROPY].calculate = entropy.function
         else:
-            del self.outputStates[ENTROPY]
+            del self.output_states[ENTROPY]
 
     def _execute(self,
                  variable=None,

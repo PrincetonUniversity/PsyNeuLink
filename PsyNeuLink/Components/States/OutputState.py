@@ -191,7 +191,7 @@ specified by its `calculate <OutputState_Calculate>` attribute with the designat
 `value <Mechanism.Mechanism_Base.value>` as its input.  This is possibly modified by the result of the outputState's
 `function <OutputState.function>` (though see `note <OutputState_Function_Note_2>`).  The final result is assigned as
 the outputState's `value <OutputState.value>`, as well as to a corresponding item of the mechanism's
-`outputValue  <Mechanism.Mechanism_Base.outputValue>` attribute. It is also used as the input to any projections for
+`output_values  <Mechanism.Mechanism_Base.output_values>` attribute. It is also used as the input to any projections for
 which the outputState is the `sender <Projection.Projection.sender>`.
 
 .. _OutputState_Class_Reference:
@@ -342,14 +342,14 @@ class OutputState(State_Base):
         the outputState's `index <OutputState.index>` attribute.  The result is combined with the result of the
         outputState's `function <OutputState.function>` ((though see `note below <OutputState_Function_Note_2>`)
         to determine both the `value <OutputState.value>` of the outputState, as well as the value of the
-        corresponding item of the owner mechanism's `outputValue <Mechanism.Mechanism_Base.outputValue>`.
+        corresponding item of the owner mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
         The default (`Linear`) transfers the value unmodified.
 
     function : CombinationFunction : default LinearCombination(operation=SUM))
         performs an element-wise (Hadamard) aggregation  of the values of the projections received by the
         outputState.  The result is combined with the result of the function specified by
         `calculate <OutputState.calculate>`, and assigned as both the outputState's `value <OutputState.value>`
-        and the corresponding item of the owner's `outputValue <Mechanism.Mechanism_Base.outputValue>`.
+        and the corresponding item of the owner's `output_values <Mechanism.Mechanism_Base.output_values>`.
 
         .. _OutputState_Function_Note_2:
 
@@ -368,7 +368,7 @@ class OutputState(State_Base):
         assigned the result of `function <OutputState.function>`
         (though see note under `function <OutputState.function>) combined with the result of the function specified
         by `calculate <OutputState.calculate>`;  the same value is assigned to the corresponding item of the owner
-        mechanism's `outputValue <Mechanism.Mechanism_Base.outputValue>`.
+        mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
 
     name : str : default <State subclass>-<index>
         name of the outputState.
@@ -483,8 +483,8 @@ class OutputState(State_Base):
                 self.owner.value[target_set[INDEX]]
             except IndexError:
                 raise OutputStateError("Value of {} argument for {} is greater than the number of items in "
-                                       "the outputValue ({}) for its owner mechanism ({})".
-                                       format(INDEX, self.name, self.owner.outputValue, self.owner.name))
+                                       "the output_values ({}) for its owner mechanism ({})".
+                                       format(INDEX, self.name, self.owner.output_values, self.owner.name))
 
         # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
@@ -567,30 +567,12 @@ def _instantiate_output_states(owner, context=None):
     (See State._instantiate_state_list() for additional details)
 
     IMPLEMENTATION NOTE:
-        default(s) for self.paramsCurrent[OUTPUT_STATES] (self.value) is assigned here
+        default(s) for self.paramsCurrent[OUTPUT_STATES] (self.value) are assigned here
         rather than in _validate_params, as it requires function to have been instantiated first
-
-    :param context:
-    :return:
     """
 
     constraint_value = []
 
-    # # MODIFIED 3/3/17 OLD:
-    # owner_value = np.atleast_2d(owner.value)
-
-    # MODIFIED 3/3/17 NEW:
-    # # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?
-    # owner_value = owner.value
-    # converted_to_2d = np.atleast_2d(owner.value)
-    # # If owner_value is a list of heterogenous elements, use as is
-    # if converted_to_2d.dtype == object:
-    #     owner_value = owner.value
-    # # Otherwise, use value converted to 2d np.array
-    # else:
-    #     owner_value = converted_to_2d
-
-    # MODIFIED 3/7/17 NEWER
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
     owner_value = owner.value
     # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
@@ -612,14 +594,12 @@ def _instantiate_output_states(owner, context=None):
         else:
             owner_value = converted_to_2d
 
-    # MODIFIED 3/3/17 END
-
     # IMPLEMENTATION NOTE:
     # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_STATES]
     #        (that is, there is the same number of items in owner_value as there are outputStates)
     #        then increment index so as to assign each item of owner_value to each outputState
-    if owner.paramsCurrent[OUTPUT_STATES]:
-        for output_state in owner.paramsCurrent[OUTPUT_STATES]:
+    if owner.output_states:
+        for output_state in owner.output_states:
             # Default is PRIMARY_OUTPUT_STATE
             index = PRIMARY_OUTPUT_STATE
             # If output_state is already an OutputState object, get its index attribute
@@ -635,13 +615,17 @@ def _instantiate_output_states(owner, context=None):
     else:
         constraint_value = owner_value
 
-    owner.outputStates = _instantiate_state_list(owner=owner,
-                                                state_list=owner.paramsCurrent[OUTPUT_STATES],
-                                                state_type=OutputState,
-                                                state_param_identifier=OUTPUT_STATES,
-                                                constraint_value=constraint_value,
-                                                constraint_value_name="output",
-                                                context=context)
-    # Assign self.outputState to first outputState in dict
-    owner.outputState = list(owner.outputStates.values())[0]
+    state_list = _instantiate_state_list(owner=owner,
+                                         state_list=owner.output_states,
+                                         state_type=OutputState,
+                                         state_param_identifier=OUTPUT_STATES,
+                                         constraint_value=constraint_value,
+                                         constraint_value_name="output",
+                                         context=context)
 
+    # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
+    # FIX: Hack to prevent recursion in calls to setter and assign_params
+    if 'COMMAND_LINE' in context:
+        owner.output_states = state_list
+    else:
+        owner._output_states = state_list
