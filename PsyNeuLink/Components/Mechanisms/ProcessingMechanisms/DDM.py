@@ -346,21 +346,6 @@ class DDM_OUTPUT_INDEX(AutoNumber):
     RT_CORRECT_VARIANCE = ()
     NUM_OUTPUT_VALUES = ()
 
-DDM_OUTPUT_STATES = [
-    {NAME: DDM_OUTPUT.DECISION_VARIABLE,
-     INDEX: DDM_OUTPUT_INDEX.DECISION_VARIABLE.value},
-    {NAME: DDM_OUTPUT.RESPONSE_TIME,
-     INDEX: DDM_OUTPUT_INDEX.RESPONSE_TIME.value},
-    {NAME: DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,  # Probability of hitting upper bound
-     INDEX: DDM_OUTPUT_INDEX.P_UPPER_MEAN.value},
-    {NAME: DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD,  # Probability of hitting lower bound
-     INDEX: DDM_OUTPUT_INDEX.P_LOWER_MEAN.value},
-    {NAME: DDM_OUTPUT.RT_CORRECT_MEAN,  # NavarroAnd Fuss only
-     INDEX: DDM_OUTPUT_INDEX.RT_CORRECT_MEAN.value},
-    {NAME: DDM_OUTPUT.RT_CORRECT_VARIANCE,  # NavarroAnd Fuss only
-     INDEX: DDM_OUTPUT_INDEX.RT_CORRECT_VARIANCE.value}]
-
-
 # DDM STANDARD OutputStates
 
 # Names:
@@ -559,28 +544,20 @@ class DDM(ProcessingMechanism_Base):
     # Set default input_value to default bias for DDM
     paramNames = paramClassDefaults.keys()
 
+    standard_output_states = [{NAME: DDM_OUTPUT.DECISION_VARIABLE,
+                               INDEX: DDM_OUTPUT_INDEX.DECISION_VARIABLE.value},
+                              {NAME: DDM_OUTPUT.RESPONSE_TIME,
+                               INDEX: DDM_OUTPUT_INDEX.RESPONSE_TIME.value},
+                              {NAME: DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,  # Probability of hitting upper bound
+                               INDEX: DDM_OUTPUT_INDEX.P_UPPER_MEAN.value},
+                              {NAME: DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD,  # Probability of hitting lower bound
+                               INDEX: DDM_OUTPUT_INDEX.P_LOWER_MEAN.value},
+                              {NAME: DDM_OUTPUT.RT_CORRECT_MEAN,  # NavarroAnd Fuss only
+                               INDEX: DDM_OUTPUT_INDEX.RT_CORRECT_MEAN.value},
+                              {NAME: DDM_OUTPUT.RT_CORRECT_VARIANCE,  # NavarroAnd Fuss only
+                               INDEX: DDM_OUTPUT_INDEX.RT_CORRECT_VARIANCE.value}]
+
     # Instantiate the names of standard OutputStates as read-only attributes of the class
-
-
-    # STANDARD_OUTPUT_STATES = DDM_OUTPUT_STATES
-    # @property
-    # def DECISION_VARIABLE(self):
-    #     return inspect.stack()[0][3]
-    # @property
-    # def RESPONSE_TIME(self):
-    #     return inspect.stack()[0][3]
-    # @property
-    # def PROBABILITY_UPPER_THRESHOLD(self):
-    #     return inspect.stack()[0][3]
-    # @property
-    # def PROBABILITY_LOWER_THRESHOLD(self):
-    #     return inspect.stack()[0][3]
-    # @property
-    # def RT_CORRECT_MEAN(self):
-    #     return inspect.stack()[0][3]
-    # @property
-    # def RT_CORRECT_VARIANCE(self):
-    #     return inspect.stack()[0][3]
 
     @tc.typecheck
     def __init__(self,
@@ -627,7 +604,9 @@ class DDM(ProcessingMechanism_Base):
                                   # context=context)
                                   context=self)
 
-        self.standard_output_states = DDM_OUTPUT_STATES
+        # Instantiate names of items in DDM_OUTPUT_STATES as attributes of the class
+        #   - if the corresponding outputState is instantiated, the attribute will point to it;
+        #   - otherwise, it will remain as a string
         for state in self.standard_output_states:
             setattr(self.__class__, state[NAME], make_output_property(state[NAME]))
 
@@ -636,8 +615,6 @@ class DDM(ProcessingMechanism_Base):
         #   - otherwise, it will remain as a string
         for output_name in [n for n in DDM.__dict__.keys() if not (n.startswith('__') and n.endswith('__'))]:
             setattr(self, output_name+'_OUTPUT', output_name)
-
-        TEST = True
 
         # # TEST PRINT
         # print("\n{} user_params:".format(self.name))
