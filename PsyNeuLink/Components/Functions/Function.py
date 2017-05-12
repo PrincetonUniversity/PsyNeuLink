@@ -1219,6 +1219,8 @@ class LinearCombination(
         # FIX: THEN TEST THAT SHAPES OF EVERY ELEMENT ALONG AXIS 0 ARE THE SAME
         # FIX; PUT THIS IN DOCUMENTATION
         if isinstance(variable, (list, np.ndarray)):
+            if isinstance(variable, np.ndarray) and not variable.ndim:
+                return
             length = 0
             for i in range(len(variable)):
                 if i == 0:

@@ -543,8 +543,10 @@ INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
 
 MEAN = 'mean'
+MEDIAN = 'median'
 VARIANCE = 'variance'
 STANDARD_DEV = 'standard_dev'
+
 
 LOW = 'low'
 HIGH = 'high'
