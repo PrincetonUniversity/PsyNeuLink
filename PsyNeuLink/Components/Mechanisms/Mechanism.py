@@ -939,6 +939,8 @@ class Mechanism_Base(Mechanism):
 
         if hasattr(self, 'standard_output_states'):
             # Instantiate names of items in standard_output_states as attributes of the class
+            # for state_name in self.standard_output_states:
+            #     setattr(self.__class__, state_name, make_output_property(state_name))
             for state in self.standard_output_states:
                 setattr(self.__class__, state[NAME], make_output_property(state[NAME]))
 
