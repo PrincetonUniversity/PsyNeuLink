@@ -155,15 +155,13 @@ Class Reference
 from functools import reduce
 from operator import *
 from random import randint
-from numpy import sqrt, abs, tanh, exp, finfo
-import numpy as np
 
-import typecheck as tc
+from numpy import abs, tanh, exp
 
 from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Utilities import random_matrix, is_matrix
+from PsyNeuLink.Globals.Registry import register_category
+from PsyNeuLink.Globals.Utilities import is_matrix
 
 EPSILON = np.finfo(float).eps
 
@@ -2501,7 +2499,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def keyword(self, keyword):
 
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
         rows = None
         cols = None
         if isinstance(self, MappingProjection):
@@ -4304,7 +4302,7 @@ class Stability(ObjectiveFunction):
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
      """
 
-    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+    from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
     from PsyNeuLink.Components.States.ParameterState import ParameterState
 
     componentName = STABILITY_FUNCTION
@@ -4358,14 +4356,14 @@ class Stability(ObjectiveFunction):
         # Validate error_matrix specification
         if MATRIX in target_set:
 
-            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
             from PsyNeuLink.Components.States.ParameterState import ParameterState
 
             matrix = target_set[MATRIX]
 
             if isinstance(matrix, MappingProjection):
                 try:
-                    matrix = matrix.parameterStates[MATRIX].value
+                    matrix = matrix._parameter_states[MATRIX].value
                     param_type_string = "MappingProjection's ParameterState"
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
@@ -4416,10 +4414,10 @@ class Stability(ObjectiveFunction):
 
         size = len(np.squeeze(self.variable))
 
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         if isinstance(self.matrix,MappingProjection):
-            self.matrix = self.matrix.parameterStates[MATRIX]
+            self.matrix = self.matrix._parameter_states[MATRIX]
         elif isinstance(self.matrix,ParameterState):
             pass
         else:
@@ -5124,14 +5122,14 @@ class BackPropagation(LearningFunction):
             error_matrix = target_set[ERROR_MATRIX]
 
             from PsyNeuLink.Components.States.ParameterState import ParameterState
-            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
             if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
                 raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
                                     "MappingProjection".format(ERROR_MATRIX, self.name))
 
             if isinstance(error_matrix, MappingProjection):
                 try:
-                    error_matrix = error_matrix.parameterStates[MATRIX].value
+                    error_matrix = error_matrix._parameter_states[MATRIX].value
                     param_type_string = "MappingProjection's ParameterState"
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "

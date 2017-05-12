@@ -76,7 +76,7 @@ Class Reference
 
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import *
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
 
 class LCAError(Exception):
@@ -210,7 +210,7 @@ class LCA(RecurrentTransferMechanism):
 
     decay : float : default 1.0
         determines the amount by which to multiply the `previous_input <TransferMechanism.previous_input>` value
-        in each round of execution.
+        in each round of execution (acts, in effect like the weight on a self-connection).
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
@@ -242,13 +242,13 @@ class LCA(RecurrentTransferMechanism):
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of
-        `outputValue <TransferMechanism.outputValue>`.    
+        `output_values <TransferMechanism.output_values>`.    
 
     COMMENT:
         CORRECTED:
         value : 1d np.array
             the output of `function <LCA.function>`;  also assigned to :keyword:`value` of the TRANSFER_RESULT 
-            outputState and the first item of :keyword:`outputValue`.
+            outputState and the first item of :keyword:`output_values`.
     COMMENT
 
     outputStates : Dict[str, OutputState]
@@ -269,7 +269,7 @@ class LCA(RecurrentTransferMechanism):
           index of the element of RESULT with the highest value, and the second the difference between that
           and the average of the value of all its other elements;
 
-    outputValue : List[array(float64), float, float]
+    output_values : List[array(float64), float, float]
         a list with the following items:
         * **result** of the `function <LCA.function>` calculation (value of TRANSFER_RESULT outputState);
         * **mean** of the result (:keyword:`value` of TRANSFER_MEAN outputState)
@@ -369,5 +369,5 @@ class LCA(RecurrentTransferMechanism):
             others = x_part[:-1]
             return max_val - np.mean(others)
 
-        self.outputStates[MAX_VS_NEXT].calculate = max_vs_next
-        self.outputStates[MAX_VS_AVG].calculate = max_vs_avg
+        self.output_states[MAX_VS_NEXT].calculate = max_vs_next
+        self.output_states[MAX_VS_AVG].calculate = max_vs_avg

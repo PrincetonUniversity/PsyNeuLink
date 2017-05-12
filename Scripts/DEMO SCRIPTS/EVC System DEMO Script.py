@@ -3,7 +3,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMe
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
 
@@ -85,11 +85,11 @@ def show_results():
     print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
     print ('\tDrift rate control signal (from EVC): {}'.
            # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
-           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value))))))
+           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision._parameter_states[DRIFT_RATE].value))))))
     print ('\tThreshold control signal (from EVC): {}'.
-           format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[THRESHOLD].value))),
-                  mySystem.controller.outputStates['threshold_ControlSignal'].value,
-                  Decision.parameterStates[THRESHOLD].receivesFromProjections[0].value
+           format(re.sub('[\[,\],\n]','',str(float(Decision._parameter_states[THRESHOLD].value))),
+                  mySystem.controller.output_states['threshold_ControlSignal'].value,
+                  Decision._parameter_states[THRESHOLD].receivesFromProjections[0].value
                   ))
     for result in results:
         print("\t{}: {}".format(result[0],

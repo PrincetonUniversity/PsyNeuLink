@@ -84,13 +84,13 @@ After each execution of the mechanism:
 
     * **result** of `function <TransferMechanism.function>` is assigned to the mechanism's
       `value <TransferMechanism.value>` attribute, the :keyword:`value` of its TRANSFER_RESULT outputState,
-      and to the 1st item of the mechanism's `outputValue <TransferMechanism.outputValue>` attribute;
+      and to the 1st item of the mechanism's `output_values <TransferMechanism.output_values>` attribute;
     ..
     * **mean** of the result is assigned to the the :keyword:`value` of the mechanism's TRANSFER_MEAN outputState,
-      and to the 2nd item of its `outputValue <TransferMechanism.outputValue>` attribute;
+      and to the 2nd item of its `output_values <TransferMechanism.output_values>` attribute;
     ..
     * **variance** of the result is assigned to the :keyword:`value` of the mechanism's TRANSFER_VARIANCE outputState,
-      and to the 3rd item of its `outputValue <TransferMechanism.outputValue>` attribute.
+      and to the 3rd item of its `output_values <TransferMechanism.output_values>` attribute.
 
 COMMENT
 
@@ -116,9 +116,10 @@ TRANSFER_MEAN = "transfer_mean "
 TRANSFER_VARIANCE = "transfer_variance"
 TRANSFER_DIFFERENTIAL = "transfer_differential"
 
+
 # TransferMechanism output indices (used to index output values):
 class Transfer_Output(AutoNumber):
-    """Indices of the `outputValue <TransferMechanism.outputValue>` attribute of the TransferMechanism containing the
+    """Indices of the `output_values <TransferMechanism.output_values>` attribute of the TransferMechanism containing the
     values described below."""
     RESULT = ()
     """Result of the TransferMechanism's `function <TransferMechanism.function>`."""
@@ -296,13 +297,13 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of
-        `outputValue <TransferMechanism.outputValue>`.
+        `output_values <TransferMechanism.output_values>`.
 
     COMMENT:
         CORRECTED:
         value : 1d np.array
             the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT outputState
-            and the first item of ``outputValue``.
+            and the first item of ``output_values``.
     COMMENT
 
     outputStates : Dict[str, OutputState]
@@ -311,7 +312,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
 
-    outputValue : List[array(float64), float, float]
+    output_values : List[array(float64), float, float]
         a list with the following items:
         * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
         * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
@@ -352,12 +353,11 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
         NOISE: None,
-        INPUT_STATES: None,
         OUTPUT_STATES:[
-            {NAME:TRANSFER_RESULT},
-            {NAME:TRANSFER_MEAN,
+            {NAME:RESULT},
+            {NAME:MEAN,
              CALCULATE:lambda x: np.mean(x)},
-            {NAME:TRANSFER_VARIANCE,
+            {NAME:VARIANCE,
              CALCULATE:lambda x: np.var(x)}],
         # INTEGRATOR_FUNCTION: Integrator
         })
@@ -367,6 +367,8 @@ class TransferMechanism(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=Transfer_DEFAULT_BIAS,
+                 input_states=None,
+                 output_states=None,
                  size:tc.optional(int)=None,
                  function=Linear,
                  initial_value=None,
@@ -384,6 +386,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
+                                                  input_states=input_states,
+                                                  output_states=output_states,
                                                   noise=noise,
                                                   time_constant=time_constant,
                                                   time_scale=time_scale,
@@ -472,8 +476,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Noise is a list or array
         if isinstance(noise, (np.ndarray, list)):
             # Variable is a list/array
-            if isinstance(self.variable[0], (np.ndarray, list)):
-                if len(noise) != np.array(self.variable[0]).size:
+            if isinstance(self.variable, (np.ndarray, list)):
+                if len(noise) != np.array(self.variable).size:
                     try:
                         formatted_noise = list(map(lambda x: x.__qualname__, noise))
                     except AttributeError:
@@ -481,8 +485,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                     raise MechanismError("The length ({}) of the array specified for the noise parameter ({}) of {} "
                                         "must match the length ({}) of the default input ({}). If noise is specified as"
                                         " an array or list, it must be of the same size as the input."
-                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable[0]).size,
-                                                self.variable[0]))
+                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
+                                                self.variable))
                 else:
                     # Noise is a list or array of functions
                     if callable(noise[0]):
@@ -500,13 +504,10 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         elif callable(noise):
             self.noise_function = True
-            if isinstance(self.variable[0], (np.ndarray, list)):
-
+            if isinstance(self.variable, (np.ndarray, list)):
                 new_noise = []
-                for v in self.variable[0]:
-
-                    new_noise.append(noise)
-
+                for i in self.variable:
+                    new_noise.append(self.noise)
                 noise = new_noise
 
         elif isinstance(noise, float):
@@ -541,7 +542,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 context=None):
         """Execute TransferMechanism function and return transform of input
 
-        Execute TransferMechanism function on input, and assign to outputValue:
+        Execute TransferMechanism function on input, and assign to output_values:
             - Activation value for all units
             - Mean of the activation values across units
             - Variance of the activation values across units
@@ -617,14 +618,14 @@ class TransferMechanism(ProcessingMechanism_Base):
             if not self.integrator_function:
 
                 self.integrator_function = Integrator(
-                                            self.inputState.value,
+                                            self.input_state.value,
                                             initializer = self.previous_input,
                                             integration_type= ADAPTIVE,
-                                            noise = noise,
-                                            rate = time_constant
+                                            noise = self.noise,
+                                            rate = self.time_constant
                                             )
 
-            current_input = self.integrator_function.execute(self.inputState.value,
+            current_input = self.integrator_function.execute(self.input_state.value,
                                                         # Should we handle runtime params?
                                                              # params={INITIALIZER: self.previous_input,
                                                              #         INTEGRATION_TYPE: ADAPTIVE,
@@ -636,7 +637,16 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         elif time_scale is TimeScale.TRIAL:
 
-            current_input = self.inputState.value + noise
+            if self.noise_function:
+                if isinstance(noise, (list, np.ndarray)):
+                    new_noise = []
+                    for n in noise:
+                        new_noise.append(n())
+                    noise = new_noise
+                else:
+                    noise = noise()
+
+            current_input = self.input_state.value + noise
         else:
             raise MechanismError("time_scale not specified for TransferMechanism")
 
