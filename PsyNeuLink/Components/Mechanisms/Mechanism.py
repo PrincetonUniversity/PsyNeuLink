@@ -2148,17 +2148,14 @@ class MechanismList(UserList):
 
 
 def make_output_property(name):
-    backing_field = '_' + name
+    # backing_field = '_' + name
 
     def getter(self):
-        return getattr(self, backing_field)
+        return name
 
     def setter(self, val):
-        raise UtilitiesError("{} is read-only property of {}".format(name, self.name))
+        raise UtilitiesError("{} is read-only property of {}".format(name, self.__class__.__name__))
 
     # Create the property
     prop = property(getter).setter(setter)
-
-    # # Install some documentation
-    # prop.__doc__ = docs[name]
     return prop
