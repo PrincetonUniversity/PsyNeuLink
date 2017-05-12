@@ -604,18 +604,6 @@ class DDM(ProcessingMechanism_Base):
                                   # context=context)
                                   context=self)
 
-        # Instantiate names of items in DDM_OUTPUT_STATES as attributes of the class
-        #   - if the corresponding outputState is instantiated, the attribute will point to it;
-        #   - otherwise, it will remain as a string
-        for state in self.standard_output_states:
-            setattr(self.__class__, state[NAME], make_output_property(state[NAME]))
-
-        # Instantiate <STANDARD_OutputState>_OUTPUT as attribute on instance
-        #   - if the corresponding outputState is instantiated, the attribute will point to it;
-        #   - otherwise, it will remain as a string
-        for output_name in [n for n in DDM.__dict__.keys() if not (n.startswith('__') and n.endswith('__'))]:
-            setattr(self, output_name+'_OUTPUT', output_name)
-
         # # TEST PRINT
         # print("\n{} user_params:".format(self.name))
         # for param in self.user_params.keys():
