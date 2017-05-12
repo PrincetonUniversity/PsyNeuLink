@@ -182,7 +182,7 @@ def parameter_spec(param):
                            tuple,
                            function_type,
                            ParamValueProjection,
-                           Projection)) or
+                           Projection)) or callable(param) or
         (inspect.isclass(param) and issubclass(param, Projection)) or
         param in parameter_keywords):
         return True
