@@ -940,12 +940,12 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Get controller's MONITOR_FOR_CONTROL specifications (optional, so need to try)
         try:
-            controller_specs = self.paramsCurrent[MONITOR_FOR_CONTROL] or []
+            controller_specs = self.paramsCurrent[MONITOR_FOR_CONTROL].copy() or []
         except KeyError:
             controller_specs = []
 
         # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
-        system_specs = self.system.monitor_for_control
+        system_specs = self.system.monitor_for_control.copy()
 
         # If the controller has a MonitoredOutputStatesOption specification, remove any such spec from system specs
         if controller_specs:
@@ -953,6 +953,9 @@ class EVCMechanism(ControlMechanism_Base):
                 option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),None)
                 if option_item is not None:
                     del system_specs[option_item]
+            for item in controller_specs:
+                if item in system_specs:
+                    del system_specs[system_specs.index(item)]
 
         # Combine controller and system specs
         # If there are none, assign PRIMARY_OUTPUT_STATES as default
