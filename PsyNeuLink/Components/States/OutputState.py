@@ -216,6 +216,22 @@ from PsyNeuLink.Components.Functions.Function import *
 
 PRIMARY_OUTPUT_STATE = 0
 
+# Standard OutputStates
+OUTPUT_RESULT = {NAME: RESULT}
+
+OUTPUT_MEAN = {NAME:MEAN,
+               CALCULATE:lambda x: np.mean(x)}
+
+OUTPUT_MEDIAN = {NAME:MEDIAN,
+                   CALCULATE:lambda x: np.median(x)}
+
+OUTPUT_STAND_DEVIATION = {NAME:STANDARD_DEV,
+                          CALCULATE:lambda x: np.std(x)}
+
+OUTPUT_VARIANCE = {NAME:VARIANCE,
+                   CALCULATE:lambda x: np.var(x)}
+
+
 class OutputStateError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -354,7 +370,7 @@ class OutputState(State_Base):
         .. _OutputState_Function_Note_2:
 
         .. note::
-           Currently PsyNeuLink does not currently support projections to outputStates.  Therefore, the
+           PsyNeuLink does not currently support projections to outputStates.  Therefore, the
            :keyword:`function` attribute is not used.  It is implemented strictly for consistency with other
            state classes, and for potential future use.
            COMMENT:
@@ -528,12 +544,13 @@ class OutputState(State_Base):
         #            TO COMBINE self.value ASSIGNED IN CALL TO SUPER (FROM PROJECTIONS)
         #            WITH calculate(self.owner.value[index]) PER BELOW
 
-        # # MODIFIED 4/15/17 OLD:
-        # if not self.value:
-        #     self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
-        # # MODIFIED 4/15/17 NEW:
+        # MODIFIED 5/11/17 OLD:
         self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
-        # # MODIFIED 4/15/17 END
+        # # MODIFIED 5/11/17 NEW:
+        # calculated_value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
+        # self.value = self.function(calculated_value)
+        # MODIFIED 5/11/17 END
+
 
 
 
@@ -611,9 +628,17 @@ def _instantiate_output_states(owner, context=None):
                     index = output_state[INDEX]
                 except KeyError:
                     pass
+                if CALCULATE in output_state:
+                    constraint_value.append(output_state[CALCULATE](owner_value[index]))
+                    continue
             constraint_value.append(owner_value[index])
     else:
         constraint_value = owner_value
+
+    # # MODIFIED 5/11/17 NEW:
+    # if owner.calculate is not None:
+    #     constraint_value = owner.calculate(owner_value)
+    # # MODIFIED 5/11/17 END
 
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=owner.output_states,

@@ -104,29 +104,12 @@ Class Reference
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction, Integrator, NormalDist
+from PsyNeuLink.Components.States.OutputState import *
 
 # TransferMechanism parameter keywords:
 RANGE = "range"
 TIME_CONSTANT = "time_constant"
 INITIAL_VALUE = 'initial_value'
-
-# TransferMechanism outputs (used to create and name outputStates):
-TRANSFER_RESULT = "transfer_result"
-TRANSFER_MEAN = "transfer_mean "
-TRANSFER_VARIANCE = "transfer_variance"
-TRANSFER_DIFFERENTIAL = "transfer_differential"
-
-
-# TransferMechanism output indices (used to index output values):
-class Transfer_Output(AutoNumber):
-    """Indices of the `output_values <TransferMechanism.output_values>` attribute of the TransferMechanism containing the
-    values described below."""
-    RESULT = ()
-    """Result of the TransferMechanism's `function <TransferMechanism.function>`."""
-    MEAN = ()
-    """Mean of the elements in the :keyword`value` of the RESULT outputState."""
-    VARIANCE = ()
-    """Variance of the elements in the :keyword`value` of the RESULT outputState."""
 
 # TransferMechanism default parameter values:
 Transfer_DEFAULT_LENGTH= 1
@@ -350,17 +333,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        # TIME_SCALE: TimeScale.TRIAL,
-        NOISE: None,
-        OUTPUT_STATES:[
-            {NAME:RESULT},
-            {NAME:MEAN,
-             CALCULATE:lambda x: np.mean(x)},
-            {NAME:VARIANCE,
-             CALCULATE:lambda x: np.var(x)}],
-        # INTEGRATOR_FUNCTION: Integrator
-        })
+    paramClassDefaults.update({NOISE: None})
 
     paramNames = paramClassDefaults.keys()
 
@@ -368,7 +341,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=Transfer_DEFAULT_BIAS,
                  input_states=None,
-                 output_states=None,
+                 output_states:tc.optional(tc.any(list, dict))=[OUTPUT_RESULT],
                  size:tc.optional(int)=None,
                  function=Linear,
                  initial_value=None,

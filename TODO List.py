@@ -175,7 +175,8 @@
 
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
 #      PROTOCOL:
-#          a) Mechanism implements PRIMARY input_state and output_state in paramClassDefaults
+#          a) Mechanism implements emptyp input_state and output_state in paramClassDefaults,
+#                to insure that they are included in user_params
 #          b) If any are specified in constructor args (input_states or output_states), they totally override
 #                paramClassDefaults [??CURRENTLY DEALT WITH IN Mechanism._filter_params??]
 #          c) Subclass implements default set in module, and uses those as defaults for constructor args
@@ -199,13 +200,13 @@
 #      Do same for input_states ObjectiveMechanism that gets subclassed (Comparator for learning, Monitor for control),
 #               that replaces input_states with SAMPLE and TARGET (Comparator), or monitored_states (Monitor)
 #     TEST USING assign_params ON COMMAND LINE TO ADD AN inputState or outputState
-#     Replace `names` arg of objective mechanism with input_states arg (and subclass-specific default entries)
 #     DOCUMENTATION for input_state(s) and output_state(s)
 #                   finish "NEW DOCUMENTATION" in ObjectiveMechanism
 #                   variable and value: 2d np.arrays
 #                   input_values and output_values:  lists of values, but each value may be an np.ndarray
-#                   XXput_states.values_as_lists: lists of values, each of which has been converted to a list
-#                   Only appear in user_params if specified in arg of constructor
+#                   [in/out]put_states.values_as_lists: lists of values, each of which has been converted to a list
+#                   NO LONGER TRUE (since they are in paramClassDefaults??):
+#                                 Only appear in user_params if specified in arg of constructor
 #
 # FIX: Duplicated MappingProjections:  State, Line 423 vs. ObjectiveMechanism Line 617
 # FIX:   In LearningAuxiliary:

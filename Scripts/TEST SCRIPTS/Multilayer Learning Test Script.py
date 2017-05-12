@@ -3,16 +3,15 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
+from PsyNeuLink.Components.States.OutputState import *
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,
-                                input_states=['HELLO'],
+                                output_states=[OUTPUT_RESULT, OUTPUT_MEAN],
                                 default_input_value = np.zeros((2,)))
-
-Input_Layer.output_states[0].value
 
 Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
