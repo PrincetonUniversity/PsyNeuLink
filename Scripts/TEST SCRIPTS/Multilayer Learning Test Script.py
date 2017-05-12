@@ -10,7 +10,6 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection i
 
 Input_Layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,
-                                output_states=[OUTPUT_RESULT, OUTPUT_MEAN],
                                 default_input_value = np.zeros((2,)))
 
 Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',

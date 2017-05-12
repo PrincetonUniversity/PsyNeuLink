@@ -328,12 +328,12 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism i
 from PsyNeuLink.Components.Functions.Function import *
 
 # DDM outputs (used to create and name outputStates):
-DDM_DECISION_VARIABLE = "decision variable"
-DDM_RESPONSE_TIME = "response time"
-DDM_PROBABILITY_UPPER_THRESHOLD = "probability upperBound"
-DDM_PROBABILITY_LOWER_THRESHOLD = "probability lowerBound"
-DDM_RT_CORRECT_MEAN = "RT correct mean"
-DDM_RT_CORRECT_VARIANCE = "RT correct variance"
+DECISION_VARIABLE = "decision variable"
+RESPONSE_TIME = "response time"
+PROBABILITY_UPPER_THRESHOLD = "probability upperBound"
+PROBABILITY_LOWER_THRESHOLD = "probability lowerBound"
+RT_CORRECT_MEAN = "RT correct mean"
+RT_CORRECT_VARIANCE = "RT correct variance"
 
 
 # Indices for results used in return value tuple; auto-numbered to insure sequentiality
@@ -345,6 +345,25 @@ class DDM_Output(AutoNumber):
     RT_CORRECT_MEAN = ()
     RT_CORRECT_VARIANCE = ()
     NUM_OUTPUT_VALUES = ()
+
+# Standard OutputStates:
+DDM_DECISION_VARIABLE = {NAME: DECISION_VARIABLE,
+                         INDEX: DDM_Output.DECISION_VARIABLE.value},
+
+DDM_RESPONSE_TIME = {NAME: RESPONSE_TIME,
+                     INDEX: DDM_Output.RESPONSE_TIME.value},
+
+DDM_PROBABILITY_UPPER_THRESHOLD = {NAME: PROBABILITY_UPPER_THRESHOLD,  # Probability of hitting upper bound
+                                   INDEX: DDM_Output.P_UPPER_MEAN.value},
+
+DDM_PROBABILITY_LOWER_THRESHOLD = {NAME: PROBABILITY_LOWER_THRESHOLD,  # Probability of hitting lower bound
+                                   INDEX: DDM_Output.P_LOWER_MEAN.value},
+
+DDM_RT_CORRECT_MEAN =  {NAME: RT_CORRECT_MEAN,  # NavarroAnd Fuss only
+                        INDEX: DDM_Output.RT_CORRECT_MEAN.value},
+
+DDM_RT_CORRECTD_VARIANCE = {NAME: RT_CORRECT_VARIANCE,  # NavarroAnd Fuss only
+                            INDEX: DDM_Output.RT_CORRECT_VARIANCE.value}
 
 
 class DDMError(Exception):
@@ -532,28 +551,10 @@ class DDM(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
+        OUTPUT_STATES: None,
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in _instantiate_defaults_to_paramClassDefaults (in __init__)
         # # MONITOR_FOR_CONTROL:[PROBABILITY_LOWER_THRESHOLD,(RESPONSE_TIME, -1, 1)]
-        OUTPUT_STATES: [  # Full set specified to include Navarro and Fuss outputs
-            {NAME: DDM_DECISION_VARIABLE,
-             INDEX: DDM_Output.DECISION_VARIABLE.value},
-
-            {NAME: DDM_RESPONSE_TIME,
-             INDEX: DDM_Output.RESPONSE_TIME.value},
-
-            {NAME: DDM_PROBABILITY_UPPER_THRESHOLD,  # Probability of hitting upper bound
-             INDEX: DDM_Output.P_UPPER_MEAN.value},
-
-            {NAME: DDM_PROBABILITY_LOWER_THRESHOLD,  # Probability of hitting lower bound
-             INDEX: DDM_Output.P_LOWER_MEAN.value},
-
-            {NAME: DDM_RT_CORRECT_MEAN,  # NavarroAnd Fuss only
-             INDEX: DDM_Output.RT_CORRECT_MEAN.value},
-
-            {NAME: DDM_RT_CORRECT_VARIANCE,  # NavarroAnd Fuss only
-             INDEX: DDM_Output.RT_CORRECT_VARIANCE.value}
-        ]
     })
 
     # Set default input_value to default bias for DDM
@@ -569,6 +570,7 @@ class DDM(ProcessingMechanism_Base):
                                      threshold=1.0,
                                      noise=0.5,
                                      t0=.200),
+                 output_states:tc.optional(tc.any(list, dict))=[DECISION_VARIABLE, RESPONSE_TIME],
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  name=None,
@@ -579,6 +581,7 @@ class DDM(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
+                                                  output_states=output_states,
                                                   time_scale=time_scale,
                                                   params=params)
 
@@ -596,6 +599,7 @@ class DDM(ProcessingMechanism_Base):
 
 
         super(DDM, self).__init__(variable=default_input_value,
+                                  output_states=output_states,
                                   params=params,
                                   name=name,
                                   prefs=prefs,
@@ -751,8 +755,10 @@ class DDM(ProcessingMechanism_Base):
 
             if not isinstance(function, NavarroAndFuss) and OUTPUT_STATES in target_set:
                 # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
-                del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_VARIANCE.value]
-                del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_MEAN.value]
+                if DDM_Output.RT_CORRECT_VARIANCE.value in target_set[OUTPUT_STATES]:
+                    del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_VARIANCE.value]
+                if DDM_Output.RT_CORRECT_VARIANCE.value in target_set[OUTPUT_STATES]:
+                    del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_MEAN.value]
 
         try:
             threshold = target_set[FUNCTION_PARAMS][THRESHOLD]
