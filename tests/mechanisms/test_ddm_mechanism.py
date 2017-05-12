@@ -297,21 +297,21 @@ def test_DDM_rate_int():
 # ------------------------------------------------------------------------------------------------
 # TEST 2
 # rate = list len 1
-
-def test_DDM_rate_list_len_1():
-    stim = 10
-    T = DDM(
-        name='DDM',
-        function=Integrator(
-            integration_type=DIFFUSION,
-            noise=0.0,
-            rate=[5],
-            time_step_size=1.0
-        ),
-        time_scale=TimeScale.TIME_STEP
-    )
-    val = float(T.execute(stim)[0])
-    assert val == 50
+#
+# def test_DDM_rate_list_len_1():
+#     stim = 10
+#     T = DDM(
+#         name='DDM',
+#         function=Integrator(
+#             integration_type=DIFFUSION,
+#             noise=0.0,
+#             rate=[5],
+#             time_step_size=1.0
+#         ),
+#         time_scale=TimeScale.TIME_STEP
+#     )
+#     val = float(T.execute(stim)[0])
+#     assert val == 50
 
 # ------------------------------------------------------------------------------------------------
 # TEST 3
