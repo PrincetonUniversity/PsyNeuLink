@@ -946,7 +946,7 @@ class EVCMechanism(ControlMechanism_Base):
             controller_specs = []
 
         # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
-        system_specs = self.system.paramsCurrent[MONITOR_FOR_CONTROL]
+        system_specs = self.system.monitor_for_control
 
         # If the controller has a MonitoredOutputStatesOption specification, remove any such spec from system specs
         if controller_specs:
