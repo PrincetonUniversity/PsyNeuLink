@@ -327,14 +327,6 @@ Class Reference
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import *
 
-# DDM outputs (used to create and name outputStates):
-DECISION_VARIABLE = "decision variable"
-RESPONSE_TIME = "response time"
-PROBABILITY_UPPER_THRESHOLD = "probability upperBound"
-PROBABILITY_LOWER_THRESHOLD = "probability lowerBound"
-RT_CORRECT_MEAN = "RT correct mean"
-RT_CORRECT_VARIANCE = "RT correct variance"
-
 
 # Indices for results used in return value tuple; auto-numbered to insure sequentiality
 class DDM_Output(AutoNumber):
@@ -346,23 +338,32 @@ class DDM_Output(AutoNumber):
     RT_CORRECT_VARIANCE = ()
     NUM_OUTPUT_VALUES = ()
 
+# DDM standard output_states (used to name outputStates):
+class DDM_OUTPUT():
+    DECISION_VARIABLE = "decision variable"
+    RESPONSE_TIME = "response time"
+    PROBABILITY_UPPER_THRESHOLD = "probability upperBound"
+    PROBABILITY_LOWER_THRESHOLD = "probability lowerBound"
+    RT_CORRECT_MEAN = "RT correct mean"
+    RT_CORRECT_VARIANCE = "RT correct variance"
+
 # Standard OutputStates:
-DDM_DECISION_VARIABLE = {NAME: DECISION_VARIABLE,
+DDM_DECISION_VARIABLE = {NAME: DDM_OUTPUT.DECISION_VARIABLE,
                          INDEX: DDM_Output.DECISION_VARIABLE.value},
 
-DDM_RESPONSE_TIME = {NAME: RESPONSE_TIME,
+DDM_RESPONSE_TIME = {NAME: DDM_OUTPUT.RESPONSE_TIME,
                      INDEX: DDM_Output.RESPONSE_TIME.value},
 
-DDM_PROBABILITY_UPPER_THRESHOLD = {NAME: PROBABILITY_UPPER_THRESHOLD,  # Probability of hitting upper bound
+DDM_PROBABILITY_UPPER_THRESHOLD = {NAME: DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,  # Probability of hitting upper bound
                                    INDEX: DDM_Output.P_UPPER_MEAN.value},
 
-DDM_PROBABILITY_LOWER_THRESHOLD = {NAME: PROBABILITY_LOWER_THRESHOLD,  # Probability of hitting lower bound
+DDM_PROBABILITY_LOWER_THRESHOLD = {NAME: DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD,  # Probability of hitting lower bound
                                    INDEX: DDM_Output.P_LOWER_MEAN.value},
 
-DDM_RT_CORRECT_MEAN =  {NAME: RT_CORRECT_MEAN,  # NavarroAnd Fuss only
+DDM_RT_CORRECT_MEAN =  {NAME: DDM_OUTPUT.RT_CORRECT_MEAN,  # NavarroAnd Fuss only
                         INDEX: DDM_Output.RT_CORRECT_MEAN.value},
 
-DDM_RT_CORRECTD_VARIANCE = {NAME: RT_CORRECT_VARIANCE,  # NavarroAnd Fuss only
+DDM_RT_CORRECTD_VARIANCE = {NAME: DDM_OUTPUT.RT_CORRECT_VARIANCE,  # NavarroAnd Fuss only
                             INDEX: DDM_Output.RT_CORRECT_VARIANCE.value}
 
 
@@ -570,7 +571,8 @@ class DDM(ProcessingMechanism_Base):
                                      threshold=1.0,
                                      noise=0.5,
                                      t0=.200),
-                 output_states:tc.optional(tc.any(list, dict))=[DECISION_VARIABLE, RESPONSE_TIME],
+                 output_states:tc.optional(tc.any(list, dict))=[DDM_OUTPUT.DECISION_VARIABLE,
+                                                                DDM_OUTPUT.RESPONSE_TIME],
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  name=None,
@@ -606,10 +608,19 @@ class DDM(ProcessingMechanism_Base):
                                   # context=context)
                                   context=self)
 
+
+        self.DECISION_VARIABLE = DDM_OUTPUT.DECISION_VARIABLE
+        self.RESPONSE_TIME = "response time"
+        self.PROBABILITY_UPPER_THRESHOLD = "probability upperBound"
+        self.PROBABILITY_LOWER_THRESHOLD = "probability lowerBound"
+        self.RT_CORRECT_MEAN = "RT correct mean"
+        self.RT_CORRECT_VARIANCE = "RT correct variance"
+
         # # TEST PRINT
         # print("\n{} user_params:".format(self.name))
         # for param in self.user_params.keys():
         #     print("\t{}: {}".format(param, self.user_params[param]))
+
 
     def plot(self, stimulus=1.0, threshold=10.0):
         """

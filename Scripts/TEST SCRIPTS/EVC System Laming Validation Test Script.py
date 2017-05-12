@@ -44,7 +44,7 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                                    noise=(0.5),
                                    starting_point=(0),
                                    t0=0.45),
-               output_states=[DECISION_VARIABLE],
+               output_states=[DDM_DECISION_VARIABLE, DDM_RESPONSE_TIME],
                prefs = DDM_prefs,
                name='Decision')
 
@@ -69,7 +69,7 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   #                                              DDM_RESPONSE_TIME],
                   #                         outcome_function=LinearCombination(exponents=[1, 1, -1])),
                   enable_controller=True,
-                  monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
+                  monitor_for_control=[Reward, PROBABILITY_UPPER_THRESHOLD, (RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')
