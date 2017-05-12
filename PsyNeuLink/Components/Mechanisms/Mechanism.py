@@ -939,16 +939,16 @@ class Mechanism_Base(Mechanism):
 
         if hasattr(self, 'standard_output_states'):
             # Instantiate names of items in standard_output_states as attributes of the class
-            # for state_name in self.standard_output_states:
-            #     setattr(self.__class__, state_name, make_output_property(state_name))
-            for state in self.standard_output_states:
-                setattr(self.__class__, state[NAME], make_output_property(state[NAME]))
+            for state_name in self.standard_output_states:
+                setattr(self.__class__, state_name, make_output_property(state_name))
 
             # Instantiate <STANDARD_OutputState>_OUTPUT_STATE as attribute on instance
             #   - if the corresponding outputState is instantiated, the attribute will point to it;
             #   - otherwise, it will remain as a string
-            for output_name in [state[NAME] for state in self.standard_output_states]:
-                setattr(self, output_name+'_OUTPUT_STATE', output_name)
+            # for output_name in [state[NAME] for state in self.standard_output_states]:
+            #     setattr(self, output_name+'_OUTPUT_STATE', output_name)
+            # for state in self.standard_output_states:
+            #     setattr(self.__class__, state[NAME], make_output_property(state[NAME]))
 
         self.value = self._old_value = None
         self._status = INITIALIZING
