@@ -588,7 +588,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         if self.noise_function:
             print("NOISE  = ", self.noise)
             if isinstance(variable, (list, np.ndarray)):
-                print("HELLO")
                 new_noise = []
                 for v in variable[0]:
                     new_noise.append(noise())
