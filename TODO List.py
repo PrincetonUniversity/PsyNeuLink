@@ -175,8 +175,9 @@
 
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
 #
-# IMPLEMENT: standard_output_states for TransferMechanism, ObjectiveMechanism, LCA, RecurrentTransfer, Intregrator
+# IMPLEMENT: standard_output_states for ObjectiveMechanism, LCA, RecurrentTransfer, and Intregrator
 #              (use ones at top of OutputState)
+# IMPLEMENT: Move RecurrentTransfer and LCA calculate functions to standard_output_states
 # IMPLEMENT: standard_input_states
 # IMPLEMENT: Subclasses of ObjectiveMechanism (Comparator and Monitor)
 #
