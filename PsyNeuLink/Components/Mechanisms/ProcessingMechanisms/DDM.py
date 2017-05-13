@@ -571,6 +571,7 @@ class DDM(ProcessingMechanism_Base):
         from PsyNeuLink.Components.States.OutputState import StandardOutputStates
         self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states)
 
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   output_states=output_states,
@@ -587,6 +588,9 @@ class DDM(ProcessingMechanism_Base):
 
         # # Conflict with above
         # self.size = size
+
+        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
+        self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states)
 
         super(DDM, self).__init__(variable=default_input_value,
                                   output_states=output_states,
