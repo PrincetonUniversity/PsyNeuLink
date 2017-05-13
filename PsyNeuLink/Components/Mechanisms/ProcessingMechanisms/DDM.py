@@ -342,7 +342,7 @@ DDM_standard_output_states = [{NAME: DECISION_VARIABLE},
                               {NAME: RT_CORRECT_MEAN},  # NavarroAnd Fuss only
                               {NAME: RT_CORRECT_VARIANCE}]  # NavarroAnd Fuss only
 
-# This is a convenience class that provides list of names of standard_output_state names in IDE
+# This is a convenience class that provides list of standard_output_state names in IDE
 class DDM_OUTPUT():
     DECISION_VARIABLE=DECISION_VARIABLE
     RESPONSE_TIME=RESPONSE_TIME

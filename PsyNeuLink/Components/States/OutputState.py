@@ -217,41 +217,38 @@ from PsyNeuLink.Components.Functions.Function import *
 PRIMARY_OUTPUT_STATE = 0
 
 # Standard OutputStates
-OUTPUT_RESULT = {NAME: RESULT}
-
-OUTPUT_MEAN = {NAME:MEAN,
-               CALCULATE:lambda x: np.mean(x)}
-
-OUTPUT_MEDIAN = {NAME:MEDIAN,
-                   CALCULATE:lambda x: np.median(x)}
-
-OUTPUT_STAND_DEVIATION = {NAME:STANDARD_DEV,
-                          CALCULATE:lambda x: np.std(x)}
-
-OUTPUT_VARIANCE = {NAME:VARIANCE,
-                   CALCULATE:lambda x: np.var(x)}
-
-
-# # This is a convenience class that provides list of names of standard_output_state names in IDE
-# class OUTPUT_STATES():
-#     RESULT=RESULT
-#     MEAN=MEAN
-#     MEDIAN=MEDIAN
-#     STANDARD_DEV=STANDARD_DEV
-#     VARIANCE=VARIANCE
+# OUTPUT_RESULT = {NAME: RESULT}
 #
+# OUTPUT_MEAN = {NAME:MEAN,
+#                CALCULATE:lambda x: np.mean(x)}
 #
-# standard_output_states = [{NAME: RESULT},
-#                           {NAME:MEAN,
-#                            CALCULATE:lambda x: np.mean(x)},
-#                           {NAME:MEDIAN,
-#                            CALCULATE:lambda x: np.median(x)},
-#                           {NAME:STANDARD_DEV,
-#                            CALCULATE:lambda x: np.std(x)},
-#                           {NAME:VARIANCE,
-#                            CALCULATE:lambda x: np.var(x)}]
+# OUTPUT_MEDIAN = {NAME:MEDIAN,
+#                    CALCULATE:lambda x: np.median(x)}
 #
+# OUTPUT_STAND_DEVIATION = {NAME:STANDARD_DEV,
+#                           CALCULATE:lambda x: np.std(x)}
 #
+# OUTPUT_VARIANCE = {NAME:VARIANCE,
+#                    CALCULATE:lambda x: np.var(x)}
+
+
+# This is a convenience class that provides list of standard_output_state names in IDE
+class OUTPUTS():
+    RESULT=RESULT
+    MEAN=MEAN
+    MEDIAN=MEDIAN
+    STANDARD_DEV=STANDARD_DEV
+    VARIANCE=VARIANCE
+
+standard_output_states = [{NAME: RESULT},
+                          {NAME:MEAN,
+                           CALCULATE:lambda x: np.mean(x)},
+                          {NAME:MEDIAN,
+                           CALCULATE:lambda x: np.median(x)},
+                          {NAME:STANDARD_DEV,
+                           CALCULATE:lambda x: np.std(x)},
+                          {NAME:VARIANCE,
+                           CALCULATE:lambda x: np.var(x)}]
 
 
 class OutputStateError(Exception):

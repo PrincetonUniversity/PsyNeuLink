@@ -341,7 +341,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=Transfer_DEFAULT_BIAS,
                  input_states=None,
-                 output_states:tc.optional(tc.any(list, dict))=[OUTPUT_RESULT],
+                 output_states:tc.optional(tc.any(list, dict))=[RESULT],
                  size:tc.optional(int)=None,
                  function=Linear,
                  initial_value=None,
@@ -372,8 +372,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.integrator_function=None
 
-        # from PsyNeuLink.Components.States.OutputState import StandardOutputStates
-        # self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states)
+        from PsyNeuLink.Components.States.OutputState import StandardOutputStates, standard_output_states
+        self.standard_output_states = StandardOutputStates(self, standard_output_states)
 
         super(TransferMechanism, self).__init__(variable=default_input_value,
                                                 params=params,
