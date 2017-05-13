@@ -386,8 +386,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.integrator_function=None
 
-        from PsyNeuLink.Components.States.OutputState import StandardOutputStates, standard_output_states
-        self.standard_output_states = StandardOutputStates(self, standard_output_states)
+        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
+        if not isinstance(self.standard_output_states, StandardOutputStates):
+            self.standard_output_states = StandardOutputStates(self, self.standard_output_states)
 
         super(TransferMechanism, self).__init__(variable=default_input_value,
                                                 params=params,

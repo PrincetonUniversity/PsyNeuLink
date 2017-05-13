@@ -5,7 +5,7 @@ from PsyNeuLink.Globals.Keywords import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
 
 # COMPOSITIONS:
 from PsyNeuLink.Components.Process import process
@@ -624,6 +624,10 @@ class ScratchPadError(Exception):
 print("TEST RecurrentTransferMechanism / LCA")
 my_auto = LCA(
         size=3,
+        output_states=[LCA_OUTPUT.RESULT,
+                       LCA_OUTPUT.ENTROPY,
+                       LCA_OUTPUT.ENERGY,
+                       LCA_OUTPUT.MAX_VS_AVG]
         # inhibition
 )
 
