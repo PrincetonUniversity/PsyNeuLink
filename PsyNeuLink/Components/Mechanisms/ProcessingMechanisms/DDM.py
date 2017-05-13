@@ -335,13 +335,24 @@ PROBABILITY_LOWER_THRESHOLD = 'PROBABILITY_LOWER_THRESHOLD'  # Probability of hi
 RT_CORRECT_MEAN = 'RT_CORRECT_MEAN'  # NavarroAnd Fuss only
 RT_CORRECT_VARIANCE = 'RT_CORRECT_VARIANCE'  # NavarroAnd Fuss only
 
-
 DDM_standard_output_states = [{NAME: DECISION_VARIABLE},
                               {NAME: RESPONSE_TIME},
                               {NAME: PROBABILITY_UPPER_THRESHOLD},  # Probability of hitting upper bound
                               {NAME: PROBABILITY_LOWER_THRESHOLD},  # Probability of hitting lower bound
                               {NAME: RT_CORRECT_MEAN},  # NavarroAnd Fuss only
                               {NAME: RT_CORRECT_VARIANCE}]  # NavarroAnd Fuss only
+
+# This is a convenience class that provides list of names of standard_output_state names in IDE
+class DDM_OUTPUT():
+    DECISION_VARIABLE=DECISION_VARIABLE
+    RESPONSE_TIME=RESPONSE_TIME
+    PROBABILITY_UPPER_THRESHOLD=PROBABILITY_UPPER_THRESHOLD
+    PROBABILITY_LOWER_THRESHOLD=PROBABILITY_LOWER_THRESHOLD
+    RT_CORRECT_MEAN=RT_CORRECT_MEAN
+    RT_CORRECT_VARIANCE=RT_CORRECT_VARIANCE
+# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+# for item in [item[NAME] for item in DDM_standard_output_states]:
+#     setattr(DDM_OUTPUT.__class__, item, item)
 
 
 class DDMError(Exception):
