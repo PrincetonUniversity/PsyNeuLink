@@ -492,6 +492,7 @@ PARAMETER_STATE_PARAMS = 'parameter_state_params'
 PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
 OUTPUT_STATES = 'output_states'
 OUTPUT_STATE_PARAMS = 'output_states_params'
+STANDARD_OUTPUT_STATES = 'standard_output_states'
 INDEX = 'index'
 CALCULATE = 'calculate'
 #endregion

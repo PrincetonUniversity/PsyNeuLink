@@ -572,12 +572,12 @@ def _instantiate_output_states(owner, context=None):
     # MODIFIED 12/7/16 END
     """Call State._instantiate_state_list() to instantiate orderedDict of outputState(s)
 
-    Create OrderedDict of outputState(s) specified in paramsCurrent[INPUT_STATES]
-    If INPUT_STATES is not specified, use self.variable to create a default output state
+    Create ContentAddressableList of outputState(s) specified in paramsCurrent[OUTPUT_STATES]
+    If OUTPUT_STATES is not specified, use self.value to create a default output state
     When completed:
-        - self.outputStates contains an OrderedDict of one or more outputStates
-        - self.outputState contains first or only outputState in OrderedDict
-        - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more outputStates)
+        - self.outputStates contains a ContentAddressableList of one or more outputStates;
+        - self.output_state contains first or only outputState in list;
+        - paramsCurrent[OUTPUT_STATES] contains the same ContentAddressableList (of one or more outputStates)
         - each outputState corresponds to an item in the output of the owner's function
         - if there is only one outputState, it is assigned the full value
 
@@ -590,6 +590,7 @@ def _instantiate_output_states(owner, context=None):
 
     constraint_value = []
 
+    # Get owner.value
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
     owner_value = owner.value
     # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
@@ -611,27 +612,44 @@ def _instantiate_output_states(owner, context=None):
         else:
             owner_value = converted_to_2d
 
+    # Get the value of each outputState
     # IMPLEMENTATION NOTE:
     # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_STATES]
     #        (that is, there is the same number of items in owner_value as there are outputStates)
     #        then increment index so as to assign each item of owner_value to each outputState
     if owner.output_states:
         for output_state in owner.output_states:
+
             # Default is PRIMARY_OUTPUT_STATE
             index = PRIMARY_OUTPUT_STATE
-            # If output_state is already an OutputState object, get its index attribute
+            output_state_value = owner_value[index]
+
+            # output_state is:
+
+            # OutputState object, so get its index attribute
             if isinstance(output_state, OutputState):
                 index = output_state.index
-            # If output_state is a specification dict, get its INDEX attribute if specified
-            elif isinstance(output_state, dict):
+                output_state_value = owner_value[index]
+
+            # string, so check if it is the name of a standard outputState and, if so, get its dict
+            elif isinstance(output_state, str) and hasattr(owner, STANDARD_OUTPUT_STATES):
+                item = next((item for item in owner.standard_output_states if output_state is item[NAME]), None)
+                if item is not None:
+                    owner.output_states[owner.output_states.index(output_state)] = item
+                    output_state = item
+
+            # specification dict, so get its INDEX attribute if specified, and apply calculate function if specified
+            if isinstance(output_state, dict):
                 try:
                     index = output_state[INDEX]
                 except KeyError:
                     pass
                 if CALCULATE in output_state:
-                    constraint_value.append(output_state[CALCULATE](owner_value[index]))
-                    continue
-            constraint_value.append(owner_value[index])
+                    output_state_value = output_state[CALCULATE](owner_value[index])
+                else:
+                    output_state_value = owner_value[index]
+
+            constraint_value.append(output_state_value)
     else:
         constraint_value = owner_value
 

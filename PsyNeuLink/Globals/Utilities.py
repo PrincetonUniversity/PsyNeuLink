@@ -841,6 +841,8 @@ class ContentAddressableList(UserList):
         return [np.ndarray.tolist(getattr(item, VALUE)) for item in self.data]
 
 
+
+
 def is_value_spec(spec):
     if isinstance(spec, (int, float, list, np.ndarray)):
         return True
