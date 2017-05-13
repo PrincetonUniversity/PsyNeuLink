@@ -674,7 +674,11 @@ def _instantiate_output_states(owner, context=None):
 
 
 class StandardOutputStates():
-
+    """Assign names and indices of specification dicts in standard_output_state as properties of the owner's class 
+    
+    Provide access to dicts and lists of the values of their name and index entries. 
+    
+    """
     @tc.typecheck
     def __init__(self, owner:Component, output_state_dicts:list):
 
@@ -689,11 +693,11 @@ class StandardOutputStates():
 
         # Add names of each outputState as property of the owner's class that returns its name string
         for state in self.data:
-            setattr(owner.__class__, state[NAME], make_output_property(state[NAME]))
+            setattr(owner.__class__, state[NAME], make_readonly_property(state[NAME]))
 
         # Add <NAME_INDEX> of each outputState as property of the owner's class that returns its index
         for state in self.data:
-            setattr(owner.__class__, state[NAME]+'_INDEX', make_output_property(state[INDEX]))
+            setattr(owner.__class__, state[NAME]+'_INDEX', make_readonly_property(state[INDEX]))
 
     @tc.typecheck
     def get_dict(self, name:str):
@@ -706,16 +710,3 @@ class StandardOutputStates():
     @property
     def indices(self):
         return [item[INDEX] for item in self.data]
-
-
-def make_output_property(val):
-
-    def getter(self):
-        return val
-
-    def setter(self, val):
-        raise UtilitiesError("{} is read-only property of {}".format(val, self.__class__.__name__))
-
-    # Create the property
-    prop = property(getter).setter(setter)
-    return prop

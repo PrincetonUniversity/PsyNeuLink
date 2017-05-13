@@ -63,6 +63,7 @@ OTHER
 * `append_type_to_name`
 * `ReadOnlyOrderedDict`
 * `ContentAddressableList`
+* `make_readonly_property`
 
 """
 
@@ -848,3 +849,18 @@ def is_value_spec(spec):
         return True
     else:
         return False
+
+
+def make_readonly_property(val):
+    """Return property that provides read-only access to its value
+    """
+
+    def getter(self):
+        return val
+
+    def setter(self, val):
+        raise UtilitiesError("{} is read-only property of {}".format(val, self.__class__.__name__))
+
+    # Create the property
+    prop = property(getter).setter(setter)
+    return prop
