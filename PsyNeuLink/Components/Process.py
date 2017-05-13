@@ -20,7 +20,7 @@
          * :ref:`Process_Pathway`
          * :ref:`Process_Mechanisms`
          * :ref:`Process_Projections`
-         * :ref:`Process_Input_And_Ouput`
+         * :ref:`Process_Input_And_Output`
          * :ref:`Process_Learning`
       * :ref:`Process_Execution`
       * :ref:`Process_Class_Reference`
@@ -144,7 +144,7 @@ Projections between mechanisms in the `pathway` of a process are specified in on
     `IDENTITY_MATRIX` is used for the projection;  if the formats do not match, or
     `learning has been specified <Process_Learning>` either for the projection or the process,
     then a `FULL_CONNECTIVITY_MATRIX` is used. If the mechanism is the `ORIGIN` mechanism (i.e., first in the
-    `pathway`), a `ProcessInputState <Process_Input_And_Ouput>` will be used as the sender,
+    `pathway`), a `ProcessInputState <Process_Input_And_Output>` will be used as the sender,
     and an `IDENTITY_MATRIX` is used for the projection.
 
 
