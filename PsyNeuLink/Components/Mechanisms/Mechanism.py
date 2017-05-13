@@ -200,7 +200,7 @@ using the following template: [TBI]
 COMMENT
 
 Each inputState of a mechanism can receive one or more projections from other mechanisms.  If the mechanism is an
-`ORIGIN` mechanism of a process, it also receives a projection from the `ProcessInputState <Process_Input_And_Ouput>`
+`ORIGIN` mechanism of a process, it also receives a projection from the `ProcessInputState <Process_Input_And_Output>`
 for that process. Each inputState's :keyword:`function <InputState.InputState.function>` aggregates the values received
 from its projections (usually by summing them), and assigns the result to the inputState's :keyword:`value` attribute.
 

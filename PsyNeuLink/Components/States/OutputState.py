@@ -15,26 +15,30 @@ Overview
 
 OutputState(s) represent the result(s) of executing a mechanism.  This may be the result(s) of its
 `function <OutputState.function>` and/or values derived from that result.  The full set of results are stored in the
-mechanism's `value <Mechanism.Mechanism_Base.value>` attribute.  OutputStates are used to represent individual items
-of the mechanism's `value <Mechanism.Mechanism_Base.value>`, and/or useful quantities derived from them.  For example,
-the `function <TransferMechanism.TransferMechanism.function>` of a `TransferMechanism` generates a single result (the
-transformed value of its input);  however, a TransferMechanism has outputStates that represent not only that
-result, but also its mean and variance (if it is an array).  In contrast, the `function <DDM.DDM.function>` of a
-`DDM` mechanism generates several results (such as decision accuracy and response time), each of which is assigned as
-the `value <OutputState.value>` of a different outputState.  The outputState(s) of a mechanism can serve as the input to
-other  mechanisms (by way of `projections <Projections>`), or as the output of a process and/or system.  The
-outputState's `sendsToProjections <OutputState.sendsToProjections>` attribute lists all of its outgoing projections.
+mechanism's `output_value <Mechanism.Mechanism_Base.output_value>` attribute.  OutputStates are used to represent 
+individual items of the mechanism's `value <Mechanism.Mechanism_Base.value>`, and/or useful quantities derived from 
+them.  For example, the `function <TransferMechanism.TransferMechanism.function>` of a `TransferMechanism` generates 
+a single result (the transformed value of its input);  however, a TransferMechanism can also be assigned outputStates 
+that represent its mean, variance or other derived values.  In contrast, the `function <DDM.DDM.function>` 
+of a `DDM` mechanism generates several results (such as decision accuracy and response time), each of which can be 
+assigned as the `value <OutputState.value>` of a different outputState.  The outputState(s) of a mechanism can serve 
+as the input to other  mechanisms (by way of `projections <Projections>`), or as the output of a process and/or 
+system.  The outputState's `sendsToProjections <OutputState.sendsToProjections>` attribute lists all of its outgoing 
+projections.
 
 .. _OutputStates_Creation:
 
 Creating an OutputState
 -----------------------
 
-An outputState can be created by calling its constructor. However, in general this is not necessary as a mechanism
-usually automatically creates the outputState(s) it needs when it is created.  For example, if the mechanism is
-created within the `pathway` of a `process <Process>`, an outputState will be created and assigned as the
+An outputState can be created by calling its constructor. However, in general this is not necessary, as a mechanism
+automatically creates a default outputState if none is explicitly specified, that contains the primary result of its
+`function <Mechanism_Base.function>`.  For example, if the mechanism is created within the `pathway` of a 
+`process <Process>`, an outputState will be created and assigned as the
 `sender <MappingProjection.MappingProjection.sender>` of a `MappingProjection` to the next mechanism in the pathway,
-or to the process's `output <Process_Input_And_Ouput>` if the mechanism is a `TERMINAL` mechanism for that process.
+or to the process's `output <Process_Input_And_Output>` if the mechanism is a `TERMINAL` mechanism for that process.
+Process_Input_And_Ouput.  Other configurations can also easily be specified using a mechanism's 
+`output_states <Mechanism_Base.output_states>` attribute (see `OutputState_Specification` below).
 
 An outputState must be owned by a mechanism. Therefore, if the outputState is created explicitly, the mechanism to
 which it belongs must be specified in the **owner** argument of its constructor; if the outputState is specified
@@ -43,26 +47,38 @@ mechanism, then the owner is inferred from the context.
 
 .. _OutputState_Primary:
 
-Every mechanism has at least one outputState, referred to as its *primary outputState*, that is automatically created
-and assigned to the mechanism's `outputState <Mechanism.Mechanism_Base.outputState>` attribute (note the singular),
-and also as the first entry in the OrderedDictionary of the mechanism's
-`outputStates <Mechanism.Mechanism_Base.outputStates>` attribute (note the plural).  The `value <OutputState.value>` of
+Every mechanism has at least one outputState, referred to as its *primary outputState*.  If outputStates are not
+`explicitly specified <OutputState_Specification>` for a mechanism, a primary outputState is automatically created
+and assigned to its `outputState <Mechanism.Mechanism_Base.outputState>` attribute (note the singular),
+and also to the first entry of the mechanism's `outputStates <Mechanism.Mechanism_Base.outputStates>` attribute 
+(note the plural).  The `value <OutputState.value>` of
 the primary outputState is assigned as the first (and often only) item of the mechanism's
-`value <Mechanism.Mechanism_Base.value>`, which is the result of the mechanism`s
-`function <Mechanism.Mechanism_Base.function>`.  In addition to the primary outputState, many mechanisms also assign
-an outputState for each additional item of their `value <Mechanism.Mechanism_Base.value>`, and some assign
-additional outputStates that calculate values derived from one or more of those items.
+`output_value <Mechanism.Mechanism_Base.output_value>`, which is the result of the mechanism`s
+`function <Mechanism.Mechanism_Base.function>`.
 
 .. _OutputState_Specification:
 
-If one or more custom outputStates need to be added when a mechanism is created, or added to an existing
-mechanism, they can be specified in an entry of the mechanism's
-`parameter dictionary <ParameterState_Specifying_Parameters>`, using the key OUTPUT_STATES.  For a single
-outputState, the value of the entry can be any of the specifications in the the list below.  To create multiple
-outputStates, the value can be either: a list, each item of which can be any of the specifications below; or
-it can be an OrderedDict in which the key for each entry is a string  specifying the name for the outputState to be
-created, and its value is one of the specifications below.  Each outputState to be created can be specified using any
-of the following formats:
+The primary outputState of a mechanism can be supplemented or replaced using the **output_states** argument of a 
+mechanism's constructor <Mechanism_Creation>`.  If any are specified there, *all*  of the outputStates desired 
+must be specified there;  that is, expliclity specifying *any* outputStates in an **output_states** argument 
+replaces any defaults.  Therefore, if the default outputState -- that usually contains the result of the mechanism's
+function -- is to be retained, it too must be specified along with any additional ones desired.  For most types of
+mechanisms, the names of outputStates relevant to their type are listed as attributes of a class with the name 
+<ABBREVIATED_CLASS_NAME>_OUTPUT>; the specifications for the outputStates themselves are listed in the mechanism's 
+`standard_output_states <Mechanism.standard_output_states>` attribute.  These calculate values that are commonly used 
+with that type of mechanism.  For example, for a TransferMechanism, this includes MEAN, MEDIAN, VARIANCE, and
+STANDARD_DEV outputStates that calculate the designated values from the ouptut of the mechanism's function, and are
+listed in `TRANSER_OUTPUT`.
+
+OutputStates are specified in an **output_states** argument as a list, the entries of which can be any of the 
+following: 
+
+# For a single
+# outputState, the value of the entry can be any of the specifications in the the list below.  To create multiple
+# outputStates, the value can be either: a list, each item of which can be any of the specifications below; or
+# it can be an OrderedDict in which the key for each entry is a string  specifying the name for the outputState to be
+# created, and its value is one of the specifications below.  Each outputState to be created can be specified using any
+# of the following formats:
 
     * A reference to an **existing outputState**.  Its `variable <OutputState.variable>` must match (in the
       number and type of its elements) the item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` to
@@ -126,7 +142,7 @@ Structure
 
 Every outputState is owned by a `mechanism <Mechanism>`. It can send one or more
 `MappingProjections <MappingProjection>` to other mechanisms.  If its owner is a `TERMINAL` mechanism of a process
-and/or system, then the outputState will also be treated as the output of that `process <Process_Input_And_Ouput>`
+and/or system, then the outputState will also be treated as the output of that `process <Process_Input_And_Output>`
 and/or of a system.  The projections that the outputState sends are listed in its
 `sendsToProjections <OutputState.sendsToProjections>` attribute.
 
