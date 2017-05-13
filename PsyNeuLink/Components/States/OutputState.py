@@ -631,13 +631,15 @@ def _instantiate_output_states(owner, context=None):
                 index = output_state.index
                 output_state_value = owner_value[index]
 
-            # string, so check if it is the name of a standard outputState and, if so, get its dict
+            # string, so check if it is the name of a standard_output_state and, if so, get its dict
             elif isinstance(output_state, str) and hasattr(owner, STANDARD_OUTPUT_STATES):
-                item = next((item for item in owner.standard_output_states if output_state is item[NAME]), None)
+                # check if string matches the name entry of a dict in standard_output_states
+                item = next((item for item in owner.standard_output_states.names if output_state is item), None)
                 if item is not None:
                     # assign dict to owner's output_state list
-                    owner.output_states[owner.output_states.index(output_state)] = item
-                    # re-assign output_state so it is treated as dict below
+                    owner.output_states[owner.output_states.index(output_state)] = \
+                                                                owner.standard_output_states.get_dict(output_state)
+                    # re-assign output_state to dict so it is processed below
                     output_state = item
 
             # specification dict, so get its INDEX attribute if specified, and apply calculate function if specified
@@ -669,3 +671,51 @@ def _instantiate_output_states(owner, context=None):
         owner.output_states = state_list
     else:
         owner._output_states = state_list
+
+
+class StandardOutputStates():
+
+    @tc.typecheck
+    def __init__(self, owner:Component, output_state_dicts:list):
+
+        for item in output_state_dicts:
+            if not isinstance(item, dict):
+                raise OutputStateError("All items of {} for {} must be dicts ({} is not)".
+                                     format(self.__class__.__name__, owner.componentName, item))
+        self.data = output_state_dicts
+
+        for i, state_dict in enumerate(self.data):
+            state_dict[INDEX] = i
+
+        # Add names of each outputState as property of the owner's class that returns its name string
+        for state in self.data:
+            setattr(owner.__class__, state[NAME], make_output_property(state[NAME]))
+
+        # Add <NAME_INDEX> of each outputState as property of the owner's class that returns its index
+        for state in self.data:
+            setattr(owner.__class__, state[NAME]+'_INDEX', make_output_property(state[INDEX]))
+
+    @tc.typecheck
+    def get_dict(self, name:str):
+        return self.data[self.names.index(name)]
+    
+    @property
+    def names(self):
+        return [item[NAME] for item in self.data]
+
+    @property
+    def indices(self):
+        return [item[INDEX] for item in self.data]
+
+
+def make_output_property(val):
+
+    def getter(self):
+        return val
+
+    def setter(self, val):
+        raise UtilitiesError("{} is read-only property of {}".format(val, self.__class__.__name__))
+
+    # Create the property
+    prop = property(getter).setter(setter)
+    return prop

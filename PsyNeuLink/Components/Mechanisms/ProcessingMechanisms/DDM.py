@@ -336,19 +336,26 @@ class DDM_OUTPUT():
     RT_CORRECT_MEAN = 'RT_CORRECT_MEAN'  # NavarroAnd Fuss only
     RT_CORRECT_VARIANCE = 'RT_CORRECT_VARIANCE'  # NavarroAnd Fuss only
 
-# Indices for results used in return value tuple; auto-numbered to insure sequentiality
-class DDM_OUTPUT_INDEX(AutoNumber):
-    DECISION_VARIABLE = ()
-    RESPONSE_TIME = ()
-    P_UPPER_MEAN = ()
-    P_LOWER_MEAN = ()
-    RT_CORRECT_MEAN = ()
-    RT_CORRECT_VARIANCE = ()
-    NUM_OUTPUT_VALUES = ()
+# # Indices for results used in return value tuple; auto-numbered to insure sequentiality
+# class DDM_OUTPUT_INDEX(AutoNumber):
+#     DECISION_VARIABLE = ()
+#     RESPONSE_TIME = ()
+#     P_UPPER_MEAN = ()
+#     P_LOWER_MEAN = ()
+#     RT_CORRECT_MEAN = ()
+#     RT_CORRECT_VARIANCE = ()
+#     NUM_OUTPUT_VALUES = ()
+
 
 # DDM STANDARD OutputStates
 
-# Names:
+DDM_standard_output_states = [{NAME: DDM_OUTPUT.DECISION_VARIABLE},
+                              {NAME: DDM_OUTPUT.RESPONSE_TIME},
+                              {NAME: DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD},  # Probability of hitting upper bound
+                              {NAME: DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD},  # Probability of hitting lower bound
+                              {NAME: DDM_OUTPUT.RT_CORRECT_MEAN},  # NavarroAnd Fuss only
+                              {NAME: DDM_OUTPUT.RT_CORRECT_VARIANCE}]  # NavarroAnd Fuss only
+
 
 class DDMError(Exception):
     def __init__(self, error_value):
@@ -544,30 +551,6 @@ class DDM(ProcessingMechanism_Base):
     # Set default input_value to default bias for DDM
     paramNames = paramClassDefaults.keys()
 
-
-    # standard_output_states = []
-    # for name in [n for n in DDM_OUTPUT.__dict__.keys() if not (n.startswith('__') and n.endswith('__'))]:
-    #     standard_output_states.append(name)
-
-    # FIX: make this a ContentAddressableList
-    standard_output_states = [{NAME: DDM_OUTPUT.DECISION_VARIABLE,
-                               INDEX: None},
-                              {NAME: DDM_OUTPUT.RESPONSE_TIME,
-                               INDEX: None},
-                              {NAME: DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,  # Probability of hitting upper bound
-                               INDEX: None},
-                              {NAME: DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD,  # Probability of hitting lower bound
-                               INDEX: None},
-                              {NAME: DDM_OUTPUT.RT_CORRECT_MEAN,  # NavarroAnd Fuss only
-                               INDEX: None},
-                              {NAME: DDM_OUTPUT.RT_CORRECT_VARIANCE,  # NavarroAnd Fuss only
-                               INDEX: None}]
-
-    for i, state_dict in enumerate(standard_output_states):
-        state_dict[INDEX] = i
-
-    # Instantiate the names of standard OutputStates as read-only attributes of the class
-
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
@@ -587,6 +570,9 @@ class DDM(ProcessingMechanism_Base):
                  prefs: is_pref_set = None,
                  # context=None):
                  context=componentType + INITIALIZING):
+
+        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
+        self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -763,10 +749,14 @@ class DDM(ProcessingMechanism_Base):
 
             if not isinstance(function, NavarroAndFuss) and OUTPUT_STATES in target_set:
                 # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
-                if DDM_OUTPUT_INDEX.RT_CORRECT_VARIANCE.value in target_set[OUTPUT_STATES]:
-                    del target_set[OUTPUT_STATES][DDM_OUTPUT_INDEX.RT_CORRECT_VARIANCE.value]
-                if DDM_OUTPUT_INDEX.RT_CORRECT_VARIANCE.value in target_set[OUTPUT_STATES]:
-                    del target_set[OUTPUT_STATES][DDM_OUTPUT_INDEX.RT_CORRECT_MEAN.value]
+                # if DDM_OUTPUT_INDEX.RT_CORRECT_VARIANCE.value in target_set[OUTPUT_STATES]:
+                #     del target_set[OUTPUT_STATES][DDM_OUTPUT_INDEX.RT_CORRECT_VARIANCE.value]
+                # if DDM_OUTPUT_INDEX.RT_CORRECT_VARIANCE.value in target_set[OUTPUT_STATES]:
+                #     del target_set[OUTPUT_STATES][DDM_OUTPUT_INDEX.RT_CORRECT_MEAN.value]
+                if self.RT_CORRECT_MEAN in target_set[OUTPUT_STATES]:
+                    del target_set[OUTPUT_STATES][self.RT_CORRECT_MEAN_INDEX]
+                if self.RT_CORRECT_VARIANCE in target_set[OUTPUT_STATES]:
+                    del target_set[OUTPUT_STATES][self.RT_CORRECT_MEAN_INDEX]
 
         try:
             threshold = target_set[FUNCTION_PARAMS][THRESHOLD]
@@ -888,24 +878,24 @@ class DDM(ProcessingMechanism_Base):
 
             if isinstance(self.function.__self__, BogaczEtAl):
                 return_value = np.array([[0.0], [0.0], [0.0], [0.0]])
-                return_value[DDM_OUTPUT_INDEX.RESPONSE_TIME.value], \
-                return_value[DDM_OUTPUT_INDEX.P_LOWER_MEAN.value] = result
-                return_value[DDM_OUTPUT_INDEX.P_UPPER_MEAN.value] = 1-return_value[DDM_OUTPUT_INDEX.P_LOWER_MEAN.value]
+                return_value[self.RESPONSE_TIME_INDEX], return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result
+                return_value[self.PROBABILITY_UPPER_THRESHOLD_INDEX] = \
+                                                               1 - return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]
 
             elif isinstance(self.function.__self__, NavarroAndFuss):
                 return_value = np.array([[0], [0], [0], [0], [0], [0]])
-                return_value[DDM_OUTPUT_INDEX.RESPONSE_TIME.value] = result[NF_Results.MEAN_DT.value]
-                return_value[DDM_OUTPUT_INDEX.P_LOWER_MEAN.value] = result[NF_Results.MEAN_ER.value]
-                return_value[DDM_OUTPUT_INDEX.P_UPPER_MEAN.value] = 1 - result[NF_Results.MEAN_ER.value]
-                return_value[DDM_OUTPUT_INDEX.RT_CORRECT_MEAN.value] = result[NF_Results.MEAN_CORRECT_RT.value]
-                return_value[DDM_OUTPUT_INDEX.RT_CORRECT_VARIANCE.value]= result[NF_Results.MEAN_CORRECT_VARIANCE.value]
+                return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_DT.value]
+                return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[NF_Results.MEAN_ER.value]
+                return_value[self.PROBABILITY_UPPER_THRESHOLD_INDEX] = 1 - result[NF_Results.MEAN_ER.value]
+                return_value[self.RT_CORRECT_MEAN_INDEX] = result[NF_Results.MEAN_CORRECT_RT.value]
+                return_value[self.RT_CORRECT_VARIANCE_INDEX]= result[NF_Results.MEAN_CORRECT_VARIANCE.value]
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
 
             # Convert ER to decision variable:
-            if random() < return_value[DDM_OUTPUT_INDEX.P_LOWER_MEAN.value]:
-                return_value[DDM_OUTPUT_INDEX.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
+            if random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
+                return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
-                return_value[DDM_OUTPUT_INDEX.DECISION_VARIABLE.value] = threshold
+                return_value[self.DECISION_VARIABLE_INDEX] = threshold
 
             return return_value
 
