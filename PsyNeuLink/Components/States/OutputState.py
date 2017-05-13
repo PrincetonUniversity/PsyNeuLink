@@ -635,7 +635,9 @@ def _instantiate_output_states(owner, context=None):
             elif isinstance(output_state, str) and hasattr(owner, STANDARD_OUTPUT_STATES):
                 item = next((item for item in owner.standard_output_states if output_state is item[NAME]), None)
                 if item is not None:
+                    # assign dict to owner's output_state list
                     owner.output_states[owner.output_states.index(output_state)] = item
+                    # re-assign output_state so it is treated as dict below
                     output_state = item
 
             # specification dict, so get its INDEX attribute if specified, and apply calculate function if specified
@@ -652,11 +654,6 @@ def _instantiate_output_states(owner, context=None):
             constraint_value.append(output_state_value)
     else:
         constraint_value = owner_value
-
-    # # MODIFIED 5/11/17 NEW:
-    # if owner.calculate is not None:
-    #     constraint_value = owner.calculate(owner_value)
-    # # MODIFIED 5/11/17 END
 
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=owner.output_states,
