@@ -87,8 +87,9 @@ Class Reference
 # IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
 #                      ADD IN GENERIC CONTROL STUFF FROM DefaultControlMechanism
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Components.States.OutputState import OutputState
 
 ControlMechanismRegistry = {}
 
@@ -255,6 +256,20 @@ class ControlMechanism_Base(Mechanism_Base):
                 raise KeyError
             else:
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
+
+        if MONITOR_FOR_CONTROL in request_set:
+            for spec in request_set[MONITOR_FOR_CONTROL]:
+                if isinstance(spec, tuple):
+                    spec = spec[0]
+                if isinstance(spec, (OutputState, Mechanism_Base)):
+                    spec = spec.name
+                if not isinstance(spec, str):
+                    raise ControlMechanismError("Invalid specification in {} arg for {} ({})".
+                                                format(MONITOR_FOR_CONTROL, self.name, spec))
+                if not any((spec is mech.name or spec in mech.output_states.names) for mech in self.system.mechanisms):
+                    raise ControlMechanismError("Specification in {} arg for {} ({}) must be a "
+                                                "Mechanism or an OutputState of one in {}".
+                                                format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
 
         super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,
