@@ -1219,6 +1219,8 @@ class LinearCombination(
         # FIX: THEN TEST THAT SHAPES OF EVERY ELEMENT ALONG AXIS 0 ARE THE SAME
         # FIX; PUT THIS IN DOCUMENTATION
         if isinstance(variable, (list, np.ndarray)):
+            if isinstance(variable, np.ndarray) and not variable.ndim:
+                return
             length = 0
             for i in range(len(variable)):
                 if i == 0:
@@ -5261,3 +5263,20 @@ class BackPropagation(LearningFunction):
 # TBI
 
 # region  *****************************************   REGISTER FUNCTIONS ***********************************************
+
+# region
+
+# FIX: IMPLEMENT AS Functions
+def max_vs_next(x):
+    x_part = np.partition(x, -2)
+    max_val = x_part[-1]
+    next = x_part[-2]
+    return max_val - next
+
+def max_vs_avg(x):
+    x_part = np.partition(x, -2)
+    max_val = x_part[-1]
+    others = x_part[:-1]
+    return max_val - np.mean(others)
+
+#endregion

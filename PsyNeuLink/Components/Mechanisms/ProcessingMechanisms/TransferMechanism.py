@@ -104,29 +104,13 @@ Class Reference
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction, Integrator, NormalDist
+# from PsyNeuLink.Components.States.OutputState import *
+from PsyNeuLink.Components.States.OutputState import OutputState, standard_output_states
 
 # TransferMechanism parameter keywords:
 RANGE = "range"
 TIME_CONSTANT = "time_constant"
 INITIAL_VALUE = 'initial_value'
-
-# TransferMechanism outputs (used to create and name outputStates):
-TRANSFER_RESULT = "transfer_result"
-TRANSFER_MEAN = "transfer_mean "
-TRANSFER_VARIANCE = "transfer_variance"
-TRANSFER_DIFFERENTIAL = "transfer_differential"
-
-
-# TransferMechanism output indices (used to index output values):
-class Transfer_Output(AutoNumber):
-    """Indices of the `output_values <TransferMechanism.output_values>` attribute of the TransferMechanism containing the
-    values described below."""
-    RESULT = ()
-    """Result of the TransferMechanism's `function <TransferMechanism.function>`."""
-    MEAN = ()
-    """Mean of the elements in the :keyword`value` of the RESULT outputState."""
-    VARIANCE = ()
-    """Variance of the elements in the :keyword`value` of the RESULT outputState."""
 
 # TransferMechanism default parameter values:
 Transfer_DEFAULT_LENGTH= 1
@@ -134,6 +118,17 @@ Transfer_DEFAULT_GAIN = 1
 Transfer_DEFAULT_BIAS = 0
 Transfer_DEFAULT_OFFSET = 0
 # Transfer_DEFAULT_RANGE = np.array([])
+
+# This is a convenience class that provides list of standard_output_state names in IDE
+class TRANSFER_OUTPUTS():
+        RESULT=RESULT
+        MEAN=MEAN
+        MEDIAN=MEDIAN
+        STANDARD_DEV=STANDARD_DEV
+        VARIANCE=VARIANCE
+# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+# for item in [item[NAME] for item in DDM_standard_output_states]:
+#     setattr(DDM_OUTPUT.__class__, item, item)
 
 
 class TransferError(Exception):
@@ -350,31 +345,23 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        # TIME_SCALE: TimeScale.TRIAL,
-        NOISE: None,
-        OUTPUT_STATES:[
-            {NAME:RESULT},
-            {NAME:MEAN,
-             CALCULATE:lambda x: np.mean(x)},
-            {NAME:VARIANCE,
-             CALCULATE:lambda x: np.var(x)}],
-        # INTEGRATOR_FUNCTION: Integrator
-        })
+    paramClassDefaults.update({NOISE: None})
+
+    standard_output_states = standard_output_states.copy()
 
     paramNames = paramClassDefaults.keys()
 
     @tc.typecheck
     def __init__(self,
                  default_input_value=Transfer_DEFAULT_BIAS,
-                 input_states=None,
-                 output_states=None,
                  size:tc.optional(int)=None,
+                 input_states:tc.optional(tc.any(list, dict))=None,
                  function=Linear,
                  initial_value=None,
                  noise=0.0,
                  time_constant=1.0,
                  range=None,
+                 output_states:tc.optional(tc.any(list, dict))=[RESULT],
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
@@ -398,6 +385,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         self.size = size
 
         self.integrator_function=None
+
+        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
+        if not isinstance(self.standard_output_states, StandardOutputStates):
+            self.standard_output_states = StandardOutputStates(self, self.standard_output_states)
 
         super(TransferMechanism, self).__init__(variable=default_input_value,
                                                 params=params,
