@@ -335,7 +335,7 @@ PROBABILITY_LOWER_THRESHOLD = 'PROBABILITY_LOWER_THRESHOLD'  # Probability of hi
 RT_CORRECT_MEAN = 'RT_CORRECT_MEAN'  # NavarroAnd Fuss only
 RT_CORRECT_VARIANCE = 'RT_CORRECT_VARIANCE'  # NavarroAnd Fuss only
 
-DDM_standard_output_states = [{NAME: DECISION_VARIABLE},
+DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},
                               {NAME: RESPONSE_TIME},
                               {NAME: PROBABILITY_UPPER_THRESHOLD},  # Probability of hitting upper bound
                               {NAME: PROBABILITY_LOWER_THRESHOLD},  # Probability of hitting lower bound
@@ -568,10 +568,6 @@ class DDM(ProcessingMechanism_Base):
                  # context=None):
                  context=componentType + INITIALIZING):
 
-        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
-        self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states)
-
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   output_states=output_states,
@@ -591,6 +587,7 @@ class DDM(ProcessingMechanism_Base):
 
         from PsyNeuLink.Components.States.OutputState import StandardOutputStates
         self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states)
+        self.use_standard_output_states_indices = True
 
         super(DDM, self).__init__(variable=default_input_value,
                                   output_states=output_states,
