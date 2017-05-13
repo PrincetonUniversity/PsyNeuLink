@@ -545,22 +545,26 @@ class DDM(ProcessingMechanism_Base):
     paramNames = paramClassDefaults.keys()
 
 
-    standard_output_states = []
-    for name in [n for n in DDM_OUTPUT.__dict__.keys() if not (n.startswith('__') and n.endswith('__'))]:
-        standard_output_states.append(name)
+    # standard_output_states = []
+    # for name in [n for n in DDM_OUTPUT.__dict__.keys() if not (n.startswith('__') and n.endswith('__'))]:
+    #     standard_output_states.append(name)
 
-    # standard_output_states = [{NAME: DDM_OUTPUT.DECISION_VARIABLE,
-    #                            INDEX: DDM_OUTPUT_INDEX.DECISION_VARIABLE.value},
-    #                           {NAME: DDM_OUTPUT.RESPONSE_TIME,
-    #                            INDEX: DDM_OUTPUT_INDEX.RESPONSE_TIME.value},
-    #                           {NAME: DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,  # Probability of hitting upper bound
-    #                            INDEX: DDM_OUTPUT_INDEX.P_UPPER_MEAN.value},
-    #                           {NAME: DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD,  # Probability of hitting lower bound
-    #                            INDEX: DDM_OUTPUT_INDEX.P_LOWER_MEAN.value},
-    #                           {NAME: DDM_OUTPUT.RT_CORRECT_MEAN,  # NavarroAnd Fuss only
-    #                            INDEX: DDM_OUTPUT_INDEX.RT_CORRECT_MEAN.value},
-    #                           {NAME: DDM_OUTPUT.RT_CORRECT_VARIANCE,  # NavarroAnd Fuss only
-    #                            INDEX: DDM_OUTPUT_INDEX.RT_CORRECT_VARIANCE.value}]
+    # FIX: make this a ContentAddressableList
+    standard_output_states = [{NAME: DDM_OUTPUT.DECISION_VARIABLE,
+                               INDEX: None},
+                              {NAME: DDM_OUTPUT.RESPONSE_TIME,
+                               INDEX: None},
+                              {NAME: DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,  # Probability of hitting upper bound
+                               INDEX: None},
+                              {NAME: DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD,  # Probability of hitting lower bound
+                               INDEX: None},
+                              {NAME: DDM_OUTPUT.RT_CORRECT_MEAN,  # NavarroAnd Fuss only
+                               INDEX: None},
+                              {NAME: DDM_OUTPUT.RT_CORRECT_VARIANCE,  # NavarroAnd Fuss only
+                               INDEX: None}]
+
+    for i, state_dict in enumerate(standard_output_states):
+        state_dict[INDEX] = i
 
     # Instantiate the names of standard OutputStates as read-only attributes of the class
 
