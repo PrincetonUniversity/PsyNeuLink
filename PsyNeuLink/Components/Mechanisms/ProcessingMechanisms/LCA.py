@@ -89,6 +89,26 @@ class LCAError(Exception):
 MAX_VS_NEXT = 'max_vs_next'
 MAX_VS_AVG = 'max_vs_avg'
 
+# This is a convenience class that provides list of standard_output_state names in IDE
+class LCA_OUTPUT():
+        RESULT=RESULT
+        MEAN=MEAN
+        MEDIAN=MEDIAN
+        STANDARD_DEV=STANDARD_DEV
+        VARIANCE=VARIANCE
+        ENERGY=ENERGY
+        ENTROPY=ENTROPY
+        MAX_VS_NEXT=MAX_VS_NEXT
+        MAX_VS_AVG=MAX_VS_AVG
+# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+# for item in [item[NAME] for item in DDM_standard_output_states]:
+#     setattr(DDM_OUTPUT.__class__, item, item)
+
+
+# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+# for item in [item[NAME] for item in DDM_standard_output_states]:
+#     setattr(DDM_OUTPUT.__class__, item, item)
+
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class LCA(RecurrentTransferMechanism):
@@ -299,16 +319,20 @@ class LCA(RecurrentTransferMechanism):
     instance of LCA : LCA
 
     """
-    componentType = RECURRENT_TRANSFER_MECHANISM
+    componentType = LCA
 
-    paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
-    paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
-    paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
+    paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
+
+    # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
+    # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
+    standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
+    standard_output_states.extend([{NAME:MAX_VS_NEXT},{NAME:MAX_VS_AVG}])
 
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
                  size:tc.optional(int)=None,
+                 input_states:tc.optional(tc.any(list, dict))=None,
                  matrix=None,
                  function=Logistic,
                  initial_value=None,
@@ -317,6 +341,7 @@ class LCA(RecurrentTransferMechanism):
                  noise:is_numeric_or_none=0.1,
                  time_constant:is_numeric_or_none=1.0,
                  range=None,
+                 output_states:tc.optional(tc.any(list, dict))=[RESULT],
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
@@ -331,24 +356,27 @@ class LCA(RecurrentTransferMechanism):
         matrix = np.full((size, size), -inhibition) * get_matrix(HOLLOW_MATRIX,size,size)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(inhibition=inhibition,
+        params = self._assign_args_to_param_dicts(input_states=input_states,
+                                                  inhibition=inhibition,
+                                                  output_states=output_states,
                                                   params=params)
 
-        super().__init__(
-                default_input_value=default_input_value,
-                size=size,
-                matrix=matrix,
-                function=function,
-                initial_value=initial_value,
-                decay=decay,
-                noise=noise,
-                time_constant=time_constant,
-                range=range,
-                time_scale=time_scale,
-                params=params,
-                name=name,
-                prefs=prefs,
-                context=context)
+        super().__init__(default_input_value=default_input_value,
+                         size=size,
+                         input_states=input_states,
+                         matrix=matrix,
+                         function=function,
+                         initial_value=initial_value,
+                         decay=decay,
+                         noise=noise,
+                         time_constant=time_constant,
+                         range=range,
+                         output_states=output_states,
+                         time_scale=time_scale,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate matrix, and the functions for the MAX_VS_NEXT and MAX_VS_AVG outputStates

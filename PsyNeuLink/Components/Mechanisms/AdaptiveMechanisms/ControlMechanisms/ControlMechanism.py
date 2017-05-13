@@ -341,6 +341,7 @@ class ControlMechanism_Base(Mechanism_Base):
         """
 
         self._validate_projection(projection)
+
         # get name of projection receiver (for use in naming the ControlSignal)
         if projection.value is DEFERRED_INITIALIZATION:
             receiver = projection.init_args['receiver']

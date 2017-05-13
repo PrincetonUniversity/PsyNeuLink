@@ -172,14 +172,18 @@
 # SEARCH & REPLACE: allocation_policy -> control_policy (AND ALL VARIANTS THEREOF)
 # SEARCH & REPLACE: baseValue -> base_value
 # SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
+# SEARCH & REPLACE: monitored_values -> monitor_values
 
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
 #
 # IMPLEMENT: standard_output_states for ObjectiveMechanism, LCA, RecurrentTransfer, and Intregrator
 #              (use ones at top of OutputState)
 # IMPLEMENT: Move RecurrentTransfer and LCA calculate functions to standard_output_states
-# IMPLEMENT: standard_input_states
 # IMPLEMENT: Subclasses of ObjectiveMechanism (Comparator and Monitor)
+# IMPLEMENT: standard_input_states (e.g., SAMPLE & TARGET as defaults for the Comparator subclass)
+# IMPLEMENT: Add WEIGHTS and EXPONENTS entry (or single one with tuple value) to inputState specification dicts
+#              and use that in ObjectiveMechanism instead of args or tuple specs
+# IMPLEMENT: Add GATING entry to both input and otuput state dicts
 #
 #  FIX: MAKE SURE THAT System AND/OR EVCMechanism ASSIGN OutputStates TO MONITORY ONLY
 #  FIX:  TO THOSE MECHANISMS FOR WHICH THE OUTPUTSTATE WERE SPECIFIED (UNLESS GIVEN A GENERIC NAME)
@@ -229,6 +233,10 @@
 # ------------------------------------------------------------------------------------------------------------------
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
+# IMPLEMENT: Abstract modulatory projection in AdaptiveMechanism
+#                - using _instantiate_output_states and _instantiate_projections
+#                - should parallel implementation of input_states and monitored_values in ObjectiveMechanism
+# SEARCH & REPLACE: monitored_values -> monitor_values
 # IMPLEMENT: modulation_operation FOR ModulatoryProjections
 #            function_type or method_type SPECIFICATION IN ADDITION TO ModulationOperation FOR modulation_operation
 #                 parameter of ModulatoryFunctions
