@@ -89,17 +89,19 @@ class DefaultControlMechanism(ControlMechanism_Base):
     from PsyNeuLink.Components.Functions.Function import Linear
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 # default_input_value=None,
                  system=None,
+                 monitor_for_control:tc.optional(list)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
-        super(DefaultControlMechanism, self).__init__(default_input_value =default_input_value,
-                                                         params=params,
-                                                         name=name,
-                                                         prefs=prefs,
-                                                         context=self)
+        super(DefaultControlMechanism, self).__init__(#default_input_value =default_input_value,
+                                                    monitor_for_control=monitor_for_control,
+                                                    params=params,
+                                                    name=name,
+                                                    prefs=prefs,
+                                                    context=self)
 
     def _execute(self,
                     variable=None,

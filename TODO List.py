@@ -30,11 +30,14 @@
 #   8) • DOCUMENTATION: SHOULD WE INCLUDE COMPONENT ATTRIBUTES IN DOCSTRING FOR SUBCLASSES (E.G., params, prefs, etc.)
 #   9) • DOCUMENTATION: SHOULD EXAMPLES BE GENERIC (SEE COMPONENT FUNCTION) OR SPECIFIC (USING ACTUAL PNL OBJECTS)?
 #  10) DOCUMENTATION: INCLUDE EXAMPLES "INLINE" OR IN THEIR OWN SECTION AT THE END?
-#  11) • SHOULD COMPONENT NAMES HAVE SPACES OF UNDERSCORES?
-#  12) • SHOULD learning_rate FOR LearningProjection SET SLOPE OF function OR DIRECTLY MULTIPLY WEIGHTS?
-#  13) HOW TO HANDLE RECURRENT PROJECTIONS RE: LEARNING?
-#  14) EVER ALLOW INSTANTIATION OF SENDER BY PROJECTION (OR ALWAYS RELY ON deferred_init())?
-#  14) HOW TO HANDLE GATING:
+#  11) DOCUMENTATION: INTERNALLY-MADE ATTRIBUTE ASSIGNEMENTS SHOULD GENERALLY BE TO THE BACKFIELD (_<attrib>)
+#                       TO AVOID INVOCATION OF assign_params BY PROPERTY
+#                       (WHICH IS INTENDED FOR VALIDATION OF EXTERNAL ASSIGNMENTS)
+#  12) • SHOULD COMPONENT NAMES HAVE SPACES OF UNDERSCORES?
+#  13) • SHOULD learning_rate FOR LearningProjection SET SLOPE OF function OR DIRECTLY MULTIPLY WEIGHTS?
+#  14) HOW TO HANDLE RECURRENT PROJECTIONS RE: LEARNING?
+#  15) EVER ALLOW INSTANTIATION OF SENDER BY PROJECTION (OR ALWAYS RELY ON deferred_init())?
+#  16) HOW TO HANDLE GATING:
 #      • SPECIFICATION (WHERE AND HOW)
 #      • MODULATION (WHO'S RESPONSIBLE FOR THE PARAMETER_MODULATION_OPERATION:  THE STATE OR THE PROJECTION?
 #      • EXECUTION:  "INLINE" (WILL INTRODUCE CYCLES IN GRAPH) OR LIKE CONTROL (PRECLUDES W/IN TRIAL GATING);
@@ -172,10 +175,24 @@
 # SEARCH & REPLACE: allocation_policy -> control_policy (AND ALL VARIANTS THEREOF)
 # SEARCH & REPLACE: baseValue -> base_value
 # SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
+# SEARCH & REPLACE: monitored_values -> monitor_values
 
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
+#
+# IMPLEMENT: standard_output_states for ObjectiveMechanism, LCA, RecurrentTransfer, and Intregrator
+#              (use ones at top of OutputState)
+# IMPLEMENT: Move RecurrentTransfer and LCA calculate functions to standard_output_states
+# IMPLEMENT: Subclasses of ObjectiveMechanism (Comparator and Monitor)
+# IMPLEMENT: standard_input_states (e.g., SAMPLE & TARGET as defaults for the Comparator subclass)
+# IMPLEMENT: Add WEIGHTS and EXPONENTS entry (or single one with tuple value) to inputState specification dicts
+#              and use that in ObjectiveMechanism instead of args or tuple specs
+# IMPLEMENT: Add GATING entry to both input and otuput state dicts
+#
+#  FIX: MAKE SURE THAT System AND/OR EVCMechanism ASSIGN OutputStates TO MONITORY ONLY
+#  FIX:  TO THOSE MECHANISMS FOR WHICH THE OUTPUTSTATE WERE SPECIFIED (UNLESS GIVEN A GENERIC NAME)
 #      PROTOCOL:
-#          a) Mechanism implements PRIMARY input_state and output_state in paramClassDefaults
+#          a) Mechanism implements emptyp input_state and output_state in paramClassDefaults,
+#                to insure that they are included in user_params
 #          b) If any are specified in constructor args (input_states or output_states), they totally override
 #                paramClassDefaults [??CURRENTLY DEALT WITH IN Mechanism._filter_params??]
 #          c) Subclass implements default set in module, and uses those as defaults for constructor args
@@ -199,13 +216,13 @@
 #      Do same for input_states ObjectiveMechanism that gets subclassed (Comparator for learning, Monitor for control),
 #               that replaces input_states with SAMPLE and TARGET (Comparator), or monitored_states (Monitor)
 #     TEST USING assign_params ON COMMAND LINE TO ADD AN inputState or outputState
-#     Replace `names` arg of objective mechanism with input_states arg (and subclass-specific default entries)
 #     DOCUMENTATION for input_state(s) and output_state(s)
 #                   finish "NEW DOCUMENTATION" in ObjectiveMechanism
 #                   variable and value: 2d np.arrays
 #                   input_values and output_values:  lists of values, but each value may be an np.ndarray
-#                   XXput_states.values_as_lists: lists of values, each of which has been converted to a list
-#                   Only appear in user_params if specified in arg of constructor
+#                   [in/out]put_states.values_as_lists: lists of values, each of which has been converted to a list
+#                   NO LONGER TRUE (since they are in paramClassDefaults??):
+#                                 Only appear in user_params if specified in arg of constructor
 #
 # FIX: Duplicated MappingProjections:  State, Line 423 vs. ObjectiveMechanism Line 617
 # FIX:   In LearningAuxiliary:
@@ -219,6 +236,10 @@
 # ------------------------------------------------------------------------------------------------------------------
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
+# IMPLEMENT: Abstract modulatory projection in AdaptiveMechanism
+#                - using _instantiate_output_states and _instantiate_projections
+#                - should parallel implementation of input_states and monitored_values in ObjectiveMechanism
+# SEARCH & REPLACE: monitored_values -> monitor_values
 # IMPLEMENT: modulation_operation FOR ModulatoryProjections
 #            function_type or method_type SPECIFICATION IN ADDITION TO ModulationOperation FOR modulation_operation
 #                 parameter of ModulatoryFunctions

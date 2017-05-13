@@ -216,6 +216,41 @@ from PsyNeuLink.Components.Functions.Function import *
 
 PRIMARY_OUTPUT_STATE = 0
 
+# Standard OutputStates
+# OUTPUT_RESULT = {NAME: RESULT}
+#
+# OUTPUT_MEAN = {NAME:MEAN,
+#                CALCULATE:lambda x: np.mean(x)}
+#
+# OUTPUT_MEDIAN = {NAME:MEDIAN,
+#                    CALCULATE:lambda x: np.median(x)}
+#
+# OUTPUT_STAND_DEVIATION = {NAME:STANDARD_DEV,
+#                           CALCULATE:lambda x: np.std(x)}
+#
+# OUTPUT_VARIANCE = {NAME:VARIANCE,
+#                    CALCULATE:lambda x: np.var(x)}
+
+
+# This is a convenience class that provides list of standard_output_state names in IDE
+class OUTPUTS():
+    RESULT=RESULT
+    MEAN=MEAN
+    MEDIAN=MEDIAN
+    STANDARD_DEV=STANDARD_DEV
+    VARIANCE=VARIANCE
+
+standard_output_states = [{NAME: RESULT},
+                          {NAME:MEAN,
+                           CALCULATE:lambda x: np.mean(x)},
+                          {NAME:MEDIAN,
+                           CALCULATE:lambda x: np.median(x)},
+                          {NAME:STANDARD_DEV,
+                           CALCULATE:lambda x: np.std(x)},
+                          {NAME:VARIANCE,
+                           CALCULATE:lambda x: np.var(x)}]
+
+
 class OutputStateError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -354,7 +389,7 @@ class OutputState(State_Base):
         .. _OutputState_Function_Note_2:
 
         .. note::
-           Currently PsyNeuLink does not currently support projections to outputStates.  Therefore, the
+           PsyNeuLink does not currently support projections to outputStates.  Therefore, the
            :keyword:`function` attribute is not used.  It is implemented strictly for consistency with other
            state classes, and for potential future use.
            COMMENT:
@@ -528,12 +563,13 @@ class OutputState(State_Base):
         #            TO COMBINE self.value ASSIGNED IN CALL TO SUPER (FROM PROJECTIONS)
         #            WITH calculate(self.owner.value[index]) PER BELOW
 
-        # # MODIFIED 4/15/17 OLD:
-        # if not self.value:
-        #     self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
-        # # MODIFIED 4/15/17 NEW:
+        # MODIFIED 5/11/17 OLD:
         self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
-        # # MODIFIED 4/15/17 END
+        # # MODIFIED 5/11/17 NEW:
+        # calculated_value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
+        # self.value = self.function(calculated_value)
+        # MODIFIED 5/11/17 END
+
 
 
 
@@ -555,12 +591,12 @@ def _instantiate_output_states(owner, context=None):
     # MODIFIED 12/7/16 END
     """Call State._instantiate_state_list() to instantiate orderedDict of outputState(s)
 
-    Create OrderedDict of outputState(s) specified in paramsCurrent[INPUT_STATES]
-    If INPUT_STATES is not specified, use self.variable to create a default output state
+    Create ContentAddressableList of outputState(s) specified in paramsCurrent[OUTPUT_STATES]
+    If OUTPUT_STATES is not specified, use self.value to create a default output state
     When completed:
-        - self.outputStates contains an OrderedDict of one or more outputStates
-        - self.outputState contains first or only outputState in OrderedDict
-        - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more outputStates)
+        - self.outputStates contains a ContentAddressableList of one or more outputStates;
+        - self.output_state contains first or only outputState in list;
+        - paramsCurrent[OUTPUT_STATES] contains the same ContentAddressableList (of one or more outputStates)
         - each outputState corresponds to an item in the output of the owner's function
         - if there is only one outputState, it is assigned the full value
 
@@ -573,6 +609,7 @@ def _instantiate_output_states(owner, context=None):
 
     constraint_value = []
 
+    # Get owner.value
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
     owner_value = owner.value
     # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
@@ -594,24 +631,56 @@ def _instantiate_output_states(owner, context=None):
         else:
             owner_value = converted_to_2d
 
+    # Get the value of each outputState
     # IMPLEMENTATION NOTE:
     # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_STATES]
     #        (that is, there is the same number of items in owner_value as there are outputStates)
     #        then increment index so as to assign each item of owner_value to each outputState
     if owner.output_states:
-        for output_state in owner.output_states:
+        for i, output_state in enumerate(owner.output_states):
+
             # Default is PRIMARY_OUTPUT_STATE
             index = PRIMARY_OUTPUT_STATE
-            # If output_state is already an OutputState object, get its index attribute
+            output_state_value = owner_value[index]
+
+            # output_state is:
+
+            # OutputState object, so get its index attribute
             if isinstance(output_state, OutputState):
                 index = output_state.index
-            # If output_state is a specification dict, get its INDEX attribute if specified
-            elif isinstance(output_state, dict):
+                output_state_value = owner_value[index]
+
+            # string, so check if it is the name of a standard_output_state and, if so, get its dict
+            elif isinstance(output_state, str) and hasattr(owner, STANDARD_OUTPUT_STATES):
+                # check if string matches the name entry of a dict in standard_output_states
+                item = next((item for item in owner.standard_output_states.names if output_state is item), None)
+                if item is not None:
+                    # assign dict to owner's output_state list
+                    owner.output_states[owner.output_states.index(output_state)] = \
+                                                                owner.standard_output_states.get_dict(output_state)
+                    # assign default index (PRIMARY_OUTPUT_STATE) unless otherwise specified
+                    # IMPLEMENTATION NOTE:  this is the default, as the number of output_states used by the mechanism
+                    #                       may not (usually does not) match the number of output_states in
+                    #                       standard_output_states, and usually those reference the primary output value
+                    #                       (RESULT) of the mechanism's function (see DDM for an exception,
+                    #                       that sets use_standard_output_states_indices = True)
+                    if not owner.use_standard_output_states_indices:
+                        owner.output_states[i][INDEX] = index
+                    # re-assign output_state to dict so it is processed below
+                    output_state = item
+
+            # specification dict, so get its INDEX attribute if specified, and apply calculate function if specified
+            if isinstance(output_state, dict):
                 try:
                     index = output_state[INDEX]
                 except KeyError:
                     pass
-            constraint_value.append(owner_value[index])
+                if CALCULATE in output_state:
+                    output_state_value = output_state[CALCULATE](owner_value[index])
+                else:
+                    output_state_value = owner_value[index]
+
+            constraint_value.append(output_state_value)
     else:
         constraint_value = owner_value
 
@@ -629,3 +698,60 @@ def _instantiate_output_states(owner, context=None):
         owner.output_states = state_list
     else:
         owner._output_states = state_list
+
+
+class StandardOutputStates():
+    """Assign names and indices of specification dicts in standard_output_state as properties of the owner's class 
+    
+    Provide access to dicts and lists of the values of their name and index entries. 
+    
+    """
+
+    @tc.typecheck
+    def __init__(self, owner:Component, output_state_dicts:list):
+
+        for item in output_state_dicts:
+            if not isinstance(item, dict):
+                raise OutputStateError("All items of {} for {} must be dicts ({} is not)".
+                                     format(self.__class__.__name__, owner.componentName, item))
+        self.data = output_state_dicts
+
+        for i, state_dict in enumerate(self.data):
+            state_dict[INDEX] = i
+            # state_dict[INDEX] = None
+
+        # Add names of each outputState as property of the owner's class that returns its name string
+        for state in self.data:
+            setattr(owner.__class__, state[NAME], make_readonly_property(state[NAME]))
+
+        # Add <NAME_INDEX> of each outputState as property of the owner's class that returns its index
+        for state in self.data:
+            setattr(owner.__class__, state[NAME]+'_INDEX', make_readonly_property(state[INDEX]))
+
+    @tc.typecheck
+    def get_dict(self, name:str):
+        return self.data[self.names.index(name)]
+    
+    @property
+    def names(self):
+        return [item[NAME] for item in self.data]
+
+    @property
+    def indices(self):
+        return [item[INDEX] for item in self.data]
+
+
+
+def make_readonly_property(val):
+    """Return property that provides read-only access to its value
+    """
+
+    def getter(self):
+        return val
+
+    def setter(self, val):
+        raise UtilitiesError("{} is read-only property of {}".format(val, self.__class__.__name__))
+
+    # Create the property
+    prop = property(getter).setter(setter)
+    return prop

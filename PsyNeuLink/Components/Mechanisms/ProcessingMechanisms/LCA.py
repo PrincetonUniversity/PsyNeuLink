@@ -74,7 +74,7 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Components.Functions.Function import Logistic, max_vs_next, max_vs_avg
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import *
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
@@ -88,6 +88,26 @@ class LCAError(Exception):
 
 MAX_VS_NEXT = 'max_vs_next'
 MAX_VS_AVG = 'max_vs_avg'
+
+# This is a convenience class that provides list of standard_output_state names in IDE
+class LCA_OUTPUT():
+        RESULT=RESULT
+        MEAN=MEAN
+        MEDIAN=MEDIAN
+        STANDARD_DEV=STANDARD_DEV
+        VARIANCE=VARIANCE
+        ENERGY=ENERGY
+        ENTROPY=ENTROPY
+        MAX_VS_NEXT=MAX_VS_NEXT
+        MAX_VS_AVG=MAX_VS_AVG
+# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+# for item in [item[NAME] for item in DDM_standard_output_states]:
+#     setattr(DDM_OUTPUT.__class__, item, item)
+
+
+# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+# for item in [item[NAME] for item in DDM_standard_output_states]:
+#     setattr(DDM_OUTPUT.__class__, item, item)
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
@@ -299,16 +319,23 @@ class LCA(RecurrentTransferMechanism):
     instance of LCA : LCA
 
     """
-    componentType = RECURRENT_TRANSFER_MECHANISM
+    componentType = LCA
 
-    paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
-    paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
-    paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
+    paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
+
+    # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
+    # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
+    standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
+    standard_output_states.extend([{NAME:MAX_VS_NEXT,
+                                    CALCULATE:max_vs_next},
+                                   {NAME:MAX_VS_AVG,
+                                    CALCULATE:max_vs_avg}])
 
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
                  size:tc.optional(int)=None,
+                 input_states:tc.optional(tc.any(list, dict))=None,
                  matrix=None,
                  function=Logistic,
                  initial_value=None,
@@ -317,6 +344,7 @@ class LCA(RecurrentTransferMechanism):
                  noise:is_numeric_or_none=0.1,
                  time_constant:is_numeric_or_none=1.0,
                  range=None,
+                 output_states:tc.optional(tc.any(list, dict))=[RESULT],
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
@@ -331,43 +359,28 @@ class LCA(RecurrentTransferMechanism):
         matrix = np.full((size, size), -inhibition) * get_matrix(HOLLOW_MATRIX,size,size)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(inhibition=inhibition,
+        params = self._assign_args_to_param_dicts(input_states=input_states,
+                                                  inhibition=inhibition,
+                                                  output_states=output_states,
                                                   params=params)
 
-        super().__init__(
-                default_input_value=default_input_value,
-                size=size,
-                matrix=matrix,
-                function=function,
-                initial_value=initial_value,
-                decay=decay,
-                noise=noise,
-                time_constant=time_constant,
-                range=range,
-                time_scale=time_scale,
-                params=params,
-                name=name,
-                prefs=prefs,
-                context=context)
+        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
+        if not isinstance(self.standard_output_states, StandardOutputStates):
+            self.standard_output_states = StandardOutputStates(self, self.standard_output_states)
 
-    def _instantiate_attributes_after_function(self, context=None):
-        """Instantiate matrix, and the functions for the MAX_VS_NEXT and MAX_VS_AVG outputStates
-        """
-        # self.matrix = np.full((self.size, self.size), self.inhibition)
-
-        super()._instantiate_attributes_after_function(context=context)
-
-        def max_vs_next(x):
-            x_part = np.partition(x, -2)
-            max_val = x_part[-1]
-            next = x_part[-2]
-            return max_val - next
-
-        def max_vs_avg(x):
-            x_part = np.partition(x, -2)
-            max_val = x_part[-1]
-            others = x_part[:-1]
-            return max_val - np.mean(others)
-
-        self.output_states[MAX_VS_NEXT].calculate = max_vs_next
-        self.output_states[MAX_VS_AVG].calculate = max_vs_avg
+        super().__init__(default_input_value=default_input_value,
+                         size=size,
+                         input_states=input_states,
+                         matrix=matrix,
+                         function=function,
+                         initial_value=initial_value,
+                         decay=decay,
+                         noise=noise,
+                         time_constant=time_constant,
+                         range=range,
+                         output_states=output_states,
+                         time_scale=time_scale,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=context)
