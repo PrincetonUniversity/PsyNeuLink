@@ -328,33 +328,20 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism i
 from PsyNeuLink.Components.Functions.Function import *
 
 
-class DDM_OUTPUT():
-    DECISION_VARIABLE='DECISION_VARIABLE'
-    RESPONSE_TIME = 'RESPONSE_TIME'
-    PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'  # Probability of hitting upper bound
-    PROBABILITY_LOWER_THRESHOLD = 'PROBABILITY_LOWER_THRESHOLD'  # Probability of hitting lower bound
-    RT_CORRECT_MEAN = 'RT_CORRECT_MEAN'  # NavarroAnd Fuss only
-    RT_CORRECT_VARIANCE = 'RT_CORRECT_VARIANCE'  # NavarroAnd Fuss only
-
-# # Indices for results used in return value tuple; auto-numbered to insure sequentiality
-# class DDM_OUTPUT_INDEX(AutoNumber):
-#     DECISION_VARIABLE = ()
-#     RESPONSE_TIME = ()
-#     P_UPPER_MEAN = ()
-#     P_LOWER_MEAN = ()
-#     RT_CORRECT_MEAN = ()
-#     RT_CORRECT_VARIANCE = ()
-#     NUM_OUTPUT_VALUES = ()
+DECISION_VARIABLE='DECISION_VARIABLE'
+RESPONSE_TIME = 'RESPONSE_TIME'
+PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'  # Probability of hitting upper bound
+PROBABILITY_LOWER_THRESHOLD = 'PROBABILITY_LOWER_THRESHOLD'  # Probability of hitting lower bound
+RT_CORRECT_MEAN = 'RT_CORRECT_MEAN'  # NavarroAnd Fuss only
+RT_CORRECT_VARIANCE = 'RT_CORRECT_VARIANCE'  # NavarroAnd Fuss only
 
 
-# DDM STANDARD OutputStates
-
-DDM_standard_output_states = [{NAME: DDM_OUTPUT.DECISION_VARIABLE},
-                              {NAME: DDM_OUTPUT.RESPONSE_TIME},
-                              {NAME: DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD},  # Probability of hitting upper bound
-                              {NAME: DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD},  # Probability of hitting lower bound
-                              {NAME: DDM_OUTPUT.RT_CORRECT_MEAN},  # NavarroAnd Fuss only
-                              {NAME: DDM_OUTPUT.RT_CORRECT_VARIANCE}]  # NavarroAnd Fuss only
+DDM_standard_output_states = [{NAME: DECISION_VARIABLE},
+                              {NAME: RESPONSE_TIME},
+                              {NAME: PROBABILITY_UPPER_THRESHOLD},  # Probability of hitting upper bound
+                              {NAME: PROBABILITY_LOWER_THRESHOLD},  # Probability of hitting lower bound
+                              {NAME: RT_CORRECT_MEAN},  # NavarroAnd Fuss only
+                              {NAME: RT_CORRECT_VARIANCE}]  # NavarroAnd Fuss only
 
 
 class DDMError(Exception):
@@ -561,8 +548,7 @@ class DDM(ProcessingMechanism_Base):
                                      threshold=1.0,
                                      noise=0.5,
                                      t0=.200),
-                 output_states:tc.optional(tc.any(list, dict))=[DDM_OUTPUT.DECISION_VARIABLE,
-                                                                DDM_OUTPUT.RESPONSE_TIME],
+                 output_states:tc.optional(tc.any(list, dict))=[DECISION_VARIABLE, RESPONSE_TIME],
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  name=None,
