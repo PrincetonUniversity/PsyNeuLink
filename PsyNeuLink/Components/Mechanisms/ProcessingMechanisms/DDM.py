@@ -86,6 +86,7 @@ executing the DDM mechanism numerically integrates the path of the decision vari
 below).  The number of `outputStates <OutputState>` is determined by the `function <DDM.function>` in use (see
 :ref:`list of output values <DDM_Results>` below).
 COMMENT
+
 COMMENT:
 [TBI - average_output_states ARGUMENT/OPTION AFTER IMPLEMENTING MULTIPROCESS DDM]
 OUTPUT MEASURE?? OUTCOME MEASURE?? RESULT?? TYPE OF RESULT??
