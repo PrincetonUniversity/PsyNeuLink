@@ -89,6 +89,19 @@ class RecurrentTransferError(Exception):
 
 DECAY = 'decay'
 
+# This is a convenience class that provides list of standard_output_state names in IDE
+class RECURRENT_OUTPUT():
+        RESULT=RESULT
+        MEAN=MEAN
+        MEDIAN=MEDIAN
+        STANDARD_DEV=STANDARD_DEV
+        VARIANCE=VARIANCE
+        ENERGY=ENERGY
+        ENTROPY=ENTROPY
+# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+# for item in [item[NAME] for item in DDM_standard_output_states]:
+#     setattr(DDM_OUTPUT.__class__, item, item)
+
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class RecurrentTransferMechanism(TransferMechanism):
@@ -288,14 +301,17 @@ class RecurrentTransferMechanism(TransferMechanism):
     componentType = RECURRENT_TRANSFER_MECHANISM
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
-    paramClassDefaults[OUTPUT_STATES].append({NAME:ENERGY})
-    paramClassDefaults[OUTPUT_STATES].append({NAME:ENTROPY})
 
+    # paramClassDefaults[OUTPUT_STATES].append({NAME:ENERGY})
+    # paramClassDefaults[OUTPUT_STATES].append({NAME:ENTROPY})
+    standard_output_states = TransferMechanism.standard_output_states.copy()
+    standard_output_states.extend([{NAME:ENERGY}, {NAME:ENTROPY}])
 
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
                  size:tc.optional(int)=None,
+                 input_states:tc.optional(tc.any(list, dict))=None,
                  matrix=FULL_CONNECTIVITY_MATRIX,
                  function=Linear,
                  initial_value=None,
@@ -303,6 +319,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  noise:is_numeric_or_none=0.0,
                  time_constant:is_numeric_or_none=1.0,
                  range=None,
+                 output_states:tc.optional(tc.any(list, dict))=[RESULT],
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
@@ -312,25 +329,31 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(matrix=matrix,
+        params = self._assign_args_to_param_dicts(input_states=input_states,
+                                                  matrix=matrix,
                                                   decay=decay,
+                                                  output_states=output_states,
                                                   params=params)
-
         self.size = size
 
-        super().__init__(
-                 default_input_value=default_input_value,
-                 size=size,
-                 function=function,
-                 initial_value=initial_value,
-                 noise=noise,
-                 time_constant=time_constant,
-                 range=range,
-                 time_scale=time_scale,
-                 params=params,
-                 name=name,
-                 prefs=prefs,
-                 context=context)
+        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
+        if not isinstance(self.standard_output_states, StandardOutputStates):
+            self.standard_output_states = StandardOutputStates(self, self.standard_output_states)
+
+        super().__init__(default_input_value=default_input_value,
+                         size=size,
+                         input_states=input_states,
+                         function=function,
+                         initial_value=initial_value,
+                         noise=noise,
+                         time_constant=time_constant,
+                         range=range,
+                         output_states=output_states,
+                         time_scale=time_scale,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of matrix and decay.
@@ -400,20 +423,22 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self.matrix = self.recurrent_projection.matrix
 
-        energy = Stability(self.variable[0],
-                           metric=ENERGY,
-                           transfer_fct=self.function,
-                           matrix=self.recurrent_projection._parameter_states[MATRIX])
-        self.output_states[ENERGY].calculate = energy.function
+        if ENERGY in self.output_states.names:
+            energy = Stability(self.variable[0],
+                               metric=ENERGY,
+                               transfer_fct=self.function,
+                               matrix=self.recurrent_projection._parameter_states[MATRIX])
+            self.output_states[ENERGY]._calculate = energy.function
 
-        if self.function_object.bounds == (0,1) or range == (0,1):
-            entropy = Stability(self.variable[0],
-                                metric=ENTROPY,
-                                transfer_fct=self.function,
-                                matrix=self.recurrent_projection._parameter_states[MATRIX])
-            self.output_states[ENTROPY].calculate = entropy.function
-        else:
-            del self.output_states[ENTROPY]
+        if ENTROPY in self.output_states.names:
+            if self.function_object.bounds == (0,1) or range == (0,1):
+                entropy = Stability(self.variable[0],
+                                    metric=ENTROPY,
+                                    transfer_fct=self.function,
+                                    matrix=self.recurrent_projection._parameter_states[MATRIX])
+                self.output_states[ENTROPY]._calculate = entropy.function
+            else:
+                del self.output_states[ENTROPY]
 
     def _execute(self,
                  variable=None,

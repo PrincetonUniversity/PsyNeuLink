@@ -1,15 +1,15 @@
 # GLOBALS:
+from PsyNeuLink.Globals.Keywords import *
 
 # MECHANISMS:
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
 
 # COMPOSITIONS:
-# from PsyNeuLink.Components.Process import process
-# from PsyNeuLink.Components.System import system
-# from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.System import system
 
 
 # FUNCTIONS:
@@ -621,58 +621,63 @@ class ScratchPadError(Exception):
 
 #region TEST RecurrentTransferMechanism / LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# my_auto = LCA(
+print("TEST RecurrentTransferMechanism / LCA")
+my_auto = LCA(
+        size=3,
+        output_states=[LCA_OUTPUT.RESULT,
+                       LCA_OUTPUT.ENTROPY,
+                       LCA_OUTPUT.ENERGY,
+                       LCA_OUTPUT.MAX_VS_AVG]
+        # inhibition
+)
+
+# my_auto = RecurrentTransferMechanism(
+#         default_input_value=[0,0,0],
 #         size=3,
-#         # inhibition
+#         function=Logistic,
+#         # matrix=RANDOM_CONNECTIVITY_MATRIX,
+#         matrix=np.array([[1,1,1],[1,1,1],[1,1,1]])
+#         # matrix=[[1,1,1],[1,1,1],[1,1,1]]
 # )
+
+# my_auto = TransferMechanism(default_input_value=[0,0,0],
+#                             # function=Logistic
+#                             )
 #
-# # my_auto = RecurrentTransferMechanism(
-# #         default_input_value=[0,0,0],
-# #         size=3,
-# #         function=Logistic,
-# #         # matrix=RANDOM_CONNECTIVITY_MATRIX,
-# #         matrix=np.array([[1,1,1],[1,1,1],[1,1,1]])
-# #         # matrix=[[1,1,1],[1,1,1],[1,1,1]]
-# # )
+# my_auto_matrix = MappingProjection(sender=my_auto,
+#                                    receiver=my_auto,
+#                                    matrix=FULL_CONNECTIVITY_MATRIX)
+
+# THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
+#                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
+my_process = process(pathway=[my_auto],
+
+# THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
+# my_process = process(pathway=[my_auto, my_auto_matrix],
+                     target=[0,0,0],
+                     learning=LEARNING
+                     )
+
+# my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
+#                      learning=LEARNING,
+#                      target=[0,0,0])
+
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
+# print(my_process.execute([1,1,1]))
 #
-# # my_auto = TransferMechanism(default_input_value=[0,0,0],
-# #                             # function=Logistic
-# #                             )
-# #
-# # my_auto_matrix = MappingProjection(sender=my_auto,
-# #                                    receiver=my_auto,
-# #                                    matrix=FULL_CONNECTIVITY_MATRIX)
-#
-# # THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
-# #                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
-# my_process = process(pathway=[my_auto],
-#
-# # THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
-# # my_process = process(pathway=[my_auto, my_auto_matrix],
-#                      target=[0,0,0],
-#                      learning=LEARNING
-#                      )
-#
-# # my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
-# #                      learning=LEARNING,
-# #                      target=[0,0,0])
-#
-# # print(my_process.execute([1,1,1]))
-# # print(my_process.execute([1,1,1]))
-# # print(my_process.execute([1,1,1]))
-# # print(my_process.execute([1,1,1]))
-# #
-# input_list = {my_auto:[1,1,1]}
-# target_list = {my_auto:[0,0,0]}
-#
-# # print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
-#
-# my_system = system(processes=[my_process],
-#                    targets=[0,0,0])
-#
-# print(my_system.run(inputs=input_list,
-#                     targets=target_list,
-#                     num_executions=5))
+input_list = {my_auto:[1,1,1]}
+target_list = {my_auto:[0,0,0]}
+
+# print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
+
+my_system = system(processes=[my_process],
+                   targets=[0,0,0])
+
+print(my_system.run(inputs=input_list,
+                    targets=target_list,
+                    num_executions=5))
 
 #endregion
 
@@ -2214,149 +2219,147 @@ class ScratchPadError(Exception):
 
 # region TEST parse_monitored_value
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import *
-from PsyNeuLink.Components.States.OutputState import OutputState
-
-def _parse_monitored_value(owner, monitored_values):
-    """Parse specifications contained in monitored_values list or dict, 
-    
-    Can take either a list or dict of specifications.
-    If it is a list, each item must be one of the following:
-        - OuptutState
-        - Mechanism
-        - string
-        - value
-        - dict
-
-    If it is a dict, each item must be an entry, the key of which must be a string that is used as a name
-        specification, and the value of which can be any of the above. 
-        
-    Return a list of specification dicts, one for each item of monitored_values
-    """
-
-
-    def parse_spec(spec):
-
-        # OutputState:
-        if isinstance(spec, OutputState):
-            name = spec.owner.name + MONITORED_VALUE_NAME_SUFFIX
-            value = spec.value
-            call_for_projection = True
-
-        # Mechanism:
-        elif isinstance(spec, Mechanism_Base):
-            name = spec.name + MONITORED_VALUE_NAME_SUFFIX
-            value = spec.output_state.value
-            call_for_projection = True
-
-        # # If spec is a MonitoredOutputStatesOption:
-        # # FIX: NOT SURE WHAT TO DO HERE YET
-        # elif isinstance(montiored_value, MonitoredOutputStateOption):
-        #     value = ???
-        #     call_for_projection = True
-
-        # If spec is a string:
-        # - use as name of inputState
-        # - instantiate InputState with defalut value (1d array with single scalar item??)
-
-        # str:
-        elif isinstance(spec, str):
-            name = spec
-            value = DEFAULT_MONITORED_VALUE
-            call_for_projection = False
-
-        # value:
-        elif is_value_spec(spec):
-            name = owner.name + MONITORED_VALUE_NAME_SUFFIX
-            value = spec
-            call_for_projection = False
-
-        elif isinstance(spec, tuple):
-            # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
-            name = owner.name + MONITORED_VALUE_NAME_SUFFIX
-            value = spec[0]
-            call_for_projection = spec[1]
-
-        # dict:
-        elif isinstance(spec, dict):
-
-            name = None
-            for k, v in spec.items():
-                # Key is not a spec keyword, so dict must be of the following form: STATE_NAME_ASSIGNMENT:STATE_SPEC
-                #
-                if not k in {NAME, VALUE, STATE_PROJECTIONS}:
-                    name = k
-                    value = v
-
-            if NAME in spec:
-                name = spec[NAME]
-
-            call_for_projection = False
-            if STATE_PROJECTIONS in spec:
-                call_for_projection = spec[STATE_PROJECTIONS]
-
-            if isinstance(spec[VALUE], (dict, tuple)):
-                # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
-                entry_name, value, call_for_projection = parse_spec(spec[VALUE])
-
-            else:
-                value = spec[VALUE]
-
-        else:
-            raise ObjectiveMechanismError("Specification for {} arg of {} ({}) must be an "
-                                          "OutputState, Mechanism, value or string".
-                                          format(MONITORED_VALUES, owner.name, spec))
-
-        return name, value, call_for_projection
-
-    # If it is a dict, convert to list by:
-    #    - assigning the key of each entry to a NAME entry of the dict
-    #    - placing the value in a VALUE entry of the dict
-    if isinstance(monitored_values, dict):
-        monitored_values_list = []
-        for name, spec in monitored_values.items():
-            monitored_values_list.append({NAME: name, VALUE: spec})
-        monitored_values = monitored_values_list
-
-    if isinstance(monitored_values, list):
-
-        for i, monitored_value in enumerate(monitored_values):
-            name, value, call_for_projection = parse_spec(monitored_value)
-            monitored_values[i] = {NAME: name,
-                                   VALUE: value,
-                                   PROJECTION: call_for_projection}
-
-    else:
-        raise ObjectiveMechanismError("{} arg for {} ({} )must be a list or dict".
-                                      format(MONITORED_VALUES, owner.name, monitored_values))
-
-    return monitored_values
-
-
-
-    # def add_monitored_values(self, states_spec, context=None):
-    #     """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
-    #
-    #     Use by other objects to add a state or list of states to be monitored by EVC
-    #     states_spec can be a Mechanism, OutputState or list of either or both
-    #     If item is a Mechanism, each of its outputStates will be used
-    #
-    #     Args:
-    #         states_spec (Mechanism, MechanimsOutputState or list of either or both:
-    #         context:
-    #     """
-    #     states_spec = list(states_spec)
-    #     validate_monitored_value(self, states_spec, context=context)
-    #     self._instantiate_monitored_output_states(states_spec, context=context)
-
-class SCRATCH_PAD():
-    name = 'SCRATCH_PAD'
-
-print(_parse_monitored_value(SCRATCH_PAD, {'TEST_STATE_NAME':{VALUE: (32, 'Projection')}}))
-
-
-
-
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import *
+# from PsyNeuLink.Components.States.OutputState import OutputState
+#
+# print("TEST parse_monitored_value")
+#
+# def _parse_monitored_value(owner, monitored_values):
+#     """Parse specifications contained in monitored_values list or dict,
+#
+#     Can take either a list or dict of specifications.
+#     If it is a list, each item must be one of the following:
+#         - OuptutState
+#         - Mechanism
+#         - string
+#         - value
+#         - dict
+#
+#     If it is a dict, each item must be an entry, the key of which must be a string that is used as a name
+#         specification, and the value of which can be any of the above.
+#
+#     Return a list of specification dicts, one for each item of monitored_values
+#     """
+#
+#
+#     def parse_spec(spec):
+#
+#         # OutputState:
+#         if isinstance(spec, OutputState):
+#             name = spec.owner.name + MONITORED_VALUE_NAME_SUFFIX
+#             value = spec.value
+#             call_for_projection = True
+#
+#         # Mechanism:
+#         elif isinstance(spec, Mechanism_Base):
+#             name = spec.name + MONITORED_VALUE_NAME_SUFFIX
+#             value = spec.output_state.value
+#             call_for_projection = True
+#
+#         # # If spec is a MonitoredOutputStatesOption:
+#         # # FIX: NOT SURE WHAT TO DO HERE YET
+#         # elif isinstance(montiored_value, MonitoredOutputStateOption):
+#         #     value = ???
+#         #     call_for_projection = True
+#
+#         # If spec is a string:
+#         # - use as name of inputState
+#         # - instantiate InputState with defalut value (1d array with single scalar item??)
+#
+#         # str:
+#         elif isinstance(spec, str):
+#             name = spec
+#             value = DEFAULT_MONITORED_VALUE
+#             call_for_projection = False
+#
+#         # value:
+#         elif is_value_spec(spec):
+#             name = owner.name + MONITORED_VALUE_NAME_SUFFIX
+#             value = spec
+#             call_for_projection = False
+#
+#         elif isinstance(spec, tuple):
+#             # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
+#             name = owner.name + MONITORED_VALUE_NAME_SUFFIX
+#             value = spec[0]
+#             call_for_projection = spec[1]
+#
+#         # dict:
+#         elif isinstance(spec, dict):
+#
+#             name = None
+#             for k, v in spec.items():
+#                 # Key is not a spec keyword, so dict must be of the following form: STATE_NAME_ASSIGNMENT:STATE_SPEC
+#                 #
+#                 if not k in {NAME, VALUE, STATE_PROJECTIONS}:
+#                     name = k
+#                     value = v
+#
+#             if NAME in spec:
+#                 name = spec[NAME]
+#
+#             call_for_projection = False
+#             if STATE_PROJECTIONS in spec:
+#                 call_for_projection = spec[STATE_PROJECTIONS]
+#
+#             if isinstance(spec[VALUE], (dict, tuple)):
+#                 # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
+#                 entry_name, value, call_for_projection = parse_spec(spec[VALUE])
+#
+#             else:
+#                 value = spec[VALUE]
+#
+#         else:
+#             raise ObjectiveMechanismError("Specification for {} arg of {} ({}) must be an "
+#                                           "OutputState, Mechanism, value or string".
+#                                           format(MONITORED_VALUES, owner.name, spec))
+#
+#         return name, value, call_for_projection
+#
+#     # If it is a dict, convert to list by:
+#     #    - assigning the key of each entry to a NAME entry of the dict
+#     #    - placing the value in a VALUE entry of the dict
+#     if isinstance(monitored_values, dict):
+#         monitored_values_list = []
+#         for name, spec in monitored_values.items():
+#             monitored_values_list.append({NAME: name, VALUE: spec})
+#         monitored_values = monitored_values_list
+#
+#     if isinstance(monitored_values, list):
+#
+#         for i, monitored_value in enumerate(monitored_values):
+#             name, value, call_for_projection = parse_spec(monitored_value)
+#             monitored_values[i] = {NAME: name,
+#                                    VALUE: value,
+#                                    PROJECTION: call_for_projection}
+#
+#     else:
+#         raise ObjectiveMechanismError("{} arg for {} ({} )must be a list or dict".
+#                                       format(MONITORED_VALUES, owner.name, monitored_values))
+#
+#     return monitored_values
+#
+#
+#
+#     # def add_monitored_values(self, states_spec, context=None):
+#     #     """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
+#     #
+#     #     Use by other objects to add a state or list of states to be monitored by EVC
+#     #     states_spec can be a Mechanism, OutputState or list of either or both
+#     #     If item is a Mechanism, each of its outputStates will be used
+#     #
+#     #     Args:
+#     #         states_spec (Mechanism, MechanimsOutputState or list of either or both:
+#     #         context:
+#     #     """
+#     #     states_spec = list(states_spec)
+#     #     validate_monitored_value(self, states_spec, context=context)
+#     #     self._instantiate_monitored_output_states(states_spec, context=context)
+#
+# class SCRATCH_PAD():
+#     name = 'SCRATCH_PAD'
+#
+# print(_parse_monitored_value(SCRATCH_PAD, {'TEST_STATE_NAME':{VALUE: (32, 'Projection')}}))
 
 #endregion
 
