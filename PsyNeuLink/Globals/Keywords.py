@@ -427,7 +427,11 @@ MONITORING = 'MONITORING'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 
-RESULT = 'result'
+RESULT = 'RESULT'
+MEAN = 'MEAN'
+MEDIAN = 'MEDIAN'
+VARIANCE = 'VARIANCE'
+STANDARD_DEV = 'STANDARD_DEV'
 
 STATE_VALUE = "State value"   # Used in State specification dict
                                                  #  to specify State value
@@ -542,12 +546,6 @@ DRIFT_RATE = 'drift_rate'
 INTEGRATOR_FUNCTION = 'integrator_function'
 INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
-
-MEAN = 'mean'
-MEDIAN = 'median'
-VARIANCE = 'variance'
-STANDARD_DEV = 'standard_dev'
-
 
 LOW = 'low'
 HIGH = 'high'

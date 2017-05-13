@@ -31,6 +31,7 @@ Input = TransferMechanism(name='Input',
 
 Reward = TransferMechanism(name='Reward',
                  # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
+                           output_states=[RESULT, MEAN, VARIANCE]
                   )
 
 Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear,

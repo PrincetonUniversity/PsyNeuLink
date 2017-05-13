@@ -911,6 +911,11 @@ class Mechanism_Base(Mechanism):
         else:
             context = context + SEPARATOR_BAR + INITIALIZING + self.name
 
+        # Determine whether index of outputState specification dict in standard_output_states is used when
+        #     instantiating an output_state from that list
+        if not hasattr(self, 'use_standard_output_states_indices'):
+            self.use_standard_output_states_indices = False
+
         super(Mechanism_Base, self).__init__(variable_default=variable,
                                              param_defaults=params,
                                              prefs=prefs,
@@ -943,6 +948,7 @@ class Mechanism_Base(Mechanism):
         self.phaseSpec = None
         self.processes = {}
         self.systems = {}
+
 
     def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state

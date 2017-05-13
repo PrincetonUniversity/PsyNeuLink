@@ -658,11 +658,14 @@ def _instantiate_output_states(owner, context=None):
                     # assign dict to owner's output_state list
                     owner.output_states[owner.output_states.index(output_state)] = \
                                                                 owner.standard_output_states.get_dict(output_state)
-                    # but assign index to PRIMARY_OUTPUT_STATE as default
-                    # IMPLEMENTATION NOTE:  Can't leave it as value in dict from standard_output_states
-                    #                       as that may not (usually does not) match the number of output_states
-                    #                       of the mechanism to which it is being assigned
-                    owner.output_states[i][INDEX] = index
+                    # assign default index (PRIMARY_OUTPUT_STATE) unless otherwise specified
+                    # IMPLEMENTATION NOTE:  this is the default, as the number of output_states used by the mechanism
+                    #                       may not (usually does not) match the number of output_states in
+                    #                       standard_output_states, and usually those reference the primary output value
+                    #                       (RESULT) of the mechanism's function (see DDM for an exception,
+                    #                       that sets use_standard_output_states_indices = True)
+                    if not owner.use_standard_output_states_indices:
+                        owner.output_states[i][INDEX] = index
                     # re-assign output_state to dict so it is processed below
                     output_state = item
 
