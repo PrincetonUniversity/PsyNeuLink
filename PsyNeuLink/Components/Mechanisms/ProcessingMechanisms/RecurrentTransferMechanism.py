@@ -336,6 +336,10 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   params=params)
         self.size = size
 
+        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
+        if not isinstance(self.standard_output_states, StandardOutputStates):
+            self.standard_output_states = StandardOutputStates(self, self.standard_output_states)
+
         super().__init__(default_input_value=default_input_value,
                          size=size,
                          input_states=input_states,
@@ -419,20 +423,22 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self.matrix = self.recurrent_projection.matrix
 
-        energy = Stability(self.variable[0],
-                           metric=ENERGY,
-                           transfer_fct=self.function,
-                           matrix=self.recurrent_projection._parameter_states[MATRIX])
-        self.output_states[ENERGY].calculate = energy.function
+        if ENERGY in self.output_states.names:
+            energy = Stability(self.variable[0],
+                               metric=ENERGY,
+                               transfer_fct=self.function,
+                               matrix=self.recurrent_projection._parameter_states[MATRIX])
+            self.output_states[ENERGY]._calculate = energy.function
 
-        if self.function_object.bounds == (0,1) or range == (0,1):
-            entropy = Stability(self.variable[0],
-                                metric=ENTROPY,
-                                transfer_fct=self.function,
-                                matrix=self.recurrent_projection._parameter_states[MATRIX])
-            self.output_states[ENTROPY].calculate = entropy.function
-        else:
-            del self.output_states[ENTROPY]
+        if ENTROPY in self.output_states.names:
+            if self.function_object.bounds == (0,1) or range == (0,1):
+                entropy = Stability(self.variable[0],
+                                    metric=ENTROPY,
+                                    transfer_fct=self.function,
+                                    matrix=self.recurrent_projection._parameter_states[MATRIX])
+                self.output_states[ENTROPY]._calculate = entropy.function
+            else:
+                del self.output_states[ENTROPY]
 
     def _execute(self,
                  variable=None,

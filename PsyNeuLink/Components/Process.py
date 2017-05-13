@@ -1216,7 +1216,7 @@ class Process_Base(Process):
                 if any(any(proj.receiver.owner is mech
                            for proj in state.sendsToProjections)
                        for state in mech.output_states):
-                    for state in mech.output_states.values():
+                    for state in mech.output_states:
                         for proj in state.sendsToProjections:
                             if proj.receiver.owner is mech:
                                 pathway.append(MechanismTuple(proj,None,None))

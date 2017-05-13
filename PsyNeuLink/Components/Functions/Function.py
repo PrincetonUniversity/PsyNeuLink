@@ -5263,3 +5263,20 @@ class BackPropagation(LearningFunction):
 # TBI
 
 # region  *****************************************   REGISTER FUNCTIONS ***********************************************
+
+# region
+
+# FIX: IMPLEMENT AS Functions
+def max_vs_next(x):
+    x_part = np.partition(x, -2)
+    max_val = x_part[-1]
+    next = x_part[-2]
+    return max_val - next
+
+def max_vs_avg(x):
+    x_part = np.partition(x, -2)
+    max_val = x_part[-1]
+    others = x_part[:-1]
+    return max_val - np.mean(others)
+
+#endregion

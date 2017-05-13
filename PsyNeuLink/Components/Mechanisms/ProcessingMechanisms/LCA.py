@@ -74,7 +74,7 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Components.Functions.Function import Logistic, max_vs_next, max_vs_avg
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import *
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
@@ -326,7 +326,10 @@ class LCA(RecurrentTransferMechanism):
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
     standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
-    standard_output_states.extend([{NAME:MAX_VS_NEXT},{NAME:MAX_VS_AVG}])
+    standard_output_states.extend([{NAME:MAX_VS_NEXT,
+                                    CALCULATE:max_vs_next},
+                                   {NAME:MAX_VS_AVG,
+                                    CALCULATE:max_vs_avg}])
 
     @tc.typecheck
     def __init__(self,
@@ -361,6 +364,10 @@ class LCA(RecurrentTransferMechanism):
                                                   output_states=output_states,
                                                   params=params)
 
+        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
+        if not isinstance(self.standard_output_states, StandardOutputStates):
+            self.standard_output_states = StandardOutputStates(self, self.standard_output_states)
+
         super().__init__(default_input_value=default_input_value,
                          size=size,
                          input_states=input_states,
@@ -377,25 +384,3 @@ class LCA(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs,
                          context=context)
-
-    def _instantiate_attributes_after_function(self, context=None):
-        """Instantiate matrix, and the functions for the MAX_VS_NEXT and MAX_VS_AVG outputStates
-        """
-        # self.matrix = np.full((self.size, self.size), self.inhibition)
-
-        super()._instantiate_attributes_after_function(context=context)
-
-        def max_vs_next(x):
-            x_part = np.partition(x, -2)
-            max_val = x_part[-1]
-            next = x_part[-2]
-            return max_val - next
-
-        def max_vs_avg(x):
-            x_part = np.partition(x, -2)
-            max_val = x_part[-1]
-            others = x_part[:-1]
-            return max_val - np.mean(others)
-
-        self.output_states[MAX_VS_NEXT].calculate = max_vs_next
-        self.output_states[MAX_VS_AVG].calculate = max_vs_avg

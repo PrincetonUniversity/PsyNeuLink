@@ -637,7 +637,7 @@ def _instantiate_output_states(owner, context=None):
     #        (that is, there is the same number of items in owner_value as there are outputStates)
     #        then increment index so as to assign each item of owner_value to each outputState
     if owner.output_states:
-        for output_state in owner.output_states:
+        for i, output_state in enumerate(owner.output_states):
 
             # Default is PRIMARY_OUTPUT_STATE
             index = PRIMARY_OUTPUT_STATE
@@ -658,6 +658,11 @@ def _instantiate_output_states(owner, context=None):
                     # assign dict to owner's output_state list
                     owner.output_states[owner.output_states.index(output_state)] = \
                                                                 owner.standard_output_states.get_dict(output_state)
+                    # but assign index to PRIMARY_OUTPUT_STATE as default
+                    # IMPLEMENTATION NOTE:  Can't leave it as value in dict from standard_output_states
+                    #                       as that may not (usually does not) match the number of output_states
+                    #                       of the mechanism to which it is being assigned
+                    owner.output_states[i][INDEX] = index
                     # re-assign output_state to dict so it is processed below
                     output_state = item
 
@@ -710,6 +715,7 @@ class StandardOutputStates():
 
         for i, state_dict in enumerate(self.data):
             state_dict[INDEX] = i
+            # state_dict[INDEX] = None
 
         # Add names of each outputState as property of the owner's class that returns its name string
         for state in self.data:
