@@ -175,6 +175,11 @@
 
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
 #
+# IMPLEMENT: standard_output_states for TransferMechanism, ObjectiveMechanism, LCA, RecurrentTransfer, Intregrator
+#              (use ones at top of OutputState)
+# IMPLEMENT: standard_input_states
+# IMPLEMENT: Subclasses of ObjectiveMechanism (Comparator and Monitor)
+#
 #  FIX: MAKE SURE THAT System AND/OR EVCMechanism ASSIGN OutputStates TO MONITORY ONLY
 #  FIX:  TO THOSE MECHANISMS FOR WHICH THE OUTPUTSTATE WERE SPECIFIED (UNLESS GIVEN A GENERIC NAME)
 #      PROTOCOL:
