@@ -88,7 +88,7 @@ Class Reference
 #                      ADD IN GENERIC CONTROL STUFF FROM DefaultControlMechanism
 
 from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.States.OutputState import OutputState
 
 ControlMechanismRegistry = {}
@@ -259,6 +259,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
         if MONITOR_FOR_CONTROL in request_set:
             for spec in request_set[MONITOR_FOR_CONTROL]:
+                if isinstance(spec, MonitoredOutputStatesOption):
+                    continue
                 if isinstance(spec, tuple):
                     spec = spec[0]
                 if isinstance(spec, (OutputState, Mechanism_Base)):

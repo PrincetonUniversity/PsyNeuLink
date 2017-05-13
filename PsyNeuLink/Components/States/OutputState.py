@@ -232,6 +232,28 @@ OUTPUT_VARIANCE = {NAME:VARIANCE,
                    CALCULATE:lambda x: np.var(x)}
 
 
+# # This is a convenience class that provides list of names of standard_output_state names in IDE
+# class OUTPUT_STATES():
+#     RESULT=RESULT
+#     MEAN=MEAN
+#     MEDIAN=MEDIAN
+#     STANDARD_DEV=STANDARD_DEV
+#     VARIANCE=VARIANCE
+#
+#
+# standard_output_states = [{NAME: RESULT},
+#                           {NAME:MEAN,
+#                            CALCULATE:lambda x: np.mean(x)},
+#                           {NAME:MEDIAN,
+#                            CALCULATE:lambda x: np.median(x)},
+#                           {NAME:STANDARD_DEV,
+#                            CALCULATE:lambda x: np.std(x)},
+#                           {NAME:VARIANCE,
+#                            CALCULATE:lambda x: np.var(x)}]
+#
+#
+
+
 class OutputStateError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -679,6 +701,7 @@ class StandardOutputStates():
     Provide access to dicts and lists of the values of their name and index entries. 
     
     """
+
     @tc.typecheck
     def __init__(self, owner:Component, output_state_dicts:list):
 
@@ -710,3 +733,19 @@ class StandardOutputStates():
     @property
     def indices(self):
         return [item[INDEX] for item in self.data]
+
+
+
+def make_readonly_property(val):
+    """Return property that provides read-only access to its value
+    """
+
+    def getter(self):
+        return val
+
+    def setter(self, val):
+        raise UtilitiesError("{} is read-only property of {}".format(val, self.__class__.__name__))
+
+    # Create the property
+    prop = property(getter).setter(setter)
+    return prop
