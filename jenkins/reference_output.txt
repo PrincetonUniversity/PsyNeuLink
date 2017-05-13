@@ -35,14 +35,13 @@ EVC Test System
 
 	Terminal mechanisms: 
 		Decision (phase: 0)
-			DDM_decision_variable
-			DDM_response_time
-			DDM_probability_upperBound
-			DDM_probability_lowerBound
+			DECISION_VARIABLE
+			RESPONSE_TIME
+			PROBABILITY_UPPER_THRESHOLD
 		Reward (phase: 1)
-			transfer_result
-			transfer_mean 
-			transfer_variance
+			RESULT
+			MEAN
+			VARIANCE
 
 ---------------------------------------------------------
 
@@ -51,9 +50,9 @@ EVC Test System
 EVCMechanism-1
 
 	Monitoring the following mechanism outputStates:
-		Decision: DDM_response_time (exp: [-1.]; wt: [ 1.])
-		Decision: DDM_probability_upperBound (exp: [ 1.]; wt: [ 1.])
-		Reward: transfer_result (exp: [ 1.]; wt: [ 1.])
+		Decision: RESPONSE_TIME (exp: [-1.]; wt: [ 1.])
+		Decision: PROBABILITY_UPPER_THRESHOLD (exp: [ 1.]; wt: [ 1.])
+		Reward: RESULT (exp: [ 1.]; wt: [ 1.])
 
 	Controlling the following mechanism parameters:
 		Decision: drift_rate
@@ -105,15 +104,14 @@ RESULTS (time step 2):
 			Drift rate control signal (from EVC): 1.0
 			Threshold control signal (from EVC): 1.0000000000000002
 		Output:
-			DDM_decision_variable: 1.0
-			DDM_probability_lowerBound: 0.119
-			DDM_probability_upperBound: 0.881
-			DDM_response_time: 3.5
+			DECISION_VARIABLE: 1.0
+			RESPONSE_TIME: 3.5
+			PROBABILITY_UPPER_THRESHOLD: 0.881
 	Reward:
 		Output:
-			transfer_mean : 10.0
-			transfer_result: 10.0
-			transfer_variance: 0.0
+			RESULT: 10.0
+			MEAN: 10.0
+			VARIANCE: 0.0
 
 ############################ TRIAL 1 ############################
 
@@ -159,15 +157,14 @@ RESULTS (time step 4):
 			Drift rate control signal (from EVC): 1.0
 			Threshold control signal (from EVC): 1.0000000000000002
 		Output:
-			DDM_decision_variable: 1.0
-			DDM_probability_lowerBound: 0.184
-			DDM_probability_upperBound: 0.816
-			DDM_response_time: 3.84
+			DECISION_VARIABLE: 1.0
+			RESPONSE_TIME: 3.84
+			PROBABILITY_UPPER_THRESHOLD: 0.816
 	Reward:
 		Output:
-			transfer_mean : 15.0
-			transfer_result: 15.0
-			transfer_variance: 0.0
+			RESULT: 15.0
+			MEAN: 15.0
+			VARIANCE: 0.0
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -1297,10 +1294,10 @@ RUNNING Stroop Model Learning Test Script.py
 - MSE: 0.225
 
 Color Naming
-	Input: [[ 1.  1.]]
+	Input: [[1.0, 1.0]]
 	Target: [[[1 1]]]
 Wording Reading:
-	Input: [[-2. -2.]]
+	Input: [[-2.0, -2.0]]
 	Target: [[[1 1]]]
 
 Response: 
@@ -1337,10 +1334,10 @@ Word-Hidden:
 - MSE: 0.222
 
 Color Naming
-	Input: [[ 1.  1.]]
+	Input: [[1.0, 1.0]]
 	Target: [[[1 1]]]
 Wording Reading:
-	Input: [[-2. -2.]]
+	Input: [[-2.0, -2.0]]
 	Target: [[[1 1]]]
 
 Response: 
@@ -1545,13 +1542,9 @@ Branch System
 
 	Terminal mechanisms: 
 		c (phase: 0)
-			transfer_result
-			transfer_mean 
-			transfer_variance
+			RESULT
 		d (phase: 0)
-			transfer_result
-			transfer_mean 
-			transfer_variance
+			RESULT
 
 ---------------------------------------------------------
 A:  ORIGIN
@@ -1592,9 +1585,7 @@ Bypass System
 
 	Terminal mechanisms: 
 		d-1 (phase: 0)
-			transfer_result
-			transfer_mean 
-			transfer_variance
+			RESULT
 
 ---------------------------------------------------------
 A:  ORIGIN
@@ -1639,9 +1630,7 @@ Chain System
 
 	Terminal mechanisms: 
 		e (phase: 0)
-			transfer_result
-			transfer_mean 
-			transfer_variance
+			RESULT
 
 ---------------------------------------------------------
 A:  ORIGIN
@@ -1683,9 +1672,7 @@ Convergent System
 
 	Terminal mechanisms: 
 		e-1 (phase: 0)
-			transfer_result
-			transfer_mean 
-			transfer_variance
+			RESULT
 
 ---------------------------------------------------------
 A:  ORIGIN
@@ -1792,9 +1779,7 @@ Cyclic System with Extended Loop
 
 	Terminal mechanisms: 
 		d-4 (phase: 0)
-			transfer_result
-			transfer_mean 
-			transfer_variance
+			RESULT
 
 ---------------------------------------------------------
 A:  ORIGIN

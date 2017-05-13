@@ -540,11 +540,7 @@ class DDM(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
-        OUTPUT_STATES: None,
-        # Assign internal params here (not accessible to user)
-        # User accessible params are assigned in _instantiate_defaults_to_paramClassDefaults (in __init__)
-        # # MONITOR_FOR_CONTROL:[PROBABILITY_LOWER_THRESHOLD,(RESPONSE_TIME, -1, 1)]
-    })
+        OUTPUT_STATES: None})
 
     # Set default input_value to default bias for DDM
     paramNames = paramClassDefaults.keys()
