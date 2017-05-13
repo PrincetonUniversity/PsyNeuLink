@@ -174,6 +174,9 @@
 # SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
 
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
+#
+#  FIX: MAKE SURE THAT System AND/OR EVCMechanism ASSIGN OutputStates TO MONITORY ONLY
+#  FIX:  TO THOSE MECHANISMS FOR WHICH THE OUTPUTSTATE WERE SPECIFIED (UNLESS GIVEN A GENERIC NAME)
 #      PROTOCOL:
 #          a) Mechanism implements emptyp input_state and output_state in paramClassDefaults,
 #                to insure that they are included in user_params
