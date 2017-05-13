@@ -937,18 +937,18 @@ class Mechanism_Base(Mechanism):
                 raise MechanismError("{0} is not implemented in mechanism class {1}".
                                      format(name, self.name))
 
-        if hasattr(self, STANDARD_OUTPUT_STATES):
-            # Instantiate names of items in standard_output_states as attributes of the class
-            for state_name in self.standard_output_states:
-                setattr(self.__class__, state_name[NAME], make_output_property(state_name[NAME]))
-
-            # Instantiate <STANDARD_OutputState>_OUTPUT_STATE as attribute on instance
-            #   - if the corresponding outputState is instantiated, the attribute will point to it;
-            #   - otherwise, it will remain as a string
-            for output_name in [state[NAME] for state in self.standard_output_states]:
-                setattr(self, output_name+'_OUTPUT_STATE', output_name)
-            # for state in self.standard_output_states:
-            #     setattr(self.__class__, state[NAME], make_output_property(state[NAME]))
+        # if hasattr(self, STANDARD_OUTPUT_STATES):
+        #     # Instantiate names of items in standard_output_states as attributes of the class
+        #     for state_name in self.standard_output_states:
+        #         setattr(self.__class__, state_name[NAME], make_output_property(state_name[NAME]))
+        #
+        #     # Instantiate <STANDARD_OutputState>_OUTPUT_STATE as attribute on instance
+        #     #   - if the corresponding outputState is instantiated, the attribute will point to it;
+        #     #   - otherwise, it will remain as a string
+        #     for output_name in [state[NAME] for state in self.standard_output_states]:
+        #         setattr(self, output_name+'_OUTPUT_STATE', output_name)
+        #     # for state in self.standard_output_states:
+        #     #     setattr(self.__class__, state[NAME], make_output_property(state[NAME]))
 
         self.value = self._old_value = None
         self._status = INITIALIZING
@@ -2159,17 +2159,3 @@ class MechanismList(UserList):
             for output_state in item.output_states:
                 values.append(output_state.value)
         return values
-
-
-def make_output_property(name):
-    # backing_field = '_' + name
-
-    def getter(self):
-        return name
-
-    def setter(self, val):
-        raise UtilitiesError("{} is read-only property of {}".format(name, self.__class__.__name__))
-
-    # Create the property
-    prop = property(getter).setter(setter)
-    return prop
