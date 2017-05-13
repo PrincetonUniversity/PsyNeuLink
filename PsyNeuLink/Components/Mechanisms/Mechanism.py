@@ -30,22 +30,33 @@
 Overview
 --------
 
-A mechanism takes an input, transforms it in some way, and makes the result available as its output.  There are three
+A mechanism takes an input, transforms it in some way, and makes the result available as its output.  There are two
 types of mechanisms in PsyNeuLink:
 
-    * A `ProcessingMechanisms` aggregrates the input it receives from other mechanisms, and/or the input to the
-      the `process <Process>` or `system <System>` to which it belongs, transforms it in some way, and provides the
-      result as input to other mechanisms in the process or system, or as the output for the process or system
-      itself.
+    * `ProcessingMechanisms <ProcessingMechanism>` aggregrate the input they receive from other mechanisms, and/or the 
+      input to the the `process <Process>` or `system <System>` to which they belong, transform it in some way, and 
+      provide the result as input to other mechanisms in the process or system, or as the output for a process or 
+      system itself.  There are a variety of different types of ProcessingMechanism, that accept various forms of
+      input and transform them in different ways (see `ProcessingMechanisms <ProcessingMechanism>` for a list).
     ..
-    * A `MonitoringMechanism` monitors the output of one or more other mechanisms, receives training (target) values,
-      and compares these to generate error signals used for `learning <Process_Learning>`).
-    ..
-    * A `ControlMechanism` evaluates the output of one or more other mechanisms in the system to which it belongs,
-      and uses this to modify the parameters of those or other mechanisms in the system.
+    * `AdpativeMechanisms <AdpativeMechanism>` monitor the output of one or more other mechanisms, and use this  
+      to modulate the parameters of other mechanisms or projections.  There are three basic AdaptiveMechanisms:
+      
+      * `LearningMechanisms <LearningMechanism>` - these receive training (target) values, and compare them with the 
+        output of a mechanism to generate learning signals that are used to modify 
+        `MappingProjection <MappingProjections>` (see `learning <Process_Learning>`).
+      
+      * `ControlMechanisms <ControlMechanism>` - these evaluate the output of a specified set of mechanisms, and 
+        generate control signals used to modify the parameters of those or other mechanisms.  
+      
+      * `GatingMechanisms <GatingMechanism>` - these receive input, and use this to determine whether and how to 
+        modify the value of the inputState(s) and/or outputState(s) of other mechanisms.
+      
+      Each type of AdaptiveMechanism is associated with a corresponding type of Projection (`LearningProjection`,
+      `ControlProjection` and `GatingProjection`, respectively).
 
 A mechanism is made up of four fundamental components: the function it uses to transform its input; and the states it
-uses to represent its input, processing parameters, and output.
+uses to represent its input(s), parameter(s), and output(s).
 
 .. _Mechanism_Creation:
 

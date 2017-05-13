@@ -70,8 +70,8 @@ with that type of mechanism.  For example, for a TransferMechanism, this include
 STANDARD_DEV outputStates that calculate the designated values from the ouptut of the mechanism's function, and are
 listed in `TRANSER_OUTPUT`.
 
-OutputStates are specified in an **output_states** argument as a list, the entries of which can be any of the 
-following: 
+OutputStates are specified in the **output_states** argument of a mechanism's constructor as a list, the entries of 
+which can be any of the following: 
 
 # For a single
 # outputState, the value of the entry can be any of the specifications in the the list below.  To create multiple
@@ -84,23 +84,26 @@ following:
       number and type of its elements) the item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` to
       which the outputState is assigned (designated by its `index <OutputState_Index>` attribute).
     ..
-    * A reference to the **OutputState class** or a ** name string**.  This creates a default outputState that is
-      assigned the first item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` as its value.  If the
-      name of the OutputState class or its keyword (OUTPUTSTATE) are used, a default name is assigned to the
-      outputState;  if a string is used, it is assigned as the name of the outputState
-      (see :ref:`naming conventions <LINK>`).
+    COMMENT:
+    * A reference to an **existing mechanism**.    
     ..
-    * A **specification dictionary**.  This can include entries, each of which uses the name of an argument for
+    COMMENT
+    * A **specification dictionary**.  Each entry should use the name of an argument for
       an outputState parameter (used in the outputState constructor) as its key, and the value of that
       parameter as its value.  By default, the outputState is assigned to the first item of the owner mechanism's
-      `value <Mechanism.Mechanism_Base.value>`.  However, :keyword:`INDEX <OutputState_Index>` can be used to
-      specify the outputState's  `index <OutputState_Index>` attribute and assign it to different item of the
-      mechanism's `value <Mechanism.Mechanism_Base.value>`.
+      `value <Mechanism.Mechanism_Base.value>`.  However, an entry with :keyword:`INDEX <OutputState_Index>` as its
+      key can be used to assign it to different item of the mechanism's `value <Mechanism.Mechanism_Base.value>`.
+    ..
+
+    * A **string**.  This creates a default outputState using that string as its name, and is assigned as the
+      `primary outputState <OutputState_Primary>` for the mechanism.
     ..
     * A **value**.  This creates a default outputState using the specified value as the outputState's
       `variable <OutputState.value>`.  This must be compatible with (have the same number and type of elements as) the
       item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` to which the outputState will be assigned
-      (its primary outputState by default, or designated by its `index <OutputState.index>` attribute).
+      (its primary outputState by default, or designated by its `index <OutputState.index>` attribute).  A default 
+      name will be assigned based on the name of the mechanism (see :ref:`naming conventions <LINK>`).
+      
       COMMENT:
          AT PRESENT THIS IS NOT USEFUL;  HOWEVER, IN THE FUTURE (E.G., WHEN GATING PROJECTIONS TO OUTPUT STATES
          IS ADDED) IT MAY BE USEFUL FOR SPECIFYING A BASEVALUE (E.G., DEFAULT) FOR THE OUTPUTSTATE.
@@ -111,18 +114,12 @@ following:
        type of elements) as the item of its owner mechanism's `value <Mechanism.Mechanism_Base.value>` to which it is
        assigned.
 
-COMMENT:
-    OutputStates can also be added by using the :py:func:`assign_output_state <OutputState.assign_output_state>` method.
-COMMENT
-
-.. _OutputState_Names:
-
-Assigning outputStates explicitly (i.e., including an OUTPUT_STATES entry in the mechanism's
-`parameter dictionary <ParameterState_Specifying_Parameters>`) adds them to any that are automatically generated for
-that mechanism.  If the name of an explicitly specified outputState is the same as one that was created automatically
-(or another one that was created explicitly), its name will be suffixed with a numerical index (incremented for each
-outputState with that name), and the outputState will be added to the list (that is, it will *not* replace ones that
-were already created).
+The list of outputStates for a mechanism can be accessed using its `output_states <Mechanism_Base.output_states>` 
+attribute, and new ones can be assigned to an exisiting mechanism by appending a list (containing specifications in the
+form listed above) to the output_states list.  If the name of an explicitly specified outputState is the same as one 
+that was created automatically (or another one that was created explicitly), its name will be suffixed with a 
+numerical index (incremented for each outputState with that name), and the outputState will be added to the list (
+that is, it will *not* replace ones that were already created).  
 
 .. _OutputState_Index_and_Calculate:
 
