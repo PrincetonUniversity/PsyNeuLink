@@ -96,3 +96,9 @@ class AdaptiveMechanism_Base(Mechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=context)
+
+#     def _instantiate_output_states(self, context=None):
+#         super()._instantiate_output_states(context=context)
+#
+#
+# def _instantiate_adaptive_projections()
