@@ -545,7 +545,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         Arguments:
 
         # CONFIRM:
-        variable (float): set to self.value (= self.inputValue)
+        variable (float): set to self.value (= self.input_value)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
             + NOISE (float)
             + TIME_CONSTANT (float)

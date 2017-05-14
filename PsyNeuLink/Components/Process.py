@@ -656,7 +656,7 @@ class Process_Base(Process):
                   to receive the initial input to the Process.  However, this behavior can be modified with the process'
                   `clamp_input` attribute.
 
-    inputValue :  2d np.array : default ``variableInstanceDefault``
+    input_value :  2d np.array : default ``variableInstanceDefault``
         same as the :keyword:`variable` attribute of the process; contains the values of the ProcessInputStates in its
         `processInputStates` attribute.
 

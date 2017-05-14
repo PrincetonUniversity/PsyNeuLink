@@ -113,9 +113,9 @@ class DefaultControlMechanism(ControlMechanism_Base):
         return self.input_values or [defaultControlAllocation]
 
     def _instantiate_input_states(self, context=None):
-        """Instantiate inputValue attribute
+        """Instantiate input_value attribute
 
-        Instantiate inputValue, inputState and input_states attributes (in case they are referenced).
+        Instantiate input_value, inputState and input_states attributes (in case they are referenced).
         Otherwise, no need to do anything, as DefaultControllerMechanism only adds input_states
         when a ControlProjection is instantiated, and uses _instantiate_control_mechanism_input_state to do so.
 
@@ -124,7 +124,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         if not hasattr(self, INPUT_STATES):
             self._input_states = None
         # if self.input_states is None:
-        #     self.inputValue = None
+        #     self.input_value = None
 
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """Instantiate requested controlProjection and associated inputState
@@ -215,6 +215,6 @@ class DefaultControlMechanism(ControlMechanism_Base):
             from PsyNeuLink.Components.States.State import State_Base
             self._input_states = ContentAddressableList(component_type=State_Base, list=[input_state])
 
-        # self.inputValue = [state.value for state in self.input_states]
+        # self.input_value = [state.value for state in self.input_states]
 
         return input_state
