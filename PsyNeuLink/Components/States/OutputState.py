@@ -286,6 +286,7 @@ from PsyNeuLink.Components.Functions.Function import *
 
 
 PRIMARY_OUTPUT_STATE = 0
+SEQUENTIAL = 'SEQUENTIAL'
 
 # Standard OutputStates
 # OUTPUT_RESULT = {NAME: RESULT}
@@ -729,15 +730,6 @@ def _instantiate_output_states(owner, context=None):
                     # assign dict to owner's output_state list
                     owner.output_states[owner.output_states.index(output_state)] = \
                                                                 owner.standard_output_states.get_dict(output_state)
-                    # assign default index (PRIMARY_OUTPUT_STATE) unless otherwise specified
-                    # IMPLEMENTATION NOTE:  this is the default, as the number of output_states used by the mechanism
-                    #                       may not (usually does not) match the number of output_states in
-                    #                       standard_output_states, and usually those reference the primary output value
-                    #                       (RESULT) of the mechanism's function (see DDM for an exception,
-                    #                       that sets use_standard_output_states_indices = True)
-                    if not owner.use_standard_output_states_indices:
-                        owner.output_states[i][INDEX] = index
-                    # re-assign output_state to dict so it is processed below
                     output_state = item
 
             # specification dict, so get its INDEX attribute if specified, and apply calculate function if specified
@@ -774,12 +766,23 @@ def _instantiate_output_states(owner, context=None):
 class StandardOutputStates():
     """Assign names and indices of specification dicts in standard_output_state as properties of the owner's class 
     
-    Provide access to dicts and lists of the values of their name and index entries. 
+    Provide access to dicts and lists of the values of their name and index entries.
+    
+    **indices** arg specifies how to assign the value of the INDEX entry in each dict listed in output_state_dicts;
+        the arg can be:
+        * PRIMARY_OUTPUT_STATES keyword - assigns the INDEX for the owner's primary outputState to all indices;
+        * SEQUENTIAL keyword - assigns sequentially incremented int to each INDEX entry
+        * a list of ints - assigns each int to the corresponding entry in output_state_dicts
+        if it is not specified, assigns `None` to each INDEX entry.
+        
     
     """
 
     @tc.typecheck
-    def __init__(self, owner:Component, output_state_dicts:list):
+    def __init__(self,
+                 owner:Component,
+                 output_state_dicts:list,
+                 indices:tc.optional(tc.any(int, str, list))=None):
 
         for item in output_state_dicts:
             if not isinstance(item, dict):
@@ -787,15 +790,44 @@ class StandardOutputStates():
                                      format(self.__class__.__name__, owner.componentName, item))
         self.data = output_state_dicts
 
-        for i, state_dict in enumerate(self.data):
-            state_dict[INDEX] = i
-            # state_dict[INDEX] = None
+        # Assign indices
+
+        # List was provided, so check that it has the appropriate number of ints and then assign
+        if isinstance(indices, list):
+            if len(indices) != len(output_state_dicts):
+                raise OutputStateError("Legnth of the list of indices provided to {} for {} ({}) "
+                                       "must equal the number of outputStates dicts provided ({})"
+                                       "length".format(self.__class__.__name__,
+                                                       owner.name,
+                                                       len(indices),
+                                                       len(output_state_dicts)))
+
+            if not all(isinstance(item, int) for item in indices):
+                raise OutputStateError("All the items in the list of indices provided to {} for {} ({}) must be ints".
+                                       format(self.__class__.__name__, self.name, owner.name, index))
+
+            for index, state_dict in zip(indices, self.data):
+                state_dict[INDEX] = index
+
+        # Assign indices sequntially based on order of items in output_state_dicts arg
+        elif indices is SEQUENTIAL:
+            for index, state_dict in enumerate(self.data):
+                state_dict[INDEX] = index
+
+        elif indices is PRIMARY_OUTPUT_STATE:
+            for state_dict in self.data:
+                state_dict[INDEX] = PRIMARY_OUTPUT_STATE
+
+        else:
+            for state_dict in self.data:
+                state_dict[INDEX] = None
+
 
         # Add names of each outputState as property of the owner's class that returns its name string
         for state in self.data:
             setattr(owner.__class__, state[NAME], make_readonly_property(state[NAME]))
 
-        # Add <NAME_INDEX> of each outputState as property of the owner's class that returns its index
+        # Add <NAME_INDEX> of each outputState as property of the owner's class, that returns its index
         for state in self.data:
             setattr(owner.__class__, state[NAME]+'_INDEX', make_readonly_property(state[INDEX]))
 
