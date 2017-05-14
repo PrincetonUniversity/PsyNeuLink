@@ -105,6 +105,8 @@ outputState in a list can be any of the following:
        type of elements) as the item of its owner mechanism's `value <Mechanism.Mechanism_Base.value>` to which it is
        assigned.
 
+
+
 The list of outputStates for a mechanism can be accessed using its `output_states <Mechanism_Base.output_states>` 
 attribute, and new ones can be added to an existing mechanism by appending a list (containing specifications in the
 form listed above) to the output_states list. Assigning without appending will replace any existing outputStates.  
@@ -112,12 +114,36 @@ If the name of an explicitly specified outputState is the same as one that was c
 that was created explicitly), its name will be suffixed with a numerical index (incremented for each outputState with 
 that name), and the outputState will be added to the list (that is, it will *not* replace ones that were already 
 created).
-  
+
+The values of a mechanism's outputStats will be assigned as items in its `output_value <Mechanism.output_value>` 
+attribute, in the order in which they are assigned in the **output_states** argument of its constructor, and listed
+in its `output_states <Mechanism.output_states>` attribute.  Note that the `output_value <Mechanism.output_value>`
+of a mechanism is distinct from its `value <Mechanism_Base.value>` attribute, which contains the full and unmodified 
+results of its `function <Mechanism_Base.function>`.
+
+.. _OutputState_Standard:
+
+Standard OutputStates
+^^^^^^^^^^^^^^^^^^^^^  
+
 Most types of mechanisms have a `standard_output_states` class attribute, that contains a list of predefined 
 outputStates relevant to that type of mechanism (for example, the TransferMechanism class has outputStates for 
 calculating the mean, median, variance, and standard deviation of its result).  The names of these are listed as 
-attributes of a class with the name <ABBREVIATED_CLASS_NAME>_OUTPUT> (for example, for the TransferMechanism class 
-is is `TRANSFER_OUTPUTS`).  
+attributes of a class with the name <ABBREVIATED_CLASS_NAME>_OUTPUT>.  For example, the TransferMechanism class 
+defines `TRANSFER_OUTPUT`, with attributes MEAN, MEDIAN, VARIANCE and STANDARD_DEV that are the names of 
+predefined outputStates in its `standard_output_states <TransferMechanism.standard_output_states>` attribute.
+These can be used in the list of outputStates specified for a TransferMechanism object, as in the example below:: 
+
+    my_mech = TransferMechanism[default_input_value=[0,0],
+                                function=Logistic(),
+                                output_states=[TRANSFER_OUTPUT.RESULT, 
+                                               TRANSFER_OUTPUT.MEAN,
+                                               TRANSFER_OUTPUT.VARIANCE]
+
+In this example, ``my_mech`` is configured with three outputStates;  the first will be named *RESULT* and will 
+represent logistic transform of the 2-element input vector;  the second will be named  *MEAN* and will represent mean 
+of the result (i.e., of its two elements); and the third will be named *VARIANCE* and contain the variance of the 
+result.
 
 .. _OutputState_Customization:
 
@@ -133,45 +159,28 @@ its `index <OutputState.index>` attribute. An outputState can also be configured
 the value of the item, by specifying a function for its `calculate <OutputState.calculate>` attribute; the result
 will then be assigned as the outputState's `value <OutputState.value>`.  An outputState's `index <OutputState.index>` 
 and `calculate <OutputState.calculate>` attributes can be assigned when the outputState is assigned to a mechanism, 
-by including *INDEX* and *CALCULATE* entries in the  `specification dictionary <OutputState_Specification>` for the 
-outputState.
+by including *INDEX* and *CALCULATE* entries in a  `specification dictionary <OutputState_Specification>` for the 
+outputState, as in the following example::
 
-For example, some `ProcessingMechanisms <ProcessingMechanism>` (such as `TransferMechanism`) use outputStates to 
-represent values derived from the value of their `primary outputState <OutputState_Primary>` (e.g., the mean and 
-variance).
-`ControlMechanisms <ControlMechanism>` assign one outputState for each of their `ControlProjections
-<ControlProjection>`.  An outputState can be assigned to a particular item of the mechanism's 
-`value <Mechanism_Base.value>` attribute using the outputState's `index` parameter, and its `calculate` parameter can 
-be used to compute some value derived from it that is then assigned as the outputState's :keyword:`value` (see 
-`OutputStates_Creation`).  For example, the TransferMechanism mechanism below is configured with outputStates that 
-represent the result of its function, as well as the mean and variance of the three elements in the result::
+    my_mech = DDM(function=BogaczEtAl(),
+                  output_states=[ DDM.DECISION_VARIABLE,
+                                  DDM.PROB_UPPER_THRESHOLD,
+                                  { NAME: 'DECISION ENTROPY',
+                                    INDEX: 2},
+                                    CALCULATE: Entropy().function } ] )
 
-    my_mech = TransferMechanism[default_input_value=[0,0,0],
-                                function=Logistic(),
-                                output_states=[RESULT, MEAN, VARIANCE]
-    
-In that example, keywords are used to specify `standard_output_states <LINK>` for the mechanism.  However, custom
-outputStates can be configured using a specification dictionary (see EXAMPLE IN OutputStae XXX )
+COMMENT:
+   ADD VERSION IN WHICH INDEX IS SPECIFICED USING DDM_standard_output_states
+COMMENT
 
-
-The :keyword:`value` attributes of all of a mechanism's outputStates  are assigned to the 
-mechanism's `output_values <Mechanism_Base.output_values>` attribute (a list), in the same order in which the
-states are listed in the mechanism's `output_states <Mechanism_Base.outputStates>`  attribute.  Note that this is 
-distinct from the mechanism's `value <Mechanism_Base.value>` attribute, which contains the full and unmodified 
-results of its `function <Mechanism_Base.function>`.
-
-
-In that example, keywords are used to specify `standard_output_states <LINK>` for the mechanism.  In the example 
-below, a custom outputState is configured to generate a binary vector based on the output of the mechanism above::
-
-    my_mech = TransferMechanism[default_input_value=[0,0,0],
-                                function=Logistic(),
-                                output_states=[RESULT, 
-                                               {NAME: 'BINARY OUTPUT',
-                                                INDEX: 0
-                                                CALCULATE: lambda x: binarize(s)}]
-
-  
+In this example, ``my_mech`` is configured with three outputStates.  The first two are standard outputStates that 
+represent the decision variable of the DDM and the probability of it crossing of the upper (vs. lower) threshold.  the 
+third is a custom outputState, that computes the entropy of the probability of crossing the upper threshold.  It uses
+the `Entropy` Function for its `calculate <OutputState.calculate>` attribute, and INDEX is assigned ``2`` to reference  
+the third item of the DDM's `value <DDM.value>` attribute, which contains the probability of crossing the upper 
+threshold.  The three outputStates will be assigned to the `output_states <Mechanism.output_states>` attribute of 
+``my_mech``, and their values will be assigned as items in its `output_value <Mechanism.output_value>` attribute, 
+each in the order in which it is listed in the **output_states** argument of the constructor for ``my_mech``.  
 
 .. _OutputState_Structure:
 

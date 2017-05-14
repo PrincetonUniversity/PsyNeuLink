@@ -47,7 +47,9 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                                    t0=0.45),
                output_states=[DECISION_VARIABLE,
                               RESPONSE_TIME,
-                              PROBABILITY_UPPER_THRESHOLD],
+                              PROBABILITY_UPPER_THRESHOLD,
+                              {NAME: 'HELLO',
+                               INDEX: DDM_standard_output_states[PROBABILITY_UPPER_THRESHOLD].index}],
                prefs = DDM_prefs,
                name='Decision')
 
