@@ -792,7 +792,11 @@ class StandardOutputStates():
 
         # Assign indices
 
-        # List was provided, so check that it has the appropriate number of ints and then assign
+        # List was provided, so check that:
+        # - it has the appropriate number of items
+        # - they are all ints
+        # and then assign each int to the INDEX entry in the corresponding dict in output_state_dicts
+        # outputState
         if isinstance(indices, list):
             if len(indices) != len(output_state_dicts):
                 raise OutputStateError("Legnth of the list of indices provided to {} for {} ({}) "
@@ -809,15 +813,17 @@ class StandardOutputStates():
             for index, state_dict in zip(indices, self.data):
                 state_dict[INDEX] = index
 
-        # Assign indices sequntially based on order of items in output_state_dicts arg
+        # Assign indices sequentially based on order of items in output_state_dicts arg
         elif indices is SEQUENTIAL:
             for index, state_dict in enumerate(self.data):
                 state_dict[INDEX] = index
 
+        # Assign PRIMARY_OUTPUT_STATE as INDEX for all outputStates in output_state_dicts
         elif indices is PRIMARY_OUTPUT_STATE:
             for state_dict in self.data:
                 state_dict[INDEX] = PRIMARY_OUTPUT_STATE
 
+        # No indices specification, so assign None to INDEX for all outputStates in output_state_dicts
         else:
             for state_dict in self.data:
                 state_dict[INDEX] = None
