@@ -524,7 +524,7 @@
 #             controller.predicted_inputs: ndarray of current value of outputState
 #                                          for each predictionMechanism in self.system.prediction_mechanisms
 #             controller.monitored_states: list of the mechanism outputStates being monitored for outcomes
-#             controller.inputValue: list of current outcome values for monitored_states
+#             controller.input_value: list of current outcome values for monitored_states
 #             controller.controlSignals: list of controlSignal objects
 #             controlSignal.allocation_samples: set of samples specified for that controlSignal
 #             [TBI:] controlSignal.allocation_range: range that the controlSignal value can take
@@ -566,7 +566,7 @@
 #                which are simply convenience string constants that are the same as the name of the argument
 #                for the parameter in the component's constructor. (see :ref:`EVCMechanism_Creation` for text)
 
-# DOCUMENT: inputValue and output_values are lists for convenience of user access, whereas
+# DOCUMENT: input_value and output_values are lists for convenience of user access, whereas
 #           variable and value are 2d np.arrays that are used as internal datastructures
 #
 

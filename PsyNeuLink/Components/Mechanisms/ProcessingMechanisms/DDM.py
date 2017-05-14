@@ -795,7 +795,7 @@ class DDM(ProcessingMechanism_Base):
         Return current decision variable (self.outputState.value) and other output values (self.outputStates[].value
         Arguments:
         # CONFIRM:
-        variable (float): set to self.value (= self.inputValue)
+        variable (float): set to self.value (= self.input_value)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
             + DRIFT_RATE (float)
             + THRESHOLD (float)

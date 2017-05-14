@@ -568,7 +568,7 @@ class EVCMechanism(ControlMechanism_Base):
             controller._assign_simulation_inputs assigns value of prediction_mechanisms to inputs of ORIGIN mechanisms
             controller.run will execute a specified number of trials with the simulation inputs
             controller.monitored_states is a list of the mechanism outputStates being monitored for outcome
-            controller.inputValue is a list of current outcome values (values for monitored_states)
+            controller.input_value is a list of current outcome values (values for monitored_states)
             controller.monitor_for_control_weights_and_exponents is a list of parameterizations for outputStates
             controller.controlSignals is a list of controlSignal objects
             controller.controlSignalSearchSpace is a list of all allocationPolicies specifed by allocation_samples
@@ -861,7 +861,7 @@ class EVCMechanism(ControlMechanism_Base):
         #    the variable of the ORIGIN mechanism for each process in the system
         self.predictedInput = {}
         for i, origin_mech in zip(range(len(self.system.originMechanisms)), self.system.originMechanisms):
-            # self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].inputValue
+            # self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].input_value
             self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].variable
 
     def _instantiate_monitoring_mechanism(self, context=None):
@@ -1440,7 +1440,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.input_states)
-        #    stored in self.inputValue = list(self.variable)
+        #    stored in self.input_value = list(self.variable)
         # self.monitoring_mechanism.execute(context=EVC_SIMULATION)
         self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 

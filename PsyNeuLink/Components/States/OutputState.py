@@ -47,38 +47,30 @@ mechanism, then the owner is inferred from the context.
 
 .. _OutputState_Primary:
 
+Primary OutputState
+~~~~~~~~~~~~~~~~~~~
+
 Every mechanism has at least one outputState, referred to as its *primary outputState*.  If outputStates are not
 `explicitly specified <OutputState_Specification>` for a mechanism, a primary outputState is automatically created
 and assigned to its `outputState <Mechanism.Mechanism_Base.outputState>` attribute (note the singular),
 and also to the first entry of the mechanism's `outputStates <Mechanism.Mechanism_Base.outputStates>` attribute 
-(note the plural).  The `value <OutputState.value>` of
-the primary outputState is assigned as the first (and often only) item of the mechanism's
-`output_value <Mechanism.Mechanism_Base.output_value>`, which is the result of the mechanism`s
-`function <Mechanism.Mechanism_Base.function>`.
+(note the plural).  The `value <OutputState.value>` of the primary outputState is assigned as the first (and often 
+only) item of the mechanism's `output_value <Mechanism.Mechanism_Base.output_value>`, which is the result of the 
+mechanism`s `function <Mechanism.Mechanism_Base.function>`.
 
 .. _OutputState_Specification:
 
+OutputState Specification
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The primary outputState of a mechanism can be supplemented or replaced using the **output_states** argument of a 
-mechanism's constructor <Mechanism_Creation>`.  If any are specified there, *all*  of the outputStates desired 
-must be specified there;  that is, expliclity specifying *any* outputStates in an **output_states** argument 
+mechanism's constructor <Mechanism_OutputStates>`.  If any are specified there, *all*  of the outputStates desired 
+must be specified there;  that is, explicitly specifying *any* outputStates in an **output_states** argument 
 replaces any defaults.  Therefore, if the default outputState -- that usually contains the result of the mechanism's
-function -- is to be retained, it too must be specified along with any additional ones desired.  For most types of
-mechanisms, the names of outputStates relevant to their type are listed as attributes of a class with the name 
-<ABBREVIATED_CLASS_NAME>_OUTPUT>; the specifications for the outputStates themselves are listed in the mechanism's 
-`standard_output_states <Mechanism.standard_output_states>` attribute.  These calculate values that are commonly used 
-with that type of mechanism.  For example, for a TransferMechanism, this includes MEAN, MEDIAN, VARIANCE, and
-STANDARD_DEV outputStates that calculate the designated values from the ouptut of the mechanism's function, and are
-listed in `TRANSER_OUTPUT`.
-
-OutputStates are specified in the **output_states** argument of a mechanism's constructor as a list, the entries of 
-which can be any of the following: 
-
-# For a single
-# outputState, the value of the entry can be any of the specifications in the the list below.  To create multiple
-# outputStates, the value can be either: a list, each item of which can be any of the specifications below; or
-# it can be an OrderedDict in which the key for each entry is a string  specifying the name for the outputState to be
-# created, and its value is one of the specifications below.  Each outputState to be created can be specified using any
-# of the following formats:
+function -- is to be retained, it too must be specified along with any additional ones desired.  OutputStates are 
+specified in a list, either in the **output_states** argument of a `mechanism's constructor <Mechanism_Creation>`, or
+by direct assignment to its `output_states <OutputState.output_states>` attribute.  The specification of each 
+outputState in a list can be any of the following: 
 
     * A reference to an **existing outputState**.  Its `variable <OutputState.variable>` must match (in the
       number and type of its elements) the item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` to
@@ -94,7 +86,6 @@ which can be any of the following:
       `value <Mechanism.Mechanism_Base.value>`.  However, an entry with :keyword:`INDEX <OutputState_Index>` as its
       key can be used to assign it to different item of the mechanism's `value <Mechanism.Mechanism_Base.value>`.
     ..
-
     * A **string**.  This creates a default outputState using that string as its name, and is assigned as the
       `primary outputState <OutputState_Primary>` for the mechanism.
     ..
@@ -115,22 +106,72 @@ which can be any of the following:
        assigned.
 
 The list of outputStates for a mechanism can be accessed using its `output_states <Mechanism_Base.output_states>` 
-attribute, and new ones can be assigned to an exisiting mechanism by appending a list (containing specifications in the
-form listed above) to the output_states list.  If the name of an explicitly specified outputState is the same as one 
-that was created automatically (or another one that was created explicitly), its name will be suffixed with a 
-numerical index (incremented for each outputState with that name), and the outputState will be added to the list (
-that is, it will *not* replace ones that were already created).  
+attribute, and new ones can be added to an existing mechanism by appending a list (containing specifications in the
+form listed above) to the output_states list. Assigning without appending will replace any existing outputStates.  
+If the name of an explicitly specified outputState is the same as one that was created automatically (or another one 
+that was created explicitly), its name will be suffixed with a numerical index (incremented for each outputState with 
+that name), and the outputState will be added to the list (that is, it will *not* replace ones that were already 
+created).
+  
+Most types of mechanisms have a `standard_output_states` class attribute, that contains a list of predefined 
+outputStates relevant to that type of mechanism (for example, the TransferMechanism class has outputStates for 
+calculating the mean, median, variance, and standard deviation of its result).  The names of these are listed as 
+attributes of a class with the name <ABBREVIATED_CLASS_NAME>_OUTPUT> (for example, for the TransferMechanism class 
+is is `TRANSFER_OUTPUTS`).  
 
-.. _OutputState_Index_and_Calculate:
+.. _OutputState_Customization:
 
-By default, an explicitly specified outputState will use the first item of the owner mechanism's
-`value <Mechanism.Mechanism_Base.value>`.  However, it can be assigned to a different item by specifying its
-`index <OutputState.index>` attribute.  The `variable <OutputState.variable>` of
-an outputState must match (in the number and type of its elements) the item of the mechanism's
-`value <Mechanism.Mechanism_Base.value>` to which it is assigned. An outputState can also be configured to transform
-the value of the item, by specifying a function for its `calculate <OutputState.calculate>` attribute;  the function
-must be able to take as input a value that is compatible with the item of the Mechahnism's
-`value <Mechanism.Mechanism_Base.value>` to which the outputState is assigned.
+OutputState Customization
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The default outputState uses the first (and usually only) item of the owner mechanism's 
+`value <Mechanism.Mechanism_Base.value>` as its value.  However, this can be modified in two ways, using the
+outputState's `index <OutputState.index>` and `calculate <OutputState.calculate>` attributes (see 
+`OutputState_Attributes` below). If the mechanism's `function <Mechanism.function>` returns a value with more than one 
+item (i.e., a list of lists, or a 2d np.array), then an outputState can be assigned to any of those items by specifying 
+its `index <OutputState.index>` attribute. An outputState can also be configured to transform
+the value of the item, by specifying a function for its `calculate <OutputState.calculate>` attribute; the result
+will then be assigned as the outputState's `value <OutputState.value>`.  An outputState's `index <OutputState.index>` 
+and `calculate <OutputState.calculate>` attributes can be assigned when the outputState is assigned to a mechanism, 
+by including *INDEX* and *CALCULATE* entries in the  `specification dictionary <OutputState_Specification>` for the 
+outputState.
+
+For example, some `ProcessingMechanisms <ProcessingMechanism>` (such as `TransferMechanism`) use outputStates to 
+represent values derived from the value of their `primary outputState <OutputState_Primary>` (e.g., the mean and 
+variance).
+`ControlMechanisms <ControlMechanism>` assign one outputState for each of their `ControlProjections
+<ControlProjection>`.  An outputState can be assigned to a particular item of the mechanism's 
+`value <Mechanism_Base.value>` attribute using the outputState's `index` parameter, and its `calculate` parameter can 
+be used to compute some value derived from it that is then assigned as the outputState's :keyword:`value` (see 
+`OutputStates_Creation`).  For example, the TransferMechanism mechanism below is configured with outputStates that 
+represent the result of its function, as well as the mean and variance of the three elements in the result::
+
+    my_mech = TransferMechanism[default_input_value=[0,0,0],
+                                function=Logistic(),
+                                output_states=[RESULT, MEAN, VARIANCE]
+    
+In that example, keywords are used to specify `standard_output_states <LINK>` for the mechanism.  However, custom
+outputStates can be configured using a specification dictionary (see EXAMPLE IN OutputStae XXX )
+
+
+The :keyword:`value` attributes of all of a mechanism's outputStates  are assigned to the 
+mechanism's `output_values <Mechanism_Base.output_values>` attribute (a list), in the same order in which the
+states are listed in the mechanism's `output_states <Mechanism_Base.outputStates>`  attribute.  Note that this is 
+distinct from the mechanism's `value <Mechanism_Base.value>` attribute, which contains the full and unmodified 
+results of its `function <Mechanism_Base.function>`.
+
+
+In that example, keywords are used to specify `standard_output_states <LINK>` for the mechanism.  In the example 
+below, a custom outputState is configured to generate a binary vector based on the output of the mechanism above::
+
+    my_mech = TransferMechanism[default_input_value=[0,0,0],
+                                function=Logistic(),
+                                output_states=[RESULT, 
+                                               {NAME: 'BINARY OUTPUT',
+                                                INDEX: 0
+                                                CALCULATE: lambda x: binarize(s)}]
+
+  
 
 .. _OutputState_Structure:
 
@@ -169,27 +210,35 @@ Like all PsyNeuLink components, an outputState has the three following core attr
 
 .. _OutputState_Attributes:
 
-An outputState also has two additional attributes that determine its operation:
+Additional Attributes
+~~~~~~~~~~~~~~~~~~~~~
+
+An outputState also has two additional attributes that determine its operation, and can be used to further 
+`customize the outputState <OutputState_Customization>`:
 
 .. _OutputState_Index:
 
 * `index <OutputState.index>`: this determines the item of its owner mechanism's
   `value <Mechanism.Mechanism_Base.value>` to which it is assigned.  By default, this is set to 0, which assigns it to
-  the first item of the mechanism's `value <Mechanism.Mechanism_Base.value>`.
+  the first item of the mechanism's `value <Mechanism.Mechanism_Base.value>`.  Its value must be equal to or less than
+  one minus the number of outputStates in the mechanism's `output_states <Mechanism.output_states>` attribute.  In 
+  addition, the `variable <OutputState.variable>` of an outputState must match (in the number and type of its elements) 
+  the item of the mechanism's `value <Mechanism.Mechanism_Base.value>` to which the index refers.      
 
 .. _OutputState_Calculate:
 
-* `calculate <OutputState.calculate>`:  this specifies the function used to convert the item of the owner mechanism's
+* `calculate <OutputState.calculate>`:  this specifies a function used to convert the item of the owner mechanism's
   `value <Mechanism.Mechanism_Base.value>` (designated by the outputState's `index <OutputState.index>` attribute),
-  before assigning it as the outputState's `value <OutputState.vaue>`.  The result is combined with the result of the
-  outputState's `function <OutputState.function>` attribute (which aggregates the value of its projections), to
-  determine the outputState's `value <OutputState.value>` (though see `note <OutputState_Function_Note_1>`). The
-  default for `calculate  <OutputState.calculate>` is an identity function (`Linear` with **slope**\ =1 and
-  **intercept**\ =0), which simply assigns the specified item of the mechanism's
-  `value <Mechanism.Mechanism_Base.value>` unmodified as the `value <OutputState.value>` of the outputState. However,
-  `calculate  <OutputState.calculate>` can be assigned any function that can take as its input the designated item
-  of the owner mechanism's `value <Mechanism.Mechanism_Base.value>`, and the result of which can be combined with the
-  result of the outputState's `function <OutputState.function>`.
+  before assigning it as the outputState's `value <OutputState.vaue>`.  The result is used as the input to the
+  outputState's `function <OutputState.function>` attribute (which implements the effects of any 
+  `GatingProjections` to the outputState), the result of whch is assigned as the outputState's 
+  `value <OutputState.value>` (though see `note <OutputState_Function_Note_1>`). The 
+  `calculate  <OutputState.calculate>` attribute can be assigned any function that can take as its input the 
+  item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` designated by the outputState's
+  `index <OutputState.index>` attribute, and the result of which can be used as the variable for the outputState's 
+  `function <OutputState.function>`.  The default is an identity function (`Linear` with **slope**\ =1 and 
+  **intercept**\ =0), that simply assigns the specified item of the mechanism's `value <Mechanism.Mechanism_Base.value>` 
+  unmodified as the variable for outputState's `function <OutputState.function>`.  
 
 .. _OutputState_Execution:
 
