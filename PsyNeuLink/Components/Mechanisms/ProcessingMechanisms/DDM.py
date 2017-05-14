@@ -327,6 +327,7 @@ Class Reference
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, SEQUENTIAL
 
 
 DECISION_VARIABLE='DECISION_VARIABLE'
@@ -583,8 +584,7 @@ class DDM(ProcessingMechanism_Base):
         # self.size = size
 
         from PsyNeuLink.Components.States.OutputState import StandardOutputStates
-        self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states)
-        self.use_standard_output_states_indices = True
+        self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states, SEQUENTIAL)
 
         super(DDM, self).__init__(variable=default_input_value,
                                   output_states=output_states,

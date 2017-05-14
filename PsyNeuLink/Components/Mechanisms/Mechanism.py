@@ -928,11 +928,6 @@ class Mechanism_Base(Mechanism):
         else:
             context = context + SEPARATOR_BAR + INITIALIZING + self.name
 
-        # Determine whether index of outputState specification dict in standard_output_states is used when
-        #     instantiating an output_state from that list
-        if not hasattr(self, 'use_standard_output_states_indices'):
-            self.use_standard_output_states_indices = False
-
         super(Mechanism_Base, self).__init__(variable_default=variable,
                                              param_defaults=params,
                                              prefs=prefs,

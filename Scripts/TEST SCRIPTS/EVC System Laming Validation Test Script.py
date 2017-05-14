@@ -23,9 +23,6 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 
 # Mechanisms:
 Input = TransferMechanism(name='Input',
-                          input_states=['HELLO']
-                          # output_states=['HELLO']
-                 # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
 
                  )
 
@@ -33,6 +30,8 @@ Reward = TransferMechanism(name='Reward',
                  # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
                            output_states=[RESULT, MEAN, VARIANCE]
                   )
+
+x = DDM()
 
 Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear,
                                                                       control_signal={
@@ -47,9 +46,7 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                                    t0=0.45),
                output_states=[DECISION_VARIABLE,
                               RESPONSE_TIME,
-                              PROBABILITY_UPPER_THRESHOLD,
-                              {NAME: 'HELLO',
-                               INDEX: DDM_standard_output_states[PROBABILITY_UPPER_THRESHOLD].index}],
+                              PROBABILITY_UPPER_THRESHOLD],
                prefs = DDM_prefs,
                name='Decision')
 
