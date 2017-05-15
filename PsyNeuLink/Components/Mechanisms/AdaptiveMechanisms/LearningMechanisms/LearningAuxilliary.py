@@ -136,6 +136,8 @@ from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, 
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import ACTIVATION_INPUT, \
     ACTIVATION_OUTPUT, ERROR_SIGNAL
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
+    ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
     import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
@@ -507,7 +509,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                       input_states=[sample_input, target_input],
                                                       function=LinearCombination(weights=[[-1], [1]]),
                                                       params=object_mech_params,
-                                                      name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM,
+                                                      name="\'{}\' {}".format(lc.activation_mech.name,
+                                                                              COMPARATOR_MECHANISM),
                                                       context=context)
 
 

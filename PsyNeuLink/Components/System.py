@@ -2169,8 +2169,9 @@ class System_Base(System):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
                 # print("\n\'- Target: {}' error: {} (processes: {})".
-                print("- error for target {}': {}".
-                      format(append_type_to_name(target_mech),
+                print("- error for target ({}): {}".
+                      # format(append_type_to_name(target_mech),
+                      format(target_mech.name,
                              re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i)))
                                                          for i in target_mech.output_state.value])),
                              ))

@@ -403,12 +403,12 @@ class ComparatorMechanism(ObjectiveMechanism):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(sample=sample,
-                                                  target=target,
-                                                  input_states=input_states,
-                                                  function=function,
-                                                  params=params)
+        # # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # params = self._assign_args_to_param_dicts(sample=sample,
+        #                                           target=target,
+        #                                           # input_states=input_states,
+        #                                           function=function,
+        #                                           params=params)
 
         from PsyNeuLink.Components.States.State import _parse_state_spec
         sample_input = _parse_state_spec(owner=self,
@@ -425,6 +425,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                                         VARIABLE: sample_input[VARIABLE]},
                                        {NAME:target_input[NAME],
                                         VARIABLE: target_input[VARIABLE]}],
+                         function=function,
                          params=params,
                          name=name,
                          prefs=prefs,
