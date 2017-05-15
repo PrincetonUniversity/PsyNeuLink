@@ -136,8 +136,8 @@ from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, 
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import ACTIVATION_INPUT, \
     ACTIVATION_OUTPUT, ERROR_SIGNAL
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
-    ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+    import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
@@ -490,18 +490,26 @@ def _instantiate_learning_components(learning_projection, context=None):
                                        {NAME:TARGET_MSE,
                                         CALCULATE:lambda x: np.sum(x*x)/len(x)}]}
 
-            objective_mechanism = ObjectiveMechanism(monitored_values=[lc.activation_mech_output,
-                                                                       TARGET],
-                                                     input_states=[{NAME:SAMPLE,
-                                                                    VARIABLE:sample_input},
-                                                                   {NAME:TARGET,
-                                                                    VARIABLE:target_input}],
-                                                     # input_states=[{SAMPLE:sample_input},
-                                                     #               {TARGET:target_input}],
-                                                     function=LinearCombination(weights=[[-1], [1]]),
-                                                     params=object_mech_params,
-                                                     name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM,
-                                                     context=context)
+            # objective_mechanism = ObjectiveMechanism(monitored_values=[lc.activation_mech_output,
+            #                                                            TARGET],
+            #                                          input_states=[{NAME:SAMPLE,
+            #                                                         VARIABLE:sample_input},
+            #                                                        {NAME:TARGET,
+            #                                                         VARIABLE:target_input}],
+            #                                          # input_states=[{SAMPLE:sample_input},
+            #                                          #               {TARGET:target_input}],
+            #                                          function=LinearCombination(weights=[[-1], [1]]),
+            #                                          params=object_mech_params,
+            #                                          name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM,
+            #                                          context=context)
+            objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
+                                                      target=TARGET,
+                                                      input_states=[sample_input, target_input],
+                                                      function=LinearCombination(weights=[[-1], [1]]),
+                                                      params=object_mech_params,
+                                                      name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM,
+                                                      context=context)
+
 
             objective_mechanism._role = LEARNING
             objective_mechanism._learning_role = TARGET
