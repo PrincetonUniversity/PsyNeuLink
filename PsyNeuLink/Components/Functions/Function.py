@@ -2831,8 +2831,11 @@ class Integrator(
                                                    self.name,
                                                    np.array(self.variable).size,
                                                    self.variable))
-
+                # OLD:
                 # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+
+                # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
+                # to have a rate parameter of type ndarray/list
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
