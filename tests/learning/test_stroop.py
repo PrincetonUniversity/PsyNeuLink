@@ -2,8 +2,8 @@ from PsyNeuLink.Components.Functions.Function import Linear, Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.System import *
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.LearningProjection import TARGET_MSE
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import TARGET_MSE
 import numpy as np
 
 
@@ -200,12 +200,11 @@ class TestStroop:
 
         def show_target():
             print ('\nColor Naming\n\tInput: {}\n\tTarget: {}'.
-                   # format(color_naming_process.input, color_naming_process.target))
-                   format(colors.inputValue, s.targets))
+                   format(colors.input_states.values_as_lists, s.targets))
             print ('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.
                    # format(word_reading_process.input, word_reading_process.target))
-                   format(words.inputValue, s.targets))
-            print ('Response: \n', response.outputValue[0])
+                   format(words.input_states.values_as_lists, s.targets))
+            print ('Response: \n', response.output_values[0])
             print ('Hidden-Output:')
             print (HO_Weights.matrix)
             print ('Color-Hidden:')
@@ -251,13 +250,13 @@ class TestStroop:
         objective_response = s.mechanisms[3]
         objective_hidden = s.mechanisms[7]
         expected_output = [
-            (colors.outputState.value, np.array([1., 1.])),
-            (words.outputState.value, np.array([-2., -2.])),
-            (hidden.outputState.value, np.array([0.13227553,  0.01990677])),
-            (response.outputState.value, np.array([0.51044657,  0.5483048])),
-            (objective_response.outputState.value, np.array([0.48955343, 0.4516952])),
-            (objective_response.outputStates[TARGET_MSE].value, np.array(0.22184555903789838)),
-            (objective_hidden.outputState.value, np.array([0., 0.])),
+            (colors.output_states[0].value, np.array([1., 1.])),
+            (words.output_states[0].value, np.array([-2., -2.])),
+            (hidden.output_states[0].value, np.array([0.13227553,  0.01990677])),
+            (response.output_states[0].value, np.array([0.51044657,  0.5483048])),
+            (objective_response.output_states[0].value, np.array([0.48955343, 0.4516952])),
+            (objective_response.output_states[TARGET_MSE].value, np.array(0.22184555903789838)),
+            (objective_hidden.output_states[0].value, np.array([0., 0.])),
             (CH_Weights.matrix, np.array([
                 [0.01190129, 1.0103412],
                 [2.01190129, 3.0103412]
