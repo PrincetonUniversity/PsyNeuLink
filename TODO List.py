@@ -157,6 +157,10 @@
 
 # DOCUMENTATION:rst pages for Gating components
 
+# DOCUMENTATION: can suppress variable that is an arg for a construcutor in a parent class from
+#                   having to be an arg in the constructor of a subclass by putting it in paramClassDefaults
+#                   for the subclass (e.g.:  MONITORED_VALUES for ComparatorMechanism)
+
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
