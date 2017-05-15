@@ -402,6 +402,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  prefs:is_pref_set=None,
                  context=None):
 
+        input_states = input_states or [None] * 2
         from PsyNeuLink.Components.States.State import _parse_state_spec
         sample_input = _parse_state_spec(owner=self,
                                          state_spec=input_states[0],
@@ -430,9 +431,14 @@ class ComparatorMechanism(ObjectiveMechanism):
         if INPUT_STATES in request_set:
             input_states = request_set[INPUT_STATES]
             num_input_states = len(input_states)
-            if num_input_states > 2:
-                raise ComparatorMechanismError("Number of items in {} arg for {} ({}) must be 2 or less".
-                                               format(INPUT_STATES, self.__class__.__name__, len(input_states)))
+            if num_input_states != 2:
+                raise ComparatorMechanismError("{} arg is specified for {} ({}), so it must have exacty 2 items, "
+                                               "one each for {} and {}".
+                                               format(INPUT_STATES,
+                                                      self.__class__.__name__,
+                                                      len(input_states),
+                                                      SAMPLE,
+                                                      TARGET))
             if len(input_states[0]) != len(input_states[1]):
                 raise ComparatorMechanismError("The length of the value specified for the {} inputState of {} ({})"
                                                "must be the same as the length of the value specified for the {} ({})".
