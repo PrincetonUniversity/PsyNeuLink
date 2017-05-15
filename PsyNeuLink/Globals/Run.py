@@ -338,8 +338,6 @@ Class Reference
 
 """
 
-
-import numpy as np
 from collections import Iterable
 
 from PsyNeuLink.Components.Component import function_type
@@ -547,7 +545,6 @@ def run(object,
 
     # SET LEARNING_RATE, if specified, for all learningProjections in process or system
     if object.learning_rate is not None:
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         for learning_mech in object.monitoringMechanisms.mechanisms:
             for projection in learning_mech.output_state.sendsToProjections:

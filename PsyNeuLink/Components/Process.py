@@ -326,25 +326,12 @@ import math
 import re
 
 import PsyNeuLink.Components
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.Mechanism import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
-    _is_learning_spec
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, \
-    _add_projection_to
-from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
-from PsyNeuLink.Globals.Registry import register_category
-import math
-import re
-
 import PsyNeuLink.Components
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
+    ObjectiveMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
     _is_learning_spec
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, \
@@ -1914,7 +1901,7 @@ class Process_Base(Process):
              and report assignment if verbose
         """
 
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
         def trace_learning_objective_mechanism_projections(mech):
             """Recursively trace projections to Objective mechanisms;
                    return TARGET ObjectiveMechanism if one is found upstream;

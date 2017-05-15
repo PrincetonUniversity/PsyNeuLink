@@ -351,13 +351,12 @@ Class Reference
 
 """
 
-
-from PsyNeuLink.Components.Functions.Function import BackPropagation
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Functions.Function import BackPropagation
 
 # Params:
 
