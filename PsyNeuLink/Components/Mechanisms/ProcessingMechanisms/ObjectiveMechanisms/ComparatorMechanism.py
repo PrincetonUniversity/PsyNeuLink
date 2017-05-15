@@ -414,8 +414,8 @@ class ComparatorMechanism(ObjectiveMechanism):
         # sample = _parse_state_spec(self, sample, default_name=SAMPLE, default_value=None)
         # target = _parse_state_spec(self, sample, default_name=TARGET, default_value=None)
 
-        super().__init__(
-                         monitored_values=[{SAMPLE:sample}, {TARGET:target}],
+        super().__init__(monitored_values=[sample, target],
+                         input_states=['SAMPLE','TARGET'],
                          params=params,
                          name=name,
                          prefs=prefs,
