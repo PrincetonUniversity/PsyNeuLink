@@ -13,7 +13,7 @@
 #      # if input_states must == monitored_values
 #      if none are specified, they will autojatically be created based on the monitored_values spec
 #  monitored_values no longer takes an inputState specification (that must be in input_states)
-#      if it is a name or value, not projection is called for (assumes that it is a TARGET, and that the projection
+#      if it is a name or value, no projection is called for (assumes that it is a TARGET, and that the projection
 #                    will be implemented by Composition
 
 # *********************************************  ObjectiveMechanism *******************************************************
@@ -29,9 +29,9 @@ ProcessingMechanisms specified in its `monitor <ObjectiveMechanism.monitor>` att
 `primary outputState <OutputState_Primary>`.  ObjectiveMechanisms are typically used closely (and often created
 automatically) with `AdaptiveMechanisms <AdpativeMechanism>`.
 
-.. _Comparator_Creation:
+.. _ObjectiveMechanism_Creation:
 
-Creating a ComparatorMechanism
+Creating an ObjectiveMechanism
 ------------------------------
 
 An ObjectiveMechanism can be created directly by calling its constructor.  ObjectiveMechanisms are also created
@@ -287,7 +287,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array
 
         Class attributes:
-            + componentType (str): ComparatorMechanism
+            + componentType (str): ObjectiveMechanism
             + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
@@ -299,7 +299,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             None
 
         MechanismRegistry:
-            All instances of ComparatorMechanism are registered in MechanismRegistry, which maintains an
+            All instances of ObjectiveMechanism are registered in MechanismRegistry, which maintains an
               entry for the subclass, a count for all instances of it, and a dictionary of those instances
     COMMENT
 
@@ -326,7 +326,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         the number of items in the list must equal the number of items in `monitored_values`, and takes precedence
         over any names specified there.
 
-    function: Function, function or method
+    function: CombinationFunction, ObjectiveFunction, function or method : default LinearCombination
         specifies the function used to evaluate the values listed in :keyword:`monitored_values`
         (see `function <LearningMechanism.function>` for details.
 
@@ -346,7 +346,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
     COMMENT
 
-    name : str : default ComparatorMechanism-<index>
+    name : str : default ObjectiveMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
@@ -369,7 +369,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         ObjectiveMechanism is fully instantiated, each item in the list refers to an outputState containing the
         value to be monitored, with a `MappingProjection` from it to the corresponding inputState.
 
-    function : CombinationFunction or function : default LinearCombination
+    function : CombinationFunction, ObjectiveFunction, function, or method
         the function used to compare evaluate the values monitored by the ObjectiveMechanism.  The function can be
         any PsyNeuLink `CombinationFunction` or a python function that takes a 2d array with an arbitrary number of
         items or a number equal to the number of items in the ObjectiveMechanism's variable (and its number of
@@ -385,7 +385,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     output_values : 2d np.array
         1st and only item is same as `value <ObjectiveMechanisms.value>`.
 
-    name : str : default ComparatorMechanism-<index>
+    name : str : default ObjectiveMechanism-<index>
         the name of the mechanism.
         Specified in the **name** argument of the constructor for the mechanism;
         if not is specified, a default is assigned by `MechanismRegistry`

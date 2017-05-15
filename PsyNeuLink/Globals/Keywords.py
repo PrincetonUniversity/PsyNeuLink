@@ -321,9 +321,9 @@ DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
 EVC_MECHANISM = "EVCMechanism"
 
 # MonitoringMechanisms:
-COMPARATOR_MECHANISM = "ComparatorMechanism"
-WEIGHTED_ERROR_MECHANISM = "WeightedErrorMechanism"
 OBJECTIVE_MECHANISM = "ObjectiveMechanism"
+COMPARATOR_MECHANISM = "ComparatorMechanism"
+MONITORING_MECHANISM = "MonitoringMechanism"
 
 # ProcessingMechanisms:
 TRANSFER_MECHANISM = "TransferMechanism"
