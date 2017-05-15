@@ -428,7 +428,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  # MODIFIED 5/8/17 OLD:
                  # default_input_value=None,
                  # MODIFIED 5/8/17 END
-                 monitored_values,
+                 monitored_values:tc.any(list, dict),
                  input_states=None,
                  # names:tc.optional(list)=None,
                  function=LinearCombination,
@@ -488,7 +488,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             raise ObjectiveMechanismError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
                                           format(target_set[ROLE], self.name))
 
-        if INPUT_STATES in target_set and target_set[INPUT_STATES] is not None:
+        if (INPUT_STATES in target_set and
+                    target_set[INPUT_STATES] is not None and
+                not all(input_state is None for input_state in target_set[INPUT_STATES])):
             if MONITORED_VALUES in target_set:
                 monitored_values = target_set[MONITORED_VALUES]
             elif hasattr(self, 'monitored_values'):
@@ -632,7 +634,7 @@ def _parse_monitored_values(owner, monitored_values:tc.any(list, dict)):
     
     Can take either a list or dict of specifications.
     If it is a list, each item must be one of the following:
-        - OuptutState
+        - OutputState
         - Mechanism
         - string
         - value
@@ -697,6 +699,8 @@ def _parse_monitored_values(owner, monitored_values:tc.any(list, dict)):
         elif isinstance(spec, dict):
 
             name = None
+            value = None
+
             for k, v in spec.items():
                 # Key is not a spec keyword, so dict must be of the following form: STATE_NAME_ASSIGNMENT:STATE_SPEC
                 #
@@ -707,6 +711,13 @@ def _parse_monitored_values(owner, monitored_values:tc.any(list, dict)):
             if NAME in spec:
                 name = spec[NAME]
 
+            if VALUE in spec:
+                if isinstance(spec[VALUE], (dict, tuple)):
+                    # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
+                    entry_name, value, projections = parse_spec(spec[VALUE])
+                else:
+                    value = spec[VALUE]
+
             projections = False
             if STATE_PROJECTIONS in spec:
                 projections = spec[STATE_PROJECTIONS]
@@ -715,12 +726,6 @@ def _parse_monitored_values(owner, monitored_values:tc.any(list, dict)):
             if OUTPUT_STATE in spec:
                 output_state = spec[OUTPUT_STATE]
 
-            if isinstance(spec[VALUE], (dict, tuple)):
-                # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
-                entry_name, value, projections = parse_spec(spec[VALUE])
-
-            else:
-                value = spec[VALUE]
 
         else:
             raise ObjectiveMechanismError("Specification for {} arg of {} ({}) must be an "
@@ -787,7 +792,7 @@ def _validate_monitored_value(objective_mech, state_spec, context=None):
     #     state_spec_is_OK = True
 
     from PsyNeuLink.Components.States.OutputState import OutputState
-    if not isinstance(state_spec, (str, OutputState, Mechanism, MonitoredOutputStatesOption)):
+    if not isinstance(state_spec, (str, OutputState, Mechanism, MonitoredOutputStatesOption, dict)):
         state_spec_is_OK = True
 
     # if isinstance(state_spec, dict):

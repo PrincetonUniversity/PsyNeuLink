@@ -390,11 +390,12 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     paramNames = paramClassDefaults.keys()
 
-    # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
+    # FIX:  TYPECHECK monitored_values TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
-                 sample:tc.any(OutputState, Mechanism_Base, dict, is_numeric, str),
-                 target:tc.any(OutputState, Mechanism_Base, dict, is_numeric, str),
+                 monitored_values=None,
+                 sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
+                 target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  input_states=None,
                  function=Distance(metric=DIFFERENCE),
                  params=None,
@@ -409,8 +410,12 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                   function=function,
                                                   params=params)
 
+        # from PsyNeuLink.Components.States.State import _parse_state_spec
+        # sample = _parse_state_spec(self, sample, default_name=SAMPLE, default_value=None)
+        # target = _parse_state_spec(self, sample, default_name=TARGET, default_value=None)
+
         super().__init__(
-                         monitored_values=[sample, target],
+                         monitored_values=[{SAMPLE:sample}, {TARGET:target}],
                          params=params,
                          name=name,
                          prefs=prefs,
