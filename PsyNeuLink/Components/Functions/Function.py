@@ -2757,7 +2757,8 @@ class Integrator(
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: variableClassDefault})
     paramClassDefaults.update({
-        NOISE: None
+        NOISE: None,
+        RATE: None
     })
 
     @tc.typecheck
@@ -2831,7 +2832,7 @@ class Integrator(
                                                    np.array(self.variable).size,
                                                    self.variable))
 
-                self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+                # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
