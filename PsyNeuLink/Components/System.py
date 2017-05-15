@@ -315,7 +315,7 @@ class SystemError(Exception):
 
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components import SystemDefaultControlMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
 
 # System factory method:
 @tc.typecheck
@@ -2675,7 +2675,7 @@ class System_Base(System):
 
         """
 
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
         from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
