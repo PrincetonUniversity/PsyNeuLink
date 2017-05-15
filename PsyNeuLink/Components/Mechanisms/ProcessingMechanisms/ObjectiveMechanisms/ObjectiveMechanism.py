@@ -315,7 +315,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         will be used.
     COMMENT
 
-    monitored_values : [List[OutputState, Mechanism, string, value, dict or MonitoredOutputStateOption]
+    monitored_values : List[OutputState, Mechanism, string, value, dict, MonitoredOutputStateOption] or Dict[]
         specifies the values that will will be monitored, and evaluated by the `function <ObjectiveMechanism>`
         (see `monitored_values` for details of specification).  The number of items must equal the length
         of `default_input_value` if that is specified.
@@ -418,21 +418,15 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         TIME_SCALE: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
         OUTPUT_STATES:[{NAME:RESULT}]})
-        # MODIFIED 12/7/16 NEW:
 
     paramNames = paramClassDefaults.keys()
 
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
-                 # MODIFIED 5/8/17 OLD:
-                 # default_input_value=None,
-                 # MODIFIED 5/8/17 END
                  monitored_values:tc.any(list, dict),
                  input_states=None,
-                 # names:tc.optional(list)=None,
                  function=LinearCombination,
-                 # role:tc.optional(str)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -443,23 +437,15 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                   input_states=input_states,
                                                   function=function,
                                                   params=params)
-
         self._learning_role = None
 
         super().__init__(
-                         # MODIFIED 5/8/17 OLD:
-                         # variable=default_input_value,
-                         # MODIFIED 5/8/17 NEW:
                          variable=None,
-                         # MODIFIED 5/8/17 END
                          input_states=input_states,
                          params=params,
                          name=name,
                          prefs=prefs,
                          context=self)
-
-        # IMPLEMENATION NOTE: THIS IS HERE UNTIL Composition IS IMPLEMENTED,
-        # SO THAT SYSTEMS AND PROCESSES CAN FIND THE OBJECTIVE MECHANISSMS SERVING AS TARGETS
 
     def _validate_variable(self, variable, context=None):
         """Validate that if default_input_value is specified the number of values matches the number of monitored_values
@@ -473,7 +459,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                      format(len(variable), self.name, len(self.user_params[MONITORED_VALUES])))
 
         super()._validate_variable(variable=variable, context=context)
-
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate `role`, `monitored_values`, amd `input_states <ObjectiveMechanism.input_states>` arguments
@@ -556,7 +541,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
             except KeyError:
                 pass
-
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.variable

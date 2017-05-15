@@ -248,8 +248,9 @@ class ComparatorMechanismError(Exception):
 class ComparatorMechanism(ObjectiveMechanism):
     """
     ComparatorMechanism(                    \
-    sample=None,                            \
-    target=None,                            \
+    sample,                                 \
+    target,                                 \
+    input_states=None                       \
     function=Distance(metric=DIFFERENCE),   \
     params=None,                            \
     name=None,                              \
@@ -369,7 +370,6 @@ class ComparatorMechanism(ObjectiveMechanism):
 
 
     """
-
     componentType = COMPARATOR_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
@@ -388,14 +388,11 @@ class ComparatorMechanism(ObjectiveMechanism):
         OUTPUT_STATES:[{NAME:RESULT}],
         MONITORED_VALUES: None})
 
-        # MODIFIED 12/7/16 NEW:
-
     paramNames = paramClassDefaults.keys()
 
     # FIX:  TYPECHECK monitored_values TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
-                 # monitored_values=None,
                  sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  input_states=None,
@@ -426,12 +423,8 @@ class ComparatorMechanism(ObjectiveMechanism):
                          prefs=prefs,
                          context=self)
 
-        # IMPLEMENATION NOTE: THIS IS HERE UNTIL Composition IS IMPLEMENTED,
-        # SO THAT SYSTEMS AND PROCESSES CAN FIND THE OBJECTIVE MECHANISSMS SERVING AS TARGETS
-
     def _validate_params(self, request_set, target_set=None, context=None):
         """If sample and target values are specified, validate that they are compatible 
-
         """
 
         if INPUT_STATES in request_set:
