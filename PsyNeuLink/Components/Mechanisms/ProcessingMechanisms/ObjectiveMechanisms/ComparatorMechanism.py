@@ -410,12 +410,15 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                   function=function,
                                                   params=params)
 
-        # from PsyNeuLink.Components.States.State import _parse_state_spec
-        # sample = _parse_state_spec(self, sample, default_name=SAMPLE, default_value=None)
-        # target = _parse_state_spec(self, sample, default_name=TARGET, default_value=None)
+        from PsyNeuLink.Components.States.State import _parse_state_spec
+        sample = _parse_state_spec(self, input_states[0], default_name=SAMPLE, default_value=None)
+        target = _parse_state_spec(self, input_states[1], default_name=TARGET, default_value=None)
 
         super().__init__(monitored_values=[sample, target],
-                         input_states=['SAMPLE','TARGET'],
+                         input_states=[{NAME:sample[NAME],
+                                        VARIABLE: sample[VARIABLE]},
+                                       {NAME:target[NAME],
+                                        VARIABLE: target[VARIABLE]}],
                          params=params,
                          name=name,
                          prefs=prefs,
