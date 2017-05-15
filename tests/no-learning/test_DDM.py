@@ -44,11 +44,11 @@ def test_DDM():
 
     expected_output = [
         (myMechanism.inputState.value, np.array([40.])),
-        (myMechanism.outputState.value, np.array([10.])),
+        (myMechanism.output_states.value, np.array([10.])),
         (myMechanism_2.inputState.value, np.array([10.])),
-        (myMechanism_2.outputState.value, np.array([20.])),
+        (myMechanism_2.output_states.value, np.array([20.])),
         (myMechanism_3.inputState.value, np.array([20.])),
-        (myMechanism_3.outputState.value, np.array([30.])),
+        (myMechanism_3.output_states.value, np.array([30.])),
         (result, np.array([30.])),
     ]
 

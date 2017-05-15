@@ -6,8 +6,8 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMe
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.scheduling.condition import AfterNCalls
@@ -127,5 +127,5 @@ class TestNoLearning:
         # list consisting of Output_Layer's OutputState, [result, mean, variance]
         expected_Output_Layer_output = [numpy.array([ 0.8344837, 0.87072018, 0.89997433]), numpy.array(0.8683927358195268), numpy.array(0.0007175454706347559)]
 
-        assert len(expected_Output_Layer_output) == len(Output_Layer.outputValue) == 3
-        assert all([numpy.allclose(expected_Output_Layer_output[i], Output_Layer.outputValue[i]) for i in range(len(expected_Output_Layer_output))])
+        assert len(expected_Output_Layer_output) == len(Output_Layer.output_values) == 3
+        assert all([numpy.allclose(expected_Output_Layer_output[i], Output_Layer.output_values[i]) for i in range(len(expected_Output_Layer_output))])

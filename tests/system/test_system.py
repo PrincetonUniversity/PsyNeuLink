@@ -6,8 +6,8 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Functions.Function import Linear, Logistic, BogaczEtAl, Integrator
 from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.scheduling.condition import *
@@ -99,7 +99,7 @@ def test_danglingControlledMech():
         processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
         controller=EVCMechanism,
         enable_controller=True,
-        monitor_for_control=[Reward, (DDM_PROBABILITY_UPPER_THRESHOLD, 1, -1)],
+        # monitor_for_control=[Reward, (DDM_PROBABILITY_UPPER_THRESHOLD, 1, -1)],
         name='EVC Gratton System',
     )
 

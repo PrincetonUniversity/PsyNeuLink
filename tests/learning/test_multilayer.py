@@ -3,8 +3,8 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMe
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, TARGET_MSE
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, TARGET_MSE
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.scheduling.condition import AfterNCalls
@@ -126,6 +126,8 @@ def test_multilayer():
         num_executions=10,
         inputs=stim_list,
         targets=target_list,
+        call_before_trial=print_header,
+        call_after_trial=show_target,
         termination_processing={TimeScale.TRIAL: AfterNCalls(Output_Layer, 1)}
     )
 
@@ -175,8 +177,8 @@ def test_multilayer():
     ]
 
     expected_output = [
-        (Output_Layer.outputState.value, np.array([ 0.22686074,  0.25270212,  0.91542149])),
-        (objective_output_layer.outputStates[TARGET_MSE].value, np.array(0.04082589331852094)),
+        (Output_Layer.output_states.values, np.array([ 0.22686074,  0.25270212,  0.91542149])),
+        (objective_output_layer.output_states[TARGET_MSE].value, np.array(0.04082589331852094)),
         (Input_Weights.matrix, np.array([
             [0.09890269, 0.19810968, 0.29740194,  0.39678767, 0.49627111],
             [0.5959199,  0.69297125, 0.79033968, 0.88805564, 0.98613492],
