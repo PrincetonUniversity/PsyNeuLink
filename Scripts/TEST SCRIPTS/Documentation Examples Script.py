@@ -2,17 +2,13 @@
 # Runs examples in the PsyNeuLink Documentation
 #
 
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Globals.Run import run
-
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+
+# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 
 #region PROCESS EXAMPLES ********************************************************************
 

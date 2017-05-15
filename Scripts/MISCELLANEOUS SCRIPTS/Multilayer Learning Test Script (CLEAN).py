@@ -1,10 +1,9 @@
-from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Functions.Function import Logistic
-
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic(),
@@ -66,6 +65,6 @@ for i in range(10):
     print ('Middle Weights: \n', Middle_Weights.matrix)
     print ('Output Weights: \n', Output_Weights.matrix)
 
-    # print ('MSE: \n', Output_Layer.outputValue[])
+    # print ('MSE: \n', Output_Layer.output_values[])
 
 print(results)

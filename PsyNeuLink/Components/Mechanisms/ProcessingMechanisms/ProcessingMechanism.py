@@ -83,6 +83,8 @@ class ProcessingMechanism_Base(Mechanism_Base):
 
     def __init__(self,
                  variable=None,
+                 input_states=None,
+                 output_states=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -99,6 +101,8 @@ class ProcessingMechanism_Base(Mechanism_Base):
         self.system = None
 
         super().__init__(variable=variable,
+                         input_states=input_states,
+                         output_states=output_states,
                          params=params,
                          name=name,
                          prefs=prefs,

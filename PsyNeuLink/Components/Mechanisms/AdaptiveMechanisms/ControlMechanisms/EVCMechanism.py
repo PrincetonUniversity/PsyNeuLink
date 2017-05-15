@@ -288,15 +288,13 @@ Class Reference
 ---------------
 
 """
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCAuxiliary import \
     ControlSignalGridSearch, ValueFunction
-
-from PsyNeuLink.Components.Process import Process_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
 OBJECT = 0
 WEIGHT = 1
@@ -390,7 +388,7 @@ class EVCMechanism(ControlMechanism_Base):
         # TBI: - CONTROL_PROJECTIONS:
         #         list of projections to add (and for which outputStates should be added)
 
-        # - inputStates: one for each performance/environment variable monitiored
+        # - input_states: one for each performance/environment variable monitiored
 
         ControlProjection Specification:
         #    - wherever a ControlProjection is specified, using kwEVC instead of CONTROL_PROJECTION
@@ -398,7 +396,7 @@ class EVCMechanism(ControlMechanism_Base):
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
 
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
-        #   constraint:  if specified, number of items in variable must match number of inputStates in INPUT_STATES
+        #   constraint:  if specified, number of items in variable must match number of input_states in INPUT_STATES
         #                  and names in list in kwMonitor must match those in INPUT_STATES
 
        **********************************************************************************************
@@ -540,7 +538,7 @@ class EVCMechanism(ControlMechanism_Base):
     [TBI]
         monitored_values : 3D np.array
             an array of values of the outputStates in `monitored_output_states` (equivalent to the values of
-            the EVCMechanism's `inputStates <EVCMechanism.inputStates>`).
+            the EVCMechanism's `input_states <EVCMechanism.input_states>`).
     COMMENT
 
     monitor_for_control_weights_and_exponents: List[Tuple[scalar, scalar]]
@@ -577,7 +575,7 @@ class EVCMechanism(ControlMechanism_Base):
             controlSignal.allocation_samples is the set of samples specified for that controlSignal
             [TBI:] controlSignal.allocation_range is the range that the controlSignal value can take
             controller.allocation_policy - holds current allocation_policy
-            controller.outputValue is a list of current controlSignal values
+            controller.output_values is a list of current controlSignal values
             controller.value_function - calls the three following functions (done explicitly, so each can be specified)
             controller.outcome_function - aggregates monitored outcomes (using specified weights and exponentiation)
             controller.cost_function - aggregate costs of control signals
@@ -753,7 +751,6 @@ class EVCMechanism(ControlMechanism_Base):
                                            name=name,
                                            prefs=prefs,
                                            context=self)
-        TEST = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -817,14 +814,14 @@ class EVCMechanism(ControlMechanism_Base):
             # #           (AS THEY CAN CURRENTLY FOR ObjectiveMechanisms)
             # state_names = []
             # variables = []
-            # for state_name in origin_mech.inputStates.keys():
+            # for state_name in origin_mech.input_states.keys():
             #     state_names.append(state_name)
             #     variables.append(origin_mech_intputStates[state_name].variable)
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
                                                             name=origin_mech.name + " " + PREDICTION_MECHANISM,
-                                                            default_input_value = origin_mech.inputState.variable,
+                                                            default_input_value = origin_mech.input_state.variable,
                                                             # default_input_value=variables,
                                                             # INPUT_STATES=state_names,
                                                             params = prediction_mechanism_params,
@@ -834,11 +831,11 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Assign projections to prediction_mechanism that duplicate those received by origin_mech
             #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
-            for orig_state_name, prediction_state_name in zip(origin_mech.inputStates.keys(),
-                                                                prediction_mechanism.inputStates.keys()):
-                for projection in origin_mech.inputStates[orig_state_name].receivesFromProjections:
+            for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
+                                                            prediction_mechanism.input_states):
+                for projection in orig_input_state.receivesFromProjections:
                     MappingProjection(sender=projection.sender,
-                                      receiver=prediction_mechanism.inputStates[prediction_state_name],
+                                      receiver=prediction_input_state,
                                       matrix=projection.matrix)
 
             # Assign list of processes for which prediction_mechanism will provide input during the simulation
@@ -881,7 +878,7 @@ class EVCMechanism(ControlMechanism_Base):
         Notes:
         * self.monitored_output_states is a list, each item of which is a Mechanism.outputState from which a projection
             will be instantiated to a corresponding inputState of the ControlMechanism
-        * self.inputStates is the usual ordered dict of states,
+        * self.input_states is the usual ordered dict of states,
             each of which receives a projection from a corresponding outputState in self.monitored_output_states
         """
 
@@ -891,7 +888,7 @@ class EVCMechanism(ControlMechanism_Base):
             self._validate_monitored_state_in_system(state)
 
         # Note: weights and exponents are assigned as parameters of outcome_function in _get_monitored_states
-        self.monitoring_mechanism = ObjectiveMechanism(monitored_values=self.monitored_output_states,
+        self.monitoring_mechanism = ObjectiveMechanism(monitored_values=self.monitored_output_states.copy(),
                                                        function=self.outcome_function,
                                                        name=self.name + ' Monitoring Mechanism')
 
@@ -933,25 +930,24 @@ class EVCMechanism(ControlMechanism_Base):
             - precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
         * self.monitored_output_states is a list, each item of which is a Mechanism.outputState from which a projection
             will be instantiated to a corresponding inputState of the ControlMechanism
-        * self.inputStates is the usual ordered dict of states,
+        * self.input_states is the usual ordered dict of states,
             each of which receives a projection from a corresponding outputState in self.monitored_output_states
 
         """
 
-        from PsyNeuLink.Components.States.OutputState import OutputState
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import validate_monitored_value
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import _validate_monitored_value
 
         # PARSE SPECS
 
         # Get controller's MONITOR_FOR_CONTROL specifications (optional, so need to try)
         try:
-            controller_specs = self.paramsCurrent[MONITOR_FOR_CONTROL] or []
+            controller_specs = self.paramsCurrent[MONITOR_FOR_CONTROL].copy() or []
         except KeyError:
             controller_specs = []
 
         # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
-        system_specs = self.system.paramsCurrent[MONITOR_FOR_CONTROL]
+        system_specs = self.system.monitor_for_control.copy()
 
         # If the controller has a MonitoredOutputStatesOption specification, remove any such spec from system specs
         if controller_specs:
@@ -959,6 +955,9 @@ class EVCMechanism(ControlMechanism_Base):
                 option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),None)
                 if option_item is not None:
                     del system_specs[option_item]
+            for item in controller_specs:
+                if item in system_specs:
+                    del system_specs[system_specs.index(item)]
 
         # Combine controller and system specs
         # If there are none, assign PRIMARY_OUTPUT_STATES as default
@@ -988,7 +987,7 @@ class EVCMechanism(ControlMechanism_Base):
                 item = item[0]
             # MODIFIED 2/22/17 END
             # Validate by ObjectiveMechanism:
-            validate_monitored_value(self, item, context=context)
+            _validate_monitored_value(self, item, context=context)
             # Extract references from specification tuples
             if isinstance(item, tuple):
                 all_specs_extracted_from_tuples.append(item[OBJECT])
@@ -1079,7 +1078,7 @@ class EVCMechanism(ControlMechanism_Base):
             # PARSE OUTPUT STATE'S SPECS
 
             # for output_state_name, output_state in list(mech.outputStates.items()):
-            for output_state_name, output_state in mech.outputStates.items():
+            for output_state in mech.output_states:
 
                 # Get MONITOR_FOR_CONTROL specification from outputState
                 try:
@@ -1116,14 +1115,14 @@ class EVCMechanism(ControlMechanism_Base):
                         local_specs.append(item)
 
             # Ignore MonitoredOutputStatesOption if any outputStates are explicitly specified for the mechanism
-            for output_state_name, output_state in list(mech.outputStates.items()):
+            for output_state in mech.output_states:
                 if (output_state in local_specs or output_state.name in local_specs):
                     option_spec = None
 
 
             # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO self.monitored_output_states
 
-            for output_state_name, output_state in list(mech.outputStates.items()):
+            for output_state in mech.output_states:
 
                 # If outputState is named or referenced anywhere, include it
                 if (output_state in local_specs or output_state.name in local_specs):
@@ -1147,14 +1146,14 @@ class EVCMechanism(ControlMechanism_Base):
 
                     # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it
                     if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
-                        if output_state is mech.outputState:
+                        if output_state is mech.output_state:
                             self.monitored_output_states.append(output_state)
                             continue
                     # If MonitoredOutputStatesOption is ALL_OUTPUT_STATES, include it
                     elif option_spec is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
                         self.monitored_output_states.append(output_state)
                     elif mech.name in local_specs or mech in local_specs:
-                        if output_state is mech.outputState:
+                        if output_state is mech.output_state:
                             self.monitored_output_states.append(output_state)
                             continue
                     elif option_spec is None:
@@ -1162,7 +1161,7 @@ class EVCMechanism(ControlMechanism_Base):
                     else:
                         raise EVCError("PROGRAM ERROR: unrecognized specification of MONITOR_FOR_CONTROL for "
                                        "{0} of {1}".
-                                       format(output_state_name, mech.name))
+                                       format(output_state.name, mech.name))
 
 
         # ASSIGN WEIGHTS AND EXPONENTS TO OUTCOME_FUNCTION
@@ -1235,7 +1234,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                 context=context)
 
         # Assign controlSignals in the order they are stored of OutputStates
-        self.controlSignals = [self.outputStates[state_name] for state_name in self.outputStates.keys()]
+        self.controlSignals = self.output_states
 
         # # TEST PRINT
         # print("\n{}.controlSignals: ".format(self.name))
@@ -1442,7 +1441,7 @@ class EVCMechanism(ControlMechanism_Base):
         self.system.run(inputs=inputs, clock=sim_clock, time_scale=time_scale, context=context)
 
         # Get outcomes for current allocation_policy
-        #    = the values of the monitored output states (self.inputStates)
+        #    = the values of the monitored output states (self.input_states)
         #    stored in self.inputValue = list(self.variable)
         # self.monitoring_mechanism.execute(context=EVC_SIMULATION)
         self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
