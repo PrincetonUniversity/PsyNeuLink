@@ -1,17 +1,19 @@
+# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
+from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
-from PsyNeuLink.Components.Functions.Function import Logistic
+
 from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.scheduling.condition import AfterNCalls
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic,
-                       default_input_value = np.zeros((2,)))
+                                default_input_value = np.zeros(2),
+                                params={STATE_PARAMS:{PARAMETER_STATE_PARAMS:{
+                                    PARAMETER_MODULATION_OPERATION:ModulationOperation.ADD}}})
 
 Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
@@ -109,7 +111,7 @@ def show_target():
     print ('\nInput Weights: \n', Input_Weights.matrix)
     print ('Middle Weights: \n', Middle_Weights.matrix)
     print ('Output Weights: \n', Output_Weights.matrix)
-    # print ('MSE: \n', Output_Layer.outputValue[])
+    # print ('MSE: \n', Output_Layer.output_values[])
 
 stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
