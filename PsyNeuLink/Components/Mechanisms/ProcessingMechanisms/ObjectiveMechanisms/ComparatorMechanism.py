@@ -231,7 +231,7 @@ Class Reference
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
-    import ObjectiveMechanism
+    import ObjectiveMechanism, MONITORED_VALUES
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Functions.Function import Distance, DISTANCE_METRICS
@@ -385,7 +385,9 @@ class ComparatorMechanism(ObjectiveMechanism):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
-        OUTPUT_STATES:[{NAME:RESULT}]})
+        OUTPUT_STATES:[{NAME:RESULT}],
+        MONITORED_VALUES: None})
+
         # MODIFIED 12/7/16 NEW:
 
     paramNames = paramClassDefaults.keys()
@@ -393,7 +395,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     # FIX:  TYPECHECK monitored_values TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
-                 monitored_values=None,
+                 # monitored_values=None,
                  sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  input_states=None,
@@ -402,13 +404,6 @@ class ComparatorMechanism(ObjectiveMechanism):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-
-        # # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        # params = self._assign_args_to_param_dicts(sample=sample,
-        #                                           target=target,
-        #                                           # input_states=input_states,
-        #                                           function=function,
-        #                                           params=params)
 
         from PsyNeuLink.Components.States.State import _parse_state_spec
         sample_input = _parse_state_spec(owner=self,
