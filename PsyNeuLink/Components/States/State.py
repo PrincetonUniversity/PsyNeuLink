@@ -2078,6 +2078,12 @@ def _parse_state_spec(owner, state_spec, default_name, default_value, projection
     variable = default_value
     params = None
 
+    # State, so assign as value
+    if isinstance(state_spec, State):
+        name = default_name
+        variable = state_spec.value
+        params = {STATE_SPEC:state_spec}
+
     # string, so use as name
     if isinstance(state_spec, str):
         name = state_spec
@@ -2104,10 +2110,14 @@ def _parse_state_spec(owner, state_spec, default_name, default_value, projection
         params = None
 
     else:
+        if hasattr(owner, name):
+            owner_name = owner.name
+        else:
+            owner_name = owner.__class__.__name__
         from PsyNeuLink.Components.States.InputState import InputStateError
         raise InputStateError("Illegal state specification found in first item of tuple "
                                       "specified in {} arg of {} ({})".
-                                      format(INPUT_STATES, owner.name, state_spec))
+                                      format(INPUT_STATES, owner_name, state_spec))
 
     state_dict = {NAME: name,
                   VARIABLE: variable,
