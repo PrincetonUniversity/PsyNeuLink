@@ -838,10 +838,10 @@ class DDM(ProcessingMechanism_Base):
 
                 # if INITIALIZING not in context:
                 #     logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
-                if abs(result) >= self.threshold:
-                #     logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
-                    self.is_finished = True
-
+                # if abs(result) >= self.threshold:
+                # #     logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
+                #     self.is_finished = True
+                #
                 return np.array([result, [0.0], [0.0], [0.0]])
             else:
                 raise MechanismError(
