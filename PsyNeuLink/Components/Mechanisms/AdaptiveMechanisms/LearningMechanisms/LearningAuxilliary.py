@@ -507,7 +507,6 @@ def _instantiate_learning_components(learning_projection, context=None):
             objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
                                                       target=TARGET,
                                                       input_states=[sample_input, target_input],
-                                                      function=LinearCombination(weights=[[-1], [1]]),
                                                       params=object_mech_params,
                                                       name="\'{}\' {}".format(lc.activation_mech.name,
                                                                               COMPARATOR_MECHANISM),

@@ -41,6 +41,8 @@ COMMENT:
 Input States
 ~~~~~~~~~~~~~~~~
 ADD DOCUMENTATION HERE (SEE NEW DOCUMENTATION ABOVE)
+*** AS FOR ObjectiveMechanism, USED TO SPECIFY THE FORMAT AND/OR NAME OF THE INPUT_STATES
+
 COMMENT
 
 .. _ComparatorMechanism_Monitored_States:
@@ -396,7 +398,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  input_states=None,
-                 function=Distance(metric=DIFFERENCE),
+                 function=LinearCombination(weights=[[-1], [1]]),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
