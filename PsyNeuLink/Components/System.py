@@ -2301,10 +2301,13 @@ class System_Base(System):
                              re.sub('[\[,\],\n]','',str(["{:0.3}".
                                                 format(float(i)) for i in mech_tuple.mechanism.output_state.value]))))
         if self.learning:
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import TARGET_MSE
+            from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+                import MSE
             for mech in self.targetMechanisms:
+                if not MSE in mech.output_states:
+                    raise SystemError("{} does not have an outputState named {}".format(mech.name, MSE))
                 print("\n- MSE: {:0.3}".
-                      format(float(mech.output_states[TARGET_MSE].value)))
+                      format(float(mech.output_states[MSE].value)))
 
 
     # TBI:

@@ -77,7 +77,7 @@ Class Reference
 from PsyNeuLink.Components.Functions.Function import Logistic, max_vs_next, max_vs_avg
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import *
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
+from PsyNeuLink.Components.States.OutputState import StandardOutputStates, PRIMARY_OUTPUT_STATE
 
 
 class LCAError(Exception):
@@ -365,11 +365,11 @@ class LCA(RecurrentTransferMechanism):
                                                   output_states=output_states,
                                                   params=params)
 
-        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
                                                                indices=PRIMARY_OUTPUT_STATE)
+
 
         super().__init__(default_input_value=default_input_value,
                          size=size,
