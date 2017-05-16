@@ -6,11 +6,7 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection i
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.TimeScale import TimeScale
-<<<<<<< Updated upstream
-from PsyNeuLink.scheduling.condition import AfterNCalls
-=======
-#from PsyNeuLink.scheduling.condition import AfterNCalls
->>>>>>> Stashed changes
+
 import numpy as np
 import random
 
