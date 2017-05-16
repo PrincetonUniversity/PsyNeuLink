@@ -161,6 +161,8 @@
 #                   having to be an arg in the constructor of a subclass by putting it in paramClassDefaults
 #                   for the subclass (e.g.:  MONITORED_VALUES for ComparatorMechanism)
 
+# DOCUMENTATION: TABLE SOMEWHERE OF ALL SPECIFICATION DICIONARIES AND THEIR ENTRIES
+
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
@@ -183,6 +185,7 @@
 
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
 #
+# IMPLEMENT:  WEIGHTS, EXPONENTS AND PROJECTION ENTRIES OF STATE SPECIFICATION DICIONARY
 # IMPLEMENT: standard_output_states for ObjectiveMechanism, LCA, RecurrentTransfer, and Intregrator
 #              (use ones at top of OutputState)
 # IMPLEMENT: Move RecurrentTransfer and LCA calculate functions to standard_output_states

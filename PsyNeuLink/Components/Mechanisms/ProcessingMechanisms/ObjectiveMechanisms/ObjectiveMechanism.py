@@ -56,7 +56,7 @@ Input States
 ADD DOCUMENTATION HERE (SEE NEW DOCUMENTATION ABOVE)
 COMMENT
 
-.. _ObjectiveMechanism_Monitored_States:
+.. _ObjectiveMechanism_Monitored_Values:
 
 Monitored Values
 ~~~~~~~~~~~~~~~~
@@ -189,7 +189,7 @@ selection mechanism.  In the example below, the latter uses a `TransferMechanism
 value, which designates the predicted reward for the selected action.  Because the output is a vector,
 by default the inputState of the ObjectiveMechanism created to monitor it will also be a vector.  However, the
 ObjectiveMechanism requires that this be a single value, that it can compare with the value of the reward mechanism.
-This can be dealt with by using `default_input_value` in the construction of the ObjectiveMechanism, to force
+This can be dealt with by using `default_input_value` in the constructor of the ObjectiveMechanism, to force
 the inputState for the ObjectiveMechanism to have a single value, as in the example below::
 
     my_action_select_mech = TransferMechanism(default_input_value = [0,0,0],
@@ -245,6 +245,7 @@ from PsyNeuLink.Components.Functions.Function import LinearCombination
 # from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.States.InputState import InputState
+from PsyNeuLink.Components.States.OutputState import standard_output_states, PRIMARY_OUTPUT_STATE
 
 OBJECT = 0
 WEIGHT = 1
@@ -255,6 +256,10 @@ MONITORED_VALUES = 'monitored_values'
 MONITORED_VALUE_NAME_SUFFIX = '_Monitor'
 DEFAULT_MONITORED_VALUE = [0]
 ERROR_SIGNAL = 'error_signal'
+
+# This is a convenience class that provides list of standard_output_state names in IDE
+class OBJECTIVE_OUTPUT():
+        ERROR_SIGNAL=ERROR_SIGNAL
 
 
 class ObjectiveMechanismError(Exception):
@@ -418,9 +423,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         MONITORED_VALUES: None,
         TIME_SCALE: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
-        OUTPUT_STATES:[{NAME:RESULT}]})
+        # OUTPUT_STATES:[{NAME:RESULT}]
+        })
 
     paramNames = paramClassDefaults.keys()
+
+    standard_output_states = standard_output_states.copy()
 
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
@@ -428,6 +436,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  monitored_values:tc.any(list, dict),
                  input_states=None,
                  function=LinearCombination,
+                 output_states=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -436,13 +445,21 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(monitored_values=monitored_values,
                                                   input_states=input_states,
+                                                  output_states=output_states,
                                                   function=function,
                                                   params=params)
         self._learning_role = None
 
+        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
+        if not isinstance(self.standard_output_states, StandardOutputStates):
+            self.standard_output_states = StandardOutputStates(self,
+                                                               self.standard_output_states,
+                                                               indices=PRIMARY_OUTPUT_STATE)
+
         super().__init__(
                          variable=None,
                          input_states=input_states,
+                         output_states=output_states,
                          params=params,
                          name=name,
                          prefs=prefs,
