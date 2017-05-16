@@ -275,8 +275,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     ObjectiveMechanism(           \
     monitored_values,             \
     input_states=None,            \
-    names=None,                   \
     function=LinearCombination,   \
+    output_states=None,           \
     params=None,                  \
     name=None,                    \
     prefs=None)
@@ -423,7 +423,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         MONITORED_VALUES: None,
         TIME_SCALE: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
-        # OUTPUT_STATES:[{NAME:RESULT}]
         })
 
     paramNames = paramClassDefaults.keys()
@@ -436,7 +435,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  monitored_values:tc.any(list, dict),
                  input_states=None,
                  function=LinearCombination,
-                 output_states=None,
+                 output_states:tc.optional(tc.any(list, dict))=[ERROR_SIGNAL],
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

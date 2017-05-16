@@ -146,8 +146,9 @@ class ComparatorMechanism(ObjectiveMechanism):
     ComparatorMechanism(                                \
         sample,                                         \
         target,                                         \
-        input_states=None                               \
+        input_states=[SAMPLE,TARGET]                    \
         function=LinearCombination(weights=[[-1],[1]],  \
+        input_states=[ERROR_SIGNAL]                     \
         params=None,                                    \
         name=None,                                      \
         prefs=None)
@@ -189,8 +190,16 @@ class ComparatorMechanism(ObjectiveMechanism):
     target : OutputState, Mechanism, value, or string
         specifies the value with which the `sample` is compared by the `function <ComparatorMechanism.function>`.
 
+    input_states :  List[InputState, value, str or dict] or Dict[] : default [SAMPLE, TARGET]
+        specifies the names and/or formats to use for the values of the sample and target inputStates;  
+        by default they are named *SAMPLE* and *TARGET*, and their formats are match the value of the outputStates
+        specified in the **sample** and **target** arguments, respectively.
+
     function: Function, function or method : default Distance(metric=DIFFERENCE)
-        specifies the `function <Comparator.function>` used to compare the `sample` with the `target`. 
+        specifies the `function <Comparator.function>` used to compare the `sample` with the `target`.
+         
+    output_states :  List[OutputState, value, str or dict] or Dict[] : default [ERROR_SIGNAL]  
+        specifies the outputStates for the mechanism;
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -296,9 +305,9 @@ class ComparatorMechanism(ObjectiveMechanism):
     def __init__(self,
                  sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
-                 input_states=None,
+                 input_states=[SAMPLE, TARGET],
                  function=LinearCombination(weights=[[-1], [1]]),
-                 output_states=[{NAME:ERROR_SIGNAL}],
+                 output_states:tc.optional(tc.any(list, dict))=[ERROR_SIGNAL],
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
