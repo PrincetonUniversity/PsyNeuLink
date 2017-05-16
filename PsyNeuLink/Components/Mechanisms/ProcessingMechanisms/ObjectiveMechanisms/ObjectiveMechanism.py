@@ -254,6 +254,7 @@ NAMES = 'names'
 MONITORED_VALUES = 'monitored_values'
 MONITORED_VALUE_NAME_SUFFIX = '_Monitor'
 DEFAULT_MONITORED_VALUE = [0]
+ERROR_SIGNAL = 'error_signal'
 
 
 class ObjectiveMechanismError(Exception):

@@ -12,16 +12,16 @@
 Overview
 --------
 
-A ComparatorMechanism is a subclass of `ComparatorMechanism` that receives two inputs (a sample and a target), compares 
-them using its `function <ComparatorMechanism.function>`, and generates and an `error_signal <Comparator.error_signal>`
-as its output.
+A ComparatorMechanism is a subclass of `ObjectiveMechanism` that receives two inputs (a sample and a target), compares 
+them using its `function <ComparatorMechanism.function>`, and generates as its output an 
+`error_signal <Comparator.error_signal>` that is the discrepancy between them.
 
 .. _ComparatorMechanism_Creation:
 
 Creating a ComparatorMechanism
 ------------------------------
 
-A CompartorMechanism can be created directly by calling its constructor.  ComparatorMechanisms are also created
+A ComparatorMechanism can be created directly by calling its constructor.  ComparatorMechanisms are also created
 automatically when other PsyNeuLink components are created (such as `LearningMechanisms <LearningMechanism_Creation>`
 and `ControlMechanisms <ControlMechanism_Creation>`.
 
@@ -30,12 +30,12 @@ and `ControlMechanisms <ControlMechanism_Creation>`.
 Structure
 ---------
 
-An ComparatorMechanism has one `inputState <InputState>` for each of the values that are specified
-to be monitored in its `monitored_values` attribute.  When an ComparatorMechanism is created, an inputState is created
-for each of those values, and assigned a `MappingProjection` from the outputState to which the value belongs.  The
-ComparatorMechanism's `function  <ComparatorMechanism.function>` uses these values to compute an `objective (or "loss")
-function <https://en.wikipedia.org/wiki/Loss_function>`_, that is assigned as the value of its outputState.
-
+A ComparatorMechanism has two `inputStates <InputState>`, one for each of the values specified in its 
+`monitored_values <ComparatorMechanism.monitored_values>` attribute.  When an ComparatorMechanism is created, 
+the two inputStates are created, and each is assigned a `MappingProjection` from the corresponding outputState 
+specified in the `monitored_values <ComparatorMechanism.monitored_values>` attribute.  The ComparatorMechanism's 
+`function  <ComparatorMechanism.function>` calculates the discrepancy between the value of those outputStates 
+that is assigned as the value of its own `output_state <ComparatorMechanism.output_state>`.
 
 COMMENT:
 Input States
@@ -233,7 +233,7 @@ Class Reference
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
-    import ObjectiveMechanism, MONITORED_VALUES
+    import ObjectiveMechanism, MONITORED_VALUES, ERROR_SIGNAL
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Functions.Function import Distance, DISTANCE_METRICS
@@ -387,7 +387,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
-        OUTPUT_STATES:[{NAME:RESULT}],
+        OUTPUT_STATES:[{NAME:ERROR_SIGNAL}],
         MONITORED_VALUES: None})
 
     paramNames = paramClassDefaults.keys()
