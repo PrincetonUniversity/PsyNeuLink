@@ -43,12 +43,12 @@ def test_DDM():
     result = z.execute([[30], [10]])
 
     expected_output = [
-        (myMechanism.inputState.value, np.array([40.])),
-        (myMechanism.output_states.value, np.array([10.])),
-        (myMechanism_2.inputState.value, np.array([10.])),
-        (myMechanism_2.output_states.value, np.array([20.])),
-        (myMechanism_3.inputState.value, np.array([20.])),
-        (myMechanism_3.output_states.value, np.array([30.])),
+        (myMechanism.input_states[0].value, np.array([40.])),
+        (myMechanism.output_states[0].value, np.array([10.])),
+        (myMechanism_2.input_states[0].value, np.array([10.])),
+        (myMechanism_2.output_states[0].value, np.array([20.])),
+        (myMechanism_3.input_states[0].value, np.array([20.])),
+        (myMechanism_3.output_states[0].value, np.array([30.])),
         (result, np.array([30.])),
     ]
 
