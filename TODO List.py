@@ -193,6 +193,7 @@
 # IMPLEMENT: Add GATING entry to both input and otuput state dicts
 
 #  DOCUMENTATION: Add `standard_output_states` to Mechanism
+#  FIX: `error_signal` as default primary outputState
 #  FIX: MAKE SURE THAT System AND/OR EVCMechanism ASSIGN OutputStates TO MONITORY ONLY
 #  FIX:  TO THOSE MECHANISMS FOR WHICH THE OUTPUTSTATE WERE SPECIFIED (UNLESS GIVEN A GENERIC NAME)
 #      PROTOCOL:
