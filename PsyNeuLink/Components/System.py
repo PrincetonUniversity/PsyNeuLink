@@ -2305,7 +2305,7 @@ class System_Base(System):
                 import MSE
             for mech in self.targetMechanisms:
                 if not MSE in mech.output_states:
-                    raise SystemError("{} does not have an outputState named {}".format(mech.name, MSE))
+                    continue
                 print("\n- MSE: {:0.3}".
                       format(float(mech.output_states[MSE].value)))
 
