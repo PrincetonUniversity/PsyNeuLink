@@ -294,6 +294,10 @@ def test_DDM_rate_int():
     val = float(T.execute(stim)[0])
     assert val == 50
 
+#  The rate -- ndarray/list bug is fixed on devel but hasn't been pulled into scheduler yet
+#  Leaving commented out for now
+
+
 # ------------------------------------------------------------------------------------------------
 # TEST 2
 # rate = list len 1
@@ -316,22 +320,46 @@ def test_DDM_rate_int():
 # ------------------------------------------------------------------------------------------------
 # TEST 3
 # rate = float
-#
-# def test_DDM_rate_float():
-#     stim = 10
-#     T = DDM(
-#         name='DDM',
-#         function=Integrator(
-#             integration_type=DIFFUSION,
-#             noise=0.0,
-#             rate=5,
-#             time_step_size=1.0
-#         ),
-#         time_scale=TimeScale.TIME_STEP
-#     )
-#     val = float(T.execute(stim)[0])
-#     assert val == 50
 
+def test_DDM_rate_float():
+    stim = 10
+    T = DDM(
+        name='DDM',
+        function=Integrator(
+            integration_type=DIFFUSION,
+            noise=0.0,
+            rate=5,
+            time_step_size=1.0
+        ),
+        time_scale=TimeScale.TIME_STEP
+    )
+    val = float(T.execute(stim)[0])
+    assert val == 50
+
+# ------------------------------------------------------------------------------------------------
+
+# TEST 4
+# rate = negative
+
+# ******
+# Should this pass?
+# ******
+
+def test_DDM_input_rate_negative():
+    stim = [10]
+    T = DDM(
+            name='DDM',
+            default_input_value=[0],
+            function = Integrator(
+                                    integration_type= DIFFUSION,
+                                    noise = 0.0,
+                                    rate = -5.0,
+                                    time_step_size=1.0
+                                  ),
+            time_scale=TimeScale.TIME_STEP
+           )
+    val = float(T.execute(stim)[0])
+    assert val == -50
 # ------------------------------------------------------------------------------------------------
 
 # INVALID RATES:
@@ -341,23 +369,25 @@ def test_DDM_rate_int():
 # rate = fn
 
 # ******
-# Currently can't test because DDM is going to parameter_spec() which is throwing an error due to 'inspect' module
+# Should this pass? (Build in function logic for rate, similar to noise)?
+# Should it fail with a DDM error in validate_params()?
 # ******
 
-# def test_DDM_input_rate_fn():
-#     with pytest.raises(DDMError) as error_text:
-#         stim = [10, 10]
-#         T = DDM(
-#                 name='DDM',
-#                 default_input_value=[0, 0],
-#                 function = Integrator(
-#                                         integration_type= DIFFUSION,
-#                                         noise = 0.0,
-#                                         rate = NormalDist().function,
-#                                         time_step_size=1.0
-#                                       ),
-#                 time_scale=TimeScale.TIME_STEP
-#                )
-#         val = float(T.execute(stim)[0])
-#     assert "must have only a single numeric item" in str(error_text.value)
+def test_DDM_input_rate_fn():
+    with pytest.raises(TypeError) as error_text:
+        stim = [10, 10]
+        T = DDM(
+                name='DDM',
+                default_input_value=[0, 0],
+                function = Integrator(
+                                        integration_type= DIFFUSION,
+                                        noise = 0.0,
+                                        rate = NormalDist().function,
+                                        time_step_size=1.0
+                                      ),
+                time_scale=TimeScale.TIME_STEP
+               )
+        val = float(T.execute(stim)[0])
+    assert "argument must be a string or a number" in str(error_text.value)
+
 # ------------------------------------------------------------------------------------------------
