@@ -373,12 +373,12 @@ def test_DDM_input_rate_negative():
 # Should it fail with a DDM error in validate_params()?
 # ******
 
-def test_DDM_input_rate_fn():
+def test_DDM_rate_fn():
     with pytest.raises(TypeError) as error_text:
-        stim = [10, 10]
+        stim = [10]
         T = DDM(
                 name='DDM',
-                default_input_value=[0, 0],
+                default_input_value=[0],
                 function = Integrator(
                                         integration_type= DIFFUSION,
                                         noise = 0.0,
