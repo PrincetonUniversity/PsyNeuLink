@@ -7,7 +7,6 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection 
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.TimeScale import TimeScale
-from PsyNeuLink.scheduling.condition import AfterNCalls
 
 def test_multilayer():
     Input_Layer = TransferMechanism(
@@ -116,9 +115,11 @@ def test_multilayer():
         print ('- Middle 2: \n', Hidden_Layer_2.value)
         print ('- Output:\n', Output_Layer.value)
 
-    s = system(processes=[p],
-               targets=[0, 0, 1],
-               learning_rate=1.0)
+    s = system(
+        processes=[p],
+        targets=[0, 0, 1],
+        learning_rate=1.0,
+    )
 
     s.reportOutputPref = True
 
@@ -128,7 +129,6 @@ def test_multilayer():
         targets=target_list,
         call_before_trial=print_header,
         call_after_trial=show_target,
-        termination_processing={TimeScale.TRIAL: AfterNCalls(Output_Layer, 1)}
     )
 
     objective_output_layer = s.mechanisms[4]
@@ -177,7 +177,7 @@ def test_multilayer():
     ]
 
     expected_output = [
-        (Output_Layer.output_states.values, np.array([ 0.22686074,  0.25270212,  0.91542149])),
+        (Output_Layer.output_states.values, [np.array([ 0.22686074,  0.25270212,  0.91542149])]),
         (objective_output_layer.output_states[TARGET_MSE].value, np.array(0.04082589331852094)),
         (Input_Weights.matrix, np.array([
             [0.09890269, 0.19810968, 0.29740194,  0.39678767, 0.49627111],
