@@ -5,7 +5,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-# NEW DOCUMENTATION:
+# ADD TO DOCUMENTATION: [per ComparatorMechanism]
 #  input_states is used to name and/or specify the value of the input_states; it can be:
 #      just a list of strings (used as names)
 #      just a list of values (used as values of inputState, overrides use of monitored_values such as for RL)
@@ -70,8 +70,6 @@ calculate other quantities (differences, ratios, etc. -- see
 `example <ObjectiveMechanism_Weights_and_Exponents_Example>` below). It can also be replaced with any Python function
 or method, so long as it takes a 2d array as its input, and generates a 1d array as its result.  
 
-XXXX
-
 .. _ObjectiveMechanism_Monitored_Values:
 
 Monitored Values
@@ -129,8 +127,8 @@ COMMENT
   later (for example, for the TARGET input of a Composition).  If a string is specified, it is used as the
   default name of the corresponding inputState (specified in the `input_states <ObjectiveMechanism.input_states>`
   attribute of the ObjectiveMechanism) If a value is specified, it is used as the default value for the corresponding
-  inputState.  If a dict is specified, it must have a single entry, the key of which will be used a string
-  specification and the value as a value specification. 
+  inputState.  If a dict is specified, it must have a single entry, the key of which will be used as a string
+  specification -- i.e., as the name of the inputState -- and the value as its value specification. 
 
 .. _ObjectiveMechanism_Function:
 
@@ -140,7 +138,7 @@ Function
 The ObjectiveMechanism's `function` can be customized to implement a wide variety of
 `objective (or "loss") functions <https://en.wikipedia.org/wiki/Loss_function>`_.  The default is the
 `LinearCombination` function, which simply sums the values of the outputStates listed in `monitored_values`.
-However, this can easily be configured to calculate differnces, ratios, etc. (see
+However, this can easily be configured to calculate differences, ratios, etc. (see
 `example <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  It can also be replaced with any
 `CombinationFunction`, or any python function that takes a 2d array with an arbitrary number of
 items or a number equal to the number of items in the ObjectiveMechanism's variable (and its number of
