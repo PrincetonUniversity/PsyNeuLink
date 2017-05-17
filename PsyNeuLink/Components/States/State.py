@@ -54,7 +54,7 @@ components, a state has the three following core attributes:
 
     * `variable <State.variable>`:  for an `inputState <InputState>` and `parameterState <ParameterState>`,
       the value of this is determined by the  value(s) of the projection(s) that it receives (and that are listed in
-      its `receivesFromProjections <State.receivesFromProjections>` attribute).  For an `outputState <OutputState>`,
+      its `afferents <State.afferents>` attribute).  For an `outputState <OutputState>`,
       it is the item of the owner mechanism's :keyword:`value` to which the outputState is assigned (specified by the
       outputStates `index <OutputState_Index>` attribute.
     ..
@@ -78,7 +78,7 @@ Execution
 State cannot be executed.  They are updated when the component to which they belong is executed.  InputStates and 
 parameterStates belonging to a mechanism are updated before the mechanism's function is called.  OutputStates
 are updated after the mechanism's function is called.  When a state is updated, it executes any projections that 
-project to it (listed in its `receivesFromProjections <State.receivesFromProjections>` attribute), uses the values 
+project to it (listed in its `afferents <State.afferents>` attribute), uses the values 
 it receives from them as the variable for its `function <State.function>`, and calls that to determine its own 
 `value <State.value>`. This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for a more 
 detailed discussion).
@@ -156,7 +156,7 @@ class State_Base(State):
         Description
         -----------
             Represents and updates the state of an input, output or parameter of a mechanism
-                - receives inputs from projections (self.receivesFromProjections, STATE_PROJECTIONS)
+                - receives inputs from projections (self.afferents, STATE_PROJECTIONS)
                 - input_states and parameterStates: combines inputs from all projections (mapping, control or learning)
                     and uses this as variable of function to update the value attribute
                 - outputStates: represent values of output of function
@@ -253,10 +253,10 @@ class State_Base(State):
     baseValue : number, list or np.ndarray
         value with which the state was initialized.
 
-    receivesFromProjections : Optional[List[Projection]]
+    afferents : Optional[List[Projection]]
         list of projections for which the state is a :keyword:`receiver`.
 
-    sendsToProjections : Optional[List[Projection]]
+    efferents : Optional[List[Projection]]
         list of projections for which the state is a :keyword:`sender`.
 
     function : TransferFunction : default determined by type
@@ -399,8 +399,8 @@ class State_Base(State):
                           # sub_group_attr='owner',
                           context=context)
 
-        self.receivesFromProjections = []
-        self.sendsToProjections = []
+        self.afferents = []
+        self.efferents = []
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(variable_default=variable,
@@ -572,7 +572,7 @@ class State_Base(State):
                                              self.variable))
 
     def _instantiate_projections_to_state(self, projections, context=None):
-        """Instantiate projections to a state and assign them to self.receivesFromProjections
+        """Instantiate projections to a state and assign them to self.afferents
 
         For each projection spec in STATE_PROJECTIONS, check that it is one or a list of any of the following:
         + Projection class (or keyword string constant for one):
@@ -588,7 +588,7 @@ class State_Base(State):
                 + PROJECTION_PARAMS:<dict> - must be dict of params for PROJECTION_TYPE
         If any of the conditions above fail:
             a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]
-        Each projection in the list is added to self.receivesFromProjections
+        Each projection in the list is added to self.afferents
         If kwMStateProjections is absent or empty, no projections are created
 
         :param context: (str)
@@ -615,7 +615,7 @@ class State_Base(State):
         # MODIFIED 12/1/16 END
 
         # Instantiate each projection specification in the projection_list, and
-        # - insure it is in self.receivesFromProjections
+        # - insure it is in self.afferents
         # - insure the output of its function is compatible with self.value
         for projection_spec in projection_list:
 
@@ -635,7 +635,7 @@ class State_Base(State):
             # - call _check_projection_receiver() to check that receiver is self; if not, it:
             #     returns object with receiver reassigned to self if chosen by user
             #     else, returns new (default) PROJECTION_TYPE object with self as receiver
-            #     note: in that case, projection will be in self.receivesFromProjections list
+            #     note: in that case, projection will be in self.afferents list
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.value is DEFERRED_INITIALIZATION:
                     from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
@@ -644,7 +644,7 @@ class State_Base(State):
                     # if isinstance(projection_spec, (LearningProjection, GatingProjection, ControlProjection)):
                     if isinstance(projection_spec, (LearningProjection, ControlProjection)):
                         # Assign projection to parameterState
-                        self.receivesFromProjections.append(projection_spec)
+                        self.afferents.append(projection_spec)
                         projection_spec.init_args[kwReceiver] = self
                         # Skip any further initialization for now
                         #   (remainder will occur as part of deferred init for
@@ -678,7 +678,7 @@ class State_Base(State):
             # - get projection_type
             # - get projection_params
             # Note: this gets projection_type but does NOT not instantiate projection; so,
-            #       projection is NOT yet in self.receivesFromProjections list
+            #       projection is NOT yet in self.afferents list
             elif isinstance(projection_spec, dict):
                 # Get projection type from specification dict
                 try:
@@ -720,7 +720,7 @@ class State_Base(State):
 
             # Check if projection_spec is class ref or keyword string constant for one
             # Note: this gets projection_type but does NOT instantiate the projection (that happens below),
-            #       so projection is NOT yet in self.receivesFromProjections list
+            #       so projection is NOT yet in self.afferents list
             else:
                 projection_type, err_str = self._parse_projection_ref(projection_spec=projection_spec,context=self)
                 if err_str:
@@ -734,7 +734,7 @@ class State_Base(State):
 
             # If neither projection_object nor projection_type have been assigned, assign default type
             # Note: this gets projection_type but does NOT not instantiate projection; so,
-            #       projection is NOT yet in self.receivesFromProjections list
+            #       projection is NOT yet in self.afferents list
             if not projection_object and not projection_type:
                     projection_type = default_projection_type
                     default_string = kwDefault
@@ -747,11 +747,11 @@ class State_Base(State):
                                      default_projection_type.__class__.__name__))
 
             # If projection_object has not been assigned, instantiate projection_type
-            # Note: this automatically assigns projection to self.receivesFromProjections and
-            #       to it's sender's sendsToProjections list:
+            # Note: this automatically assigns projection to self.afferents and
+            #       to it's sender's efferents list:
             #           when a projection is instantiated, it assigns itself to:
-            #               its receiver's .receivesFromProjections attribute (in Projection._instantiate_receiver)
-            #               its sender's .sendsToProjections list attribute (in Projection._instantiate_sender)
+            #               its receiver's .afferents attribute (in Projection._instantiate_receiver)
+            #               its sender's .efferents list attribute (in Projection._instantiate_sender)
             if not projection_object:
                 projection_spec = projection_type(receiver=self,
                                                   name=self.owner.name+' '+self.name+' '+projection_type.className,
@@ -768,15 +768,15 @@ class State_Base(State):
             # Initialization of projection is deferred
             if projection_spec.value is DEFERRED_INITIALIZATION:
                 # Assign instantiated "stub" so it is found on deferred initialization pass (see Process)
-                self.receivesFromProjections.append(projection_spec)
+                self.afferents.append(projection_spec)
                 continue
 
-            # Projection specification is valid, so assign projection to State's receivesFromProjections list
+            # Projection specification is valid, so assign projection to State's afferents list
             elif iscompatible(self.variable, projection_spec.value):
                 # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlProjection)
-                #    may have already called this method and assigned projection to self.receivesFromProjections list
-                if not projection_spec in self.receivesFromProjections:
-                    self.receivesFromProjections.append(projection_spec)
+                #    may have already called this method and assigned projection to self.afferents list
+                if not projection_spec in self.afferents:
+                    self.afferents.append(projection_spec)
 
             # Projection specification is not valid
             else:
@@ -789,7 +789,7 @@ class State_Base(State):
                                         self.value))
 
     def _instantiate_projection_from_state(self, projection_spec, receiver, context=None):
-        """Instantiate projection from a state and assign it to self.sendsToProjections
+        """Instantiate projection from a state and assign it to self.efferents
 
         Check that projection_spec is one of the following:
         + Projection class (or keyword string constant for one):
@@ -805,7 +805,7 @@ class State_Base(State):
                 + PROJECTION_PARAMS:<dict> - must be dict of params for PROJECTION_TYPE
         If any of the conditions above fail:
             a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]
-        Projection is added to self.sendsToProjections
+        Projection is added to self.efferents
         If kwMStateProjections is absent or empty, no projections are created
 
         :param context: (str)
@@ -827,7 +827,7 @@ class State_Base(State):
         # MODIFIED 12/1/16 END
 
         # Instantiate projection specification and
-        # - insure it is in self.sendsToProjections
+        # - insure it is in self.efferents
         # - insure self.value is compatible with the projection's function variable
 
 # FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION_SPEC
@@ -848,7 +848,7 @@ class State_Base(State):
         # - call _check_projection_sender() to check that sender is self; if not, it:
         #     returns object with sender reassigned to self if chosen by user
         #     else, returns new (default) PROJECTION_TYPE object with self as sender
-        #     note: in that case, projection will be in self.sendsToProjections list
+        #     note: in that case, projection will be in self.efferents list
         if isinstance(projection_spec, Projection_Base):
             projection_object, default_class_name = self._check_projection_sender(projection_spec=projection_spec,
                                                                                  receiver=receiver,
@@ -868,7 +868,7 @@ class State_Base(State):
         # - get projection_type
         # - get projection_params
         # Note: this gets projection_type but does NOT not instantiate projection; so,
-        #       projection is NOT yet in self.sendsToProjections list
+        #       projection is NOT yet in self.efferents list
         elif isinstance(projection_spec, dict):
             # Get projection type from specification dict
             try:
@@ -910,7 +910,7 @@ class State_Base(State):
 
         # Check if projection_spec is class ref or keyword string constant for one
         # Note: this gets projection_type but does NOT instantiate the projection,
-        #       so projection is NOT yet in self.sendsToProjections list
+        #       so projection is NOT yet in self.efferents list
         else:
             projection_type, err_str = self._parse_projection_ref(projection_spec=projection_spec,context=self)
             if err_str:
@@ -924,7 +924,7 @@ class State_Base(State):
 
         # If neither projection_object nor projection_type have been assigned, assign default type
         # Note: this gets projection_type but does NOT not instantiate projection; so,
-        #       projection is NOT yet in self.receivesFromProjections list
+        #       projection is NOT yet in self.afferents list
         if not projection_object and not projection_type:
                 projection_type = default_projection_type
                 default_string = kwDefault
@@ -937,11 +937,11 @@ class State_Base(State):
                                  default_projection_type.__class__.__name__))
 
         # If projection_object has not been assigned, instantiate projection_type
-        # Note: this automatically assigns projection to self.sendsToProjections and
-        #       to it's receiver's receivesFromProjections list:
+        # Note: this automatically assigns projection to self.efferents and
+        #       to it's receiver's afferents list:
         #           when a projection is instantiated, it assigns itself to:
-        #               its receiver's .receivesFromProjections attribute (in Projection._instantiate_receiver)
-        #               its sender's .sendsToProjections list attribute (in Projection._instantiate_sender)
+        #               its receiver's .afferents attribute (in Projection._instantiate_receiver)
+        #               its sender's .efferents list attribute (in Projection._instantiate_sender)
         if not projection_object:
             projection_spec = projection_type(sender=self,
                                               receiver=receiver,
@@ -966,12 +966,12 @@ class State_Base(State):
                          projection_spec.name
                          ))
 
-        # If projection is valid, assign to State's sendsToProjections list
+        # If projection is valid, assign to State's efferents list
         else:
             # This is needed to avoid duplicates, since instantiation of projection may have already called this method
-            #    and assigned projection to self.sendsToProjections list
-            if not projection_spec in self.sendsToProjections:
-                self.sendsToProjections.append(projection_spec)
+            #    and assigned projection to self.efferents list
+            if not projection_spec in self.efferents:
+                self.efferents.append(projection_spec)
 
     def _check_projection_receiver(self, projection_spec, messages=None, context=None):
         """Check whether Projection object references State as receiver and, if not, return default Projection object
@@ -1010,7 +1010,7 @@ class State_Base(State):
             if reassign == 'r':
                 projection_spec.receiver = self
                 # IMPLEMENTATION NOTE: allow the following, since it is being carried out by State itself
-                self.receivesFromProjections.append(projection_spec)
+                self.afferents.append(projection_spec)
                 if self.prefs.verbosePref:
                     print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
                 return (projection_spec, None)
@@ -1064,7 +1064,7 @@ class State_Base(State):
             if reassign == 'r':
                 projection_spec.sender = self
                 # IMPLEMENTATION NOTE: allow the following, since it is being carried out by State itself
-                self.sendsToProjections.append(projection_spec)
+                self.efferents.append(projection_spec)
                 if self.prefs.verbosePref:
                     print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
                 return (projection_spec, None)
@@ -1163,7 +1163,7 @@ class State_Base(State):
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         """Update each projection, combine them, and assign result to value
 
-        Call update for each projection in self.receivesFromProjections (passing specified params)
+        Call update for each projection in self.afferents (passing specified params)
         Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
         Assign result to self.value
@@ -1209,7 +1209,7 @@ class State_Base(State):
         from PsyNeuLink.Components.Process import ProcessInputState
         from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
-        for projection in self.receivesFromProjections:
+        for projection in self.afferents:
 
             if hasattr(projection, 'sender'):
                 sender = projection.sender
@@ -1371,12 +1371,12 @@ class State_Base(State):
         self._projections = assignment
 
     # @property
-    # def receivesFromProjections(self):
-    #     return self._receivesFromProjections
+    # def afferents(self):
+    #     return self._afferents
     #
-    # @receivesFromProjections.setter
-    # def receivesFromProjections(self, assignment):
-    #     self._receivesFromProjections = assignment
+    # @afferents.setter
+    # def afferents(self, assignment):
+    #     self._afferents = assignment
 
 # **************************************************************************************
 

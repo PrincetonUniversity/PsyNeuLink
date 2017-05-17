@@ -23,7 +23,7 @@ that represent its mean, variance or other derived values.  In contrast, the `fu
 of a `DDM` mechanism generates several results (such as decision accuracy and response time), each of which can be 
 assigned as the `value <OutputState.value>` of a different outputState.  The outputState(s) of a mechanism can serve 
 as the input to other  mechanisms (by way of `projections <Projections>`), or as the output of a process and/or 
-system.  The outputState's `sendsToProjections <OutputState.sendsToProjections>` attribute lists all of its outgoing 
+system.  The outputState's `efferents <OutputState.efferents>` attribute lists all of its outgoing 
 projections.
 
 .. _OutputStates_Creation:
@@ -191,7 +191,7 @@ Every outputState is owned by a `mechanism <Mechanism>`. It can send one or more
 `MappingProjections <MappingProjection>` to other mechanisms.  If its owner is a `TERMINAL` mechanism of a process
 and/or system, then the outputState will also be treated as the output of that `process <Process_Input_And_Output>`
 and/or of a system.  The projections that the outputState sends are listed in its
-`sendsToProjections <OutputState.sendsToProjections>` attribute.
+`efferents <OutputState.efferents>` attribute.
 
 Like all PsyNeuLink components, an outputState has the three following core attributes:
 
@@ -432,7 +432,7 @@ class OutputState(State_Base):
     owner : Mechanism
         the mechanism to which the outputState belongs.
 
-    sendsToProjections : Optional[List[Projection]]
+    efferents : Optional[List[Projection]]
         a list of the projections sent by the outputState (i.e., for which the outputState is a
         `sender <Projection.Projection.sender>`).
 

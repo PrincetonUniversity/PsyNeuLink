@@ -302,7 +302,7 @@ class ControlSignal(OutputState):
     cost : float
         combined result of all cost functions that are enabled.
 
-    sendsToProjections : [List[ControlProjection]]
+    efferents : [List[ControlProjection]]
         a list with one item -- the `ControlProjection` assigned to the ControlSignal.
 
     name : str : default <State subclass>-<index>
