@@ -2709,8 +2709,8 @@ class Integrator(
               `noise <Integrator.noise>` (ignores `variable <Integrator.variable>`);
             * **SIMPLE**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` *
               `variable <variable.Integrator.variable>` + `noise <Integrator.noise>`;
-            * **ADAPTIVE**: (1-`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
-              (`rate <Integrator.rate>` * `previous_value <Integrator.previous_value>`) + `noise <Integrator.noise>`
+            * **ADAPTIVE**: (`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
+              (1- `rate <Integrator.rate>` * `previous_value <Integrator.previous_value>`) + `noise <Integrator.noise>`
               (`Weiner filter <https://en.wikipedia.org/wiki/Wiener_filter>`_ or
               `Delta rule <https://en.wikipedia.org/wiki/Delta_rule>`_);
             * **DIFFUSION**: `previous_value <Integrator.previous_value>` +
