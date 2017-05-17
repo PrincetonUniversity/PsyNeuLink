@@ -2137,36 +2137,36 @@ class System_Base(System):
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
-            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
-            if isinstance(component, MappingProjection):
-                continue
+                from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+                if isinstance(component, MappingProjection):
+                    continue
 
-            params = None
+                params = None
 
-            component_type = component.componentType
+                component_type = component.componentType
 
-            processes = list(component.processes.keys())
+                processes = list(component.processes.keys())
 
-            # Sort for consistency of reporting:
-            process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-            process_names = list(p.name for p in process_keys_sorted)
+                # Sort for consistency of reporting:
+                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                process_names = list(p.name for p in process_keys_sorted)
 
-            context_str = str("{} | {}: {} [in processes: {}]".
-                              format(context,
-                                     component_type,
-                                     component.name,
-                                     re.sub('[\[,\],\n]','',str(process_names))))
+                context_str = str("{} | {}: {} [in processes: {}]".
+                                  format(context,
+                                         component_type,
+                                         component.name,
+                                         re.sub('[\[,\],\n]','',str(process_names))))
 
-            # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(
-                clock=clock,
-                time_scale=self.timeScale,
-                runtime_params=params,
-                # time_scale=time_scale,
-                context=context_str
-            )
-            # # TEST PRINT:
-            # print ("EXECUTING MONITORING UPDATES: ", component.name)
+                # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+                component.execute(
+                    clock=clock,
+                    time_scale=self.timeScale,
+                    runtime_params=params,
+                    # time_scale=time_scale,
+                    context=context_str
+                )
+                # # TEST PRINT:
+                # print ("EXECUTING MONITORING UPDATES: ", component.name)
 
         # THEN update all MappingProjections
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
@@ -2174,29 +2174,29 @@ class System_Base(System):
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
-            if isinstance(component, (LearningMechanism, ObjectiveMechanism)):
-                continue
-            if not isinstance(component, MappingProjection):
-                raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
+                if isinstance(component, (LearningMechanism, ObjectiveMechanism)):
+                    continue
+                if not isinstance(component, MappingProjection):
+                    raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
 
-            component_type = "mappingProjection"
-            processes = list(component.sender.owner.processes.keys())
+                component_type = "mappingProjection"
+                processes = list(component.sender.owner.processes.keys())
 
 
-            # Sort for consistency of reporting:
-            process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-            process_names = list(p.name for p in process_keys_sorted)
+                # Sort for consistency of reporting:
+                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                process_names = list(p.name for p in process_keys_sorted)
 
-            context_str = str("{} | {}: {} [in processes: {}]".
-                              format(context,
-                                     component_type,
-                                     component.name,
-                                     re.sub('[\[,\],\n]','',str(process_names))))
+                context_str = str("{} | {}: {} [in processes: {}]".
+                                  format(context,
+                                         component_type,
+                                         component.name,
+                                         re.sub('[\[,\],\n]','',str(process_names))))
 
-            component._parameter_states[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
+                component._parameter_states[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
 
-            # TEST PRINT:
-            # print ("EXECUTING WEIGHT UPDATES: ", component.name)
+                # TEST PRINT:
+                # print ("EXECUTING WEIGHT UPDATES: ", component.name)
 
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
