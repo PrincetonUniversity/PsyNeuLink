@@ -148,13 +148,6 @@ from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Globals.Keywords import *
 
-TARGET_ERROR = "TARGET_ERROR"
-TARGET_ERROR_MEAN = "TARGET_ERROR_MEAN"
-TARGET_ERROR_SUM = "TARGET_ERROR_SUM"
-TARGET_SSE = "TARGET_SSE"
-TARGET_MSE = "TARGET_MSE"
-
-
 class LearningAuxilliaryError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value

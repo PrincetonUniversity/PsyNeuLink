@@ -2076,6 +2076,8 @@ def _parse_state_spec(owner, state_spec, default_name, default_value, projection
 
     name = default_name
     variable = default_value
+    trans_projections = None
+    mod_projections = None
     params = None
 
     # State, so assign as value

@@ -121,13 +121,6 @@ WEIGHT_CHANGE_PARAMS = "weight_change_params"
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
 
-TARGET_ERROR = "TARGET_ERROR"
-TARGET_ERROR_MEAN = "TARGET_ERROR_MEAN"
-TARGET_ERROR_SUM = "TARGET_ERROR_SUM"
-TARGET_SSE = "TARGET_SSE"
-TARGET_MSE = "TARGET_MSE"
-
-
 DefaultTrainingMechanism = ObjectiveMechanism
 
 class LearningProjectionError(Exception):
