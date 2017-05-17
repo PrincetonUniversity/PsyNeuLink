@@ -45,8 +45,8 @@ the length specified for an inputState can differ from its corresponding OutputS
 MappingProjection created uses a `FULL_CONNECTIVITY` matrix.  Thus, outputStates of differing lengths can be mapped 
 to the sample and target inputStates of a ComparatorMechanism (see the `example <ComparatorMechanism_Example>` below),
 so long as the latter are of the same length.  If a projection other than a `FULL_CONNECTIVITY` matrix is needed, 
-this can be specified using the *PROJECTION* entry of a `state specification dictionary <LINK>` in the
-**input_states** argument.
+this can be specified using the *PROJECTION* entry of a `state specification dictionary <InputState_Specification>` 
+for the inputState in the **input_states** argument.
 
 .. _ComparatorMechanism_Structure:
 
@@ -257,9 +257,11 @@ class ComparatorMechanism(ObjectiveMechanism):
 \    value : 1d np.array
         the result of the comparison carried out by the `function <ComparatorMechanism.function>`.
 
-    output_state : ContentAddressableList[OutputState]
-        contains, by default, the *ERROR_SIGNAL*  outputState, the value of which is equal to the 
-        `value <ComparatorMechanism.value>` attribute of the ComparatorMechanism.
+    output_state : OutputState
+        contains the 'primary <OutputState_Primary>` outputState of the ComparatorMechanism; the default is  
+        its *ERROR_SIGNAL* outputState, the value of which is equal to the `value <ComparatorMechanism.value>` 
+        attribute of the ComparatorMechanism.
+
 
     output_states : ContentAddressableList[OutputState]
         contains, by default, only the *ERROR_SIGNAL* (primary) outputState of the ComparatorMechanism.

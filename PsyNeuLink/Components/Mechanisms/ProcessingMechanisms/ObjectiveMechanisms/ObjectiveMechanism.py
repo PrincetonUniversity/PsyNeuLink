@@ -34,22 +34,22 @@ automatically by) `AdaptiveMechanisms <AdaptiveMechanism>`.
 Creating an ObjectiveMechanism
 ------------------------------
 
-An ObjectiveMechanism can be created directly by calling its constructor.  ObjectiveMechanisms are also created
-automatically when other PsyNeuLink components are created (in particular, AdaptiveMechanisms such as  
-`LearningMechanisms <LearningMechanism_Creation>` and `ControlMechanisms <ControlMechanism_Creation>`.
+ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular, 
+AdaptiveMechanisms such as `LearningMechanisms <LearningMechanism_Creation>` and 
+`ControlMechanisms <ControlMechanism_Creation>`.  An ObjectiveMechanism can also be created directly by calling its 
+constructor.  Its **monitored_values** argument is used to specify the outputStates to be monitored.  When an 
+ObjectiveMechanism is created, an inputState is created for each of the outputStates specified in its 
+**monitored_values** argument, and a `MappingProjection` is assigned from each of those to the corresponding
+inputState.  By default, the value of each inputState uses the format of its corresponding outputState, and the 
+MappingProjection between them uses an `IDENTITY_MATRIX`.  However, the **input_states** argument can be used to
+customize the inputStates, and/or to specify their names. Any of the formats for 
+`specifying inputStates <InputState_Specification>` can be used in the **input_states** argument, however the number
+of inputStates specified must equal the number of outputStates specified in the **monitored_values** argument (see the 
+`examples <ObjectiveMechanism_Examples>` below). The value of each must also be of the same type as the value of the 
+corresponding outputState, however their lengths can differ;  in that case, by default, the MappingProjection created 
+uses a  `FULL_CONNECTIVITY` matrix, although this too can be customized using the *PROJECTION* entry of a 
+`state specification dictionary <InputState_Specification>` for the inputState in the **input_states** argument.
 
-XXX FROM COMPARATOR:
-Its **sample** and **target** arguments are used to specify the outputStates that provide the 
-sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_States` for details concerning their 
-specification, which are special instances of an ObjectiveMechanism's **monitored_values** argument).  When the 
-ComparatorMechanism is created, two inputStates are created, and these are each assigned a `MappingProjection` from 
-the outputStates specified in the **sample** and **target** arguments, respectively. The value of the sample and 
-target inputStates must be compatible with one another in length and type (so that they can be compared using the 
-ComparatorMechanism's `function <ComparatorMechanism.function>`.  By default, they are named *SAMPLE* and *TARGET*,
-respectively, and their values are determined by the format of the outputStates specified in the **sample** and 
-**target** arguments (and from which each receives its projection).  However, their names and/or their format can be 
-specified explicitly using the **input_states** argument. This can be done if either or both need(s) to be different 
-from the outputState from which it receives its projection (see the `example <ComparatorMechanism_Examples> below).
 
 .. _ObjectiveMechanism_Structure:
 
@@ -186,7 +186,8 @@ its `monitored_values` attribute, and then uses its `function <ObjectiveMechanis
 evaluate these.  The result is assigned as to its `value <ObjectiveMechanism.value>` attribute as the value of its
 `primary outputState <OutputState_Primary>`.
 
-.. _ObjectiveMechanism_Class_Reference:
+
+.. _ObjectiveMechanism_Examples:
 
 Examples
 --------
@@ -248,6 +249,7 @@ subtracting it from) the value of `my_reward_mech`.  Similarly, the `operation <
 and `exponents <LinearCombination.exponents>` parameters of `LinearCombination` can be used together to multiply and
 divide quantities.
 
+.. _ObjectiveMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -285,14 +287,14 @@ class ObjectiveMechanismError(Exception):
 
 class ObjectiveMechanism(ProcessingMechanism_Base):
     """
-    ObjectiveMechanism(           \
-    monitored_values,             \
-    input_states=None,            \
-    function=LinearCombination,   \
-    output_states=None,           \
-    params=None,                  \
-    name=None,                    \
-    prefs=None)
+    ObjectiveMechanism(               \
+        monitored_values,             \
+        input_states=None,            \
+        function=LinearCombination,   \
+        output_states=[ERROR_SIGNAL], \
+        params=None,                  \
+        name=None,                    \
+        prefs=None)
 
     Implements the ObjectiveMechanism subclass of `ProcessingMechanism`.
 
@@ -325,29 +327,29 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    COMMENT:
-    default_input_value : Optional[List[array] or 2d np.array]
-        specifies the format of the values monitored by the ObjectiveMechanism;  each item corresponds to the value
-        of an outputState monitored, and to the value of the corresponding inputState of the ObjectiveMechanism.  It
-        must have the same length as the number items in monitored_values.  The values specified here take precedence
-        over those in :keyword:`monitored_values`;  if none are provided, the ones in :keyword:`monitored_values`
-        will be used.
-    COMMENT
-
     monitored_values : List[OutputState, Mechanism, string, value, dict, MonitoredOutputStateOption] or Dict[]
         specifies the values that will will be monitored, and evaluated by the `function <ObjectiveMechanism>`
-        (see `monitored_values` for details of specification).  The number of items must equal the length
-        of `default_input_value` if that is specified.
+        (see `monitored_values` for details of specification).
 
+    input_states :  List[InputState, value, str or dict] or Dict[] : default None
+        specifies the names and/or formats to use for the values of the inputStates that receive the input from the
+        outputStates specified in the **monitored_values** argument; if specified, there must be one for each item 
+        specified in the **monitored_values** argument.
+
+    COMMENT:
     names: List[str]
         specifies the names to use for the input_states created for the list in
         `monitored_values <ObjectiveMechanism.monitor>`.  If specified,
         the number of items in the list must equal the number of items in `monitored_values`, and takes precedence
         over any names specified there.
+    COMMENT
 
     function: CombinationFunction, ObjectiveFunction, function or method : default LinearCombination
         specifies the function used to evaluate the values listed in :keyword:`monitored_values`
         (see `function <LearningMechanism.function>` for details.
+
+    output_states :  List[OutputState, value, str or dict] or Dict[] : default [ERROR_SIGNAL]  
+        specifies the outputStates for the mechanism;
 
     role: Optional[LEARNING, CONTROL]
         specifies if the ObjectiveMechanism is being used for learning or control (see `role` for details).
@@ -383,10 +385,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     default_input_value : Optional[List[array] or 2d np.array]
     COMMENT
 
-    monitored_values : [List[OutputState]
-        determines  the values monitored, and evaluated by `function <ObjectiveMechanism>`.  Once the
-        ObjectiveMechanism is fully instantiated, each item in the list refers to an outputState containing the
-        value to be monitored, with a `MappingProjection` from it to the corresponding inputState.
+    monitored_values : ContentAddressableList[OutputState]
+        determines  the values monitored, and evaluated by `function <ObjectiveMechanism>`.  Each item in the list 
+        refers to an outputState containing the value to be monitored, with a `MappingProjection` from it to the 
+        corresponding inputState listed in the `input_states <ComparatorMechanism.input_states>` attribute.
+
+    input_states : ContentAddressableList[InputState]
+        contains the inputStates of the ObjectiveMechanism, each of which receives a `MappingProjection` from the 
+        outputStates specified in its `monitored_values <ObjectiveMechanism.monitored_values>` attribute.
 
     function : CombinationFunction, ObjectiveFunction, function, or method
         the function used to compare evaluate the values monitored by the ObjectiveMechanism.  The function can be
@@ -401,8 +407,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     value : 1d np.array
         the output of the evaluation carried out by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
 
+    output_state : OutputState
+        contains the 'primary <OutputState_Primary>` outputState of the ObjectiveMechanism; the default is  
+        its *ERROR_SIGNAL* outputState, the value of which is equal to the `value <ObjectiveMechanism.value>` 
+        attribute of the ObjectiveMechanism.
+
+    output_states : ContentAddressableList[OutputState]
+        contains, by default, only the *ERROR_SIGNAL* (primary) outputState of the ObjectiveMechanism.
+
     output_values : 2d np.array
-        1st and only item is same as `value <ObjectiveMechanisms.value>`.
+        contains one item that is the value of the *ERROR_SIGNAL* outputState.
 
     name : str : default ObjectiveMechanism-<index>
         the name of the mechanism.
