@@ -720,6 +720,19 @@ class ParameterState(State_Base):
         # if self.name in self.owner.function_params:
         #     setattr(self.owner.function.__self__, self.name, self.value)
 
+    @property
+    def trans_projections(self):
+        raise ParameterStateError("PROGRAM ERROR: Attempt to access trans_projection for {};"
+                                  "it is a {} which does not have {}s".
+                                  format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
+
+    @trans_projections.setter
+    def trans_projections(self, value):
+        raise ParameterStateError("PROGRAM ERROR: Attempt to assign trans_projection to {};"
+                                  "it is a {} which cannot accept {}s".
+                                  format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
+
+
 
 def _instantiate_parameter_states(owner, context=None):
     """Call _instantiate_parameter_state for all params in user_params to instantiate ParameterStates for them

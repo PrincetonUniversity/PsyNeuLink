@@ -301,6 +301,9 @@ MAPPING_PROJECTION = "MappingProjection"
 LEARNING_PROJECTION = "LearningProjection"
 CONTROL_PROJECTION = "ControlProjection"
 GATING_PROJECTION = "GatingProjection"
+TRANSMISSIVE_PROJECTION = "TransmissiveProjection"
+MODULATORY_PROJECTION = "ModulatoryProjection"
+
 
 # Function:
 EXAMPLE_FUNCTION_TYPE = "EXAMPLE FUNCTION"
