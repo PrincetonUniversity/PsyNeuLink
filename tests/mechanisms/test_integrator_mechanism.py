@@ -164,3 +164,27 @@ def test_integrator_input_list_len_5():
         np.testing.assert_allclose(v, e, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
 # ------------------------------------------------------------------------------------------------
+
+# TEST 4
+# input = nparray of length 5
+
+def test_integrator_input_array_len_5():
+
+    I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            default_input_value= [0,0,0,0,0],
+            function = Integrator(
+                                integration_type= SIMPLE,
+                                )
+           )
+    P = process( pathway= [I])
+    input_array = np.array([10.0, 5.0, 2.0, 1.0, 0.0])
+    val = P.execute(input_array)
+    expected_output= [10.0, 5.0, 2.0, 1.0, 0.0]
+
+    for i in range(len(expected_output)):
+        v = val[i]
+        e = expected_output[i]
+        np.testing.assert_allclose(v, e, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+
+# ------------------------------------------------------------------------------------------------
