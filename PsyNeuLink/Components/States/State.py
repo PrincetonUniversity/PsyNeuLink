@@ -1669,6 +1669,9 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # MODIFIED 5/17/17 END
 
 
+
+
+    # MODIFIED 5/17/17 OLD: ********************************************************************************************
     # If variable for state is specified in state_params, use that
     if VARIABLE in state_params and state_params[VARIABLE] is not None:
         state_variable = state_params[VARIABLE]
@@ -1946,17 +1949,15 @@ def _instantiate_state(owner,                   # Object to which state will bel
             state_variable =  constraint_value
             state_params.update({STATE_PROJECTIONS:[state_spec]})
 
-    # FIX:  WHEN THERE ARE MULTIPLE STATES, LENGTH OF constraint_value GROWS AND MISMATCHES state_variable
-    # IMPLEMENT:  NEED TO CHECK FOR ITEM OF constraint_value AND CHECK COMPATIBLITY AGAINST THAT
-    #         # Do one last check for compatibility of value with constraint_value (in case state_spec was a value)
+    # MODIFIED 5/17/17 END ********************************************************************************************
+
+
+    # Do one last check for compatibility of value with constraint_value (in case state_spec was a value)
     if not iscompatible(state_variable, constraint_value):
-        # FIX:  IMPLEMENT TEST OF constraint_index HERE 5/26/16
-        # pass
         state_variable = constraint_value
         spec_type = state_name
-    #endregion
 
-    #region WARN IF DEFAULT (constraint_value) HAS BEEN ASSIGNED
+    # WARN IF DEFAULT (constraint_value) HAS BEEN ASSIGNED
     # spec_type has been assigned, so iscompatible() failed above and constraint value was assigned
     if spec_type:
         if owner.prefs.verbosePref:
@@ -1969,11 +1970,8 @@ def _instantiate_state(owner,                   # Object to which state will bel
                          constraint_value.__class__.__name__,
                          constraint_value,
                          owner.__class__.__name__))
-    #endregion
-    #endregion
 
-    #region INSTANTIATE STATE:
-    # Instantiate new State
+    # INSTANTIATE STATE:
     # Note: this will be either a default State instantiated using constraint_value as its value
     #       or one determined by a specification dict, depending on which of the following obtained above:
     # - state_spec was a ParamValueProjection tuple
@@ -2005,8 +2003,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
 # FIX: 2/17/17:  COMMENTED THIS OUT SINCE IT CREATES AN ATTRIBUTE ON OWNER THAT IS NAMED <state.name.value>
 #                NOT SURE WHAT THE PURPOSE IS
 #     setattr(owner, state.name+'.value', state.value)
-
-    #endregion
 
     return state
 
@@ -2093,11 +2089,17 @@ def _parse_state_spec(owner,
     mod_projections = None
     params = default_params
 
+    # If variable is specified in state_params, use that
+    if VARIABLE in state_params and state_params[VARIABLE] is not None:
+        variable = state_params[VARIABLE]
+
     # State, so assign as value
     if isinstance(state_spec, State):
         name = default_name
         variable = state_spec.value
-        params = {STATE_SPEC:state_spec}
+        trans_projections = state_spec.trans_projections
+        mod_projections =  state_spec.mod_projections
+        params = state_spec.params
 
     # string, so use as name
     if isinstance(state_spec, str):
