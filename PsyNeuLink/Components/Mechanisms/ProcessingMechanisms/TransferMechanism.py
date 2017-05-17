@@ -105,7 +105,8 @@ Class Reference
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction, Integrator, NormalDist
 # from PsyNeuLink.Components.States.OutputState import *
-from PsyNeuLink.Components.States.OutputState import OutputState, standard_output_states, PRIMARY_OUTPUT_STATE
+from PsyNeuLink.Components.States.OutputState \
+    import StandardOutputStates, standard_output_states, PRIMARY_OUTPUT_STATE
 
 # TransferMechanism parameter keywords:
 RANGE = "range"
@@ -120,7 +121,7 @@ Transfer_DEFAULT_OFFSET = 0
 # Transfer_DEFAULT_RANGE = np.array([])
 
 # This is a convenience class that provides list of standard_output_state names in IDE
-class TRANSFER_OUTPUTS():
+class TRANSFER_OUTPUT():
         RESULT=RESULT
         MEAN=MEAN
         MEDIAN=MEDIAN
@@ -386,7 +387,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.integrator_function=None
 
-        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
