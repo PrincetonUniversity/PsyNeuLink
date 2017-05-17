@@ -92,17 +92,75 @@ def test_integrator_diffusion():
 # TEST 1
 # function = Linear
 
-def test_integrator_linear():
+# def test_integrator_linear():
+#
+#     # SHOULD CAUSE AN ERROR??
+#
+#     with pytest.raises(FunctionError) as error_text:
+#         I = IntegratorMechanism(
+#                 name='IntegratorMechanism',
+#                 function = Linear(),
+#                 time_scale=TimeScale.TIME_STEP
+#                )
+#         # val = float(I.execute(10)[0])
+#         P = process(pathway=[I])
+#         val = float(P.execute(10))
+#     assert val == 10
 
-    # SHOULD CAUSE AN ERROR??
 
-    with pytest.raises(FunctionError) as error_text:
-        I = IntegratorMechanism(
-                name='IntegratorMechanism',
-                function = Linear(),
-                time_scale=TimeScale.TIME_STEP
-               )
-        # val = float(I.execute(10)[0])
-        P = process(pathway=[I])
-        val = float(P.execute(10))
-    assert val == 10
+# ======================================= INPUT TESTS ============================================
+
+# VALID INPUT:
+
+# ------------------------------------------------------------------------------------------------
+# TEST 1
+# input = float
+
+def test_integrator_input_float():
+    I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function = Integrator(
+                                    integration_type= SIMPLE,
+                                  )
+           )
+    P = process( pathway= [I])
+    val = float(P.execute(10.0))
+    assert val == 10.0
+
+# ------------------------------------------------------------------------------------------------
+# TEST 2
+# input = list of length 1
+def test_integrator_input_list():
+    I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function = Integrator(
+                                    integration_type= SIMPLE,
+                                  )
+           )
+    P = process( pathway= [I])
+    val = float(P.execute([10.0]))
+    assert val == 10.0
+
+# ------------------------------------------------------------------------------------------------
+# TEST 3
+# input = list of length 5
+
+def test_integrator_input_list_len_5():
+
+    I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            default_input_value= [0,0,0,0,0],
+            function = Integrator(
+                                integration_type= SIMPLE,
+                                )
+           )
+    P = process( pathway= [I])
+    val = P.execute([10.0, 5.0, 2.0, 1.0, 0.0])
+    expected_output= [10.0, 5.0, 2.0, 1.0, 0.0]
+
+    for i in range(len(expected_output)):
+        v = val[i]
+        e = expected_output[i]
+        np.testing.assert_allclose(v, e, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+
+# ------------------------------------------------------------------------------------------------
