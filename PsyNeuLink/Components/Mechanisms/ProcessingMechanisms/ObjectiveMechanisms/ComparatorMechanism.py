@@ -316,7 +316,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  input_states=[SAMPLE, TARGET],
                  function=LinearCombination(weights=[[-1], [1]]),
-                 output_states:tc.optional(tc.any(list, dict))=[ERROR_SIGNAL],
+                 output_states:tc.optional(tc.any(list, dict))=[ERROR_SIGNAL, MSE],
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
