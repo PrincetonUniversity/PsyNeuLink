@@ -2110,14 +2110,21 @@ def _parse_state_spec(owner,
     if ((isinstance(state_spec, str) and state_spec in projection_keywords) or
             isinstance(state_spec, Projection) or
             (inspect.isclass(state_spec) and issubclass(state_spec, Projection))):
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-        # Disallow if it is not ControlProjection or a LearningProjection
-        try:
-            constraint_value = owner.paramClassDefaults[state_name]
-        # If parameter is not for owner itself, try owner's function
-        except KeyError:
-            constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+
+        if (state_spec in projection_keywords or
+                    isinstance(state_spec, (LearningProjection, ControlProjection, GatingProjection)) or
+                    # isinstance(constraint_value, Projection) or
+                    (inspect.isclass(constraint_value) and
+                issubclass(constraint_value, (LearningProjection, ControlProjection, GatingProjection)))
+                ):
+            try:
+                state_spec = owner.paramClassDefaults[state_name]
+            # If parameter is not for owner itself, try owner's function
+            except KeyError:
+                state_spec = owner.user_params[FUNCTION].paramClassDefaults[state_name]
 
     # State class: set to variableClassDefault
     elif inspect.isclass(constraint_value) and issubclass(constraint_value, State):
