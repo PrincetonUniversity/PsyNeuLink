@@ -2140,6 +2140,7 @@ def _parse_state_spec(owner,
         constraint_value = constraint_value.value
 
     # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTION KEYWORD?
+    # TEST COMMENT
     # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
     if isinstance(constraint_value, str):
         constraint_value = get_param_value_for_keyword(owner, constraint_value)
