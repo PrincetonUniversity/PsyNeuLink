@@ -92,8 +92,14 @@ Class Reference
 
 #
 
-from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Registry import register_category
+from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Projections.Projection import projection_keywords
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+
 
 # Note:  This is created only for assignment of default projection types for each state subclass (see .__init__.py)
 #        Individual stateRegistries (used for naming) are created for each mechanism
@@ -1641,17 +1647,16 @@ def _instantiate_state(owner,                   # Object to which state will bel
 
     # FIX: IF VARIABLE IS IN state_params EXTRACT IT AND ASSIGN IT TO constraint_value 5/9/17
 
-    #region VALIDATE ARGS
+    # VALIDATE ARGS
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
-        raise StateError("state_type arg ({0}) to _instantiate_state "
-                             "must be a State subclass".format(state_type))
+        raise StateError("PROGRAM ERROR: state_type arg ({}) for _instantiate_state must be a State subclass".
+                         format(state_type))
     if not isinstance(state_name, str):
-        raise StateError("state_name arg ({0}) to _instantiate_state must be a string".
+        raise StateError("PROGRAM ERROR: state_name arg ({}) for _instantiate_state must be a string".
                              format(state_name))
     if not isinstance(constraint_value_name, str):
-        raise StateError("constraint_value_name arg ({0}) to _instantiate_state must be a string".
+        raise StateError("PROGRAM ERROR: constraint_value_name arg ({}) for _instantiate_state must be a string".
                              format(constraint_value_name))
-    #endregion
 
     state_params = state_params or {}
 
@@ -1663,7 +1668,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # MODIFIED 5/17/17 OLD: ********************************************************************************************
 
 
-    # # MODIFIED 5/17/17 OLD:
+    # # MODIFIED 5/17/17 OLD - MOVED TO _parse_state_spec():
     # if VARIABLE in state_params and state_params[VARIABLE] is not None:
     #     state_variable = state_params[VARIABLE]
     # # Otherwise, assume state is specified as a value, so set state_variable to it;
@@ -1678,32 +1683,28 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # MODIFIED 5/17/17 NEW:
     # CALL _parse_state_spec FOR CONSTRAINT_VALUE HERE
     constraint_dict = _parse_state_spec(owner=owner,
+                                        state_type=state_type,
                                         state_spec=constraint_value,
                                         default_name=None,
-                                        default_value=None)
+                                        default_value=None,
+                                        default_params=None)
     constraint_value = constraint_dict[VARIABLE]
     # MODIFIED 5/17/17 END
 
     # -----------------------------------------------------------------------------------------------------------------
 
 
-    # # MODIFIED 5/17/17 OLD: ----------------------------------------------------------------------------------------
-
+    # MODIFIED 5/17/17 OLD: ----------------------------------------------------------------------------------------
     # Projection class, object, or keyword: set to paramClassDefaults (of owner or owner's function)
-    # FIX: ADD TEST FOR STR AND IN projection_keywords HERE
-    # IMPLEMENT:  ADD GatingPojection HERE 5/7/17
     if (isinstance(constraint_value, (str, Projection)) or
             (inspect.isclass(constraint_value) and
                  issubclass(constraint_value, (Projection)))):
-        from PsyNeuLink.Components.Projections.Projection import projection_keywords
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         # Disallow if it is not ControlProjection or a LearningProjection
         if (constraint_value in projection_keywords or
-                    isinstance(constraint_value, (ControlProjection, LearningProjection)) or
+                    isinstance(constraint_value, (LearningProjection, ControlProjection, GatingProjection)) or
                     # isinstance(constraint_value, Projection) or
                     (inspect.isclass(constraint_value) and
-                issubclass(constraint_value, (ControlProjection, LearningProjection)))
+                issubclass(constraint_value, (LearningProjection, ControlProjection, GatingProjection)))
                 ):
             try:
                 constraint_value = owner.paramClassDefaults[state_name]
