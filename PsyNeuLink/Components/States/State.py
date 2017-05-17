@@ -1653,8 +1653,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
                              format(constraint_value_name))
     #endregion
 
-    if state_params is None:
-        state_params = {}
+    state_params = state_params or {}
 
     # Used locally to report type of specification for State
     #  if value is not compatible with constraint_value
@@ -2079,7 +2078,12 @@ def _check_state_ownership(owner, param_name, mechanism_state):
     return mechanism_state
 
 
-def _parse_state_spec(owner, state_spec, default_name, default_value, projections=None):
+def _parse_state_spec(owner,
+                      state_type,
+                      state_spec,
+                      default_name,
+                      default_value,
+                      default_params=None):
     """Return state specification dictionary for state_spec
     """
 
@@ -2087,7 +2091,7 @@ def _parse_state_spec(owner, state_spec, default_name, default_value, projection
     variable = default_value
     trans_projections = None
     mod_projections = None
-    params = None
+    params = default_params
 
     # State, so assign as value
     if isinstance(state_spec, State):
