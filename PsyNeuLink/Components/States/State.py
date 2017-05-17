@@ -1653,8 +1653,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
                              format(constraint_value_name))
     #endregion
 
-    if state_params is None:
-        state_params = {}
+    state_params = state_params or {}
 
     # Used locally to report type of specification for State
     #  if value is not compatible with constraint_value
