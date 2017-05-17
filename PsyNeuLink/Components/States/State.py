@@ -1675,8 +1675,9 @@ def _instantiate_state(owner,                   # Object to which state will bel
     if ((isinstance(constraint_value, str) and constraint_value in projection_keywords) or
             isinstance(constraint_value, Projection) or
             (inspect.isclass(constraint_value) and issubclass(constraint_value, Projection))):
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
         # Disallow if it is not a LearningProjection, ControlProjection or GatingProjection
         if (constraint_value in {LEARNING_PROJECTION, CONTROL_PROJECTION, GATING_PROJECTION} or
                     isinstance(constraint_value, (LearningProjection, ControlProjection, GatingProjection)) or
