@@ -40,10 +40,6 @@ Objective Functions:
   * `Stability`
   * `Distance`
 
-Objective Functions:
-  * `Stability`
-  * `Distance`
-
 Learning Functions:
   * `Reinforcement`
   * `BackPropagation`
@@ -1428,8 +1424,6 @@ class Linear(
 
     bounds : None
 
-    bounds : None
-
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
@@ -1783,8 +1777,6 @@ class Logistic(
     bias : float
         value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
         (if it is specified).
-
-    bounds : (0,1)
 
     bounds : (0,1)
 
@@ -2160,8 +2152,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     matrix : number, list, 1d or 2d np.ndarray, np.matrix, function, or matrix keyword : default IDENTITY_MATRIX
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
-
-    bounds : None
 
     bounds : None
 

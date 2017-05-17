@@ -185,7 +185,7 @@ def parameter_spec(param):
                            tuple,
                            function_type,
                            ParamValueProjection,
-                           Projection)) or callable(param) or
+                           Projection)) or
         (inspect.isclass(param) and issubclass(param, Projection)) or
         param in parameter_keywords):
         return True
@@ -313,6 +313,7 @@ def iscompatible(candidate, reference=None, **kargs):
     except KeyError:
         kargs[kwCompatibilityNumeric] = True
         # number_only = True
+
 
     # If reference is not provided, assign local_variables to arg values (provided or default)
     if reference is None:

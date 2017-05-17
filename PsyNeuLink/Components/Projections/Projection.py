@@ -180,8 +180,6 @@ is assigned as follows:
 
 
 
-
-
 .. _Projection_Receiver:
 
 Receiver
@@ -647,7 +645,7 @@ class Projection_Base(Projection):
 
         # # IMPLEMENTATION NOTE:  The following supported instantiation of a default sender type by a projection, for
         # #                       projections that did not yet have their sender specified;  however, this should now
-        # #                       be covered by deferred_init(): sender is assigned in that call or bythe time is made.
+        # #                       be covered by deferred_init(): sender is assigned in that call or by the time is made.
         # # If sender is a class, instantiate it:
         # # - assume it is a Mechanism or State (should have been validated in _validate_params)
         # # - implement default sender of the corresponding type
@@ -886,7 +884,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
         receiver.input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
-    # input_state is index into inputStates OrderedDict, so get corresponding key and assign to input_state
+    # input_state is index into input_states OrderedDict, so get corresponding key and assign to input_state
     elif isinstance(state, int):
         try:
             key = list(receiver.input_states.keys)[state]
@@ -898,7 +896,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
             input_state = key
 
     # input_state is string (possibly key retrieved above)
-    #    so try as key in inputStates OrderedDict (i.e., as name of an inputState)
+    #    so try as key in input_states OrderedDict (i.e., as name of an inputState)
     if isinstance(state, str):
         try:
             receiver.input_state[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
@@ -934,8 +932,8 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                                     constraint_value=projection_spec.value,
                                     constraint_value_name='Projection_spec value for new inputState',
                                     context=context)
-        #  Update inputState and inputStates
-    # No inputState(s) yet, so create them
+
+    #  Update inputState and input_states
     if receiver.input_states:
         receiver.input_states[input_state.name] = input_state
 

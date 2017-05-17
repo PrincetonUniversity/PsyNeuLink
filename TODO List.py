@@ -314,17 +314,10 @@
 # FIX: SEARCH FOR "` argument" and replace with "**<arg>** argument"
 # FIX: SEARCH FOR ALL MATRIX KEYWORDS AND REPLACE WITH `MATRIX KEYWORD`
 # FIX: DOCUMENTATION OF RESULTS OF TransferMechanism EXECUTION (AND OTHERS), REGARDING WHAT GOES IN THE value ATTRIBUTE
-<<<<<<< HEAD
 
 # FIX: Component._validate_params: if param is a string, check for keywords before raising excpetion
 #                                  (will require consoliation of all keywords?)
 
-=======
-
-# FIX: Component._validate_params: if param is a string, check for keywords before raising excpetion
-#                                  (will require consoliation of all keywords?)
-
->>>>>>> devel
 # TEST: Autoassociative SOFT_CLAMP
 # TEST: Autoassociative learning:  fix [auto_mech] version
 # FIX: ADD PredictionMechanisms TO system.graph AND ASK NATE TO RENDER THEM IN BLUE

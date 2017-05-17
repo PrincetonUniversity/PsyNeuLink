@@ -331,7 +331,6 @@ from PsyNeuLink.Components.Functions.Function import *
 
 logger = logging.getLogger(__name__)
 
-# DDM outputs (used to create and name outputStates):
 DECISION_VARIABLE='DECISION_VARIABLE'
 RESPONSE_TIME = 'RESPONSE_TIME'
 PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'  # Probability of hitting upper bound
@@ -346,7 +345,7 @@ DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},
                               {NAME: RT_CORRECT_MEAN},  # NavarroAnd Fuss only
                               {NAME: RT_CORRECT_VARIANCE}]  # NavarroAnd Fuss only
 
-# Indices for results used in return value tuple; auto-numbered to insure sequentiality
+# This is a convenience class that provides list of standard_output_state names in IDE
 class DDM_OUTPUT():
     DECISION_VARIABLE=DECISION_VARIABLE
     RESPONSE_TIME=RESPONSE_TIME
@@ -834,14 +833,14 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
             if self.function_params['integration_type'] == 'diffusion':
-                result = self.function(self.inputState.value, context=context)
+                result = self.function(self.variable, context=context)
 
-                # if INITIALIZING not in context:
-                #     logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
-                # if abs(result) >= self.threshold:
-                # #     logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
-                #     self.is_finished = True
-                #
+                if INITIALIZING not in context:
+                    logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
+                if abs(result) >= self.threshold:
+                #     logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
+                    self.is_finished = True
+
                 return np.array([result, [0.0], [0.0], [0.0]])
             else:
                 raise MechanismError(
@@ -851,14 +850,14 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif self.timeScale == TimeScale.TRIAL:
 
-            # # Get length of self.outputValue from OUTPUT_STATES
+            # # Get length of self.output_values from OUTPUT_STATES
             # # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
-            # #       is run (to evaluate self.outputValue) before outputStates have been instantiated
-            # self.outputValue = [None] * len(self.paramsCurrent[OUTPUT_STATES])
+            # #       is run (to evaluate self.output_values) before outputStates have been instantiated
+            # self.output_values = [None] * len(self.paramsCurrent[OUTPUT_STATES])
 
             # # TEST PRINT:
             # print ("\nDDM RUN")
-            # print ("stimulus: {}".format(self.inputState.value))
+            # print ("stimulus: {}".format(self.input_state.value))
             # print ("control signal: {}\n".format(self.parameterStates[DRIFT_RATE].value))
 
             # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
