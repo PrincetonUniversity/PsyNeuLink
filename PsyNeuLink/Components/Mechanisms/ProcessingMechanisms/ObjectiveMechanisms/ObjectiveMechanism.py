@@ -576,10 +576,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if self.input_states is None:
             self._input_states = [None] * len(self.monitored_values)
 
-        # Parse monitored_values
+        # Parse monitored_values into a state specificaton dict
         monitored_values = _parse_monitored_values(owner=self, monitored_values=self.monitored_values)
 
-        # Parse input_states to determine whether its specifications need to be derived from monitored_value
+        # Parse input_states into a state specification dict, passing monitored_values as defaults
+        # from monitored_value
         for i, input_state, monitored_value in zip(range(len(self.input_states)),
                                                    self.input_states,
                                                    monitored_values):
