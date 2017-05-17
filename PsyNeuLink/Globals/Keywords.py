@@ -428,14 +428,10 @@ SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 
 RESULT = 'RESULT'
-# MEAN = 'MEAN'
-MEAN = 'mean'
-# MEDIAN = 'MEDIAN'
-MEDIAN = "median"
-# VARIANCE = 'VARIANCE'
-VARIANCE = "variance"
-# STANDARD_DEV = 'STANDARD_DEV'
-STANDARD_DEV = "standard_dev"
+MEAN = 'MEAN'
+MEDIAN = 'MEDIAN'
+VARIANCE = 'VARIANCE'
+STANDARD_DEV = 'STANDARD_DEV'
 
 STATE_VALUE = "State value"   # Used in State specification dict
                                                  #  to specify State value
