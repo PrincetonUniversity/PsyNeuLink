@@ -2318,6 +2318,7 @@ class Process_Base(Process):
 
         print("\n\'{}\' executing with:\n- pathway: [{}]".
               format(append_type_to_name(self),
+              # format(self.name,
                      re.sub('[\[,\],\n]','',str(self.mechanismNames))))
         # # MODIFIED 2/17/17 OLD:
         # variable = [list(i) for i in self.variable]
