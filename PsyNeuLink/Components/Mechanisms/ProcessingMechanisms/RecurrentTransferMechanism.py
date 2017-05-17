@@ -78,7 +78,7 @@ Class Reference
 from PsyNeuLink.Components.Functions.Function import get_matrix, Stability
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
+from PsyNeuLink.Components.States.OutputState import StandardOutputStates, PRIMARY_OUTPUT_STATE
 
 
 class RecurrentTransferError(Exception):
@@ -303,8 +303,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
 
-    # paramClassDefaults[OUTPUT_STATES].append({NAME:ENERGY})
-    # paramClassDefaults[OUTPUT_STATES].append({NAME:ENTROPY})
     standard_output_states = TransferMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:ENERGY}, {NAME:ENTROPY}])
 
@@ -337,7 +335,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   params=params)
         self.size = size
 
-        from PsyNeuLink.Components.States.OutputState import StandardOutputStates
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,

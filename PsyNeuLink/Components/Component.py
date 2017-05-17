@@ -665,7 +665,6 @@ class Component(object):
 
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
-
         # Validate the set passed in and assign to paramInstanceDefaults
         # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
         self._instantiate_defaults(variable=variable_default,
