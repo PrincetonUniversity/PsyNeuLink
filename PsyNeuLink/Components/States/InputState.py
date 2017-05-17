@@ -46,6 +46,11 @@ An inputState must be owned by a mechanism. Therefore, if the inputState is crea
 must be specified in the ``owner`` argument of its constructor; if the inputState is specified in the
 INPUT_STATES entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.
 
+.. _InputState_Specification
+
+InputState Specification
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 If one or more custom input_states need to be specified when a mechanism is created, or added to an existing mechanism,
 they can be specified in an entry of the mechanism's parameter dictionary, using the key :keyword`INPUT_STATES`
 and a value that specifies one or more input_states. For a single inputState, the value can be any of the

@@ -26,8 +26,8 @@ Overview
 An ObjectiveMechanism is a `ProcessingMechanism` that monitors the `outputStates <OutputState>` of one or more other
 ProcessingMechanisms specified in its `monitor <ObjectiveMechanism.monitor>` attribute, and evaluates them using its
 `function <ObjectiveMechanism.function>`. The result of the evaluation is placed in the ObjectiveMechanism's
-`primary outputState <OutputState_Primary>`.  ObjectiveMechanisms are typically used closely (and often created
-automatically) with `AdaptiveMechanisms <AdpativeMechanism>`.
+`primary outputState <OutputState_Primary>`.  ObjectiveMechanisms are typically used closely with (and often created
+automatically by) `AdaptiveMechanisms <AdaptiveMechanism>`.
 
 .. _ObjectiveMechanism_Creation:
 
@@ -35,8 +35,21 @@ Creating an ObjectiveMechanism
 ------------------------------
 
 An ObjectiveMechanism can be created directly by calling its constructor.  ObjectiveMechanisms are also created
-automatically when other PsyNeuLink components are created (such as `LearningMechanisms <LearningMechanism_Creation>`
-and `ControlMechanisms <ControlMechanism_Creation>`.
+automatically when other PsyNeuLink components are created (in particular, AdaptiveMechanisms such as  
+`LearningMechanisms <LearningMechanism_Creation>` and `ControlMechanisms <ControlMechanism_Creation>`.
+
+XXX FROM COMPARATOR:
+Its **sample** and **target** arguments are used to specify the outputStates that provide the 
+sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_States` for details concerning their 
+specification, which are special instances of an ObjectiveMechanism's **monitored_values** argument).  When the 
+ComparatorMechanism is created, two inputStates are created, and these are each assigned a `MappingProjection` from 
+the outputStates specified in the **sample** and **target** arguments, respectively. The value of the sample and 
+target inputStates must be compatible with one another in length and type (so that they can be compared using the 
+ComparatorMechanism's `function <ComparatorMechanism.function>`.  By default, they are named *SAMPLE* and *TARGET*,
+respectively, and their values are determined by the format of the outputStates specified in the **sample** and 
+**target** arguments (and from which each receives its projection).  However, their names and/or their format can be 
+specified explicitly using the **input_states** argument. This can be done if either or both need(s) to be different 
+from the outputState from which it receives its projection (see the `example <ComparatorMechanism_Examples> below).
 
 .. _ObjectiveMechanism_Structure:
 
