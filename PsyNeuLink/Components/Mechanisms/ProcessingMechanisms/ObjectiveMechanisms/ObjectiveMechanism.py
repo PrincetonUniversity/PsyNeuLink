@@ -37,12 +37,13 @@ Creating an ObjectiveMechanism
 ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular, 
 AdaptiveMechanisms such as `LearningMechanisms <LearningMechanism_Creation>` and 
 `ControlMechanisms <ControlMechanism_Creation>`.  An ObjectiveMechanism can also be created directly by calling its 
-constructor.  Its **monitored_values** argument is used to specify the outputStates to be monitored.  When an 
-ObjectiveMechanism is created, an inputState is created for each of the outputStates specified in its 
-**monitored_values** argument, and a `MappingProjection` is assigned from each of those to the corresponding
-inputState.  By default, the value of each inputState uses the format of its corresponding outputState, and the 
-MappingProjection between them uses an `IDENTITY_MATRIX`.  However, the **input_states** argument can be used to
-customize the inputStates, and/or to specify their names. Any of the formats for 
+constructor.  Its **monitored_values** argument is used to specify the outputStates to be monitored.  Any of the forms 
+used for `specifying outputStates <OutputState_Specification>` can be used, as well as a value of 
+MonitoredOutputStateOption.  When an ObjectiveMechanism is created, an inputState is created for each of the 
+outputStates specified in its **monitored_values** argument, and a `MappingProjection` is assigned from each of those 
+to the corresponding inputState.  By default, the value of each inputState uses the format of its corresponding 
+outputState, and the MappingProjection between them uses an `IDENTITY_MATRIX`.  However, the **input_states** argument 
+can be used to customize the inputStates, and/or to specify their names. Any of the forms used for 
 `specifying inputStates <InputState_Specification>` can be used in the **input_states** argument, however the number
 of inputStates specified must equal the number of outputStates specified in the **monitored_values** argument (see the 
 `examples <ObjectiveMechanism_Examples>` below). The value of each must also be of the same type as the value of the 
@@ -56,36 +57,30 @@ uses a  `FULL_CONNECTIVITY` matrix, although this too can be customized using th
 Structure
 ---------
 
-An ObjectiveMechanism has one `inputState <InputState>` for each of the values that are specified
-to be monitored in its `monitored_values` attribute.  When an ObjectiveMechanism is created, an inputState is created
-for each of those values, and assigned a `MappingProjection` from the outputState to which the value belongs.  The
-ObjectiveMechanism's `function  <ObjectiveMechanism.function>` uses these values to compute an `objective (or "loss")
-function <https://en.wikipedia.org/wiki/Loss_function>`_, that is assigned as the value of its outputState.
+An ObjectiveMechanism has one `inputState <InputState>` for each of the outputStates specified in its
+**monitored_values** argument, each pair of which is connected by a `MappingProjection`.  The monitored outputStates
+are listed in the ObjectiveMechanism's `monitored_values <ObjectiveMechanism.monitored_values>` attribute, and  
+the inputStates to which they project are listed in the ObjectiveMechanism's 
+`input_states <ObjectiveMechanism.input_states>` attribute.  The ObjectiveMechanism's 
+`function <ObjectiveMechanism.function>` uses these values to compute an 
+`objective (or "loss") function <https://en.wikipedia.org/wiki/Loss_function>`_, that is assigned as the value of its 
+*ERROR_SIGNAL* (`primary <OutputState_Primary>`) outputState.  By default, it uses a `LinearCombination` function to 
+sum the values of its inputStates.  However, the `function <ComparatorMechanism.function>` can be customized to 
+calculate other quantities (differences, ratios, etc. -- see 
+`example <ObjectiveMechanism_Weights_and_Exponents_Example>` below). It can also be replaced with any Python function
+or method, so long as it takes a 2d array as its input, and generates a 1d array as its result.  
 
-
-COMMENT:
-Input States
-~~~~~~~~~~~~~~~~
-ADD DOCUMENTATION HERE (SEE NEW DOCUMENTATION ABOVE)
-COMMENT
+XXXX
 
 .. _ObjectiveMechanism_Monitored_Values:
 
 Monitored Values
 ~~~~~~~~~~~~~~~~
 
-The values to be monitored by an ObjectiveMechanism are specified in the :keyword:`monitored_values` argument of its
-constructor.  These can be specified in a variety of ways, each of which must eventually resolve to an outputState, the
-value of which is to be monitored.  Those outputStates are listed in the ObjectiveMechanism's `monitored_values`
-attribute.
+These can be specified in a variety of ways, each of which must eventually resolve to an outputState, the
+value of which is to be monitored.
 
-The number of items in `monitored_values` must match the length of the number of items in the 
-**input_states** argument if it is specified
-COMMENT:
-, or the `default_input_value
-<ObjectiveMechanism.Additional_Attributes>` if it is specified
-COMMENT
-.  Note that some forms of
+Note that some forms of
 specification may depend on specifications made for the outputState referenced, the mechanism to which it belongs,
 and/or the process or system to which that mechanism belongs. These interactions (and the precedence afforded to
 each) are described below.
@@ -115,20 +110,6 @@ COMMENT
   specifies outputStates to be monitored, those will be monitored even if they do not satisfy any of the conditions
   described in the specifications below.
 ..
-COMMENT: [OLD - REPLACED BY input_states ARG]
-    * **InputState**:  this creates a "placemarker" inputState, that will later be assigned to an outputState to be
-      monitored and a projection from it.  It can be any of the following:
-    
-      * **existing inputState**:  its name, value, and parameters will be used to create an identical
-        inputState for the ObjectiveMechanism;
-      |
-      * `specification dictionary <InputState_Creation>` **for an inputState**:  the specifications will be used to
-        create an inputState for the ObjectiveMechanism;
-      |
-      * **value**: a default inputState will be created using that value;
-      |
-      * **string**: a default inputState will be created using the string as its name, and a scalar as its value.
-COMMENT
 
 COMMENT: TBI
     .. _ObjectiveMechanism_OutputState_Tuple:
@@ -143,24 +124,13 @@ COMMENT: TBI
           ..
           * an exponent (int) - exponentiates the value of the outputState;
 COMMENT
+
 * **string**, **value** or **dict**: These can be used as placemarkers for a monitored_state that will be instantiated
   later (for example, for the TARGET input of a Composition).  If a string is specified, it is used as the
   default name of the corresponding inputState (specified in the `input_states <ObjectiveMechanism.input_states>`
   attribute of the ObjectiveMechanism) If a value is specified, it is used as the default value for the corresponding
   inputState.  If a dict is specified, it must have a single entry, the key of which will be used a string
   specification and the value as a value specification. 
-
-Additional Attributes
-~~~~~~~~~~~~~~~~~~~~~
-
-* `default_input_value`
-   This specifies the format of each value monitored by the ObjectiveMechanism and the variable for the corresponding
-   inputState.  These values take precedence over the specification of values in `monitored_values`, and can be used
-   to override the defaults assumed there. If `default_input_value` is specified, it must have the same number of items
-   as `monitored_values`. If  `default_input_value` is `None` (the default), then the specifications in
-   `monitored_values` are used.  The use of `default_input_value` to override defaults used by `monitored_values`
-   can be helpful in some situations (see `example <ObjectiveMechanism_Default_Input_Value_Example>` below).
-
 
 .. _ObjectiveMechanism_Function:
 
