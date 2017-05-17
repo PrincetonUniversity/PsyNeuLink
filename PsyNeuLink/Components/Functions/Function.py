@@ -3808,7 +3808,7 @@ class NormalDist(DistributionFunction):
         # Validate variable and assign to self.variable, and validate params
         self._check_args(variable=variable, params=params, context=context)
 
-        mean = self.paramsCurrent[MEAN]
+        mean = self.paramsCurrent[DIST_MEAN]
         standard_dev = self.paramsCurrent[STANDARD_DEV]
 
         result = standard_dev * np.random.normal() + mean
@@ -4213,7 +4213,7 @@ class WaldDist(DistributionFunction):
         self._check_args(variable=variable, params=params, context=context)
 
         scale = self.paramsCurrent[SCALE]
-        mean = self.paramsCurrent[MEAN]
+        mean = self.paramsCurrent[DIST_MEAN]
 
         result = np.random.wald(mean, scale)
 

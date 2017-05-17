@@ -1732,9 +1732,11 @@ class Mechanism_Base(Mechanism):
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
         for i in range(num_input_states):
-            input_state = list(self.input_states.values())[i]
+            # input_state = list(self.input_states.values())[i]
+            input_state = self.input_states[i]
             # input_item = np.ndarray(input[i])
             input_item = input[i]
+
             if len(input_state.variable) == len(input_item):
                 input_state.value = input_item
             else:
