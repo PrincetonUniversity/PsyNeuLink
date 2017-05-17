@@ -1682,7 +1682,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     constraint_dict = _parse_state_spec(owner=owner,
                                         state_type=state_type,
                                         state_spec=constraint_value,
-                                        default_name=None,
+                                        default_name=state_name,
                                         default_value=None,
                                         default_params=None)
     constraint_value = constraint_dict[VARIABLE]
@@ -2107,9 +2107,9 @@ def _parse_state_spec(owner,
     # MODIFIED 5/17/17 FROM _instantiate_state: ----------------------------------------------------------------
     # Projection class, object, or keyword: set to paramClassDefaults (of owner or owner's function)
     from PsyNeuLink.Components.Projections.Projection import projection_keywords
-    if ((isinstance(constraint_value, str) and constraint_value in projection_keywords) or
-            isinstance(constraint_value, Projection) or
-            (inspect.isclass(constraint_value) and issubclass(constraint_value, Projection))):
+    if ((isinstance(state_spec, str) and state_spec in projection_keywords) or
+            isinstance(state_spec, Projection) or
+            (inspect.isclass(state_spec) and issubclass(state_spec, Projection))):
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         # Disallow if it is not ControlProjection or a LearningProjection
