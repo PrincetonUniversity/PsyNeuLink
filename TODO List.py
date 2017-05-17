@@ -187,7 +187,7 @@
 #
 # IMPLEMENT:  **control** arg for ControlMechanism, and **train** arg for LearningMechanism
 # IMPLEMENT:  Ability to pass outputState specifications to Objective mechanism via controller of system
-# IMPLEMENT:  WEIGHTS, EXPONENTS AND PROJECTION ENTRIES OF STATE SPECIFICATION DICIONARY
+# IMPLEMENT:  WEIGHTS, EXPONENTS AND PROJECTION ENTRIES OF STATE SPECIFICATION DICTIONARY
 # IMPLEMENT: standard_output_states for ObjectiveMechanism, LCA, RecurrentTransfer, and Intregrator
 #              (use ones at top of OutputState)
 # IMPLEMENT: Move RecurrentTransfer and LCA calculate functions to standard_output_states

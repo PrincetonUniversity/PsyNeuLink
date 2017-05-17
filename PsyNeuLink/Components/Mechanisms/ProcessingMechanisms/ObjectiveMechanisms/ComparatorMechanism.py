@@ -25,21 +25,28 @@ ComparatorMechanisms are generally created automatically when other PsyNeuLink c
 `LearningMechanisms <LearningMechanism_Creation>`.  A ComparatorMechanism can also be created directly by calling 
 its constructor.  Its **sample** and **target** arguments are used to specify the outputStates that provide the 
 sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_States` for details concerning their 
-specification, which are special instances of an ObjectiveMechanism's **monitored_values** argument).  When the 
-ComparatorMechanism is created, two inputStates are created, and these are each assigned a `MappingProjection` from 
-the outputStates specified in the **sample** and **target** arguments, respectively. The value of the sample and 
-target inputStates must be compatible with one another in length and type (so that they can be compared using the 
-ComparatorMechanism's `function <ComparatorMechanism.function>`.  By default, they are named *SAMPLE* and *TARGET*,
-respectively, and their values are determined by the format of the outputStates specified in the **sample** and 
-**target** arguments (and from which each receives its projection).  However, their names and/or their format can be 
-specified explicitly using the **input_states** argument. This can be done if either or both need(s) to be different 
-from the outputState from which it receives its projection (see the `example <ComparatorMechanism_Examples> below).
+specification, which are special versions of an ObjectiveMechanism's **monitored_values** argument).  When the 
+ComparatorMechanism is created, two inputStates are created, one each for its sample and target inputs (and named, 
+by default, *SAMPLE* and *TARGET*). Each is assigned a MappingProjection from the corresponding outputState specified 
+in the **sample** and **target** arguments.
 
-- IF YOU SPECIFY ONE INPUTSTATE, YOU MUST SPECIFY BOTH.  
-- THE SPECIFCATION CAN BE ANY INPUTSTATE SPECIFICTION (SEE INPUTSTATES);
-- MAPPING PROJECTIONS:  AUTO-ASSIGN:  IDENTITY IF MATCHES OUTPUTSTATES, ELSE FULL CONNECTIVITY;
-                          CAN BE SPECIIED USING THE ??PROJECTION?? ENTRY OF A INPUTSTATE SPECIFCICATION DICTIONARY:
-                           DOCUMENT IN INPUTSTATES
+It is important to recognize that the value of the *SAMPLE* and *TARGET* inputStates must have the same length and type, 
+so that they can be compared using the ComparatorMechanism's `function <ComparatorMechanism.function>`.  By default, 
+they use the format of the outputStates specified in the **sample** and **target** arguments, respectively,
+and the `MappingProjection` to each uses an `IDENTITY_MATRIX`.  Therefore, for the default configuration, the 
+outputStates specified in the **sample** and **target** arguments must have values of the same length and type.
+If these differ, the **input_states** argument can be used to explicitly specify the format of the ComparatorMechanism's 
+*SAMPLE* and *TARGET* inputStates, to insure they are compatible with one another (as well as to customize their 
+names, if desired).  If the **input_states** argument is used, *both* the sample and target inputStates must be 
+specified.  Any of the formats for `specifying inputStates <InputState_Specification>` can be used in the argument. 
+If values are assigned for the inputStates, they must be of equal length and type.  Their types must be 
+also be compatible with the value of the outputStates specified in the **sample** and **target** arguments.  However,
+the length specified for an inputState can differ from its corresponding OutputState;  in that case, by default, the
+MappingProjection created uses a `FULL_CONNECTIVITY` matrix.  Thus, outputStates of differing lengths can be mapped 
+to the sample and target inputStates of a ComparatorMechanism (see the `example <ComparatorMechanism_Example>` below),
+so long as the latter are of the same length.  If a projection other than a `FULL_CONNECTIVITY` matrix is needed, 
+this can be specified using the *PROJECTION* entry of a `state specification dictionary <LINK>` in the
+**input_states** argument.
 
 .. _ComparatorMechanism_Structure:
 
@@ -71,10 +78,10 @@ compare these.  By default, the result is assigned as to the `value <ComparatorM
 `output_state <ComparatorMechanism.output_state>`, and as the first item of the mechanism's 
 `output_value <ComparatorMechanism.output_value>` attribute. 
 
-.. _ComparatorMechanism_Examples:
+.. _ComparatorMechanism_Example:
 
-Examples
---------
+Example
+-------
 
 .. _ComparatorMechanism_Default_Input_Value_Example:
 
