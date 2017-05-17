@@ -2106,24 +2106,18 @@ def _parse_state_spec(owner,
 
     # MODIFIED 5/17/17 FROM _instantiate_state: ----------------------------------------------------------------
     # Projection class, object, or keyword: set to paramClassDefaults (of owner or owner's function)
-    if (isinstance(state_spec, (str, Projection)) or
-            (inspect.isclass(constraint_value) and
-                 issubclass(constraint_value, (Projection)))):
-        # Disallow if it is not a LearningProjection, ControlProjection or GatingProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+    from PsyNeuLink.Components.Projections.Projection import projection_keywords
+    if ((isinstance(constraint_value, str) and constraint_value in projection_keywords) or
+            isinstance(constraint_value, Projection) or
+            (inspect.isclass(constraint_value) and issubclass(constraint_value, Projection))):
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
-        if (constraint_value in projection_keywords or
-                    isinstance(constraint_value, (LearningProjection, ControlProjection, GatingProjection)) or
-                    # isinstance(constraint_value, Projection) or
-                    (inspect.isclass(constraint_value) and
-                issubclass(constraint_value, (LearningProjection, ControlProjection, GatingProjection)))
-                ):
-            try:
-                constraint_value = owner.paramClassDefaults[state_name]
-            # If parameter is not for owner itself, try owner's function
-            except KeyError:
-                constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        # Disallow if it is not ControlProjection or a LearningProjection
+        try:
+            constraint_value = owner.paramClassDefaults[state_name]
+        # If parameter is not for owner itself, try owner's function
+        except KeyError:
+            constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
 
     # State class: set to variableClassDefault
     elif inspect.isclass(constraint_value) and issubclass(constraint_value, State):
