@@ -1671,26 +1671,18 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #region CHECK FORMAT OF constraint_value AND CONVERT TO SIMPLE VALUE
 
     # Projection class, object, or keyword: set to paramClassDefaults (of owner or owner's function)
-    # FIX: ADD TEST FOR STR AND IN projection_keywords HERE
-    # IMPLEMENT:  ADD GatingPojection HERE 5/7/17
-    if (isinstance(constraint_value, (str, Projection)) or
-            (inspect.isclass(constraint_value) and
-                 issubclass(constraint_value, (Projection)))):
-        from PsyNeuLink.Components.Projections.Projection import projection_keywords
+    from PsyNeuLink.Components.Projections.Projection import projection_keywords
+    if ((isinstance(constraint_value, str) and constraint_value in projection_keywords) or
+            isinstance(constraint_value, Projection) or
+            (inspect.isclass(constraint_value) and issubclass(constraint_value, Projection))):
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         # Disallow if it is not ControlProjection or a LearningProjection
-        if (constraint_value in projection_keywords or
-                    isinstance(constraint_value, (ControlProjection, LearningProjection)) or
-                    # isinstance(constraint_value, Projection) or
-                    (inspect.isclass(constraint_value) and
-                issubclass(constraint_value, (ControlProjection, LearningProjection)))
-                ):
-            try:
-                constraint_value = owner.paramClassDefaults[state_name]
-            # If parameter is not for owner itself, try owner's function
-            except KeyError:
-                constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
+        try:
+            constraint_value = owner.paramClassDefaults[state_name]
+        # If parameter is not for owner itself, try owner's function
+        except KeyError:
+            constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
 
     # State class: set to variableClassDefault
     elif inspect.isclass(constraint_value) and issubclass(constraint_value, State):
