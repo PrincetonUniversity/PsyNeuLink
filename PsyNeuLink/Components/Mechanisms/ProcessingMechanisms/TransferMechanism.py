@@ -586,16 +586,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         time_constant = self.time_constant
         range = self.range
         noise = self.noise
-        if self.noise_function:
-            print("NOISE  = ", self.noise)
-            if isinstance(variable, (list, np.ndarray)):
-                new_noise = []
-                for v in variable[0]:
-                    new_noise.append(noise())
-                noise = new_noise
-                print(new_noise)
-            else:
-                noise = noise()
 
         #endregion
 
@@ -628,12 +618,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                              )
 
         elif time_scale is TimeScale.TRIAL:
-
             if self.noise_function:
                 if isinstance(noise, (list, np.ndarray)):
                     new_noise = []
                     for n in noise:
                         new_noise.append(n())
+                    noise = new_noise
+                elif isinstance(variable, (list, np.ndarray)):
+                    new_noise = []
+                    for v in variable[0]:
+                        new_noise.append(noise())
                     noise = new_noise
                 else:
                     noise = noise()
