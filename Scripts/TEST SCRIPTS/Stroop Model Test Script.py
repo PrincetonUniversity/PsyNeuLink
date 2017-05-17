@@ -61,21 +61,21 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
 # Execute processes:
 for i in range(10):
     color_naming_process.execute(input=[1, 1],target=[0,1])
-    print(response.input_state.receivesFromProjections[0].matrix)
-    print(response.input_state.receivesFromProjections[1].matrix)
+    print(response.input_state.afferents[0].matrix)
+    print(response.input_state.afferents[1].matrix)
 
     word_reading_process.execute(input=[1, 1], target=[1,0])
-    print(response.input_state.receivesFromProjections[0].matrix)
-    print(response.input_state.receivesFromProjections[1].matrix)
+    print(response.input_state.afferents[0].matrix)
+    print(response.input_state.afferents[1].matrix)
 
 # # Execute system:
 # for i in range(10):
 #     mySystem.execute(input=[[1,1],[1,1]],
 #                      target=[[0,1],[1,0]])
-#     print(response.input_state.receivesFromProjections[0].matrix)
-#     print(response.input_state.receivesFromProjections[1].matrix)
-#     print(response.input_state.receivesFromProjections[0].matrix)
-#     print(response.input_state.receivesFromProjections[1].matrix)
+#     print(response.input_state.afferents[0].matrix)
+#     print(response.input_state.afferents[1].matrix)
+#     print(response.input_state.afferents[0].matrix)
+#     print(response.input_state.afferents[1].matrix)
 
 # mySystem.show_graph()
 #

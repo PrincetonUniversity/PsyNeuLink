@@ -711,7 +711,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     # IMPLEMENTATION NOTE: Assumes that the LearningMechanism projects to and modifies only a single MappingProjection
     @property
     def learned_projection(self):
-        learning_projections = self.output_states[LEARNING_SIGNAL].sendsToProjections
+        learning_projections = self.output_states[LEARNING_SIGNAL].efferents
         if learning_projections:
             return learning_projections[0].receiver.owner
         else:

@@ -1443,11 +1443,11 @@ class Mechanism_Base(Mechanism):
 
             Execution sequence:
             - Call self.input_state.execute() for each entry in self.input_states:
-                + execute every self.input_state.receivesFromProjections.[<Projection>.execute()...]
+                + execute every self.input_state.afferents.[<Projection>.execute()...]
                 + aggregate results using self.input_state.params[FUNCTION]()
                 + store the result in self.input_state.value
             - Call every self.params[<ParameterState>].execute(); for each:
-                + execute self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
+                + execute self.params[<ParameterState>].afferents.[<Projection>.execute()...]
                     (usually this is just a single ControlProjection)
                 + aggregate results (if > one) using self.params[<ParameterState>].params[FUNCTION]()
                 + apply the result to self.params[<ParameterState>].value
@@ -1757,7 +1757,7 @@ class Mechanism_Base(Mechanism):
     def _update_input_states(self, runtime_params=None, time_scale=None, context=None):
         """ Update value for each inputState in self.input_states:
 
-        Call execute method for all (MappingProjection) projections in inputState.receivesFromProjections
+        Call execute method for all (MappingProjection) projections in inputState.afferents
         Aggregate results (using inputState execute method)
         Update inputState.value
         """
