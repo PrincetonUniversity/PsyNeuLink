@@ -104,7 +104,7 @@ Class Reference
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction, Integrator, NormalDist
-
+# from PsyNeuLink.Components.States.OutputState import *
 from PsyNeuLink.Components.States.OutputState import OutputState, standard_output_states
 
 # TransferMechanism parameter keywords:
@@ -112,15 +112,14 @@ RANGE = "range"
 TIME_CONSTANT = "time_constant"
 INITIAL_VALUE = 'initial_value'
 
-# TransferMechanism outputs (used to create and name outputStates):
+# TransferMechanism default parameter values:
 Transfer_DEFAULT_LENGTH= 1
 Transfer_DEFAULT_GAIN = 1
 Transfer_DEFAULT_BIAS = 0
 Transfer_DEFAULT_OFFSET = 0
 # Transfer_DEFAULT_RANGE = np.array([])
 
-# unused?
-# why not an enum?
+# This is a convenience class that provides list of standard_output_state names in IDE
 class TRANSFER_OUTPUTS():
         RESULT=RESULT
         MEAN=MEAN
@@ -347,7 +346,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({NOISE: None})
-        # TIME_SCALE: TimeScale.TRIAL,
+
     standard_output_states = standard_output_states.copy()
 
     paramNames = paramClassDefaults.keys()

@@ -1259,7 +1259,6 @@ def _get_obect_type(object):
         raise RunError("{} type not supported by Run module".format(object.__class__.__name__))
 
 
-
 import uuid
 def _get_unique_id():
     return uuid.uuid4()

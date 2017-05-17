@@ -1363,7 +1363,7 @@ class System_Base(System):
                                 if isinstance(projection.sender.owner,Mechanism))
                         # For all the projections to each inputState
                         for projection in input_state.receivesFromProjections)
-                    # For all inputStates for the first_mech
+                    # For all input_states for the first_mech
                     for input_state in first_mech.input_states):
                 # Assign its set value as empty, marking it as a "leaf" in the graph
                 mech_tuple = self._allMechanisms._get_tuple_for_mech(first_mech)
@@ -2636,7 +2636,6 @@ class System_Base(System):
     # @property
     # def processes(self):
     #     return sorted(self._processList.processes)
-
 
     # @property
     # def input_value(self):
