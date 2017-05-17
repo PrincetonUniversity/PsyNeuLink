@@ -308,7 +308,6 @@ class ComparatorMechanism(ObjectiveMechanism):
                                    {NAME:MSE,
                                     CALCULATE:lambda x: np.sum(x*x)/len(x)}])
 
-
     # FIX:  TYPECHECK monitored_values TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
