@@ -1660,6 +1660,15 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #  if value is not compatible with constraint_value
     spec_type = None
 
+    # MODIFIED 5/17/17 NEW:
+    state_dict = _parse_state_spec(owner=owner,
+                                   state_type=state_type,
+                                   state_spec=state_spec,
+                                   state_params=state_params,
+                                   default_name=state_name,
+                                   default_value=constraint_value)
+    # MODIFIED 5/17/17 END
+
 
     # If variable for state is specified in state_params, use that
     if VARIABLE in state_params and state_params[VARIABLE] is not None:
