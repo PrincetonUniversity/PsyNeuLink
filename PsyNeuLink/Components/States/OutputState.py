@@ -837,6 +837,14 @@ class StandardOutputStates():
         for state in self.data:
             setattr(owner.__class__, state[NAME]+'_INDEX', make_readonly_property(state[INDEX]))
 
+    @property
+    def trans_projections(self):
+        return self.efferents
+
+    @trans_projections.setter
+    def trans_projections(self, assignment):
+        self.efferents = assignment
+
     @tc.typecheck
     def get_dict(self, name:str):
         return self.data[self.names.index(name)]
@@ -848,6 +856,7 @@ class StandardOutputStates():
     @property
     def indices(self):
         return [item[INDEX] for item in self.data]
+
 
 
 

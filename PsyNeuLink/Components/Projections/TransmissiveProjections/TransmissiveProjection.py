@@ -50,8 +50,12 @@ Execution
 """
 
 from PsyNeuLink.Components.Projections.Projection import Projection_Base
+from PsyNeuLink.Globals.Keywords import TRANSMISSIVE_PROJECTION
 
 class TransmissiveProjection_Base(Projection_Base):
+
+    componentCategory = TRANSMISSIVE_PROJECTION
+
     def __init__(self,
                  receiver,
                  sender=None,

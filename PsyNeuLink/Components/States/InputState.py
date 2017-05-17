@@ -399,6 +399,15 @@ class InputState(State_Base):
                                                   self.reference_value))
                                                   # self.owner.variable))
 
+    @property
+    def trans_projections(self):
+        return self.afferents
+
+    @trans_projections.setter
+    def trans_projections(self, assignment):
+        self.afferents = assignment
+
+
 def _instantiate_input_states(owner, context=None):
     """Call State._instantiate_state_list() to instantiate orderedDict of inputState(s)
 

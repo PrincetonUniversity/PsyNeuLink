@@ -1659,28 +1659,35 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #  if value is not compatible with constraint_value
     spec_type = None
 
-    # MODIFIED 5/17/17 NEW:
-    state_dict = _parse_state_spec(owner=owner,
-                                   state_type=state_type,
-                                   state_spec=state_spec,
-                                   state_params=state_params,
-                                   default_name=state_name,
-                                   default_value=constraint_value)
-    # MODIFIED 5/17/17 END
-
-
-
 
     # MODIFIED 5/17/17 OLD: ********************************************************************************************
-    # If variable for state is specified in state_params, use that
-    if VARIABLE in state_params and state_params[VARIABLE] is not None:
-        state_variable = state_params[VARIABLE]
-    # Otherwise, assume state is specified as a value, so set state_variable to it;
-    #    if otherwise, will be overridden below
-    else:
-        state_variable = state_spec
 
-    #region CHECK FORMAT OF constraint_value AND CONVERT TO SIMPLE VALUE
+
+    # # MODIFIED 5/17/17 OLD:
+    # if VARIABLE in state_params and state_params[VARIABLE] is not None:
+    #     state_variable = state_params[VARIABLE]
+    # # Otherwise, assume state is specified as a value, so set state_variable to it;
+    # #    if otherwise, will be overridden below
+    # else:
+    #     state_variable = state_spec
+    #
+    # # MODIFIED 5/17/17 END
+
+    #region CHECK FORMAT OF constraint_value AND CONVERT TO SIMPLE VALUE -------------------------------------------
+
+    # MODIFIED 5/17/17 NEW:
+    # CALL _parse_state_spec FOR CONSTRAINT_VALUE HERE
+    constraint_dict = _parse_state_spec(owner=owner,
+                                        state_spec=constraint_value,
+                                        default_name=None,
+                                        default_value=None)
+    constraint_value = constraint_dict[VARIABLE]
+    # MODIFIED 5/17/17 END
+
+    # -----------------------------------------------------------------------------------------------------------------
+
+
+    # # MODIFIED 5/17/17 OLD: ----------------------------------------------------------------------------------------
 
     # Projection class, object, or keyword: set to paramClassDefaults (of owner or owner's function)
     # FIX: ADD TEST FOR STR AND IN projection_keywords HERE
@@ -1737,15 +1744,19 @@ def _instantiate_state(owner,                   # Object to which state will bel
         if constraint_value is None:
             return None
 
-    # Otherwise, assumed to be a value
+    # -----------------------------------------------------------------------------------------------------------------
 
-    # # MODIFIED 6/14/16: QQQ - WHY DOESN'T THIS WORK HERE?? (DONE BELOW, JUST BEFORE CALLING state = state_type(<>)
-    # # CONVERT constraint_value TO NP ARRAY AS ACTUAL STATE VALUES WILL BE SO CONVERTED (WHERE ??)
-    # #  Convert constraint_value to np.array as actual state value is converted
-    # constraint_value = convert_to_np_array(constraint_value,1)
-    # # MODIFIED END
+    # MODIFIED 5/17/17 NEW:
+    state_dict = _parse_state_spec(owner=owner,
+                                   state_type=state_type,
+                                   state_spec=state_spec,
+                                   state_params=state_params,
+                                   default_name=state_name,
+                                   default_value=constraint_value)
+    # MODIFIED 5/17/17 END
 
-    #endregion
+
+
 
     #region CHECK COMPATIBILITY OF state_spec WITH constraint_value
 
@@ -2090,8 +2101,14 @@ def _parse_state_spec(owner,
     params = default_params
 
     # If variable is specified in state_params, use that
-    if VARIABLE in state_params and state_params[VARIABLE] is not None:
-        variable = state_params[VARIABLE]
+    if VARIABLE in params and params[VARIABLE] is not None:
+        variable = params[VARIABLE]
+
+
+    # NEW ^
+    # *********************************************
+    # OLD: v
+
 
     # State, so assign as value
     if isinstance(state_spec, State):
