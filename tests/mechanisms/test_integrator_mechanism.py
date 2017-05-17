@@ -166,7 +166,7 @@ def test_integrator_input_list_len_5():
 # ------------------------------------------------------------------------------------------------
 
 # TEST 4
-# input = nparray of length 5
+# input = numpy array of length 5
 
 def test_integrator_input_array_len_5():
 
@@ -188,3 +188,35 @@ def test_integrator_input_array_len_5():
         np.testing.assert_allclose(v, e, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
 # ------------------------------------------------------------------------------------------------
+
+# INVALID INPUT:
+
+# ------------------------------------------------------------------------------------------------
+# TEST 1
+# input = list of length > default length
+
+def test_integrator_input_array_greater_than_default():
+
+    with pytest.raises(ValueError) as error_text:
+        I = IntegratorMechanism(
+                name='IntegratorMechanism',
+                default_input_value=[0, 0, 0]
+               )
+        P = process(pathway=[I])
+        val = P.execute([10.0, 5.0, 2.0, 1.0, 0.0])
+    assert "shapes" in str(error_text) and "not aligned" in str(error_text)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 2
+# input = list of length < default length
+
+def test_integrator_input_array_less_than_default():
+
+    with pytest.raises(ValueError) as error_text:
+        I = IntegratorMechanism(
+                name='IntegratorMechanism',
+                default_input_value=[0, 0, 0, 0, 0]
+               )
+        P = process(pathway=[I])
+        val = P.execute([10.0, 5.0, 2.0])
+    assert "shapes" in str(error_text) and "not aligned" in str(error_text)
