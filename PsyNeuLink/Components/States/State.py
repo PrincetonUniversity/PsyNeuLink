@@ -96,9 +96,6 @@ from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Projections.Projection import projection_keywords
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
 
 
 # Note:  This is created only for assignment of default projection types for each state subclass (see .__init__.py)
@@ -1694,57 +1691,59 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # -----------------------------------------------------------------------------------------------------------------
 
 
-    # MODIFIED 5/17/17 OLD: ----------------------------------------------------------------------------------------
-    # Projection class, object, or keyword: set to paramClassDefaults (of owner or owner's function)
-    if (isinstance(constraint_value, (str, Projection)) or
-            (inspect.isclass(constraint_value) and
-                 issubclass(constraint_value, (Projection)))):
-        # Disallow if it is not ControlProjection or a LearningProjection
-        if (constraint_value in projection_keywords or
-                    isinstance(constraint_value, (LearningProjection, ControlProjection, GatingProjection)) or
-                    # isinstance(constraint_value, Projection) or
-                    (inspect.isclass(constraint_value) and
-                issubclass(constraint_value, (LearningProjection, ControlProjection, GatingProjection)))
-                ):
-            try:
-                constraint_value = owner.paramClassDefaults[state_name]
-            # If parameter is not for owner itself, try owner's function
-            except KeyError:
-                constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
-
-    # State class: set to variableClassDefault
-    elif inspect.isclass(constraint_value) and issubclass(constraint_value, State):
-            constraint_value = state_spec.variableClassDefault
-
-    # State object: set to its value (i.e., output of its function)
-    elif isinstance(constraint_value, state_type):
-        constraint_value = constraint_value.value
-
-    # Specification dict; presumably it is for a State
-    elif isinstance(constraint_value, dict):
-        # # MODIFIED 5/10/17 OLD:
-        # constraint_value = constraint_value[STATE_VALUE]
-        # MODIFIED 5/10/17 NEW:
-        constraint_value = constraint_value[VARIABLE]
-        # MODIFIED 5/10/17 END
-
-    # ParamValueProjection tuple, set to ParamValueProjection.value:
-    elif isinstance(constraint_value, ParamValueProjection):
-        constraint_value = constraint_value.value
-
-    # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTION KEYWORD?
-    # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
-    if isinstance(constraint_value, str):
-        constraint_value = get_param_value_for_keyword(owner, constraint_value)
-        if constraint_value is None:
-            return None
-
-    # function; try to resolve to a value, otherwise return None to suppress instantiation of state
-    if isinstance(constraint_value, function_type):
-        constraint_value = get_param_value_for_function(owner, constraint_value)
-        if constraint_value is None:
-            return None
-
+    # # MODIFIED 5/17/17 OLD [MOVED TO _parse_state_spec(): ------------------------------------------------------------
+    # # Projection class, object, or keyword: set to paramClassDefaults (of owner or owner's function)
+    # if (isinstance(constraint_value, (str, Projection)) or
+    #         (inspect.isclass(constraint_value) and
+    #              issubclass(constraint_value, (Projection)))):
+    #     # Disallow if it is not a LearningProjection, ControlProjection or GatingProjection
+    #     from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+    #     from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+    #     from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+    #     if (constraint_value in projection_keywords or
+    #                 isinstance(constraint_value, (LearningProjection, ControlProjection, GatingProjection)) or
+    #                 # isinstance(constraint_value, Projection) or
+    #                 (inspect.isclass(constraint_value) and
+    #             issubclass(constraint_value, (LearningProjection, ControlProjection, GatingProjection)))
+    #             ):
+    #         try:
+    #             constraint_value = owner.paramClassDefaults[state_name]
+    #         # If parameter is not for owner itself, try owner's function
+    #         except KeyError:
+    #             constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
+    #
+    # # State class: set to variableClassDefault
+    # elif inspect.isclass(constraint_value) and issubclass(constraint_value, State):
+    #         constraint_value = state_spec.variableClassDefault
+    #
+    # # State object: set to its value (i.e., output of its function)
+    # elif isinstance(constraint_value, state_type):
+    #     constraint_value = constraint_value.value
+    #
+    # # Specification dict; presumably it is for a State
+    # elif isinstance(constraint_value, dict):
+    #     # # MODIFIED 5/10/17 OLD:
+    #     # constraint_value = constraint_value[STATE_VALUE]
+    #     # MODIFIED 5/10/17 NEW:
+    #     constraint_value = constraint_value[VARIABLE]
+    #     # MODIFIED 5/10/17 END
+    #
+    # # ParamValueProjection tuple, set to ParamValueProjection.value:
+    # elif isinstance(constraint_value, ParamValueProjection):
+    #     constraint_value = constraint_value.value
+    #
+    # # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTION KEYWORD?
+    # # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
+    # if isinstance(constraint_value, str):
+    #     constraint_value = get_param_value_for_keyword(owner, constraint_value)
+    #     if constraint_value is None:
+    #         return None
+    #
+    # # function; try to resolve to a value, otherwise return None to suppress instantiation of state
+    # if isinstance(constraint_value, function_type):
+    #     constraint_value = get_param_value_for_function(owner, constraint_value)
+    #     if constraint_value is None:
+    #         return None
     # -----------------------------------------------------------------------------------------------------------------
 
     # MODIFIED 5/17/17 NEW:
@@ -2105,10 +2104,68 @@ def _parse_state_spec(owner,
     if VARIABLE in params and params[VARIABLE] is not None:
         variable = params[VARIABLE]
 
+    # MODIFIED 5/17/17 FROM _instantiate_state: ----------------------------------------------------------------
+    # Projection class, object, or keyword: set to paramClassDefaults (of owner or owner's function)
+    if (isinstance(state_spec, (str, Projection)) or
+            (inspect.isclass(constraint_value) and
+                 issubclass(constraint_value, (Projection)))):
+        # Disallow if it is not a LearningProjection, ControlProjection or GatingProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+        if (constraint_value in projection_keywords or
+                    isinstance(constraint_value, (LearningProjection, ControlProjection, GatingProjection)) or
+                    # isinstance(constraint_value, Projection) or
+                    (inspect.isclass(constraint_value) and
+                issubclass(constraint_value, (LearningProjection, ControlProjection, GatingProjection)))
+                ):
+            try:
+                constraint_value = owner.paramClassDefaults[state_name]
+            # If parameter is not for owner itself, try owner's function
+            except KeyError:
+                constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
+
+    # State class: set to variableClassDefault
+    elif inspect.isclass(constraint_value) and issubclass(constraint_value, State):
+            constraint_value = state_spec.variableClassDefault
+
+    # State object: set to its value (i.e., output of its function)
+    elif isinstance(constraint_value, state_type):
+        constraint_value = constraint_value.value
+
+    # Specification dict; presumably it is for a State
+    elif isinstance(constraint_value, dict):
+        # # MODIFIED 5/10/17 OLD:
+        # constraint_value = constraint_value[STATE_VALUE]
+        # MODIFIED 5/10/17 NEW:
+        constraint_value = constraint_value[VARIABLE]
+        # MODIFIED 5/10/17 END
+
+    # ParamValueProjection tuple, set to ParamValueProjection.value:
+    elif isinstance(constraint_value, ParamValueProjection):
+        constraint_value = constraint_value.value
+
+    # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTION KEYWORD?
+    # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
+    if isinstance(constraint_value, str):
+        constraint_value = get_param_value_for_keyword(owner, constraint_value)
+        if constraint_value is None:
+            return None
+
+    # function; try to resolve to a value, otherwise return None to suppress instantiation of state
+    if isinstance(constraint_value, function_type):
+        constraint_value = get_param_value_for_function(owner, constraint_value)
+        if constraint_value is None:
+            return None
+
+    # -----------------------------------------------------------------------------------------------------------------
+
 
     # NEW ^
     # *********************************************
     # OLD: v
+
+
 
 
     # State, so assign as value
