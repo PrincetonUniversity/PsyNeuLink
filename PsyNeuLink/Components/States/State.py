@@ -1650,25 +1650,14 @@ def _instantiate_state(owner,                   # Object to which state will bel
                                         params=None)
     constraint_value = constraint_dict[VALUE]
 
-    # PARSE state_spec
-    state_dict = _parse_state_spec(owner=owner,
+    # PARSE state_spec using constraint_value as default for value
+    state_spec = _parse_state_spec(owner=owner,
                                    state_type=state_type,
                                    state_spec=state_spec,
                                    params=state_params,
                                    value=constraint_value)
 
-    # CHECK COMPATIBILITY OF state_spec WITH constraint_value
-
-
-    # state_spec is a:
-    # ---------------
-
-    # Class
-    # - instantiate default using constraint_value as value
-    if inspect.isclass(state_spec) and issubclass(state_spec, state_type):
-        state_variable = constraint_value
-
-    # State object
+    # state_spec is State object
     # - check that its value attribute matches the constraint_value
     # - check that its owner = owner
     # - if either fails, assign default
@@ -1696,21 +1685,30 @@ def _instantiate_state(owner,                   # Object to which state will bel
             state = constraint_value
             spec_type = state_name
 
-    #Specification dict
+    # Otherwise, state_spec should now be a state specification dict
+    state_variable = state_spec[VARIABLE]
+    state_value = state_spec[VALUE]
+
+    if not iscompatible(state_variable, constraint_value):
+        if owner.prefs.verbosePref:
+            print("{} is not compatible with constraint value ({}) specified for {} of {};  latter will be used".
+                  format(VARIABLE, constraint_value, state_type, owner.name))
+        state_variable = constraint_value
+        spec_type = VARIABLE
+
+    XXX MAKE SURE RELEVANT THIGS BELOW ARE GETTING DONE IN parse_state_spec
+    # Specification dict
     # If state_spec is a specification dict:
     # - check that STATE_VALUE / VARIABLE matches constraint_value and assign to state_variable
     # - add/assign STATE params to state_params
-    if isinstance(state_spec, dict):
-        if VARIABLE in state_spec:
-            state_variable =  state_spec[VARIABLE]
-        else:
-            state_variable = constraint_value
-            if owner.prefs.verbosePref:
-                print("{} missing from inputState specification dict for {};  default ({}) will be used".
-                                     format(VARIABLE, owner.name, constraint_value))
-        if not iscompatible(state_variable, constraint_value):
-            state_variable = constraint_value
-            spec_type = VARIABLE
+    # if isinstance(state_spec, dict):
+    #     if VARIABLE in state_spec:
+    #         state_variable =  state_spec[VARIABLE]
+    #     else:
+    #         state_variable = constraint_value
+    #         if owner.prefs.verbosePref:
+    #             print("{} missing from inputState specification dict for {};  default ({}) will be used".
+    #                                  format(VARIABLE, owner.name, constraint_value))
 
         # Add state_spec[STATE_PARAMS] to state_params
         try:
@@ -1947,8 +1945,27 @@ def _parse_state_spec(owner,
                       projections=None,
                       modulatory_projections=None,
                       params=None):
-    """Return state specification dictionary for state_spec
+    """Return either state object or state specification dict for state_spec
+    
+    If state_spec resolves to a state object, return that;  
+        otherwise, return state specification dictionary using arguments provided as defaults
+    Warn if variable is assigned is assigned the default value, and verbosePref is set on owner. 
+    
     """
+
+    # State object:
+    # - check that it is of the specified type and, if so, return it
+    if isinstance(state_spec, State):
+        if state_spec is state_type:
+            return state_spec
+        else:
+            raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
+                             "class of state being instantiated ({})".format(state_spec, state_type))
+
+    # Mechanism object:
+    # - call owner to return primary state of specified type
+    if isinstance(state_spec, Mechanism):
+        return owner._get_primary_state(state_type)
 
     # If variable is specified in state_params, use that
     if params is not None and VARIABLE in params and params[VARIABLE] is not None:
@@ -1976,27 +1993,35 @@ def _parse_state_spec(owner,
     #         except KeyError:
     #             constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
 
+    # Create default dict for return
+    state_dict = {NAME: name,
+                  VARIABLE: variable,
+                  VALUE: value,
+                  STATE_PROJECTIONS: projections,
+                  MODULATORY_PROJECTIONS: modulatory_projections,
+                  PARAMS: params}
+
     # State class
     if inspect.isclass(state_spec) and issubclass(state_spec, State):
         if state_spec is state_type:
-            variable = state_spec.variableClassDefault
+            state_dict[VARIABLE] = state_spec.variableClassDefault
         else:
             raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
                              "class of state being instantiated ({})".format(state_spec, state_type))
 
-    # State object
-    elif isinstance(state_spec, State):
-        if state_spec is state_type:
-            name = state_spec.name
-            # variable = state_spec.value
-            # variable = state_spec.variableClassDefault
-            variable = state_spec.variable
-            value = state_spec.value
-            modulatory_projections =  state_spec.mod_projections
-            params = state_spec.user_params.copy()
-        else:
-            raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
-                             "class of state being instantiated ({})".format(state_spec, state_type))
+    # # State object
+    # elif isinstance(state_spec, State):
+    #     if state_spec is state_type:
+    #         name = state_spec.name
+    #         # variable = state_spec.value
+    #         # variable = state_spec.variableClassDefault
+    #         variable = state_spec.variable
+    #         value = state_spec.value
+    #         modulatory_projections =  state_spec.mod_projections
+    #         params = state_spec.user_params.copy()
+    #     else:
+    #         raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
+    #                          "class of state being instantiated ({})".format(state_spec, state_type))
 
     # Specification dict
     elif isinstance(state_spec, dict):
@@ -2015,12 +2040,12 @@ def _parse_state_spec(owner,
                                            params=params)
             # Use name specified as key in state_spec (rather than one in SPEFICATION_DICT if specified):
             state_dict.update({NAME:name})
-            return state_dict
-
 
         else:
-            # Pass to assignment of entries at end of method
-            pass
+            if not VARIABLE in state_spec and owner.prefs.verbosePref:
+                print("{} missing from specification dict for {} of {};  default ({}) will be used".
+                      format(VARIABLE, state_type, owner.name, constraint_value))
+            state_dict.update(state_spec)
 
     # Tuple
     elif isinstance(state_spec, tuple):
@@ -2034,30 +2059,33 @@ def _parse_state_spec(owner,
                                        projections=projections,
                                        params=params)
         # Add projection_spec from second item in tuple and return dict
-        return state_dict.update({modulatory_projections:state_spec[1]})
+        state_dict.update({modulatory_projections:state_spec[1]})
 
     # string
     elif isinstance(state_spec, str):
         # Test whether it is a keyword for the owner, in which case it should resolve to a value
-        state_spec = get_param_value_for_keyword(owner, state_spec)
+        spec = get_param_value_for_keyword(owner, state_spec)
         # A value was returned, so use as variable
-        if state_spec is not None:
-            variable = state_spec
+        if spec is not None:
+            state_dict[VARIABLE] = spec
+            if owner.prefs.verbosePref:
+                print("{} not specified for {} of {};  default ({}) will be used".
+                      format(VARIABLE, state_type, owner.name, constraint_value))
         # It is not a keyword, so treat string as the name for the state
         else:
-            name = state_spec
+            state_dict[NAME] = spec
 
     # function; try to resolve to a value, otherwise return None to suppress instantiation of state
     elif isinstance(state_spec, function_type):
-        value = get_param_value_for_function(owner, state_spec)
-        if value is None:
+        state_dict[VALUE] = get_param_value_for_function(owner, state_spec)
+        if state_dict[VALUE] is None:
             # return None
             raise StateError("PROGRAM ERROR: state_spec for {} of {} is a function ({}), "
                              "but it failed to return a value".format(state_type,owner.name, state_spec))
 
-    # value, so use as value of input_state
+    # value, so use as variable of input_state
     elif is_value_spec(state_spec):
-        variable = state_spec
+        state_dict[VARIABLE] = state_spec
 
     elif state_spec is None:
         # pass
@@ -2071,9 +2099,5 @@ def _parse_state_spec(owner,
         raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
                          format(state_type, owner.name, state_spec))
 
-    return {NAME: name,
-            VARIABLE: variable,
-            VALUE: value,
-            STATE_PROJECTIONS: projections,
-            MODULATORY_PROJECTIONS: modulatory_projections,
-            PARAMS: params}
+    return state_dict
+
