@@ -3,11 +3,10 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMe
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, TARGET_MSE
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, TARGET_MSE
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.TimeScale import TimeScale
-from PsyNeuLink.scheduling.condition import AfterNCalls
 
 def test_multilayer():
     Input_Layer = TransferMechanism(
@@ -116,9 +115,11 @@ def test_multilayer():
         print ('- Middle 2: \n', Hidden_Layer_2.value)
         print ('- Output:\n', Output_Layer.value)
 
-    s = system(processes=[p],
-               targets=[0, 0, 1],
-               learning_rate=1.0)
+    s = system(
+        processes=[p],
+        targets=[0, 0, 1],
+        learning_rate=1.0,
+    )
 
     s.reportOutputPref = True
 
@@ -126,7 +127,8 @@ def test_multilayer():
         num_executions=10,
         inputs=stim_list,
         targets=target_list,
-        termination_processing={TimeScale.TRIAL: AfterNCalls(Output_Layer, 1)}
+        call_before_trial=print_header,
+        call_after_trial=show_target,
     )
 
     objective_output_layer = s.mechanisms[4]
@@ -141,42 +143,9 @@ def test_multilayer():
                 nested_elem = [nested_elem]
             results_list.extend(nested_elem)
 
-    expected_results_list = [
-        0.83448370231346, 0.8707201786695044, 0.8999743264756163,
-        0.8683927358195268,
-        0.0007175454706347559,
-        0.7797019346587708, 0.832631377973685, 0.9015962725334999,
-        0.8379765283886519,
-        0.0024906569174657483,
-        0.7021850243581587, 0.7773822989749413, 0.9030776464400238,
-        0.7942149899243746,
-        0.0068679773434540785,
-        0.60279149220922, 0.6995807898859298, 0.9045314296553872,
-        0.7356345705835124,
-        0.01582443585963084,
-        0.49679270296011985, 0.6003032086020696, 0.9061008242664779,
-        0.6677322452762224,
-        0.03019552718795884,
-        0.40562020017560557, 0.49472390987426346, 0.9078661674551524,
-        0.6027367591683405,
-        0.04787522308107376,
-        0.3376302465351187, 0.4039763747743685, 0.9097767517554378,
-        0.550461124354975,
-        0.06528749483581726,
-        0.28892812402413326, 0.33633532241586245, 0.9117192979826672,
-        0.512327581474221,
-        0.08013144535100698,
-        0.25348770666261206, 0.287918960919678, 0.9136124968123867,
-        0.4850063881315589,
-        0.09204918341087988,
-        0.22686074091309802, 0.25270211784499447, 0.9154214931287058,
-        0.4649947839622661,
-        0.10155340629221028
-    ]
-
     expected_output = [
-        (Output_Layer.outputState.value, np.array([ 0.22686074,  0.25270212,  0.91542149])),
-        (objective_output_layer.outputStates[TARGET_MSE].value, np.array(0.04082589331852094)),
+        (Output_Layer.output_states.values, [np.array([ 0.22686074,  0.25270212,  0.91542149])]),
+        (objective_output_layer.output_states[TARGET_MSE].value, np.array(0.04082589331852094)),
         (Input_Weights.matrix, np.array([
             [0.09890269, 0.19810968, 0.29740194,  0.39678767, 0.49627111],
             [0.5959199,  0.69297125, 0.79033968, 0.88805564, 0.98613492],
@@ -194,7 +163,18 @@ def test_multilayer():
             [-0.2388705 , -0.19778374,  0.81214434],
             [-0.00287122,  0.03785105,  1.06315816]
         ])),
-        (results_list, expected_results_list)
+        (results, [
+            [np.array([ 0.8344837 ,  0.87072018,  0.89997433])],
+            [np.array([ 0.77970193,  0.83263138,  0.90159627])],
+            [np.array([ 0.70218502,  0.7773823 ,  0.90307765])],
+            [np.array([ 0.60279149,  0.69958079,  0.90453143])],
+            [np.array([ 0.4967927 ,  0.60030321,  0.90610082])],
+            [np.array([ 0.4056202 ,  0.49472391,  0.90786617])],
+            [np.array([ 0.33763025,  0.40397637,  0.90977675])],
+            [np.array([ 0.28892812,  0.33633532,  0.9117193 ])],
+            [np.array([ 0.25348771,  0.28791896,  0.9136125 ])],
+            [np.array([ 0.22686074,  0.25270212,  0.91542149])]
+        ]),
     ]
 
     for i in range(len(expected_output)):
