@@ -99,7 +99,7 @@ The specification of a parameter can take any of the following forms:
       `receiver <Projection.Projection.receiver>`.  The projection must be a `ControlProjection` or
       `LearningProjection`, and its value must be a valid one for the parameter.
     ..
-    * A `ParamValueProjection` or 2-item (value, projection specification) **tuple**.  This creates a default
+    * A 2-item (value, projection specification) **tuple**.  This creates a default
       parameterState, uses the value (1st) item of the tuple as parameterState's
       `baseValue <ParameterState.baseValue>`, and assigns the parameter's name as the name of the parameterState.
       The projection (2nd) item of the tuple is used to create and/or assign the specified projection, that is assigned

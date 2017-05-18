@@ -303,9 +303,8 @@ constructor, or with the mechanism's `assign_params` method, using the following
       * a ControlProjection or LearningProjection specification (see `Projection_Creation`),
         that assigns the parameter its default value, and a projection to it's ParameterState of the specified type;
       |
-      * a tuple with exactly two items: the parameter value and a projection type specifying either a
-        `ControlProjection` or a `LearningProjection` (a `ParamValueProjection` namedtuple can be used for
-        clarity).
+      * a tuple with exactly two items: the parameter value and a projection type specifying a
+        `LearningProjection`, `ControlProjection` or `GatingProjection`.
       |
       .. note::
          Some Mechanism subclasses include the function parameters as arguments in mechanism's constructor.
@@ -1074,11 +1073,11 @@ class Mechanism_Base(Mechanism):
             + TIME_SCALE:  <TimeScale>
             + INPUT_STATES:
                 <MechanismsInputState or Projection object or class,
-                specification dict for one, ParamValueProjection tuple, or numeric value(s)>;
+                specification dict for one, 2-item tuple, or numeric value(s)>;
                 if it is missing or not one of the above types, it is set to self.variable
             + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
-                ParameterState or Projection object or class, specification dict for one,
-                ParamValueProjection tuple, or numeric value(s);
+                ParameterState or Projection object or class, specification dict for one, 2-item tuple, or numeric 
+                value(s);
                 if invalid, default (from paramInstanceDefaults or paramClassDefaults) is assigned
             + OUTPUT_STATES:
                 <MechanismsOutputState object or class, specification dict, or numeric value(s);
@@ -1127,59 +1126,6 @@ class Mechanism_Base(Mechanism):
 
         #region VALIDATE INPUT STATE(S)
 
-        # # MODIFIED 6/10/16
-        # # FIX: SHOULD CHECK LENGTH OF INPUT_STATES PARAM (LIST OF NAMES OR SPECIFICATION DICT) AGAINST LENGTH OF
-        # # FIX: self.variable 2D ARRAY AND COMPARE variable SPECS, IF PROVIDED, WITH CORRESPONDING ELEMENTS OF
-        # # FIX: self.variable 2D ARRAY
-        # try:
-        #     param_value = params[INPUT_STATES]
-        #
-        # except KeyError:
-        #     if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
-        #         pass
-        #     else:
-        #         # INPUT_STATES not specified:
-        #         # - set to None, so that it is set to default (self.variable) in instantiate_inputState
-        #         # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
-        #         params[INPUT_STATES] = None
-        #
-        # else:
-        #     # INPUT_STATES is specified, so validate:
-        #     # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_inputState)
-        #     if not isinstance(param_value, (list, OrderedDict, ContentAddressableList)):
-        #         param_value = [param_value]
-        #     # Validate each item in the list or OrderedDict
-        #     # Note:
-        #     # * number of input_states is validated against length of the owner mechanism's execute method variable (EMV)
-        #     #     in instantiate_inputState, where an inputState is assigned to each item (value) of the EMV
-        #     i = 0
-        #     for key, item in param_value if isinstance(param_value, dict) else enumerate(param_value):
-        #         from PsyNeuLink.Components.States.InputState import InputState
-        #         # If not valid...
-        #         if not ((isclass(item) and (issubclass(item, InputState) or # InputState class ref
-        #                                         issubclass(item, Projection))) or    # Project class ref
-        #                     isinstance(item, InputState) or      # InputState object
-        #                     isinstance(item, dict) or                     # InputState specification dict
-        #                     isinstance(item, ParamValueProjection) or     # ParamValueProjection tuple
-        #                     isinstance(item, str) or                      # Name (to be used as key in input_states dict)
-        #                     iscompatible(item, **{kwCompatibilityNumeric: True})):   # value
-        #             # set to None, so it is set to default (self.variable) in instantiate_inputState
-        #             param_value[key] = None
-        #             if self.prefs.verbosePref:
-        #                 print("Item {0} of {1} param ({2}) in {3} is not a"
-        #                       " InputState, specification dict or value, nor a list of dict of them; "
-        #                       "variable ({4}) of execute method for {5} will be used"
-        #                       " to create a default outputState for {3}".
-        #                       format(i,
-        #                              INPUT_STATES,
-        #                              param_value,
-        #                              self.__class__.__name__,
-        #                              self.variable,
-        #                              self.execute.__self__.name))
-        #         i += 1
-        #     params[INPUT_STATES] = param_value
-        #
-
         # MODIFIED 5/10/17 NEW:
         # INPUT_STATES is specified, so validate:
         if INPUT_STATES in params and params[INPUT_STATES] is not None:
@@ -1201,7 +1147,6 @@ class Mechanism_Base(Mechanism):
                                                 issubclass(item, Projection))) or    # Project class ref
                             isinstance(item, InputState) or      # InputState object
                             isinstance(item, dict) or                     # InputState specification dict
-                            isinstance(item, ParamValueProjection) or     # ParamValueProjection tuple
                             isinstance(item, str) or                      # Name (to be used as key in input_states dict)
                             iscompatible(item, **{kwCompatibilityNumeric: True})):   # value
                     # set to None, so it is set to default (self.variable) in instantiate_inputState
@@ -1262,12 +1207,11 @@ class Mechanism_Base(Mechanism):
                         isinstance(param_value, ParameterState) or
                         isinstance(param_value, Projection) or
                         isinstance(param_value, dict) or
-                        isinstance(param_value, ParamValueProjection) or
                         iscompatible(param_value, default_value)):
                     params[FUNCTION_PARAMS][param_name] = default_value
                     if self.prefs.verbosePref:
                         print("{0} param ({1}) for execute method {2} of {3} is not a ParameterState, "
-                              "projection, ParamValueProjection, or value; default value ({4}) will be used".
+                              "projection, tuple, or value; default value ({4}) will be used".
                               format(param_name,
                                      param_value,
                                      self.execute.__self__.componentName,
@@ -1859,13 +1803,13 @@ class Mechanism_Base(Mechanism):
         else:
             mechanism_string = ' mechanism'
 
-        # # MODIFIED 2/20/17 NEW:
-        input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
-        # # MODIFIED 4/21/17 NEWER: [NEW CRASHES IF input_val IS AN ARRAY]
-        # if isinstance(input_val, np.ndarray) and input_val.ndim > 1 and input_val.shape[1] > 1:
-        #     input_string = input_val
-        # else:
-        #     input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
+        # # # MODIFIED 2/20/17 NEW:
+        # input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
+        # MODIFIED 4/21/17 NEWER: [NEW CRASHES IF input_val IS AN ARRAY]
+        if isinstance(input_val, np.ndarray) and input_val.ndim > 1 and input_val.shape[1] > 1:
+            input_string = input_val
+        else:
+            input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
         # MODIFIED 2/20/17 END
 
         print ("\n\'{}\'{} executed:\n- input:  {}".

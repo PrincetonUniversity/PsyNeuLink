@@ -471,7 +471,7 @@ class State_Base(State):
                     + PROJECTION_PARAMS:<dict> - must be dict of params for PROJECTION_TYPE
             # IMPLEMENTATION NOTE: TBI - When learning projection is implemented
             # + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
-            #     ParameterState, projection, ParamValueProjection tuple or value
+            #     ParameterState, projection, 2-item tuple or value
 
         :param request_set:
         :param target_set:
@@ -479,20 +479,6 @@ class State_Base(State):
         :return:
         """
 
-        # # Check params[STATE_PROJECTIONS] before calling validate_param:
-        # MODIFIED 5/10/17 OLD:
-        # try:
-        #     projections = target_set[STATE_PROJECTIONS]
-        # except KeyError:
-        #     # If no projections, ignore (none will be created)
-        #     projections = None
-        # else:
-        #     # If specification is not a list, wrap it in one:
-        #     # - to be consistent with paramClassDefaults
-        #     # - for consistency of treatment below
-        #     if not isinstance(projections, list):
-        #         projections = [projections]
-        # MODIFIED 5/10/17 NEW:
         if STATE_PROJECTIONS in target_set:
             # if projection specification is an object or class reference, needs to be wrapped in a list
             # - to be consistent with paramClassDefaults
@@ -503,7 +489,6 @@ class State_Base(State):
         else:
             # If no projections, ignore (none will be created)
             projections = None
-        # MODIFIED 5/10/17 END
 
         super(State, self)._validate_params(request_set, target_set, context=context)
 
@@ -1616,12 +1601,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
         assign projection class spec to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
     + specification dict for State (see XXX for context):
         check compatibility of STATE_VALUE with constraint_value
-    + ParamValueProjection tuple: (only allowed for ParameterState spec)
-        assign ParamValueProjection.value to state_spec
-            if it is a string:
-                test if it is a keyword and get its value by calling keyword method of owner's execute method
-                otherwise, return None (suppress assignment of parameterState)
-        assign ParamValueProjection.projection to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
     + 2-item tuple: (only allowed for ParameterState spec)
         assign first item to state_spec
             if it is a string:
@@ -1688,7 +1667,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # - instantiate default using constraint_value as value
     if inspect.isclass(state_spec) and issubclass(state_spec, state_type):
         state_variable = constraint_value
-    #endregion
 
     # State object
     # - check that its value attribute matches the constraint_value
@@ -1756,30 +1734,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
 
     # IMPLEMENTATION NOTE:  CONSOLIDATE ALL THE PROJECTION-RELATED STUFF BELOW:
 
-    # IMPLEMENTATION NOTE:  CONSIDER DEPRECATING THIS
-    #region ParamValueProjection
-    # If state_type is ParameterState and state_spec is a ParamValueProjection tuple:
-    # - check that ParamValueProjection.value matches constraint_value and assign to state_variable
-    # - assign ParamValueProjection.projection to STATE_PARAMS:{STATE_PROJECTIONS:<projection>}
-    # Note: validity of projection specification or compatibility of projection's variable or function output
-    #       with state value is handled in State._instantiate_projections_to_state
-    if isinstance(state_spec, ParamValueProjection):
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if not issubclass(state_type, ParameterState):
-            raise StateError("ParamValueProjection ({0}) not permitted as specification for {1} (in {2})".
-                                 format(state_spec, state_type.__name__, owner.name))
-        state_variable =  state_spec.value
-        # If it is a string, try to resolve as keyword
-        if isinstance(state_variable, str):
-            state_variable = get_param_value_for_keyword(owner, state_variable)
-            if not state_variable:
-                return None
-        if not iscompatible(state_variable, constraint_value):
-            state_variable = constraint_value
-            spec_type = 'ParamValueProjection'
-        state_params.update({STATE_PROJECTIONS:[state_spec.projection]})
-    #endregion
-
     # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function._instantiate_function()
     PARAM_SPEC = 0
     PROJECTION_SPEC = 1
@@ -1787,7 +1741,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
     #    projection specification (MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL or LEARNING,
-    #    or class ref to one of those), allow it (though should use ParamValueProjection)
+    #    or class ref to one of those), allow it
     # - check that first item matches constraint_value and assign to state_variable
     # - assign second item as projection to STATE_PARAMS:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
@@ -1824,9 +1778,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
                 return None
 
         constraint_value = state_variable
-        # if not iscompatible(state_variable, constraint_value):
-        #     state_variable = constraint_value
-        #     spec_type = 'ParamValueProjection'
         state_params.update({STATE_PROJECTIONS:[projection_to_state]})
     #endregion
 
@@ -1851,7 +1802,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # Projection
     # If state_spec is a Projection object or Projection class
     # - assign constraint_value to state_variable
-    # - assign ParamValueProjection.projection to STATE_PARAMS:{STATE_PROJECTIONS:[<projection>]}
+    # - assign tuple[1] to STATE_PARAMS:{STATE_PROJECTIONS:[<projection>]}
     # Note: validity of projection specification or compatibility of projection's variable or function output
     #       with state value is handled in State._instantiate_projections_to_state
     try:
@@ -1864,9 +1815,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
         if isinstance(state_spec, (Projection, str)):
             state_variable =  constraint_value
             state_params.update({STATE_PROJECTIONS:[state_spec]})
-
-    # MODIFIED 5/17/17 END ********************************************************************************************
-
 
     # Do one last check for compatibility of value with constraint_value (in case state_spec was a value)
     if not iscompatible(state_variable, constraint_value):
@@ -1890,7 +1838,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # INSTANTIATE STATE:
     # Note: this will be either a default State instantiated using constraint_value as its value
     #       or one determined by a specification dict, depending on which of the following obtained above:
-    # - state_spec was a ParamValueProjection tuple
+    # - state_spec was a 2-item tuple
     # - state_spec was a specification dict
     # - state_spec was a value
     # - value of specified State was incompatible with constraint_value
@@ -2003,7 +1951,7 @@ def _parse_state_spec(owner,
     """
 
     # If variable is specified in state_params, use that
-    if VARIABLE in params and params[VARIABLE] is not None:
+    if params is not None and VARIABLE in params and params[VARIABLE] is not None:
         variable = params[VARIABLE]
 
     # MODIFIED 5/17/17 FROM _instantiate_state: ----------------------------------------------------------------
@@ -2074,7 +2022,7 @@ def _parse_state_spec(owner,
             # Pass to assignment of entries at end of method
             pass
 
-    # Tuple (including ParamValueProjection tuple)
+    # Tuple
     elif isinstance(state_spec, tuple):
         # Parse state_spec in first item of tuple
         state_dict = _parse_state_spec(owner=owner,
@@ -2107,12 +2055,16 @@ def _parse_state_spec(owner,
             raise StateError("PROGRAM ERROR: state_spec for {} of {} is a function ({}), "
                              "but it failed to return a value".format(state_type,owner.name, state_spec))
 
+    # value, so use as value of input_state
+    elif is_value_spec(state_spec):
+        variable = state_spec
+
     elif state_spec is None:
         # pass
         raise StateError("PROGRAM ERROR: state_spec for {} of {} is None".format(state_type,owner.name))
 
     else:
-        if hasattr(owner, name):
+        if name and hasattr(owner, name):
             owner_name = owner.name
         else:
             owner_name = owner.__class__.__name__
