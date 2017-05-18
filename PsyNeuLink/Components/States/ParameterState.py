@@ -732,8 +732,8 @@ def _instantiate_parameter_states(owner, context=None):
 
     # TBI / IMPLEMENT: use specs to implement paramterStates below
 
-    owner._parameter_states = {}
-    #
+    owner._parameter_states = ContentAddressableList(ParameterState)
+
     # Check that parameterStates for owner have not been explicitly suppressed (by assigning to None)
     try:
         no_parameter_states = not owner.params[PARAMETER_STATES]
