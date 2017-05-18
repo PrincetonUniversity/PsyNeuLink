@@ -431,7 +431,6 @@ RESULT = 'RESULT'
 MEAN = 'MEAN'
 MEDIAN = 'MEDIAN'
 VARIANCE = 'VARIANCE'
-STANDARD_DEV = 'STANDARD_DEV'
 
 STATE_VALUE = "State value"   # Used in State specification dict
                                                  #  to specify State value
@@ -553,6 +552,9 @@ HIGH = 'high'
 BETA = 'beta'
 
 DIST_SHAPE = 'dist_shape'
+
+STANDARD_DEV = 'standard_dev'
+DIST_MEAN = 'mean'
 
 OUTPUT_TYPE = 'output'
 ALL = 'all'
