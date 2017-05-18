@@ -86,18 +86,16 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import \
-    LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
-
-from PsyNeuLink.Components.Functions.Function import BackPropagation, Logistic, Linear
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import _objective_mechanism_role
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
+                                                                            import LearningMechanism, ERROR_SIGNAL
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Components.Functions.Function import Linear, BackPropagation
 
 # Params:
 
@@ -107,8 +105,8 @@ projection_keywords.update({LEARNING_PROJECTION})
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
 
-    Return :keyword:`true` if spec is LEARNING or a valid projection_spec (see Projection._is_projection_spec
-    Otherwise, return :keyword:`False`
+    Return `True` if spec is LEARNING or a valid projection_spec (see Projection._is_projection_spec.
+    Otherwise, return `False`
 
     """
     if spec is LEARNING:
@@ -140,7 +138,7 @@ class LearningProjectionError(Exception):
 
 
 
-class LearningProjection(Projection_Base):
+class LearningProjection(ModulatoryProjection_Base):
     """
     LearningProjection(               \
                  sender=None,         \
@@ -356,7 +354,7 @@ class LearningProjection(Projection_Base):
             # VALIDATE SENDER
             sender = self.sender
             if isinstance(sender, LearningMechanism):
-                sender = self.sender = sender.outputState
+                sender = self.sender = sender.output_state
 
             if any(s in {OutputState, LearningMechanism} for s in {sender, type(sender)}):
                 # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
@@ -381,7 +379,7 @@ class LearningProjection(Projection_Base):
             receiver = self.receiver
             if isinstance(receiver, MappingProjection):
                 try:
-                    receiver = self.receiver = receiver.parameterStates[MATRIX]
+                    receiver = self.receiver = receiver._parameter_states[MATRIX]
                 except KeyError:
                     raise LearningProjectionError("The MappingProjection {} specified as the receiver for {} "
                                                   "has no MATRIX parameter state".format(receiver.name, self.name))
@@ -473,7 +471,7 @@ class LearningProjection(Projection_Base):
 
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
-        candidate_objective_mech = learning_mechanism.inputStates[ERROR_SIGNAL].receivesFromProjections[0].sender.owner
+        candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].receivesFromProjections[0].sender.owner
         if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
             learned_projection.objective_mechanism = candidate_objective_mech
         learned_projection.learning_mechanism = learning_mechanism

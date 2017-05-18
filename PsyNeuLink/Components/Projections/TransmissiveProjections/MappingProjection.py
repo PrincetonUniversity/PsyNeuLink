@@ -128,12 +128,12 @@ In addition to its `function <MappingProjection.function>`, MappingProjections u
 
 .. _Mapping_Parameter_Modulation_Operation:
 
-* `param_modulation_operation <MappingProjection.param_modulation_operation>`
+* `matrix_modulation_operation <MappingProjection.matrix_modulation_operation>`
 
   Used to determine how the value of any projections to the `parameterState <ParameterState>` for the
   `matrix <MappingProjection.matrix>` influence it.  For example, this is used for a `LearningProjection` to apply
   weight changes to the `matrix <MappingProjection.matrix>` during learning. The
-  :keyword:`param_modulation_operation` attribute must be assigned a value of `ModulationOperation` and the operation
+  :keyword:`matrix_modulation_operation` attribute must be assigned a value of `ModulationOperation` and the operation
   is always applied in an element-wise (Hadamard) manner. The default operation is ADD.
 
 .. _Projection_Execution:
@@ -159,6 +159,7 @@ Class Reference
 """
 
 from PsyNeuLink.Components.Projections.Projection import *
+from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection import TransmissiveProjection_Base
 from PsyNeuLink.Components.Functions.Function import *
 
 parameter_keywords.update({MAPPING_PROJECTION})
@@ -170,13 +171,13 @@ class MappingError(Exception):
         self.error_value = error_value
 
 
-class MappingProjection(Projection_Base):
+class MappingProjection(TransmissiveProjection_Base):
     """
     MappingProjection(                                      \
         sender=None,                                        \
         receiver=None,                                      \
         matrix=DEFAULT_MATRIX,                              \
-        param_modulation_operation=ModulationOperation.ADD, \
+        matrix_modulation_operation=ModulationOperation.ADD, \
         params=None,                                        \
         name=None,                                          \
         prefs=None)
@@ -237,7 +238,7 @@ class MappingProjection(Projection_Base):
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
         value of the `sender <MappingProjection.sender>`.
 
-    param_modulation_operation : ModulationOperation : default ModulationOperation.ADD
+    matrix_modulation_operation : ModulationOperation : default ModulationOperation.ADD
         specifies the operation used to combine the value of any projections to the matrix's parameterState with the
         `matrix <MappingProjection.matrix>` itself.  Most commonly used with `LearningProjections <LearningProjection>`.
 
@@ -268,7 +269,7 @@ class MappingProjection(Projection_Base):
     receiver: InputState
         identifies the destination of the projection.
 
-    param_modulation_operation : ModulationOperation
+    matrix_modulation_operation : ModulationOperation
         determines the operation used to combine the value of any projections to the matrix's parameterState with the
         `matrix <MappingProjection.matrix>` itself.
 
@@ -314,7 +315,7 @@ class MappingProjection(Projection_Base):
                  sender=None,
                  receiver=None,
                  matrix=DEFAULT_MATRIX,
-                 param_modulation_operation=ModulationOperation.ADD,
+                 matrix_modulation_operation=ModulationOperation.ADD,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -322,7 +323,7 @@ class MappingProjection(Projection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
-                                                  param_modulation_operation=param_modulation_operation,
+                                                  matrix_modulation_operation=matrix_modulation_operation,
                                                   params=params)
 
         self.learning_mechanism = None
@@ -335,7 +336,7 @@ class MappingProjection(Projection_Base):
             self.init_args['name'] = name
             # Delete these as they have been moved to params dict (and will not be recognized by Projection.__init__)
             del self.init_args['matrix']
-            del self.init_args['param_modulation_operation']
+            del self.init_args['matrix_modulation_operation']
 
             # Flag for deferred initialization
             self.value = DEFERRED_INITIALIZATION
@@ -354,7 +355,7 @@ class MappingProjection(Projection_Base):
     # def _instantiate_sender(self, context=None):
             # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
             # #            - kwMATRIX NEEDS TO BE A 3D np.array, EACH 3D ITEM OF WHICH IS A 2D WEIGHT MATRIX
-            # #            - MAKE SURE len(self.sender.value) == len(self.receiver.inputStates.items())
+            # #            - MAKE SURE len(self.sender.value) == len(self.receiver.input_states.items())
             # # for i in range (len(self.sender.value)):
             # #            - CHECK EACH MATRIX AND ASSIGN??
 
@@ -362,18 +363,18 @@ class MappingProjection(Projection_Base):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
-        If the Mechanism has more than one inputState, assignment to other inputStates must be done explicitly
+        If the Mechanism has more than one inputState, assignment to other input_states must be done explicitly
             (i.e., by: _instantiate_receiver(State)
 
         """
         # MODIFIED 4/21/17 OLD: [MOVED TO PROJECTION INIT]
         # # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
         # if isinstance(self.receiver, Mechanism):
-        #     if (len(self.receiver.inputStates) > 1 and
+        #     if (len(self.receiver.input_states) > 1 and
         #             (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
         #         print("{0} has more than one inputState; {1} was assigned to the first one".
         #               format(self.receiver.owner.name, self.name))
-        #     self.receiver = self.receiver.inputState
+        #     self.receiver = self.receiver.input_state
         # MODIFIED 4/21/17 END
 
         self.reshapedWeightMatrix = False
@@ -469,7 +470,7 @@ class MappingProjection(Projection_Base):
 
             # Assume that if monitoringMechanism attribute is assigned,
             #    both a LearningProjection and parameterState[MATRIX] to receive it have been instantiated
-            matrix_parameter_state = self.parameterStates[MATRIX]
+            matrix_parameter_state = self._parameter_states[MATRIX]
 
             # Assign current MATRIX to parameter state's baseValue, so that it is updated in call to execute()
             matrix_parameter_state.baseValue = self.matrix
@@ -504,6 +505,10 @@ class MappingProjection(Projection_Base):
             raise MappingError("Matrix parameter for {} ({}) MappingProjection must be "
                                "an np.matrix, a 2d np.array, or a correspondingly configured list".
                                format(self.name, matrix))
+
+        # FIX: Hack to prevent recursion in calls to setter and assign_params
+        self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+
         self.function.__self__.matrix = matrix
 
     @property

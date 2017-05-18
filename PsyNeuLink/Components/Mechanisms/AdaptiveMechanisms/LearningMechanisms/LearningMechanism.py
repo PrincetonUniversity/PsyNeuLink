@@ -25,10 +25,10 @@ A LearningMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies 
 <MappingProjection.matrix>`) of a `MappingProjection`.  It's function takes an `error_signal` (usually the output of
 an `ObjectiveMechanism` or another `LearningMechanism`) and generates a `learning_signal` that is used to modify
 the MappingProjection by way of a `LearningProjection`.  A LearningMechanism can modify only MappingProjections that
-link ProcessingMechanisms in the same `system <System>` or `process <Process>` to which it belongs.  The learning  
-components of a system can be displayed using the system's `show_graph` method with its **show_learning** argument 
-assigned :keyword:``True`.  LearningMechanisms are execute after all of the ProcessingMechanisms in that system or 
-process have been executed.  If they belong to a system, they are executed before the  
+link ProcessingMechanisms in the same `system <System>` or `process <Process>` to which it belongs.  The learning
+components of a system can be displayed using the system's `show_graph` method with its **show_learning** argument
+assigned :keyword:``True`.  LearningMechanisms are execute after all of the ProcessingMechanisms in that system or
+process have been executed.  If they belong to a system, they are executed before the
 `control components <ControlMechanism>` for that system have been executed.
 
 COMMENT:
@@ -64,7 +64,7 @@ required to implement learning that do not already exist are also instantiated. 
 Structure
 ---------
 
-A LearningMechanism has three `inputStates <InputState>`, a learning `function <LearningMechanism.function>`,
+A LearningMechanism has three `input_states <InputState>`, a learning `function <LearningMechanism.function>`,
 and two `outputStates <OutputState>` that are used to receive, compute, and transmit the information needed to modify
 the MappingProjection for which it is responsible.
 
@@ -115,7 +115,7 @@ These receive the information required by the LearningMechanism's `function <Lea
 Learning Function
 ~~~~~~~~~~~~~~~~~
 
-This uses the three values received by the LearningMechanism's `inputStates <LearningMechanism_InputStates>` to
+This uses the three values received by the LearningMechanism's `input_states <LearningMechanism_InputStates>` to
 calculate a `learning_signal` and its own `error_signal`.  The `learning_signal` is the set of changes to the
 `matrix <MappingProjection.matrix>` parameter of the MappingProjection required to reduce the value received by the
 LearningMechanism's `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>` inputState .  In
@@ -147,7 +147,7 @@ These receive the output of the LearningMechanism's `function <LearningMechanism
    of the MappingProjection being learned.  It is assigned as the `sender <LearningProjection.sender>` for the
    LearningProjection that projects to the MappingProjection.  It's value is accessible as the LearningMechanism's
    `learning_signal` attribute, and as the first item of the LearningMechanism's
-   `outputValue <LearningMechanism.outputValue>` attribute.
+   `output_values <LearningMechanism.output_values>` attribute.
 
 .. _LearningMechanism_Output_Error_Signal:
 
@@ -158,7 +158,7 @@ These receive the output of the LearningMechanism's `function <LearningMechanism
    `multilayer learning sequence <LearningMechanism_Multi_Layer>`, it serves as the `sender <MappingProjection.sender>`
    for a MappingProjection to the LearningMechanism for the MappingProjection before it in the sequence (i.e.,
    the layer "below" it).  It's value is accessible as the LearningMechanism's `learning_signal` attribute,
-   and as the first item of the LearningMechanism's `outputValue <LearningMechanism.outputValue>` attribute.
+   and as the first item of the LearningMechanism's `output_values <LearningMechanism.output_values>` attribute.
 
 .. _LearningMechanism_Additional_Attributes:
 
@@ -336,13 +336,13 @@ been executed, including the ObjectiveMechanism(s) that provide the `error_signa
 LearningMechanism is executed, it uses the value of its `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>`
 inputState to calculate changes to the `matrix <MappingProjection.MappingProjection.matrix>` of its
 `MappingProjection`.  The changes are assigned as the value of its `learning_signal` attribute (as well as the 1st item
-of its `outputValue <LearningMechanism.outputValue>` attribute) and used as the `value <LearningProjection.value>` of
-the `LearningProjection` from the LearningMechanism to the `MATRIX` parameterState of its `learned_projection`.
+of its `output_values <LearningMechanism.output_values>` attribute) and used as the `value <LearningProjection.value>`
+of the `LearningProjection` from the LearningMechanism to the `MATRIX` parameterState of its `learned_projection`.
 However, these but are not applied to the `matrix <MappingProjection.MappingProjection.matrix>` itself until the next
 time the `learned_projection` is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 In addition, the LearningMechanism assigns the `error_signal` signal computed by its
 `function <LearningMechanism.function>` to its `error_signal` attribute (as well as the 2nd item of its
-`outputValue <LearningMechanism.outputValue>` attribute).
+`output_values <LearningMechanism.output_values>` attribute).
 
 .. _LearningMechanism_Class_Reference:
 
@@ -352,16 +352,12 @@ Class Reference
 """
 
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import _objective_mechanism_role
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.Functions.Function import BackPropagation
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.Functions.Function import BackPropagation, Logistic
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
 # Params:
 
@@ -387,7 +383,7 @@ ACTIVATION_OUTPUT_INDEX = 1
 ERROR_OUTPUT_INDEX = 2
 ERROR_SIGNAL_INDEX = 3
 
-# Used to name inputStates:
+# Used to name input_states:
 ACTIVATION_INPUT = 'activation_input'     # inputState
 ACTIVATION_OUTPUT = 'activation_output'   # inputState
 ERROR_SIGNAL = 'error_signal'             # inputState and outputState
@@ -523,7 +519,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         error_source : ObjectiveMechanism or LearningMechanism
             the mechanism from which the LearningMechanism gets its `error_signal`.  The LearningMechanism receives a
-            projection from the `error_source` to its `ERROR_SIGNAL <LearningMechanism.inputStates>` inputState.
+            projection from the `error_source` to its `ERROR_SIGNAL <LearningMechanism.input_states>` inputState.
             If the `error_source` is an ObjectiveMechanism, the projection is from its
             `primary outputState <OutputState_Primary>`.  If the `error_source` is another LearningMechanism,
             the projection is from its `ERROR_SIGNAL <LearningMechanism.outputStates>` outputState.  In either case,
@@ -555,7 +551,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         matrix of changes to be used by recipient of `LearningProjection` to adjust its parameters (e.g.,
         matrix weights, in rows correspond to sender, columns to receiver); same as `value <LearningMechanism.value>`.
 
-    outputValue : 2d np.array
+    output_values : 2d np.array
         the 1st item is the same as `learning_signal`;  the 2nd item is the same as `error_signal`.
 
     name : str : default LearningProjection-<index>
@@ -716,7 +712,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     # IMPLEMENTATION NOTE: Assumes that the LearningMechanism projects to and modifies only a single MappingProjection
     @property
     def learned_projection(self):
-        learning_projections = self.outputStates[LEARNING_SIGNAL].sendsToProjections
+        learning_projections = self.output_states[LEARNING_SIGNAL].sendsToProjections
         if learning_projections:
             return learning_projections[0].receiver.owner
         else:
@@ -738,22 +734,22 @@ def _instantiate_error_signal_projection(sender, receiver):
     Can take as the sender an `ObjectiveMechanism` or a `LearningMechanism`.
     If the sender is an ObjectiveMechanism, uses its `primary outputState <OutputState_Primary>`.
     If the sender is a LearningMechanism, uses its `ERROR_SIGNAL <LearningMechanism.outputStates>` outputState.
-    The receiver must be a LearningMechanism; its `ERROR_SIGNAL <LearningMechanism.inputStates>` inputState is used.
+    The receiver must be a LearningMechanism; its `ERROR_SIGNAL <LearningMechanism.input_states>` inputState is used.
     Uses and IDENTITY_MATRIX for the MappingProjection, so requires that the sender be the same length as the receiver.
 
     """
 
     if isinstance(sender, ObjectiveMechanism):
-        sender = sender.outputState
+        sender = sender.output_state
     elif isinstance(sender, LearningMechanism):
-        sender = sender.outputStates[ERROR_SIGNAL]
+        sender = sender.output_states[ERROR_SIGNAL]
     else:
         raise LearningMechanismError("Sender of the error signal projection {} must be either "
                                      "an ObjectiveMechanism or a LearningMechanism".
                                      format(sender))
 
     if isinstance(receiver, LearningMechanism):
-        receiver = receiver.inputStates[ERROR_SIGNAL]
+        receiver = receiver.input_states[ERROR_SIGNAL]
     else:
         raise LearningMechanismError("Receiver of the error signal projection {} must be a LearningMechanism".
                                      format(receiver))

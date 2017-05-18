@@ -371,9 +371,10 @@ Class Reference
 
 """
 
+from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.States.State import _instantiate_state
-from PsyNeuLink.Components.Functions.Function import *
+
 
 class ParameterStateError(Exception):
     def __init__(self, error_value):
@@ -583,18 +584,14 @@ class ParameterState(State_Base):
         Parameter can be either owner's, or owner's function_object
         """
 
-        # # MODIFIED 11/29/16 OLD:
-        # if not self.name in self.owner.function_params.keys():
-        # MODIFIED 11/29/16 NEW:
         # If the parameter is not in either the owner's user_params dict or its function_params dict, throw exception
         if not self.name in self.owner.user_params.keys() and not self.name in self.owner.function_params.keys():
-        # MODIFIED 11/29/16 END
             raise ParameterStateError("Name of requested parameterState ({}) does not refer to a valid parameter "
                                       "of the component ({}) or it function ({})".
                                       format(self.name,
                                              # self.owner.function_object.__class__.__name__,
                                              self.owner.name,
-                                             self.owner.function_object.componentName))
+                                             self.owner.function.componentName))
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -686,20 +683,6 @@ class ParameterState(State_Base):
             self.value = self.parameterModulationOperation(self.baseValue, self.value)
         #endregion
 
-        # FIX: STRIP VALUES OUT OF ARRAY OR LIST OF THAT IS WHAT PARAMETER REQUIRES (USE TYPE-MATCH?)
-        # FIX: DEHACK TEST FOR MATRIX
-        # FIX: MOVE TO PROPERTY
-        # # MODIFIED 2/21/17 NEW: FOR EVC BUT BREAKS LEARNING
-        # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
-        # if self.name in self.owner.function_params and not 'matrix' in self.name:
-        #     param_type = type(getattr(self.owner.function.__self__, self.name))
-        #     # # MODIFIED 4/20/17 OLD:
-        #     # self.owner.function.__self__.paramsCurrent[self.name] = type_match(self.value, param_type)
-        #     # MODIFIED 4/20/17 NEW:
-        #     param_back_field_name = '_' + self.name
-        #     self.owner.function.__self__.paramsCurrent[param_back_field_name] = type_match(self.value, param_type)
-        #     # MODIFIED 4/20/17 END
-
         #region APPLY RUNTIME PARAM VALUES
         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
         if (not self.stateParams or self.prefs.runtimeParamModulationPref is ModulationOperation.DISABLED):
@@ -722,16 +705,6 @@ class ParameterState(State_Base):
         else:
             # If tuple, use param-specific ModulationOperation as operation
             self.value = operation(value, self.value)
-
-        # # MODIFIED 4/20/17 REMOVED (SEEMS NOT TO BE NEEDED)
-        # # MODIFIED 2/21/17 NEW: FOR EVC, BUT BREAKS LEARNING
-        # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
-        # if self.name in self.owner.function_params and not 'matrix' in self.name:
-        # # if self.name in self.owner.function_params:
-        # #     setattr(self.owner.function.__self__, self.name, self.value)
-        #     param_type = type(getattr(self.owner.function.__self__, self.name))
-        #     setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
-        TEST = True
 
         #endregion
 
@@ -759,7 +732,7 @@ def _instantiate_parameter_states(owner, context=None):
 
     # TBI / IMPLEMENT: use specs to implement paramterStates below
 
-    owner.parameterStates = {}
+    owner._parameter_states = {}
     #
     # Check that parameterStates for owner have not been explicitly suppressed (by assigning to None)
     try:
@@ -822,16 +795,16 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         pass
     # Allow ControlProjection, LearningProjection
     elif isinstance(param_value, Projection):
-        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         if isinstance(param_value, (ControlProjection, LearningProjection)):
             pass
         else:
             return
     # Allow Projection class
     elif inspect.isclass(param_value) and issubclass(param_value, Projection):
-        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         if issubclass(param_value, (ControlProjection, LearningProjection)):
             pass
         else:
@@ -895,7 +868,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                       constraint_value_name=function_param_name,
                                       context=context)
             if state:
-                owner.parameterStates[function_param_name] = state
+                owner._parameter_states[function_param_name] = state
             continue
 
     else:
@@ -908,5 +881,5 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                   constraint_value_name=param_name,
                                   context=context)
         if state:
-            owner.parameterStates[param_name] = state
+            owner._parameter_states[param_name] = state
 

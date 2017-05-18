@@ -33,6 +33,7 @@ TYPE CHECKING VALUE COMPARISON
 * `is_numeric`
 * `is_numeric_or_none`
 * `iscompatible`
+* `is_value_spec`
 
 ENUM
 ~~~~
@@ -61,6 +62,8 @@ OTHER
 * `underscore_to_camelCase`
 * `append_type_to_name`
 * `ReadOnlyOrderedDict`
+* `ContentAddressableList`
+* `make_readonly_property`
 
 """
 
@@ -128,12 +131,12 @@ class AutoNumber(IntEnum):
     * Start of numbering changed to 0 (from 1 in example)
     * obj based on int rather than object
     """
-    def __new__(cls):
+    def __new__(component_type):
         # Original example:
-        # value = len(cls.__members__) + 1
-        # obj = object.__new__(cls)
-        value = len(cls.__members__)
-        obj = int.__new__(cls)
+        # value = len(component_type.__members__) + 1
+        # obj = object.__new__(component_type)
+        value = len(component_type.__members__)
+        obj = int.__new__(component_type)
         obj._value_ = value
         return obj
 
@@ -182,7 +185,7 @@ def parameter_spec(param):
                            tuple,
                            function_type,
                            ParamValueProjection,
-                           Projection)) or callable(param) or
+                           Projection)) or
         (inspect.isclass(param) and issubclass(param, Projection)) or
         param in parameter_keywords):
         return True
@@ -311,6 +314,7 @@ def iscompatible(candidate, reference=None, **kargs):
         kargs[kwCompatibilityNumeric] = True
         # number_only = True
 
+
     # If reference is not provided, assign local_variables to arg values (provided or default)
     if reference is None:
         match_type = kargs[kwCompatibilityType]
@@ -350,6 +354,8 @@ def iscompatible(candidate, reference=None, **kargs):
             (isinstance(candidate, numbers.Number) and issubclass(match_type,numbers.Number)) or
             # IMPLEMENTATION NOTE: Allow UserDict types to match dict (make this an option in the future)
             (isinstance(candidate, UserDict) and match_type is dict) or
+            # IMPLEMENTATION NOTE: Allow UserList types to match list (make this an option in the future)
+            (isinstance(candidate, UserList) and match_type is list) or
             # IMPLEMENTATION NOTE: This is needed when kwCompatiblityType is not specified
             #                      and so match_type==list as default
             (isinstance(candidate, numbers.Number) and issubclass(match_type,list)) or
@@ -629,3 +635,235 @@ class ReadOnlyOrderedDict(UserDict):
         return self._ordered_keys
     def copy(self):
         return self.data.copy()
+
+from collections import UserList
+class ContentAddressableList(UserList):
+    """
+    ContentAddressableList( component_type, key=None, list=None)
+
+    Implements dict-like list, that can be keyed by the names of the `compoments <Component>` in its entries.
+
+    Supports:
+      * getting and setting entries in the list using keys (string), in addition to numeric indices.
+        the key to use is specified by the **key** arg of the constructor, and must be a string attribute;
+        * for getting an entry:
+          the key must match the keyed attribute of a component in the list; otherwise an exception is raised;
+        * for setting an entry:
+            - the key must match the key of the component being assigned;
+            - if there is already a component in the list the keyed vaue of which matches the key, it is replaced;
+            - if there is no component in the list the keyed attribute of which matches the key,
+              the component is appended to the list;
+        * for getting lists of the names, values of the keyed attributes, and values of the `value <Component.value>`
+            attributes of components in the list.
+
+    IMPLEMENTATION NOTE:
+        This class allows components to be maintained in lists, while providing ordered storage
+        and the convenience access and assignment by name (e.g., akin to a dict).
+        Lists are used (instead of a dict or OrderedDict) since:
+            - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
+                collections of states to other variables, such as lists of their values);
+            - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
+                or by key (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for
+                accessing by key/name less critical;
+            - the number of states in a collection for a given mechanism is likely to be small so that, even when
+                accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
+
+    Arguments
+    ---------
+
+    component_type : Class
+        specifies the class of the items in the list.
+
+    key : str : default `name`
+        specifies the attribute of **component_type** used to key items in the list by content;
+        **component_type** must have this attribute or, if it is not provided, an attribute with the name 'name'.
+
+    list : List : default None
+        specifies a list used to initialize the list;
+        all of the items must be of type **component_type** and have the **key** attribute.
+
+    Attributes
+    ----------
+
+    component_type : Class
+        the class of the items in the list.
+
+    key : str
+        the attribute of `component_type <ContentAddressableList.component_type>` used to key items in the list by content;
+
+    data : List (property)
+        the actual list of items.
+
+    names : List (property)
+        values of the `name <Component>` attribute of components in the list.
+
+    key_values : List (property)
+        values of the keyed attribute of each component in the list.
+
+    values : List (property)
+        values of the `value <Component>` attribute of components in the list.
+
+    """
+
+    def __init__(self, component_type, key=None, list=None, **kwargs):
+        self.component_type = component_type
+        self.key = key or 'name'
+        if not isinstance(component_type, type):
+            raise UtilitiesError("component_type arg for {} ({}) must be a class"
+                                 .format(self.__class__.__name__, component_type))
+        if not isinstance(self.key, str):
+            raise UtilitiesError("key arg for {} ({}) must be a string".
+                                 format(self.__class__.__name__, self.key))
+        if not hasattr(component_type, self.key):
+            raise UtilitiesError("key arg for {} (\'{}\') must be an attribute of {}".
+                                 format(self.__class__.__name__,
+                                        self.key,
+                                        component_type.__name__))
+        if list is not None:
+            if not all(isinstance(obj, self.component_type) for obj in list):
+                raise UtilitiesError("All of the items in the list arg for {} "
+                                     "must be of the type specified in the component_type arg ({})"
+                                     .format(self.__class__.__name__, self.component_type.__name__))
+        UserList.__init__(self, list, **kwargs)
+
+    def __repr__(self):
+        return '[\n\t{0}\n]'.format('\n\t'.join(['{0}\t{1}\t{2}'.format(i, self[i].name, repr(self[i].value)) for i in range(len(self))]))
+
+    def __getitem__(self, key):
+        if key is None:
+            raise KeyError("None is not a legal key for {}".format(self.__class__.__name__))
+        try:
+            return self.data[key]
+        except TypeError:
+            key_num = self._get_key_for_item(key)
+            return self.data[key_num]
+
+    def __setitem__(self, key, value):
+        # For efficiency, first assume the key is numeric (duck typing in action!)
+        try:
+            self.data[key] = value
+        # If it is not
+        except TypeError:
+            # It must be a string
+            if not isinstance(key, str):
+                raise UtilitiesError("Non-numer key used for {} ({})must be a string)".
+                                      format(self.__class__.__name__, key))
+            # The specified string must also match the value of the attribute of the class used for addressing
+            if not key == value.name:
+                raise UtilitiesError("The key of the entry for {} {} ({}) "
+                                     "must match the value of its {} attribute ({})".
+                                      format(self.__class__.__name__,
+                                             value.__class__.__name__,
+                                             key,
+                                             self.key,
+                                             getattr(value, self.key)))
+            #
+            key_num = self._get_key_for_item(key)
+            if key_num is not None:
+                self.data[key_num] = value
+            else:
+                self.data.append(value)
+
+    def __contains__(self, item):
+        if super().__contains__(item):
+            return True
+        else:
+            return any(item == obj.name for obj in self.data)
+
+    def _get_key_for_item(self, key):
+        if isinstance(key, str):
+            obj = next((obj for obj in self.data if obj.name == key), None)
+            if obj is None:
+                return None
+            else:
+                return self.data.index(obj)
+        elif isinstance(key, self.component_type):
+            return self.data.index(key)
+        else:
+            raise UtilitiesError("{} is not a legal key for {} (must be number, string or State)".
+                                  format(key, self.key))
+
+    def __delitem__(self, key):
+        del self.data[key]
+
+    def clear(self):
+        super().clear()
+
+    # def pop(self, key, *args):
+    #     raise UtilitiesError("{} is read-only".format(self.name))
+    #
+    # def popitem(self):
+    #     raise UtilitiesError("{} is read-only".format(self.name))
+
+    def __additem__(self, key, value):
+        if key >= len(self.data):
+            self.data.append(value)
+        else:
+            self.data[key] = value
+
+    def copy(self):
+        return self.data.copy()
+
+    @property
+    def names(self):
+        """Return list of `values <Component.value>` of the name attribute of components in the list.
+        Returns
+        -------
+        names :  list
+            list of the values of the `name <Component.name>` attributes of components in the list.
+        """
+        return [getattr(item, NAME) for item in self.data]
+
+    @property
+    def key_values(self):
+        """Return list of `values <Component.value>` of the keyed attribute of components in the list.
+        Returns
+        -------
+        key_values :  list
+            list of the values of the `keyed <Component.name>` attributes of components in the list.
+        """
+        return [getattr(item, self.key) for item in self.data]
+
+    @property
+    def values(self):
+        """Return list of values of components in the list.
+        Returns
+        -------
+        values :  list
+            list of the values of the `value <Component.value>` attributes of components in the list.
+        """
+        return [getattr(item, VALUE) for item in self.data]
+
+    @property
+    def values_as_lists(self):
+        """Return list of values of components in the list, each converted to a list.
+        Returns
+        -------
+        values :  list
+            list of list values of the `value <Component.value>` attributes of components in the list,
+        """
+        return [np.ndarray.tolist(getattr(item, VALUE)) for item in self.data]
+
+
+
+
+def is_value_spec(spec):
+    if isinstance(spec, (int, float, list, np.ndarray)):
+        return True
+    else:
+        return False
+
+
+def make_readonly_property(val):
+    """Return property that provides read-only access to its value
+    """
+
+    def getter(self):
+        return val
+
+    def setter(self, val):
+        raise UtilitiesError("{} is read-only property of {}".format(val, self.__class__.__name__))
+
+    # Create the property
+    prop = property(getter).setter(setter)
+    return prop

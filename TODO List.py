@@ -30,9 +30,28 @@
 #   8) • DOCUMENTATION: SHOULD WE INCLUDE COMPONENT ATTRIBUTES IN DOCSTRING FOR SUBCLASSES (E.G., params, prefs, etc.)
 #   9) • DOCUMENTATION: SHOULD EXAMPLES BE GENERIC (SEE COMPONENT FUNCTION) OR SPECIFIC (USING ACTUAL PNL OBJECTS)?
 #  10) DOCUMENTATION: INCLUDE EXAMPLES "INLINE" OR IN THEIR OWN SECTION AT THE END?
-#  11) • SHOULD COMPONENT NAMES HAVE SPACES OF UNDERSCORES?
-#  12) • SHOULD learning_rate FOR LearningProjection SET SLOPE OF function OR DIRECTLY MULTIPLY WEIGHTS?
-#  13) HOW TO HANDLE RECURRENT PROJECTIONS RE: LEARNING?
+#  11) DOCUMENTATION: INTERNALLY-MADE ATTRIBUTE ASSIGNEMENTS SHOULD GENERALLY BE TO THE BACKFIELD (_<attrib>)
+#                       TO AVOID INVOCATION OF assign_params BY PROPERTY
+#                       (WHICH IS INTENDED FOR VALIDATION OF EXTERNAL ASSIGNMENTS)
+#  12) • SHOULD COMPONENT NAMES HAVE SPACES OF UNDERSCORES?
+#  13) • SHOULD learning_rate FOR LearningProjection SET SLOPE OF function OR DIRECTLY MULTIPLY WEIGHTS?
+#  14) HOW TO HANDLE RECURRENT PROJECTIONS RE: LEARNING?
+#  15) EVER ALLOW INSTANTIATION OF SENDER BY PROJECTION (OR ALWAYS RELY ON deferred_init())?
+#  16) HOW TO HANDLE GATING:
+#      • SPECIFICATION (WHERE AND HOW)
+#      • MODULATION (WHO'S RESPONSIBLE FOR THE PARAMETER_MODULATION_OPERATION:  THE STATE OR THE PROJECTION?
+#      • EXECUTION:  "INLINE" (WILL INTRODUCE CYCLES IN GRAPH) OR LIKE CONTROL (PRECLUDES W/IN TRIAL GATING);
+#                    EITHER WAY, HOW TO IMPLEMENT W/IN ROUND (I.E., W/IN TRIAL) GATING OF A STATE?
+#                    E.G., CLASSIC CASES IN WHICH EITHER A STIMULUS GATES ITSELF INTO WM (DA)
+#                          OR A DECISION INDUCES LC GATING OF RESPONSE?
+#      PROPOSAL:  ALL ADAPTIVE PROJECTIONS MODULATE A PARAMETER OF THE FUNCTION OF THE STATE TO WHICH THEY PROJECT:
+#                      LEARNING:  MATRIX PARAMETER STATE OF MAPPING PROJECTION (ADD / INTERCEPT)
+#                      GATING:    INPUT AND OUTPUT STATE OF MECHANISM (MULTIPLY / SLOPE/GAIN)
+#                      CONTROL:   PARAMETER STATE STATE OF MECHANISM (MULTIPLY / SLOPE/GAIN)
+#                 NEED SOME WAY TO SPECIFY WHICH PARAMETER OF THE STATE'S FUNCTION THE MODULATORY PROJECTION MODULATES
+#      ADD SUBCLASSING OF PROJECTIONS:
+#                 TRANSMISSIVE (MappingProjection):  FROM PROCESSING MECHANISM
+#                 ADAPTIVE (LearningProjection, GatingProjection, ControlProjection): FROM ADAPTIVE MECHANISM
 
 # TASKS:
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
@@ -134,6 +153,10 @@
 
 # DOCUMENTATION: add heading for Primary OutputState in States
 
+# DOCUMENTATION: input_states, parameter_states and output_states as ContentAddressableList
+
+# DOCUMENTATION:rst pages for Gating components
+
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
@@ -141,21 +164,123 @@
 # IMPLEMENT:  Deferred init for control.
 
 # IMPLEMENT General creation of INPUT_STATES for all mechanisms as ObjectiveMechanism does it
-#           Use that to generalize creation of inputStates for PredictionMechanism by EVCMechanism
+#           Use that to generalize creation of input_states for PredictionMechanism by EVCMechanism
 #
 # IMPLEMENT: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
 
-# IMPLEMENT: LCA (Leaky Competitive Accumulator):
-#                  RecurrentTransferMechanism with inhibition argument instead of matrix, and
-#                     implements matrix that is constrained to be all negative weights = inhibition
-#                  Implement "DDM_emulation_mode" in which inhibition = decay > than some value and len(variable[0]) = 2
+
+# IMPLEMENT: LCA (Leaky Competitive Accumulator):  SET DEFAULT PARAMS THAT ~ DDM
 
 
-# FIX FINISH UP X_DEFAULT_CONTROL_MECH / CONTROLLED PROJECTION DEFERRED_INIT:
-# Finish looking at _instantiate_sender for Projection and ControlProjection:
-#     - get rid of both instantiation of projection and of any DefaultController-related stuff
-#     - get rid of duplicate entries in ControlSignal sendsToProjections
+# SEARCH & REPLACE: allocation_policy -> control_policy (AND ALL VARIANTS THEREOF)
+# SEARCH & REPLACE: baseValue -> base_value
+# SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
+# SEARCH & REPLACE: monitored_values -> monitor_values
 
+# FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
+#
+# IMPLEMENT: standard_output_states for ObjectiveMechanism, LCA, RecurrentTransfer, and Intregrator
+#              (use ones at top of OutputState)
+# IMPLEMENT: Move RecurrentTransfer and LCA calculate functions to standard_output_states
+# IMPLEMENT: Subclasses of ObjectiveMechanism (Comparator and Monitor)
+# IMPLEMENT: standard_input_states (e.g., SAMPLE & TARGET as defaults for the Comparator subclass)
+# IMPLEMENT: Add WEIGHTS and EXPONENTS entry (or single one with tuple value) to inputState specification dicts
+#              and use that in ObjectiveMechanism instead of args or tuple specs
+# IMPLEMENT: Add GATING entry to both input and otuput state dicts
+#
+#  FIX: MAKE SURE THAT System AND/OR EVCMechanism ASSIGN OutputStates TO MONITORY ONLY
+#  FIX:  TO THOSE MECHANISMS FOR WHICH THE OUTPUTSTATE WERE SPECIFIED (UNLESS GIVEN A GENERIC NAME)
+#      PROTOCOL:
+#          a) Mechanism implements emptyp input_state and output_state in paramClassDefaults,
+#                to insure that they are included in user_params
+#          b) If any are specified in constructor args (input_states or output_states), they totally override
+#                paramClassDefaults [??CURRENTLY DEALT WITH IN Mechanism._filter_params??]
+#          c) Subclass implements default set in module, and uses those as defaults for constructor args
+#                (??standard way of overriding paramClassDefault or need to implement in assign_args_to_dicts)?
+
+#          See ObjectiveMechanism._instantiate_input_state_for_monitored_value for parse of input_state specification
+
+# DECIDE WHETHER OR NOT input_states AND output_states SHOULD BE properties (at bottom of assign_args_to_params):
+#          IF SO, make sure paramClassDefaults ones get done if input_states/output_states aren't args or are None
+#                   and/or enforce as args in inits of all mechanisms?
+#          IF NOT, make sure they are removed from user_params
+
+#     input_states and output_states can be specificed by a dict, in which the key is the name and value is the
+#           value to use as its variable, or a dict of params
+#     Mechanism implements PRIMARY input_state and output_state in paramClassDefaults for base_class;
+#        it can then be relabeled by subclasses if desired.
+#      Replace output_states construtor arg with control_signals, gating_signals, learning_signals
+#               subclasss __init__ should intercept and rename as output_states,
+#                  and a property that accesses output_states
+#      Implement list of possible states, named, and usable in the arg
+#      Do same for input_states ObjectiveMechanism that gets subclassed (Comparator for learning, Monitor for control),
+#               that replaces input_states with SAMPLE and TARGET (Comparator), or monitored_states (Monitor)
+#     TEST USING assign_params ON COMMAND LINE TO ADD AN inputState or outputState
+#     DOCUMENTATION for input_state(s) and output_state(s)
+#                   finish "NEW DOCUMENTATION" in ObjectiveMechanism
+#                   variable and value: 2d np.arrays
+#                   input_values and output_values:  lists of values, but each value may be an np.ndarray
+#                   [in/out]put_states.values_as_lists: lists of values, each of which has been converted to a list
+#                   NO LONGER TRUE (since they are in paramClassDefaults??):
+#                                 Only appear in user_params if specified in arg of constructor
+#
+# FIX: Duplicated MappingProjections:  State, Line 423 vs. ObjectiveMechanism Line 617
+# FIX:   In LearningAuxiliary:
+#                  # input_states=[{NAME:SAMPLE,
+#                  #                VARIABLE:sample_input},
+#                  #               {NAME:TARGET,
+#                  #                VARIABLE:target_input}],
+#                  input_states=[{SAMPLE:sample_input},
+#                                {TARGET:target_input}],
+
+# ------------------------------------------------------------------------------------------------------------------
+
+# MODULATORY COMPONENTS ----------------------------------------------------------
+# IMPLEMENT: Abstract modulatory projection in AdaptiveMechanism
+#                - using _instantiate_output_states and _instantiate_projections
+#                - should parallel implementation of input_states and monitored_values in ObjectiveMechanism
+# SEARCH & REPLACE: monitored_values -> monitor_values
+# IMPLEMENT: modulation_operation FOR ModulatoryProjections
+#            function_type or method_type SPECIFICATION IN ADDITION TO ModulationOperation FOR modulation_operation
+#                 parameter of ModulatoryFunctions
+# IMPLEMENT: additive and multiplicative ATTRIBUTES FOR TransferFunctions (REQIURE THESE, AND DOCUMENT FOR TransferFct)
+# IMPLEMENT: CONSTRAINT ON STATE FUNCTIONS TO BE A TransferFunction
+# DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction
+# DOCUMENTATION: UPDATE ParameterState_Parameter_Modulation_Operation WITH REFACTORING OF modulation_operation arg/param
+# FIX: is_param_spec to allow tuple with projection specification in it TO PASS TYPECHECK
+# FIX: PARSING OF input_state AND output_state ARGS IN Mechanism CONSTRUCTORS:
+# FIX:    * input_states arg crashes
+# FIX:    * doesn't recognize reference to existing specification dict for outputStates in constructor arg
+#            getting packaged by Python interpreter as a tuple in the arg: either look for tuples or use *ref notation?
+#               (see my_mean example in TransferMechanism)
+# IMPLEMENT: Move `calculate` attribute of outputState to function, while preserving index attribute
+# IMPLEMENT: MEANS TO SPECIFY GATING FOR A InputState AND OutputState OF A MECHANISM:
+#         * implement default (RESULTS) for primary outputState
+#               (??and change reference to it in DOCS from "primary" to "results" outputState
+#         * create sets of input_states and outputStates either at top of module or in class (below paramClassDefaults)
+#         * parse input_state and output_state specs for duplicate names or entries, and update dicts accordingly
+#              (so that default versions can be modified, not just added to -- seee Mechanism._filter_params
+#         * implement GatingProjection spec:  can be only value for input_state or output_state arg,
+#              with keywords GATE (==GATE_PRIMARY) GATE_ALL, GATE_PRIMARY
+#              or an entry in the state specification dictionary with the key "GATING", and a value that is the
+#              keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOpearation value, GatingProjection, or its constructor
+# -----------------------------------------------------------------------------------
+
+# FIX: Recursion loop problem for setters / assign_params
+#         init():  instantiate_output_states (context = INITIALIZING):
+#             setter (context => SET_ATTRIBUTE)
+#             assign_params (context = SET_ATTRIBUTE)
+#             instantiate_output_state (context = None or SET_ATTRIBUTE)
+#             setter (context => SET_ATTRIBUTE)…
+#             assign_params (context = SET_ATTRIBUTE)
+#
+#         COMMAND LINE:
+#             init():  instantiate_output_states (context = COMMAND_LINE):
+#             setter (context => SET_ATTRIBUTE)
+#             assign_params (context = SET_ATTRIBUTE)
+#             instantiate_output_state (context = None or SET_ATTRIBUTE)
+#             setter (context => SET_ATTRIBUTE)…
+#             assign_params (context = SET_ATTRIBUTE)
 
 # FIX: REPLACE: kwConstants must == arg names
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
@@ -189,17 +314,10 @@
 # FIX: SEARCH FOR "` argument" and replace with "**<arg>** argument"
 # FIX: SEARCH FOR ALL MATRIX KEYWORDS AND REPLACE WITH `MATRIX KEYWORD`
 # FIX: DOCUMENTATION OF RESULTS OF TransferMechanism EXECUTION (AND OTHERS), REGARDING WHAT GOES IN THE value ATTRIBUTE
-<<<<<<< HEAD
 
 # FIX: Component._validate_params: if param is a string, check for keywords before raising excpetion
 #                                  (will require consoliation of all keywords?)
 
-=======
-
-# FIX: Component._validate_params: if param is a string, check for keywords before raising excpetion
-#                                  (will require consoliation of all keywords?)
-
->>>>>>> devel
 # TEST: Autoassociative SOFT_CLAMP
 # TEST: Autoassociative learning:  fix [auto_mech] version
 # FIX: ADD PredictionMechanisms TO system.graph AND ASK NATE TO RENDER THEM IN BLUE
@@ -275,7 +393,7 @@
 #                                f) parse MonitoredOUtputStates specification for monitored_values arg
 #                                g) Fix EVC use of ObjectiveMechanism (needs to now call for Mapping Projection
 #     4.5): LearningMechanism:
-#              Name inputStates using input_state_names (or create them explicitly using the values of variable?)
+#              Name input_states using input_state_names (or create them explicitly using the values of variable?)
 #              Instantiate the MappingProjection from its ObjectiveMechanism
 #                            (as ObjectiveMechanism does, by calling module function if not None)
 #              Need to change how learning function is specified, since no longer belongs in LearningProjection
@@ -410,7 +528,7 @@
 #             controlSignal.allocation_samples: set of samples specified for that controlSignal
 #             [TBI:] controlSignal.allocation_range: range that the controlSignal value can take
 #             controller.allocation_policy: current allocation_policy
-#             controller.outputValue: list of current controlSignal values
+#             controller.output_values: list of current controlSignal values
 #             controller.value_function: calls the three following functions (done explicitly, so each can be specified)
 #             controller.outcome_aggregation function: aggregates outcomes (using specified weights and exponentiation)
 #             controller.cost_function:  aggregate costs of control signals
@@ -447,24 +565,24 @@
 #                which are simply convenience string constants that are the same as the name of the argument
 #                for the parameter in the component's constructor. (see :ref:`EVCMechanism_Creation` for text)
 
-# DOCUMENT: inputValue and outputValue are lists for convenience of user access, whereas
+# DOCUMENT: inputValue and output_values are lists for convenience of user access, whereas
 #           variable and value are 2d np.arrays that are used as internal datastructures
 #
 
 
-# DOCUMENT:  Explain better the relationship of an inputStates variable to its value, and of thes to the
+# DOCUMENT:  Explain better the relationship of an input_states variable to its value, and of thes to the
 #            to the potential for multiple items of a mechanism's variable (with an example:  ComparatorMechanism)
 
 
 # DOCUMENT:  FIGURES FOR:
 #                   inputState: inputValue vs. variable
-#                   OutputState: function vs. calculate, value vs. outputState.value vs. outputValue
+#                   OutputState: function vs. calculate, value vs. outputState.value vs. output_values
 
 # DOCUMENT:  IN MECHANISM, CLARIFY:
 #                DISTINCTION BETWEEN THE RESULT OF ITS FUNCTION,
 #                                     AND ITS ``value`` ATTRIBUTE, WHICH IS WHAT IS RETURNED BY ITS EXECUTE METHOD
 #                DISTINCTION BETWEEN ``value``, WHICH IS THE RESULT OF THE MECHANISM'S EXECUTION,
-#                                AND ``outputValue``, WHICH IS A SUMMARY OF THE ``value`` OF EACH OF ITS outputStates
+#                                AND ``output_values``, WHICH IS A SUMMARY OF THE ``value`` OF EACH OF ITS outputStates
 #
 # DOCUMENTATION: add show to Systsem and Process
 #
@@ -519,7 +637,7 @@
 
 # IMPLEMENT / DOCUMENT:
 #             IMPLEMENTATION NOTE:  Process._execute_learning - ~line 1909
-#                This implementation restricts learning to parameterStates of projections to inputStates
+#                This implementation restricts learning to parameterStates of projections to input_states
 #                That means that other parameters (e.g. object or function parameters) are not currenlty learnable
 #             ADD LEARNING TO OF OTHER PARAMETER STATES (E.G., OBJECT ITSELF AND/OR ITS FUNCTION)
 
@@ -1331,8 +1449,8 @@
 # DOCUMENT: System.mechanisms:  DICT:
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
-# DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.outputValue
-# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
+# DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.output_values
+# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.input_states (that receive projections from monitored States) and
 #                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 # DOCUMENT: CURRENTLY, PREDICTION MECHANISMS USE OUTPUT OF CORRESPONDING ORIGIN MECHANISM
 #           (RATHER THAN THEIR INPUT, WHICH == INPUT TO THE PROCESS)
@@ -1347,7 +1465,7 @@
 #           All other Function objects: value is always 1D np.array
 #    - Mechanism.value is always an indexible object of which the first item is a 1D np.array
 #               (corresponding to the value of Mechanism.outputState and Mechanism.outputStates.items()[0]
-#     Mechanism.variable[i] <-> Mechanism.inputState.items()e[i]
+#     Mechanism.variable[i] <-> Mechanism.input_state.items()e[i]
 #     Mechanism.value[i] <-> Mechanism.ouptputState.items()e[i]
 #    - variable = input, value = output
 #    - Function.variable and Function.value are always converted to 2D np.ndarray
@@ -1528,7 +1646,7 @@
 #      In projection() and Function:
 #          DefaultProjection
 #      In Process_Base:
-#          kwProcessDefaultProjection: Components.Projections.MappingProjection
+#          kwProcessDefaultProjection: Components.Projections.TransmissiveProjections.MappingProjection
 #          kwProcessDefaultProjectionFunction: Components.Function.LinearMatrix
 #  DefaultMechanism is now being assigned in Process;
 #  -  need to re-instate some form of set_default_mechanism() in Mechanism
@@ -1625,16 +1743,16 @@
 # FIX!!: Get straight ComponentName vs. ComponentType (e.g.,. EVCMechanism, ComparatorMechanism)
 #
 # FIX!!: VARIABLE VS. VALUE BUSINESS:
-#     QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)
+#     QUESTION: is mechanism.value always == mechanism.output_values (if not, document example)
 #     QUESTION: is self.value re-initialized prior to every system execution? process execution?
-#     FIX: Mechanism.inputValue and outputValue should both be lists (not np.arrays)
+#     FIX: Mechanism.inputValue and output_values should both be lists (not np.arrays)
 #     FIX: WHY BOTHER WITH inputValue ATTRIBUTE?  IF IT IS WORTH KEEPING, ADD TO DOCUMENTATION OF MECHANISM AND INPUTSTATE
-#     IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
+#     IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL input_states
 #     DOCUMENTATION:  inputValue is a list, variable is a 2d np.nparray
-#     FIX:  RECONCILE DOCUMENTATION WITH ACTUALITY:  value == outputValue or just 1st item of outputValue
-#           CURRENTLY:  value = outputValue (DDM doesn't even have an outputValue
-#     FIX:  MAKE IT SO THAT value = output of function, and outputValue is what is returned by execute
-#     FIX:                  check that outputValue is concatenation of outputState values
+#     FIX:  RECONCILE DOCUMENTATION WITH ACTUALITY:  value == output_values or just 1st item of output_values
+#           CURRENTLY:  value = output_values (DDM doesn't even have an output_values
+#     FIX:  MAKE IT SO THAT value = output of function, and output_values is what is returned by execute
+#     FIX:                  check that output_values is concatenation of outputState values
 #     IMPLEMENT .input FOR Component:  == ndarray of all inputState.variables
 #     IMPLEMENT .output FOR Component:  == ndarray of all outputState.variables
 #     FIX: GET STRAIGHT system.input vs. system.inputValue
@@ -1660,7 +1778,7 @@
 
 # FIX:  ALLOW `name` TO BE A PARAM IN A PARAMS DICT (WHICH OVERRIDES name ARGUMENT OF CONSTRUCTOR)
 #
-# FIX: MAKE ALL OBJECT PARAMS @PRPOERTY SO THEY ARE READ-ONLY (I.E., ACCESSSIBLE ONLY VIA ASSIGN_PARAMS)
+# FIX: MAKE ALL OBJECT PARAMS @PRPOERTY SO THEY ARE READ-ONLY (I.E., ACCESSSIBLE ONLY VIA COMMAND_LINE)
 #      AND USE SETTER TO ISSUE WARNING ON ATTEMPTS TO ASSIGN;  INTERNALLY USE _PARAM TO DO DIRECT ASSIGNMENTS
 #
 # FIX:  IN _validate_params, ARE FUNCTION_PARAMS CHECKED AGAINST FUNCTION?  SHOULD BE.
@@ -1956,7 +2074,7 @@
 #                execute based on that, rather than dedicated line in System.execute
 # IMPLEMENT: *** sort System.executionList (per System.show() and exeucte based on that, rather than checking modulos
 # IMPLEMENT: *** EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
-#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
+#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (input_states)
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)
 # IMPLEMENT: Store input passed on command line (i.e., at runtime) in self.input attribute (for access by EVC)??
 # IMPLEMENT: run() function (in Systems module) that runs default System
@@ -2089,7 +2207,7 @@
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 #          #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 #
-# TEST: MAKE SURE THAT outputValue IS GETTING SET PROPERLY
+# TEST: MAKE SURE THAT output_values IS GETTING SET PROPERLY
 #                  (IN Mechanism.execute OR Mecchanism._update_output_states)
 #
 # IMPLEMENT: dictionaries for receivesFromProjections and sendsToProjections;
@@ -2120,7 +2238,7 @@
 #               (in Mechanism_Base.@status.setter, ~Line 1746)
 #
 # IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
-#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
+#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (input_states)
 #
 # - IMPLEMENT: CLEAN UP ORGANIZATION OF STATES AND PARAMS
 # Mechanism components:                Params:
@@ -2140,7 +2258,7 @@
 # - Implement: allow list of names, that will be used to instantiate states using self.value
 # - Implement: allow dict entry values to be types (that should be checked against self.value)
 #
-# - NEED TO INITIALIZE:            kwStateValue: NotImplemented,
+# - NEED TO INITIALIZE:            STATE_VALUE: NotImplemented,
 # - IMPLEMENTATION NOTE: move defaultMechanism to a preference (in Mechanism.__init__() or Process.__init())
 # - IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING RELEVANT PROJECTIONS?
 # -    ASSGIGN  *** HANDLE SAME AS MECHANISM STATE AND PROJECTION STATE DEFAULTS:
@@ -2196,7 +2314,7 @@
 #                                             (that is checked when ControlMechanism is implemented
 #            DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                          it is applied to just that mechanism
-#     DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
+#     DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.input_states (that receive projections from monitored States) and
 #                                   EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 #
 # FIX/DOCUMENT:  WHY SYSTEM: None FOR EVCMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
@@ -2251,7 +2369,7 @@
 #                   - function that returns a 2d array, validate per above.
 #
 # - IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
-#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
+#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (input_states)
 #
 # - IMPLEMENT: .add_projection(Mechanism or State) method:
 #                   - add controlSignal projection from EVC to specified Mechanism/State
@@ -2362,7 +2480,7 @@
 #
 # IMPLEMENT:  ?? ADD OPTION TO OVERRIDE "LAZY UPDATING" OF PARAMETER STATES, SO THAT ANY CHANGES CAN BE SEEN IN A PRINT
 #                STATEMENT AS SOON AS THEY HAVE OCCURRED)
-# IMPLEMENT: ADD OPTION TO SPECIFY WHICH OUTPUT STATES (self.outputValue) TO INCLUDE IN REPORT_OUTPUT
+# IMPLEMENT: ADD OPTION TO SPECIFY WHICH OUTPUT STATES (self.output_values) TO INCLUDE IN REPORT_OUTPUT
 #            (e.g., DDM)
 # IMPLEMENT:  ParamsDict - > .<param>:
 #             In update parameter states, assign self.param.value == parameterState[<param>].value
@@ -2410,7 +2528,7 @@
     # value (variable) == owner's functionOutputValue since that is where it gets it's value
     #    -- ?? should also do this in Mechanism, as per inputState:
                 # See:
-                # Validate self.inputState.value against variable for FUNCTION
+                # Validate self.input_state.value against variable for FUNCTION
                 # Note:  this is done when inputState is first assigned,
                 #        but needs to be done here in case FUNCTION is changed
     # uses MappingProjetion as default projection
@@ -2440,7 +2558,7 @@
 # QUESTION:  WHERE DOES THIS BELONG (WHERE IS InputState USED AS VARIABLE OR ASSIGNMENT SPECIFICATION)??
 #            (WAS IN Initialization arguments: UNDER __init_ FOR Mechanism_Base)
 #             - variable : value, InputState or specification dict for one
-#                       if value, it will be used as variable (template of self.inputState.value)
+#                       if value, it will be used as variable (template of self.input_state.value)
 #                       if State or specification dict, it's value attribute will be used
 
 # QUESTION:  WHERE DOES THIS BELONG (WHERE ARE ParameterStates SPECIFIED FOR ASSIGNMENT)??
@@ -2529,7 +2647,7 @@
 #
 #
 # IMPLEMENTATION NOTE:  ADD DESCRIPTION OF ControlProjection CHANNELS:  ADDED TO ANY SENDER OF A ControlProjection:
-    # USED, AT A MININUM, FOR ALIGNING VALIDATION OF inputStates WITH ITEMS IN variable
+    # USED, AT A MININUM, FOR ALIGNING VALIDATION OF input_states WITH ITEMS IN variable
     #                      ?? AND SAME FOR FOR outputStates WITH value
     # SHOULD BE INCLUDED IN INSTANTIATION OF CONTROL MECHANISM (per SYSTEM DEFAULT CONTROL MECHANISM)
     #     IN OVERRIDES OF _validate_variable AND
@@ -2638,7 +2756,7 @@
 #                                popls = pop.parameterState.receivesFromProjections[0]
 #                            preceding ErrorMonitoringMechanism (pem):
 #                                pem = popls.sender.owner
-#                            assign MappingProjection from pem.outputState to self.inputState
+#                            assign MappingProjection from pem.outputState to self.input_state
 #                        - Get weight matrix for pop (pwm):
 #                                pwm = pop.parameterState.params[MATRIX]
 #    - update: compute weight changes based on errorSignal received rom ErrorMonitor Mechanism and pwm
@@ -2666,7 +2784,7 @@
 #
 # Two object types:
 # 1) ComparatorMechanism (MonioringMechanism):
-#     - has two inputStates:  i) system output;  ii) training input
+#     - has two input_states:  i) system output;  ii) training input
 #     - computes some objective function on them (default:  Hadamard difference)
 #     - default ComparatorMechanism that is associated with default LearningProjection
 #
@@ -2814,7 +2932,7 @@
 #     CYCLE WARNING:  if verbose, on run() warn about any un-initialized recurrent projections
 #     Equivalent of run() for initialize()
 #
-# IMPLEMENT: show function for results of system.execute (integrate with system.outputValues) and process.execute
+# IMPLEMENT: show function for results of system.execute (integrate with system.output_values) and process.execute
 # IMPLEMENT: show function for system and process that shows inputs
 # IMPLEMENT: ??change specification of inputs in construct_inputs to name of process rather than mechanism
 # IMPLEMENT: help function for process.run and system.run that explains required structure of inputs
@@ -2874,7 +2992,7 @@
 #
 # FIX: NEED TO BE ABLE TO SPECIFY phaseSpec FOR EVC;  EITHER:
 #       ALLOW EVC TO BE IN A PROCESS, AND RECEIVE PROCESS-SPECIFIED PROJECTIONS,
-#       WHICH SHOULD AUTOMATICALLY INSTANTIATE CORRESPONDING MONITORED STATES (EVC.inputStates):
+#       WHICH SHOULD AUTOMATICALLY INSTANTIATE CORRESPONDING MONITORED STATES (EVC.input_states):
 #       THAT IS:
 #           WHEN A PROCESS INSTANTIATES AN PROJECTION TO AN EVC MECHANISM,
 #           IT SHOULD NOT JUST ADD THE PROJECTION TO THE PRIMARY INPUT STATE
@@ -2943,10 +3061,10 @@
 #               either in their _validate_params method, or in class function
 #
 #     Make sure add_monitored_value works
-#     Allow inputStates to be named (so they can be used as ComparatorMechanism)
+#     Allow input_states to be named (so they can be used as ComparatorMechanism)
 #     Move it to ProcessingMechanism
 #  Replace ComparatorMechanmism with ObjectiveMechanism
-#   using a particular function and named inputStates
+#   using a particular function and named input_states
 #   FIX: typechecking
 #   FIX: rename `monitor` and `names` args
 #   - IMPLEMENT call to _instantiate_input_states (not plural) once that is implemented (see State above):
@@ -2965,7 +3083,7 @@
 #endregion
 
 #region EVCMechanism -----------------------------------------------------------------------------------
-#     Validate that EVCMechanism.inputState matches outputState from EVCMechanism.monitoring_mechanism
+#     Validate that EVCMechanism.input_state matches outputState from EVCMechanism.monitoring_mechanism
 #     Allow it to take monitoring_mechanism as an argument
 #           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
 #     Make sure add_monitored_value works:

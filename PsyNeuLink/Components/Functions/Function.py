@@ -40,10 +40,6 @@ Objective Functions:
   * `Stability`
   * `Distance`
 
-Objective Functions:
-  * `Stability`
-  * `Distance`
-
 Learning Functions:
   * `Reinforcement`
   * `BackPropagation`
@@ -159,15 +155,13 @@ Class Reference
 from functools import reduce
 from operator import *
 from random import randint
-from numpy import sqrt, abs, tanh, exp, finfo
-import numpy as np
 
-import typecheck as tc
+from numpy import abs, tanh, exp
 
 from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Utilities import random_matrix, is_matrix
+from PsyNeuLink.Globals.Registry import register_category
+from PsyNeuLink.Globals.Utilities import is_matrix
 
 EPSILON = np.finfo(float).eps
 
@@ -1225,6 +1219,8 @@ class LinearCombination(
         # FIX: THEN TEST THAT SHAPES OF EVERY ELEMENT ALONG AXIS 0 ARE THE SAME
         # FIX; PUT THIS IN DOCUMENTATION
         if isinstance(variable, (list, np.ndarray)):
+            if isinstance(variable, np.ndarray) and not variable.ndim:
+                return
             length = 0
             for i in range(len(variable)):
                 if i == 0:
@@ -1425,8 +1421,6 @@ class Linear(
     intercept : float
         value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
         (if it is specified).
-
-    bounds : None
 
     bounds : None
 
@@ -1783,8 +1777,6 @@ class Logistic(
     bias : float
         value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
         (if it is specified).
-
-    bounds : (0,1)
 
     bounds : (0,1)
 
@@ -2163,8 +2155,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     bounds : None
 
-    bounds : None
-
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -2511,7 +2501,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def keyword(self, keyword):
 
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
         rows = None
         cols = None
         if isinstance(self, MappingProjection):
@@ -2767,7 +2757,8 @@ class Integrator(
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: variableClassDefault})
     paramClassDefaults.update({
-        NOISE: None
+        NOISE: None,
+        RATE: None
     })
 
     @tc.typecheck
@@ -2840,8 +2831,11 @@ class Integrator(
                                                    self.name,
                                                    np.array(self.variable).size,
                                                    self.variable))
+                # OLD:
+                # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
-                self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+                # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
+                # to have a rate parameter of type ndarray/list
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -3804,7 +3798,7 @@ class NormalDist(DistributionFunction):
         # Validate variable and assign to self.variable, and validate params
         self._check_args(variable=variable, params=params, context=context)
 
-        mean = self.paramsCurrent[MEAN]
+        mean = self.paramsCurrent[DIST_MEAN]
         standard_dev = self.paramsCurrent[STANDARD_DEV]
 
         result = standard_dev * np.random.normal() + mean
@@ -4209,7 +4203,7 @@ class WaldDist(DistributionFunction):
         self._check_args(variable=variable, params=params, context=context)
 
         scale = self.paramsCurrent[SCALE]
-        mean = self.paramsCurrent[MEAN]
+        mean = self.paramsCurrent[DIST_MEAN]
 
         result = np.random.wald(mean, scale)
 
@@ -4314,7 +4308,7 @@ class Stability(ObjectiveFunction):
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
      """
 
-    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+    from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
     from PsyNeuLink.Components.States.ParameterState import ParameterState
 
     componentName = STABILITY_FUNCTION
@@ -4368,14 +4362,14 @@ class Stability(ObjectiveFunction):
         # Validate error_matrix specification
         if MATRIX in target_set:
 
-            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
             from PsyNeuLink.Components.States.ParameterState import ParameterState
 
             matrix = target_set[MATRIX]
 
             if isinstance(matrix, MappingProjection):
                 try:
-                    matrix = matrix.parameterStates[MATRIX].value
+                    matrix = matrix._parameter_states[MATRIX].value
                     param_type_string = "MappingProjection's ParameterState"
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
@@ -4426,10 +4420,10 @@ class Stability(ObjectiveFunction):
 
         size = len(np.squeeze(self.variable))
 
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         if isinstance(self.matrix,MappingProjection):
-            self.matrix = self.matrix.parameterStates[MATRIX]
+            self.matrix = self.matrix._parameter_states[MATRIX]
         elif isinstance(self.matrix,ParameterState):
             pass
         else:
@@ -5134,14 +5128,14 @@ class BackPropagation(LearningFunction):
             error_matrix = target_set[ERROR_MATRIX]
 
             from PsyNeuLink.Components.States.ParameterState import ParameterState
-            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
             if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
                 raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
                                     "MappingProjection".format(ERROR_MATRIX, self.name))
 
             if isinstance(error_matrix, MappingProjection):
                 try:
-                    error_matrix = error_matrix.parameterStates[MATRIX].value
+                    error_matrix = error_matrix._parameter_states[MATRIX].value
                     param_type_string = "MappingProjection's ParameterState"
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
@@ -5273,3 +5267,20 @@ class BackPropagation(LearningFunction):
 # TBI
 
 # region  *****************************************   REGISTER FUNCTIONS ***********************************************
+
+# region
+
+# FIX: IMPLEMENT AS Functions
+def max_vs_next(x):
+    x_part = np.partition(x, -2)
+    max_val = x_part[-1]
+    next = x_part[-2]
+    return max_val - next
+
+def max_vs_avg(x):
+    x_part = np.partition(x, -2)
+    max_val = x_part[-1]
+    others = x_part[:-1]
+    return max_val - np.mean(others)
+
+#endregion

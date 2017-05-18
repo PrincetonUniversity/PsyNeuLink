@@ -45,31 +45,12 @@ def test_mixed_NN_DDM():
     result = s.run(inputs=stim_list)
 
     expected_output = [
-        (input_layer.outputState.value, np.array([5., 5.])),
-        (hidden_layer.inputState.value, np.array([2.66468183, 4.52238317, 4.58793488, 7.00409625, 5.45141135])),
-        (hidden_layer.outputState.value, np.array([0.93491015, 0.98925363, 0.98992862, 0.99909267, 0.99572808])),
-        (ddm.inputState.value, np.array([4.90891316])),
-        (ddm.outputState.value, np.array([1.])),
-        (result, [
-            [
-                np.array([1.]),
-                np.array([0.84788377]),
-                np.array([0.99999566]),
-                np.array([4.33932833e-06])
-            ],
-            [
-                np.array([1.]),
-                np.array([0.64079774]),
-                np.array([0.99999999]),
-                np.array([1.31228211e-08])
-            ],
-            [
-                np.array([1.]),
-                np.array([0.60742216]),
-                np.array([1.]),
-                np.array([2.96718357e-09])
-            ]
-        ]),
+        (input_layer.output_states[0].value, np.array([5., 5.])),
+        (hidden_layer.input_states[0].value, np.array([2.66468183, 4.52238317, 4.58793488, 7.00409625, 5.45141135])),
+        (hidden_layer.output_states[0].value, np.array([0.93491015, 0.98925363, 0.98992862, 0.99909267, 0.99572808])),
+        (ddm.input_states[0].value, np.array([4.90891316])),
+        (ddm.output_states[0].value, np.array([1.])),
+        (result, [[np.array([ 1.]), np.array([ 0.84788377])], [np.array([ 1.]), np.array([ 0.64079774])], [np.array([ 1.]), np.array([ 0.60742216])]]),
     ]
 
     for i in range(len(expected_output)):

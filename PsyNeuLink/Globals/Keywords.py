@@ -178,12 +178,13 @@ NO_CONTEXT = "NO_CONTEXT"
 INITIALIZING = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
 EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
-kwAssign = ': Assign' # Used in context for Log
+kwAssign = '| Assign' # Used in context for Log
 ASSIGN_VALUE = ': Assign value'
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
 VALIDATE = 'Validate'
 COMMAND_LINE = "COMMAND_LINE"
+SET_ATTRIBUTE = "SET ATTRIBUTE"
 kwParams = 'params'
 CHANGED = 'CHANGED'
 UNCHANGED = 'UNCHANGED'
@@ -235,11 +236,12 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------
 
-# General:
-PREFS_ARG = "prefs"
+# Standard arg / attribute names:
 VARIABLE = "variable"
-NAME = "name"
+VALUE = "value"
 PARAMS = "params"
+NAME = "name"
+PREFS_ARG = "prefs"
 CONTEXT = "context"
 
 INITIAL_VALUES = 'initial_values'
@@ -252,6 +254,7 @@ INPUTS_DIM = 3
 
 COMPONENT_INIT = 'Component.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
+DEFERRED_ASSIGNMENT = 'Deferred Assignment'
 DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
 USER_PARAMS = 'user_params' # Params available to user for inspection in user_params dict
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
@@ -405,7 +408,6 @@ kpMechanismExecutedLogEntry = "Mechanism Executed"
 #region ---------------------------------------------    MECHANISM   ---------------------------------------------------
 
 MECHANISM = 'MECHANISM'
-kwMechanism = "MECHANISM"
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
@@ -426,12 +428,17 @@ MONITORING = 'MONITORING'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 
-kwStateValue = "State value"   # Used in State specification dict
+RESULT = 'RESULT'
+MEAN = 'MEAN'
+MEDIAN = 'MEDIAN'
+VARIANCE = 'VARIANCE'
+
+STATE_VALUE = "State value"   # Used in State specification dict
                                                  #  to specify State value
 STATE_PARAMS = "State params" # Used in State specification dict
 
 # ParamClassDefaults:
-kwMechanismTimeScale = "Mechanism Time Scale"
+MECHANISM_TIME_SCALE = "Mechanism Time Scale"
 kwMechanismExecutionSequenceTemplate = "Mechanism Execution Sequence Template"
 
 # Entries for output OrderedDict, describing the current state of the Mechanism
@@ -476,13 +483,14 @@ ALLOCATION_SAMPLES = "allocation_samples"
 
 #region ----------------------------------------------    STATES  ------------------------------------------------------
 
-kwState = "State"
+STATE = "State"
 # These are use for dict specification of State
 STATE_PROJECTIONS = "StateProjections"  # Used to specify projection list to State
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
 
+PRIMARY = 'Primary'
 INPUT_STATES = 'input_states'
 INPUT_STATE_PARAMS = 'input_state_params'
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
@@ -492,6 +500,7 @@ PARAMETER_STATE_PARAMS = 'parameter_state_params'
 PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
 OUTPUT_STATES = 'output_states'
 OUTPUT_STATE_PARAMS = 'output_states_params'
+STANDARD_OUTPUT_STATES = 'standard_output_states'
 INDEX = 'index'
 CALCULATE = 'calculate'
 #endregion
@@ -542,15 +551,15 @@ INTEGRATOR_FUNCTION = 'integrator_function'
 INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
 
-MEAN = 'mean'
-STANDARD_DEV = 'standard_dev'
-
 LOW = 'low'
 HIGH = 'high'
 
 BETA = 'beta'
 
 DIST_SHAPE = 'dist_shape'
+
+STANDARD_DEV = 'standard_dev'
+DIST_MEAN = 'mean'
 
 OUTPUT_TYPE = 'output'
 ALL = 'all'

@@ -143,7 +143,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         -----------
             * Called by ControlSignalGridSearch.
             * Call system.execute for each `allocation_policy` in `controlSignalSearchSpace`.
-            * Store an array of values for outputStates in `monitored_output_states` (i.e., the inputStates in `inputStates`)
+            * Store an array of values for outputStates in `monitored_output_states` (i.e., the input_states in `input_states`)
                 for each `allocation_policy`.
             * Call `_compute_EVC` for each allocation_policy to calculate the EVC, identify the  maximum,
                 and assign to `EVC_max`.
@@ -156,7 +156,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
               it is NOT used for system.execute -- that uses the runtime_params provided for the Mechanisms in each
                 Process.configuration
 
-            Return (2D np.array): value of outputState for each monitored state (in self.inputStates) for EVC_max
+            Return (2D np.array): value of outputState for each monitored state (in self.input_states) for EVC_max
 
         """
 
@@ -257,7 +257,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             result = None
             EVC_max = float('-Infinity')
             EVC_max_policy = np.empty_like(controller.controlSignalSearchSpace[0])
-            EVC_max_state_values = np.empty_like(controller.inputValue)
+            EVC_max_state_values = np.empty_like(controller.input_values)
             max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             EVC_values = np.array([])
@@ -306,7 +306,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     # Keep track of state values and allocation policy associated with EVC max
                     # EVC_max_state_values = controller.inputValue.copy()
                     # EVC_max_policy = allocation_vector.copy()
-                    EVC_max_state_values = controller.inputValue
+                    EVC_max_state_values = controller.input_values
                     EVC_max_policy = allocation_vector
                     max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
 
@@ -358,9 +358,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         # Assign allocations to controlSignals for optimal allocation policy:
         EVC_maxStateValue = iter(controller.EVC_max_state_values)
 
-        # Assign max values for optimal allocation policy to controller.inputStates (for reference only)
-        for i in range(len(controller.inputStates)):
-            controller.inputStates[list(controller.inputStates.keys())[i]].value = np.atleast_1d(next(EVC_maxStateValue))
+        # Assign max values for optimal allocation policy to controller.input_states (for reference only)
+        for i in range(len(controller.input_states)):
+            controller.input_states[controller.input_states.names[i]].value = np.atleast_1d(next(EVC_maxStateValue))
 
 
         # Report EVC max info
@@ -372,7 +372,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                                         controller.EVC_max_policy[i]))
             print()
 
-        #endregion
+        #endregionj
 
         # # TEST PRINT:
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(controller.outputState.value))
@@ -416,7 +416,11 @@ def _compute_EVC(args):
                         context=context)
 
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
-                                                              outcome=ctlr.inputValue,
+                                                              # MODIFIED 5/7/17 OLD:
+                                                              # outcome=ctlr.input_values,
+                                                              # MODIFIED 5/7/17 NEW:
+                                                              outcome=ctlr.variable,
+                                                              # MODIFIED 5/7/17 END
                                                               costs=ctlr.controlSignalCosts,
                                                               context=context)
 

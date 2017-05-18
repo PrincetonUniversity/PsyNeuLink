@@ -4,9 +4,9 @@ from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DDM_PROBABILITY_UPPER_THRESHOLD
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, PROBABILITY_UPPER_THRESHOLD
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.Functions.Function import Linear, Logistic, BogaczEtAl, Integrator
 from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.scheduling.condition import *
@@ -69,7 +69,7 @@ class TestInit:
             processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
             controller=EVCMechanism,
             enable_controller=True,
-            monitor_for_control=[Reward, (DDM_PROBABILITY_UPPER_THRESHOLD, 1, -1)],
+            #monitor_for_control=[Reward, (PROBABILITY_UPPER_THRESHOLD, 1, -1)],
             name='EVC Gratton System',
         )
 
@@ -127,7 +127,7 @@ class TestLinear:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.outputValue[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.output_values[i])
 
     def test_two_AAB(self):
         A = IntegratorMechanism(
@@ -174,7 +174,7 @@ class TestLinear:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.outputValue[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.output_values[i])
 
     def test_two_ABB(self):
         A = TransferMechanism(
@@ -222,7 +222,7 @@ class TestLinear:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.outputValue[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.output_values[i])
 
 class TestBranching:
     def test_three_ABAC(self):
@@ -288,7 +288,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].outputValue[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
 
     def test_three_ABACx2(self):
         A = IntegratorMechanism(
@@ -353,7 +353,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].outputValue[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
 
     def test_three_2_ABC(self):
         A = IntegratorMechanism(
@@ -418,7 +418,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].outputValue[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
 
     def test_three_2_ABCx2(self):
         A = IntegratorMechanism(
@@ -483,7 +483,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].outputValue[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
 
     def test_three_integrators(self):
         A = IntegratorMechanism(
@@ -558,7 +558,7 @@ class TestBranching:
 
         for m in range(len(mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].outputValue[i])
+                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].output_values[i])
 
     def test_four_ABBCD(self):
         A = TransferMechanism(
@@ -631,7 +631,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].outputValue[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
 
     def test_four_integrators_mixed(self):
         A = IntegratorMechanism(
@@ -731,7 +731,7 @@ class TestBranching:
 
         for m in range(len(mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].outputValue[i])
+                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].output_values[i])
 
 
     def test_five_ABABCDE(self):
@@ -811,7 +811,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].outputValue[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].output_values[i])
 
     #
     #   A  B
@@ -973,4 +973,4 @@ class TestBranching:
 
         for m in expected_output:
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], m.outputValue[i])
+                numpy.testing.assert_allclose(expected_output[m][i], m.output_values[i])
