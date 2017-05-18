@@ -31,7 +31,7 @@ def test_DDM_Integrator():
 # TEST 2
 # function = Bogacz
 
-def test_DDM_Integrator():
+def test_DDM_Integrator_Bogacz():
     stim = 10
     T = DDM(
             name='DDM',
