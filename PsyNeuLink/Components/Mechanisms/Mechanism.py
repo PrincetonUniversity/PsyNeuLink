@@ -1728,9 +1728,11 @@ class Mechanism_Base(Mechanism):
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
         for i in range(num_input_states):
-            input_state = list(self.input_states.values())[i]
+            # input_state = list(self.input_states.values())[i]
+            input_state = self.input_states[i]
             # input_item = np.ndarray(input[i])
             input_item = input[i]
+
             if len(input_state.variable) == len(input_item):
                 input_state.value = input_item
             else:
@@ -1850,12 +1852,12 @@ class Mechanism_Base(Mechanism):
             mechanism_string = ' mechanism'
 
         # # MODIFIED 2/20/17 NEW:
-        input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
+        # input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
         # # MODIFIED 4/21/17 NEWER: [NEW CRASHES IF input_val IS AN ARRAY]
-        # if isinstance(input_val, np.ndarray) and input_val.ndim > 1 and input_val.shape[1] > 1:
-        #     input_string = input_val
-        # else:
-        #     input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
+        if isinstance(input_val, np.ndarray) and input_val.ndim > 1 and input_val.shape[1] > 1:
+            input_string = input_val
+        else:
+            input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
         # MODIFIED 2/20/17 END
 
         print ("\n\'{}\'{} executed:\n- input:  {}".
