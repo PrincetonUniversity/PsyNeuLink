@@ -10,7 +10,6 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection 
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.TimeScale import TimeScale
-from PsyNeuLink.scheduling.condition import AfterNCalls
 
 logger = logging.getLogger(__name__)
 
