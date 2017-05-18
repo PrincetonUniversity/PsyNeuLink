@@ -1696,39 +1696,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
         state_variable = constraint_value
         spec_type = VARIABLE
 
-    XXX MAKE SURE RELEVANT THIGS BELOW ARE GETTING DONE IN parse_state_spec
-    # Specification dict
-    # If state_spec is a specification dict:
-    # - check that STATE_VALUE / VARIABLE matches constraint_value and assign to state_variable
-    # - add/assign STATE params to state_params
-    # if isinstance(state_spec, dict):
-    #     if VARIABLE in state_spec:
-    #         state_variable =  state_spec[VARIABLE]
-    #     else:
-    #         state_variable = constraint_value
-    #         if owner.prefs.verbosePref:
-    #             print("{} missing from inputState specification dict for {};  default ({}) will be used".
-    #                                  format(VARIABLE, owner.name, constraint_value))
-
-        # Add state_spec[STATE_PARAMS] to state_params
-        try:
-            state_params.update(state_spec[STATE_PARAMS])
-        # state_spec[STATE_PARAMS] was not specified
-        except KeyError:
-            pass
-        # Add state_spec[STATE_PARAMS] to state_params
-        for spec in state_spec:
-            if spec is NAME:
-                # Assign state name
-                state_name = state_spec[spec]
-                # But don't include in params dict for state
-                #  (IMPLEMENTATION NOTE: but don't delete, as apparently still yoked to paramClassDefaults)
-                continue
-            if spec is VARIABLE:
-                # Don't include VARIABLE in state_params
-                continue
-            state_params[spec] = state_spec[spec]
-
+    # XXX MAKE SURE RELEVANT THINGS BELOW ARE GETTING DONE IN parse_state_spec
 
     # IMPLEMENTATION NOTE:  CONSOLIDATE ALL THE PROJECTION-RELATED STUFF BELOW:
 
@@ -2042,10 +2010,22 @@ def _parse_state_spec(owner,
             state_dict.update({NAME:name})
 
         else:
+            # Warn if VARIABLE was not in dict
             if not VARIABLE in state_spec and owner.prefs.verbosePref:
                 print("{} missing from specification dict for {} of {};  default ({}) will be used".
-                      format(VARIABLE, state_type, owner.name, constraint_value))
+                      format(VARIABLE, state_type, owner.name, state_spec))
+            # FIX: DO THIS: Put entries (except NAME, VARIABLE AND VALUE) in params
+            # Move all params-relevant entries from state_spec into params
+            for spec in [param_spec for param_spec in state_spec.copy()
+                         if not param_spec in {NAME, VARIABLE, PREFS_ARG, CONTEXT}]:
+                # if spec in {NAME, VARIABLE, PREFS_ARG, CONTEXT}:
+                #     continue
+                if not params:
+                    params = {}
+                params[spec] = state_spec[spec]
+                del state_spec[spec]
             state_dict.update(state_spec)
+
 
     # Tuple
     elif isinstance(state_spec, tuple):
