@@ -1651,6 +1651,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     state_spec = _parse_state_spec(owner=owner,
                                    state_type=state_type,
                                    state_spec=state_spec,
+                                   name=state_name,
                                    params=state_params,
                                    value=constraint_value)
 
@@ -1712,8 +1713,8 @@ def _instantiate_state(owner,                   # Object to which state will bel
     state = state_type(owner=owner,
                        reference_value=constraint_value,
                        variable=state_variable,
-                       name=state_name,
-                       params=state_params,
+                       name=state_spec[NAME],
+                       params=state_spec[PARAMS],
                        prefs=None,
                        context=context)
 
@@ -1967,6 +1968,7 @@ def _parse_state_spec(owner,
     # value, so use as variable of input_state
     elif is_value_spec(state_spec):
         state_dict[VARIABLE] = state_spec
+        state_dict[VALUE] = state_spec
 
     elif state_spec is None:
         # pass
