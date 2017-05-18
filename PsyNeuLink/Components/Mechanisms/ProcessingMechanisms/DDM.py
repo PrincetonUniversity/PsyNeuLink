@@ -769,6 +769,7 @@ class DDM(ProcessingMechanism_Base):
         """
 
         super()._instantiate_attributes_before_function(context=context)
+        TEST = True
 
     # def _instantiate_attributes_after_function(self, context=None):
     #
