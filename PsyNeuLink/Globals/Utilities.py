@@ -784,7 +784,13 @@ class ContentAddressableList(UserList):
                                   format(key, self.key))
 
     def __delitem__(self, key):
-        del self.data[key]
+        if key is None:
+            raise KeyError("None is not a legal key for {}".format(self.__class__.__name__))
+        try:
+            del self.data[key]
+        except TypeError:
+            key_num = self._get_key_for_item(key)
+            del self.data[key_num]
 
     def clear(self):
         super().clear()
