@@ -1696,6 +1696,8 @@ def _instantiate_state(owner,                   # Object to which state will bel
         state_variable = constraint_value
         spec_type = VARIABLE
 
+
+    # ----------------------------------------------------------------------------------------------
     # XXX MAKE SURE RELEVANT THINGS BELOW ARE GETTING DONE IN parse_state_spec
 
     # IMPLEMENTATION NOTE:  CONSOLIDATE ALL THE PROJECTION-RELATED STUFF BELOW:
@@ -2044,6 +2046,11 @@ def _parse_state_spec(owner,
     # string
     elif isinstance(state_spec, str):
         # Test whether it is a keyword for the owner, in which case it should resolve to a value
+        if state_spec in projection_keywords:
+            # state_spec = state_variable
+            # state_variable = constraint_value
+            state_dict[VARIABLE]=value
+        ??else:
         spec = get_param_value_for_keyword(owner, state_spec)
         # A value was returned, so use as variable
         if spec is not None:
