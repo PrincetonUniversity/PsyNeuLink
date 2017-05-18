@@ -1639,10 +1639,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
 
     state_params = state_params or {}
 
-    # Used locally to report type of specification for State
-    #  if value is not compatible with constraint_value
-    spec_type = None
-
     # PARSE constraint_value
     constraint_dict = _parse_state_spec(owner=owner,
                                         state_type=state_type,
@@ -1684,9 +1680,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
                                      constraint_value,
                                      state_type.__name__))
             # state = constraint_value
-            # spec_type = state_name
             state_variable = constraint_value
-            spec_type = state_spec[NAME]
 
     # Otherwise, state_spec should now be a state specification dict
     state_variable = state_spec[VARIABLE]
@@ -1698,23 +1692,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
             print("{} is not compatible with constraint value ({}) specified for {} of {};  latter will be used".
                   format(VARIABLE, constraint_value, state_type, owner.name))
         state_variable = constraint_value
-        # spec_type = VARIABLE
-        # spec_type = state_name
-        spec_type = state_spec[NAME]
-
-    # WARN IF DEFAULT (constraint_value) HAS BEEN ASSIGNED
-    # spec_type has been assigned, so iscompatible() failed above and constraint value was assigned
-    if spec_type:
-        if owner.prefs.verbosePref:
-            print("Value ({0}) of {1} (type: {2}) is not compatible with {3} ({4}) of {6};"
-                  " default {4} will be created using {5}".
-                  format(state_variable,
-                         state_name,
-                         spec_type,
-                         constraint_value_name,
-                         constraint_value.__class__.__name__,
-                         constraint_value,
-                         owner.__class__.__name__))
 
     # INSTANTIATE STATE:
     # Note: this will be either a default State instantiated using constraint_value as its value
@@ -1728,7 +1705,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from ComponentPreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
 
-    #  Convert constraint_value to np.array to match state_variable (which, as output of function, will be np.array)
+    #  Convert constraint_value to np.array to match state_variable (which, as output of function, will be an np.array)
     constraint_value = convert_to_np_array(constraint_value,1)
 
     # Implement default State
