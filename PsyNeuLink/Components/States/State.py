@@ -1749,24 +1749,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
         state_params.update({STATE_PROJECTIONS:[projection_to_state]})
     #endregion
 
-    #region Keyword String
-    if isinstance(state_spec, str):
-        if state_spec in projection_keywords:
-            state_spec = state_variable
-            state_variable = constraint_value
-        else:
-            state_spec = get_param_value_for_keyword(owner, state_spec)
-            if state_spec is None:
-                return None
-    #endregion
-
-    #region Function
-    if isinstance(state_spec, function_type):
-        state_spec = get_param_value_for_function(owner, state_spec)
-        if state_spec is None:
-            return None
-    #endregion
-
     # Projection
     # If state_spec is a Projection object or Projection class
     # - assign constraint_value to state_variable
@@ -1788,6 +1770,8 @@ def _instantiate_state(owner,                   # Object to which state will bel
     if not iscompatible(state_variable, constraint_value):
         state_variable = constraint_value
         spec_type = state_name
+
+    # ---------------------------------------------------
 
     # WARN IF DEFAULT (constraint_value) HAS BEEN ASSIGNED
     # spec_type has been assigned, so iscompatible() failed above and constraint value was assigned
@@ -2045,22 +2029,22 @@ def _parse_state_spec(owner,
 
     # string
     elif isinstance(state_spec, str):
-        # Test whether it is a keyword for the owner, in which case it should resolve to a value
+        # Test whether it is a projection keyword for the owner, in which case it should resolve to a value
         if state_spec in projection_keywords:
             # state_spec = state_variable
             # state_variable = constraint_value
             state_dict[VARIABLE]=value
-        ??else:
-        spec = get_param_value_for_keyword(owner, state_spec)
-        # A value was returned, so use as variable
-        if spec is not None:
-            state_dict[VARIABLE] = spec
-            if owner.prefs.verbosePref:
-                print("{} not specified for {} of {};  default ({}) will be used".
-                      format(VARIABLE, state_type, owner.name, constraint_value))
-        # It is not a keyword, so treat string as the name for the state
         else:
-            state_dict[NAME] = spec
+            spec = get_param_value_for_keyword(owner, state_spec)
+            # A value was returned, so use as variable
+            if spec is not None:
+                state_dict[VARIABLE] = spec
+                if owner.prefs.verbosePref:
+                    print("{} not specified for {} of {};  default ({}) will be used".
+                          format(VARIABLE, state_type, owner.name, constraint_value))
+            # It is not a keyword, so treat string as the name for the state
+            else:
+                state_dict[NAME] = spec
 
     # function; try to resolve to a value, otherwise return None to suppress instantiation of state
     elif isinstance(state_spec, function_type):
