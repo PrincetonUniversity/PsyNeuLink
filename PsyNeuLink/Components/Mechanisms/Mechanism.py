@@ -1201,7 +1201,6 @@ class Mechanism_Base(Mechanism):
                                                 issubclass(item, Projection))) or    # Project class ref
                             isinstance(item, InputState) or      # InputState object
                             isinstance(item, dict) or                     # InputState specification dict
-                            isinstance(item, ParamValueProjection) or     # ParamValueProjection tuple
                             isinstance(item, str) or                      # Name (to be used as key in input_states dict)
                             iscompatible(item, **{kwCompatibilityNumeric: True})):   # value
                     # set to None, so it is set to default (self.variable) in instantiate_inputState
@@ -1262,7 +1261,6 @@ class Mechanism_Base(Mechanism):
                         isinstance(param_value, ParameterState) or
                         isinstance(param_value, Projection) or
                         isinstance(param_value, dict) or
-                        isinstance(param_value, ParamValueProjection) or
                         iscompatible(param_value, default_value)):
                     params[FUNCTION_PARAMS][param_name] = default_value
                     if self.prefs.verbosePref:

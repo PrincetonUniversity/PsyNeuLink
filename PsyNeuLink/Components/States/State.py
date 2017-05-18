@@ -1700,10 +1700,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
         constraint_value = constraint_value[VARIABLE]
         # MODIFIED 5/10/17 END
 
-    # ParamValueProjection tuple, set to ParamValueProjection.value:
-    elif isinstance(constraint_value, ParamValueProjection):
-        constraint_value = constraint_value.value
-
     # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTION KEYWORD?
     # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
     if isinstance(constraint_value, str):
@@ -1819,31 +1815,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #endregion
 
     # IMPLEMENTATION NOTE:  CONSOLIDATE ALL THE PROJECTION-RELATED STUFF BELOW:
-
-    # IMPLEMENTATION NOTE:  CONSIDER DEPRECATING THIS
-    #region ParamValueProjection
-    # If state_type is ParameterState and state_spec is a ParamValueProjection tuple:
-    # - check that ParamValueProjection.value matches constraint_value and assign to state_variable
-    # - assign ParamValueProjection.projection to STATE_PARAMS:{STATE_PROJECTIONS:<projection>}
-    # Note: validity of projection specification or compatibility of projection's variable or function output
-    #       with state value is handled in State._instantiate_projections_to_state
-    if isinstance(state_spec, ParamValueProjection):
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if not issubclass(state_type, ParameterState):
-            raise StateError("ParamValueProjection ({0}) not permitted as specification for {1} (in {2})".
-                                 format(state_spec, state_type.__name__, owner.name))
-        state_variable =  state_spec.value
-        # If it is a string, try to resolve as keyword
-        if isinstance(state_variable, str):
-            state_variable = get_param_value_for_keyword(owner, state_variable)
-            if not state_variable:
-                return None
-        if not iscompatible(state_variable, constraint_value):
-            state_variable = constraint_value
-            spec_type = 'ParamValueProjection'
-        state_params.update({STATE_PROJECTIONS:[state_spec.projection]})
-    #endregion
-
     # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function._instantiate_function()
     PARAM_SPEC = 0
     PROJECTION_SPEC = 1
