@@ -528,21 +528,17 @@ class MappingProjection(TransmissiveProjection_Base):
          a ParamValueProjection or unnamed (matrix, projection) tuple
         """
 
-        # Specification is a ParamValueProjection tuple, so allow
-        if isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], ParamValueProjection):
-            self.paramsCurrent[FUNCTION_PARAMS][MATRIX].value =  value
-
         # Specification is a two-item tuple, so validate that 2nd item is:
         # a projection keyword, projection subclass, or instance of a projection subclass
-        elif (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
-                      len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) is 2 and
-                  (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING_PROJECTION,
-                                                                      CONTROL_PROJECTION,
-                                                                      LEARNING_PROJECTION}
-                   or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection) or
-                       (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
-                            issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection)))
-              ):
+        if (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
+                    len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) is 2 and
+                (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING_PROJECTION,
+                                                                    CONTROL_PROJECTION,
+                                                                    LEARNING_PROJECTION}
+                 or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection) or
+                     (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
+                          issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection)))
+            ):
             # # MODIFIED 4/8/17 OLD:
             # self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1])
             # MODIFIED 4/8/17 NEW:
