@@ -177,14 +177,13 @@ def parameter_spec(param):
     #     param = ??
     # if is_numeric(param):
     from PsyNeuLink.Components.Functions.Function import function_type
-    from PsyNeuLink.Components.Projections.Projection import Projection, ParamValueProjection
+    from PsyNeuLink.Components.Projections.Projection import Projection
 
     if (isinstance(param, (numbers.Number,
                            np.ndarray,
                            list,
                            tuple,
                            function_type,
-                           ParamValueProjection,
                            Projection)) or
         (inspect.isclass(param) and issubclass(param, Projection)) or
         param in parameter_keywords):

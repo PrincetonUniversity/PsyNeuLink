@@ -614,7 +614,7 @@
 #                 + State object: it will be validated
 #                 + State subclass: a default state will be implemented using a default value
 #                 + dict with specifications for a State object to create:
-#                 + ParamValueProjection tuple: a state will be implemented using the value and assigned the projection
+#                 + 2-item tuple: a state will be implemented using the first (value) item and assigned the projection
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
 
@@ -1503,7 +1503,7 @@
 #                 - what gets called
 #
 # DOCUMENT: ControlSignals are now NEVER specified for params by default;
-#           they must be explicitly specified using ParamValueProjection tuple: (paramValue, CONTROL_PROJECTION)
+#           they must be explicitly specified using 2-item tuple: (paramValue, CONTROL_PROJECTION)
 #     - Clean up ControlProjection InstanceAttributes
 # DOCUMENT _instantiate_state_list() in Mechanism
 # DOCUMENT: change comment in DDM re: FUNCTION_RUN_TIME_PARAM
@@ -2263,7 +2263,7 @@
 # - IMPLEMENTATION OF MULTIPLE INPUT AND OUTPUT STATES:
 # - IMPLEMENT:  ABSTRACT HANDLING OF MULTIPLE STATES (AT LEAST FOR INPUT AND OUTPUT STATES, AND POSSIBLE PARAMETER??
 # - Implement: Add StateSpec tuple specificaton in list for  INPUT_STATE and OutputStates
-#        - akin to ParamValueProjection
+#        - akin to 2-item tuple
 #        - this is because OrderedDict is a specialty class so don't want to impose their use on user specification
 #        - adjust _validate_params and instantiate_output_state accordingly
 # - Implement: allow list of names, that will be used to instantiate states using self.value

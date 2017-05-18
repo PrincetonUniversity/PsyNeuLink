@@ -87,8 +87,8 @@ one of the specifications below:
       :ref:`projection specification dictionary <Projection_In_Context_Specification>`, or a list containing
       items that are either of those.
     ..
-    * A :any:`ParamValueProjection` tuple.  This creates a default inputState using the ``value`` item as its
-    ``variable``, and assigns the state as the ``receiver`` of the projection item.
+    * A **2-item tuple**.  This creates a default inputState using the first (value) item as its
+      :keyword:`variable`, and assigns the state as the :keyword:`receiver` of the 2nd (projection) item.
 
     .. note::
        In all cases, the resulting ``value`` of the inputState must be compatible with (that is, have the same number
