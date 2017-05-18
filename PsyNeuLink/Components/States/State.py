@@ -1683,8 +1683,10 @@ def _instantiate_state(owner,                   # Object to which state will bel
                                      state_spec.value,
                                      constraint_value,
                                      state_type.__name__))
-            state = constraint_value
-            spec_type = state_name
+            # state = constraint_value
+            # spec_type = state_name
+            state_variable = constraint_value
+            spec_type = state_spec[NAME]
 
     # Otherwise, state_spec should now be a state specification dict
     state_variable = state_spec[VARIABLE]
@@ -1696,14 +1698,9 @@ def _instantiate_state(owner,                   # Object to which state will bel
             print("{} is not compatible with constraint value ({}) specified for {} of {};  latter will be used".
                   format(VARIABLE, constraint_value, state_type, owner.name))
         state_variable = constraint_value
-        spec_type = VARIABLE
-
-    # Do one last check for compatibility of value with constraint_value (in case state_spec was a value)
-    if not iscompatible(state_variable, constraint_value):
-        state_variable = constraint_value
-        spec_type = state_name
-
-    # ---------------------------------------------------
+        # spec_type = VARIABLE
+        # spec_type = state_name
+        spec_type = state_spec[NAME]
 
     # WARN IF DEFAULT (constraint_value) HAS BEEN ASSIGNED
     # spec_type has been assigned, so iscompatible() failed above and constraint value was assigned
@@ -1953,42 +1950,6 @@ def _parse_state_spec(owner,
                                        params=params)
         # Add projection spec from second item in tuple, and return dict
         state_dict.update({modulatory_projections:state_spec[1]})
-
-
-    # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function._instantiate_function()
-    # - check that first item matches constraint_value and assign to state_variable
-    # - assign second item as projection to STATE_PARAMS:{STATE_PROJECTIONS:<projection>}
-    # Note: validity of projection specification or compatibility of projection's variable or function output
-    #       with state value is handled in State._instantiate_projections_to_state
-    # IMPLEMENTATION NOTE:
-    #    - need to do some checking on state_spec[PROJECTION_SPEC] to see if it is a projection
-    #      since it could just be a numeric tuple used for the variable of a state;
-    #      could check string against ProjectionRegistry (as done in _parse_projection_ref in State)
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if not issubclass(state_type, ParameterState):
-            raise StateError("Tuple with projection spec ({0}) not permitted as specification "
-                                      "for {1} (in {2})".format(state_spec, state_type_name, owner.name))
-        state_variable =  state_spec[PARAM_SPEC]
-        projection_to_state = state_spec[PROJECTION_SPEC]
-        # If it is a string, assume it is a keyword and try to resolve to value
-        if isinstance(state_variable, str):
-            # Evaluate keyword to get template for state_variable
-            state_variable = get_param_value_for_keyword(owner, state_variable)
-            if state_variable is None:
-                return None
-        # If it is a function, call to resolve to value
-        if isinstance(state_variable, function_type):
-            state_variable = get_param_value_for_function(owner, state_variable)
-            if state_variable is None:
-                return None
-
-        constraint_value = state_variable
-        state_params.update({STATE_PROJECTIONS:[projection_to_state]})
-    #endregion
-
-
-
-
 
     # Projection class, object, or keyword:
     #     set to variable to value and assign projection spec to STATE_PROJECTIONS entry in params
