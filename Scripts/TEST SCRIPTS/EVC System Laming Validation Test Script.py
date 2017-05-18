@@ -147,3 +147,6 @@ mySystem.run(inputs=stim_list_dict,
              # call_after_time_step=show_results
              call_after_trial=show_results
              )
+
+import pprint
+pprint.pprint(mySystem.results)
