@@ -90,13 +90,14 @@ Class Reference
 
 """
 
-#
-
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Projections.Projection import projection_keywords
 
+state_keywords = component_keywords.copy().update({STATE_VALUE,
+                                                   STATE_PARAMS,
+                                                   STATE_PROJECTIONS,
+                                                   MODULATORY_PROJECTIONS,
+                                                   PROJECTION_TYPE})
 
 # Note:  This is created only for assignment of default projection types for each state subclass (see .__init__.py)
 #        Individual stateRegistries (used for naming) are created for each mechanism
@@ -308,7 +309,8 @@ class State_Base(State):
     requiredParamClassDefaultTypes.update({FUNCTION_PARAMS : [dict],
                                            PROJECTION_TYPE: [str, Projection]})   # Default projection type
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({STATE_PROJECTIONS: []})
+    paramClassDefaults.update({STATE_PROJECTIONS:[],
+                               MODULATORY_PROJECTIONS:[]})
     paramNames = paramClassDefaults.keys()
 
     #endregion
@@ -1661,114 +1663,34 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #  if value is not compatible with constraint_value
     spec_type = None
 
-
-    # MODIFIED 5/17/17 OLD: ********************************************************************************************
-
-
-    # # MODIFIED 5/17/17 OLD - MOVED TO _parse_state_spec():
-    # if VARIABLE in state_params and state_params[VARIABLE] is not None:
-    #     state_variable = state_params[VARIABLE]
-    # # Otherwise, assume state is specified as a value, so set state_variable to it;
-    # #    if otherwise, will be overridden below
-    # else:
-    #     state_variable = state_spec
-    #
-    # # MODIFIED 5/17/17 END
-
-    #region CHECK FORMAT OF constraint_value AND CONVERT TO SIMPLE VALUE -------------------------------------------
-
-    # MODIFIED 5/17/17 NEW:
-    # CALL _parse_state_spec FOR CONSTRAINT_VALUE HERE
+    # PARSE constraint_value
     constraint_dict = _parse_state_spec(owner=owner,
                                         state_type=state_type,
                                         state_spec=constraint_value,
-                                        default_name=state_name,
-                                        default_value=None,
-                                        default_params=None)
-    constraint_value = constraint_dict[VARIABLE]
-    # MODIFIED 5/17/17 END
+                                        value=None,
+                                        params=None)
+    constraint_value = constraint_dict[VALUE]
 
-    # -----------------------------------------------------------------------------------------------------------------
-
-
-    # # MODIFIED 5/17/17 OLD [MOVED TO _parse_state_spec(): ------------------------------------------------------------
-    # # Projection class, object, or keyword: set to paramClassDefaults (of owner or owner's function)
-    # if (isinstance(constraint_value, (str, Projection)) or
-    #         (inspect.isclass(constraint_value) and
-    #              issubclass(constraint_value, (Projection)))):
-    #     # Disallow if it is not a LearningProjection, ControlProjection or GatingProjection
-    #     from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-    #     from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-    #     from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
-    #     if (constraint_value in projection_keywords or
-    #                 isinstance(constraint_value, (LearningProjection, ControlProjection, GatingProjection)) or
-    #                 # isinstance(constraint_value, Projection) or
-    #                 (inspect.isclass(constraint_value) and
-    #             issubclass(constraint_value, (LearningProjection, ControlProjection, GatingProjection)))
-    #             ):
-    #         try:
-    #             constraint_value = owner.paramClassDefaults[state_name]
-    #         # If parameter is not for owner itself, try owner's function
-    #         except KeyError:
-    #             constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
-    #
-    # # State class: set to variableClassDefault
-    # elif inspect.isclass(constraint_value) and issubclass(constraint_value, State):
-    #         constraint_value = state_spec.variableClassDefault
-    #
-    # # State object: set to its value (i.e., output of its function)
-    # elif isinstance(constraint_value, state_type):
-    #     constraint_value = constraint_value.value
-    #
-    # # Specification dict; presumably it is for a State
-    # elif isinstance(constraint_value, dict):
-    #     # # MODIFIED 5/10/17 OLD:
-    #     # constraint_value = constraint_value[STATE_VALUE]
-    #     # MODIFIED 5/10/17 NEW:
-    #     constraint_value = constraint_value[VARIABLE]
-    #     # MODIFIED 5/10/17 END
-    #
-    # # ParamValueProjection tuple, set to ParamValueProjection.value:
-    # elif isinstance(constraint_value, ParamValueProjection):
-    #     constraint_value = constraint_value.value
-    #
-    # # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTION KEYWORD?
-    # # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
-    # if isinstance(constraint_value, str):
-    #     constraint_value = get_param_value_for_keyword(owner, constraint_value)
-    #     if constraint_value is None:
-    #         return None
-    #
-    # # function; try to resolve to a value, otherwise return None to suppress instantiation of state
-    # if isinstance(constraint_value, function_type):
-    #     constraint_value = get_param_value_for_function(owner, constraint_value)
-    #     if constraint_value is None:
-    #         return None
-    # -----------------------------------------------------------------------------------------------------------------
-
-    # MODIFIED 5/17/17 NEW:
+    # PARSE state_spec
     state_dict = _parse_state_spec(owner=owner,
                                    state_type=state_type,
                                    state_spec=state_spec,
-                                   state_params=state_params,
-                                   default_name=state_name,
-                                   default_value=constraint_value)
-    # MODIFIED 5/17/17 END
+                                   params=state_params,
+                                   value=constraint_value)
+
+    # CHECK COMPATIBILITY OF state_spec WITH constraint_value
 
 
+    # state_spec is a:
+    # ---------------
 
-
-    #region CHECK COMPATIBILITY OF state_spec WITH constraint_value
-
-    #region State subclass
-    # If state_spec is a subclass:
+    # Class
     # - instantiate default using constraint_value as value
     if inspect.isclass(state_spec) and issubclass(state_spec, state_type):
         state_variable = constraint_value
     #endregion
 
-    #region State object
-    # If state_spec is a State object:
+    # State object
     # - check that its value attribute matches the constraint_value
     # - check that its owner = owner
     # - if either fails, assign default
@@ -1795,22 +1717,12 @@ def _instantiate_state(owner,                   # Object to which state will bel
                                      state_type.__name__))
             state = constraint_value
             spec_type = state_name
-    #endregion
 
-    #region Specification dict
+    #Specification dict
     # If state_spec is a specification dict:
     # - check that STATE_VALUE / VARIABLE matches constraint_value and assign to state_variable
     # - add/assign STATE params to state_params
     if isinstance(state_spec, dict):
-        # # MODIFIED 5/10/17 OLD:
-        # try:
-        #     state_variable =  state_spec[STATE_VALUE]
-        # except KeyError:
-        #     state_variable = constraint_value
-        #     if owner.prefs.verbosePref:
-        #         print("{0} missing from inputState specification dict for {1};  default ({2}) will be used".
-        #                              format(STATE_VALUE, owner.name, constraint_value))
-        # MODIFIED 5/10/17 NEW:
         if VARIABLE in state_spec:
             state_variable =  state_spec[VARIABLE]
         else:
@@ -1818,15 +1730,9 @@ def _instantiate_state(owner,                   # Object to which state will bel
             if owner.prefs.verbosePref:
                 print("{} missing from inputState specification dict for {};  default ({}) will be used".
                                      format(VARIABLE, owner.name, constraint_value))
-        # MODIFIED 5/10/17 END
-
         if not iscompatible(state_variable, constraint_value):
             state_variable = constraint_value
-            # # MODIFIED 5/10/17 OLD:
-            # spec_type = STATE_VALUE
-            # MODIFIED 5/10/17 NEW:
             spec_type = VARIABLE
-            # MODIFIED 5/10/17 END
 
         # Add state_spec[STATE_PARAMS] to state_params
         try:
@@ -1847,7 +1753,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
                 continue
             state_params[spec] = state_spec[spec]
 
-    #endregion
 
     # IMPLEMENTATION NOTE:  CONSOLIDATE ALL THE PROJECTION-RELATED STUFF BELOW:
 
@@ -2088,17 +1993,14 @@ def _check_state_ownership(owner, param_name, mechanism_state):
 def _parse_state_spec(owner,
                       state_type,
                       state_spec,
-                      default_name,
-                      default_value,
-                      default_params=None):
+                      name=None,
+                      variable=None,
+                      value=None,
+                      projections=None,
+                      modulatory_projections=None,
+                      params=None):
     """Return state specification dictionary for state_spec
     """
-
-    name = default_name
-    variable = default_value
-    trans_projections = None
-    mod_projections = None
-    params = default_params
 
     # If variable is specified in state_params, use that
     if VARIABLE in params and params[VARIABLE] is not None:
@@ -2126,105 +2028,100 @@ def _parse_state_spec(owner,
     #         except KeyError:
     #             constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
 
-    # State class: set to variableClassDefault
+    # State class
     if inspect.isclass(state_spec) and issubclass(state_spec, State):
         if state_spec is state_type:
-            constraint_value = state_spec.variableClassDefault
+            variable = state_spec.variableClassDefault
         else:
             raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
                              "class of state being instantiated ({})".format(state_spec, state_type))
 
-
-    # State, so assign as value
+    # State object
     elif isinstance(state_spec, State):
-        name = default_name
-        variable = state_spec.value
-        trans_projections = state_spec.trans_projections
-        mod_projections =  state_spec.mod_projections
-        params = state_spec.params
+        if state_spec is state_type:
+            name = state_spec.name
+            # variable = state_spec.value
+            # variable = state_spec.variableClassDefault
+            variable = state_spec.variable
+            value = state_spec.value
+            modulatory_projections =  state_spec.mod_projections
+            params = state_spec.user_params.copy()
+        else:
+            raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
+                             "class of state being instantiated ({})".format(state_spec, state_type))
+
+    # Specification dict
+    elif isinstance(state_spec, dict):
+        # Dict has a single entry of the form {STATE_NAME:SPECIFICATION_DICT},
+        #     so assign STATE_NAME as name, and return parsed SPECIFICATION_DICT
+        if len(state_spec) == 1 and list(state_spec.keys())[0] not in state_keywords:
+            name, state_spec = list(state_spec.items())[0]
+            state_dict = _parse_state_spec(owner=owner,
+                                           state_type=state_type,
+                                           state_spec=state_spec,
+                                           name=name,
+                                           variable=variable,
+                                           value=value,
+                                           projections=projections,
+                                           modulatory_projections=modulatory_projections,
+                                           params=params)
+            # Use name specified as key in state_spec (rather than one in SPEFICATION_DICT if specified):
+            state_dict.update({NAME:name})
+            return state_dict
 
 
+        else:
+            # Pass to assignment of entries at end of method
+            pass
 
-    # Specification dict; presumably it is for a State
-    elif isinstance(constraint_value, dict):
-        # # MODIFIED 5/10/17 OLD:
-        # constraint_value = constraint_value[STATE_VALUE]
-        # MODIFIED 5/10/17 NEW:
-        constraint_value = constraint_value[VARIABLE]
-        # MODIFIED 5/10/17 END
+    # Tuple (including ParamValueProjection tuple)
+    elif isinstance(state_spec, tuple):
+        # Parse state_spec in first item of tuple
+        state_dict = _parse_state_spec(owner=owner,
+                                       state_type=state_type,
+                                       state_spec=state_spec[0],
+                                       name=name,
+                                       variable=variable,
+                                       value=value,
+                                       projections=projections,
+                                       params=params)
+        # Add projection_spec from second item in tuple and return dict
+        return state_dict.update({modulatory_projections:state_spec[1]})
 
-    # ParamValueProjection tuple, set to ParamValueProjection.value:
-    elif isinstance(constraint_value, ParamValueProjection):
-        constraint_value = constraint_value.value
-
-    # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTION KEYWORD?
-    # TEST COMMENT
-    # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
-    if isinstance(constraint_value, str):
-        constraint_value = get_param_value_for_keyword(owner, constraint_value)
-        if constraint_value is None:
-            return None
+    # string
+    elif isinstance(state_spec, str):
+        # Test whether it is a keyword for the owner, in which case it should resolve to a value
+        state_spec = get_param_value_for_keyword(owner, state_spec)
+        # A value was returned, so use as variable
+        if state_spec is not None:
+            variable = state_spec
+        # It is not a keyword, so treat string as the name for the state
+        else:
+            name = state_spec
 
     # function; try to resolve to a value, otherwise return None to suppress instantiation of state
-    if isinstance(constraint_value, function_type):
-        constraint_value = get_param_value_for_function(owner, constraint_value)
-        if constraint_value is None:
-            return None
-
-    # -----------------------------------------------------------------------------------------------------------------
-
-
-    # NEW ^
-    # *********************************************
-    # OLD: v
-
-
-
-
-
-    # string, so use as name
-    if isinstance(state_spec, str):
-        name = state_spec
-
-    # value, so use as value of input_state
-    elif is_value_spec(state_spec):
-        variable = state_spec
-
-    # tuple, so call for (and return result of) parse of first item, and add projection spec to STATE_PROJECTIONS
-    elif isinstance(state_spec, tuple):
-        return _parse_state_spec(owner, state_spec[0], default_name, default_value, projections=state_spec[1])
-
-    # already a dict, so add any missing params and return dict
-    elif isinstance(state_spec, dict):
-        if not NAME in state_spec:
-            state_spec[NAME] = default_name
-        if not VARIABLE in state_spec:
-            state_spec[VARIABLE] = default_value
-        return state_spec
+    elif isinstance(state_spec, function_type):
+        value = get_param_value_for_function(owner, state_spec)
+        if value is None:
+            # return None
+            raise StateError("PROGRAM ERROR: state_spec for {} of {} is a function ({}), "
+                             "but it failed to return a value".format(state_type,owner.name, state_spec))
 
     elif state_spec is None:
-        name = default_name
-        variable = default_value
-        params = None
+        # pass
+        raise StateError("PROGRAM ERROR: state_spec for {} of {} is None".format(state_type,owner.name))
 
     else:
         if hasattr(owner, name):
             owner_name = owner.name
         else:
             owner_name = owner.__class__.__name__
-        from PsyNeuLink.Components.States.InputState import InputStateError
-        raise InputStateError("Illegal state specification found in first item of tuple "
-                                      "specified in {} arg of {} ({})".
-                                      format(INPUT_STATES, owner_name, state_spec))
+        raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+                         format(state_type, owner.name, state_spec))
 
-    state_dict = {NAME: name,
-                  VARIABLE: variable,
-                  PARAMS: params}
-
-    # # MODIFIED 5/11/17 OLD:
-    # # [COMMENTING THIS OUT SUPPRESSES INSTANTIATION OF PROJECTIONS IN State._instantiate_projections_to_state]
-    # if projections:
-    #     state_dict[STATE_PROJECTIONS] = projections
-    # # MODIFIED 5/11/17 END
-
-    return state_dict
+    return {NAME: name,
+            VARIABLE: variable,
+            VALUE: value,
+            STATE_PROJECTIONS: projections,
+            MODULATORY_PROJECTIONS: modulatory_projections,
+            PARAMS: params}

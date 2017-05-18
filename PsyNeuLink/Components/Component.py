@@ -279,6 +279,8 @@ from collections import OrderedDict, Iterable
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 
+component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
+
 class ResetMode(Enum):
     CURRENT_TO_INSTANCE_DEFAULTS = 0
     INSTANCE_TO_CLASS = 1

@@ -303,6 +303,7 @@ CONTROL_PROJECTION = "ControlProjection"
 GATING_PROJECTION = "GatingProjection"
 TRANSMISSIVE_PROJECTION = "TransmissiveProjection"
 MODULATORY_PROJECTION = "ModulatoryProjection"
+MODULATORY_PROJECTIONS = "ModulatoryProjections"
 
 
 # Function:
