@@ -635,14 +635,7 @@ class OutputState(State_Base):
         #            TO COMBINE self.value ASSIGNED IN CALL TO SUPER (FROM PROJECTIONS)
         #            WITH calculate(self.owner.value[index]) PER BELOW
 
-        # MODIFIED 5/11/17 OLD:
         self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
-        # # MODIFIED 5/11/17 NEW:
-        # calculated_value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
-        # self.value = self.function(calculated_value)
-        # MODIFIED 5/11/17 END
-
-
 
 
 def _instantiate_output_states(owner, context=None):
