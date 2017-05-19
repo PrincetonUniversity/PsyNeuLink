@@ -441,11 +441,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                               # error_output,
                                                               error_signal],
                                             activation_derivative_fct=activation_derivative,
-                                            # # MODIFIED 3/5/17 OLD:
-                                            # error_derivative_fct=error_derivative,
-                                            # MODIFIED 3/5/17 NEW:
                                             error_derivative_fct=activation_derivative,
-                                            # MODIFIED 3/5/17 END
                                             error_matrix=error_matrix,
                                             learning_rate=learning_rate,
                                             context=context)
