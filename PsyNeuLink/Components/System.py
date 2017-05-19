@@ -2779,7 +2779,7 @@ class System_Base(System):
                     G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
 
             # incoming edges
-            for istate in objmech.input_states.values():
+            for istate in objmech.input_states:
                 for proj in istate.afferents:
                     sndr_name = proj.sender.owner.name
                     G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
