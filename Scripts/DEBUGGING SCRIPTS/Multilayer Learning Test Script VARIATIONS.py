@@ -5,9 +5,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
-
 from PsyNeuLink.Globals.TimeScale import TimeScale
-from PsyNeuLink.scheduling.condition import AfterNCalls
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic,
