@@ -130,7 +130,6 @@ def show_results():
         print("\t\t\t{}: {}".format(result[0],
                                 re.sub('[\[,\],\n]','',str("{:0.3}".format(float(result[1]))))))
 
-
 # Run system:
 
 mySystem.controller.reportOutputPref = False
