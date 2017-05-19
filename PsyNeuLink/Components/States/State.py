@@ -91,6 +91,7 @@ Class Reference
 """
 
 import inspect
+import copy
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Projections.Projection import projection_keywords
 
@@ -1652,13 +1653,13 @@ def _instantiate_state(owner,                  # Object to which state will belo
                                         state_spec=constraint_value,
                                         value=None,
                                         params=None)
-    # constraint_value = constraint_dict[VALUE]
     constraint_value = constraint_dict[VARIABLE]
+    # constraint_value = constraint_dict[VALUE]
 
     # PARSE state_spec using constraint_value as default for value
     state_spec = _parse_state_spec(owner=owner,
                                    state_type=state_type,
-                                   state_spec=state_spec,
+                                   state_spec=copy.deepcopy(state_spec),
                                    name=state_name,
                                    params=state_params,
                                    value=constraint_value)
