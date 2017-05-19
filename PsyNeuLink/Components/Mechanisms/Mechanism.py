@@ -991,9 +991,11 @@ class Mechanism_Base(Mechanism):
         # INPUT_STATES:
 
         # Check if input_states is in params (i.e., was specified in arg of constructor)
-        if not INPUT_STATES in params or params[INPUT_STATES] is None:
+        if (not INPUT_STATES in params or not params[INPUT_STATES]) and self.paramClassDefaults[INPUT_STATES]:
             # If it wasn't, assign from paramClassDefaults (even if it is None) to force creation of input_states attrib
-            params[INPUT_STATES] = self.paramClassDefaults[INPUT_STATES]
+            params[INPUT_STATES] = self.paramClassDefaults[INPUT_STATES].copy()
+        else:
+            params[INPUT_STATES] = None
         # Convert input_states_spec to list if it is not one
         if params[INPUT_STATES] is not None and not isinstance(params[INPUT_STATES], (list, dict)):
             params[INPUT_STATES] = [params[INPUT_STATES]]
@@ -1002,8 +1004,10 @@ class Mechanism_Base(Mechanism):
         # OUTPUT_STATES:
 
         # Check if OUTPUT_STATES is in params (i.e., was specified in arg of contructor)
-        if not OUTPUT_STATES in params or params[OUTPUT_STATES] is None:
-            params[OUTPUT_STATES] = self.paramClassDefaults[OUTPUT_STATES]
+        if (not OUTPUT_STATES in params or not params[OUTPUT_STATES]) and self.paramClassDefaults[OUTPUT_STATES]:
+            params[OUTPUT_STATES] = self.paramClassDefaults[OUTPUT_STATES].copy()
+        else:
+            params[OUTPUT_STATES] = None
         # Convert OUTPUT_STATES_spec to list if it is not one
         if params[OUTPUT_STATES] is not None and not isinstance(params[OUTPUT_STATES], (list, dict)):
             params[OUTPUT_STATES] = [params[OUTPUT_STATES]]
