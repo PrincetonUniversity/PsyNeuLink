@@ -846,9 +846,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     if param_name is FUNCTION_PARAMS:
         for function_param_name in param_value.keys():
             function_param_value = param_value[function_param_name]
-            # Assignment of ParameterState for Component objects, function or method are not currently supported
-            if isinstance(function_param_value, (function_type, method_type, Component)):
-                continue
+
             # IMPLEMENTATION NOTE:
             # The following is necessary since, if ANY parameters of a function are specified, entries are made
             #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values
@@ -860,10 +858,11 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             #    not been explicitly specified
             if function_param_value is None:
                 continue
-            # Don't assign ParameterState for parameters that are not lists, arrays or have a numeric value
-            if not is_value_spec(function_param_value):
+
+            if not _is_legal_param_value(owner, function_param_value):
                 continue
-            # Assign parameterState for function_param to the component
+
+            # Raise exception if the function parameter's name is the same as one that already exists for its owner
             if function_param_name in owner.user_params:
                 if inspect.isclass(owner.function):
                     function_name = owner.function.__name__
@@ -873,6 +872,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
+            # Assign parameterState for function_param to the component
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
                                       state_name=function_param_name,
@@ -883,12 +883,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                       context=context)
             if state:
                 owner._parameter_states[function_param_name] = state
-            # continue
 
-    else:
-        # Don't assign ParameterState for parameters that are not lists, arrays or have a numeric value
-        if not is_value_spec(param_value):
-            return
+    elif _is_legal_param_value(owner, param_value):
         state = _instantiate_state(owner=owner,
                                   state_type=ParameterState,
                                   state_name=param_name,
@@ -900,3 +896,13 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         if state:
             owner._parameter_states[param_name] = state
 
+def _is_legal_param_value(owner, value):
+
+    # LEGAL PARAMETER VALUES:
+    # lists, arrays numeric values, or keywords that resolve to one of those
+    if is_value_spec(value) or isinstance(value, tuple) or get_param_value_for_keyword(owner, value):
+        return True
+
+    # Assignment of ParameterState for Component objects, function or method are not currently supported
+    if isinstance(value, (function_type, method_type, Component)):
+        return False
