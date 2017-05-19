@@ -326,13 +326,15 @@ class ComparatorMechanism(ObjectiveMechanism):
         input_states = input_states or [None] * 2
         from PsyNeuLink.Components.States.State import _parse_state_spec
         sample_input = _parse_state_spec(owner=self,
+                                         state_type=InputState,
                                          state_spec=input_states[0],
-                                         default_name=SAMPLE,
-                                         default_value=None)
+                                         name=SAMPLE,
+                                         value=None)
         target_input = _parse_state_spec(owner=self,
+                                         state_type=InputState,
                                          state_spec=input_states[1],
-                                         default_name=TARGET,
-                                         default_value=None)
+                                         name=TARGET,
+                                         value=None)
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,

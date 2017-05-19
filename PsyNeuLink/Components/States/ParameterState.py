@@ -899,8 +899,13 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
 def _is_legal_param_value(owner, value):
 
     # LEGAL PARAMETER VALUES:
-    # lists, arrays numeric values, or keywords that resolve to one of those
-    if is_value_spec(value) or isinstance(value, tuple) or get_param_value_for_keyword(owner, value):
+
+    # lists, arrays numeric values
+    if is_value_spec(value) or isinstance(value, tuple):
+        return True
+
+    # keyword that resolves to one of the above
+    if get_param_value_for_keyword(owner, value) is not None:
         return True
 
     # Assignment of ParameterState for Component objects, function or method are not currently supported

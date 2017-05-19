@@ -94,11 +94,12 @@ import inspect
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Projections.Projection import projection_keywords
 
-state_keywords = component_keywords.copy().update({STATE_VALUE,
-                                                   STATE_PARAMS,
-                                                   STATE_PROJECTIONS,
-                                                   MODULATORY_PROJECTIONS,
-                                                   PROJECTION_TYPE})
+state_keywords = component_keywords.copy()
+state_keywords.update({STATE_VALUE,
+                       STATE_PARAMS,
+                       STATE_PROJECTIONS,
+                       MODULATORY_PROJECTIONS,
+                       PROJECTION_TYPE})
 
 # Note:  This is created only for assignment of default projection types for each state subclass (see .__init__.py)
 #        Individual stateRegistries (used for naming) are created for each mechanism
@@ -1921,7 +1922,7 @@ def _parse_state_spec(owner,
         # Add projection spec from second item to params and part first item of tuple
         if params is None:
             params = {}
-        params.update({STATE_PROJECTIONS:state_spec[1]})
+        params.update({STATE_PROJECTIONS:[state_spec[1]]})
         # Parse state_spec in first item of tuple
         state_dict = _parse_state_spec(owner=owner,
                                        state_type=state_type,
