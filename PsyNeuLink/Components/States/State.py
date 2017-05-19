@@ -1805,8 +1805,8 @@ def _parse_state_spec(owner,
                       name=None,
                       variable=None,
                       value=None,
-                      projections=None,
-                      modulatory_projections=None,
+                      projections=[],
+                      modulatory_projections=[],
                       params=None):
     """Return either state object or state specification dict for state_spec
     
@@ -1910,6 +1910,7 @@ def _parse_state_spec(owner,
                 params[spec] = state_spec[spec]
                 del state_spec[spec]
             state_dict.update(state_spec)
+            state_dict[PARAMS].update(params)
 
     # 2-item tuple (spec, projection)
     elif isinstance(state_spec, tuple):

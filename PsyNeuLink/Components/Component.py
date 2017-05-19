@@ -1642,7 +1642,7 @@ class Component(object):
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
                 # these are always allowable since they are attribs of every component
-                if param_name in {VARIABLE, NAME, PARAMS}:
+                if param_name in {VARIABLE, NAME, VALUE, PARAMS}:
                     continue
                 # function is a class, so function_params has not yet been implemented
                 if param_name is FUNCTION_PARAMS and inspect.isclass(self.function):
