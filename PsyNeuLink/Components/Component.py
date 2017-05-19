@@ -923,7 +923,7 @@ class Component(object):
                     params[FUNCTION_PARAMS].__additem__(param_name,kwargs[arg][param_name])
 
             # If no input_states or output_states are specified, ignore
-            #   (ones in paramClassDefaults will be assigned to paramsCurrent in Component.__init__
+            #   (ones in paramClassDefaults will be assigned to paramsCurrent below (in params_class_defaults_only)
             elif arg in {INPUT_STATES, OUTPUT_STATES} and kwargs[arg] is None:
                 continue
 
