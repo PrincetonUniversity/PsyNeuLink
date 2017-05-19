@@ -1201,10 +1201,10 @@ class Process_Base(Process):
             #    add that to the pathway so that it can be identified and assigned for learning if so specified
             if i+1 == len(pathway):
                 if any(any(proj.receiver.owner is mech
-                           for proj in state.sendsToProjections)
+                           for proj in state.efferents)
                        for state in mech.output_states):
                     for state in mech.output_states:
-                        for proj in state.sendsToProjections:
+                        for proj in state.efferents:
                             if proj.receiver.owner is mech:
                                 pathway.append(MechanismTuple(proj,None,None))
                                 pathway.append(pathway[i-2])
@@ -1259,7 +1259,7 @@ class Process_Base(Process):
                     mech = item
 
                     # Check if first Mechanism already has any projections and, if so, issue appropriate warning
-                    if mech.input_state.receivesFromProjections:
+                    if mech.input_state.afferents:
                         self._issue_warning_about_existing_projections(mech, context)
 
                     # Assign input projection from Process
@@ -1283,7 +1283,7 @@ class Process_Base(Process):
                             try:
                                 learning_projections = list(projection for
                                                         projection in
-                                                        preceding_item._parameter_states[MATRIX].receivesFromProjections
+                                                        preceding_item._parameter_states[MATRIX].afferents
                                                         if isinstance(projection, LearningProjection))
 
                             # preceding_item doesn't have a parameterStates attrib, so assign one with self.learning
@@ -1327,7 +1327,7 @@ class Process_Base(Process):
     # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
 
                     # PRECEDING ITEM IS A MECHANISM
-                    projection_list = item.input_state.receivesFromProjections
+                    projection_list = item.input_state.afferents
                     projection_found = False
                     for projection in projection_list:
                         # Current mechanism DOES receive a projection from the preceding item
@@ -1368,7 +1368,7 @@ class Process_Base(Process):
                                 # Check if projection's matrix param has a learningSignal
                                 else:
                                     if not (any(isinstance(projection, LearningProjection) for
-                                                projection in matrix_param_state.receivesFromProjections)):
+                                                projection in matrix_param_state.afferents)):
                                         _add_projection_to(projection,
                                                           matrix_param_state,
                                                           projection_spec=self.learning)
@@ -1540,7 +1540,7 @@ class Process_Base(Process):
     def _issue_warning_about_existing_projections(self, mechanism, context=None):
 
         # Check where the projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
-        for projection in mechanism.input_state.receivesFromProjections:
+        for projection in mechanism.input_state.afferents:
 
             # Projection to first Mechanism in Pathway comes from a Process input
             if isinstance(projection.sender, ProcessInputState):
@@ -1781,7 +1781,7 @@ class Process_Base(Process):
                 input_state._deferred_init()
                 # Restrict projections to those from mechanisms in the current process
                 projections = []
-                for projection in input_state.receivesFromProjections:
+                for projection in input_state.afferents:
                     try:
                         if self in projection.sender.owner.processes:
                             projections.append(projection)
@@ -1793,12 +1793,12 @@ class Process_Base(Process):
             for parameter_state in mech._parameter_states:
                 parameter_state._deferred_init()
                 # MODIFIED 5/2/17 OLD:
-                # self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
+                # self._instantiate__deferred_init_projections(parameter_state.afferents)
                 # MODIFIED 5/2/17 NEW:
                 # Defer instantiation of ControlProjections to System
                 #   and there should not be any other type of projection to the ParameterState of a Mechanism
                 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-                if not all(isinstance(proj, ControlProjection) for proj in parameter_state.receivesFromProjections):
+                if not all(isinstance(proj, ControlProjection) for proj in parameter_state.afferents):
                     raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterState for a Mechanism")
                 # MODIFIED 5/2/17 END
 
@@ -1815,7 +1815,7 @@ class Process_Base(Process):
                 # then designate mech as a TARGET
                 if (isinstance(mech, ObjectiveMechanism) and
                         # any(projection.sender.owner.processes[self] == TERMINAL
-                        #     for projection in mech.input_states[SAMPLE].receivesFromProjections) and
+                        #     for projection in mech.input_states[SAMPLE].afferents) and
                         mech._learning_role is TARGET and
                         self.learning
                             ):
@@ -1850,7 +1850,7 @@ class Process_Base(Process):
                 for parameter_state in projection._parameter_states:
                     # Initialize each projection to the parameterState (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
-                    for param_projection in parameter_state.receivesFromProjections:
+                    for param_projection in parameter_state.afferents:
                         param_projection._deferred_init(context=context)
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _monitoring_mech_tuples
@@ -1908,7 +1908,7 @@ class Process_Base(Process):
                    return None if no TARGET ObjectiveMechanism is found.
             """
             for input_state in mech.input_states.values():
-                for projection in input_state.receivesFromProjections:
+                for projection in input_state.afferents:
                     sender = projection.sender.owner
                     # If projection is not from another ObjectiveMechanism, ignore
                     if not isinstance(sender, (ObjectiveMechanism)):
@@ -2196,7 +2196,7 @@ class Process_Base(Process):
             # For each inputState of the mechanism
             for input_state in mech.input_states:
                 # For each projection in the list
-                for projection in input_state.receivesFromProjections:
+                for projection in input_state.afferents:
 
                     # Skip learning if projection is an input from the Process or a system
                     # or comes from a mechanism that belongs to another process
@@ -2468,13 +2468,13 @@ class ProcessInputState(OutputState):
         else:
             self.name = owner.name + "_" + name
         self.prefs = prefs
-        self.sendsToProjections = []
+        self.efferents = []
         self.owner = owner
         self.value = variable
         # MODIFIED 2/17/17 NEW:
         # self.owner.input = self.value
         # MODIFIED 2/17/17 END
-        # self.receivesFromProjections = []
+        # self.afferents = []
         # from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
         # from PsyNeuLink.Components.Functions.Function import Linear
         # self.index = PRIMARY_OUTPUT_STATE

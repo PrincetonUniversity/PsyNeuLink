@@ -1190,7 +1190,7 @@ class System_Base(System):
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.input_states:
-                for projection in input_state.receivesFromProjections:
+                for projection in input_state.afferents:
                     sender = projection.sender.owner
                     system_processes = self.processes
                     if isinstance(sender, Process):
@@ -1200,7 +1200,7 @@ class System_Base(System):
                         del projection
 
             # If sender_mech has no projections left, raise exception
-            if not any(any(projection for projection in input_state.receivesFromProjections)
+            if not any(any(projection for projection in input_state.afferents)
                        for input_state in sender_mech.input_states):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
@@ -1227,7 +1227,7 @@ class System_Base(System):
                                              projection.receiver.owner._role in (LEARNING, CONTROL)) or
                                 # itself!
                                  projection.receiver.owner is sender_mech
-                            for projection in output_state.sendsToProjections)
+                            for projection in output_state.efferents)
                         for output_state in sender_mech.output_states)):
                 try:
                     if sender_mech.systems[self] is ORIGIN:
@@ -1240,7 +1240,7 @@ class System_Base(System):
 
             for output_state in sender_mech.output_states:
 
-                for projection in output_state.sendsToProjections:
+                for projection in output_state.efferents:
                     receiver = projection.receiver.owner
                     receiver_tuple = self._allMechanisms._get_tuple_for_mech(receiver)
 
@@ -1348,7 +1348,7 @@ class System_Base(System):
                                 for proc in projection.sender.owner.processes
                                 if isinstance(projection.sender.owner,Mechanism))
                         # For all the projections to each inputState
-                        for projection in input_state.receivesFromProjections)
+                        for projection in input_state.afferents)
                     # For all input_states for the first_mech
                     for input_state in first_mech.input_states):
                 # Assign its set value as empty, marking it as a "leaf" in the graph
@@ -1364,7 +1364,7 @@ class System_Base(System):
         # # LABELS ANY MECH AS A TARGET THAT PROJECTS TO AN ObjectiveMechanism WITH LEARNING AS ITS role
         # for mech in self.mechanisms:
         #     for output_state in mech.outputStates.values():
-        #         for projection in output_state.sendsToProjections:
+        #         for projection in output_state.efferents:
         #             receiver = projection.receiver.owner
         #             if isinstance(receiver, ObjectiveMechanism) and receiver.role == LEARNING:
         #                 mech.systems[self] = TERMINAL
@@ -1492,7 +1492,7 @@ class System_Base(System):
 
             # Skip if ORIGIN mechanism already has a projection from a SystemInputState in current system
             # (this avoids duplication from multiple passes through _instantiate_graph)
-            if any(self is projection.sender.owner for projection in origin_mech.input_state.receivesFromProjections):
+            if any(self is projection.sender.owner for projection in origin_mech.input_state.afferents):
                 continue
 
             # Check, for each ORIGIN mechanism, that the length of the corresponding item of self.variable matches the
@@ -1580,17 +1580,17 @@ class System_Base(System):
                                      not receiver_mech is sender_mech)
                                 # receivers of senders to sender_mech
                                 for receiver_mech in [proj.receiver.owner for proj in
-                                                      mech.output_state.sendsToProjections])
+                                                      mech.output_state.efferents])
                         # senders to sender_mech
                         for mech in [proj.sender.owner
-                                     for proj in sender_mech.input_states[SAMPLE].receivesFromProjections]):
+                                     for proj in sender_mech.input_states[SAMPLE].afferents]):
 
                     # Get the ProcessingMechanism that projected to sender_mech
-                    error_source_mech = sender_mech.input_states[SAMPLE].receivesFromProjections[0].sender.owner
+                    error_source_mech = sender_mech.input_states[SAMPLE].afferents[0].sender.owner
 
                     # Get the other ObjectiveMechanism to which the error_source projects (in addition to sender_mech)
                     other_obj_mech = next((projection.receiver.owner for projection in
-                                           error_source_mech.output_state.sendsToProjections if
+                                           error_source_mech.output_state.efferents if
                                            isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
                     sender_mech = other_obj_mech
 
@@ -1598,11 +1598,11 @@ class System_Base(System):
                 # None of the mechanisms that project to it are a TERMINAL mechanism
                 elif not all(all(projection.sender.owner.processes[proc] is TERMINAL
                                  for proc in projection.sender.owner.processes)
-                             for projection in sender_mech.input_states[SAMPLE].receivesFromProjections):
+                             for projection in sender_mech.input_states[SAMPLE].afferents):
 
                     # Get the LearningMechanism to which the sender_mech projected
                     try:
-                        learning_mech = sender_mech.output_state.sendsToProjections[0].receiver.owner
+                        learning_mech = sender_mech.output_state.efferents[0].receiver.owner
                         if not isinstance(learning_mech, LearningMechanism):
                             raise AttributeError
                     except AttributeError:
@@ -1613,11 +1613,11 @@ class System_Base(System):
                         import ACTIVATION_INPUT, ERROR_SIGNAL
 
                     # Get the ProcessingMechanism that projected to sender_mech
-                    error_source_mech = sender_mech.input_states[SAMPLE].receivesFromProjections[0].sender.owner
+                    error_source_mech = sender_mech.input_states[SAMPLE].afferents[0].sender.owner
 
                     # Get the other LearningMechanism to which the error_source projects (in addition to sender_mech)
                     error_signal_mech = next((projection.receiver.owner for projection in
-                                              error_source_mech.output_state.sendsToProjections if
+                                              error_source_mech.output_state.efferents if
                                               projection.receiver.name is ACTIVATION_INPUT), None)
 
 
@@ -1625,7 +1625,7 @@ class System_Base(System):
                     #    from any other ObjectiveMechanism or LearningMechanism in the system;
                     # If it does, get the first one found
                     error_signal_projection = next ((projection for projection
-                                                     in learning_mech.input_states[ERROR_SIGNAL].receivesFromProjections
+                                                     in learning_mech.input_states[ERROR_SIGNAL].afferents
                                                      if (isinstance(projection.sender.owner,(ObjectiveMechanism,
                                                                                             LearningMechanism)) and
                                                      not projection.sender.owner is sender_mech and
@@ -1669,7 +1669,7 @@ class System_Base(System):
 
                         # Reassign error_matrix to one for the projection to which the error_signal_mech projects
                         learning_mech.function_object.error_matrix = \
-                            error_signal_mech.output_states['learning_signal'].sendsToProjections[0].receiver
+                            error_signal_mech.output_states['learning_signal'].efferents[0].receiver
                         # Delete error_matrix parameterState for error_matrix
                         #    (since its value, which was the IDENTITY_MATRIX, is now itself ParameterState,
                         #     and Components are not allowed  as the value of a ParameterState
@@ -1681,7 +1681,7 @@ class System_Base(System):
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.input_states:
-                for projection in input_state.receivesFromProjections:
+                for projection in input_state.afferents:
                     sender = projection.sender.owner
                     system_processes = self.processes
                     if isinstance(sender, Process):
@@ -1691,14 +1691,14 @@ class System_Base(System):
                         del projection
 
             # If sender_mech has no projections left, raise exception
-            if not any(any(projection for projection in input_state.receivesFromProjections)
+            if not any(any(projection for projection in input_state.afferents)
                        for input_state in sender_mech.input_states):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
             for output_state in sender_mech.output_states:
 
-                for projection in output_state.sendsToProjections:
+                for projection in output_state.efferents:
                     receiver = projection.receiver.owner
                     try:
                         self.learningGraph[receiver].add(sender_mech)
@@ -1926,7 +1926,7 @@ class System_Base(System):
         self.controller._execution_id = self._execution_id
         if self.enable_controller and self.controller.input_states:
             for state in self.controller.input_states:
-                for projection in state.receivesFromProjections:
+                for projection in state.afferents:
                     projection.sender.owner._execution_id = self._execution_id
 
         self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
@@ -1968,7 +1968,7 @@ class System_Base(System):
                 for j in range(len(origin_mech.input_states)):
                    # Get the input from each projection to that inputState (from the corresponding SystemInputState)
                     system_input_state = next(projection.sender
-                                              for projection in origin_mech.input_states[j].receivesFromProjections
+                                              for projection in origin_mech.input_states[j].afferents
                                               if isinstance(projection.sender, SystemInputState))
                     if system_input_state:
                         system_input_state.value = input[i][j]
@@ -2493,16 +2493,16 @@ class System_Base(System):
         for mech in list(self.mechanisms):
             for parameter_state in mech._parameter_states:
                 try:
-                    for projection in parameter_state.receivesFromProjections:
+                    for projection in parameter_state.afferents:
                         if isinstance(projection, ControlProjection):
                             controlled_parameters.append(parameter_state)
                 except AttributeError:
                     pass
             for output_state in mech.output_states:
                 try:
-                    for projection in output_state.sendsToProjections:
+                    for projection in output_state.efferents:
                         for parameter_state in projection.paramaterStates:
-                            for sender in parameter_state.receivesFromProjections:
+                            for sender in parameter_state.afferents:
                                 if isinstance(sender, LearningProjection):
                                     learning_projections.append(projection)
                 except AttributeError:
@@ -2712,7 +2712,7 @@ class System_Base(System):
                 sndr_label = sndr_name
 
                 # find edge name
-                projs = sndr[0].output_state.sendsToProjections
+                projs = sndr[0].output_state.efferents
                 for proj in projs:
                     if proj.receiver.owner == rcvr[0]:
                         edge_name = proj.name
@@ -2746,12 +2746,12 @@ class System_Base(System):
                         # for each sndr of rcvr
                         sndrs = learning_graph[rcvr]
                         for sndr in sndrs:
-                            edge_label = rcvr._parameter_states['matrix'].receivesFromProjections[0].name
+                            edge_label = rcvr._parameter_states['matrix'].afferents[0].name
                             G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
                     else:
                         sndrs = learning_graph[rcvr]
                         for sndr in sndrs:
-                            projs = sndr.output_state.sendsToProjections
+                            projs = sndr.output_state.efferents
                             for proj in projs:
                                 if proj.receiver.owner == rcvr:
                                     edge_name = proj.name
@@ -2763,7 +2763,7 @@ class System_Base(System):
         if show_control:
             controller = self.controller
 
-            connector = controller.input_state.receivesFromProjections[0]
+            connector = controller.input_state.afferents[0]
             objmech = connector.sender.owner
 
             # main edge
@@ -2773,14 +2773,14 @@ class System_Base(System):
 
             # outgoing edges
             for output_state in controller.controlSignals:
-                for projection in output_state.sendsToProjections:
+                for projection in output_state.efferents:
                     edge_name
                     rcvr_name = projection.receiver.owner.name
                     G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
 
             # incoming edges
             for istate in objmech.input_states.values():
-                for proj in istate.receivesFromProjections:
+                for proj in istate.afferents:
                     sndr_name = proj.sender.owner.name
                     G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
 
@@ -2826,6 +2826,6 @@ class SystemInputState(OutputState):
         else:
             self.name = owner.name + "_" + name
         self.prefs = prefs
-        self.sendsToProjections = []
+        self.efferents = []
         self.owner = owner
         self.value = variable

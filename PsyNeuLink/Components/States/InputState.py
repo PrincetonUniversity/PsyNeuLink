@@ -17,7 +17,7 @@ An inputState receives the input to a mechanism provided by the projections to t
 or system.  If the inputState belongs to an `ORIGIN` mechanism (see
 `role of mechanisms in processes and systems <Mechanism_Role_In_Processes_And_Systems>`), then it receives the input
 specified when that process or system is `run <Run>`.  The projections received by an inputState are
-listed in its `receivesFromProjections <InputState.receivesFromProjections>` attribute. Its
+listed in its `afferents <InputState.afferents>` attribute. Its
 `function <InputState.function>` combines the values of these inputs, and the result is assigned to an item
 corresponding to the inputState in the owner mechanism's :keyword:`variable <Mechanism.Mechanism_Base.variable>` and
 `input_value <Mechanism.Mechanism_Base.input_value>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
@@ -87,8 +87,8 @@ one of the specifications below:
       :ref:`projection specification dictionary <Projection_In_Context_Specification>`, or a list containing
       items that are either of those.
     ..
-    * A :any:`ParamValueProjection` tuple.  This creates a default inputState using the ``value`` item as its
-    ``variable``, and assigns the state as the ``receiver`` of the projection item.
+    * A **2-item tuple**.  This creates a default inputState using the first (value) item as its
+      :keyword:`variable`, and assigns the state as the :keyword:`receiver` of the 2nd (projection) item.
 
     .. note::
        In all cases, the resulting ``value`` of the inputState must be compatible with (that is, have the same number
@@ -132,7 +132,7 @@ Structure
 Every inputState is owned by a `mechanism <Mechanism>`. It can receive one or more
 `MappingProjections <MappingProjection>` from other mechanisms, as well as from the process or system to which its
 owner belongs (if it is the `ORIGIN` mechanism for that process or system).  The projections received by an
-inputState are listed in its `receivesFromProjections <InputState.receivesFromProjections>` attribute.
+inputState are listed in its `afferents <InputState.afferents>` attribute.
 
 Like all PsyNeuLink components, an inputState has the three following core attributes:
 
@@ -279,7 +279,7 @@ class InputState(State_Base):
     owner : Mechanism
         the mechanism to which the inputState belongs.
 
-    receivesFromProjections : Optional[List[Projection]]
+    afferents : Optional[List[Projection]]
         a list of the projections received by the inputState
         (i.e., for which it is a `receiver <Projection.Projection.receiver>`).
 
@@ -398,6 +398,15 @@ class InputState(State_Base):
                                                   self.owner.name,
                                                   self.reference_value))
                                                   # self.owner.variable))
+
+    @property
+    def trans_projections(self):
+        return self.afferents
+
+    @trans_projections.setter
+    def trans_projections(self, assignment):
+        self.afferents = assignment
+
 
 def _instantiate_input_states(owner, context=None):
     """Call State._instantiate_state_list() to instantiate orderedDict of inputState(s)

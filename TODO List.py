@@ -614,7 +614,7 @@
 #                 + State object: it will be validated
 #                 + State subclass: a default state will be implemented using a default value
 #                 + dict with specifications for a State object to create:
-#                 + ParamValueProjection tuple: a state will be implemented using the value and assigned the projection
+#                 + 2-item tuple: a state will be implemented using the first (value) item and assigned the projection
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
 
@@ -1321,7 +1321,7 @@
 #           If the MappingProjection is defined outside the Process pathway and not explicitly listed in it,
 #               it will not be included in the Process;  this is because deferring intialization means that
 #               even if the sender or the receiver is specified, the projection will not be assigned to the
-#               specified mechanism's projection list (sendsToProjections, receivesFromProjections), and thus not
+#               specified mechanism's projection list (efferents, afferents), and thus not
 #               identified in _instantiate_pathway.  Could allow sender to be left unspecified and still
 #               proceed with initialization that thus be recognized by the Process;  however, can't do the reverse
 #               (specify sender but not receiver) since receiver *must* be specified to initialize a projection
@@ -1407,7 +1407,7 @@
 #         self.init_args['name'] = name
 #         del self.init_args['self']
 #     - set self.value = DEFERRED_INITIALIZATION
-# 3) Where projections are ordinarily instantiated, assign instantiated stub" to sendsToProjections,
+# 3) Where projections are ordinarily instantiated, assign instantiated stub" to efferents,
 # 4) When a process is instantiated, the last thing it does is call _deferred_init
 #    for all of the projections associated with the mechanism in its pathway,
 #    beginning with the last and moving backward though the pathway
@@ -1503,7 +1503,7 @@
 #                 - what gets called
 #
 # DOCUMENT: ControlSignals are now NEVER specified for params by default;
-#           they must be explicitly specified using ParamValueProjection tuple: (paramValue, CONTROL_PROJECTION)
+#           they must be explicitly specified using 2-item tuple: (paramValue, CONTROL_PROJECTION)
 #     - Clean up ControlProjection InstanceAttributes
 # DOCUMENT _instantiate_state_list() in Mechanism
 # DOCUMENT: change comment in DDM re: FUNCTION_RUN_TIME_PARAM
@@ -2015,11 +2015,11 @@
 #    "SEQUENTIAL"/"ANALYTIC" MODE:
 #    1) Call every Process on each cycle
 #        a) Each Process calls the Mechanisms in its Pathway list in the sequence in which they appear;
-#            the next one is called when Mechanism.receivesFromProjections.frequency modulo CurrentTime() = 0
+#            the next one is called when Mechanism.afferents.frequency modulo CurrentTime() = 0
 #
 # VS:
 #        a) Each Process polls all the Mechanisms in its Pathway list on each cycle
-#            each one is called when Mechanism.receivesFromProjections.frequency modulo CurrentTime() = 0
+#            each one is called when Mechanism.afferents.frequency modulo CurrentTime() = 0
 #
 # SEQUENTIAL MODE:
 #     COMPUTE LCD (??GCF??)
@@ -2221,7 +2221,7 @@
 # TEST: MAKE SURE THAT output_values IS GETTING SET PROPERLY
 #                  (IN Mechanism.execute OR Mecchanism._update_output_states)
 #
-# IMPLEMENT: dictionaries for receivesFromProjections and sendsToProjections;
+# IMPLEMENT: dictionaries for afferents and efferents;
 #            each entry is the name of an inputState or outputState;  value is tuple with...??
 # IMPLEMENT: add built-in names for mechanism's InputStates and OutputStates (like ParameterStates)
 # IMPLEMENT: reference to mechanism by name in pathway (look it up in Registry)
@@ -2263,7 +2263,7 @@
 # - IMPLEMENTATION OF MULTIPLE INPUT AND OUTPUT STATES:
 # - IMPLEMENT:  ABSTRACT HANDLING OF MULTIPLE STATES (AT LEAST FOR INPUT AND OUTPUT STATES, AND POSSIBLE PARAMETER??
 # - Implement: Add StateSpec tuple specificaton in list for  INPUT_STATE and OutputStates
-#        - akin to ParamValueProjection
+#        - akin to 2-item tuple
 #        - this is because OrderedDict is a specialty class so don't want to impose their use on user specification
 #        - adjust _validate_params and instantiate_output_state accordingly
 # - Implement: allow list of names, that will be used to instantiate states using self.value
@@ -2374,7 +2374,7 @@
 # IMPLEMENT      MOVE ASSIGNMENT OF monitor_for_control_factors TO THERE
 #
 # - IMPLEMENT: controlSignals attribute:  list of control signals for mechanism
-#                                        (get from outputStates.sendsToProjections)
+#                                        (get from outputStates.efferents)
 # - IMPLEMENT: controlSignalSearchSpace argument in constructor, that can be:
 #                   - 2d array (each item of which is validated for length = len(self.controlSignals
 #                   - function that returns a 2d array, validate per above.
@@ -2426,11 +2426,11 @@
 # FIX: ControlMechanism._take_over_as_default_controller() IS NOT FULLY DELETING DefaultController.outputStates
 #
 # FIX: PROBLEM - ControlMechanism._take_over_as_default_controller()
-# FIX:           NOT SETTING sendsToProjections IN NEW CONTROLLER (e.g., EVC)
+# FIX:           NOT SETTING efferents IN NEW CONTROLLER (e.g., EVC)
 #
 # SOLUTIONS:
 # 1) CLEANER: use _instantiate_sender on ControlProjection to instantiate both outputState and projection
-# 2) EASIER: add self.sendsToProjections.append() statement in _take_over_as_default_controller()
+# 2) EASIER: add self.efferents.append() statement in _take_over_as_default_controller()
 #
 #
 # BACKGROUND INFO:
@@ -2764,7 +2764,7 @@
 #                            preceding processing mechanism's output projection (pop)
 #                                pop = ppm.outputState.projections[0]
 #                            preceding processing mechanism's output projection learning signal (popls):
-#                                popls = pop.parameterState.receivesFromProjections[0]
+#                                popls = pop.parameterState.afferents[0]
 #                            preceding ErrorMonitoringMechanism (pem):
 #                                pem = popls.sender.owner
 #                            assign MappingProjection from pem.outputState to self.input_state
@@ -2801,7 +2801,7 @@
 #
 # 2) LearnningSignal (Projection):
 #     - sender:  output of Monitoring Mechanism
-#         default: receiver.owner.outputState.sendsToProjections.<MonitoringMechanism> if specified,
+#         default: receiver.owner.outputState.efferents.<MonitoringMechanism> if specified,
 #                  else default ComparatorMechanism
 #     - receiver: MappingProjection parameterState (or some equivalent thereof)
 #
@@ -2812,7 +2812,7 @@
 #        ParameterState and Training Projection both call that object
 # MappingProjection should have LEARNING_PARAM which:
 #    - specifies LearningProjection
-#    - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
+#    - uses self.outputStates.efferents.<MonitoringMechanism> if specified
 #    - otherwise defaults to LinearCompartor (which it instantiates for itself) and LearningProjection with BP
 #
 # Projection mechanism:

@@ -362,7 +362,7 @@ from PsyNeuLink.Components.Functions.Function import BackPropagation
 # Params:
 
 parameter_keywords.update({LEARNING_PROJECTION})
-projection_keywords.update({LEARNING_PROJECTION})
+projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
@@ -711,7 +711,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     # IMPLEMENTATION NOTE: Assumes that the LearningMechanism projects to and modifies only a single MappingProjection
     @property
     def learned_projection(self):
-        learning_projections = self.output_states[LEARNING_SIGNAL].sendsToProjections
+        learning_projections = self.output_states[LEARNING_SIGNAL].efferents
         if learning_projections:
             return learning_projections[0].receiver.owner
         else:

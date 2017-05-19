@@ -516,7 +516,7 @@ class MappingProjection(TransmissiveProjection_Base):
         """Returns matrix specification in self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
 
         Returns matrix param for MappingProjection, getting second item if it is
-         a ParamValueprojection or unnamed (matrix, projection) tuple
+         an unnamed (matrix, projection) tuple
         """
         return self._get_param_value_from_tuple(self.paramsCurrent[FUNCTION_PARAMS][MATRIX])
 
@@ -525,7 +525,7 @@ class MappingProjection(TransmissiveProjection_Base):
         """Assign matrix specification for self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
 
         Assigns matrix param for MappingProjection, assigning second item if it is
-         a ParamValueProjection or unnamed (matrix, projection) tuple
+         a 2-item tuple or unnamed (matrix, projection) tuple
         """
 
         # Specification is a two-item tuple, so validate that 2nd item is:

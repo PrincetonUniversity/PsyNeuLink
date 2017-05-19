@@ -279,6 +279,8 @@ from collections import OrderedDict, Iterable
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 
+component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
+
 class ResetMode(Enum):
     CURRENT_TO_INSTANCE_DEFAULTS = 0
     INSTANCE_TO_CLASS = 1
@@ -1706,12 +1708,6 @@ class Component(object):
                     target_set[param_name] = param_value()
                     continue
 
-            # # MODIFIED 4/18/17 OLD:
-            # # Value is a ParamValueProjection or 2-item tuple extract its value for validation below
-            # if isinstance(param_value, (ParamValueProjection, tuple)):
-            #     param_value = self._get_param_value_from_tuple(param_value)
-            # MODIFIED 4/18/17 END
-
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
 
@@ -1805,7 +1801,7 @@ class Component(object):
                                     format(param_name, self.name, param_value, type_name))
 
     def _get_param_value_from_tuple(self, param_spec):
-        """Returns param value (first item) of either a ParamValueProjection or an unnamed (value, projection) tuple
+        """Returns param value (first item) of a (value, projection) tuple
         """
         from PsyNeuLink.Components.Projections.Projection import Projection
         # from PsyNeuLink.Components.Projections.Modulatory.ControlProjection import ControlProjection

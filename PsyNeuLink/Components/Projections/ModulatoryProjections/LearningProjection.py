@@ -121,13 +121,6 @@ WEIGHT_CHANGE_PARAMS = "weight_change_params"
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
 
-TARGET_ERROR = "TARGET_ERROR"
-TARGET_ERROR_MEAN = "TARGET_ERROR_MEAN"
-TARGET_ERROR_SUM = "TARGET_ERROR_SUM"
-TARGET_SSE = "TARGET_SSE"
-TARGET_MSE = "TARGET_MSE"
-
-
 DefaultTrainingMechanism = ObjectiveMechanism
 
 class LearningProjectionError(Exception):
@@ -472,7 +465,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
-        candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].receivesFromProjections[0].sender.owner
+        candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].afferents[0].sender.owner
         if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
             learned_projection.objective_mechanism = candidate_objective_mech
         learned_projection.learning_mechanism = learning_mechanism

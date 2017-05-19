@@ -17,7 +17,7 @@ A parameterState belongs to either a `mechanism <Mechanism>` or a `MappingProjec
 possibly modify the value of a parameter of its owner or it owner's function.  It can receive one or more
 `ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that modify that
 parameter.   The projections received by a parameterState are listed in its
-`receivesFromProjections <ParameterState.receivesFromProjections>` attribute.
+`afferents <ParameterState.afferents>` attribute.
 Its `function <ParameterState.function>` combines the values of these inputs, and uses the result to modify the value
 of the parameter for which it is responsible.
 
@@ -70,7 +70,7 @@ Parameters can be specified in one of several places:
 
 The value specified for the parameter (either explicitly or by default) is assigned as the parameterState's
 `baseValue <ParameterState.baseValue>`, and any projections assigned to it are added to its
-`receiveFromProjections <ParameterState.receivesFromProjections>` attribute. When the parameterState's owner is
+`receiveFromProjections <ParameterState.afferents>` attribute. When the parameterState's owner is
 executed, the parameterState's `baseValue <ParameterState.baseValue>` is combined with the value of the projections
 it receives to determine the value of the parameter for which the parameterState is responsible
 (see `ParameterState_Execution` for details).
@@ -99,7 +99,7 @@ The specification of a parameter can take any of the following forms:
       `receiver <Projection.Projection.receiver>`.  The projection must be a `ControlProjection` or
       `LearningProjection`, and its value must be a valid one for the parameter.
     ..
-    * A `ParamValueProjection` or 2-item (value, projection specification) **tuple**.  This creates a default
+    * A 2-item (value, projection specification) **tuple**.  This creates a default
       parameterState, uses the value (1st) item of the tuple as parameterState's
       `baseValue <ParameterState.baseValue>`, and assigns the parameter's name as the name of the parameterState.
       The projection (2nd) item of the tuple is used to create and/or assign the specified projection, that is assigned
@@ -184,7 +184,7 @@ responsible.  When the parameterState is updated (i.e., the owner is executed) t
 combined (using the  parameterState's `function <ParameterState.function>`) and the result is used to modify the
 parameter for which the parameterState is responsible (see `Execution <ParameterState_Execution>` below).  The
 projections received by a parameterState are listed in its `receiveFromProjections
-<ParameterState.receivesFromProjections>` attribute. Like all PsyNeuLink components, it has the three following core
+<ParameterState.afferents>` attribute. Like all PsyNeuLink components, it has the three following core
 attributes:
 
 * `variable <ParameterState.variable>`:  this serves as a template for the `value <Projection.Projection.value>` of
@@ -479,7 +479,7 @@ class ParameterState(State_Base):
     owner : Mechanism
         the mechanism to which the parameterState belongs.
 
-    receivesFromProjections : Optional[List[Projection]]
+    afferents : Optional[List[Projection]]
         a list of the projections received by the parameterState (i.e., for which it is a
         `receiver <Projection.Projection.receiver>`); generally these are `ControlProjection(s) <ControlProjection>`
         and/or `LearningProjection(s) <LearningProjection>`.
@@ -579,7 +579,7 @@ class ParameterState(State_Base):
         self.parameterModulationOperation = self.paramsCurrent[PARAMETER_MODULATION_OPERATION]
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that parameterState (as identified by its name) is for a valid parameter for owner
+        """Insure that parameterState (as identified by its name) is for a valid parameter of the owner
 
         Parameter can be either owner's, or owner's function_object
         """
@@ -720,6 +720,19 @@ class ParameterState(State_Base):
         # if self.name in self.owner.function_params:
         #     setattr(self.owner.function.__self__, self.name, self.value)
 
+    @property
+    def trans_projections(self):
+        raise ParameterStateError("PROGRAM ERROR: Attempt to access trans_projection for {};"
+                                  "it is a {} which does not have {}s".
+                                  format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
+
+    @trans_projections.setter
+    def trans_projections(self, value):
+        raise ParameterStateError("PROGRAM ERROR: Attempt to assign trans_projection to {};"
+                                  "it is a {} which cannot accept {}s".
+                                  format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
+
+
 
 def _instantiate_parameter_states(owner, context=None):
     """Call _instantiate_parameter_state for all params in user_params to instantiate ParameterStates for them
@@ -760,7 +773,6 @@ def _instantiate_parameter_states(owner, context=None):
     #                       and that, in turn, will overwrite their current values with the defaults from paramsCurrent)
     for param_name, param_value in owner.user_params_for_instantiation.items():
         _instantiate_parameter_state(owner, param_name, param_value, context=context)
-    # MODIFIED 4/1/17 END
 
 
 def _instantiate_parameter_state(owner, param_name, param_value, context):
@@ -834,9 +846,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     if param_name is FUNCTION_PARAMS:
         for function_param_name in param_value.keys():
             function_param_value = param_value[function_param_name]
-            # Assignment of ParameterState for Component objects, function or method are not currently supported
-            if isinstance(function_param_value, (function_type, method_type, Component)):
-                continue
+
             # IMPLEMENTATION NOTE:
             # The following is necessary since, if ANY parameters of a function are specified, entries are made
             #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values
@@ -849,7 +859,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             if function_param_value is None:
                 continue
 
-            # Assign parameterState for function_param to the component
+            if not _is_legal_param_value(owner, function_param_value):
+                continue
+
+            # Raise exception if the function parameter's name is the same as one that already exists for its owner
             if function_param_name in owner.user_params:
                 if inspect.isclass(owner.function):
                     function_name = owner.function.__name__
@@ -859,6 +872,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
+            # Assign parameterState for function_param to the component
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
                                       state_name=function_param_name,
@@ -869,9 +883,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                       context=context)
             if state:
                 owner._parameter_states[function_param_name] = state
-            continue
 
-    else:
+    elif _is_legal_param_value(owner, param_value):
         state = _instantiate_state(owner=owner,
                                   state_type=ParameterState,
                                   state_name=param_name,
@@ -883,3 +896,18 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         if state:
             owner._parameter_states[param_name] = state
 
+def _is_legal_param_value(owner, value):
+
+    # LEGAL PARAMETER VALUES:
+
+    # lists, arrays numeric values
+    if is_value_spec(value) or isinstance(value, tuple):
+        return True
+
+    # keyword that resolves to one of the above
+    if get_param_value_for_keyword(owner, value) is not None:
+        return True
+
+    # Assignment of ParameterState for Component objects, function or method are not currently supported
+    if isinstance(value, (function_type, method_type, Component)):
+        return False
