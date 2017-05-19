@@ -321,7 +321,6 @@ class State_Base(State):
                                MODULATORY_PROJECTIONS:[]})
     paramNames = paramClassDefaults.keys()
 
-    #endregion
 
     def __init__(self,
                  owner,
@@ -1554,11 +1553,9 @@ def _instantiate_state_list(owner,
                     # Add incremented index suffix for each state name
                     else:
                         state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(key+1)
-                    # MODIFIED 12/11/16 NEW:
                     # If it is an "exposed" number, make it a 1d np.array
                     if isinstance(state_spec, numbers.Number):
                         state_spec = np.atleast_1d(state_spec)
-                    # MODIFIED 12/11/16 END
 
                     state_constraint_value = constraint_value[key]
 
