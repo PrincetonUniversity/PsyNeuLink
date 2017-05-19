@@ -1928,7 +1928,8 @@ def _parse_state_spec(owner,
                                        projections=projections,
                                        params=params)
         # Add projection spec from second item in tuple, and return dict
-        state_dict.update({modulatory_projections:state_spec[1]})
+        # state_dict.update({modulatory_projections:state_spec[1]})
+        state_dict.update({STATE_PROJECTIONS:state_spec[1]})
 
     # Projection class, object, or keyword:
     #     set to variable to value and assign projection spec to STATE_PROJECTIONS entry in params
