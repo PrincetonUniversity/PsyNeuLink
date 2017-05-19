@@ -860,7 +860,9 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             #    not been explicitly specified
             if function_param_value is None:
                 continue
-
+            # Don't assign ParameterState for parameters that are not lists, arrays or have a numeric value
+            if not is_value_spec(function_param_value):
+                continue
             # Assign parameterState for function_param to the component
             if function_param_name in owner.user_params:
                 if inspect.isclass(owner.function):
@@ -881,9 +883,12 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                       context=context)
             if state:
                 owner._parameter_states[function_param_name] = state
-            continue
+            # continue
 
     else:
+        # Don't assign ParameterState for parameters that are not lists, arrays or have a numeric value
+        if not is_value_spec(param_value):
+            return
         state = _instantiate_state(owner=owner,
                                   state_type=ParameterState,
                                   state_name=param_name,
