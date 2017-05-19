@@ -1652,7 +1652,8 @@ def _instantiate_state(owner,                  # Object to which state will belo
                                         state_spec=constraint_value,
                                         value=None,
                                         params=None)
-    constraint_value = constraint_dict[VALUE]
+    # constraint_value = constraint_dict[VALUE]
+    constraint_value = constraint_dict[VARIABLE]
 
     # PARSE state_spec using constraint_value as default for value
     state_spec = _parse_state_spec(owner=owner,
@@ -1700,8 +1701,8 @@ def _instantiate_state(owner,                  # Object to which state will belo
             print("{} is not compatible with constraint value ({}) specified for {} of {};  latter will be used".
                   format(VARIABLE, constraint_value, state_type, owner.name))
         state_variable = constraint_value
-    else:
-        constraint_value = state_variable
+    # else:
+    #     constraint_value = state_variable
 
     # INSTANTIATE STATE:
     # Note: this will be either a default State instantiated using constraint_value as its value
@@ -1860,7 +1861,7 @@ def _parse_state_spec(owner,
     if VARIABLE in params and params[VARIABLE] is not None:
         variable = params[VARIABLE]
 
-    # MODIFIED 5/19/17 NEW:
+    # Move any projection specifications in the state specification dict to params
     if not STATE_PROJECTIONS in params:
         params[STATE_PROJECTIONS]=projections
     else:
@@ -1869,7 +1870,6 @@ def _parse_state_spec(owner,
         params[MODULATORY_PROJECTIONS]=modulatory_projections
     else:
         params[STATE_PROJECTIONS].append(projections)
-    # MODIFIED 5/19/17 END
 
     # Create default dict for return
     state_dict = {NAME: name,
