@@ -1,42 +1,43 @@
+import numpy as np
+
 from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, TARGET_MSE
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import TARGET_MSE
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.Globals.Keywords import LEARNING, SOFT_CLAMP
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
+
 
 def test_multilayer():
     Input_Layer = TransferMechanism(
         name='Input Layer',
         function=Logistic,
-        default_input_value = np.zeros((2,)),
+        default_input_value=np.zeros((2,)),
     )
 
     Hidden_Layer_1 = TransferMechanism(
         name='Hidden Layer_1',
         function=Logistic(),
-        default_input_value = np.zeros((5,)),
+        default_input_value=np.zeros((5,)),
     )
 
     Hidden_Layer_2 = TransferMechanism(
         name='Hidden Layer_2',
         function=Logistic(),
-        default_input_value = [0,0,0,0],
+        default_input_value=[0, 0, 0, 0],
     )
 
     Output_Layer = TransferMechanism(
         name='Output Layer',
         function=Logistic,
-        default_input_value = [0,0,0],
+        default_input_value=[0, 0, 0],
     )
 
-    Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
-    Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
-    Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
-
+    Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
+    Middle_Weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
+    Output_Weights_matrix = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
 
     # TEST PROCESS.LEARNING WITH:
     # CREATION OF FREE STANDING PROJECTIONS THAT HAVE NO LEARNING (Input_Weights, Middle_Weights and Output_Weights)
@@ -88,32 +89,28 @@ def test_multilayer():
         clamp_input=SOFT_CLAMP,
         learning=LEARNING,
         learning_rate=1.0,
-        target=[0,0,1],
+        target=[0, 0, 1],
         prefs={
             VERBOSE_PREF: False,
             REPORT_OUTPUT_PREF: False
         },
     )
 
-    stim_list = {Input_Layer:[[-1, 30]]}
-    target_list = {Output_Layer:[[0, 0, 1]]}
-
-
-    def print_header():
-        print("\n\n**** TRIAL: ", CentralClock.trial)
+    stim_list = {Input_Layer: [[-1, 30]]}
+    target_list = {Output_Layer: [[0, 0, 1]]}
 
     def show_target():
         i = s.input
         t = s.targetInputStates[0].value
-        print ('\nOLD WEIGHTS: \n')
-        print ('- Input Weights: \n', Input_Weights.matrix)
-        print ('- Middle Weights: \n', Middle_Weights.matrix)
-        print ('- Output Weights: \n', Output_Weights.matrix)
-        print ('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
-        print ('ACTIVITY FROM OLD WEIGHTS: \n')
-        print ('- Middle 1: \n', Hidden_Layer_1.value)
-        print ('- Middle 2: \n', Hidden_Layer_2.value)
-        print ('- Output:\n', Output_Layer.value)
+        print('\nOLD WEIGHTS: \n')
+        print('- Input Weights: \n', Input_Weights.matrix)
+        print('- Middle Weights: \n', Middle_Weights.matrix)
+        print('- Output Weights: \n', Output_Weights.matrix)
+        print('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
+        print('ACTIVITY FROM OLD WEIGHTS: \n')
+        print('- Middle 1: \n', Hidden_Layer_1.value)
+        print('- Middle 2: \n', Hidden_Layer_2.value)
+        print('- Output:\n', Output_Layer.value)
 
     s = system(
         processes=[p],
@@ -127,7 +124,6 @@ def test_multilayer():
         num_executions=10,
         inputs=stim_list,
         targets=target_list,
-        call_before_trial=print_header,
         call_after_trial=show_target,
     )
 
@@ -144,36 +140,36 @@ def test_multilayer():
             results_list.extend(nested_elem)
 
     expected_output = [
-        (Output_Layer.output_states.values, [np.array([ 0.22686074,  0.25270212,  0.91542149])]),
+        (Output_Layer.output_states.values, [np.array([0.22686074,  0.25270212,  0.91542149])]),
         (objective_output_layer.output_states[TARGET_MSE].value, np.array(0.04082589331852094)),
         (Input_Weights.matrix, np.array([
             [0.09890269, 0.19810968, 0.29740194,  0.39678767, 0.49627111],
             [0.5959199,  0.69297125, 0.79033968, 0.88805564, 0.98613492],
         ])),
         (Middle_Weights.matrix, np.array([
-            [ 0.08992499,  0.10150104,  0.11891032,  0.14250149],
-            [ 0.29158517,  0.30154765,  0.31758943,  0.34007336],
-            [ 0.49318268,  0.50159531,  0.51632339,  0.5377435 ],
-            [ 0.69471052,  0.70164382,  0.71511777,  0.73552215],
-            [ 0.8961628 ,  0.90169281,  0.91397691,  0.93341744]
-       ])),
+            [0.08992499,  0.10150104,  0.11891032,  0.14250149],
+            [0.29158517,  0.30154765,  0.31758943,  0.34007336],
+            [0.49318268,  0.50159531,  0.51632339,  0.5377435],
+            [0.69471052,  0.70164382,  0.71511777,  0.73552215],
+            [0.8961628,  0.90169281,  0.91397691,  0.93341744]
+        ])),
         (Output_Weights.matrix, np.array([
             [-0.71039394, -0.66929423,  0.31014399],
             [-0.47462798, -0.43340256,  0.56113343],
-            [-0.2388705 , -0.19778374,  0.81214434],
+            [-0.2388705, -0.19778374,  0.81214434],
             [-0.00287122,  0.03785105,  1.06315816]
         ])),
         (results, [
-            [np.array([ 0.8344837 ,  0.87072018,  0.89997433])],
-            [np.array([ 0.77970193,  0.83263138,  0.90159627])],
-            [np.array([ 0.70218502,  0.7773823 ,  0.90307765])],
-            [np.array([ 0.60279149,  0.69958079,  0.90453143])],
-            [np.array([ 0.4967927 ,  0.60030321,  0.90610082])],
-            [np.array([ 0.4056202 ,  0.49472391,  0.90786617])],
-            [np.array([ 0.33763025,  0.40397637,  0.90977675])],
-            [np.array([ 0.28892812,  0.33633532,  0.9117193 ])],
-            [np.array([ 0.25348771,  0.28791896,  0.9136125 ])],
-            [np.array([ 0.22686074,  0.25270212,  0.91542149])]
+            [np.array([0.8344837,  0.87072018,  0.89997433])],
+            [np.array([0.77970193,  0.83263138,  0.90159627])],
+            [np.array([0.70218502,  0.7773823,  0.90307765])],
+            [np.array([0.60279149,  0.69958079,  0.90453143])],
+            [np.array([0.4967927,  0.60030321,  0.90610082])],
+            [np.array([0.4056202,  0.49472391,  0.90786617])],
+            [np.array([0.33763025,  0.40397637,  0.90977675])],
+            [np.array([0.28892812,  0.33633532,  0.9117193])],
+            [np.array([0.25348771,  0.28791896,  0.9136125])],
+            [np.array([0.22686074,  0.25270212,  0.91542149])]
         ]),
     ]
 
