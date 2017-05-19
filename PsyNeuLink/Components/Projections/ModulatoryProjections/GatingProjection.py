@@ -73,8 +73,8 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.Gating
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 
-projection_keywords.update({GATING_PROJECTION})
 parameter_keywords.update({GATING_PROJECTION})
+projection_keywords.update({GATING_PROJECTION, GATING})
 
 class GatingProjectionError(Exception):
     def __init__(self, error_value):

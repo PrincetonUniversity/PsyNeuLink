@@ -118,7 +118,7 @@ def show_results():
     print ('\t\t\tThreshold control signal (from EVC): {}'.
            format(re.sub('[\[,\],\n]','',str(float(Decision._parameter_states[THRESHOLD].value))),
                   mySystem.controller.output_states['threshold_ControlSignal'].value,
-                  Decision._parameter_states[THRESHOLD].receivesFromProjections[0].value
+                  Decision._parameter_states[THRESHOLD].afferents[0].value
                   ))
     print('\t\tOutput:')
     for result in results_for_decision:
@@ -145,3 +145,6 @@ mySystem.run(inputs=stim_list_dict,
              # call_after_time_step=show_results
              call_after_trial=show_results
              )
+
+# import pprint
+# pprint.pprint(mySystem.results)

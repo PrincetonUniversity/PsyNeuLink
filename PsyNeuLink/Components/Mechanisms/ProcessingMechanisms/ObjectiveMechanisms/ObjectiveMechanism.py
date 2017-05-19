@@ -570,12 +570,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         from PsyNeuLink.Components.States.State import _parse_state_spec
 
-        # If input_states were not specified, instantiate empty list (to invoke default assignments)
-        if self.input_states is None:
-            self._input_states = [None] * len(self.monitored_values)
-
         # Parse monitored_values into a state specificaton dict
         monitored_values = _parse_monitored_values(owner=self, monitored_values=self.monitored_values)
+
+        # If input_states were not specified, assign value of monitored_valued for each (to invoke default assignments)
+        if self.input_states is None:
+            # self._input_states = [None] * len(self.monitored_values)
+            self._input_states = [m[VALUE] for m in monitored_values]
+
 
         # Parse input_states into a state specification dict, passing monitored_values as defaults
         # from monitored_value
@@ -591,10 +593,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # Parse input_state to determine its specifications and assign values from monitored_values
             #    to any missing specifications, including any projections requested.
             self._input_states[i] = _parse_state_spec(self,
-                                                     state_spec=input_state,
-                                                     default_name=monitored_values[i][NAME],
-                                                     default_value=monitored_values[i][VALUE],
-                                                     projections=monitored_values[i][PROJECTION])
+                                                      state_type=InputState,
+                                                      state_spec=input_state,
+                                                      name=monitored_values[i][NAME],
+                                                      value=monitored_values[i][VALUE],
+                                                      projections=monitored_values[i][PROJECTION])
 
         constraint_value = []
         for input_state in self.input_states:
