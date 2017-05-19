@@ -161,11 +161,12 @@ logger = logging.getLogger(__name__)
 
 
 class SchedulerError(Exception):
-     def __init__(self, error_value):
-         self.error_value = error_value
+    def __init__(self, error_value):
+        self.error_value = error_value
 
-     def __str__(self):
-         return repr(self.error_value)
+    def __str__(self):
+        return repr(self.error_value)
+
 
 class Scheduler(object):
     """
@@ -292,9 +293,11 @@ class Scheduler(object):
                 if self.termination_conds[tc].scheduler is None:
                     logger.debug('Setting scheduler of {0} to self ({1})'.format(self.termination_conds[tc], self))
                     self.termination_conds[tc].scheduler = self
+
     ################################################################################
     # Run methods
     ################################################################################
+
     def run(self, termination_conds=None):
         '''
         :param self:
@@ -315,7 +318,6 @@ class Scheduler(object):
 
             return term
 
-        execution_list = []
         self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
         self._reset_count(self.counts_total, TimeScale.TRIAL)
         self._reset_time(TimeScale.TRIAL)
