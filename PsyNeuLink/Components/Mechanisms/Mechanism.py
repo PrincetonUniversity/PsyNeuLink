@@ -1851,14 +1851,12 @@ class Mechanism_Base(Mechanism):
         else:
             mechanism_string = ' mechanism'
 
-        # # MODIFIED 2/20/17 NEW:
-        # input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
-        # # MODIFIED 4/21/17 NEWER: [NEW CRASHES IF input_val IS AN ARRAY]
-        if isinstance(input_val, np.ndarray) and input_val.ndim > 1 and input_val.shape[1] > 1:
-            input_string = input_val
-        else:
+        # kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        #   if you want more specific output, you can add conditional tests here
+        try:
             input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
-        # MODIFIED 2/20/17 END
+        except TypeError:
+            input_string = input_val
 
         print ("\n\'{}\'{} executed:\n- input:  {}".
                format(self.name,
