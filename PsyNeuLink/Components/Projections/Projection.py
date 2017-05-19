@@ -887,7 +887,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     # input_state is index into input_states OrderedDict, so get corresponding key and assign to input_state
     elif isinstance(state, int):
         try:
-            key = list(receiver.input_states.keys)[state]
+            key = receiver.input_states[state]
         except IndexError:
             raise ProjectionError("Attempt to assign projection_spec ({0}) to inputState {1} of {2} "
                                  "but it has only {3} input_states".
