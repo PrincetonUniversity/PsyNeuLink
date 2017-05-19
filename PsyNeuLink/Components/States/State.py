@@ -101,6 +101,11 @@ state_keywords.update({STATE_VALUE,
                        MODULATORY_PROJECTIONS,
                        PROJECTION_TYPE})
 
+def _is_state_type (spec):
+    if issubclass(spec, State):
+        return True
+    return False
+
 # Note:  This is created only for assignment of default projection types for each state subclass (see .__init__.py)
 #        Individual stateRegistries (used for naming) are created for each mechanism
 StateRegistry = {}
@@ -1799,15 +1804,19 @@ def _check_state_ownership(owner, param_name, mechanism_state):
     return mechanism_state
 
 
+@tc.typecheck
 def _parse_state_spec(owner,
-                      state_type,
+                      state_type:_is_state_type,
                       state_spec,
-                      name=None,
+                      name:tc.optional(str)=None,
                       variable=None,
                       value=None,
-                      projections=[],
-                      modulatory_projections=[],
+                      # projections:tc.any(list, bool)=[],
+                      # modulatory_projections:tc.any(list,bool)=[],
+                      projections:tc.any(list, bool)=[],
+                      modulatory_projections:tc.any(list,bool)=[],
                       params=None):
+
     """Return either state object or state specification dict for state_spec
     
     If state_spec resolves to a state object, return that;  
@@ -1842,17 +1851,35 @@ def _parse_state_spec(owner,
     if isinstance(state_spec, Mechanism):
         return owner._get_primary_state(state_type)
 
+
+    params = params or {}
+
     # If variable is specified in state_params, use that
-    if params is not None and VARIABLE in params and params[VARIABLE] is not None:
+    if VARIABLE in params and params[VARIABLE] is not None:
         variable = params[VARIABLE]
+
+    # MODIFIED 5/19/17 NEW:
+    if not STATE_PROJECTIONS in params:
+        params[STATE_PROJECTIONS]=projections
+    else:
+        params[STATE_PROJECTIONS].append(projections)
+    if not MODULATORY_PROJECTIONS in params:
+        params[MODULATORY_PROJECTIONS]=modulatory_projections
+    else:
+        params[STATE_PROJECTIONS].append(projections)
+    # MODIFIED 5/19/17 END
 
     # Create default dict for return
     state_dict = {NAME: name,
                   VARIABLE: variable,
                   VALUE: value,
-                  STATE_PROJECTIONS: projections,
-                  MODULATORY_PROJECTIONS: modulatory_projections,
+                  # # MODIFIED 5/19/17 OLD:
+                  # STATE_PROJECTIONS: projections,
+                  # MODULATORY_PROJECTIONS: modulatory_projections,
+                  # PARAMS: params}
+                  # MODIFIED 5/19/17 NEW:
                   PARAMS: params}
+                  # MODIFIED 5/19/17 END
 
     # State class
     if inspect.isclass(state_spec) and issubclass(state_spec, State):
@@ -1902,14 +1929,16 @@ def _parse_state_spec(owner,
             # FIX: DO THIS: Put entries (except NAME, VARIABLE AND VALUE) in params
             # Move all params-relevant entries from state_spec into params
             for spec in [param_spec for param_spec in state_spec.copy()
-                         if not param_spec in {NAME, VARIABLE, PREFS_ARG, CONTEXT}]:
+                         if not param_spec in {NAME, VARIABLE, PARAMS, PREFS_ARG, CONTEXT}]:
                 # if spec in {NAME, VARIABLE, PREFS_ARG, CONTEXT}:
                 #     continue
                 if not params:
                     params = {}
                 params[spec] = state_spec[spec]
                 del state_spec[spec]
+                # del state_dict[spec]
             state_dict.update(state_spec)
+            # state_dict = state_spec
             state_dict[PARAMS].update(params)
 
     # 2-item tuple (spec, projection)
@@ -1920,7 +1949,7 @@ def _parse_state_spec(owner,
         if not _is_proj_spec(state_spec[1]):
             raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a projection specification".
                              format(state_type_name, owner.name, state_spec[1]))
-        # Add projection spec from second item to params and part first item of tuple
+        # Add projection spec from second item to params and parse first item of tuple
         if params is None:
             params = {}
         params.update({STATE_PROJECTIONS:[state_spec[1]]})
@@ -1932,7 +1961,7 @@ def _parse_state_spec(owner,
                                        variable=variable,
                                        value=value,
                                        projections=projections,
-                                       params=params)
+                                       params=None)
         # Add projection spec from second item in tuple, and return dict
         # state_dict.update({modulatory_projections:state_spec[1]})
         # state_dict.update({STATE_PROJECTIONS:state_spec[1]})
@@ -2000,3 +2029,4 @@ def _is_proj_spec (spec):
             (inspect.isclass(spec) and issubclass(spec, Projection))):
         return True
     return False
+
