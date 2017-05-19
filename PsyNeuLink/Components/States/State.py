@@ -1575,10 +1575,10 @@ def _instantiate_state_list(owner,
                          format(state_entries, owner.name, state_param_identifier, owner.__class__.__name__))
 
 
-def _instantiate_state(owner,                   # Object to which state will belong
+def _instantiate_state(owner,                  # Object to which state will belong
                       state_type,              # State subclass
-                      state_name,              # Name used to refer to subclass in prompts
-                      state_spec,              # State subclass, object, spec dict or value
+                      state_name,              # Name for state (also used to refer to subclass in prompts)
+                      state_spec,              # State subclass, object, spec dict, tuple, projection, value or str
                       state_params,            # params for state
                       constraint_value,        # Value used to check compatibility
                       constraint_value_name,   # Name of constraint_value's type (e.g. variable, output...)
@@ -1594,6 +1594,12 @@ def _instantiate_state(owner,                   # Object to which state will bel
     + State object:
         check owner is owner (if not, user is given options in _check_state_ownership)
         check compatibility of value with constraint_value
+    + 2-item tuple: (only allowed for ParameterState spec)
+        assign first item to state_spec
+            if it is a string:
+                test if it is a keyword and get its value by calling keyword method of owner's execute method
+                otherwise, return None (suppress assignment of parameterState)
+        assign second item to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
     + Projection object:
         assign constraint_value to value
         assign projection to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
@@ -1602,24 +1608,19 @@ def _instantiate_state(owner,                   # Object to which state will bel
         assign projection class spec to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
     + specification dict for State (see XXX for context):
         check compatibility of STATE_VALUE with constraint_value
-    + 2-item tuple: (only allowed for ParameterState spec)
-        assign first item to state_spec
-            if it is a string:
-                test if it is a keyword and get its value by calling keyword method of owner's execute method
-                otherwise, return None (suppress assignment of parameterState)
-        assign second item to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
     + value:
-        if it is a string:
-            test if it is a keyword and get its value by calling keyword method of owner's execute method
-            otherwise, return None (suppress assignment of parameterState)
-        check compatibility with constraint_value
+        implement default using the value
+    + str:
+        test if it is a keyword and get its value by calling keyword method of owner's execute method
+        # otherwise, return None (suppress assignment of parameterState)
+        otherwise, implement default using the string as its name
+    Check compatibility with constraint_value
     If any of the conditions above fail:
         a default State of specified type is instantiated using constraint_value as value
 
-    If state_params is specified, include with instantiation of state
-
-    :param context: (str)
-    :return state: (State)
+    If state_params is specified, include as params arg with instantiation of state
+    
+    Returns a state or None
     """
 
     # IMPLEMENTATION NOTE: CONSIDER MOVING MUCH IF NOT ALL OF THIS TO State.__init__()

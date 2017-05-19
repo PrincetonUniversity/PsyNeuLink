@@ -579,7 +579,7 @@ class ParameterState(State_Base):
         self.parameterModulationOperation = self.paramsCurrent[PARAMETER_MODULATION_OPERATION]
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that parameterState (as identified by its name) is for a valid parameter for owner
+        """Insure that parameterState (as identified by its name) is for a valid parameter of the owner
 
         Parameter can be either owner's, or owner's function_object
         """
@@ -773,7 +773,6 @@ def _instantiate_parameter_states(owner, context=None):
     #                       and that, in turn, will overwrite their current values with the defaults from paramsCurrent)
     for param_name, param_value in owner.user_params_for_instantiation.items():
         _instantiate_parameter_state(owner, param_name, param_value, context=context)
-    # MODIFIED 4/1/17 END
 
 
 def _instantiate_parameter_state(owner, param_name, param_value, context):
