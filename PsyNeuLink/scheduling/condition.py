@@ -55,12 +55,14 @@ from PsyNeuLink.Globals.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
 
+
 class ConditionError(Exception):
-     def __init__(self, error_value):
+    def __init__(self, error_value):
         self.error_value = error_value
 
-     def __str__(self):
+    def __str__(self):
         return repr(self.error_value)
+
 
 class ConditionSet(object):
     """
@@ -111,6 +113,7 @@ class ConditionSet(object):
             conditions[owner].scheduler = self.scheduler
             self.conditions[owner] = conditions[owner]
 
+
 class Condition(object):
     """
     An object used in conjunction with `Scheduler`<Scheduler> to specify a running pattern for PNL objects.
@@ -144,7 +147,7 @@ class Condition(object):
 
         self._scheduler = None
         self._owner = None
-        #logger.debug('{1} dependencies: {0}'.format(dependencies, type(self).__name__))
+        # logger.debug('{1} dependencies: {0}'.format(dependencies, type(self).__name__))
 
     @property
     def scheduler(self):
@@ -186,6 +189,7 @@ class Condition(object):
 #   - independent of components and time
 ######################################################################
 
+
 class Always(Condition):
     """
     Always
@@ -200,6 +204,7 @@ class Always(Condition):
     """
     def __init__(self):
         super().__init__(True, lambda x: x)
+
 
 class Never(Condition):
     """
@@ -222,8 +227,9 @@ class Never(Condition):
 ######################################################################
 
 # TODO: create this class to subclass All and Any from
-#class CompositeCondition(Condition):
-    #def
+# class CompositeCondition(Condition):
+    # def
+
 
 class All(Condition):
     """
@@ -268,6 +274,7 @@ class All(Condition):
                 return False
         return True
 
+
 class Any(Condition):
     """
     Any
@@ -311,6 +318,7 @@ class Any(Condition):
                 return True
         return False
 
+
 class Not(Condition):
     """
     Not
@@ -340,6 +348,7 @@ class Not(Condition):
 #   - satisfied based only on TimeScales
 ######################################################################
 
+
 class BeforePass(Condition):
     """
     BeforePass
@@ -362,6 +371,7 @@ class BeforePass(Condition):
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] < n
         super().__init__(n, func, time_scale)
+
 
 class AtPass(Condition):
     """
@@ -389,6 +399,7 @@ class AtPass(Condition):
                 raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.format(type(self).__name__, e, time_scale))
         super().__init__(n, func)
 
+
 class AfterPass(Condition):
     """
     AfterPass
@@ -412,6 +423,7 @@ class AfterPass(Condition):
             return self.scheduler.times[time_scale][TimeScale.PASS] > n
         super().__init__(n, func, time_scale)
 
+
 class AfterNPasses(Condition):
     """
     AfterPass
@@ -430,6 +442,7 @@ class AfterNPasses(Condition):
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] >= n
         super().__init__(n, func, time_scale)
+
 
 class EveryNPasses(Condition):
     """
@@ -452,6 +465,7 @@ class EveryNPasses(Condition):
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] % n == 0
         super().__init__(n, func, time_scale)
+
 
 class BeforeTrial(Condition):
     """
@@ -479,6 +493,7 @@ class BeforeTrial(Condition):
                 raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.format(type(self).__name__, e, time_scale))
         super().__init__(n, func)
 
+
 class AtTrial(Condition):
     """
     AtTrial
@@ -504,6 +519,7 @@ class AtTrial(Condition):
             except KeyError as e:
                 raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.format(type(self).__name__, e, time_scale))
         super().__init__(n, func)
+
 
 class AfterTrial(Condition):
     """
@@ -531,6 +547,7 @@ class AfterTrial(Condition):
                 raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.format(type(self).__name__, e, time_scale))
         super().__init__(n, func)
 
+
 class AfterNTrials(Condition):
     """
     AfterNTrials
@@ -557,6 +574,7 @@ class AfterNTrials(Condition):
 #   - satisfied based on executions or state of Components
 ######################################################################
 
+
 class BeforeNCalls(Condition):
     """
     BeforeNCalls
@@ -582,10 +600,12 @@ class BeforeNCalls(Condition):
         super().__init__(dependency, func, n)
 
 # NOTE:
-# The behavior is not desired (i.e. depending on the order mechanisms are checked, B running AtNCalls(A, x))
+# The behavior of AtNCalls is not desired (i.e. depending on the order mechanisms are checked, B running AtNCalls(A, x))
 # may run on both the xth and x+1st call of A; if A and B are not parent-child
 # A fix could invalidate key assumptions and affect many other conditions
 # Since this condition is unlikely to be used, it's best to leave it for now
+
+
 class AtNCalls(Condition):
     """
     AtNCalls
@@ -609,6 +629,7 @@ class AtNCalls(Condition):
             logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
             return num_calls == n
         super().__init__(dependency, func, n)
+
 
 class AfterCall(Condition):
     """
@@ -634,6 +655,7 @@ class AfterCall(Condition):
             return num_calls > n
         super().__init__(dependency, func, n)
 
+
 class AfterNCalls(Condition):
     """
     AfterNCalls
@@ -658,6 +680,7 @@ class AfterNCalls(Condition):
             return num_calls >= n
         super().__init__(dependency, func, n)
 
+
 class AfterNCallsCombined(Condition):
     """
     AfterNCallsCombined
@@ -675,6 +698,7 @@ class AfterNCallsCombined(Condition):
     """
     def __init__(self, *dependencies, n=None, time_scale=TimeScale.TRIAL):
         logger.debug('{0} args: deps {1}, n {2}, ts {3}'.format(type(self).__name__, dependencies, n, time_scale))
+
         def func(_none, *dependencies, n=None):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
@@ -686,6 +710,7 @@ class AfterNCallsCombined(Condition):
                 logger.debug('{0} has reached {1} num_calls in {2}'.format(d, self.scheduler.counts_total[time_scale][d], time_scale.name))
             return count_sum >= n
         super().__init__(None, func, *dependencies, n=n)
+
 
 class EveryNCalls(Condition):
     """
@@ -711,6 +736,7 @@ class EveryNCalls(Condition):
             logger.debug('{0} has reached {1} num_calls'.format(dependency, num_calls))
             return num_calls >= n
         super().__init__(dependency, func, n)
+
 
 class JustRan(Condition):
     """
@@ -738,6 +764,7 @@ class JustRan(Condition):
                 return dependency == self.scheduler.execution_list[-1]
         super().__init__(dependency, func)
 
+
 class AllHaveRun(Condition):
     """
     AllHaveRun
@@ -764,7 +791,7 @@ class AllHaveRun(Condition):
             return True
         super().__init__(None, func, *dependencies)
 
-# dynamic condition
+
 class WhenFinished(Condition):
     """
     WhenFinished
@@ -776,6 +803,7 @@ class WhenFinished(Condition):
         - dependency has "finished" (i.e. its is_finished attribute is True)
 
     Notes:
+        This is a dynamic condition.
         The is_finished concept varies among components, and is currently implemented in:
             `DDM`<DDM>
 
@@ -789,7 +817,7 @@ class WhenFinished(Condition):
 
         super().__init__(dependency, func)
 
-# dynamic condition
+
 class WhenFinishedAny(Condition):
     """
     WhenFinishedAny
@@ -801,6 +829,7 @@ class WhenFinishedAny(Condition):
         - any of the dependencies have "finished" (i.e. its is_finished attribute is True)
 
     Notes:
+    This is a dynamic condition.
         This is a convenience class; WhenFinishedAny(A, B, C) is equivalent to Any(WhenFinished(A), WhenFinished(B), WhenFinished(C))
         If no dependencies are specified, the condition will default to checking all of its scheduler's Components.
         The is_finished concept varies among components, and is currently implemented in:
@@ -821,7 +850,7 @@ class WhenFinishedAny(Condition):
 
         super().__init__(None, func, *dependencies)
 
-# dynamic condition
+
 class WhenFinishedAll(Condition):
     """
     WhenFinishedAll
@@ -833,6 +862,7 @@ class WhenFinishedAll(Condition):
         - all of the dependencies have "finished" (i.e. its is_finished attribute is True)
 
     Notes:
+        This is a dynamic condition.
         This is a convenience class; WhenFinishedAll(A, B, C) is equivalent to All(WhenFinished(A), WhenFinished(B), WhenFinished(C))
         If no dependencies are specified, the condition will default to checking all of its scheduler's Components.
         The is_finished concept varies among components, and is currently implemented in:
