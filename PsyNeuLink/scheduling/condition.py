@@ -816,7 +816,7 @@ class WhenFinishedAny(Condition):
                     if d.is_finished:
                         return True
                 except AttributeError as e:
-                    raise ConditionError('WhenFinishedAny: Unsupported dependency type: {0}; ({1})'.format(type(dependency), e))
+                    raise ConditionError('WhenFinishedAny: Unsupported dependency type: {0}; ({1})'.format(type(d), e))
             return False
 
         super().__init__(None, func, *dependencies)
@@ -848,7 +848,7 @@ class WhenFinishedAll(Condition):
                     if not d.is_finished:
                         return False
                 except AttributeError as e:
-                    raise ConditionError('WhenFinishedAll: Unsupported dependency type: {0}; ({1})'.format(type(dependency), e))
+                    raise ConditionError('WhenFinishedAll: Unsupported dependency type: {0}; ({1})'.format(type(d), e))
             return True
 
         super().__init__(None, func, *dependencies)
