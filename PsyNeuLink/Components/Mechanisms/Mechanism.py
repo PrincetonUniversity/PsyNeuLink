@@ -988,13 +988,15 @@ class Mechanism_Base(Mechanism):
         rather than override those in paramClassDefaults (the default behavior)
         """
 
+        import copy
+
         # INPUT_STATES:
 
         # Check if input_states is in params (i.e., was specified in arg of constructor)
         if not INPUT_STATES in params or params[INPUT_STATES] is None:
             # If it wasn't, assign from paramClassDefaults (even if it is None) to force creation of input_states attrib
             if self.paramClassDefaults[INPUT_STATES] is not None:
-                params[INPUT_STATES] = self.paramClassDefaults[INPUT_STATES].copy()
+                params[INPUT_STATES] = copy.deepcopy(self.paramClassDefaults[INPUT_STATES])
             else:
                 params[INPUT_STATES] = None
         # Convert input_states_spec to list if it is not one
@@ -1007,7 +1009,7 @@ class Mechanism_Base(Mechanism):
         # Check if OUTPUT_STATES is in params (i.e., was specified in arg of contructor)
         if not OUTPUT_STATES in params or params[OUTPUT_STATES] is None:
             if self.paramClassDefaults[OUTPUT_STATES] is not None:
-                params[OUTPUT_STATES] = self.paramClassDefaults[OUTPUT_STATES].copy()
+                params[OUTPUT_STATES] = copy.deepcopy(self.paramClassDefaults[OUTPUT_STATES])
             else:
                 params[OUTPUT_STATES] = None
         # Convert OUTPUT_STATES_spec to list if it is not one
