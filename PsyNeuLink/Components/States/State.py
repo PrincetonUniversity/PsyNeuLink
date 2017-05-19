@@ -1695,11 +1695,13 @@ def _instantiate_state(owner,                  # Object to which state will belo
     state_value = state_spec[VALUE]
 
     # Check that it's variable is compatible with constraint_value, and if not, assign the latter as default variable
-    if not iscompatible(state_variable, constraint_value):
+    if constraint_value is not None and not iscompatible(state_variable, constraint_value):
         if owner.prefs.verbosePref:
             print("{} is not compatible with constraint value ({}) specified for {} of {};  latter will be used".
                   format(VARIABLE, constraint_value, state_type, owner.name))
         state_variable = constraint_value
+    else:
+        constraint_value = state_variable
 
     # INSTANTIATE STATE:
     # Note: this will be either a default State instantiated using constraint_value as its value
