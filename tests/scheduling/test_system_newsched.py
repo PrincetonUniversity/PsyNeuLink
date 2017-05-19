@@ -4,18 +4,21 @@ from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, PROBABILITY_UPPER_THRESHOLD
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.Functions.Function import Linear, Logistic, BogaczEtAl, Integrator
 from PsyNeuLink.scheduling.Scheduler import Scheduler
-from PsyNeuLink.scheduling.condition import *
+from PsyNeuLink.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
 from PsyNeuLink.Globals.Keywords import SIMPLE
+from PsyNeuLink.Globals.TimeScale import TimeScale
+
 
 class TestInit:
+
     def test_create_scheduler_from_system_StroopDemo(self):
-        Color_Input = TransferMechanism(name='Color Input', function=Linear(slope = 0.2995))
-        Word_Input = TransferMechanism(name='Word Input', function=Linear(slope = 0.2995))
+        Color_Input = TransferMechanism(name='Color Input', function=Linear(slope=0.2995))
+        Word_Input = TransferMechanism(name='Word Input', function=Linear(slope=0.2995))
 
         # Processing Mechanisms (Control)
         Color_Hidden = TransferMechanism(
@@ -47,21 +50,21 @@ class TestInit:
 
         # Processes:
         ColorNamingProcess = process(
-            default_input_value = [0],
-            pathway = [Color_Input, Color_Hidden, Output, Decision],
-            name = 'Color Naming Process',
+            default_input_value=[0],
+            pathway=[Color_Input, Color_Hidden, Output, Decision],
+            name='Color Naming Process',
         )
 
         WordReadingProcess = process(
-            default_input_value = [0],
-            pathway = [Word_Input, Word_Hidden, Output, Decision],
-            name = 'Word Reading Process',
+            default_input_value=[0],
+            pathway=[Word_Input, Word_Hidden, Output, Decision],
+            name='Word Reading Process',
         )
 
         RewardProcess = process(
-            default_input_value = [0],
-            pathway = [Reward],
-            name = 'RewardProcess',
+            default_input_value=[0],
+            pathway=[Reward],
+            name='RewardProcess',
         )
 
         # System:
@@ -69,7 +72,7 @@ class TestInit:
             processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
             controller=EVCMechanism,
             enable_controller=True,
-            #monitor_for_control=[Reward, (PROBABILITY_UPPER_THRESHOLD, 1, -1)],
+            # monitor_for_control=[Reward, (PROBABILITY_UPPER_THRESHOLD, 1, -1)],
             name='EVC Gratton System',
         )
 
@@ -92,10 +95,11 @@ class TestInit:
 
 
 class TestLinear:
+
     def test_one_run_twice(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=.5,
                 integration_type=SIMPLE
@@ -103,20 +107,20 @@ class TestLinear:
         )
 
         p = process(
-            default_input_value = [0],
-            pathway = [A],
-            name = 'p'
+            default_input_value=[0],
+            pathway=[A],
+            name='p'
         )
 
         s = system(
             processes=[p],
-            name = 's'
+            name='s'
         )
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(A, 2)}
         stim_list = {A: [[1]]}
 
-        results = s.run(
+        s.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -132,7 +136,7 @@ class TestLinear:
     def test_two_AAB(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=.5,
                 integration_type=SIMPLE
@@ -141,19 +145,19 @@ class TestLinear:
 
         B = TransferMechanism(
             name='B',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=2.0),
         )
 
         p = process(
-            default_input_value = [0],
-            pathway = [A, B],
-            name = 'p'
+            default_input_value=[0],
+            pathway=[A, B],
+            name='p'
         )
 
         s = system(
             processes=[p],
-            name = 's'
+            name='s'
         )
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(B, 1)}
@@ -163,7 +167,7 @@ class TestLinear:
         sched.add_condition(B, EveryNCalls(A, 2))
         s.scheduler_processing = sched
 
-        results = s.run(
+        s.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -179,13 +183,13 @@ class TestLinear:
     def test_two_ABB(self):
         A = TransferMechanism(
             name='A',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=2.0),
         )
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=.5,
                 integration_type=SIMPLE
@@ -193,14 +197,14 @@ class TestLinear:
         )
 
         p = process(
-            default_input_value = [0],
-            pathway = [A, B],
-            name = 'p'
+            default_input_value=[0],
+            pathway=[A, B],
+            name='p'
         )
 
         s = system(
             processes=[p],
-            name = 's'
+            name='s'
         )
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
@@ -211,7 +215,7 @@ class TestLinear:
         sched.add_condition(B, Any(JustRan(A), JustRan(B)))
         s.scheduler_processing = sched
 
-        results = s.run(
+        s.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -224,11 +228,13 @@ class TestLinear:
         for i in range(len(expected_output)):
             numpy.testing.assert_allclose(expected_output[i], terminal_mech.output_values[i])
 
+
 class TestBranching:
+
     def test_three_ABAC(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=.5,
                 integration_type=SIMPLE
@@ -237,30 +243,30 @@ class TestBranching:
 
         B = TransferMechanism(
             name='B',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=2.0),
         )
         C = TransferMechanism(
             name='C',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=2.0),
         )
 
         p = process(
-            default_input_value = [0],
-            pathway = [A, B],
-            name = 'p'
+            default_input_value=[0],
+            pathway=[A, B],
+            name='p'
         )
 
         q = process(
-            default_input_value = [0],
-            pathway = [A, C],
-            name = 'q'
+            default_input_value=[0],
+            pathway=[A, C],
+            name='q'
         )
 
         s = system(
             processes=[p, q],
-            name = 's'
+            name='s'
         )
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 1)}
@@ -271,7 +277,7 @@ class TestBranching:
         sched.add_condition(C, EveryNCalls(A, 2))
         s.scheduler_processing = sched
 
-        results = s.run(
+        s.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -293,7 +299,7 @@ class TestBranching:
     def test_three_ABACx2(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=.5,
                 integration_type=SIMPLE
@@ -302,30 +308,30 @@ class TestBranching:
 
         B = TransferMechanism(
             name='B',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=2.0),
         )
         C = TransferMechanism(
             name='C',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=2.0),
         )
 
         p = process(
-            default_input_value = [0],
-            pathway = [A, B],
-            name = 'p'
+            default_input_value=[0],
+            pathway=[A, B],
+            name='p'
         )
 
         q = process(
-            default_input_value = [0],
-            pathway = [A, C],
-            name = 'q'
+            default_input_value=[0],
+            pathway=[A, C],
+            name='q'
         )
 
         s = system(
             processes=[p, q],
-            name = 's'
+            name='s'
         )
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 2)}
@@ -336,7 +342,7 @@ class TestBranching:
         sched.add_condition(C, EveryNCalls(A, 2))
         s.scheduler_processing = sched
 
-        results = s.run(
+        s.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -358,7 +364,7 @@ class TestBranching:
     def test_three_2_ABC(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=.5,
                 integration_type=SIMPLE
@@ -367,7 +373,7 @@ class TestBranching:
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -376,25 +382,25 @@ class TestBranching:
 
         C = TransferMechanism(
             name='C',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=2.0),
         )
 
         p = process(
-            default_input_value = [0],
-            pathway = [A, C],
-            name = 'p'
+            default_input_value=[0],
+            pathway=[A, C],
+            name='p'
         )
 
         q = process(
-            default_input_value = [0],
-            pathway = [B, C],
-            name = 'q'
+            default_input_value=[0],
+            pathway=[B, C],
+            name='q'
         )
 
         s = system(
             processes=[p, q],
-            name = 's'
+            name='s'
         )
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 1)}
@@ -404,7 +410,7 @@ class TestBranching:
         sched.add_condition(C, All(EveryNCalls(A, 1), EveryNCalls(B, 1)))
         s.scheduler_processing = sched
 
-        results = s.run(
+        s.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -423,7 +429,7 @@ class TestBranching:
     def test_three_2_ABCx2(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=.5,
                 integration_type=SIMPLE
@@ -432,7 +438,7 @@ class TestBranching:
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -441,25 +447,25 @@ class TestBranching:
 
         C = TransferMechanism(
             name='C',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=2.0),
         )
 
         p = process(
-            default_input_value = [0],
-            pathway = [A, C],
-            name = 'p'
+            default_input_value=[0],
+            pathway=[A, C],
+            name='p'
         )
 
         q = process(
-            default_input_value = [0],
-            pathway = [B, C],
-            name = 'q'
+            default_input_value=[0],
+            pathway=[B, C],
+            name='q'
         )
 
         s = system(
             processes=[p, q],
-            name = 's'
+            name='s'
         )
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 2)}
@@ -469,7 +475,7 @@ class TestBranching:
         sched.add_condition(C, All(EveryNCalls(A, 1), EveryNCalls(B, 1)))
         s.scheduler_processing = sched
 
-        results = s.run(
+        s.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -488,7 +494,7 @@ class TestBranching:
     def test_three_integrators(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -497,7 +503,7 @@ class TestBranching:
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -506,7 +512,7 @@ class TestBranching:
 
         C = IntegratorMechanism(
             name='C',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -514,20 +520,20 @@ class TestBranching:
         )
 
         p = process(
-            default_input_value = [0],
-            pathway = [A, C],
-            name = 'p'
+            default_input_value=[0],
+            pathway=[A, C],
+            name='p'
         )
 
         q = process(
-            default_input_value = [0],
-            pathway = [B, C],
-            name = 'q'
+            default_input_value=[0],
+            pathway=[B, C],
+            name='q'
         )
 
         s = system(
             processes=[p, q],
-            name = 's'
+            name='s'
         )
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 2)}
@@ -538,7 +544,7 @@ class TestBranching:
         sched.add_condition(C, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
         s.scheduler_processing = sched
 
-        results = s.run(
+        s.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -563,13 +569,13 @@ class TestBranching:
     def test_four_ABBCD(self):
         A = TransferMechanism(
             name='A',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=2.0),
         )
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=.5,
                 integration_type=SIMPLE
@@ -578,7 +584,7 @@ class TestBranching:
 
         C = IntegratorMechanism(
             name='C',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=.5,
                 integration_type=SIMPLE
@@ -587,25 +593,25 @@ class TestBranching:
 
         D = TransferMechanism(
             name='D',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=1.0),
         )
 
         p = process(
-            default_input_value = [0],
-            pathway = [A, B, D],
-            name = 'p'
+            default_input_value=[0],
+            pathway=[A, B, D],
+            name='p'
         )
 
         q = process(
-            default_input_value = [0],
-            pathway = [A, C, D],
-            name = 'q'
+            default_input_value=[0],
+            pathway=[A, C, D],
+            name='q'
         )
 
         s = system(
             processes=[p, q],
-            name = 's'
+            name='s'
         )
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(D, 1)}
@@ -617,7 +623,7 @@ class TestBranching:
         sched.add_condition(D, Any(EveryNCalls(B, 3), EveryNCalls(C, 3)))
         s.scheduler_processing = sched
 
-        results = s.run(
+        s.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -636,7 +642,7 @@ class TestBranching:
     def test_four_integrators_mixed(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -645,7 +651,7 @@ class TestBranching:
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -654,7 +660,7 @@ class TestBranching:
 
         C = IntegratorMechanism(
             name='C',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -663,7 +669,7 @@ class TestBranching:
 
         D = IntegratorMechanism(
             name='D',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -671,32 +677,32 @@ class TestBranching:
         )
 
         p = process(
-            default_input_value = [0],
-            pathway = [A, C],
-            name = 'p'
+            default_input_value=[0],
+            pathway=[A, C],
+            name='p'
         )
 
         p1 = process(
-            default_input_value = [0],
-            pathway = [A, D],
-            name = 'p1'
+            default_input_value=[0],
+            pathway=[A, D],
+            name='p1'
         )
 
         q = process(
-            default_input_value = [0],
-            pathway = [B, C],
-            name = 'q'
+            default_input_value=[0],
+            pathway=[B, C],
+            name='q'
         )
 
         q1 = process(
-            default_input_value = [0],
-            pathway = [B, D],
-            name = 'q1'
+            default_input_value=[0],
+            pathway=[B, D],
+            name='q1'
         )
 
         s = system(
             processes=[p, p1, q, q1],
-            name = 's'
+            name='s'
         )
 
         term_conds = {TimeScale.TRIAL: All(AfterNCalls(C, 1), AfterNCalls(D, 1))}
@@ -708,7 +714,7 @@ class TestBranching:
         sched.add_condition(D, EveryNCalls(B, 1))
         s.scheduler_processing = sched
 
-        results = s.run(
+        s.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -733,23 +739,22 @@ class TestBranching:
             for i in range(len(expected_output[m])):
                 numpy.testing.assert_allclose(expected_output[m][i], mechs[m].output_values[i])
 
-
     def test_five_ABABCDE(self):
         A = TransferMechanism(
             name='A',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=2.0),
         )
 
         B = TransferMechanism(
             name='B',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=2.0),
         )
 
         C = IntegratorMechanism(
             name='C',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=.5,
                 integration_type=SIMPLE
@@ -758,35 +763,35 @@ class TestBranching:
 
         D = TransferMechanism(
             name='D',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=1.0),
         )
 
         E = TransferMechanism(
             name='E',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Linear(slope=2.0),
         )
 
         p = process(
-            default_input_value = [0],
-            pathway = [A, C, D],
-            name = 'p'
+            default_input_value=[0],
+            pathway=[A, C, D],
+            name='p'
         )
 
         q = process(
-            default_input_value = [0],
-            pathway = [B, C, E],
-            name = 'q'
+            default_input_value=[0],
+            pathway=[B, C, E],
+            name='q'
         )
 
         s = system(
             processes=[p, q],
-            name = 's'
+            name='s'
         )
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(E, 1)}
-        stim_list = {A: [[1]], B:[[2]]}
+        stim_list = {A: [[1]], B: [[2]]}
 
         sched = Scheduler(system=s)
         sched.add_condition(C, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
@@ -794,7 +799,7 @@ class TestBranching:
         sched.add_condition(E, EveryNCalls(C, 1))
         s.scheduler_processing = sched
 
-        results = s.run(
+        s.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -823,7 +828,7 @@ class TestBranching:
     def test_six_integrators_threelayer_mixed(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -832,7 +837,7 @@ class TestBranching:
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -841,7 +846,7 @@ class TestBranching:
 
         C = IntegratorMechanism(
             name='C',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -850,7 +855,7 @@ class TestBranching:
 
         D = IntegratorMechanism(
             name='D',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -859,7 +864,7 @@ class TestBranching:
 
         E = IntegratorMechanism(
             name='E',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -868,7 +873,7 @@ class TestBranching:
 
         F = IntegratorMechanism(
             name='F',
-            default_input_value = [0],
+            default_input_value=[0],
             function=Integrator(
                 rate=1,
                 integration_type=SIMPLE
@@ -877,50 +882,50 @@ class TestBranching:
 
         p = [
             process(
-                default_input_value = [0],
-                pathway = [A, C, E],
-                name = 'p'
+                default_input_value=[0],
+                pathway=[A, C, E],
+                name='p'
             ),
             process(
-                default_input_value = [0],
-                pathway = [A, C, F],
-                name = 'p1'
+                default_input_value=[0],
+                pathway=[A, C, F],
+                name='p1'
             ),
             process(
-                default_input_value = [0],
-                pathway = [A, D, E],
-                name = 'p2'
+                default_input_value=[0],
+                pathway=[A, D, E],
+                name='p2'
             ),
             process(
-                default_input_value = [0],
-                pathway = [A, D, F],
-                name = 'p3'
+                default_input_value=[0],
+                pathway=[A, D, F],
+                name='p3'
             ),
             process(
-                default_input_value = [0],
-                pathway = [B, C, E],
-                name = 'q'
+                default_input_value=[0],
+                pathway=[B, C, E],
+                name='q'
             ),
             process(
-                default_input_value = [0],
-                pathway = [B, C, F],
-                name = 'q1'
+                default_input_value=[0],
+                pathway=[B, C, F],
+                name='q1'
             ),
             process(
-                default_input_value = [0],
-                pathway = [B, D, E],
-                name = 'q2'
+                default_input_value=[0],
+                pathway=[B, D, E],
+                name='q2'
             ),
             process(
-                default_input_value = [0],
-                pathway = [B, D, F],
-                name = 'q3'
+                default_input_value=[0],
+                pathway=[B, D, F],
+                name='q3'
             )
         ]
 
         s = system(
             processes=p,
-            name = 's'
+            name='s'
         )
 
         term_conds = {TimeScale.TRIAL: All(AfterNCalls(E, 1), AfterNCalls(F, 1))}
@@ -934,7 +939,7 @@ class TestBranching:
         sched.add_condition(F, EveryNCalls(D, 2))
         s.scheduler_processing = sched
 
-        results = s.run(
+        s.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
