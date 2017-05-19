@@ -1949,12 +1949,11 @@ def _parse_state_spec(owner,
         if not _is_proj_spec(state_spec[1]):
             raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a projection specification".
                              format(state_type_name, owner.name, state_spec[1]))
-        # Get projection spec from second item of tuple, put it in params
-        # tuple (
-        # wihtout params)
+        # Put projection spec from second item of tuple in params
         if params is None:
             params = {}
         params.update({STATE_PROJECTIONS:[state_spec[1]]})
+
         # Parse state_spec in first item of tuple (without params)
         state_dict = _parse_state_spec(owner=owner,
                                        state_type=state_type,
@@ -1965,11 +1964,7 @@ def _parse_state_spec(owner,
                                        projections=projections,
                                        params=None)
         # Add params (with projection spec) to any params specified in first item of tuple
-        # state_dict.update({modulatory_projections:state_spec[1]})
-        # state_dict.update({STATE_PROJECTIONS:state_spec[1]})
         state_dict[PARAMS].update(params)
-        TEST = True
-
 
     # Projection class, object, or keyword:
     #     set to variable to value and assign projection spec to STATE_PROJECTIONS entry in params
