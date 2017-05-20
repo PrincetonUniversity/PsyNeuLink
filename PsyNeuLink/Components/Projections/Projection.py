@@ -248,6 +248,7 @@ PROJECTION_SPEC_KEYWORDS = {MAPPING_PROJECTION,
                             CONTROL, CONTROL_PROJECTION,
                             GATING, GATING_PROJECTION}
 
+
 class ProjectionError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -776,6 +777,7 @@ def _is_projection_spec(spec, include_matrix_keywords=True):
 
     Otherwise, return :keyword:`False`
     """
+
     if inspect.isclass(spec) and issubclass(spec, Projection):
         return True
     if isinstance(spec, Projection):
