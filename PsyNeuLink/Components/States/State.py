@@ -1814,12 +1814,15 @@ def _parse_state_spec(owner,
                       value=None,
                       projections:tc.any(list, bool)=[],
                       modulatory_projections:tc.any(list,bool)=[],
-                      params=None):
+                      params=None,
+                      force_dict=False):
 
     """Return either state object or state specification dict for state_spec
     
-    If state_spec resolves to a state object, return that;  
-        otherwise, return state specification dictionary using arguments provided as defaults
+    If state_spec is or resolves to a state object:
+        if force_dict is False:  return that 
+        if force_dict is True: parse into state specification_dictionary  
+    Otherwise, return state specification dictionary using arguments provided as defaults
     Warn if variable is assigned is assigned the default value, and verbosePref is set on owner.
     **value** arg should generally be a constraint for the value of the state;  
         if state_spec is a Projection, and method is being called from:
@@ -1830,6 +1833,13 @@ def _parse_state_spec(owner,
 
     from PsyNeuLink.Components.Projections.Projection import projection_keywords
 
+    @tc.typecheck
+    def _state_dict(state:State):
+        return dict(**{NAME:state.name,
+                      VARIABLE:state.variable,
+                      VALUE:state.value,
+                      STATE_PROJECTIONS:state.trans_projections})
+
     # Validate that state_type is a State class
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
         raise StateError("\'state_type\' arg ({}) must be a sublcass of {}".format(state_type,
@@ -1837,19 +1847,30 @@ def _parse_state_spec(owner,
     state_type_name = state_type.__name__
 
     # State object:
-    # - check that it is of the specified type and, if so, return it
+    # - check that it is of the specified type and, if so:
+    #     - if force_dict is False, return the primary state object
+    #     - if force_dict is True, get state's attributes and return their values in a state specification dictionary
+
     if isinstance(state_spec, State):
-        if state_spec is state_type:
-            return state_spec
+        if isinstance(state_spec, state_type):
+            if force_dict:
+                return _state_dict(state_spec)
+            else:
+                return state_spec
         else:
             raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
                              "class of state being instantiated ({})".format(state_spec, state_type_name))
 
     # Mechanism object:
-    # - call owner to return primary state of specified type
+    # - call owner to get primary state of specified type;
+    # - if force_dict is False, return the primary state object
+    # - if force_dict is True, get primary state's attributes and return their values in a state specification dict
     if isinstance(state_spec, Mechanism):
-        return owner._get_primary_state(state_type)
-
+        primary_state = owner._get_primary_state(state_type)
+        if force_dict:
+            return _state_dict(primary_state)
+        else:
+            return primary_state
 
     params = params or {}
 

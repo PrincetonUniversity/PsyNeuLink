@@ -637,6 +637,15 @@ class OutputState(State_Base):
 
         self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
 
+    @property
+    def trans_projections(self):
+        return self.efferents
+
+    @trans_projections.setter
+    def trans_projections(self, assignment):
+        self.efferents = assignment
+
+
 
 def _instantiate_output_states(owner, context=None):
     # MODIFIED 12/7/16 NEW:
@@ -829,14 +838,6 @@ class StandardOutputStates():
         # Add <NAME_INDEX> of each outputState as property of the owner's class, that returns its index
         for state in self.data:
             setattr(owner.__class__, state[NAME]+'_INDEX', make_readonly_property(state[INDEX]))
-
-    @property
-    def trans_projections(self):
-        return self.efferents
-
-    @trans_projections.setter
-    def trans_projections(self, assignment):
-        self.efferents = assignment
 
     @tc.typecheck
     def get_dict(self, name:str):
