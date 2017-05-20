@@ -243,13 +243,14 @@ kpProjectionTimeScaleLogEntry = "Projection TimeScale"
 
 projection_keywords = set()
 
-PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
-                            DEFAULT_MATRIX,
-                            IDENTITY_MATRIX,
-                            FULL_CONNECTIVITY_MATRIX,
-                            HOLLOW_MATRIX,
-                            RANDOM_CONNECTIVITY_MATRIX,
-                            LEARNING, LEARNING_PROJECTION,
+# PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
+#                             DEFAULT_MATRIX,
+#                             IDENTITY_MATRIX,
+#                             FULL_CONNECTIVITY_MATRIX,
+#                             HOLLOW_MATRIX,
+#                             RANDOM_CONNECTIVITY_MATRIX}
+#
+PROJECTION_SPEC_KEYWORDS = {LEARNING, LEARNING_PROJECTION,
                             CONTROL, CONTROL_PROJECTION,
                             GATING, GATING_PROJECTION}
 
@@ -785,7 +786,7 @@ def _is_projection_spec(spec):
         return True
     if isinstance(spec, dict) and PROJECTION_TYPE in spec:
         return True
-    if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS:
+    if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS | MATRIX_KEYWORD_SET:
         return True
     from PsyNeuLink.Components.Functions.Function import get_matrix
     if get_matrix(spec) is not None:

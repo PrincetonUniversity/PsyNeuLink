@@ -133,6 +133,9 @@ class MatrixKeywords:
     def _values(self):
         return list(self.__dict__.values())
 
+    def _set(self):
+        return set(self.__dict__.values())
+
     def _names(self):
         return list(self.__dict__)
 
@@ -146,6 +149,7 @@ AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
 DEFAULT_MATRIX = IDENTITY_MATRIX
 
 MATRIX_KEYWORDS = MatrixKeywords()
+MATRIX_KEYWORD_SET = MATRIX_KEYWORDS._set()
 MATRIX_KEYWORD_VALUES = MATRIX_KEYWORDS._values()
 MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
 # MATRIX_KEYWORD_VALUES = list(MATRIX_KEYWORDS.__dict__.values())
