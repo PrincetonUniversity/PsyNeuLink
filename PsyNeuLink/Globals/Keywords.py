@@ -402,6 +402,7 @@ HARD_CLAMP = "hard_clamp"
 LEARNING = 'learning'
 LEARNING_RATE = "learning_rate"
 CONTROL = 'control'
+GATING = 'gating'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"
