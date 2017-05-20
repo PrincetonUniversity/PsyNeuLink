@@ -4,9 +4,9 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Run import run
 
-# import random
-# random.seed(0)
-# np.random.seed(0)
+import random
+random.seed(0)
+np.random.seed(0)
 
 
 myInputLayer = TransferMechanism(name='Input Layer',
