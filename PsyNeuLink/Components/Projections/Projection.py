@@ -248,7 +248,7 @@ PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             IDENTITY_MATRIX,
                             FULL_CONNECTIVITY_MATRIX,
                             HOLLOW_MATRIX,
-                            RANDOM_CONNECTIVITY_MATRIX
+                            RANDOM_CONNECTIVITY_MATRIX,
                             LEARNING, LEARNING_PROJECTION,
                             CONTROL, CONTROL_PROJECTION,
                             GATING, GATING_PROJECTION}
