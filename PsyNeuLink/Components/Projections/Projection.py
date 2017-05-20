@@ -249,8 +249,9 @@ PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             FULL_CONNECTIVITY_MATRIX,
                             HOLLOW_MATRIX,
                             RANDOM_CONNECTIVITY_MATRIX,
-                            LEARNING_PROJECTION,
-                            CONTROL_PROJECTION}
+                            LEARNING, LEARNING_PROJECTION,
+                            CONTROL, CONTROL_PROJECTION,
+                            GATING, GATING_PROJECTION}
 
 class ProjectionError(Exception):
     def __init__(self, error_value):
