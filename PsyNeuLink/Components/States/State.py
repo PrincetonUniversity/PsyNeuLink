@@ -93,7 +93,7 @@ Class Reference
 import inspect
 import copy
 from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Projections.Projection import projection_keywords, _is_proj_spec
+from PsyNeuLink.Components.Projections.Projection import projection_keywords, _is_projection_spec
 
 state_keywords = component_keywords.copy()
 state_keywords.update({STATE_VALUE,
@@ -1939,7 +1939,8 @@ def _parse_state_spec(owner,
         if len(state_spec) != 2:
             raise StateError("Tuple provided as state_spec for {} of {} ({}) must have exactly two items".
                              format(state_type_name, owner.name, state_spec))
-        if not _is_proj_spec(state_spec[1]):
+        # Don't allow matrix keywords -- force them to be converted from a string into a value (below)
+        if not _is_projection_spec(state_spec[1], include_matrix_keywords=False):
             raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a projection specification".
                              format(state_type_name, owner.name, state_spec[1]))
         # Put projection spec from second item of tuple in params
@@ -1966,7 +1967,9 @@ def _parse_state_spec(owner,
     #                               InputState, projection's value;
     #                               ParameterState, projection's (= parameter's) value;
     #                               OutputState, projection's variable .
-    elif _is_proj_spec(state_spec):
+    # Don't allow matrix keywords -- force them to be converted from a string into a value (below)
+    elif _is_projection_spec(state_spec, include_matrix_keywords=False):
+    # elif _is_proj_spec(state_spec):
         # state_spec = state_variable
         state_dict[VARIABLE] =  value
         if state_dict[PARAMS] is None:
