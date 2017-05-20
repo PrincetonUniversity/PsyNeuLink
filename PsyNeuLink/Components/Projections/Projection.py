@@ -248,7 +248,7 @@ PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             IDENTITY_MATRIX,
                             FULL_CONNECTIVITY_MATRIX,
                             HOLLOW_MATRIX,
-                            RANDOM_CONNECTIVITY_MATRIX,
+                            RANDOM_CONNECTIVITY_MATRIX
                             LEARNING, LEARNING_PROJECTION,
                             CONTROL, CONTROL_PROJECTION,
                             GATING, GATING_PROJECTION}
@@ -798,6 +798,13 @@ def _is_projection_spec(spec):
                 return True
             if _is_projection_subclass(spec[1], LEARNING_PROJECTION):
                 return True
+    return False
+
+def _is_proj_spec (spec):
+    if ((isinstance(spec, str) and spec in projection_keywords) or
+            isinstance(spec, Projection) or
+            (inspect.isclass(spec) and issubclass(spec, Projection))):
+        return True
     return False
 
 def _is_projection_subclass(spec, keyword):

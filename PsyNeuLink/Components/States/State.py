@@ -93,7 +93,7 @@ Class Reference
 import inspect
 import copy
 from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Projections.Projection import projection_keywords
+from PsyNeuLink.Components.Projections.Projection import projection_keywords, _is_proj_spec
 
 state_keywords = component_keywords.copy()
 state_keywords.update({STATE_VALUE,
@@ -2013,13 +2013,3 @@ def _parse_state_spec(owner,
                          format(state_type_name, owner.name, state_spec))
 
     return state_dict
-
-
-# FIX: COMPARE WITH Process._is_projection_spec()
-def _is_proj_spec (spec):
-    if ((isinstance(spec, str) and spec in projection_keywords) or
-            isinstance(spec, Projection) or
-            (inspect.isclass(spec) and issubclass(spec, Projection))):
-        return True
-    return False
-
