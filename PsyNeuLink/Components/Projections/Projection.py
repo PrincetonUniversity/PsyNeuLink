@@ -769,7 +769,7 @@ class Projection_Base(Projection):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
 
-def _is_projection_spec(spec):
+def _is_projection_spec(spec, include_matrix_keywords=True):
     """Evaluate whether spec is a valid Projection specification
 
     Return :keyword:`true` if spec is any of the following:
@@ -786,11 +786,14 @@ def _is_projection_spec(spec):
         return True
     if isinstance(spec, dict) and PROJECTION_TYPE in spec:
         return True
-    if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS | MATRIX_KEYWORD_SET:
+    if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS:
         return True
-    from PsyNeuLink.Components.Functions.Function import get_matrix
-    if get_matrix(spec) is not None:
-        return True
+    if include_matrix_keywords:
+        if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
+            return True
+        from PsyNeuLink.Components.Functions.Function import get_matrix
+        if get_matrix(spec) is not None:
+            return True
     if isinstance(spec, tuple) and len(spec) == 2:
         # Call recursively on first item, which should be a standard projection spec
         if _is_projection_spec(spec[0]):
@@ -801,12 +804,6 @@ def _is_projection_spec(spec):
                 return True
     return False
 
-def _is_proj_spec (spec):
-    if ((isinstance(spec, str) and spec in projection_keywords) or
-            isinstance(spec, Projection) or
-            (inspect.isclass(spec) and issubclass(spec, Projection))):
-        return True
-    return False
 
 def _is_projection_subclass(spec, keyword):
     """Evaluate whether spec is a valid specification of type
