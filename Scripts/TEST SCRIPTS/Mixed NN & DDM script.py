@@ -25,11 +25,11 @@ myDDM = DDM(name='My_DDM',
 myProcess = process(name='Neural Network DDM Process',
                     default_input_value=[0, 0],
                     pathway=[myInputLayer,
-                                   RANDOM_CONNECTIVITY_MATRIX,
-                                   # FULL_CONNECTIVITY_MATRIX,
-                                   myHiddenLayer,
-                                   FULL_CONNECTIVITY_MATRIX,
-                                   myDDM])
+                             RANDOM_CONNECTIVITY_MATRIX,
+                             # FULL_CONNECTIVITY_MATRIX,
+                             myHiddenLayer,
+                             FULL_CONNECTIVITY_MATRIX,
+                             myDDM])
 
 myProcess.reportOutputPref = True
 myInputLayer.reportOutputPref = True
