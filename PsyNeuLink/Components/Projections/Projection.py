@@ -243,14 +243,8 @@ kpProjectionTimeScaleLogEntry = "Projection TimeScale"
 
 projection_keywords = set()
 
-# PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
-#                             DEFAULT_MATRIX,
-#                             IDENTITY_MATRIX,
-#                             FULL_CONNECTIVITY_MATRIX,
-#                             HOLLOW_MATRIX,
-#                             RANDOM_CONNECTIVITY_MATRIX}
-#
-PROJECTION_SPEC_KEYWORDS = {LEARNING, LEARNING_PROJECTION,
+PROJECTION_SPEC_KEYWORDS = {MAPPING_PROJECTION,
+                            LEARNING, LEARNING_PROJECTION,
                             CONTROL, CONTROL_PROJECTION,
                             GATING, GATING_PROJECTION}
 
@@ -775,8 +769,10 @@ def _is_projection_spec(spec, include_matrix_keywords=True):
     Return :keyword:`true` if spec is any of the following:
     + Projection class (or keyword string constant for one):
     + Projection object:
+    + 2-item tuple of which the second is a projection_spec (checked recursively with thi method):
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
+    + Matrix keyword (if include_matrix_keywords is set to `True`)
 
     Otherwise, return :keyword:`False`
     """
@@ -798,9 +794,13 @@ def _is_projection_spec(spec, include_matrix_keywords=True):
         # Call recursively on first item, which should be a standard projection spec
         if _is_projection_spec(spec[0]):
             # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
-            if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
+            if _is_projection_subclass(spec[1], MAPPING_PROJECTION):
                 return True
             if _is_projection_subclass(spec[1], LEARNING_PROJECTION):
+                return True
+            if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
+                return True
+            if _is_projection_subclass(spec[1], GATING_PROJECTION):
                 return True
     return False
 
