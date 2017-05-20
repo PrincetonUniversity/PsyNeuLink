@@ -1812,8 +1812,6 @@ def _parse_state_spec(owner,
                       name:tc.optional(str)=None,
                       variable=None,
                       value=None,
-                      # projections:tc.any(list, bool)=[],
-                      # modulatory_projections:tc.any(list,bool)=[],
                       projections:tc.any(list, bool)=[],
                       modulatory_projections:tc.any(list,bool)=[],
                       params=None):
@@ -1860,26 +1858,21 @@ def _parse_state_spec(owner,
         variable = params[VARIABLE]
 
     # Move any projection specifications in the state specification dict to params
-    if not STATE_PROJECTIONS in params:
+    if not STATE_PROJECTIONS in params or isinstance(params[STATE_PROJECTIONS], bool):
         params[STATE_PROJECTIONS]=projections
     else:
         params[STATE_PROJECTIONS].append(projections)
-    if not MODULATORY_PROJECTIONS in params:
+
+    if not MODULATORY_PROJECTIONS in params or isinstance(params[MODULATORY_PROJECTIONS], bool):
         params[MODULATORY_PROJECTIONS]=modulatory_projections
     else:
-        params[STATE_PROJECTIONS].append(projections)
+        params[MODULATORY_PROJECTIONS].append(modulatory_projections)
 
     # Create default dict for return
     state_dict = {NAME: name,
                   VARIABLE: variable,
                   VALUE: value,
-                  # # MODIFIED 5/19/17 OLD:
-                  # STATE_PROJECTIONS: projections,
-                  # MODULATORY_PROJECTIONS: modulatory_projections,
-                  # PARAMS: params}
-                  # MODIFIED 5/19/17 NEW:
                   PARAMS: params}
-                  # MODIFIED 5/19/17 END
 
     # State class
     if inspect.isclass(state_spec) and issubclass(state_spec, State):
@@ -1918,7 +1911,7 @@ def _parse_state_spec(owner,
                                            projections=projections,
                                            modulatory_projections=modulatory_projections,
                                            params=params)
-            # Use name specified as key in state_spec (rather than one in SPEFICATION_DICT if specified):
+            # Use name specified as key in state_spec (overrides one in SPEFICATION_DICT if specified):
             state_dict.update({NAME:name})
 
         else:

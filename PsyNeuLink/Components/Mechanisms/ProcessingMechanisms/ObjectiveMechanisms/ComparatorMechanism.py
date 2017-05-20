@@ -308,7 +308,6 @@ class ComparatorMechanism(ObjectiveMechanism):
                                    {NAME:MSE,
                                     CALCULATE:lambda x: np.sum(x*x)/len(x)}])
 
-    # FIX:  TYPECHECK monitored_values TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
                  sample:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
@@ -342,10 +341,12 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                                indices=PRIMARY_OUTPUT_STATE)
 
         super().__init__(monitored_values=[sample, target],
-                         input_states=[{NAME:sample_input[NAME],
-                                        VARIABLE: sample_input[VARIABLE]},
-                                       {NAME:target_input[NAME],
-                                        VARIABLE: target_input[VARIABLE]}],
+                         # input_states=[{NAME:sample_input[NAME],
+                         #                VARIABLE: sample_input[VARIABLE]},
+                         #               {NAME:target_input[NAME],
+                         #                VARIABLE: target_input[VARIABLE]}],
+                         input_states=[{sample_input[NAME]:{VARIABLE: sample_input[VARIABLE]}},
+                                       {target_input[NAME]:{VARIABLE: target_input[VARIABLE]}}],
                          function=function,
                          output_states=output_states,
                          params=params,
