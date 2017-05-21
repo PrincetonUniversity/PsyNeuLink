@@ -1812,8 +1812,8 @@ def _parse_state_spec(owner,
                       name:tc.optional(str)=None,
                       variable=None,
                       value=None,
-                      projections:tc.any(list, bool)=[],
-                      modulatory_projections:tc.any(list,bool)=[],
+                      # projections:tc.any(list, bool)=[],
+                      # modulatory_projections:tc.any(list,bool)=[],
                       params=None,
                       force_dict=False):
 
@@ -1838,7 +1838,8 @@ def _parse_state_spec(owner,
         return dict(**{NAME:state.name,
                       VARIABLE:state.variable,
                       VALUE:state.value,
-                      PARAMS:{STATE_PROJECTIONS:state.trans_projections}})
+                      # PARAMS:{STATE_PROJECTIONS:state.trans_projections}})
+                      PARAMS:state.params})
 
     # Validate that state_type is a State class
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
@@ -1872,22 +1873,23 @@ def _parse_state_spec(owner,
         else:
             return primary_state
 
-    params = params or {}
+    # params = params or {}
 
-    # If variable is specified in state_params, use that
-    if VARIABLE in params and params[VARIABLE] is not None:
-        variable = params[VARIABLE]
+    if params:
+        # If variable is specified in state_params, use that
+        if VARIABLE in params and params[VARIABLE] is not None:
+            variable = params[VARIABLE]
 
-    # Move any projection specifications in the state specification dict to params
-    if not STATE_PROJECTIONS in params or isinstance(params[STATE_PROJECTIONS], bool):
-        params[STATE_PROJECTIONS]=projections
-    else:
-        params[STATE_PROJECTIONS].append(projections)
-
-    if not MODULATORY_PROJECTIONS in params or isinstance(params[MODULATORY_PROJECTIONS], bool):
-        params[MODULATORY_PROJECTIONS]=modulatory_projections
-    else:
-        params[MODULATORY_PROJECTIONS].append(modulatory_projections)
+        # # Move any projection specifications in the state specification dict to params
+        # if not STATE_PROJECTIONS in params or isinstance(params[STATE_PROJECTIONS], bool):
+        #     params[STATE_PROJECTIONS]=projections
+        # else:
+        #     params[STATE_PROJECTIONS].append(projections)
+        #
+        # if not MODULATORY_PROJECTIONS in params or isinstance(params[MODULATORY_PROJECTIONS], bool):
+        #     params[MODULATORY_PROJECTIONS]=modulatory_projections
+        # else:
+        #     params[MODULATORY_PROJECTIONS].append(modulatory_projections)
 
     # Create default dict for return
     state_dict = {NAME: name,
@@ -1929,31 +1931,33 @@ def _parse_state_spec(owner,
                                            name=name,
                                            variable=variable,
                                            value=value,
-                                           projections=projections,
-                                           modulatory_projections=modulatory_projections,
-                                           params=params)
-            # Use name specified as key in state_spec (overrides one in SPEFICATION_DICT if specified):
-            state_dict.update({NAME:name})
+                                           # projections=projections,
+                                           # modulatory_projections=modulatory_projections,
+                                           # params=params)
+                                           )
+            if state_dict[PARAMS]:
+                params = params or {}
+                # params.update(state_dict[PARAMS])
+                # Use name specified as key in state_spec (overrides one in SPEFICATION_DICT if specified):
+                state_dict[PARAMS].update(params)
 
         else:
             # Warn if VARIABLE was not in dict
             if not VARIABLE in state_spec and owner.prefs.verbosePref:
                 print("{} missing from specification dict for {} of {};  default ({}) will be used".
                       format(VARIABLE, state_type, owner.name, state_spec))
-            # FIX: DO THIS: Put entries (except NAME, VARIABLE AND VALUE) in params
             # Move all params-relevant entries from state_spec into params
             for spec in [param_spec for param_spec in state_spec.copy()
                          if not param_spec in {NAME, VARIABLE, PARAMS, PREFS_ARG, CONTEXT}]:
-                # if spec in {NAME, VARIABLE, PREFS_ARG, CONTEXT}:
-                #     continue
-                if not params:
-                    params = {}
+                params = params or {}
                 params[spec] = state_spec[spec]
                 del state_spec[spec]
-                # del state_dict[spec]
             state_dict.update(state_spec)
             # state_dict = state_spec
-            state_dict[PARAMS].update(params)
+            if params:
+                if state_dict[PARAMS] is None:
+                    state_dict[PARAMS] = {}
+                state_dict[PARAMS].update(params)
 
     # 2-item tuple (spec, projection)
     elif isinstance(state_spec, tuple):
@@ -1965,8 +1969,7 @@ def _parse_state_spec(owner,
             raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a projection specification".
                              format(state_type_name, owner.name, state_spec[1]))
         # Put projection spec from second item of tuple in params
-        if params is None:
-            params = {}
+        params = params or {}
         params.update({STATE_PROJECTIONS:[state_spec[1]]})
 
         # Parse state_spec in first item of tuple (without params)
@@ -1976,9 +1979,11 @@ def _parse_state_spec(owner,
                                        name=name,
                                        variable=variable,
                                        value=value,
-                                       projections=projections,
-                                       params=None)
+                                       # projections=projections,
+                                       params={})
         # Add params (with projection spec) to any params specified in first item of tuple
+        if state_dict[PARAMS] is None:
+            state_dict[PARAMS] = {}
         state_dict[PARAMS].update(params)
 
     # Projection class, object, or keyword:
