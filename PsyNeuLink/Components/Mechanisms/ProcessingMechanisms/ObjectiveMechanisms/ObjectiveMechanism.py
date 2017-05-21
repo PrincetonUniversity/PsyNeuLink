@@ -697,15 +697,15 @@ def _instantiate_monitoring_projections(owner,
     receiver_projection_specs = receiver_projection_specs or [DEFAULT_MATRIX] * len(sender_list)
 
     if len(sender_list) != len(receiver_list):
-        raise ObjeciveMechanismError("PROGRAM ERROR: Number of senders ({}) does not equal number of receivers ({}) "
+        raise ObjectiveMechanismError("PROGRAM ERROR: Number of senders ({}) does not equal number of receivers ({}) "
                                      "in call to instantiate monitoring projections for {}".
-                                     format(len(sender_list), len(reciever_list), owner.name))
+                                     format(len(sender_list), len(receiver_list), owner.name))
 
     if len(receiver_projection_specs) != len(receiver_list):
-        raise ObjeciveMechanismError("PROGRAM ERROR: Number of projection specs ({}) "
+        raise ObjectiveMechanismError("PROGRAM ERROR: Number of projection specs ({}) "
                                      "does not equal number of receivers ({}) "
                                      "in call to instantiate monitoring projections for {}".
-                                     format(len(receiver_projection_specs), len(reciever_list), owner.name))
+                                     format(len(receiver_projection_specs), len(receiver_list), owner.name))
 
     # Instantiate inputState with projection from outputState specified by sender
     for sender, receiver, recvr_projs in zip(sender_list, receiver_list, receiver_projection_specs):

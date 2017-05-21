@@ -2003,10 +2003,9 @@ def _parse_state_spec(owner,
         if len(state_spec) != 2:
             raise StateError("Tuple provided as state_spec for {} of {} ({}) must have exactly two items".
                              format(state_type_name, owner.name, state_spec))
-        # Don't allow matrix keywords -- force them to be converted from a string into a value (below)
-        if not _is_projection_spec(state_spec[1], include_matrix_keywords=False):
+        if not _is_projection_spec(state_spec[1]):
             raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a projection specification".
-                             format(state_type_name, owner.name, state_spec[1]))
+                             format(state_type_name, owner.__class__.__name__, state_spec[1]))
         # Put projection spec from second item of tuple in params
         params = params or {}
         params.update({STATE_PROJECTIONS:[state_spec[1]]})
