@@ -579,25 +579,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             monitored_value_dict[NAME] = monitored_value_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
             monitored_values.append(monitored_value_dict)
 
-        # # Parse monitored_values into a state specificaton dict
-        # monitored_values = _parse_monitored_values(owner=self, monitored_values=self.monitored_values)
-
         # If input_states were not specified, assign value of monitored_valued for each (to invoke default assignments)
         if self.input_states is None:
-            # self._input_states = [None] * len(self.monitored_values)
             self._input_states = [m[VALUE] for m in monitored_values]
 
-
-        # Parse input_states into a state specification dict, passing monitored_values as defaults
-        # from monitored_value
+        # Parse input_states into a state specification dict, passing monitored_values as defaults from monitored_value
         for i, input_state, monitored_value in zip(range(len(self.input_states)),
                                                    self.input_states,
                                                    monitored_values):
-
-            # if monitored_values[i][PROJECTION]:
-            #     projections = {SENDER: monitored_values[OUTPUT_STATE],
-            #                    RECEIVER: inputState}
-
 
             # Parse input_state to determine its specifications and assign values from monitored_values
             #    to any missing specifications, including any projections requested.
@@ -606,7 +595,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                       state_spec=input_state,
                                                       name=monitored_values[i][NAME],
                                                       value=monitored_values[i][VALUE],
-                                                      projections=monitored_values[i][STATE_PROJECTIONS])
+                                                      projections=monitored_values[i][PARAMS][STATE_PROJECTIONS])
 
         constraint_value = []
         for input_state in self.input_states:
@@ -631,7 +620,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         #                      SHOULD PROBABLY BE INTEGRATED INTO State MODULE (IN _instantate_state)
         # Instantiate inputState with projection from outputState specified by monitored_value
         for monitored_value, input_state in zip(monitored_values, self.input_states):
-            if monitored_value[STATE_PROJECTIONS] is not None:
+            if monitored_value[PARAMS][STATE_PROJECTIONS] is not None:
                 _instantiate_monitoring_projection(sender=monitored_value[OUTPUT_STATE],
                                                    receiver=input_state,
                                                    matrix=AUTO_ASSIGN_MATRIX)
