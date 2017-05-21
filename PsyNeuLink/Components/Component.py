@@ -1314,9 +1314,7 @@ class Component(object):
 
             self.assign_default_FUNCTION_PARAMS = True
 
-            if not FUNCTION in request_set:
-                self.assign_default_FUNCTION_PARAMS = True
-            else:
+            if FUNCTION in request_set:
                 # Get function class:
                 function = request_set[FUNCTION]
                 if inspect.isclass(function):
