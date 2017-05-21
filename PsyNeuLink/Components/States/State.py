@@ -1542,6 +1542,20 @@ def _instantiate_state_list(owner,
                     state_spec = constraint_value[index]
                     state_constraint_value = constraint_value[index]
 
+                # FIX: 5/21/17  ADD, AND DEAL WITH state_spec AND state_constraint
+                # elif isinstance(state_spec, dict):
+                #     # If state_spec has NAME entry
+                #     if NAME in state_spec:
+                #         # If it has been used, add suffix to it
+                #         if state_name is state_spec[NAME]:
+                #             state_name = state_spec[NAME] + '_' + str(key)
+                #         # Otherwise, use it
+                #         else:
+                #             state_name = state_spec[NAME]
+                #     state_spec = ??
+                #     state_constraint_value = ??
+
+
                 # If state_spec is NOT a string, then:
                 # - use default name (which is incremented for each instance in register_categories)
                 # - use item as state_spec (i.e., assume it is a specification for a State)
@@ -1976,7 +1990,7 @@ def _parse_state_spec(owner,
                          if not param_spec in {NAME, VARIABLE, PARAMS, PREFS_ARG, CONTEXT}]:
                 params = params or {}
                 params[spec] = state_spec[spec]
-                del state_spec[spec]
+                # del state_spec[spec]
             state_dict.update(state_spec)
             # state_dict = state_spec
             if params:
