@@ -1838,7 +1838,7 @@ def _parse_state_spec(owner,
         return dict(**{NAME:state.name,
                       VARIABLE:state.variable,
                       VALUE:state.value,
-                      STATE_PROJECTIONS:state.trans_projections})
+                      PARAMS:{STATE_PROJECTIONS:state.trans_projections}})
 
     # Validate that state_type is a State class
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
@@ -2009,7 +2009,7 @@ def _parse_state_spec(owner,
                       format(VARIABLE, state_type, owner.name, value))
         # It is not a keyword, so treat string as the name for the state
         else:
-            state_dict[NAME] = spec
+            state_dict[NAME] = state_spec
 
     # function; try to resolve to a value, otherwise return None to suppress instantiation of state
     elif isinstance(state_spec, function_type):
