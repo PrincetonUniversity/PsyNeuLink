@@ -92,6 +92,7 @@ Class Reference
 
 import inspect
 import copy
+import collections
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Projections.Projection import projection_keywords, _is_projection_spec
 
@@ -1494,14 +1495,14 @@ def _instantiate_state_list(owner,
 
         # Instantiate state for entry in list or dict
         # Note: if state_entries is a list, state_spec is the item, and key is its index in the list
-        for key, state_spec in state_entries if isinstance(state_entries, dict) else enumerate(state_entries):
+        for index, state_spec in state_entries if isinstance(state_entries, dict) else enumerate(state_entries):
             state_name = ""
 
             # State_entries is a dict, so use:
-            # - entry key as state's name
+            # - entry index as state's name
             # - entry value as state_spec
-            if isinstance(key, str):
-                state_name = key
+            if isinstance(index, str):
+                state_name = index
                 state_constraint_value = constraint_value
                 # Note: state_spec has already been assigned to entry value by enumeration above
                 # MODIFIED 12/11/16 NEW:
@@ -1528,7 +1529,7 @@ def _instantiate_state_list(owner,
 
                 # If state_spec is a string, then use:
                 # - string as the name for a default state
-                # - key (index in list) to get corresponding value from constraint_value as state_spec
+                # - index (index in list) to get corresponding value from constraint_value as state_spec
                 # - assign same item of constraint_value as the constraint
                 if isinstance(state_spec, str):
                     # Use state_spec as state_name if it has not yet been used
@@ -1537,9 +1538,9 @@ def _instantiate_state_list(owner,
                     # Add index suffix to name if it is already been used
                     # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
                     else:
-                        state_name = state_spec + '_' + str(key)
-                    state_spec = constraint_value[key]
-                    state_constraint_value = constraint_value[key]
+                        state_name = state_spec + '_' + str(index)
+                    state_spec = constraint_value[index]
+                    state_constraint_value = constraint_value[index]
 
                 # If state_spec is NOT a string, then:
                 # - use default name (which is incremented for each instance in register_categories)
@@ -1552,12 +1553,12 @@ def _instantiate_state_list(owner,
                         state_name = 'Default_' + state_param_identifier[:-1]
                     # Add incremented index suffix for each state name
                     else:
-                        state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(key+1)
+                        state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
                     # If it is an "exposed" number, make it a 1d np.array
                     if isinstance(state_spec, numbers.Number):
                         state_spec = np.atleast_1d(state_spec)
 
-                    state_constraint_value = constraint_value[key]
+                    state_constraint_value = constraint_value[index]
 
             state = _instantiate_state(owner=owner,
                                                 state_type=state_type,
@@ -1568,7 +1569,7 @@ def _instantiate_state_list(owner,
                                                 constraint_value_name=constraint_value_name,
                                                 context=context)
 
-            # Get name of state, and use as key to assign to states OrderedDict
+            # Get name of state, and use as index to assign to states OrderedDict
             states[state.name] = state
         return states
 
@@ -1656,7 +1657,8 @@ def _instantiate_state(owner,                  # Object to which state will belo
     # PARSE state_spec using constraint_value as default for value
     state_spec = _parse_state_spec(owner=owner,
                                    state_type=state_type,
-                                   state_spec=copy.deepcopy(state_spec),
+                                   state_spec=state_spec,
+                                   # state_spec=state_spec,
                                    name=state_name,
                                    params=state_params,
                                    value=constraint_value)
@@ -1820,8 +1822,9 @@ def _parse_state_spec(owner,
     """Return either state object or state specification dict for state_spec
     
     If state_spec is or resolves to a state object:
-        if force_dict is False:  return that 
-        if force_dict is True: parse into state specification_dictionary  
+        if force_dict is False:  return state object 
+        if force_dict is True: parse into state specification_dictionary 
+            (replacing any components with their id to avoid problems with deepcopy)   
     Otherwise, return state specification dictionary using arguments provided as defaults
     Warn if variable is assigned is assigned the default value, and verbosePref is set on owner.
     **value** arg should generally be a constraint for the value of the state;  
@@ -1833,8 +1836,25 @@ def _parse_state_spec(owner,
 
     from PsyNeuLink.Components.Projections.Projection import projection_keywords
 
+    # IMPLEMENTATION NOTE:  ONLY CALLED IF force_dict=True;  CAN AVOID BY NEVER SETTING THAT OPTION TO True
+    #                       STILL NEEDS WORK: SEEMS TO SET PARAMS AND SO CAUSES CALL TO assign_params TO BAD EFFECT
+    # Get convert state object into state specification dictionary,
+    #     replacing any set, dict or Component with its id to avoid problems with deepcopy
     @tc.typecheck
     def _state_dict(state:State):
+        @tc.typecheck
+        # Checks if item is Component and returns its id if it is
+        def filter_params(item):
+            if isinstance(item, (set, dict, Component)):
+                item = id(item)
+            return item
+        if hasattr(state, 'params') and state.params:
+            for param in state.params:
+                if isinstance(param, collections.Iterable) and not isinstance(param, str):
+                    for index, item in param if isinstance(param, dict) else enumerate(param):
+                        state.params[param][index] = filter_params(item)
+                else:
+                    state.params[param] = filter_params(state.params[param])
         return dict(**{NAME:state.name,
                       VARIABLE:state.variable,
                       VALUE:state.value,
@@ -1872,6 +1892,9 @@ def _parse_state_spec(owner,
             return _state_dict(primary_state)
         else:
             return primary_state
+
+    # Avoid modifying any objects passed in via state_spec
+    # state_spec = copy.deepcopy(state_spec)
 
     # params = params or {}
 
