@@ -459,6 +459,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          prefs=prefs,
                          context=self)
 
+        TEST = True
+
     def _validate_variable(self, variable, context=None):
         """Validate that if default_input_value is specified the number of values matches the number of monitored_values
 
@@ -585,7 +587,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 monitored_value_dict[NAME] = monitored_value.name
                 monitored_value_dict[VARIABLE] = monitored_value.variable
                 monitored_value_dict[VALUE] = monitored_value.variable
-                monitored_value_dict[PARAMS] = monitored_value.params
+                # monitored_value_dict[PARAMS] = monitored_value.params
             else:
                 raise ObjectiveMechanismError("PROGRAM ERROR: call to State._parse_state_spec() for {} of {} "
                                               "should have returned dict or State, but returned {} instead".
@@ -611,7 +613,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                       name=monitored_values[i][NAME],
                                                       value=monitored_values[i][VALUE],
                                                       # projections=monitored_values[i][PARAMS][STATE_PROJECTIONS])
-                                                      params=monitored_values[i][PARAMS])
+                                                      # params=monitored_values[i][PARAMS])
+                                                      )
 
         constraint_value = []
         for input_state in self.input_states:
@@ -637,7 +640,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # Instantiate inputState with projection from outputState specified by monitored_value
         for monitored_value, input_state in zip(monitored_values, self.input_states):
             # if monitored_value[PARAMS][STATE_PROJECTIONS] is not None:
-            if monitored_value[PARAMS] and STATE_PROJECTIONS in monitored_value[PARAMS]:
+            # if monitored_value[PARAMS] and STATE_PROJECTIONS in monitored_value[PARAMS]:
+            # IMPLEMENTATION NOTE:  This may not properly handle situations in which the outputState is specified by
+            #                        a 2-item tuple with a projection specification as its second item.
+            if isinstance(monitored_value[OUTPUT_STATE], OutputState):
                 _instantiate_monitoring_projection(sender=monitored_value[OUTPUT_STATE],
                                                    receiver=input_state,
                                                    matrix=AUTO_ASSIGN_MATRIX)
