@@ -631,7 +631,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         #                      SHOULD PROBABLY BE INTEGRATED INTO State MODULE (IN _instantate_state)
         # Instantiate inputState with projection from outputState specified by monitored_value
         for monitored_value, input_state in zip(monitored_values, self.input_states):
-            if monitored_value[STATE_PROJECTIONS]:
+            if monitored_value[STATE_PROJECTIONS] is not None:
                 _instantiate_monitoring_projection(sender=monitored_value[OUTPUT_STATE],
                                                    receiver=input_state,
                                                    matrix=AUTO_ASSIGN_MATRIX)
