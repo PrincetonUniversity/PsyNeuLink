@@ -1836,30 +1836,30 @@ def _parse_state_spec(owner,
 
     from PsyNeuLink.Components.Projections.Projection import projection_keywords
 
-    # IMPLEMENTATION NOTE:  ONLY CALLED IF force_dict=True;  CAN AVOID BY NEVER SETTING THAT OPTION TO True
-    #                       STILL NEEDS WORK: SEEMS TO SET PARAMS AND SO CAUSES CALL TO assign_params TO BAD EFFECT
-    # Get convert state object into state specification dictionary,
-    #     replacing any set, dict or Component with its id to avoid problems with deepcopy
-    @tc.typecheck
-    def _state_dict(state:State):
-        @tc.typecheck
-        # Checks if item is Component and returns its id if it is
-        def filter_params(item):
-            if isinstance(item, (set, dict, Component)):
-                item = id(item)
-            return item
-        if hasattr(state, 'params') and state.params:
-            for param in state.params:
-                if isinstance(param, collections.Iterable) and not isinstance(param, str):
-                    for index, item in param if isinstance(param, dict) else enumerate(param):
-                        state.params[param][index] = filter_params(item)
-                else:
-                    state.params[param] = filter_params(state.params[param])
-        return dict(**{NAME:state.name,
-                      VARIABLE:state.variable,
-                      VALUE:state.value,
-                      # PARAMS:{STATE_PROJECTIONS:state.trans_projections}})
-                      PARAMS:state.params})
+    # # IMPLEMENTATION NOTE:  ONLY CALLED IF force_dict=True;  CAN AVOID BY NEVER SETTING THAT OPTION TO True
+    # #                       STILL NEEDS WORK: SEEMS TO SET PARAMS AND SO CAUSES CALL TO assign_params TO BAD EFFECT
+    # # Get convert state object into state specification dictionary,
+    # #     replacing any set, dict or Component with its id to avoid problems with deepcopy
+    # @tc.typecheck
+    # def _state_dict(state:State):
+    #     @tc.typecheck
+    #     # Checks if item is Component and returns its id if it is
+    #     def filter_params(item):
+    #         if isinstance(item, (set, dict, Component)):
+    #             item = id(item)
+    #         return item
+    #     if hasattr(state, 'params') and state.params:
+    #         for param in state.params:
+    #             if isinstance(param, collections.Iterable) and not isinstance(param, str):
+    #                 for index, item in param if isinstance(param, dict) else enumerate(param):
+    #                     state.params[param][index] = filter_params(item)
+    #             else:
+    #                 state.params[param] = filter_params(state.params[param])
+    #     return dict(**{NAME:state.name,
+    #                   VARIABLE:state.variable,
+    #                   VALUE:state.value,
+    #                   # PARAMS:{STATE_PROJECTIONS:state.trans_projections}})
+    #                   PARAMS:state.params})
 
     # Validate that state_type is a State class
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
@@ -1874,10 +1874,11 @@ def _parse_state_spec(owner,
 
     if isinstance(state_spec, State):
         if isinstance(state_spec, state_type):
-            if force_dict:
-                return _state_dict(state_spec)
-            else:
-                return state_spec
+            # if force_dict:
+            #     return _state_dict(state_spec)
+            # else:
+            #     return state_spec
+            return state_spec
         else:
             raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
                              "class of state being instantiated ({})".format(state_spec, state_type_name))
@@ -1888,12 +1889,13 @@ def _parse_state_spec(owner,
     # - if force_dict is True, get primary state's attributes and return their values in a state specification dict
     if isinstance(state_spec, Mechanism):
         primary_state = owner._get_primary_state(state_type)
-        if force_dict:
-            return _state_dict(primary_state)
-        else:
-            return primary_state
+        # if force_dict:
+        #     return _state_dict(primary_state)
+        # else:
+        #     return primary_state
+        return primary_state
 
-    # Avoid modifying any objects passed in via state_spec
+    # # Avoid modifying any objects passed in via state_spec
     # state_spec = copy.deepcopy(state_spec)
 
     # params = params or {}
