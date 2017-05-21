@@ -1312,33 +1312,35 @@ class Component(object):
 
             self.assign_default_FUNCTION_PARAMS = True
 
-            try:
-                # # MODIFIED 11/30/16 OLD:
-                # function = request_set[FUNCTION]
-                # MODIFIED 11/30/16 NEW:
-                # Copy to keep record of request_set function for comparison below, after request_set has been updated
-                import copy
-                function = copy.deepcopy(request_set[FUNCTION])
-                # MODIFIED 11/30/16 END
-            except KeyError:
-                # If there is no function specified, then allow functionParams
-                # Note: this occurs for objects that have "hard-coded" functions
+            if not FUNCTION in request_set:
                 self.assign_default_FUNCTION_PARAMS = True
             else:
+            #
+            #     # # MODIFIED 11/30/16 OLD:
+            #     # function = request_set[FUNCTION]
+            #     # MODIFIED 11/30/16 NEW:
+            #     # Copy to keep record of request_set function for comparison below, after request_set has been updated
+            #     import copy
+            #     function = copy.deepcopy(request_set[FUNCTION])
+            #     # MODIFIED 11/30/16 END
+            # except KeyError:
+            #     # If there is no function specified, then allow functionParams
+            #     # Note: this occurs for objects that have "hard-coded" functions
+            # else:
                 # Get function class:
+                function = request_set[FUNCTION]
                 if inspect.isclass(function):
                     function_class = function
                 else:
                     function_class = function.__class__
                 # Get default function (from ParamClassDefaults)
-                try:
-                    default_function = default_set[FUNCTION]
-                except KeyError:
+                if not FUNCTION in default_set:
                     # This occurs if a function has been specified as an arg in the call to __init__()
                     #     but there is no function spec in paramClassDefaults;
                     # This will be caught, and an exception raised, in _validate_params()
                     pass
                 else:
+                    default_function = default_set[FUNCTION]
                     # Get default function class
                     if inspect.isclass(function):
                         default_function_class = default_function
