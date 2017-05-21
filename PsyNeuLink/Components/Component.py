@@ -1315,18 +1315,6 @@ class Component(object):
             if not FUNCTION in request_set:
                 self.assign_default_FUNCTION_PARAMS = True
             else:
-            #
-            #     # # MODIFIED 11/30/16 OLD:
-            #     # function = request_set[FUNCTION]
-            #     # MODIFIED 11/30/16 NEW:
-            #     # Copy to keep record of request_set function for comparison below, after request_set has been updated
-            #     import copy
-            #     function = copy.deepcopy(request_set[FUNCTION])
-            #     # MODIFIED 11/30/16 END
-            # except KeyError:
-            #     # If there is no function specified, then allow functionParams
-            #     # Note: this occurs for objects that have "hard-coded" functions
-            # else:
                 # Get function class:
                 function = request_set[FUNCTION]
                 if inspect.isclass(function):
