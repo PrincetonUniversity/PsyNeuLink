@@ -632,7 +632,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             input_state_projection_specs.append(state.params[STATE_PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
 
         _instantiate_monitoring_projections(owner=self,
-                                            sender_list=monitored_values,
+                                            sender_list=[mon_val[OUTPUT_STATE] for mon_val in monitored_values],
                                             receiver_list=self.input_states,
                                             receiver_projection_specs=input_state_projection_specs,
                                             context=context)
@@ -724,7 +724,7 @@ def _instantiate_monitoring_projections(owner,
         #                           by a 2-item tuple (i.e., with a projection specification as its second item)
         # if sender[PARAMS][STATE_PROJECTIONS] is not None:
         # if sender[PARAMS] and STATE_PROJECTIONS in sender[PARAMS]:
-        if isinstance(sender[OUTPUT_STATE], OutputState):
+        if isinstance(sender, OutputState):
             MappingProjection(sender=sender,
                               receiver=receiver,
                               matrix=projection_spec,
