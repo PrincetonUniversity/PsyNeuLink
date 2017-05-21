@@ -320,8 +320,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # self._assign_args_to_param_dicts(output_states=output_states)
-
+        # Parse items of input_states arg for validation (in _validate_params)
         input_states = input_states or [None] * 2
         from PsyNeuLink.Components.States.State import _parse_state_spec
         sample_input = _parse_state_spec(owner=self,
@@ -340,13 +339,15 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                                self.standard_output_states,
                                                                indices=PRIMARY_OUTPUT_STATE)
 
-        super().__init__(monitored_values=[sample, target],
+        super().__init__(monitored_values=[sample_input, target_input],
                          # input_states=[{NAME:sample_input[NAME],
-                         #                VARIABLE: sample_input[VARIABLE]},
+                         #                VARIABLE: sample_input[VARIABLE],
+                         #                PARAMS: sample_input[PARAMS]},
                          #               {NAME:target_input[NAME],
                          #                VARIABLE: target_input[VARIABLE]}],
-                         input_states=[{sample_input[NAME]:{VARIABLE: sample_input[VARIABLE]}},
-                                       {target_input[NAME]:{VARIABLE: target_input[VARIABLE]}}],
+                         # input_states=[{sample_input[NAME]:{VARIABLE: sample_input[VARIABLE]}},
+                         #               {target_input[NAME]:{VARIABLE: target_input[VARIABLE]}}],
+                         input_states = [sample_input, target_input],
                          function=function,
                          output_states=output_states,
                          params=params,
@@ -369,8 +370,13 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                       len(input_states),
                                                       SAMPLE,
                                                       TARGET))
-            if len(input_states[0]) != len(input_states[1]):
-                raise ComparatorMechanismError("The length of the value specified for the {} inputState of {} ({})"
+
+            if not all(isinstance(input_state,dict) for input_state in input_states):
+                raise ComparatorMechanismError("PROGRAM ERROR: all items in input_state args must be converted to dicts"
+                                               " by calling State._parse_state_spec() before calling super().__init__")
+
+            if len(input_states[0][VARIABLE]) != len(input_states[1][VARIABLE]):
+                raise ComparatorMechanismError("The length of the value specified for the {} inputState of {} ({}) "
                                                "must be the same as the length of the value specified for the {} ({})".
                                                format(SAMPLE,
                                                       self.__class__.__name__,
