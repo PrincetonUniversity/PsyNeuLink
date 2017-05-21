@@ -564,7 +564,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         Update self.input_state and self.input_states.
         Call _instantiate_monitoring_projection() to instantiate MappingProjection to inputState
             if an outputState has been specified.
-
         """
 
         from PsyNeuLink.Components.States.State import _parse_state_spec
