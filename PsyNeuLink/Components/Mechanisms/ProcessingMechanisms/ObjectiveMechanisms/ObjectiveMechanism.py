@@ -574,7 +574,22 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         monitored_values = []
         for value in self.monitored_values:
-            monitored_value_dict = _parse_state_spec(self, OutputState, value, force_dict=True)
+            # monitored_value_dict = _parse_state_spec(self, OutputState, value, force_dict=True)
+            monitored_value_dict = {}
+            monitored_value = _parse_state_spec(owner=self,
+                                                state_type=OutputState,
+                                                state_spec=value)
+            if isinstance(monitored_value, dict):
+                monitored_value_dict = monitored_value
+            elif isinstance(monitored_value, State):
+                monitored_value_dict[NAME] = monitored_value.name
+                monitored_value_dict[VARIABLE] = monitored_value.variable
+                monitored_value_dict[VALUE] = monitored_value.variable
+                monitored_value_dict[PARAMS] = monitored_value.params
+            else:
+                raise ObjectiveMechanismError("PROGRAM ERROR: call to State._parse_state_spec() for {} of {} "
+                                              "should have returned dict or State, but returned {} instead".
+                                              format(OUTPUT_STATE, self.name, type(monitored_value)))
             monitored_value_dict[OUTPUT_STATE]=value
             monitored_value_dict[NAME] = monitored_value_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
             monitored_values.append(monitored_value_dict)
