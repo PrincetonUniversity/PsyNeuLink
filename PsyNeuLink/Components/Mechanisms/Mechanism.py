@@ -1350,15 +1350,21 @@ class Mechanism_Base(Mechanism):
             weights = [[input_state.weight if input_state.weight is not None else 1.0]
                        for input_state in self.input_states]
             self.function_object.weights = weights
-            # FIX: THIS SHOULDN'T BE NECESSARY ??WHY ISN'T ParameterState baseValue GETTING UPDATED WITH ASSIGNMENT:
-            self._parameter_states[WEIGHTS].baseValue = weights
+
+            # MODIFIED 5/22/17 NEW:
+            # FIX: THIS SHOULDN'T BE NECESSARY ??WHY ISN'T ParameterState base_value GETTING UPDATED WITH ASSIGNMENT:
+            self._parameter_states[WEIGHTS].base_value = weights
+            # MODIFIED 5/22/17 END
 
         if self.input_states and any(input_state.exponent is not None for input_state in self.input_states):
             exponents = [[input_state.exponent if input_state.exponent is not None else 1.0]
                        for input_state in self.input_states]
             self.function_object.exponents = exponents
-            # FIX: THIS SHOULDN'T BE NECESSARY (??WHY ISN'T ParameterState baseValue GETTING UPDATED WITH ASSIGNMENT:
-            self._parameter_states[EXPONENTS].baseValue = exponents
+
+            # MODIFIED 5/22/17 NEW:
+            # FIX: THIS SHOULDN'T BE NECESSARY (??WHY ISN'T ParameterState base_value GETTING UPDATED WITH ASSIGNMENT:
+            self._parameter_states[EXPONENTS].base_value = exponents
+            # MODIFIED 5/22/17 END
 
         pass
 
@@ -1644,7 +1650,7 @@ class Mechanism_Base(Mechanism):
             for state in self.input_states:
                 self.input_states[state].value = self.input_states[state].variable
             for state in self._parameter_states:
-                self._parameter_states[state].value =  self._parameter_states[state].baseValue
+                self._parameter_states[state].value =  self._parameter_states[state].base_value
             for state in self.output_states:
                 # Zero outputStates in case of recurrence:
                 #    don't want any non-zero values as a residuum of initialization runs to be

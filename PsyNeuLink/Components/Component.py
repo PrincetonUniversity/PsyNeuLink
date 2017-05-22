@@ -2337,7 +2337,7 @@ def make_property(name, default_value):
         # # Update parameterState.value if there is one
         # try:
         #     if name in self.parameterStates:
-        #         self.parameterStates[name].baseValue = val
+        #         self.parameterStates[name].base_value = val
         #         # self.parameterStates[name].value = val
         # except AttributeError:
         #     pass
@@ -2352,7 +2352,7 @@ def make_property(name, default_value):
             # # Update value of owner's parameterState
             # try:
             #     if name in self.owner.parameterStates:
-            #         self.owner.parameterStates[name].baseValue = val
+            #         self.owner.parameterStates[name].base_value = val
             #         # self.owner.parameterStates[name].value = val
             # except AttributeError:
             #     pass
