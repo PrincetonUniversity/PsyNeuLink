@@ -471,23 +471,26 @@ def _instantiate_learning_components(learning_projection, context=None):
 
             objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
                                                       target=TARGET,
-                                                      # input_states=[sample_input, target_input],
-                                                      # ALTERANTIVE SPECS FOR TESTING:
+                                                      input_states=[sample_input, target_input],
+                                                      # FOR TESTING: ALTERNATIVE specifications of input_states arg:
                                                       # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
                                                       #               target_input],
-                                                      input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
-                                                                    target_input],
+                                                      # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
+                                                      #               target_input],
                                                       name="\'{}\' {}".format(lc.activation_mech.name,
                                                                               COMPARATOR_MECHANISM),
                                                       context=context)
 
-            # # ALTERNATIVE [FOR TESTING]
+            # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism
+            # #              (should produce identical result to use of ComparatorMechanism above)
             # objective_mechanism = ObjectiveMechanism(monitored_values=[lc.activation_mech_output,
             #                                                            TARGET],
             #                                          input_states=[{SAMPLE:sample_input},
             #                                                        {TARGET:target_input}],
             #                                          function=LinearCombination(weights=[[-1], [1]]),
-            #                                          # output_states=[ERROR_SIGNAL, MSE],
+            #                                          output_states=[ERROR_SIGNAL,
+            #                                                         {NAME:MSE,
+            #                                                          CALCULATE:lambda x: np.sum(x*x)/len(x)}],
             #                                          name="\'{}\' {}".format(lc.activation_mech.name,
             #                                                                  COMPARATOR_MECHANISM),
             #                                          context=context)

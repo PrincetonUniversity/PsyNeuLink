@@ -340,6 +340,12 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                                indices=PRIMARY_OUTPUT_STATE)
 
         super().__init__(monitored_values=[sample, target],
+                         # input_states=[{NAME:sample_input[NAME],
+                         #                VARIABLE: sample_input[VARIABLE]},
+                         #               {NAME:target_input[NAME],
+                         #                VARIABLE: target_input[VARIABLE]}],
+                         # input_states=[{sample_input[NAME]:{VARIABLE: sample_input[VARIABLE]}},
+                         #               {target_input[NAME]:{VARIABLE: target_input[VARIABLE]}}],
                          input_states = [sample_input, target_input],
                          function=function,
                          output_states=output_states,
