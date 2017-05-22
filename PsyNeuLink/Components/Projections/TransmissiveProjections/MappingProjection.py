@@ -327,6 +327,7 @@ class MappingProjection(TransmissiveProjection_Base):
                                                   params=params)
 
         self.learning_mechanism = None
+        self.has_learning_projection = False
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
@@ -349,8 +350,6 @@ class MappingProjection(TransmissiveProjection_Base):
                                       name=name,
                                       prefs=prefs,
                                       context=self)
-
-        self.has_learning_projection = False
 
     # def _instantiate_sender(self, context=None):
             # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:

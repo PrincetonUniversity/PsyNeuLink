@@ -2288,8 +2288,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # MODIFIED 3/26/17 OLD:
         # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
         # First try to get receiver from specification in params
-        if kwReceiver in param_set:
-            self.receiver = param_set[kwReceiver]
+        if RECEIVER in param_set:
+            self.receiver = param_set[RECEIVER]
             # Check that specification is a list of numbers or an np.array
             if ((isinstance(self.receiver, list) and all(isinstance(elem, numbers.Number) for elem in self.receiver)) or
                     isinstance(self.receiver, np.ndarray)):
@@ -2302,7 +2302,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
                 print("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
                       format(sender_len))
-            self.receiver = param_set[kwReceiver] = sender
+            self.receiver = param_set[RECEIVER] = sender
         # # MODIFIED 3/26/17 NEW:
         # self.receiver = param_set[kwReceiver] = sender
         # MODIFIED 3/26/17 END
@@ -2314,7 +2314,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         for param_name, param_value in param_set.items():
 
             # Receiver param already checked above
-            if param_name is kwReceiver:
+            if param_name is RECEIVER:
                 continue
 
             # Not currently used here

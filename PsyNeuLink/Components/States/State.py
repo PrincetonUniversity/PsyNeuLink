@@ -643,7 +643,7 @@ class State_Base(State):
                     if isinstance(projection_spec, (LearningProjection, ControlProjection)):
                         # Assign projection to parameterState
                         self.afferents.append(projection_spec)
-                        projection_spec.init_args[kwReceiver] = self
+                        projection_spec.init_args[RECEIVER] = self
                         # Skip any further initialization for now
                         #   (remainder will occur as part of deferred init for
                         #    LearningProjection, ControlProjection or GatingProjection)
@@ -653,7 +653,7 @@ class State_Base(State):
                         # Assume init was deferred because receiver could not be determined previously
                         #  (e.g., specified in function arg for receiver object, or as standalone projection in script)
                         # Assign receiver to init_args and call _deferred_init for projection
-                        projection_spec.init_args[kwReceiver] = self
+                        projection_spec.init_args[RECEIVER] = self
                         projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
                         # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
@@ -731,7 +731,7 @@ class State_Base(State):
                                  default_projection_type.__class__.__name__))
 
             # If neither projection_object nor projection_type have been assigned, assign default type
-            # Note: this gets projection_type but does NOT not instantiate projection; so,
+            # Note: this gets projection_type but does NOT instantiate projection; so,
             #       projection is NOT yet in self.afferents list
             if not projection_object and not projection_type:
                     projection_type = default_projection_type
@@ -751,11 +751,25 @@ class State_Base(State):
             #               its receiver's .afferents attribute (in Projection._instantiate_receiver)
             #               its sender's .efferents list attribute (in Projection._instantiate_sender)
             if not projection_object:
-                projection_spec = projection_type(receiver=self,
-                                                  name=self.owner.name+' '+self.name+' '+projection_type.className,
-                                                  # name=self.owner.name + ' '+projection_type.className,
-                                                  params=projection_params,
-                                                  context=context)
+                # # MODIFIED 5/21/17 OLD:
+                # projection_spec = projection_type(receiver=self,
+                #                                   name=self.owner.name+' '+self.name+' '+projection_type.className,
+                #                                   # name=self.owner.name + ' '+projection_type.className,
+                #                                   params=projection_params,
+                #                                   context=context)
+                # MODIFIED 5/21/17 NEW:
+                kwargs = {RECEIVER:self,
+                          NAME:self.owner.name+' '+self.name+' '+projection_type.className,
+                          PARAMS:projection_params,
+                          CONTEXT:context}
+                # FIX: ??DO SOMETHING COMPARABLE FOR ModulatoryProjections:
+                from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
+                    import TransmissiveProjection_Base
+                if issubclass(projection_type, TransmissiveProjection_Base) and projection_spec in MATRIX_KEYWORD_SET:
+                    # projection_params.update({MATRIX:projection_spec})
+                    kwargs.update({MATRIX:projection_spec})
+                projection_spec = projection_type(**kwargs)
+                # MODIFIED 5/21/17 END
 
             # Check that output of projection's function (projection_spec.value is compatible with
             #    variable of the State to which it projects;  if it is not, raise exception:
@@ -1987,7 +2001,7 @@ def _parse_state_spec(owner,
                       format(VARIABLE, state_type, owner.name, state_spec))
             # Move all params-relevant entries from state_spec into params
             for spec in [param_spec for param_spec in state_spec.copy()
-                         if not param_spec in {NAME, VARIABLE, PARAMS, PREFS_ARG, CONTEXT}]:
+                         if not param_spec in {NAME, VARIABLE, VALUE, PARAMS, PREFS_ARG, CONTEXT}]:
                 params = params or {}
                 params[spec] = state_spec[spec]
                 # del state_spec[spec]
