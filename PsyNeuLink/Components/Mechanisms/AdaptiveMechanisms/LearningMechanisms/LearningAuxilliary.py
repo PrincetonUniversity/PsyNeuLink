@@ -479,7 +479,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                       #               target_input],
                                                       input_states=[{NAME:SAMPLE,
                                                                      VARIABLE:sample_input,
-                                                                     WEIGHT:-10},
+                                                                     WEIGHT:-1
+                                                                     },
                                                                     {NAME:TARGET,
                                                                      VARIABLE:target_input,
                                                                      # WEIGHT:1
