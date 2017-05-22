@@ -1,3 +1,5 @@
+import typecheck
+
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDMError
 
@@ -374,7 +376,7 @@ def test_DDM_input_rate_negative():
 # ******
 
 def test_DDM_rate_fn():
-    with pytest.raises(TypeError) as error_text:
+    with pytest.raises(typecheck.framework.InputParameterError) as error_text:
         stim = [10]
         T = DDM(
                 name='DDM',
@@ -388,6 +390,6 @@ def test_DDM_rate_fn():
                 time_scale=TimeScale.TIME_STEP
                )
         val = float(T.execute(stim)[0])
-    assert "argument must be a string or a number" in str(error_text.value)
+    assert "incompatible value" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------

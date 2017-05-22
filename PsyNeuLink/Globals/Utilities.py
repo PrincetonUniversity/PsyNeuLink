@@ -77,11 +77,13 @@ import numpy as np
 from enum import EnumMeta
 from enum import IntEnum
 import typecheck as tc
+import inspect
 
 from PsyNeuLink.Globals.Defaults import *
 from PsyNeuLink.Globals.Keywords import *
 
 from PsyNeuLink.Globals.TimeScale import *
+
 
 
 class UtilitiesError(Exception):
@@ -178,6 +180,7 @@ def parameter_spec(param):
     # if is_numeric(param):
     from PsyNeuLink.Components.Functions.Function import function_type
     from PsyNeuLink.Components.Projections.Projection import Projection, ParamValueProjection
+    from PsyNeuLink.Components.Component import parameter_keywords
 
     if (isinstance(param, (numbers.Number,
                            np.ndarray,
