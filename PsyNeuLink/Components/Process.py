@@ -20,7 +20,7 @@
          * :ref:`Process_Pathway`
          * :ref:`Process_Mechanisms`
          * :ref:`Process_Projections`
-         * :ref:`Process_Input_And_Ouput`
+         * :ref:`Process_Input_And_Output`
          * :ref:`Process_Learning`
       * :ref:`Process_Execution`
       * :ref:`Process_Class_Reference`
@@ -144,7 +144,7 @@ Projections between mechanisms in the `pathway` of a process are specified in on
     `IDENTITY_MATRIX` is used for the projection;  if the formats do not match, or
     `learning has been specified <Process_Learning>` either for the projection or the process,
     then a `FULL_CONNECTIVITY_MATRIX` is used. If the mechanism is the `ORIGIN` mechanism (i.e., first in the
-    `pathway`), a `ProcessInputState <Process_Input_And_Ouput>` will be used as the sender,
+    `pathway`), a `ProcessInputState <Process_Input_And_Output>` will be used as the sender,
     and an `IDENTITY_MATRIX` is used for the projection.
 
 
@@ -326,25 +326,12 @@ import math
 import re
 
 import PsyNeuLink.Components
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.Mechanism import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
-    _is_learning_spec
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, \
-    _add_projection_to
-from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
-from PsyNeuLink.Globals.Registry import register_category
-import math
-import re
-
 import PsyNeuLink.Components
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
+    ObjectiveMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
     _is_learning_spec
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, \
@@ -656,7 +643,7 @@ class Process_Base(Process):
                   to receive the initial input to the Process.  However, this behavior can be modified with the process'
                   `clamp_input` attribute.
 
-    inputValue :  2d np.array : default ``variableInstanceDefault``
+    input_value :  2d np.array : default ``variableInstanceDefault``
         same as the :keyword:`variable` attribute of the process; contains the values of the ProcessInputStates in its
         `processInputStates` attribute.
 
@@ -1914,7 +1901,7 @@ class Process_Base(Process):
              and report assignment if verbose
         """
 
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
         def trace_learning_objective_mechanism_projections(mech):
             """Recursively trace projections to Objective mechanisms;
                    return TARGET ObjectiveMechanism if one is found upstream;
@@ -2331,6 +2318,7 @@ class Process_Base(Process):
 
         print("\n\'{}\' executing with:\n- pathway: [{}]".
               format(append_type_to_name(self),
+              # format(self.name,
                      re.sub('[\[,\],\n]','',str(self.mechanismNames))))
         # # MODIFIED 2/17/17 OLD:
         # variable = [list(i) for i in self.variable]
@@ -2360,9 +2348,13 @@ class Process_Base(Process):
                      re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.value]))))
 
         if self.learning:
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import TARGET_MSE
-            print("\n- MSE: {:0.3}".
-                  format(float(self.targetMechanism.output_states[TARGET_MSE].value)))
+            from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+                import MSE
+            for mech in self.targetMechanisms:
+                if not MSE in mech.output_states:
+                    continue
+                print("\n- MSE: {:0.3}".
+                      format(float(mech.output_states[MSE].value)))
 
         elif separator:
             print("\n\n****************************************\n")

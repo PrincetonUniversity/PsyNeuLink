@@ -315,7 +315,7 @@ class SystemError(Exception):
 
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components import SystemDefaultControlMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
 
 # System factory method:
 @tc.typecheck
@@ -2169,8 +2169,9 @@ class System_Base(System):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
                 # print("\n\'- Target: {}' error: {} (processes: {})".
-                print("- error for target {}': {}".
-                      format(append_type_to_name(target_mech),
+                print("- error for target ({}): {}".
+                      # format(append_type_to_name(target_mech),
+                      format(target_mech.name,
                              re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i)))
                                                          for i in target_mech.output_state.value])),
                              ))
@@ -2300,10 +2301,13 @@ class System_Base(System):
                              re.sub('[\[,\],\n]','',str(["{:0.3}".
                                                 format(float(i)) for i in mech_tuple.mechanism.output_state.value]))))
         if self.learning:
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import TARGET_MSE
+            from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+                import MSE
             for mech in self.targetMechanisms:
+                if not MSE in mech.output_states:
+                    continue
                 print("\n- MSE: {:0.3}".
-                      format(float(mech.output_states[TARGET_MSE].value)))
+                      format(float(mech.output_states[MSE].value)))
 
 
     # TBI:
@@ -2675,7 +2679,7 @@ class System_Base(System):
 
         """
 
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
         from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 

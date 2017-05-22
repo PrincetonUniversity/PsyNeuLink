@@ -177,14 +177,13 @@ def parameter_spec(param):
     #     param = ??
     # if is_numeric(param):
     from PsyNeuLink.Components.Functions.Function import function_type
-    from PsyNeuLink.Components.Projections.Projection import Projection, ParamValueProjection
+    from PsyNeuLink.Components.Projections.Projection import Projection
 
     if (isinstance(param, (numbers.Number,
                            np.ndarray,
                            list,
                            tuple,
                            function_type,
-                           ParamValueProjection,
                            Projection)) or
         (inspect.isclass(param) and issubclass(param, Projection)) or
         param in parameter_keywords):
@@ -602,6 +601,7 @@ def append_type_to_name(object, type=None):
     # type = type or object.componentType
     # type = type or object.__class__.__base__.__base__.__base__.__name__
     type = type or object.__class__.__base__.__name__
+    # type = type or object.__class__.__name__
     if any(token in name for token in [type.lower(), type.upper(), type.capitalize()]):
         string = name
     else:

@@ -30,7 +30,7 @@ class Keywords:
         receive projections from other processes in the system. The `ORIGIN` mechanisms of a process or
         system are listed in its :keyword:`originMechanisms` attribute, and can be displayed using its :keyword:`show`
         method.  For additional details about `ORIGIN` mechanisms in processes, see
-        `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Ouput>`;
+        `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`;
         and for systems see `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
 
@@ -58,7 +58,7 @@ class Keywords:
         as it may send projections to other processes in the system.  The `TERMINAL` mechanisms of a process
         or system are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
         :keyword:`show` method.  For additional details about `TERMINAL` mechanisms in processes, see
-        `Process_Mechanisms` and `Process_Input_And_Ouput`; and for systems see `System_Mechanisms`.
+        `Process_Mechanisms` and `Process_Input_And_Output`; and for systems see `System_Mechanisms`.
 
     SINGLETON
         A `ProcessingMechanism` that is the only mechanism in a process and/or system.  It can serve the functions
@@ -321,9 +321,9 @@ DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
 EVC_MECHANISM = "EVCMechanism"
 
 # MonitoringMechanisms:
-COMPARATOR_MECHANISM = "ComparatorMechanism"
-WEIGHTED_ERROR_MECHANISM = "WeightedErrorMechanism"
 OBJECTIVE_MECHANISM = "ObjectiveMechanism"
+COMPARATOR_MECHANISM = "ComparatorMechanism"
+MONITORING_MECHANISM = "MonitoringMechanism"
 
 # ProcessingMechanisms:
 TRANSFER_MECHANISM = "TransferMechanism"

@@ -351,13 +351,13 @@ Class Reference
 
 """
 
-
-from PsyNeuLink.Components.Functions.Function import BackPropagation
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
+    import ObjectiveMechanism, ERROR_SIGNAL
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Functions.Function import BackPropagation
 
 # Params:
 
@@ -386,7 +386,6 @@ ERROR_SIGNAL_INDEX = 3
 # Used to name input_states:
 ACTIVATION_INPUT = 'activation_input'     # inputState
 ACTIVATION_OUTPUT = 'activation_output'   # inputState
-ERROR_SIGNAL = 'error_signal'             # inputState and outputState
 LEARNING_SIGNAL = 'learning_signal'       #                outputState
 
 input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]

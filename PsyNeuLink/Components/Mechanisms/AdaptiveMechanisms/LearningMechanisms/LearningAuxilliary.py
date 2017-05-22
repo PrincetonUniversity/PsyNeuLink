@@ -136,7 +136,10 @@ from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, 
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import ACTIVATION_INPUT, \
     ACTIVATION_OUTPUT, ERROR_SIGNAL
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
+    ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+    import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
@@ -475,33 +478,13 @@ def _instantiate_learning_components(learning_projection, context=None):
             #     so that it is left free to later be assigned a projection from ProcessInputState and/or SystemInputState
             # Assign derivative of Linear to lc.error_derivative (as default, until TARGET projection is assigned);
             #    this will induce a simple subtraction of target-sample (i.e., implement a comparator)
-
             sample_input = target_input = error_output
-            # Assign outputStates for TARGET ObjectiveMechanism (used for reporting)
-            object_mech_params = {OUTPUT_STATES:
-                                      [{NAME:TARGET_ERROR},
-                                       {NAME:TARGET_ERROR_MEAN,
-                                        CALCULATE:lambda x: np.mean(x)},
-                                       {NAME:TARGET_ERROR_SUM,
-                                        CALCULATE:lambda x: np.sum(x)},
-                                       {NAME:TARGET_SSE,
-                                        CALCULATE:lambda x: np.sum(x*x)},
-                                       {NAME:TARGET_MSE,
-                                        CALCULATE:lambda x: np.sum(x*x)/len(x)}]}
-
-            objective_mechanism = ObjectiveMechanism(monitored_values=[lc.activation_mech_output,
-                                                                       TARGET],
-                                                     input_states=[{NAME:SAMPLE,
-                                                                    VARIABLE:sample_input},
-                                                                   {NAME:TARGET,
-                                                                    VARIABLE:target_input}],
-                                                     # input_states=[{SAMPLE:sample_input},
-                                                     #               {TARGET:target_input}],
-                                                     function=LinearCombination(weights=[[-1], [1]]),
-                                                     params=object_mech_params,
-                                                     name=lc.activation_mech.name + " " + OBJECTIVE_MECHANISM,
-                                                     context=context)
-
+            objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
+                                                      target=TARGET,
+                                                      input_states=[sample_input, target_input],
+                                                      name="\'{}\' {}".format(lc.activation_mech.name,
+                                                                              COMPARATOR_MECHANISM),
+                                                      context=context)
             objective_mechanism._role = LEARNING
             objective_mechanism._learning_role = TARGET
 

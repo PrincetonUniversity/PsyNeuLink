@@ -665,7 +665,6 @@ class Component(object):
 
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
-
         # Validate the set passed in and assign to paramInstanceDefaults
         # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
         self._instantiate_defaults(variable=variable_default,
@@ -1313,33 +1312,21 @@ class Component(object):
 
             self.assign_default_FUNCTION_PARAMS = True
 
-            try:
-                # # MODIFIED 11/30/16 OLD:
-                # function = request_set[FUNCTION]
-                # MODIFIED 11/30/16 NEW:
-                # Copy to keep record of request_set function for comparison below, after request_set has been updated
-                import copy
-                function = copy.deepcopy(request_set[FUNCTION])
-                # MODIFIED 11/30/16 END
-            except KeyError:
-                # If there is no function specified, then allow functionParams
-                # Note: this occurs for objects that have "hard-coded" functions
-                self.assign_default_FUNCTION_PARAMS = True
-            else:
+            if FUNCTION in request_set:
                 # Get function class:
+                function = request_set[FUNCTION]
                 if inspect.isclass(function):
                     function_class = function
                 else:
                     function_class = function.__class__
                 # Get default function (from ParamClassDefaults)
-                try:
-                    default_function = default_set[FUNCTION]
-                except KeyError:
+                if not FUNCTION in default_set:
                     # This occurs if a function has been specified as an arg in the call to __init__()
                     #     but there is no function spec in paramClassDefaults;
                     # This will be caught, and an exception raised, in _validate_params()
                     pass
                 else:
+                    default_function = default_set[FUNCTION]
                     # Get default function class
                     if inspect.isclass(function):
                         default_function_class = default_function
@@ -1395,15 +1382,14 @@ class Component(object):
         # if request_set has been passed or created then validate and, if OK, assign params to target_set
         if request_set:
             # MODIFIED 4/18/17 NEW:
-            # For params that are a ParamValueProjection or 2-item tuple, extract the value
+            # For params that are a 2-item tuple, extract the value
             #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
             #    which is used it instantiate the specified projections)
             # IMPLEMENTATION NOTE:  Do this here rather than in _validate_params, as it needs to be done before
             #                       any override of _validate_params, which (should not, but) may process params
             #                       before calling super()._validate_params
-            from PsyNeuLink.Components.ShellClasses import ParamValueProjection
             for param_name, param_value in request_set.items():
-                if isinstance(param_value, (ParamValueProjection, tuple)):
+                if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
                     request_set[param_name] = param_value
             # MODIFIED 4/18/17 END NEW
@@ -1590,11 +1576,6 @@ class Component(object):
 
         # Otherwise, do some checking on variable before converting to np.ndarray
 
-        # If variable is a ParamValueProjection tuple, get value:
-        from PsyNeuLink.Components.Mechanisms.Mechanism import ParamValueProjection
-        if isinstance(variable, ParamValueProjection):
-            variable = variable.value
-
         # If variable is callable (function or object reference), call it and assign return to value to variable
         # Note: check for list is necessary since function references must be passed wrapped in a list so that they are
         #       not called before being passed
@@ -1705,7 +1686,6 @@ class Component(object):
 
             # If self is a Function and param is a class ref for function, instantiate it as the function
             from PsyNeuLink.Components.Functions.Function import Function_Base
-            from PsyNeuLink.Components.ShellClasses import ParamValueProjection
             if (isinstance(self, Function_Base) and
                     inspect.isclass(param_value) and
                     issubclass(param_value, self.paramClassDefaults[param_name])):
@@ -1815,16 +1795,12 @@ class Component(object):
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of either a ParamValueProjection or an unnamed (value, projection) tuple
         """
-        from PsyNeuLink.Components.Mechanisms.Mechanism import ParamValueProjection
         from PsyNeuLink.Components.Projections.Projection import Projection
         # from PsyNeuLink.Components.Projections.Modulatory.ControlProjection import ControlProjection
         # from PsyNeuLink.Components.Projections.Modulatory.LearningProjection import LearningProjection
 
-        if isinstance(param_spec, ParamValueProjection):
-            value =  param_spec.value
-
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
-        elif (isinstance(param_spec, tuple) and len(param_spec) is 2 and
+        if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
                 (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING} or
                      isinstance(param_spec[1], Projection) or
                      (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
@@ -2058,13 +2034,9 @@ class Component(object):
                                           format(FUNCTION_PARAMS, self.name, function_param_specs))
                     # parse entries of FUNCTION_PARAMS dict
                     else:
-                        # Get param value from any params specified as ParamValueProjection or (param, projection) tuple
+                        # Get param value from any params specified as (param, projection) tuple
                         from PsyNeuLink.Components.Projections.Projection import Projection
-                        from PsyNeuLink.Components.Mechanisms.Mechanism import ParamValueProjection
                         for param_name, param_spec in function_param_specs.items():
-                            if isinstance(param_spec, ParamValueProjection):
-                                from PsyNeuLink.Components.States.ParameterState import ParameterState
-                                function_param_specs[param_name] =  param_spec.value
                             if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
                                     (param_spec[1] in {MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION} or
                                          isinstance(param_spec[1], Projection) or

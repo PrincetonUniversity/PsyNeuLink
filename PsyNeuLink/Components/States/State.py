@@ -1653,8 +1653,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
                              format(constraint_value_name))
     #endregion
 
-    if state_params is None:
-        state_params = {}
+    state_params = state_params or {}
 
     # Used locally to report type of specification for State
     #  if value is not compatible with constraint_value
@@ -1672,20 +1671,18 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #region CHECK FORMAT OF constraint_value AND CONVERT TO SIMPLE VALUE
 
     # Projection class, object, or keyword: set to paramClassDefaults (of owner or owner's function)
-    # FIX: ADD TEST FOR STR AND IN projection_keywords HERE
-    # IMPLEMENT:  ADD GatingPojection HERE 5/7/17
-    if (isinstance(constraint_value, (str, Projection)) or
-            (inspect.isclass(constraint_value) and
-                 issubclass(constraint_value, (Projection)))):
-        from PsyNeuLink.Components.Projections.Projection import projection_keywords
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+    from PsyNeuLink.Components.Projections.Projection import projection_keywords
+    if ((isinstance(constraint_value, str) and constraint_value in projection_keywords) or
+            isinstance(constraint_value, Projection) or
+            (inspect.isclass(constraint_value) and issubclass(constraint_value, Projection))):
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-        # Disallow if it is not ControlProjection or a LearningProjection
-        if (constraint_value in projection_keywords or
-                    isinstance(constraint_value, (ControlProjection, LearningProjection)) or
-                    # isinstance(constraint_value, Projection) or
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+        # Disallow if it is not a LearningProjection, ControlProjection or GatingProjection
+        if (constraint_value in {LEARNING_PROJECTION, CONTROL_PROJECTION, GATING_PROJECTION} or
+                    isinstance(constraint_value, (LearningProjection, ControlProjection, GatingProjection)) or
                     (inspect.isclass(constraint_value) and
-                issubclass(constraint_value, (ControlProjection, LearningProjection)))
+                         issubclass(constraint_value, (LearningProjection, ControlProjection, GatingProjection)))
                 ):
             try:
                 constraint_value = owner.paramClassDefaults[state_name]
@@ -1708,10 +1705,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
         # MODIFIED 5/10/17 NEW:
         constraint_value = constraint_value[VARIABLE]
         # MODIFIED 5/10/17 END
-
-    # ParamValueProjection tuple, set to ParamValueProjection.value:
-    elif isinstance(constraint_value, ParamValueProjection):
-        constraint_value = constraint_value.value
 
     # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTION KEYWORD?
     # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
@@ -1828,31 +1821,6 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #endregion
 
     # IMPLEMENTATION NOTE:  CONSOLIDATE ALL THE PROJECTION-RELATED STUFF BELOW:
-
-    # IMPLEMENTATION NOTE:  CONSIDER DEPRECATING THIS
-    #region ParamValueProjection
-    # If state_type is ParameterState and state_spec is a ParamValueProjection tuple:
-    # - check that ParamValueProjection.value matches constraint_value and assign to state_variable
-    # - assign ParamValueProjection.projection to STATE_PARAMS:{STATE_PROJECTIONS:<projection>}
-    # Note: validity of projection specification or compatibility of projection's variable or function output
-    #       with state value is handled in State._instantiate_projections_to_state
-    if isinstance(state_spec, ParamValueProjection):
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if not issubclass(state_type, ParameterState):
-            raise StateError("ParamValueProjection ({0}) not permitted as specification for {1} (in {2})".
-                                 format(state_spec, state_type.__name__, owner.name))
-        state_variable =  state_spec.value
-        # If it is a string, try to resolve as keyword
-        if isinstance(state_variable, str):
-            state_variable = get_param_value_for_keyword(owner, state_variable)
-            if not state_variable:
-                return None
-        if not iscompatible(state_variable, constraint_value):
-            state_variable = constraint_value
-            spec_type = 'ParamValueProjection'
-        state_params.update({STATE_PROJECTIONS:[state_spec.projection]})
-    #endregion
-
     # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function._instantiate_function()
     PARAM_SPEC = 0
     PROJECTION_SPEC = 1
@@ -2078,6 +2046,12 @@ def _parse_state_spec(owner, state_spec, default_name, default_value, projection
     variable = default_value
     params = None
 
+    # State, so assign as value
+    if isinstance(state_spec, State):
+        name = default_name
+        variable = state_spec.value
+        params = {STATE_SPEC:state_spec}
+
     # string, so use as name
     if isinstance(state_spec, str):
         name = state_spec
@@ -2104,10 +2078,14 @@ def _parse_state_spec(owner, state_spec, default_name, default_value, projection
         params = None
 
     else:
+        if hasattr(owner, name):
+            owner_name = owner.name
+        else:
+            owner_name = owner.__class__.__name__
         from PsyNeuLink.Components.States.InputState import InputStateError
         raise InputStateError("Illegal state specification found in first item of tuple "
                                       "specified in {} arg of {} ({})".
-                                      format(INPUT_STATES, owner.name, state_spec))
+                                      format(INPUT_STATES, owner_name, state_spec))
 
     state_dict = {NAME: name,
                   VARIABLE: variable,

@@ -157,6 +157,12 @@
 
 # DOCUMENTATION:rst pages for Gating components
 
+# DOCUMENTATION: can suppress variable that is an arg for a construcutor in a parent class from
+#                   having to be an arg in the constructor of a subclass by putting it in paramClassDefaults
+#                   for the subclass (e.g.:  MONITORED_VALUES for ComparatorMechanism)
+
+# DOCUMENTATION: TABLE SOMEWHERE OF ALL SPECIFICATION DICIONARIES AND THEIR ENTRIES
+
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
@@ -179,6 +185,9 @@
 
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
 #
+# IMPLEMENT:  **control** arg for ControlMechanism, and **train** arg for LearningMechanism
+# IMPLEMENT:  Ability to pass outputState specifications to Objective mechanism via controller of system
+# IMPLEMENT:  WEIGHTS, EXPONENTS AND PROJECTION ENTRIES OF STATE SPECIFICATION DICTIONARY
 # IMPLEMENT: standard_output_states for ObjectiveMechanism, LCA, RecurrentTransfer, and Intregrator
 #              (use ones at top of OutputState)
 # IMPLEMENT: Move RecurrentTransfer and LCA calculate functions to standard_output_states
@@ -187,7 +196,9 @@
 # IMPLEMENT: Add WEIGHTS and EXPONENTS entry (or single one with tuple value) to inputState specification dicts
 #              and use that in ObjectiveMechanism instead of args or tuple specs
 # IMPLEMENT: Add GATING entry to both input and otuput state dicts
-#
+
+#  DOCUMENTATION: Add `standard_output_states` to Mechanism
+#  FIX: `error_signal` as default primary outputState
 #  FIX: MAKE SURE THAT System AND/OR EVCMechanism ASSIGN OutputStates TO MONITORY ONLY
 #  FIX:  TO THOSE MECHANISMS FOR WHICH THE OUTPUTSTATE WERE SPECIFIED (UNLESS GIVEN A GENERIC NAME)
 #      PROTOCOL:
@@ -523,7 +534,7 @@
 #             controller.predicted_inputs: ndarray of current value of outputState
 #                                          for each predictionMechanism in self.system.prediction_mechanisms
 #             controller.monitored_states: list of the mechanism outputStates being monitored for outcomes
-#             controller.inputValue: list of current outcome values for monitored_states
+#             controller.input_value: list of current outcome values for monitored_states
 #             controller.controlSignals: list of controlSignal objects
 #             controlSignal.allocation_samples: set of samples specified for that controlSignal
 #             [TBI:] controlSignal.allocation_range: range that the controlSignal value can take
@@ -565,7 +576,7 @@
 #                which are simply convenience string constants that are the same as the name of the argument
 #                for the parameter in the component's constructor. (see :ref:`EVCMechanism_Creation` for text)
 
-# DOCUMENT: inputValue and output_values are lists for convenience of user access, whereas
+# DOCUMENT: input_value and output_values are lists for convenience of user access, whereas
 #           variable and value are 2d np.arrays that are used as internal datastructures
 #
 

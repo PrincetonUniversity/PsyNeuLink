@@ -20,7 +20,7 @@ specified when that process or system is `run <Run>`.  The projections received 
 listed in its `receivesFromProjections <InputState.receivesFromProjections>` attribute. Its
 `function <InputState.function>` combines the values of these inputs, and the result is assigned to an item
 corresponding to the inputState in the owner mechanism's :keyword:`variable <Mechanism.Mechanism_Base.variable>` and
-`inputValue <Mechanism.Mechanism_Base.inputValue>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
+`input_value <Mechanism.Mechanism_Base.input_value>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
 for additional details about the role of input_states in mechanisms).
 
 
@@ -45,6 +45,11 @@ the ``receiver`` of a MappingProjection from the  preceding mechanism in the pat
 An inputState must be owned by a mechanism. Therefore, if the inputState is created directly, its mechanism
 must be specified in the ``owner`` argument of its constructor; if the inputState is specified in the
 INPUT_STATES entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.
+
+.. _InputState_Specification
+
+InputState Specification
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 If one or more custom input_states need to be specified when a mechanism is created, or added to an existing mechanism,
 they can be specified in an entry of the mechanism's parameter dictionary, using the key :keyword`INPUT_STATES`
@@ -153,8 +158,8 @@ An inputState cannot be executed directly.  It is executed when the mechanism to
 When this occurs, the inputState executes any projections it receives, calls its `function <InputState.function>` to
 aggregate their values, and then assigns the result to the inputState's `value <InputState.value>` attribute.  This,
 in turn, is assigned to the item of the mechanism's `variable <Mechanism.Mechanism_Base.variable>` and
-`inputValue <Mechanism.Mechanism_Base.inputValue>` attributes corresponding to that inputState
-(see `mechanism variable and inputValue attributes <Mechanism_Variable>` for additional details).
+`input_value <Mechanism.Mechanism_Base.input_value>` attributes corresponding to that inputState
+(see `mechanism variable and input_value attributes <Mechanism_Variable>` for additional details).
 
 .. _InputState_Class_Reference:
 
@@ -406,7 +411,7 @@ def _instantiate_input_states(owner, context=None):
         - self.input_state contains the `primary inputState <Mechanism_InputStates>`:  first or only one in OrderedDict
         - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more input_states)
         - each inputState corresponds to an item in the variable of the owner's function
-        - the value of all of the input_states is stored in a list in inputValue
+        - the value of all of the input_states is stored in a list in input_value
         - if there is only one inputState, it is assigned the full value
 
     Note: State._instantiate_state_list()
@@ -457,8 +462,8 @@ def _instantiate_input_states(owner, context=None):
 
 
 
-#     # Initialize self.inputValue to correspond to format of owner's variable, and zero it
+#     # Initialize self.input_value to correspond to format of owner's variable, and zero it
 # # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
 # # FIX:  IS THIS A LIST OR np.array (SHOULD BE A LIST)
-#     # ??REPLACE THIS WITH owner.inputValue = list(owner.variable) * 0.0??
-#     owner.inputValue = owner.variable.copy() * 0.0
+#     # ??REPLACE THIS WITH owner.input_value = list(owner.variable) * 0.0??
+#     owner.input_value = owner.variable.copy() * 0.0
