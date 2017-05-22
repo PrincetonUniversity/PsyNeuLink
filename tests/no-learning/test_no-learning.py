@@ -1,48 +1,45 @@
 import logging
-import numpy
+import numpy as np
 
 from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from PsyNeuLink.Globals.Keywords import SOFT_CLAMP
 
 logger = logging.getLogger(__name__)
 
+
 class TestNoLearning:
+
     def test_multilayer(self):
         Input_Layer = TransferMechanism(
             name='Input Layer',
             function=Logistic,
-            default_input_value = np.zeros((2,)),
+            default_input_value=np.zeros((2,)),
         )
 
         Hidden_Layer_1 = TransferMechanism(
             name='Hidden Layer_1',
             function=Logistic(),
-            default_input_value = np.zeros((5,)),
+            default_input_value=np.zeros((5,)),
         )
 
         Hidden_Layer_2 = TransferMechanism(
             name='Hidden Layer_2',
             function=Logistic(),
-            default_input_value = [0,0,0,0],
+            default_input_value=[0, 0, 0, 0],
         )
 
         Output_Layer = TransferMechanism(
             name='Output Layer',
             function=Logistic,
-            default_input_value = [0,0,0],
+            default_input_value=[0, 0, 0],
         )
 
-        Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
-        Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
-        Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
-
+        Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
 
         # TEST PROCESS.LEARNING WITH:
         # CREATION OF FREE STANDING PROJECTIONS THAT HAVE NO LEARNING (Input_Weights, Middle_Weights and Output_Weights)
@@ -54,23 +51,6 @@ class TestNoLearning:
         Input_Weights = MappingProjection(
             name='Input Weights',
             matrix=Input_Weights_matrix,
-        )
-
-        # This projection will be used by the process below by assigning its sender and receiver args
-        #    to mechanismss in the pathway
-        Middle_Weights = MappingProjection(
-            name='Middle Weights',
-            sender=Hidden_Layer_1,
-            receiver=Hidden_Layer_2,
-            matrix=Middle_Weights_matrix
-        )
-
-        # Commented lines in this projection illustrate variety of ways in which matrix and learning signals can be specified
-        Output_Weights = MappingProjection(
-            name='Output Weights',
-            sender=Hidden_Layer_2,
-            receiver=Output_Layer,
-            matrix=Output_Weights_matrix
         )
 
         p = process(
@@ -92,7 +72,7 @@ class TestNoLearning:
                 Output_Layer
             ],
             clamp_input=SOFT_CLAMP,
-            target=[0,0,1],
+            target=[0, 0, 1],
             prefs={
                 VERBOSE_PREF: False,
                 REPORT_OUTPUT_PREF: True
@@ -103,13 +83,13 @@ class TestNoLearning:
 
         s.reportOutputPref = True
 
-        stim_list = {Input_Layer:[[-1, 30]]}
+        stim_list = {Input_Layer: [[-1, 30]]}
 
-        results = s.run(
+        s.run(
             num_executions=10,
             inputs=stim_list,
         )
 
-        expected_Output_Layer_output = [numpy.array([ 0.8344837, 0.87072018, 0.89997433])]
+        expected_Output_Layer_output = [np.array([0.8344837, 0.87072018, 0.89997433])]
 
-        numpy.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.output_values)
+        np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.output_values)
