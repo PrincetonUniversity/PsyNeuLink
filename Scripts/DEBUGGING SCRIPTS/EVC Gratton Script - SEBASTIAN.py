@@ -135,14 +135,14 @@ for mech in mySystem.controller.prediction_mechanisms.keys():
         # then use that key to access its *value* in the dictionary, which will be an integrator mechanism
         # that integrator mechanism is the one whose rate we want to change ( I think!)
         # mySystem.controller.prediction_mechanisms[mech].function_object.rate = 0.3481
-        # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].baseValue = 0.3481
-        # mech.parameterStates['rate'].baseValue = 0.3481
+        # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 0.3481
+        # mech.parameterStates['rate'].base_value = 0.3481
         mySystem.controller.prediction_mechanisms[mech].function_object.rate = 0.3481
 
     if mech.name is 'Reward':
         print(mech.name)
         mySystem.controller.prediction_mechanisms[mech].function_object.rate = 1.0
-        # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].baseValue = 1.0
+        # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
 
 
 

@@ -263,7 +263,7 @@ class State_Base(State):
     owner : Mechanism or Projection
         object to which the state belongs.
 
-    baseValue : number, list or np.ndarray
+    base_value : number, list or np.ndarray
         value with which the state was initialized.
 
     afferents : Optional[List[Projection]]
@@ -445,16 +445,12 @@ class State_Base(State):
     def _validate_variable(self, variable, context=None):
         """Validate variable and assign validated values to self.variable
 
-        Sets self.baseValue = self.value = self.variable = variable
+        Sets self.base_value = self.value = self.variable = variable
         Insures that it is a number of list or tuple of numbers
 
         This overrides the class method, to perform more detailed type checking
         See explanation in class method.
         Note:  this method (or the class version) is called only if the parameter_validation attribute is True
-
-        :param variable: (anything but a dict) - variable to be validated:
-        :param context: (str)
-        :return none:
         """
 
         super(State,self)._validate_variable(variable, context)
@@ -464,7 +460,7 @@ class State_Base(State):
         else:
             context = context + kwAssign + ' Base Value'
 
-        self.baseValue = self.variable
+        self.base_value = self.variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """validate projection specification(s)
@@ -480,11 +476,6 @@ class State_Base(State):
             # IMPLEMENTATION NOTE: TBI - When learning projection is implemented
             # + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
             #     ParameterState, projection, 2-item tuple or value
-
-        :param request_set:
-        :param target_set:
-        :param context:
-        :return:
         """
 
         if STATE_PROJECTIONS in target_set:
@@ -528,9 +519,6 @@ class State_Base(State):
         This constraint reflects the role of State functions:
             they simply update the value of the State;
             accordingly, their variable and value must be compatible
-
-        :param context:
-        :return:
         """
 
         var_is_matrix = False
@@ -588,9 +576,6 @@ class State_Base(State):
             a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]
         Each projection in the list is added to self.afferents
         If kwMStateProjections is absent or empty, no projections are created
-
-        :param context: (str)
-        :return state: (State)
         """
 
         from PsyNeuLink.Components.Projections.Projection import Projection_Base
@@ -819,9 +804,6 @@ class State_Base(State):
             a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]
         Projection is added to self.efferents
         If kwMStateProjections is absent or empty, no projections are created
-
-        :param context: (str)
-        :return state: (State)
         """
 
         from PsyNeuLink.Components.Projections.Projection import Projection_Base
@@ -1275,7 +1257,7 @@ class State_Base(State):
         # There were no projections
         else:
             # mark combined_values as none, so that (after being assigned to self.value)
-            #    it is ignored in execute method (i.e., not combined with baseValue)
+            #    it is ignored in execute method (i.e., not combined with base_value)
             combined_values = None
         #endregion
 
@@ -1329,11 +1311,11 @@ class State_Base(State):
             # self.owner.log.entries[self.name] = LogEntry(CentralClock, context, assignment)
 
     @property
-    def baseValue(self):
+    def base_value(self):
         return self._baseValue
 
-    @baseValue.setter
-    def baseValue(self, value):
+    @base_value.setter
+    def base_value(self, value):
         self._baseValue = value
 
     @property

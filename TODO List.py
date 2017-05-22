@@ -179,7 +179,7 @@
 
 
 # SEARCH & REPLACE: allocation_policy -> control_policy (AND ALL VARIANTS THEREOF)
-# SEARCH & REPLACE: baseValue -> base_value
+# SEARCH & REPLACE: base_value -> base_value
 # SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
 # SEARCH & REPLACE: monitored_values -> monitor_values
 
@@ -187,7 +187,9 @@
 #
 # IMPLEMENT:  **control** arg for ControlMechanism, and **train** arg for LearningMechanism
 # IMPLEMENT:  Ability to pass outputState specifications to Objective mechanism via controller of system
-# IMPLEMENT:  WEIGHTS, EXPONENTS AND PROJECTION ENTRIES OF STATE SPECIFICATION DICTIONARY
+# FIX:  ??WHY IS ASSIGNMENT TO <component>.function_object.<param>
+# FIX:      NOT UPDATING <component>._parameter_states[PARAM].base_value?
+# IMPLEMENT:  MODULATION_PROJECTION ENTRIES OF STATE SPECIFICATION DICTIONARY
 # IMPLEMENT: standard_output_states for ObjectiveMechanism, LCA, RecurrentTransfer, and Intregrator
 #              (use ones at top of OutputState)
 # IMPLEMENT: Move RecurrentTransfer and LCA calculate functions to standard_output_states
@@ -1006,7 +1008,7 @@
 #   CHANGE ALL VARIABLES FROM THEIR LOCAL NAMES (E.G., Allocation_Source, Input_value, etc) to variable
 #   Projections: sendsTo and sendsFrom
 #   "or isinstance(" -> use tuple
-#   Change "baseValue" -> "instanceValue" for prefs
+#   Change "base_value" -> "instanceValue" for prefs
 #   super(<class name>, self) -> super() [CHECK FUNCTIONALITY IN EACH CASE]
 #   NotImplemented -> None (and adjust tests accordingly)
 #
