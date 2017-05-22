@@ -1,14 +1,14 @@
+import numpy as np
+
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.Components.Functions.Function import Linear, BogaczEtAl
+from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE
 
-import numpy as np
-import random
 
 def test_EVC():
     # Mechanisms
@@ -26,7 +26,7 @@ def test_EVC():
                 ControlProjection(
                     function=Linear,
                     control_signal={
-                        ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)
+                        ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                     },
                 ),
             ),
@@ -35,7 +35,7 @@ def test_EVC():
                 ControlProjection(
                     function=Linear,
                     control_signal={
-                        ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)
+                        ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                     },
                 ),
             ),
@@ -55,13 +55,13 @@ def test_EVC():
     TaskExecutionProcess = process(
         default_input_value=[0],
         pathway=[(Input), IDENTITY_MATRIX, (Decision)],
-        name = 'TaskExecutionProcess',
+        name='TaskExecutionProcess',
     )
 
     RewardProcess = process(
         default_input_value=[0],
         pathway=[(Reward)],
-        name = 'RewardProcess',
+        name='RewardProcess',
     )
 
     # System:
@@ -79,8 +79,8 @@ def test_EVC():
 
     # Stimuli
     stim_list_dict = {
-        Input:[0.5, 0.123],
-        Reward:[20, 20]
+        Input: [0.5, 0.123],
+        Reward: [20, 20]
     }
 
     mySystem.run(
@@ -158,16 +158,16 @@ def test_EVC():
         #       decision variable
         (Decision.output_states[DECISION_VARIABLE].value, np.array([1.0])),
         #       response time
-        (Decision.output_states[RESPONSE_TIME].value, np.array([ 3.84279648])),
+        (Decision.output_states[RESPONSE_TIME].value, np.array([3.84279648])),
         #       upper bound
-        (Decision.output_states[PROBABILITY_UPPER_THRESHOLD].value, np.array([ 0.81637827])),
+        (Decision.output_states[PROBABILITY_UPPER_THRESHOLD].value, np.array([0.81637827])),
         #       lower bound
-        #(round(float(Decision.output_states['DDM_probability_lowerBound'].value),3), 0.184),
+        # (round(float(Decision.output_states['DDM_probability_lowerBound'].value),3), 0.184),
 
         # --- Reward Mechanism ---
         #    Output State Values
         #       transfer mean
-        (Reward.output_states[RESULT].value, np.array([ 15.])),
+        (Reward.output_states[RESULT].value, np.array([15.])),
         #       transfer_result
         (Reward.output_states[MEAN].value, np.array(15.0)),
         #       transfer variance

@@ -1056,6 +1056,8 @@ class Process_Base(Process):
         from PsyNeuLink.Components.Mechanisms.Mechanism import _is_mechanism_spec
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
+        self.runtime_params_dict = {}
+
         for i in range(len(pathway)):
             config_item = pathway[i]
             if isinstance(config_item, tuple):
@@ -1075,14 +1077,20 @@ class Process_Base(Process):
                         raise ProcessError("Third item of tuple ({}) in entry {} of pathway for {}"
                                            " must be a phase value".
                                            format(config_item[2], i, self.name))
+
+                    self.runtime_params_dict[config_item[0]] = config_item[1]
+
                     pathway[i] = MechanismTuple(config_item[0], config_item[1], config_item[2])
 
                 # If the tuple has only one item, check that it is a Mechanism or Projection specification
                 if len(config_item) is 1:
                     if _is_mechanism_spec(config_item[0]) or _is_projection_spec(config_item[0]):
                         # Pad with None
+
+                        self.runtime_params_dict[config_item[0]] = None
+
                         pathway[i] = MechanismTuple(config_item[0],
-                                                          None,
+                                                          0,
                                                           DEFAULT_PHASE_SPEC)
                     else:
                         raise ProcessError("First item of tuple ({}) in entry {} of pathway for {}"
@@ -1096,16 +1104,22 @@ class Process_Base(Process):
                     second_tuple_item = config_item[1]
                     if _is_mechanism_spec(config_item[0]):
                         if isinstance(second_tuple_item, dict):
+
+                            self.runtime_params_dict[config_item[0]] = config_item[1]
+
                             pathway[i] = MechanismTuple(config_item[0],
-                                                              second_tuple_item,
+                                                              0,
                                                               DEFAULT_PHASE_SPEC)
                         # If the second item is a number, assume it is meant as a phase spec and move it to third item
                         elif isinstance(second_tuple_item, (int, float)):
+
+                            self.runtime_params_dict[config_item[0]] = None
+
                             pathway[i] = MechanismTuple(config_item[0],
-                                                              None,
+                                                              0,
                                                               second_tuple_item)
                         else:
-                            raise ProcessError("Second item of tuple ((}) in item {} of pathway for {}"
+                            raise ProcessError("Second item of tuple ({}) in item {} of pathway for {}"
                                                " is neither a params dict nor phaseSpec (int or float)".
                                                format(second_tuple_item, i, self.name))
                     # Projection
@@ -1115,7 +1129,7 @@ class Process_Base(Process):
                         if (_is_projection_spec(second_tuple_item) and
                                 _is_projection_subclass(second_tuple_item, LEARNING_PROJECTION)):
                             pathway[i] = MechanismTuple(config_item[0],
-                                                              second_tuple_item,
+                                                              0,
                                                               DEFAULT_PHASE_SPEC)
                         else:
                             raise ProcessError("Second item of tuple ({}) in item {} of pathway for {}"
@@ -1133,8 +1147,10 @@ class Process_Base(Process):
                 # Convert item to tuple, padded with None
                 if _is_mechanism_spec(pathway[i]) or _is_projection_spec(pathway[i]):
                     # Pad with None for param and DEFAULT_PHASE_SPEC for phase
+                    self.runtime_params_dict[pathway[i]] = None
+
                     pathway[i] = MechanismTuple(pathway[i],
-                                                      None,
+                                                      0,
                                                       DEFAULT_PHASE_SPEC)
                 else:
                     raise ProcessError("Item of {} of pathway for {}"
@@ -1267,7 +1283,7 @@ class Process_Base(Process):
                 # Must be a Mechanism (enforced above)
                 # Assign input(s) from Process to it if it doesn't already have any
                 # Note: does not include learning (even if specified for the process)
-                if i==0:
+                if i == 0:
                     # Relabel for clarity
                     mech = item
 
@@ -1431,7 +1447,7 @@ class Process_Base(Process):
 
                     # Get sender for projection
                     sender_mech=pathway[i-1][OBJECT_ITEM]
-                    
+
                     # Get receiver for projection
                     try:
                         receiver_mech=pathway[i+1][OBJECT_ITEM]
@@ -2027,6 +2043,8 @@ class Process_Base(Process):
                 time_scale=None,
                 # time_scale=TimeScale.TRIAL,
                 runtime_params=None,
+                termination_processing=None,
+                termination_learning=None,
                 context=None
                 ):
         """Execute the mechanisms specified in the process` `pathway` attribute.

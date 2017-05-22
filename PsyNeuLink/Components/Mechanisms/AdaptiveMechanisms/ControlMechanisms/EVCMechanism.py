@@ -58,7 +58,7 @@ EVCMechanism's  `ControlSignals <ControlSignal>`.  Each ControlSignal is impleme
 `parameterStates <ParameterState>` for the parameters of the mechanisms and/or functions controlled by that
 ControlSignal.  In addition, a set of prediction mechanisms  are created that are used to keep a running average of
 inputs to the system over the course of multiple executions.   These averages are used to generate input to the
-system when the EVCMechanism simulates its execution. Each of these specialized components is described in the 
+system when the EVCMechanism simulates its execution. Each of these specialized components is described in the
 sections that follow.
 
 .. _EVCMechanism_Structure:
@@ -200,8 +200,8 @@ prediction mechanisms to do this.  Each prediction mechanism provides an estimat
 mechanism in the system, based on a running average of inputs to that mechanism in previous rounds of execution.
 The EVCMechanism uses these estimates to provide input to the system each time it simulates it to evaluate its
 performance.  When an EVCMechanism is `created automatically <EVCMechanism_Creation>`, a prediction mechanism is
-created for each `ORIGIN` mechanism in the system. For each projection received by the `ORIGIN` mechanism,   
-a `MappingProjection` from the same source is created that projects to the prediction mechanism.  The type of 
+created for each `ORIGIN` mechanism in the system. For each projection received by the `ORIGIN` mechanism,
+a `MappingProjection` from the same source is created that projects to the prediction mechanism.  The type of
 mechanism used for the prediction mechanisms can be specified using the EVCMechanism's
 `prediction_mechanism_type` attribute, and their parameters can be specified using the EVCMechanism's
 `prediction_mechanism_params` attribute.  The default type is an 'IntegratorMechanism`, that calculates an
@@ -483,7 +483,7 @@ class EVCMechanism(ControlMechanism_Base):
         ControlSignals.
 
     predictionMechanisms : MechanismList
-        a list of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the system, along with any 
+        a list of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the system, along with any
         `runtime_params <Mechanism.runtime_params>` and the `phase <Mechanism.phase>` in which they execute.
 
     origin_prediction_mechanisms : Dict[ProcessingMechanism, ProcessingMechanism]
@@ -648,8 +648,8 @@ class EVCMechanism(ControlMechanism_Base):
         default `combine_outcome_and_cost_function` is called by a custom `value_function`, the weights and/or
         exponents parameters of the `LinearCombination` function can be used, respectively, to scale and/or exponentiate
         the contribution of the outcome and/or cost to the result.  These must be specified as 1d arrays in a `WEIGHTS`
-        and/or EXPONENTS entry of a  `parameter specifiction dictionary <ParameterState_Specifying_Parameters>` 
-        assigned to the function's `params` argument; each array must have two elements, the first for the outcome 
+        and/or EXPONENTS entry of a  `parameter specifiction dictionary <ParameterState_Specifying_Parameters>`
+        assigned to the function's `params` argument; each array must have two elements, the first for the outcome
         and second for the cost. The default function can also be replaced with any
         `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that returns a scalar value.  If used with
         the EVCMechanism's default `value_function`, a custom combine_outcome_and_cost_function must accomoudate three
@@ -905,7 +905,9 @@ class EVCMechanism(ControlMechanism_Base):
                           name = self.system.name + ' outcome signal'
                           )
 
-        self.system.executionList.append(MechanismTuple(self.monitoring_mechanism, None, self.system.numPhases-1))
+        self.system.executionList.append(MechanismTuple(self.monitoring_mechanism, None, self.system.numPhases - 1))
+        self.system.executionGraph[MechanismTuple(self.monitoring_mechanism, None, self.system.numPhases - 1)] = set(
+            self.system.executionList[:-1])
 
     def _get_monitored_states(self, context=None):
         """

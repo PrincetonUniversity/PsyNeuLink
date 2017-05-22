@@ -35,7 +35,7 @@ Distribution Functions:
   * `UniformDist`
   * `GammaDist`
   * `WaldDist`
-  
+
 Objective Functions:
   * `Stability`
   * `Distance`
@@ -50,25 +50,25 @@ Overview
 --------
 
 A Function is a `component <Component>` that "packages" a function (in its `function <Function_Base.function>` method)
-for use by other PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function; when thata 
+for use by other PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function; when thata
 component is executed, its Function's `function <Function_Base.function>` is executed.  The
 `function <Function_Base.function>` can be any callable operation, although most commonly it is a mathematical operation
-(and, for those, almost always uses a call to one or more numpy functions).  There are two reasons PsyNeuLink 
+(and, for those, almost always uses a call to one or more numpy functions).  There are two reasons PsyNeuLink
 packages functions in a Function component: to *manage parameters*, and for *modularity*.
 
 **Manage parameters**. Parameters are attributes of a function that either remain stable over multiple calls to the
-function (e.g., the `gain <Logistic.gain>` or `bias <Logistic.bias>` of a `Logistic` function, or the learning rate 
+function (e.g., the `gain <Logistic.gain>` or `bias <Logistic.bias>` of a `Logistic` function, or the learning rate
 of a learning function); or, if they change, they do so less frequently or under the control of different factors
-than the function's variable (i.e., its input).  As a consequence, it is useful to manage these separately from the 
-function's variable, and not have to provide them every time the function is called.  To address this, every 
-PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at 
-the time the Function is created (in arguments to its constructor), and can be modified independently 
-of a call to its :keyword:`function`. Modifications can be directly (e.g., in a script), or by the operation of other 
-PsyNeuLink components (e.g., `AdaptiveMechanisms`) by way of `ControlProjections <ControlProjection>`.  
+than the function's variable (i.e., its input).  As a consequence, it is useful to manage these separately from the
+function's variable, and not have to provide them every time the function is called.  To address this, every
+PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at
+the time the Function is created (in arguments to its constructor), and can be modified independently
+of a call to its :keyword:`function`. Modifications can be directly (e.g., in a script), or by the operation of other
+PsyNeuLink components (e.g., `AdaptiveMechanisms`) by way of `ControlProjections <ControlProjection>`.
 
-**Modularity**. By providing a standard interface, any Function assigned to a components in PsyNeuLink can be replaced 
-with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain standards 
-(the PsyNeuLink :ref:`Function API <LINK>`). 
+**Modularity**. By providing a standard interface, any Function assigned to a components in PsyNeuLink can be replaced
+with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain standards
+(the PsyNeuLink :ref:`Function API <LINK>`).
 
 .. _Function_Creation:
 
@@ -90,15 +90,15 @@ Structure
 
 Every Function has a `variable <Function_Base.variable>` that provides the input to its
 `function <Function_Base.function>` method.  It's core attribute is its `function <Function_Base.function>` attribute,
-that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or 
-method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be 
+that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or
+method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be
 "turtles" all the way down!).  A Function also has an attribute for each of the parameters of its `function
 <Function_Base.function>`.   If a Function has been assigned to another component, then it also has an `owner
 <Function_Base.owner>` attribute that refers to that component.  The Function itself is assigned as the component's
 `function_object <Component.function_object>` attribute.  Each of the Function's attributes is also assigned
 as an attribute of the `owner <Function_Base.owner>`, and those are each associated with with a
 `parameterState <ParameterState>` of the `owner <Function_Base.owner>`.  Projections to those parameterStates can be
-used by `ControlProjections <ControlProjection>` to modify the Function's parameters. 
+used by `ControlProjections <ControlProjection>` to modify the Function's parameters.
 
 COMMENT:
 .. _Function_Output_Type_Conversion:
@@ -123,8 +123,8 @@ Execution
 Functions are not executable objects, but their `function <Function_Base.function>` can be called.   This can be done
 directly.  More commonly, however, they are called when their `owner <Function_Base.owner>` is executed.  The parameters
 of the `function <Function_Base.function>` can be modified when it is executed, by assigning a
-`parameter specification dictionary <ParameterState_Specifying_Parameters>` to the **params** argument in the 
-call to the `function <Function_Base.function>`.  For `mechanisms <Mechanism>`, this can also be done by specifying 
+`parameter specification dictionary <ParameterState_Specifying_Parameters>` to the **params** argument in the
+call to the `function <Function_Base.function>`.  For `mechanisms <Mechanism>`, this can also be done by specifying
 `runtime_params <Mechanism_Runtime_Parameters>` for the mechanism when it is `executed <Mechanism_Base.execute>`.
 
 Class Reference
@@ -264,7 +264,7 @@ class Function_Base(Function):
             Functions are used to "wrap" functions used used by other components;
             They are defined here (on top of standard libraries) to provide a uniform interface for managing parameters
              (including defaults)
-            NOTE:   the Function category definition serves primarily as a shell, and as an interface to the Function 
+            NOTE:   the Function category definition serves primarily as a shell, and as an interface to the Function
                        class, to maintain consistency of structure with the other function categories;
                     it also insures implementation of .function for all Function Components
                     (as distinct from other Function subclasses, which can use a FUNCTION param
@@ -1356,7 +1356,7 @@ class LinearCombination(
 
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape
-    
+
     All TransferFunctions must have the attribute `bounds` that specifies the lower and upper limits of the result;
         if there are none, the attribute is set to `None`;  if it has at least one bound, the attribute is set to a
         tuple specifying the lower and upper bounds, respectively, with `None` as the entry for no bound.
@@ -1421,7 +1421,7 @@ class Linear(
     intercept : float
         value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
         (if it is specified).
-        
+
     bounds : None
 
     owner : Mechanism
@@ -1627,8 +1627,8 @@ class Exponential(
 
     scale : float
         value by which the exponentiated value is multiplied.
-        
-    bounds : (0, None) 
+
+    bounds : (0, None)
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -1777,7 +1777,7 @@ class Logistic(
     bias : float
         value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
         (if it is specified).
-        
+
     bounds : (0,1)
 
     owner : Mechanism
@@ -1885,7 +1885,7 @@ class SoftMax(
 
     .. _SoftMax:
 
-    SoftMax transform of variable (see `The Softmax function and its derivative 
+    SoftMax transform of variable (see `The Softmax function and its derivative
     <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
 
     Arguments
@@ -1934,7 +1934,7 @@ class SoftMax(
               values to 1, 0 for all others.
 
     bounds : None if `output <SoftMax.output>`==MAX_VAL, else (0,1) : default (0,1)
-    
+
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -1982,7 +1982,7 @@ class SoftMax(
         Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
         sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
         filtered by `ouptput <SoftMax.output>` specification.
-        
+
         Arguments
         ---------
 
@@ -2045,14 +2045,14 @@ class SoftMax(
         """
         derivative(output)
 
-        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL, 
+        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL,
         return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
             COMMENT:
                 D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
             COMMENT
-            D\ :sub:`j`\ S\ :sub:`i` = S\ :sub:`i`\ (𝜹\ :sub:`i,j` - S\ :sub:`j`), 
+            D\ :sub:`j`\ S\ :sub:`i` = S\ :sub:`i`\ (𝜹\ :sub:`i,j` - S\ :sub:`j`),
             where 𝜹\ :sub:`i,j`\ =1 if i=j and 𝜹\ :sub:`i,j`\ =0 if i≠j.
-        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum 
+        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
         value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
         (since it is ambiguous as to which element would have been chosen by the SoftMax function)
 
@@ -2152,7 +2152,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     matrix : number, list, 1d or 2d np.ndarray, np.matrix, function, or matrix keyword : default IDENTITY_MATRIX
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
-        
+
     bounds : None
 
     params : Optional[Dict[param keyword, param value]]
@@ -2660,7 +2660,7 @@ class Integrator(
         `noise <Integrator.noise>` for details).
 
     time_step_size : float : default 0.0
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>` 
+        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
         is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
 
     initializer float, list or 1d np.array : default 0.0
@@ -2695,12 +2695,12 @@ class Integrator(
 
     integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
         specifies type of integration:
-            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` + 
+            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` +
               `noise <Integrator.noise>` (ignores `variable <Integrator.variable>`);
             * **SIMPLE**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` *
               `variable <variable.Integrator.variable>` + `noise <Integrator.noise>`;
-            * **ADAPTIVE**: (1-`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
-              (`rate <Integrator.rate>` * `previous_value <Integrator.previous_value>`) + `noise <Integrator.noise>`
+            * **ADAPTIVE**: (`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
+              (1- `rate <Integrator.rate>` * `previous_value <Integrator.previous_value>`) + `noise <Integrator.noise>`
               (`Weiner filter <https://en.wikipedia.org/wiki/Wiener_filter>`_ or
               `Delta rule <https://en.wikipedia.org/wiki/Delta_rule>`_);
             * **DIFFUSION**: `previous_value <Integrator.previous_value>` +
@@ -2729,7 +2729,7 @@ class Integrator(
         is set to DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
     initializer : 1d np.array or list
-        determines the starting value for integration (i.e., the value to which 
+        determines the starting value for integration (i.e., the value to which
         `previous_value <Integrator.previous_value>` is set.
 
         If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
@@ -3276,7 +3276,7 @@ class BogaczEtAl(
     ----------
 
     variable : number or 1d np.array
-        holds initial value assigned to :keyword:`variable_default` argument;  
+        holds initial value assigned to :keyword:`variable_default` argument;
         ignored by `function <BogaczEtal.function>`.
 
     drift_rate : float or 1d np.array
@@ -3294,7 +3294,7 @@ class BogaczEtAl(
         Gaussian random process).
 
     t0 : float or 1d np.array
-        determines the assumed non-decision time to determine the response time returned by the solution. 
+        determines the assumed non-decision time to determine the response time returned by the solution.
 
     bias : float or 1d np.array
         normalized starting point:
@@ -3350,7 +3350,7 @@ class BogaczEtAl(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: terminal value of decision variable (equal to threshold), mean accuracy (error rate; ER) and mean 
+        Return: terminal value of decision variable (equal to threshold), mean accuracy (error rate; ER) and mean
         response time (RT)
 
         Arguments
@@ -3442,37 +3442,37 @@ class BogaczEtAl(
 
         Calculate the derivative of 1/(reward rate) with respect to the threshold (**output** arg)
         and drift_rate (**input** arg).  Reward rate (RR) is assumed to be:
-          
+
             RR = (delay\ :sub:`ITI` + Z/A + ED);
-           
+
         the derivative of 1/RR with respect to the `threshold <BogaczEtAl.threshold>` is:
-        
+
             1/A - E/A - (2A/c\ :sup:`2`\ )ED;
-          
+
         and the derivative of 1/RR with respect to the `drift_rate <BogaczEtAl.drift_rate>` is:
-          
+
             -Z/A\ :sup:`2` + (Z/A\ :sup:`2`\ )E - (2Z/c\ :sup:`2`\ )ED
-                                   
+
         where:
 
             A = `drift_rate <BogaczEtAl.drift_rate>`,
 
-            Z = `threshold <BogaczEtAl.threshold>`,  
+            Z = `threshold <BogaczEtAl.threshold>`,
 
-            c = `noise <BogaczEtAl.noise>`,  
+            c = `noise <BogaczEtAl.noise>`,
 
-            E = exp(-2ZA/\ c\ :sup:`2`\ ), and  
+            E = exp(-2ZA/\ c\ :sup:`2`\ ), and
 
             D = delay\ :sub:`ITI` + delay\ :sub:`penalty` - Z/A
-            
+
             delay\ :sub:`ITI` is the intertrial interval and delay\ :sub:`penalty` is a penalty delay.
 
-          
+
         Returns
         -------
 
         derivatives :  List[float, float)
-            of 1/RR with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate <BogaczEtAl.drift_rate>`. 
+            of 1/RR with respect to `threshold <BogaczEtAl.threshold>` and `drift_rate <BogaczEtAl.drift_rate>`.
 
         """
         Z = output or self.threshold
@@ -4239,7 +4239,7 @@ class Stability(ObjectiveFunction):
     Return the stability of a vector based an a weight matrix from each element to every other element in the vector.
     The value of `variable <Stability.variable>` is passed through the `matrix <Stability.matrix>`, transformed
     using the `transfer_fct <Stability.transfer_fct>` (if specified), and then compared with its initial value
-    using the specified `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is specified, the result 
+    using the specified `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is specified, the result
     is normalized by the number of elements in the `variable <Stability.variable>`.
 
     Arguments
@@ -4249,17 +4249,17 @@ class Stability(ObjectiveFunction):
         the array for which stabilty is calculated.
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
-        specifies the matrix of recurrent weights;  must be a square matrix with the same width as the 
-        length of `variable <Stability.variable>`. 
+        specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
+        length of `variable <Stability.variable>`.
 
     metric : ENERGY, ENTROPY or keyword in DISTANCE_METRICS : Default ENERGY
-        specifies the metric used to compute stability. 
+        specifies the metric used to compute stability.
 
     transfer_fct : function or method : Default None
         specifies the function used to transform output of weight `matrix <Stability.matrix>`.
 
     normalize : bool : Default False
-        specifies whether to normalize the stability value by the length of `variable <Stability.variable>`. 
+        specifies whether to normalize the stability value by the length of `variable <Stability.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -4278,7 +4278,7 @@ class Stability(ObjectiveFunction):
 
     variable : 1d np.array
         array for which stability is calculated.
-    
+
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
         weight matrix from each element of `variable <Stability.variablity>` to each other;  if a matrix other
         than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
@@ -4286,14 +4286,14 @@ class Stability(ObjectiveFunction):
 
     metric : ENERGY, ENTROPY or keyword in DISTANCE_METRICS
         metric used to compute stability.  If ENTROPY or DISTANCE_METRICS keyword is used, the `Distance` Function
-        is used to compute the stability of `variable <Stability.variable>` with respect to its value after  
+        is used to compute the stability of `variable <Stability.variable>` with respect to its value after
         transformation by `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>`.
 
     transfer_fct : function or method
         function used to transform output of weight `matrix <Stability.matrix>` prior to computing stability.
 
     normalize : bool
-        if `True`, result of stability calculation is normalized by the length of `variable <Stability.variable>`. 
+        if `True`, result of stability calculation is normalized by the length of `variable <Stability.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -4410,12 +4410,12 @@ class Stability(ObjectiveFunction):
 
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiate matrix
-         
-        Specified matrix specified is convolved with HOLLOW_MATRIX 
+
+        Specified matrix specified is convolved with HOLLOW_MATRIX
             to eliminate the diagonal (self-connections) from the calculation.
-        The `Distance` Function is used for all calculations except ENERGY (which is not really a distance metric). 
+        The `Distance` Function is used for all calculations except ENERGY (which is not really a distance metric).
         If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the Distance Function.
-            
+
         """
 
         size = len(np.squeeze(self.variable))
@@ -4444,15 +4444,15 @@ class Stability(ObjectiveFunction):
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate the stability of `variable <Stability.variable>`.
-         
-         Compare the value of `variable <Stability.variable>` with its value after transformation by 
+
+         Compare the value of `variable <Stability.variable>` with its value after transformation by
          `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>` (if specified), using the specified
          `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is `True`, the result is divided
-         by the length of `variable <Stability.variable>`. 
+         by the length of `variable <Stability.variable>`.
 
         Returns
         -------
-        
+
         stability : scalar
 
         """
@@ -4497,7 +4497,7 @@ class Distance(ObjectiveFunction):
     .. _Distance:
 
     Return the distance between two vectors based on a specified metric.
-      
+
     Arguments
     ---------
 
@@ -4505,10 +4505,10 @@ class Distance(ObjectiveFunction):
         the arrays between which the distance is calculated.
 
     metric : keyword in DISTANCE_METRICS : Default EUCLIDEAN
-        specifies the metric used to compute the distance between the two items in `variable <Distance.variable>`. 
+        specifies the metric used to compute the distance between the two items in `variable <Distance.variable>`.
 
     normalize : bool : Default False
-        specifies whether to normalize the distance by the length of `variable <Distance.variable>`. 
+        specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -4530,10 +4530,10 @@ class Distance(ObjectiveFunction):
         contains the arrays between which the distance is calculated.
 
     metric : keyword in DISTANCE_METRICS
-        specifies the metric used to compute the distance between the two items in `variable <Distance.variable>`. 
+        specifies the metric used to compute the distance between the two items in `variable <Distance.variable>`.
 
     normalize : bool
-        specifies whether to normalize the distance by the length of `variable <Distance.variable>`. 
+        specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -4598,7 +4598,7 @@ class Distance(ObjectiveFunction):
 
         Returns
         -------
-        
+
         distance : scalar
 
         """

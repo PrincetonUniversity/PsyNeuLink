@@ -254,9 +254,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         COMMENT:
             :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
         COMMENT
-    
+
     size : int
-        length of the first (and only) item in `variable <TransferMechanism.variable>` 
+        length of the first (and only) item in `variable <TransferMechanism.variable>`
         (i.e., the vector transformed by `function <TransferMechanism.function>`.
 
     function : Function :  default Linear

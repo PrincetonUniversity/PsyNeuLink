@@ -165,9 +165,9 @@ is assigned as follows:
     is used, and its `primary outputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
   ..
   * `ControlProjection`: if the projection's `receiver <Projection.receiver>` belongs to a system, then the system's
-    `controller` is used as the mechanism for the `sender <Projection.sender>`, an outputState is added to the 
+    `controller` is used as the mechanism for the `sender <Projection.sender>`, an outputState is added to the
     ControlMechanism, and assigned as the projection's `sender <Projection.sender>`.  If the receiver does not
-    belong to a system, the ControlProjection will be ignored. 
+    belong to a system, the ControlProjection will be ignored.
   ..
   COMMENT:
   * `GatingProjection`:  DOCUMENT
@@ -177,8 +177,8 @@ is assigned as follows:
     then a `ComparatorMechanism` is created, and its `primary outputState <OutputState_Primary>` is assigned as the
     `sender <Projection.sender>`.  Otherwise, a `WeightedErrorMechanism` is created and its
     `primary outputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
-    
-    
+
+
 
 .. _Projection_Receiver:
 

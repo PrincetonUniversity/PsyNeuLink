@@ -250,10 +250,10 @@ first item of the mechanism's `value <Mechanism_Base.value>` attribute (usually 
 some `ProcessingMechanisms <ProcessingMechanism>` (such as `TransferMechanism`) use outputStates to represent
 values derived from the value of their `primary outputState <OutputState_Primary>` (e.g., the mean and variance).
 `ControlMechanisms <ControlMechanism>` assign one outputState for each of their `ControlProjections
-<ControlProjection>`.  An outputState can be assigned to a particular item of the mechanism's 
-`value <Mechanism_Base.value>` attribute using the outputState's `index` parameter, and its `calculate` parameter can 
-be used to modify that item before assigning it as the outputState's :keyword:`value` (see `OutputStates_Creation`). 
-The :keyword:`value` attributes of all of a mechanism's outputStates  are assigned to the mechanism's 
+<ControlProjection>`.  An outputState can be assigned to a particular item of the mechanism's
+`value <Mechanism_Base.value>` attribute using the outputState's `index` parameter, and its `calculate` parameter can
+be used to modify that item before assigning it as the outputState's :keyword:`value` (see `OutputStates_Creation`).
+The :keyword:`value` attributes of all of a mechanism's outputStates  are assigned to the mechanism's
 `output_values <Mechanism_Base.output_values>` attribute (a list), in the same order in which they appear in mechanism's
 `outputStates <Mechanism_Base.outputStates>`  attribute.  Note that this is distinct from the mechanism's `value
 <Mechanism_Base.value>` attribute, which contains the full and unmodified results of its
@@ -265,7 +265,7 @@ Mechanism Parameters
 ~~~~~~~~~~~~~~~~~~~~
 
 Most mechanisms implement a standard set of parameters, that can be specified by direct reference to the corresponding
-attribute of the mechanisms (e.g., myMechanism.attribute), in a 
+attribute of the mechanisms (e.g., myMechanism.attribute), in a
 `parameter dictionary <ParameterState_Specifying_Parameters>` assigned to `params` argument in the mechanism's
 constructor, or with the mechanism's `assign_params` method, using the following keywords:
 
@@ -292,8 +292,8 @@ constructor, or with the mechanism's `assign_params` method, using the following
       |
       .. note::
          Some Mechanism subclasses include the function parameters as arguments in mechanism's constructor.
-         Any values specified in the `FUNCTION__PARAMS` entry of a 
-         `parameter specification dictionary <ParameterState_Specifying_Parameters>` for the mechanism take precedence 
+         Any values specified in the `FUNCTION__PARAMS` entry of a
+         `parameter specification dictionary <ParameterState_Specifying_Parameters>` for the mechanism take precedence
          over values assigned to parameter-specific arguments in its (or its function's) constructor.
 
     * OUTPUT_STATES - specifies specialized outputStates required by a mechanism subclass
@@ -373,24 +373,24 @@ Runtime Parameters
    This is an advanced feature, and is generally not required for most applications.
 
 The parameters of a mechanism are usually specified when the mechanism is created.  However, these can be overridden
-when it executed.  This can be done in a `parameter specification dictionary <ParameterState_Specifying_Parameters>` 
-assigned to the **runtime_param** argument of the mechanism's `execute <Mechanism_Base.execute>` method, or in a tuple 
-with the mechanism in the `pathway` of a process (see Process :ref:`Process_Mechanisms`).  Any value assigned to a 
-parameter in a runtime_params dicitonary will override the current value of that parameter for the (and *only* the) 
-current execution of the mechanism; the value will return to its previous value following current round of execution, 
-unless the `runtimeParamStickyAssignmentPref` is set for the component to which the parameter belongs. The runtime 
-parameters for a mechanism are specified using a dictionary that contains one or more entries, each of which is for 
-a parameter of the mechanism or its  function, or for one of the mechanism's states.  Entries for parameters of the 
-mechanism or its function use the standard format for `parameter dictionaries <ParameterState_Specifying_Parameters>`.  
-Entries for the mechanism's states can be used to specify runtime parameters of the corresponding state, its function, 
-or any of the projections to that state.  Each state entry uses a key corresponding to the type of state 
-(INPUT_STATE_PARAMS, OUTPUT_STATE_PARAMS or PARAMETER_STATE_PARAMS), and the value is a subdictionary containing a 
-parameter dictionary with the runtime  parameter specifications for all states of that type). Within the subdictionary, 
-specification of parameters for the  state or its function use the  standard format for `parameter dictionaries 
-<ParameterState_Specifying_Parameters>`.  Parameters for all of the state's projections can be specified in an entry 
-with the key PROJECTION_PARAMS, and a subdictionary that contains the parameter specifications;  parameters for 
-projections of a particular type can be placed in an entry with a key specifying the type (MAPPING_PROJECTION_PARAMS, 
-CONTROL_PROJECTION_PARAMS, or LEARNING_PROJECTION_PARAMS; and parameters can for a specific projection can be placed 
+when it executed.  This can be done in a `parameter specification dictionary <ParameterState_Specifying_Parameters>`
+assigned to the **runtime_param** argument of the mechanism's `execute <Mechanism_Base.execute>` method, or in a tuple
+with the mechanism in the `pathway` of a process (see Process :ref:`Process_Mechanisms`).  Any value assigned to a
+parameter in a runtime_params dicitonary will override the current value of that parameter for the (and *only* the)
+current execution of the mechanism; the value will return to its previous value following current round of execution,
+unless the `runtimeParamStickyAssignmentPref` is set for the component to which the parameter belongs. The runtime
+parameters for a mechanism are specified using a dictionary that contains one or more entries, each of which is for
+a parameter of the mechanism or its  function, or for one of the mechanism's states.  Entries for parameters of the
+mechanism or its function use the standard format for `parameter dictionaries <ParameterState_Specifying_Parameters>`.
+Entries for the mechanism's states can be used to specify runtime parameters of the corresponding state, its function,
+or any of the projections to that state.  Each state entry uses a key corresponding to the type of state
+(INPUT_STATE_PARAMS, OUTPUT_STATE_PARAMS or PARAMETER_STATE_PARAMS), and the value is a subdictionary containing a
+parameter dictionary with the runtime  parameter specifications for all states of that type). Within the subdictionary,
+specification of parameters for the  state or its function use the  standard format for `parameter dictionaries
+<ParameterState_Specifying_Parameters>`.  Parameters for all of the state's projections can be specified in an entry
+with the key PROJECTION_PARAMS, and a subdictionary that contains the parameter specifications;  parameters for
+projections of a particular type can be placed in an entry with a key specifying the type (MAPPING_PROJECTION_PARAMS,
+CONTROL_PROJECTION_PARAMS, or LEARNING_PROJECTION_PARAMS; and parameters can for a specific projection can be placed
 in an entry with a key specifying the name of the project and a dictionary with the specifications.
 
 COMMENT:
@@ -432,12 +432,15 @@ Class Reference
 
 """
 
+import logging
+
 from collections import OrderedDict
 from inspect import isclass
 
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 
+logger = logging.getLogger(__name__)
 MechanismRegistry = {}
 
 class MonitoredOutputStatesOption(AutoNumber):
@@ -873,6 +876,7 @@ class Mechanism_Base(Mechanism):
         # params = self._assign_args_to_param_dicts(**kwargs)
 
         self._execution_id = None
+        self.is_finished = False
 
         # Register with MechanismRegistry or create one
         if not context is VALIDATE:
@@ -1467,9 +1471,9 @@ class Mechanism_Base(Mechanism):
             its function, or projection(s) to any of its states.  Any value assigned to a parameter will override
             the current value of that parameter for the (and only the current) execution of the mechanism, and will
             return to its previous value following execution (unless the `runtimeParamStickyAssignmentPref` is set
-            for the component to which the parameter belongs).  See `runtime_params <Mechanism_Runtime_Parameters>` 
+            for the component to which the parameter belongs).  See `runtime_params <Mechanism_Runtime_Parameters>`
             above for details concerning specification.
-              
+
         time_scale : TimeScale :  default TimeScale.TRIAL
             specifies whether the mechanism is executed for a single time_step or a trial.
 
@@ -1729,7 +1733,7 @@ class Mechanism_Base(Mechanism):
                                   format(num_inputs, self.name,  num_input_states ))
         for i in range(num_input_states):
             # input_state = list(self.input_states.values())[i]
-            input_state = self.input_states[i]
+            input_state = self._input_states[i]
             # input_item = np.ndarray(input[i])
             input_item = input[i]
 
