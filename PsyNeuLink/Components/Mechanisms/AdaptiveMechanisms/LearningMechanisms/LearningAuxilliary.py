@@ -139,7 +139,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.Lear
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
     ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
-    import ComparatorMechanism
+    import ComparatorMechanism, MSE
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
@@ -471,10 +471,6 @@ def _instantiate_learning_components(learning_projection, context=None):
             objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
                                                       target=TARGET,
                                                       input_states=[sample_input, target_input],
-                                                      # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
-                                                      #               target_input],
-                                                      # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
-                                                      #               target_input],
                                                       name="\'{}\' {}".format(lc.activation_mech.name,
                                                                               COMPARATOR_MECHANISM),
                                                       context=context)

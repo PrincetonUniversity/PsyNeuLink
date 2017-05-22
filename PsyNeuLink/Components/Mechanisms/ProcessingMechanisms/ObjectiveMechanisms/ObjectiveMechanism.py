@@ -647,26 +647,8 @@ def _validate_monitored_value(objective_mech, state_spec, context=None):
     
     Called by both self._validate_variable(), self.add_monitored_value(), and EVCMechanism._get_monitored_states()
     """
-    # state_spec_is_OK = False
-
-    # if _is_value_spec(state_spec):
-    #     state_spec_is_OK = True
-
     from PsyNeuLink.Components.States.OutputState import OutputState
     if not isinstance(state_spec, (str, OutputState, Mechanism, MonitoredOutputStatesOption, dict)):
-        state_spec_is_OK = True
-
-    # if isinstance(state_spec, dict):
-    #     state_spec_is_OK = True
-    #
-    # if isinstance(state_spec, str):
-    #     # Will be used as the name of the inputState
-    #     state_spec_is_OK = True
-
-    # if isinstance(state_spec, MonitoredOutputStatesOption):
-    #     state_spec_is_OK = True
-    #
-    # if not state_spec_is_OK:
         raise ObjectiveMechanismError("Specification of {} arg for {} ({}) must be"
                              "an OutputState, Mechanism, or a MonitoredOutputStatesOption value".
                              format(MONITORED_VALUES, objective_mech.name, state_spec))
@@ -712,7 +694,7 @@ def _instantiate_monitoring_projections(owner,
 
         # IMPLEMENTATION NOTE:  If there is more than one projection specified for a receiver, only the 1st is used;
         #                           (there should only be one if a 2-item tuple was used to specify the inputState,
-        #                            however other specifications could produce more)
+        #                            however other forms of specifications could produce more)
         if len(recvr_projs) > 1 and owner.verbosePref:
             warnings.warn("{} projections were specified for inputState ({}) of {} ;"
                           "only the first ({}) will be used".
@@ -721,8 +703,6 @@ def _instantiate_monitoring_projections(owner,
 
         # IMPLEMENTATION NOTE:  This may not handle situations properly in which the outputState is specified
         #                           by a 2-item tuple (i.e., with a projection specification as its second item)
-        # if sender[PARAMS][STATE_PROJECTIONS] is not None:
-        # if sender[PARAMS] and STATE_PROJECTIONS in sender[PARAMS]:
         if isinstance(sender, OutputState):
             # Projection has been specified for receiver and initialization begun, so call deferred_init()
             if receiver.afferents:
