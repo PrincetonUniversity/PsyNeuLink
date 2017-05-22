@@ -468,12 +468,30 @@ def _instantiate_learning_components(learning_projection, context=None):
             # Assign derivative of Linear to lc.error_derivative (as default, until TARGET projection is assigned);
             #    this will induce a simple subtraction of target-sample (i.e., implement a comparator)
             sample_input = target_input = error_output
+
             objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
                                                       target=TARGET,
                                                       input_states=[sample_input, target_input],
+                                                      # ALTERANTIVE SPECS FOR TESTING:
+                                                      # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
+                                                      #               target_input],
+                                                      # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
+                                                      #               target_input],
                                                       name="\'{}\' {}".format(lc.activation_mech.name,
                                                                               COMPARATOR_MECHANISM),
                                                       context=context)
+
+            # ALTERNATIVE [FOR TESTING]
+            objective_mechanism = ObjectiveMechanism(monitored_values=[lc.activation_mech_output,
+                                                                       TARGET],
+                                                     input_states=[{SAMPLE:sample_input},
+                                                                   {TARGET:target_input}],
+                                                     function=LinearCombination(weights=[[-1], [1]]),
+                                                     # output_states=[ERROR_SIGNAL, MSE],
+                                                     name="\'{}\' {}".format(lc.activation_mech.name,
+                                                                             COMPARATOR_MECHANISM),
+                                                     context=context)
+
             objective_mechanism._role = LEARNING
             objective_mechanism._learning_role = TARGET
 

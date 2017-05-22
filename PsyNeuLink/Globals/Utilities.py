@@ -164,6 +164,7 @@ def optional_parameter_spec(param):
         return True
     return parameter_spec(param)
 
+
 def parameter_spec(param):
     """Test whether param is a legal PsyNeuLink parameter specification
 

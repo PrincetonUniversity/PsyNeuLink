@@ -569,9 +569,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         from PsyNeuLink.Components.States.State import _parse_state_spec
         from PsyNeuLink.Components.States.OutputState import OutputState
 
+        # Parse monitored_values
         monitored_values = []
         for value in self.monitored_values:
-            # monitored_value_dict = _parse_state_spec(self, OutputState, value, force_dict=True)
             monitored_value_dict = {}
             monitored_value = _parse_state_spec(owner=self,
                                                 state_type=OutputState,
@@ -595,7 +595,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if self.input_states is None:
             self._input_states = [m[VALUE] for m in monitored_values]
 
-
         # Parse input_states into a state specification dict, passing monitored_values as defaults from monitored_value
         for i, input_state, monitored_value in zip(range(len(self.input_states)),
                                                    self.input_states,
@@ -612,20 +611,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         constraint_value = []
         for input_state in self.input_states:
             constraint_value.append(input_state[VARIABLE])
+        self.variable = constraint_value
 
-        from PsyNeuLink.Components.States.State import _instantiate_state_list
-        self._input_states = _instantiate_state_list(owner=self,
-                                                     state_list=self.input_states,
-                                                     state_type=InputState,
-                                                     state_param_identifier=INPUT_STATE,
-                                                     constraint_value=constraint_value,
-                                                     constraint_value_name=self.__class__.__name__ + ' variable',
-                                                     context=context)
+        super()._instantiate_input_states(context=context)
 
-        self.variable = self.input_states.values.copy()
-        self.variableClassDefault = self.variable.copy()
+        # self.variableClassDefault = self.variable.copy()
 
-        # Get any projections specied in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
+        # Get any projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
         input_state_projection_specs = []
         for i, state in enumerate(self._input_states):
             input_state_projection_specs.append(state.params[STATE_PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
