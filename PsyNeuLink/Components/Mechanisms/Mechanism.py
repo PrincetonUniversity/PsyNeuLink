@@ -1344,10 +1344,18 @@ class Mechanism_Base(Mechanism):
 
         super()._instantiate_function(context=context)
 
+        # FIX: IF SOME INPUT_STATES ARE SPECIFIED BUT OTHERS ARE NOT, *AND* FUNCTION'S PARAM IS SPECIFIED
+        # FIX:  CONSIDER DEFERRING TO FUNCTION'S SPEC IF INPUT_STATE'S SPEC IS NONE
         if self.input_states and any(input_state.weight is not None for input_state in self.input_states):
             weights = [[input_state.weight if input_state.weight is not None else 1.0]
                        for input_state in self.input_states]
             self.function_object.weights = weights
+
+        if self.input_states and any(input_state.exponent is not None for input_state in self.input_states):
+            exponents = [[input_state.exponent if input_state.exponent is not None else 1.0]
+                       for input_state in self.input_states]
+            self.function_object.exponents = exponents
+            
         pass
 
         # Assign weights and exponents from input_states if function has those parameters
