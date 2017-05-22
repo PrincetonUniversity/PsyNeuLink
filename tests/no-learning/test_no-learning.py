@@ -90,6 +90,6 @@ class TestNoLearning:
             inputs=stim_list,
         )
 
-        expected_Output_Layer_output = [np.array([0.8344837, 0.87072018, 0.89997433])]
+        expected_Output_Layer_output = [np.array([0.97988347, 0.97988347, 0.97988347])]
 
         np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.output_values)
