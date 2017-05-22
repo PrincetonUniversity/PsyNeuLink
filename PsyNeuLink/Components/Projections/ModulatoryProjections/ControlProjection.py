@@ -77,7 +77,7 @@ from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
-parameter_keywords.update({CONTROL_PROJECTION})
+parameter_keywords.update({CONTROL_PROJECTION, CONTROL})
 projection_keywords.update({CONTROL_PROJECTION, CONTROL})
 
 class ControlProjectionError(Exception):

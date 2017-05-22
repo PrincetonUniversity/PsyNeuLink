@@ -100,8 +100,8 @@ from PsyNeuLink.Components.States.ParameterState import ParameterState
 
 # Params:
 
-parameter_keywords.update({LEARNING_PROJECTION})
-projection_keywords.update({LEARNING_PROJECTION})
+parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
+projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
