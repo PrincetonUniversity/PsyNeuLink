@@ -1974,7 +1974,7 @@ def _parse_state_spec(owner,
 
     # Specification dict
     elif isinstance(state_spec, dict):
-        # Dict has a single entry of the form {STATE_NAME:SPECIFICATION_DICT},
+        # Dict has a single entry of the form {<STATE_NAME>:<STATE SPECIFICATION DICT>},
         #     so assign STATE_NAME as name, and return parsed SPECIFICATION_DICT
         if len(state_spec) == 1 and list(state_spec.keys())[0] not in state_keywords:
             name, state_spec = list(state_spec.items())[0]

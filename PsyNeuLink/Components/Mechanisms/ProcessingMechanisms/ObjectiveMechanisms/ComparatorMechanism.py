@@ -344,9 +344,9 @@ class ComparatorMechanism(ObjectiveMechanism):
                          #                VARIABLE: sample_input[VARIABLE]},
                          #               {NAME:target_input[NAME],
                          #                VARIABLE: target_input[VARIABLE]}],
-                         # input_states=[{sample_input[NAME]:{VARIABLE: sample_input[VARIABLE]}},
-                         #               {target_input[NAME]:{VARIABLE: target_input[VARIABLE]}}],
-                         input_states = [sample_input, target_input],
+                         input_states=[{sample_input[NAME]:{VARIABLE: sample_input[VARIABLE]}},
+                                       {target_input[NAME]:{VARIABLE: target_input[VARIABLE]}}],
+                         # input_states = [sample_input, target_input],
                          function=function,
                          output_states=output_states,
                          params=params,
@@ -360,9 +360,11 @@ class ComparatorMechanism(ObjectiveMechanism):
 
         if INPUT_STATES in request_set:
             input_states = request_set[INPUT_STATES]
+
+            # Validate that there are exactly two input_states (for sample and target)
             num_input_states = len(input_states)
             if num_input_states != 2:
-                raise ComparatorMechanismError("{} arg is specified for {} ({}), so it must have exacty 2 items, "
+                raise ComparatorMechanismError("{} arg is specified for {} ({}), so it must have exactly 2 items, "
                                                "one each for {} and {}".
                                                format(INPUT_STATES,
                                                       self.__class__.__name__,
@@ -370,18 +372,27 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                       SAMPLE,
                                                       TARGET))
 
+            # Validate that input_states are specified as dicts
             if not all(isinstance(input_state,dict) for input_state in input_states):
                 raise ComparatorMechanismError("PROGRAM ERROR: all items in input_state args must be converted to dicts"
                                                " by calling State._parse_state_spec() before calling super().__init__")
 
-            if len(input_states[0][VARIABLE]) != len(input_states[1][VARIABLE]):
-                raise ComparatorMechanismError("The length of the value specified for the {} inputState of {} ({}) "
-                                               "must be the same as the length of the value specified for the {} ({})".
+            # Validate length of variable for sample = target
+            if VARIABLE in input_states[0]:
+                # input_states arg specified in standard state specification dict format
+                lengths = [len(input_state[VARIABLE]) for input_state in input_states]
+            else:
+                # input_states arg specified in {<STATE_NAME>:<STATE SPECIFICATION DICT>} format
+                lengths = [len(list(input_state_dict.values())[0][VARIABLE]) for input_state_dict in input_states]
+
+            if lengths[0] != lengths[1]:
+                raise ComparatorMechanismError("Length of value specified for {} inputState of {} ({}) must be "
+                                               "same as length of value specified for {} ({})".
                                                format(SAMPLE,
                                                       self.__class__.__name__,
-                                                      len(input_states[0]),
+                                                      lengths[0],
                                                       TARGET,
-                                                      len(input_states[1])))
+                                                      lengths[1]))
 
         elif SAMPLE in request_set and TARGET in request_set:
 
@@ -414,7 +425,6 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                           len(target),
                                                           self.__class__.__name__,
                                                           self.name))
-
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
