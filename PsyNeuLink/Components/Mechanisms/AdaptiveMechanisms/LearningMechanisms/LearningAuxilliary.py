@@ -470,9 +470,11 @@ def _instantiate_learning_components(learning_projection, context=None):
             sample_input = target_input = error_output
             objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
                                                       target=TARGET,
-                                                      # input_states=[sample_input, target_input],
-                                                      input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
-                                                                    target_input],
+                                                      input_states=[sample_input, target_input],
+                                                      # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
+                                                      #               target_input],
+                                                      # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
+                                                      #               target_input],
                                                       name="\'{}\' {}".format(lc.activation_mech.name,
                                                                               COMPARATOR_MECHANISM),
                                                       context=context)

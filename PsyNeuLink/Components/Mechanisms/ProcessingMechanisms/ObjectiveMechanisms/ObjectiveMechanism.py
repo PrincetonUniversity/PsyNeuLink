@@ -724,7 +724,23 @@ def _instantiate_monitoring_projections(owner,
         # if sender[PARAMS][STATE_PROJECTIONS] is not None:
         # if sender[PARAMS] and STATE_PROJECTIONS in sender[PARAMS]:
         if isinstance(sender, OutputState):
-            MappingProjection(sender=sender,
-                              receiver=receiver,
-                              matrix=projection_spec,
-                              name = sender.name + ' monitor')
+            # Projection has been specified for receiver and initialization begun, so call deferred_init()
+            if receiver.afferents:
+                if not receiver.afferents[0].value is DEFERRED_INITIALIZATION:
+                    raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
+                                                  "implemented and initialized ({})".
+                                                  format(receiver.name, owner.name, receiver.aferents[0].name))
+                if not receiver.afferents[0].function_params[MATRIX] is projection_spec:
+                    raise ObjectiveMechanismError("PROGRAM ERROR: Projection specification for {} of {} ({}) "
+                                                  "does not match matrix already assigned ({})".
+                                                  format(receiver.name,
+                                                         owner.name,
+                                                         projection_spec,
+                                                         receiver.afferents[0].function_params[MATRIX]))
+                receiver.afferents[0].init_args[SENDER] = sender
+                receiver.afferents[0]._deferred_init()
+            else:
+                MappingProjection(sender=sender,
+                                  receiver=receiver,
+                                  matrix=projection_spec,
+                                  name = sender.name + ' monitor')

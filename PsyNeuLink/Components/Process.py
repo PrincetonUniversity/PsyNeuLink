@@ -1446,19 +1446,19 @@ class Process_Base(Process):
                         if item.value is DEFERRED_INITIALIZATION:
                             # Check sender arg
                             try:
-                                sender_arg = item.init_args[kwSenderArg]
+                                sender_arg = item.init_args[SENDER]
                             except AttributeError:
                                 raise ProcessError("PROGRAM ERROR: Value of {} is {} but it does not have init_args".
                                                    format(item, DEFERRED_INITIALIZATION))
                             except KeyError:
                                 raise ProcessError("PROGRAM ERROR: Value of {} is {} "
                                                    "but init_args does not have entry for {}".
-                                                   format(item.init_args[NAME], DEFERRED_INITIALIZATION, kwSenderArg))
+                                                   format(item.init_args[NAME], DEFERRED_INITIALIZATION, SENDER))
                             else:
                                 # If sender is not specified for the projection,
                                 #    assign mechanism that precedes in pathway
                                 if sender_arg is None:
-                                    item.init_args[kwSenderArg] = sender_mech
+                                    item.init_args[SENDER] = sender_mech
                                 elif sender_arg is not sender_mech:
                                     raise ProcessError("Sender of projection ({}) specified in item {} of"
                                                        " pathway for {} is not the mechanism ({}) "
