@@ -197,6 +197,7 @@
 #              and use that in ObjectiveMechanism instead of args or tuple specs
 # IMPLEMENT: Add GATING entry to both input and otuput state dicts
 
+#  DOCUMENTATION: Add weights and exponents specification (in state specificaditon dict or in function)
 #  DOCUMENTATION: Add `standard_output_states` to Mechanism
 #  DOCUMENTATION: Matrix specification as 2nd item of in 2-item tuple in list for input_states arg of Mechanism
 #  FIX: `error_signal` as default primary outputState
