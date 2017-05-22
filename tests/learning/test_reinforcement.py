@@ -1,4 +1,3 @@
-import random
 import numpy as np
 import pytest
 
@@ -7,19 +6,18 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Functions.Function import PROB
 from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
-from PsyNeuLink.Components.System import System_Base, system
+from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.TimeScale import CentralClock
+
 
 def test_reinforcement():
     input_layer = TransferMechanism(
-        default_input_value=[0,0,0
-            ],
+        default_input_value=[0, 0, 0],
         name='Input Layer',
     )
 
     action_selection = TransferMechanism(
-        default_input_value=[0,0,0
-            ],
+        default_input_value=[0, 0, 0],
         function=SoftMax(
             output=PROB,
             gain=1.0,
@@ -28,10 +26,8 @@ def test_reinforcement():
     )
 
     p = process(
-        default_input_value=[0, 0, 0
-            ],
-        pathway=[input_layer,action_selection
-            ],
+        default_input_value=[0, 0, 0],
+        pathway=[input_layer, action_selection],
         learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)),
         target=0,
     )
@@ -44,27 +40,24 @@ def test_reinforcement():
     # Must initialize reward (won't be used, but needed for declaration of lambda function)
     action_selection.output_states.value = [0, 0, 1]
     # Get reward value for selected action)
-    reward = lambda : [reward_values[int(np.nonzero(action_selection.output_states.value)[0])]]
+    reward = lambda: [reward_values[int(np.nonzero(action_selection.output_states.value)[0])]]
 
     def print_header():
         print("\n\n**** TRIAL: ", CentralClock.trial)
 
     def show_weights():
-        print ('Reward prediction weights: \n', action_selection.input_states[0].receivesFromProjections[0].matrix)
-        print ('\nAction selected:  {}; predicted reward: {}'.format(
+        print('Reward prediction weights: \n', action_selection.input_states[0].receivesFromProjections[0].matrix)
+        print('\nAction selected:  {}; predicted reward: {}'.format(
             np.nonzero(action_selection.output_states.value)[0][0],
             action_selection.output_states.value[np.nonzero(action_selection.output_states.value)[0][0]],
-            )
-        )
+        ))
 
-    input_list = {input_layer:[[1, 1, 1]]}
+    input_list = {input_layer: [[1, 1, 1]]}
 
     s = system(
-        processes=[p
-            ],
+        processes=[p],
         # learning_rate=0.05,
-        targets=[0
-            ],
+        targets=[0],
     )
 
     results = s.run(
@@ -92,32 +85,32 @@ def test_reinforcement():
 
     expected_output = [
         (input_layer.output_states.values, [np.array([1., 1., 1.])]),
-        (action_selection.output_states.values, [np.array([ 0., 3.38417298, 0.])]),
-        (pytest.helpers.expand_np_ndarray(mech_objective_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array([ 6.61582702]), np.array(6.615827015625), np.array(6.615827015625), np.array(43.7691671006736), np.array(43.7691671006736)])),
+        (action_selection.output_states.values, [np.array([0., 3.38417298, 0.])]),
+        (pytest.helpers.expand_np_ndarray(mech_objective_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array([6.61582702]), np.array(6.615827015625), np.array(6.615827015625), np.array(43.7691671006736), np.array(43.7691671006736)])),
         (pytest.helpers.expand_np_ndarray(mech_learning_input_to_action.output_states.values), pytest.helpers.expand_np_ndarray(([np.array(
             [
-                [ 0.        ,  0.        ,  0.        ],
-                [ 0.        ,  0.33079135,  0.        ],
-                [ 0.        ,  0.        ,  0.        ],
+                [0.        , 0.        , 0.        ],
+                [0.        , 0.33079135, 0.        ],
+                [0.        , 0.        , 0.        ],
             ]),
-            np.array([ 0.        ,  0.33079135,  0.        ])
+            np.array([0.        , 0.33079135, 0.        ])
         ]))),
         (reward_prediction_weights.matrix, np.array([
             [1.        , 0.        , 0.            ],
             [0.        , 3.38417298, 0.            ],
-            [0.        , 0.        , 2.283625  ]])
-        ),
+            [0.        , 0.        , 2.283625      ]
+        ])),
         (results, [
-            [np.array([ 0., 1., 0.])],
-            [np.array([ 0., 1.45, 0. ])],
-            [np.array([ 0., 1.8775, 0. ])],
-            [np.array([ 0., 2.283625, 0. ])],
-            [np.array([ 0., 0., 1.])],
-            [np.array([ 0., 0., 1.45])],
-            [np.array([ 0., 2.66944375, 0. ])],
-            [np.array([ 0., 0., 1.8775])],
-            [np.array([ 0., 3.03597156, 0. ])],
-            [np.array([ 0., 3.38417298, 0. ])]
+            [np.array([0., 1., 0.])],
+            [np.array([0., 1.45, 0.])],
+            [np.array([0., 1.8775, 0.])],
+            [np.array([0., 2.283625, 0.])],
+            [np.array([0., 0., 1.])],
+            [np.array([0., 0., 1.45])],
+            [np.array([0., 2.66944375, 0.])],
+            [np.array([0., 0., 1.8775])],
+            [np.array([0., 3.03597156, 0.])],
+            [np.array([0., 3.38417298, 0.])]
         ]),
     ]
 

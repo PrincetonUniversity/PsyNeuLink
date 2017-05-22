@@ -323,11 +323,13 @@ After each execution of the mechanism:
 Class Reference
 ---------------
 """
+import logging
 
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import *
 
+logger = logging.getLogger(__name__)
 
 DECISION_VARIABLE='DECISION_VARIABLE'
 RESPONSE_TIME = 'RESPONSE_TIME'
@@ -562,8 +564,9 @@ class DDM(ProcessingMechanism_Base):
                  name=None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs: is_pref_set = None,
-                 # context=None):
-                 context=componentType + INITIALIZING):
+                 thresh=0,
+                 context=componentType + INITIALIZING
+    ):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -581,6 +584,7 @@ class DDM(ProcessingMechanism_Base):
 
         # # Conflict with above
         # self.size = size
+        self.threshold = thresh
 
         from PsyNeuLink.Components.States.OutputState import StandardOutputStates
         self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states)
@@ -831,12 +835,12 @@ class DDM(ProcessingMechanism_Base):
             if self.function_params['integration_type'] == 'diffusion':
                 result = self.function(self.input_state.value, context=context)
 
-                # if INITIALIZING not in context:
-                #     logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
-                # if abs(result) >= self.threshold:
-                # #     logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
-                #     self.is_finished = True
-                #
+                if INITIALIZING not in context:
+                    logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
+                if abs(result) >= self.threshold:
+                    logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
+                    self.is_finished = True
+
                 return np.array([result, [0.0], [0.0], [0.0]])
             else:
                 raise MechanismError(

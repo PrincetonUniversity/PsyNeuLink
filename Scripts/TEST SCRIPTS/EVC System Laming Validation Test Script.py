@@ -6,6 +6,7 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.scheduling.condition import AfterNCalls
 
 import random
 random.seed(0)
@@ -54,13 +55,13 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
 # Processes:
 TaskExecutionProcess = process(
     default_input_value=[0],
-    pathway=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
+    pathway=[Input, IDENTITY_MATRIX, Decision],
     prefs = process_prefs,
     name = 'TaskExecutionProcess')
 
 RewardProcess = process(
     default_input_value=[0],
-    pathway=[(Reward, 1)],
+    pathway=[Reward],
     prefs = process_prefs,
     name = 'RewardProcess')
 
@@ -143,8 +144,9 @@ mySystem.controller.reportOutputPref = False
 
 # mySystem.run(inputs=trial_list,
 # # mySystem.run(inputs=reversed_trial_list,
-mySystem.run(inputs=stim_list_dict,
-             call_before_trial=show_trial_header,
-             # call_after_time_step=show_results
-             call_after_trial=show_results
-             )
+mySystem.run(
+    inputs=stim_list_dict,
+    call_before_trial=show_trial_header,
+    # call_after_time_step=show_results
+    call_after_trial=show_results,
+)

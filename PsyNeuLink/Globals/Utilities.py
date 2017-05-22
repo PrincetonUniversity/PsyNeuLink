@@ -77,11 +77,13 @@ import numpy as np
 from enum import EnumMeta
 from enum import IntEnum
 import typecheck as tc
+import inspect
 
 from PsyNeuLink.Globals.Defaults import *
 from PsyNeuLink.Globals.Keywords import *
 
 from PsyNeuLink.Globals.TimeScale import *
+
 
 
 class UtilitiesError(Exception):
@@ -178,6 +180,7 @@ def parameter_spec(param):
     # if is_numeric(param):
     from PsyNeuLink.Components.Functions.Function import function_type
     from PsyNeuLink.Components.Projections.Projection import Projection, ParamValueProjection
+    from PsyNeuLink.Components.Component import parameter_keywords
 
     if (isinstance(param, (numbers.Number,
                            np.ndarray,
@@ -640,9 +643,9 @@ from collections import UserList
 class ContentAddressableList(UserList):
     """
     ContentAddressableList( component_type, key=None, list=None)
-    
+
     Implements dict-like list, that can be keyed by the names of the `compoments <Component>` in its entries.
-    
+
     Supports:
       * getting and setting entries in the list using keys (string), in addition to numeric indices.
         the key to use is specified by the **key** arg of the constructor, and must be a string attribute;
@@ -651,26 +654,26 @@ class ContentAddressableList(UserList):
         * for setting an entry:
             - the key must match the key of the component being assigned;
             - if there is already a component in the list the keyed vaue of which matches the key, it is replaced;
-            - if there is no component in the list the keyed attribute of which matches the key, 
+            - if there is no component in the list the keyed attribute of which matches the key,
               the component is appended to the list;
         * for getting lists of the names, values of the keyed attributes, and values of the `value <Component.value>`
-            attributes of components in the list.  
-        
+            attributes of components in the list.
+
     IMPLEMENTATION NOTE:
-        This class allows components to be maintained in lists, while providing ordered storage 
+        This class allows components to be maintained in lists, while providing ordered storage
         and the convenience access and assignment by name (e.g., akin to a dict).
         Lists are used (instead of a dict or OrderedDict) since:
-            - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from 
+            - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
                 collections of states to other variables, such as lists of their values);
             - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
-                or by key (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for 
+                or by key (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for
                 accessing by key/name less critical;
-            - the number of states in a collection for a given mechanism is likely to be small so that, even when 
+            - the number of states in a collection for a given mechanism is likely to be small so that, even when
                 accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
-                 
+
     Arguments
     ---------
-    
+
     component_type : Class
         specifies the class of the items in the list.
 
@@ -679,7 +682,7 @@ class ContentAddressableList(UserList):
         **component_type** must have this attribute or, if it is not provided, an attribute with the name 'name'.
 
     list : List : default None
-        specifies a list used to initialize the list;  
+        specifies a list used to initialize the list;
         all of the items must be of type **component_type** and have the **key** attribute.
 
     Attributes
@@ -692,17 +695,17 @@ class ContentAddressableList(UserList):
         the attribute of `component_type <ContentAddressableList.component_type>` used to key items in the list by content;
 
     data : List (property)
-        the actual list of items.      
+        the actual list of items.
 
     names : List (property)
         values of the `name <Component>` attribute of components in the list.
 
     key_values : List (property)
         values of the keyed attribute of each component in the list.
-        
+
     values : List (property)
         values of the `value <Component>` attribute of components in the list.
-    
+
     """
 
     def __init__(self, component_type, key=None, list=None, **kwargs):
@@ -725,6 +728,9 @@ class ContentAddressableList(UserList):
                                      "must be of the type specified in the component_type arg ({})"
                                      .format(self.__class__.__name__, self.component_type.__name__))
         UserList.__init__(self, list, **kwargs)
+
+    def __repr__(self):
+        return '[\n\t{0}\n]'.format('\n\t'.join(['{0}\t{1}\t{2}'.format(i, self[i].name, repr(self[i].value)) for i in range(len(self))]))
 
     def __getitem__(self, key):
         if key is None:
