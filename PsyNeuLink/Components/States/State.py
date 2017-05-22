@@ -1133,43 +1133,7 @@ class State_Base(State):
                 return (projection_spec, None)
             # projection_spec was class but not Projection
             else:
-                return (None, "not a Projection subclass")
-
-# # FIX: NO LONGER USED;  SUPERCEDED BY value setter METHOD ABOVE.  INCOROPRATE VALIDATION THERE??
-#     def add_observer_for_keypath(self, object, keypath):
-#         self.observers[keypath].append(object)
-#
-# # IMPLEMENTATION NOTE:  USE DECORATOR TO MAKE SURE THIS IS CALLED WHENEVER state.value IS ASSIGNED
-#     def set_value(self, new_value):
-#         """Validate value, assign it, and update any observers
-#
-#         Uses valueClassDefault as the template for validating new_value
-#         :param new_value:
-#         :return:
-#         """
-#
-#         # Validate new_value
-#         if self.prefs.paramValidationPref:
-#             if not isinstance(new_value, self.variableInstanceDefault):
-#                 raise StateError("Value {0} of {1} must be of type {2}".
-#                                      format(new_value, self.name, self.variableInstanceDefault))
-#             # Check that each element is a number
-#             for element in new_value:
-#                 if not isinstance(element, numbers.Number):
-#                     raise StateError("Item {0} ({1}) in value of {2} is not a number".
-#                                          format(new_value.index(element), element, self.name))
-#
-#         old_value = self.value
-#
-#         # Set value
-#         self.value = new_value
-#
-#         # Update observers
-#         if self.observers:
-#         # if len(self.observers[self.kpState]):
-#             for observer in self.observers[self.kpState]:
-#                 observer.observe_value_at_keypath(self.kpState, old_value, new_value)
-#
+                return (None, "not a Projection subclass")#
 
 
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
@@ -1932,17 +1896,6 @@ def _parse_state_spec(owner,
         # If variable is specified in state_params, use that
         if VARIABLE in params and params[VARIABLE] is not None:
             variable = params[VARIABLE]
-
-        # # Move any projection specifications in the state specification dict to params
-        # if not STATE_PROJECTIONS in params or isinstance(params[STATE_PROJECTIONS], bool):
-        #     params[STATE_PROJECTIONS]=projections
-        # else:
-        #     params[STATE_PROJECTIONS].append(projections)
-        #
-        # if not MODULATORY_PROJECTIONS in params or isinstance(params[MODULATORY_PROJECTIONS], bool):
-        #     params[MODULATORY_PROJECTIONS]=modulatory_projections
-        # else:
-        #     params[MODULATORY_PROJECTIONS].append(modulatory_projections)
 
     # Create default dict for return
     state_dict = {NAME: name,
