@@ -481,16 +481,16 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                                               COMPARATOR_MECHANISM),
                                                       context=context)
 
-            # ALTERNATIVE [FOR TESTING]
-            objective_mechanism = ObjectiveMechanism(monitored_values=[lc.activation_mech_output,
-                                                                       TARGET],
-                                                     input_states=[{SAMPLE:sample_input},
-                                                                   {TARGET:target_input}],
-                                                     function=LinearCombination(weights=[[-1], [1]]),
-                                                     # output_states=[ERROR_SIGNAL, MSE],
-                                                     name="\'{}\' {}".format(lc.activation_mech.name,
-                                                                             COMPARATOR_MECHANISM),
-                                                     context=context)
+            # # ALTERNATIVE [FOR TESTING]
+            # objective_mechanism = ObjectiveMechanism(monitored_values=[lc.activation_mech_output,
+            #                                                            TARGET],
+            #                                          input_states=[{SAMPLE:sample_input},
+            #                                                        {TARGET:target_input}],
+            #                                          function=LinearCombination(weights=[[-1], [1]]),
+            #                                          # output_states=[ERROR_SIGNAL, MSE],
+            #                                          name="\'{}\' {}".format(lc.activation_mech.name,
+            #                                                                  COMPARATOR_MECHANISM),
+            #                                          context=context)
 
             objective_mechanism._role = LEARNING
             objective_mechanism._learning_role = TARGET
