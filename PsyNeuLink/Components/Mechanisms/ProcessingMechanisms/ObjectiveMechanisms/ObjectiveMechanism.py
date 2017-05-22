@@ -459,8 +459,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-        TEST = True
-
     def _validate_variable(self, variable, context=None):
         """Validate that if default_input_value is specified the number of values matches the number of monitored_values
 

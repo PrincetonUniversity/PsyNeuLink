@@ -91,5 +91,3 @@ elif COMPOSITION is SYSTEM:
 
 else:
     print ("Multilayer Learning Network NOT RUN")
-
-TEST = True

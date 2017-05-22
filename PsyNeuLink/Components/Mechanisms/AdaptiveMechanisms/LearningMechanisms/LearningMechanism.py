@@ -617,7 +617,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
-        TEST = True
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has exactly three items: activation_input, activation_output and error_signal
