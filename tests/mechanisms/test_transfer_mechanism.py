@@ -77,7 +77,8 @@ def test_transfer_mech_inputs_list_of_strings():
 # TEST 2
 # variable = list of greater length than default input
 
-def test_transfer_mech_inputs_mismatched_with_default():
+
+def test_transfer_mech_inputs_mismatched_with_default_longer():
     with pytest.raises(MechanismError) as error_text:
         T = TransferMechanism(name='T',
                                        default_input_value = [0,0,0,0],
@@ -92,7 +93,8 @@ def test_transfer_mech_inputs_mismatched_with_default():
 # TEST 3
 # variable = list of shorter length than default input
 
-def test_transfer_mech_inputs_mismatched_with_default():
+
+def test_transfer_mech_inputs_mismatched_with_default_shorter():
     with pytest.raises(MechanismError) as error_text:
         T = TransferMechanism(name='T',
                                        default_input_value = [0,0,0,0,0,0],
