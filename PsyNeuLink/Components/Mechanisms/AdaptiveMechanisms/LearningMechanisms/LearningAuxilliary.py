@@ -472,7 +472,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
                                                       target=TARGET,
                                                       input_states=[sample_input, target_input],
-                                                      # ALTERNATIVE input_states SPECIFICATIONS [FOR TESTING]:
+                                                      # FOR TESTING: ALTERNATIVE specifications of input_states arg:
                                                       # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
                                                       #               target_input],
                                                       # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
@@ -481,7 +481,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                                               COMPARATOR_MECHANISM),
                                                       context=context)
 
-            # # ALTERNATIVE: Direct call to ObjectiveMechanism [FOR TESTING]
+            # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism
             # #              (should produce identical result to use of ComparatorMechanism above)
             # objective_mechanism = ObjectiveMechanism(monitored_values=[lc.activation_mech_output,
             #                                                            TARGET],
