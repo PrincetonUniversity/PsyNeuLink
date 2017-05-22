@@ -72,7 +72,6 @@ import warnings
 warnings.filterwarnings("error")
 
 import numbers
-from random import random
 import numpy as np
 from enum import EnumMeta
 from enum import IntEnum
