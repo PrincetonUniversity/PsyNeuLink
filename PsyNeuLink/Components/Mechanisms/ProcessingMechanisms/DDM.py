@@ -769,16 +769,6 @@ class DDM(ProcessingMechanism_Base):
         """
 
         super()._instantiate_attributes_before_function(context=context)
-        TEST = True
-
-    # def _instantiate_attributes_after_function(self, context=None):
-    #
-    #     super()._instantiate_attributes_after_function(context=context)
-    #
-    #     if not isinstance(self.paramsCurrent[FUNCTION], NavarroAndFuss):
-    #         # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
-    #         del self.outputStates[DDM_RT_CORRECT_MEAN]
-    #         del self.outputStates[DDM_RT_CORRECT_VARIANCE]
 
     def _execute(self,
                  variable=None,
