@@ -1340,6 +1340,18 @@ class Mechanism_Base(Mechanism):
         self._instantiate_parameter_states(context=context)
         super()._instantiate_attributes_before_function(context=context)
 
+    def _instantiate_function(self, context=None):
+
+        super()._instantiate_function(context=context)
+
+        if self.input_states and any(input_state.weight is not None for input_state in self.input_states):
+            weights = [[input_state.weight if input_state.weight is not None else 1.0]
+                       for input_state in self.input_states]
+            self.function_object.weights = weights
+        pass
+
+        # Assign weights and exponents from input_states if function has those parameters
+
     def _instantiate_attributes_after_function(self, context=None):
 
         self._instantiate_output_states(context=context)

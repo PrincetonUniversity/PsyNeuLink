@@ -331,7 +331,9 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
+                               WEIGHT:None,
+                               EXPONENT:None})
 
     #endregion
 
@@ -359,6 +361,28 @@ class InputState(State_Base):
                                                   name=name,
                                                   prefs=prefs,
                                                   context=self)
+
+
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate weights and exponents
+        
+        This needs to be done here, since paramClassDefault declarations assign None as default
+            (so that they can be ignored if not specified here or in the function)
+        """
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        
+        if WEIGHT in target_set and target_set[WEIGHT] is not None:
+            if not isinstance(target_set[WEIGHT], (int, float)):
+                raise InputStateError("{} parameter of {} for {} ({}) must be an int or float".
+                                      format(WEIGHT, self.name, self.owner.name, target_set[WEIGHT]))
+
+        if EXPONENT in target_set and target_set[EXPONENT] is not None:
+            if not isinstance(target_set[EXPONENT], (int, float)):
+                raise InputStateError("{} parameter of {} for {} ({}) must be an int or float".
+                                      format(EXPONENT, self.name, self.owner.name, target_set[EXPONENT]))
+
 
     def _instantiate_function(self, context=None):
         """Insure that function is LinearCombination and that output is compatible with owner.variable
@@ -468,7 +492,6 @@ def _instantiate_input_states(owner, context=None):
             warnings.warn("Variable for {} ({}) has been adjusted "
                           "to match number and format of its input_states: ({})".
                           format(old_variable, append_type_to_name(owner),owner.variable))
-
 
 
 #     # Initialize self.input_value to correspond to format of owner's variable, and zero it

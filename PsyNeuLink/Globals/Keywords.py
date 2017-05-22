@@ -493,20 +493,28 @@ STATE_PROJECTIONS = "StateProjections"  # Used to specify projection list to Sta
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
+kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
+kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
 
+# InputStates:
 PRIMARY = 'Primary'
 INPUT_STATES = 'input_states'
 INPUT_STATE_PARAMS = 'input_state_params'
-kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
-kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
+WEIGHT = 'weight'
+EXPONENT = 'exponent'
+
+# ParameterStates:
 PARAMETER_STATES = 'parameter_states'
 PARAMETER_STATE_PARAMS = 'parameter_state_params'
 PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
+
+# OutputStates:
 OUTPUT_STATES = 'output_states'
 OUTPUT_STATE_PARAMS = 'output_states_params'
 STANDARD_OUTPUT_STATES = 'standard_output_states'
 INDEX = 'index'
 CALCULATE = 'calculate'
+
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------
