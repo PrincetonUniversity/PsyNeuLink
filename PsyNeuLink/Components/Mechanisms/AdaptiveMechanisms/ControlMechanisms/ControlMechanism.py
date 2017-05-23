@@ -230,7 +230,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
 
     COMMENT:  [REPLACE THIS WITH control_signals]    
-    controlProjections : List[ControlProjection]
+    control_projections : List[ControlProjection]
         list of `ControlProjections <ControlProjection>` managed by the ControlMechanism.
         There is one for each ouputState in the `outputStates` dictionary.
     COMMENT
@@ -239,8 +239,6 @@ class ControlMechanism_Base(Mechanism_Base):
         array of values assigned to each ControlSignal listed in the 
         `control_signals <ControlMechanism.control_signals>` attribute
         (this is the same as the ControlMechanism's `value <ControlMechanism.value>` attribute).
-
-
     """
 
     componentType = "ControlMechanism"
@@ -285,7 +283,6 @@ class ControlMechanism_Base(Mechanism_Base):
                                                     name=name,
                                                     prefs=prefs,
                                                     context=self)
-        TEST = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
@@ -379,7 +376,6 @@ class ControlMechanism_Base(Mechanism_Base):
                                                        mech_spec.name,
                                                        self.system.name))
 
-
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self
         """
@@ -420,14 +416,6 @@ class ControlMechanism_Base(Mechanism_Base):
                 for key, projection in self.paramsCurrent[CONTROL_PROJECTIONS].items():
                     self._instantiate_control_projection(projection, context=self.name)
 
-    # def _instantiate_output_states(self, context=None):
-    #     """Instantiate ControlSignals specified in **control_signal** argument
-    #     """
-    #
-    #     for cs in self.control_signals:
-    #
-
-
     def _take_over_as_default_controller(self, context=None):
 
         # Check the parameterStates of the system's mechanisms for any ControlProjections with deferred_init()
@@ -440,11 +428,10 @@ class ControlMechanism_Base(Mechanism_Base):
                         params = projection.control_signal
                         self._instantiate_control_projection(projection, params=params, context=context)
 
-
-
-
     # IMPLEMENTATION NOTE:  INCORPORATE INTO _instantiate_output_states AND/OR
     #                       MAKE THIS A COMPOSITION METHOD WHEN IT IS IMPLEMENTED
+    #                       LEAVE ALL ControlMechanism-SPECIFIC STUFF HERE,
+    #                           AND MOVE INSTANTIATION OF PROJCECTION TO Composition
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """Add outputState (as ControlSignal) and assign as sender to requesting ControlProjection
 
@@ -458,9 +445,14 @@ class ControlMechanism_Base(Mechanism_Base):
         * assume that self.allocation_policy has already been extended 
             to include the particular (indexed) allocation to be used for the outputState being created here.
 
-
-        Returns state: (OutputState)
+        Returns ControlSignal (OutputState)
         """
+
+        if self.allocation_policy is None:
+            self.allocation_policy = np.array(defaultControlAllocation)
+        else:
+            self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
+
 
         self._validate_projection(projection)
 
@@ -487,6 +479,9 @@ class ControlMechanism_Base(Mechanism_Base):
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
         output_state_name = receiver.name + '_' + ControlSignal.__name__
         output_state_value = self.allocation_policy[output_state_index]
+
+        # FIX: CALL super()_instantiate_output_states ??
+        # FIX:     OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanis)
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
         state = _instantiate_state(owner=self,
@@ -526,15 +521,18 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Add ControlProjection to ControlMechanism's list of ControlProjections
         try:
-            self.controlProjections.append(projection)
+            self.control_projections.append(projection)
         except AttributeError:
-            self.controlProjections = [projection]
+            self.control_projections = [projection]
 
         # Update controlSignalCosts to accommodate instantiated projection
         try:
             self.controlSignalCosts = np.append(self.controlSignalCosts, np.empty((1,1)),axis=0)
         except AttributeError:
             self.controlSignalCosts = np.empty((1,1))
+
+        # Assign ControlSignals in the order they are stored of output_states
+        self.control_signals = self.output_states
 
         return state
 

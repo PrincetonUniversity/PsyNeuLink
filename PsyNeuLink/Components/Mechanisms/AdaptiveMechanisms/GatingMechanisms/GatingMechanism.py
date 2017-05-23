@@ -185,10 +185,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
         There is one for each ouputState in the `outputStates` dictionary.
 
     controlProjectionCosts : 2d np.array
-        array of costs associated with each of the control signals in the `controlProjections` attribute.
+        array of costs associated with each of the control signals in the `control_projections` attribute.
 
     allocation_policy : 2d np.array
-        array of values assigned to each control signal in the `controlProjections` attribute.
+        array of values assigned to each control signal in the `control_projections` attribute.
         This is the same as the ControlMechanism's `value <ControlMechanism.value>` attribute.
 
 
