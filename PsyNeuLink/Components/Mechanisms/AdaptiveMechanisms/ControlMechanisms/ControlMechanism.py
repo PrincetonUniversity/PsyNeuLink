@@ -134,8 +134,8 @@ class ControlMechanism_Base(Mechanism_Base):
     """
     ControlMechanism_Base(     \
     monitor_for_control=None,  \
-    function=Linear,           \
     control_signals=None,      \
+    function=Linear,           \
     params=None,               \
     name=None,                 \
     prefs=None)
@@ -190,13 +190,13 @@ class ControlMechanism_Base(Mechanism_Base):
             specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
             specification options).
 
-        function : TransferFunction : default Linear(slope=1, intercept=0)
-            specifies function used to combine values of monitored output states.
-            
         control_signals : List[Attribute of Mechanism or its function, ParameterState, or tuple[str, Mechanism]
             specifies the parameters to be controlled by the ControlMechanism 
             (see `control_signals <ControMechanism.control_signals>` for details).
 
+        function : TransferFunction : default Linear(slope=1, intercept=0)
+            specifies function used to combine values of monitored output states.
+            
         params : Optional[Dict[param keyword, param value]]
             a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
             for the mechanism, parameters for its function, and/or a custom function and its parameters. Values
@@ -277,6 +277,7 @@ class ControlMechanism_Base(Mechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(monitor_for_control=monitor_for_control,
                                                   function=function,
+                                                  control_signals=control_signals,
                                                   params=params)
 
         super(ControlMechanism_Base, self).__init__(variable=default_input_value,
@@ -284,6 +285,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                     name=name,
                                                     prefs=prefs,
                                                     context=self)
+        TEST = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
@@ -318,7 +320,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                 "Mechanism or an OutputState of one in {}".
                                                 format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
 
-        if CONTROL_SIGNALS in target_set:
+        if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
 
             for spec in target_set[CONTROL_SIGNALS]:
 

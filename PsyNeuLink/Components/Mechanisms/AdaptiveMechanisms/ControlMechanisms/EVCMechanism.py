@@ -355,6 +355,7 @@ class EVCMechanism(ControlMechanism_Base):
     prediction_mechanism_type=IntegratorMechanism,                     \
     prediction_mechanism_params=None,                                  \
     monitor_for_control=None,                                          \
+    control_signals=None,                                              \
     function=ControlSignalGridSearch                                   \
     value_function=ValueFunction,                                      \
     outcome_function=LinearCombination(operation=PRODUCT),             \
@@ -428,6 +429,10 @@ class EVCMechanism(ControlMechanism_Base):
     default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES
         specifies set of outputState values to monitor (see `ControlMechanism_Monitored_OutputStates` for
         specification options).
+
+    control_signals : List[Attribute of Mechanism or its function, ParameterState, or tuple[str, Mechanism]
+        specifies the parameters to be controlled by the EVCMechanism 
+        (see `control_signals <EVCMechanism.control_signals>` for details).
 
     function : function or method : ControlSignalGridSearch
         specifies the function used to determine the `allocation_policy` for the next execution of the system
@@ -715,6 +720,7 @@ class EVCMechanism(ControlMechanism_Base):
                  prediction_mechanism_type=IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
                  monitor_for_control:tc.optional(list)=None,
+                 control_signals:tc.optional(list) = None,
                  function=ControlSignalGridSearch,
                  value_function=ValueFunction,
                  outcome_function=LinearCombination(operation=PRODUCT),
@@ -746,6 +752,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         super(EVCMechanism, self).__init__(# default_input_value=default_input_value,
                                            monitor_for_control=monitor_for_control,
+                                           control_signals=control_signals,
                                            function=function,
                                            params=params,
                                            name=name,
