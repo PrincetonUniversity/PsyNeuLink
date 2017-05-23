@@ -324,11 +324,25 @@ class ControlMechanism_Base(Mechanism_Base):
 
             for spec in target_set[CONTROL_SIGNALS]:
 
+                # ControlSignal specification
+                # Check that all of its ControlProjections are to mechanisms in the controller's system
+                from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
+                if isinstance(spec, ControlSignal):
+                    if not all(control_proj.receiver.owner in self.system.mechanisms
+                               for control_proj in spec.efferents):
+                        raise ControlMechanismError("The ControlSignal specified in the {} arg for {} ({}) "
+                                                    "has one more more ControlProjections to a mechanism "
+                                                    "that is not in {}".
+                                                    format(CONTROL_SIGNALS, self.name, spec.name, self.system.name))
+                    continue
+
+                # ParameterState specification
                 if isinstance(spec, ParameterState):
-                    spec_mech = ParameterState.owner
+                    mech_spec = ParameterState.owner
                     param_name = ParameterState.name
 
-                if isinstance(spec, tuple):
+                # Tuple (parameter name, mechanism) specification
+                elif isinstance(spec, tuple):
                     param_name = spec[0]
                     mech_spec = spec[1]
                     # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
@@ -348,11 +362,22 @@ class ControlMechanism_Base(Mechanism_Base):
                         raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
                                                     "specified in the {} argument for {}".
                                                     format(param_name, mech_spec.name, CONTROL_SIGNALS, self.name))
-                # Check that the mechanism is in the controller's system
-                if not any((mech_spec.name is mech.name or mech_spec.name in mech.output_states.names)
-                           for mech in self.system.mechanisms):
-                    raise ControlMechanismError("Specification in {} arg for {} ({}) must be a Mechanism in {}".
-                                                format(CONTROL_SIGNALS, self.name, mech_spec.name, self.system.name))
+
+                else:
+                    raise ControlMechanismError("Specification in {} arg for {} ({}) must be a "
+                                                "ParameterState, a tuple specifying a parameter and mechanism, "
+                                                "or an existing ControlSignal".
+                                                format(MONITOR_FOR_CONTROL, self.name, spec))
+
+                # Check that the mechanism (to which the param belongs) is in the controller's system
+                if not mech_spec in self.system.mechanisms:
+                    raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
+                                                "must be for a Mechanism in {}".
+                                                format(param_name,
+                                                       CONTROL_SIGNALS,
+                                                       self.name,
+                                                       mech_spec.name,
+                                                       self.system.name))
 
 
     def _validate_projection(self, projection, context=None):
@@ -483,7 +508,7 @@ class ControlMechanism_Base(Mechanism_Base):
         else:
             projection.sender = state
 
-        # Update self.outputState and self.outputStates
+        # Update self.output_state and self.output_states
         try:
             self.output_states[state.name] = state
         except (AttributeError, TypeError):

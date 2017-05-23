@@ -575,8 +575,8 @@ class EVCMechanism(ControlMechanism_Base):
             controller.monitored_states is a list of the mechanism outputStates being monitored for outcome
             controller.input_value is a list of current outcome values (values for monitored_states)
             controller.monitor_for_control_weights_and_exponents is a list of parameterizations for outputStates
-            controller.controlSignals is a list of controlSignal objects
-            controller.controlSignalSearchSpace is a list of all allocationPolicies specifed by allocation_samples
+            controller.control_signals is a list of controlSignal objects
+            controller.control_signalsearchSpace is a list of all allocationPolicies specifed by allocation_samples
             controlSignal.allocation_samples is the set of samples specified for that controlSignal
             [TBI:] controlSignal.allocation_range is the range that the controlSignal value can take
             controller.allocation_policy - holds current allocation_policy
@@ -1227,6 +1227,7 @@ class EVCMechanism(ControlMechanism_Base):
                 print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
                       " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
 
+    # FIX 5/23/17: MOVE THIS TO SUPER
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """
         """
@@ -1242,11 +1243,11 @@ class EVCMechanism(ControlMechanism_Base):
                                                 context=context)
 
         # Assign controlSignals in the order they are stored of OutputStates
-        self.controlSignals = self.output_states
+        self.control_signals = self.output_states
 
         # # TEST PRINT
-        # print("\n{}.controlSignals: ".format(self.name))
-        # for control_signal in self.controlSignals:
+        # print("\n{}.control_signals: ".format(self.name))
+        # for control_signal in self.control_signals:
         #     print("{}".format(control_signal.name))
 
     def _instantiate_function(self, context=None):
@@ -1331,19 +1332,19 @@ class EVCMechanism(ControlMechanism_Base):
         # CONSTRUCT SEARCH SPACE
 
         control_signal_sample_lists = []
-        control_signals = self.controlSignals
+        control_signals = self.control_signals
 
         # Get allocation_samples for all ControlSignals
         num_control_signals = len(control_signals)
 
-        for control_signal in self.controlSignals:
+        for control_signal in self.control_signals:
             control_signal_sample_lists.append(control_signal.allocation_samples)
 
         # Construct controlSignalSearchSpace:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.controlSignalSearchSpace = \
+        self.control_signalsearchSpace = \
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
 
         # EXECUTE SEARCH
@@ -1438,8 +1439,8 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Implement the current allocation_policy over ControlSignals (outputStates),
         #    by assigning allocation values to EVCMechanism.value, and then calling _update_output_states
-        for i in range(len(self.controlSignals)):
-            # self.controlSignals[list(self.controlSignals.values())[i]].value = np.atleast_1d(allocation_vector[i])
+        for i in range(len(self.control_signals)):
+            # self.control_signals[list(self.control_signals.values())[i]].value = np.atleast_1d(allocation_vector[i])
             self.value[i] = np.atleast_1d(allocation_vector[i])
         self._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
@@ -1454,8 +1455,8 @@ class EVCMechanism(ControlMechanism_Base):
         # self.monitoring_mechanism.execute(context=EVC_SIMULATION)
         self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
-        for i in range(len(self.controlSignals)):
-            self.controlSignalCosts[i] = self.controlSignals[i].cost
+        for i in range(len(self.control_signals)):
+            self.controlSignalCosts[i] = self.control_signals[i].cost
 
 
     # The following implementation of function attributes as properties insures that even if user sets the value of a
