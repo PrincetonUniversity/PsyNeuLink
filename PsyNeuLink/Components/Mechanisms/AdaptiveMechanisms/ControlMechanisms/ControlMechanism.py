@@ -418,6 +418,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
     def _take_over_as_default_controller(self, context=None):
 
+        # FIX 5/23/17: INTEGRATE THIS WITH ASSIGNMENT OF control_signals
+        # FIX:         (E.G., CHECK IF SPECIFIED ControlSignal ALREADY EXISTS)
         # Check the parameterStates of the system's mechanisms for any ControlProjections with deferred_init()
         for mech in self.system.mechanisms:
             for parameter_state in mech._parameter_states:

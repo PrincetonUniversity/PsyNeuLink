@@ -573,11 +573,7 @@ class ControlSignal(OutputState):
         self.intensity = self.allocation
 
         # Default cost params
-        # # MODIFIED 1/23/17 OLD:
-        # self.intensity_cost = self.intensityCostFunction(self.intensity)
-        # MODIFIED 1/23/17 NEW:
         self.intensity_cost = self.intensity_cost_function(self.intensity)
-        # MODIFIED 1/23/17 END
         self.adjustment_cost = 0
         self.duration_cost = 0
         self.last_duration_cost = self.duration_cost
