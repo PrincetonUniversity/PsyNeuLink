@@ -41,7 +41,7 @@ in other systems are ignored (PsyNeuLink does not support ESP).  A system can in
     and assign the result as their output.
 
 * `AdpativeMechanism`
-    These are used to adjust the operation of other components.  There are two types:  
+    These are used to adjust the operation of other components.  There are two types:
     `LearningMechanisms <LearningMechanism>` that adjust projections, and `ControlMechanisms <ControlMechanism>`
     that adjust the parameters of other mechanisms and/or their functions.
 
@@ -50,19 +50,19 @@ in other systems are ignored (PsyNeuLink does not support ESP).  A system can in
 Creating a System
 -----------------
 
-Systems are created by calling :py:func:`system`.  If no arguments are provided, a system with a single process 
-containing a single :ref:`default mechanism <LINK>` will be created.  More generally, a system is 
+Systems are created by calling :py:func:`system`.  If no arguments are provided, a system with a single process
+containing a single :ref:`default mechanism <LINK>` will be created.  More generally, a system is
 created from one or more `processes <Process>` that are specified in the **processes** argument of its constructor.
-Whenever a system is created, a `ControlMechanism <ControlMechanism>` is created for it and assigned as its 
-`controller`.  The controller can be specified by assigning an existing ControlMechanism to the **controller** 
-argument of the system's constructor, or specifying a class of ControlMechanism;  if none is specified, 
-a `DefaultControlMechanism` is created.  
+Whenever a system is created, a `ControlMechanism <ControlMechanism>` is created for it and assigned as its
+`controller`.  The controller can be specified by assigning an existing ControlMechanism to the **controller**
+argument of the system's constructor, or specifying a class of ControlMechanism;  if none is specified,
+a `DefaultControlMechanism` is created.
 
 .. note::
-   At present, only `processes <Process>` can be assigned to a system; `mechanisms <Mechanism>` cannot be assigned 
-   directly to a system.  They must be assigned to the `pathway <Process_Pathway>` of a process, and then that process 
-   must be 
-   included 
+   At present, only `processes <Process>` can be assigned to a system; `mechanisms <Mechanism>` cannot be assigned
+   directly to a system.  They must be assigned to the `pathway <Process_Pathway>` of a process, and then that process
+   must be
+   included
    in the **processes** argument of the constructor for the system.
 
 
@@ -76,16 +76,16 @@ Structure
 Graph
 ~~~~~
 
-When a system is created, a graph is constructed that describes the projections (edges) among its mechanisms (nodes).  
-The graph is assigned to the system's `graph` attribute.  A system's graph can be displayed using its `show_graph` 
-method.  The graph is stored as a dictionary of dependencies, that can be passed to graph theoretical tools for 
-analysis.  A system can have recurrent processing pathways, such as feedback loops, in which case the system will 
-have a cyclic graph.  PsyNeuLink also uses the graph of a system to determine the order in which its mechanisms are 
-executed.  In order to do so in an orderly manner, however, the graph must be acyclic.  So, for execution, 
-PsyNeuLink constructs an `executionGraph` from the system's `graph`. If the  system is acyclic, these are the same.  
-If the system is cyclic, then the `executionGraph` is a subset of the `graph` in which the dependencies (edges) 
-associated with projections that close a loop have been removed. Note that this only impacts the order of execution;  
-the projections themselves remain in effect, and will be fully functional during the execution of the affected 
+When a system is created, a graph is constructed that describes the projections (edges) among its mechanisms (nodes).
+The graph is assigned to the system's `graph` attribute.  A system's graph can be displayed using its `show_graph`
+method.  The graph is stored as a dictionary of dependencies, that can be passed to graph theoretical tools for
+analysis.  A system can have recurrent processing pathways, such as feedback loops, in which case the system will
+have a cyclic graph.  PsyNeuLink also uses the graph of a system to determine the order in which its mechanisms are
+executed.  In order to do so in an orderly manner, however, the graph must be acyclic.  So, for execution,
+PsyNeuLink constructs an `executionGraph` from the system's `graph`. If the  system is acyclic, these are the same.
+If the system is cyclic, then the `executionGraph` is a subset of the `graph` in which the dependencies (edges)
+associated with projections that close a loop have been removed. Note that this only impacts the order of execution;
+the projections themselves remain in effect, and will be fully functional during the execution of the affected
 mechanisms (see `System_Execution` below for a more detailed description).
 
 .. _System_Mechanisms:
@@ -206,15 +206,15 @@ of execution, as input to mechanisms that close recurrent loops (designated as `
 Learning
 ~~~~~~~~
 The system will execute learning if it is specified for any process in the system.  The system's `learning` attribute
-indicates whether learning is enabled for the system. Learning is executed for any components (individual projections 
+indicates whether learning is enabled for the system. Learning is executed for any components (individual projections
 or processes) for which it is specified after all processing mechanisms in the
 system have been executed, but before the controller is executed (see below).  The learning components of a system
 can be displayed using the system's `show_graph` method with its **show_learning** argument assigned :keyword:`True`.
-The stimuli used for learning (both inputs and targets) can be specified in either of two formats, 
-sequence or mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both 
-formats require that an input be provided for each `ORIGIN` mechanism of the system (listed in its `originMechanisms 
-<System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or mechanism format, 
-one target must be provided for each `TARGET` mechanism (listed in its 
+The stimuli used for learning (both inputs and targets) can be specified in either of two formats,
+sequence or mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both
+formats require that an input be provided for each `ORIGIN` mechanism of the system (listed in its `originMechanisms
+<System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or mechanism format,
+one target must be provided for each `TARGET` mechanism (listed in its
 `targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a
 `function format <Run_Targets_Function_Format>`, which generates a target for each execution of the mechanism.
 
@@ -227,13 +227,13 @@ one target must be provided for each `TARGET` mechanism (listed in its
 
 Control
 ~~~~~~~
-Every system is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor  
-the outputState(s) of one or more mechanisms in the system (listed in its `monitored_output_states` attribute), 
+Every system is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor
+the outputState(s) of one or more mechanisms in the system (listed in its `monitored_output_states` attribute),
 and uses that information to set the value of parameters for those or other mechanisms in the system, or their functions
 (see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which outputStates are
 monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled).  The control components
-of a system can be displayed using the system's `show_graph` method with its **show_control** argument assigned 
-:keyword:``True`. The controller is executed after all other mechanisms in the system are executed, and sets the 
+of a system can be displayed using the system's `show_graph` method with its **show_control** argument assigned
+:keyword:``True`. The controller is executed after all other mechanisms in the system are executed, and sets the
 values of any parameters that it controls, which then take effect in the next round of execution.
 
 COMMENT:
@@ -258,6 +258,8 @@ Class Reference
 
 import math
 import re
+import logging
+
 from collections import OrderedDict
 
 from toposort import *
@@ -270,12 +272,17 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOpti
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
+from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.scheduling.Scheduler import Scheduler
+
+logger = logging.getLogger(__name__)
 
 # ProcessRegistry ------------------------------------------------------------------------------------------------------
 
 defaultInstanceCount = 0 # Number of default instances (used to index name)
 
 # inspect() keywords
+SCHEDULER = 'scheduler'
 PROCESSES = 'processes'
 MECHANISMS = 'mechanisms'
 ORIGIN_MECHANISMS = 'origin_mechanisms'
@@ -321,6 +328,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.O
 @tc.typecheck
 def system(default_input_value=None,
            processes:list=[],
+           scheduler=None,
            initial_values:dict={},
            controller=SystemDefaultControlMechanism,
            enable_controller:bool=False,
@@ -449,6 +457,7 @@ def system(default_input_value=None,
     return System_Base(default_input_value=default_input_value,
                        processes=processes,
                        controller=controller,
+                       scheduler=scheduler,
                        initial_values=initial_values,
                        enable_controller=enable_controller,
                        monitor_for_control=monitor_for_control,
@@ -762,6 +771,7 @@ class System_Base(System):
                  targets=None,
                  params=None,
                  name=None,
+                 scheduler=None,
                  prefs:is_pref_set=None,
                  context=None):
 
@@ -779,6 +789,10 @@ class System_Base(System):
                                                   params=params)
 
         self.function = self.execute
+        self.scheduler_processing = scheduler
+        self.scheduler_learning = None
+        self.termination_processing = None
+        self.termination_learning = None
 
         register_category(entry=self,
                           base_class=System_Base,
@@ -1870,6 +1884,8 @@ class System_Base(System):
                 execution_id=None,
                 clock=CentralClock,
                 time_scale=None,
+                termination_processing=None,
+                termination_learning=None,
                 # time_scale=TimeScale.TRIAL
                 context=None):
         """Execute mechanisms in system at specified :ref:`phases <System_Execution_Phase>` in order \
@@ -1976,6 +1992,10 @@ class System_Base(System):
                         raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
         self.input = input
+        if termination_processing is not None:
+            self.termination_processing = termination_processing
+        if termination_learning is not None:
+            self.termination_learning = termination_learning
         #endregion
 
         if self._report_system_output:
@@ -2030,14 +2050,23 @@ class System_Base(System):
     def _execute_processing(self, clock=CentralClock, context=None):
     # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
         # Execute each Mechanism in self.executionList, in the order listed during its phase
-        for i in range(len(self.executionList)):
 
-            mechanism, params, phase_spec = self.executionList[i]
 
             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
 # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
-            if phase_spec == (clock.time_step % self.numPhases):
-                # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+        if self.scheduler_processing is None:
+            raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, must be initialized before execution'.format(self.name))
+        logger.debug('{0}.scheduler processing termination conditions: {1}'.format(self, self.termination_processing))
+        for next_execution_set in self.scheduler_processing.run(termination_conds=self.termination_processing):
+            logger.debug('Running next_execution_set {0}'.format(next_execution_set))
+            i = 0
+            for mechanism in next_execution_set:
+                logger.debug('\tRunning mechanism {0}'.format(mechanism))
+                for p in self.processes:
+                    try:
+                        rt_params = p.runtime_params_dict[mechanism]
+                    except:
+                        rt_params = None
 
                 processes = list(mechanism.processes.keys())
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
@@ -2046,7 +2075,7 @@ class System_Base(System):
                 mechanism.execute(clock=clock,
                                   time_scale=self.timeScale,
                                   # time_scale=time_scale,
-                                  runtime_params=params,
+                                  runtime_params=rt_params,
                                   context=context +
                                           "| mechanism: " + mechanism.name +
                                           " [in processes: " + str(process_names) + "]")
@@ -2074,7 +2103,7 @@ class System_Base(System):
                         if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
                             process._report_process_completion()
 
-            if not i:
+            if i == 0:
                 # Zero input to first mechanism after first run (in case it is repeated in the pathway)
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
@@ -2100,63 +2129,74 @@ class System_Base(System):
             self.targetInputStates[i].value = self.current_targets[i]
 
         # NEXT, execute all components involved in learning
-        for component in self.learningExecutionList:
+        if self.scheduler_learning is None:
+            raise SystemError('System.py:_execute_learning - {0}\'s scheduler is None, must be initialized before execution'.format(self.name))
+        logger.debug('{0}.scheduler learning termination conditions: {1}'.format(self, self.termination_learning))
+        for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
+            logger.debug('Running next_execution_set {0}'.format(next_execution_set))
+            for component in next_execution_set:
+                logger.debug('\tRunning component {0}'.format(component))
 
-            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
-            if isinstance(component, MappingProjection):
-                continue
+                from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+                if isinstance(component, MappingProjection):
+                    continue
 
-            params = None
+                params = None
 
-            component_type = component.componentType
+                component_type = component.componentType
 
-            processes = list(component.processes.keys())
+                processes = list(component.processes.keys())
 
-            # Sort for consistency of reporting:
-            process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-            process_names = list(p.name for p in process_keys_sorted)
+                # Sort for consistency of reporting:
+                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                process_names = list(p.name for p in process_keys_sorted)
 
-            context_str = str("{} | {}: {} [in processes: {}]".
-                              format(context,
-                                     component_type,
-                                     component.name,
-                                     re.sub('[\[,\],\n]','',str(process_names))))
+                context_str = str("{} | {}: {} [in processes: {}]".
+                                  format(context,
+                                         component_type,
+                                         component.name,
+                                         re.sub('[\[,\],\n]','',str(process_names))))
 
-            # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(clock=clock,
-                              time_scale=self.timeScale,
-                              runtime_params=params,
-                              # time_scale=time_scale,
-                              context=context_str)
-            # # TEST PRINT:
-            # print ("EXECUTING MONITORING UPDATES: ", component.name)
+                # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+                component.execute(
+                    clock=clock,
+                    time_scale=self.timeScale,
+                    runtime_params=params,
+                    # time_scale=time_scale,
+                    context=context_str
+                )
+                # # TEST PRINT:
+                # print ("EXECUTING MONITORING UPDATES: ", component.name)
 
         # THEN update all MappingProjections
-        for component in self.learningExecutionList:
+        for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
+            logger.debug('Running next_execution_set {0}'.format(next_execution_set))
+            for component in next_execution_set:
+                logger.debug('\tRunning component {0}'.format(component))
 
-            if isinstance(component, (LearningMechanism, ObjectiveMechanism)):
-                continue
-            if not isinstance(component, MappingProjection):
-                raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
+                if isinstance(component, (LearningMechanism, ObjectiveMechanism)):
+                    continue
+                if not isinstance(component, MappingProjection):
+                    raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
 
-            component_type = "mappingProjection"
-            processes = list(component.sender.owner.processes.keys())
+                component_type = "mappingProjection"
+                processes = list(component.sender.owner.processes.keys())
 
 
-            # Sort for consistency of reporting:
-            process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-            process_names = list(p.name for p in process_keys_sorted)
+                # Sort for consistency of reporting:
+                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                process_names = list(p.name for p in process_keys_sorted)
 
-            context_str = str("{} | {}: {} [in processes: {}]".
-                              format(context,
-                                     component_type,
-                                     component.name,
-                                     re.sub('[\[,\],\n]','',str(process_names))))
+                context_str = str("{} | {}: {} [in processes: {}]".
+                                  format(context,
+                                         component_type,
+                                         component.name,
+                                         re.sub('[\[,\],\n]','',str(process_names))))
 
-            component._parameter_states[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
+                component._parameter_states[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
 
-            # TEST PRINT:
-            # print ("EXECUTING WEIGHT UPDATES: ", component.name)
+                # TEST PRINT:
+                # print ("EXECUTING WEIGHT UPDATES: ", component.name)
 
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
@@ -2190,6 +2230,8 @@ class System_Base(System):
             call_after_time_step=None,
             clock=CentralClock,
             time_scale=None,
+            termination_processing=None,
+            termination_learning=None,
             context=None):
         """Run a sequence of executions
 
@@ -2242,6 +2284,14 @@ class System_Base(System):
             list of the OutputValue for each `TERMINAL` mechanism of the system returned for each execution.
 
         """
+        if self.scheduler_processing is None:
+            self.scheduler_processing = Scheduler(system=self)
+
+        if self.scheduler_learning is None:
+            self.scheduler_learning = Scheduler(nodes=self.learningExecutionList, toposort_ordering=toposort(self.learningGraph))
+
+        logger.debug(inputs)
+
         from PsyNeuLink.Globals.Run import run
         return run(self,
                    inputs=inputs,
@@ -2255,6 +2305,8 @@ class System_Base(System):
                    call_before_time_step=call_before_time_step,
                    call_after_time_step=call_after_time_step,
                    time_scale=time_scale,
+                   termination_processing=termination_processing,
+                   termination_learning=termination_learning,
                    clock=clock,
                    context=context)
 
@@ -2620,7 +2672,7 @@ class System_Base(System):
         """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
-    def show_graph(self, 
+    def show_graph(self,
                    direction = 'BT',
                    show_learning = False,
                    show_control = False,
@@ -2629,40 +2681,40 @@ class System_Base(System):
                    output_fmt='pdf',
                    ):
         """Generate a display of the graph structure of mechanisms and projections in the system.
-        
-        By default, only the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>` 
-        in the `system's graph <System.graph>` are displayed.  However, the **show_learning** and 
+
+        By default, only the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`
+        in the `system's graph <System.graph>` are displayed.  However, the **show_learning** and
         **show_control** arguments can be used to also show the `learning <LearningMechanism>` and
-        `control <ControlMechanism>` components of the system, respectively.  `Mechanisms <Mechanism>` are always 
-        displayed as (oval) nodes.  `Projections <Projection>` are displayed as labelled arrows, unless 
-        **show_learning** is assigned **True**, in which case MappingProjections that receive a `LearningProjection` 
-        are displayed as diamond-shaped nodes. The numbers in parentheses within a mechanism node indicate its 
-        dimensionality.   
+        `control <ControlMechanism>` components of the system, respectively.  `Mechanisms <Mechanism>` are always
+        displayed as (oval) nodes.  `Projections <Projection>` are displayed as labelled arrows, unless
+        **show_learning** is assigned **True**, in which case MappingProjections that receive a `LearningProjection`
+        are displayed as diamond-shaped nodes. The numbers in parentheses within a mechanism node indicate its
+        dimensionality.
 
         Arguments
         ---------
 
-        direction : keyword : default 'BT' 
+        direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
 
-        show_learning : bool : default False 
-            determines whether or not to show the learning components of the system;  
+        show_learning : bool : default False
+            determines whether or not to show the learning components of the system;
             they will all be displayed in the color specified for **learning_color**.
             projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
 
-        show_control :  bool : default False 
-            determines whether or not to show the control components of the system;  
+        show_control :  bool : default False
+            determines whether or not to show the control components of the system;
             they will all be displayed in the color specified for **control_color**.
 
         learning_color : keyword : default `green`
             determines the color in which the learning components are displayed
 
         control_color : keyword : default `blue`
-            determines the color in which the learning components are displayed (note: if the system's 
+            determines the color in which the learning components are displayed (note: if the system's
             `controller <System.controller>`) is an `EVCMechanism`, then a link is shown in red from the
-            `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` it creates to the corresponding 
-            `ORIGIN` mechanisms of the system, to indicate that although no projection are created for these, 
-            the prediction mechanisms determine the input to the `ORIGIN` mechanisms when the EVCMechanism 
+            `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` it creates to the corresponding
+            `ORIGIN` mechanisms of the system, to indicate that although no projection are created for these,
+            the prediction mechanisms determine the input to the `ORIGIN` mechanisms when the EVCMechanism
             `simulates execution <EVCMechanism_Execution>` of the system.
 
         output_fmt : keyword : default 'pdf'
@@ -2673,8 +2725,8 @@ class System_Base(System):
         Returns
         -------
 
-        display of system : `pdf` or Graphviz graph object 
-            'pdf' (placed in current directory) if :keyword:`output_fmt` arg is 'pdf'; 
+        display of system : `pdf` or Graphviz graph object
+            'pdf' (placed in current directory) if :keyword:`output_fmt` arg is 'pdf';
             Graphviz graph object if :keyword:`output_fmt` arg is 'jupyter'.
 
         """
@@ -2689,8 +2741,8 @@ class System_Base(System):
         learning_graph=self.learningGraph
 
         # build graph and configure visualisation settings
-        G = gv.Digraph(engine = "dot", 
-                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'}, 
+        G = gv.Digraph(engine = "dot",
+                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'},
                        edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
                        graph_attr = {"rankdir" : direction} )
 
