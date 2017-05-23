@@ -511,7 +511,7 @@ class ControlSignal(OutputState):
                                              "a list or 1D np.array of numbers".
                                          format(allocation_samples, self.name))
 
-        # # If allocation_policy has been assigned, set self.value to it so it reflects the number of  controlSignals;
+        # # If allocation_policy has been assigned, set self.value to it so it reflects the number of  control_signals;
         # #    this is necessary, since function is not fully executed during initialization (in _instantiate_function)
         # #    it returns default_allocation policy which has only a singel item,
         # #    however validation of indices for outputStates requires that proper number of items be in self.value
@@ -692,8 +692,8 @@ class ControlSignal(OutputState):
 
         #region Record controlSignal values in owner mechanism's log
         # Notes:
-        # * Log controlSignals for ALL states of a given mechanism in the mechanism's log
-        # * Log controlSignals for EACH state in a separate entry of the mechanism's log
+        # * Log control_signals for ALL states of a given mechanism in the mechanism's log
+        # * Log control_signals for EACH state in a separate entry of the mechanism's log
 
         # Get receiver mechanism and state
         controller = self.owner

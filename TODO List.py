@@ -539,7 +539,7 @@
 #                                          for each predictionMechanism in self.system.prediction_mechanisms
 #             controller.monitored_states: list of the mechanism outputStates being monitored for outcomes
 #             controller.input_value: list of current outcome values for monitored_states
-#             controller.controlSignals: list of controlSignal objects
+#             controller.control_signals: list of controlSignal objects
 #             controlSignal.allocation_samples: set of samples specified for that controlSignal
 #             [TBI:] controlSignal.allocation_range: range that the controlSignal value can take
 #             controller.allocation_policy: current allocation_policy
@@ -2377,10 +2377,10 @@
 #
 # IMPLEMENT      MOVE ASSIGNMENT OF monitor_for_control_factors TO THERE
 #
-# - IMPLEMENT: controlSignals attribute:  list of control signals for mechanism
+# - IMPLEMENT: control_signals attribute:  list of control signals for mechanism
 #                                        (get from outputStates.efferents)
 # - IMPLEMENT: control_signal_search_space argument in constructor, that can be:
-#                   - 2d array (each item of which is validated for length = len(self.controlSignals
+#                   - 2d array (each item of which is validated for length = len(self.control_signals
 #                   - function that returns a 2d array, validate per above.
 #
 # - IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
