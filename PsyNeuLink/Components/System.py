@@ -758,6 +758,8 @@ class System_Base(System):
                                'learning': False
                                })
 
+
+    # FIX 5/23/17: ADD control_signals ARGUMENT HERE (AND DOCUMENT IT ABOVE)
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
@@ -824,6 +826,7 @@ class System_Base(System):
 
         # Instantiate controller from class specification
         else:
+            # FIX 5/23/17: ADD control_signals ARGUMENT HERE
             self.controller = self.controller(system=self,
                                               monitor_for_control=monitor_for_control)
 
