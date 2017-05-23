@@ -86,7 +86,7 @@ def test_reinforcement():
     expected_output = [
         (input_layer.output_states.values, [np.array([1., 1., 1.])]),
         (action_selection.output_states.values, [np.array([0., 3.38417298, 0.])]),
-        (pytest.helpers.expand_np_ndarray(mech_objective_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array([6.61582702]), np.array(6.615827015625), np.array(6.615827015625), np.array(43.7691671006736), np.array(43.7691671006736)])),
+        (pytest.helpers.expand_np_ndarray(mech_objective_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array([6.61582702]), np.array(43.7691671006736)])),
         (pytest.helpers.expand_np_ndarray(mech_learning_input_to_action.output_states.values), pytest.helpers.expand_np_ndarray(([np.array(
             [
                 [0.        , 0.        , 0.        ],
