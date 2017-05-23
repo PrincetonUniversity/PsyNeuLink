@@ -431,7 +431,9 @@ class ControlMechanism_Base(Mechanism_Base):
                         self._instantiate_control_signal(projection, params=params, context=context)
 
     # IMPLEMENTATION NOTE:  IMPLEMENT _instantiate_output_states THAT CALLS THIS FOR EACH ITEM
-=    def _instantiate_control_signal(self, projection, params=None, context=None):
+    #                       DESIGN PATTERN SHOULD COMPLEMENT THAT FOR _instantiate_input_states of ObjectiveMechanism
+    #                           (with control_signals taking the place of monitored_values)
+    def _instantiate_control_signal(self, projection=None, params=None, context=None):
         """Add outputState (as ControlSignal) and assign as sender to requesting ControlProjection
 
         # Updates allocation_policy and control_signal_costs attributes to accommodate instantiated projection
@@ -453,19 +455,22 @@ class ControlMechanism_Base(Mechanism_Base):
             self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
 
 
-        self._validate_projection(projection)
+        # Validate projection (if specified) and get receiver's name
+        if projection:
+            self._validate_projection(projection)
 
-        # get name of projection receiver (for use in naming the ControlSignal)
-        if projection.value is DEFERRED_INITIALIZATION:
-            receiver = projection.init_args['receiver']
-        else:
-            receiver = projection.receiver
+            # get name of projection receiver (for use in naming the ControlSignal)
+            if projection.value is DEFERRED_INITIALIZATION:
+                receiver = projection.init_args['receiver']
+            else:
+                receiver = projection.receiver
 
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-        if not isinstance(projection, ControlProjection):
-            raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
-                                              "that is not a ControlProjection, to outputState of {1}".
-                                              format(projection, self.name))
+            from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+            if not isinstance(projection, ControlProjection):
+                raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
+                                                  "that is not a ControlProjection, to outputState of {1}".
+                                                  format(projection, self.name))
+        # Otherwise, use name specified in control_signals
 
         #  Update self.value by evaluating function
         self._update_value(context=context)
