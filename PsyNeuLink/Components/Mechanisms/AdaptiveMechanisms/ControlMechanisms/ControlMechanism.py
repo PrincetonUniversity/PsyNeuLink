@@ -50,12 +50,9 @@ mechanism or function to which the parameter belongs (see `Mechanism_Parameters`
 the **control_signals**  argument of the constructor for the ControlMechanism.  The **control_signals** argument must 
 be a list, each item of which must refer to a parameter to be controlled specified in any of the following forms:
 
-  * the attribute (of a Mechanism or its function) for the parameter;
-  |  
-  * the ParameterState (of a Mechanism) for the parameter
+  * a **ParameterState** (of a Mechanism) for the parameter;
   |
-  * a tuple, the first item of which is the name of the parameter (a keyword or string), 
-    and the second item of which is the Mechanism to which it belongs   
+  * a **tuple**, with the *name* of the parameter as its 1st item. and the *mechanism* to which it belongs as the 2nd.
 
 A `ControlSignal` is created for each item listed in **control_signals**, and all of a ControlMechanism's ControlSignals 
 are listed in ControlMechanism's `control_signals <ControlMechanism.control_signals>` attribute.  Each ControlSignal is 
@@ -289,11 +286,11 @@ class ControlMechanism_Base(Mechanism_Base):
                                                     context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate SYSTEM, MONITOR_FOR_CONTROL and FUNCTION_PARAMS
+        """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
 
         If system is specified, validate it
         Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputStates for Mechanisms in self.system
-        Check that len(WEIGHTS) = len(MONITOR_FOR_CONTROL)
+        Check that all items in CONTROL_SIGNALS are parameters or ParameterStates for Mechanisms in self.system
         """
 
         super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
@@ -322,12 +319,39 @@ class ControlMechanism_Base(Mechanism_Base):
                                                 format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
 
         if CONTROL_SIGNALS in target_set:
-            for cs in target_set[CONTROL_SIGNALS]:
-                if isinstance(str, ParameterState):
-                    continue
 
-        
-        
+            for spec in target_set[CONTROL_SIGNALS]:
+
+                if isinstance(spec, ParameterState):
+                    spec_mech = ParameterState.owner
+                    param_name = ParameterState.name
+
+                if isinstance(spec, tuple):
+                    param_name = spec[0]
+                    mech_spec = spec[1]
+                    # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
+                    if not isinstance(param_name, str):
+                        raise ControlMechanismError("1st item of tuple in specification in {} arg for {} ({}) "
+                                                    "must be a string".format(CONTROL_SIGNALS, self.name, param_name))
+                    # Check that 2nd item is a mechanism
+                    if not isinstance(mech_spec, Mechanism):
+                        raise ControlMechanismError("2nd item of tuple in specification in {} arg for {} ({}) "
+                                                    "must be a Mechanism".format(CONTROL_SIGNALS, self.name, mech_spec))
+                    # Check that param (named by str) is an attribute of the mechanism
+                    if not hasattr(param_name, mech_spec):
+                        raise ControlMechanismError("{} is not an attribute of {} (in {} arg for {})"
+                                                    .format(param_name, mech_spec, CONTROL_SIGNALS, self.name))
+                    # Check that the mechanism has a parameterState for the param
+                    if not any(param_name in mech_spec._parameter_states):
+                        raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
+                                                    "specified in the {} argument for {}".
+                                                    format(param_name, mech_spec.name, CONTROL_SIGNALS, self.name))
+                # Check that the mechanism is in the controller's system
+                if not any((mech_spec.name is mech.name or mech_spec.name in mech.output_states.names)
+                           for mech in self.system.mechanisms):
+                    raise ControlMechanismError("Specification in {} arg for {} ({}) must be a Mechanism in {}".
+                                                format(CONTROL_SIGNALS, self.name, mech_spec.name, self.system.name))
+
 
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self
@@ -345,6 +369,13 @@ class ControlMechanism_Base(Mechanism_Base):
         raise ControlMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
                                           format(self.__class__.__name__,
                                                  self.__class__.__bases__[0].__name__))
+
+    def _instantiate_output_states(self, context=None):
+
+        for cs in self.control_signals:
+            self._instantiate_control_projection(projection=cs, context=context)
+
+        super()._instantiate_output_states(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Take over as default controller (if specified) and implement any specified ControlProjections
