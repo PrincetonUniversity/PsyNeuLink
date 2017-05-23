@@ -291,7 +291,7 @@ Keep components simple; put any necessary complexity (to make it easier for the 
          every instance of State must be explicitly assigned an existing <state>.ownerMechanism (Mechanism)
          default projections can be implemented for a state (using <state>.defaultProjectionType);
              if their sender is not specified, a default one will be created (see Projection below)
-         <state>.receivesFromProjections is consulted when a State's update function is executed,
+         <state>.afferents is consulted when a State's update function is executed,
              and <state>.value is updated based on those
          subclasses must implement defaultProjectionType
      - Projection:
@@ -538,7 +538,7 @@ Keep components simple; put any necessary complexity (to make it easier for the 
              - insures output of projection function is compatible with state.value
              - insures receiver for each projection is state
              - if spec is not valid, default is created of type determined by paramsCurrent[PROJECTION_TYPE]
-             - adds each to state.receivesFromProjections
+             - adds each to state.afferents
          9) Assign observers
 
      E) Projection:
@@ -651,14 +651,14 @@ Keep components simple; put any necessary complexity (to make it easier for the 
      - Mechanism.update_states_and_execute:
          [TBI: calls each of the functions in its executionSequence (see Mechanism.execute):
          - calls self.inputState.() for each entry in self.inputStates, which:
-             + executes every self.inputState.receivesFromProjections.[<Projection>.execute()...]
+             + executes every self.inputState.afferents.[<Projection>.execute()...]
                  note:  for the first mechanism in the pathway, this includes a projection with Process input
              + aggregates them using self.inputState.params[FUNCTION]()
              + applies any runtime kwMechansimInputStateParams specified with mechanism in a tuple in the pathway
              + stores result in self.inputState.value
          - calls self._update_parameter_states, which calls every self.params[<ParameterState>].execute(),
              each of which:
-             + executes self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
+             + executes self.params[<ParameterState>].afferents.[<Projection>.execute()...]
                  (usually this absent, or is a single ControlSignal projection from DefaultController)
                  with any runtime kwMechansimParameterStateParams specified with mechanism in tupel in pathway
              + aggregates results using self.params[<ParameterState>].params[FUNCTION]()
