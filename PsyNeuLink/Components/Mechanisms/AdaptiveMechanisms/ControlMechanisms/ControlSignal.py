@@ -561,7 +561,7 @@ class ControlSignal(OutputState):
 
             self.paramsCurrent[cost_function_name] = cost_function
 
-        self.controlSignalCostOptions = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
+        self.control_signal_cost_options = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
 
         # Assign instance attributes
         self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
@@ -658,17 +658,17 @@ class ControlSignal(OutputState):
         # compute cost(s)
         new_cost = intensity_cost = adjustment_cost = duration_cost = 0
 
-        if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
+        if self.control_signal_cost_options & ControlSignalCostOptions.INTENSITY_COST:
             intensity_cost = self.intensity_cost = self.intensity_cost_function(self.intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
 
-        if self.controlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
+        if self.control_signal_cost_options & ControlSignalCostOptions.ADJUSTMENT_COST:
             adjustment_cost = self.adjustment_cost = self.adjustment_cost_function(intensity_change)
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
 
-        if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
+        if self.control_signal_cost_options & ControlSignalCostOptions.DURATION_COST:
             duration_cost = self.duration_cost = self.duration_cost_function([self.last_duration_cost, new_cost])
             if self.prefs.verbosePref:
                 print("++ Used duration cost")
@@ -798,27 +798,27 @@ class ControlSignal(OutputState):
             if not self.paramsCurrent[cost_function_name]:
                 raise ControlSignalError("Unable to toggle {} ON as function assignment is \'None\'".
                                          format(cost_function_name))
-            self.controlSignalCostOptions |= cost_option
+            self.control_signal_cost_options |= cost_option
         else:
-            self.controlSignalCostOptions &= ~cost_option
+            self.control_signal_cost_options &= ~cost_option
 
     # def set_intensity_cost(self, assignment=ON):
     #     if assignment:
-    #         self.controlSignalCostOptions |= ControlSignalCostOptions.INTENSITY_COST
+    #         self.control_signal_cost_options |= ControlSignalCostOptions.INTENSITY_COST
     #     else:
-    #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.INTENSITY_COST
+    #         self.control_signal_cost_options &= ~ControlSignalCostOptions.INTENSITY_COST
     #
     # def set_adjustment_cost(self, assignment=ON):
     #     if assignment:
-    #         self.controlSignalCostOptions |= ControlSignalCostOptions.ADJUSTMENT_COST
+    #         self.control_signal_cost_options |= ControlSignalCostOptions.ADJUSTMENT_COST
     #     else:
-    #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.ADJUSTMENT_COST
+    #         self.control_signal_cost_options &= ~ControlSignalCostOptions.ADJUSTMENT_COST
     #
     # def set_duration_cost(self, assignment=ON):
     #     if assignment:
-    #         self.controlSignalCostOptions |= ControlSignalCostOptions.DURATION_COST
+    #         self.control_signal_cost_options |= ControlSignalCostOptions.DURATION_COST
     #     else:
-    #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.DURATION_COST
+    #         self.control_signal_cost_options &= ~ControlSignalCostOptions.DURATION_COST
     #
     def get_costs(self):
         """Return three-element list with the values of ``intensity_cost``, ``adjustment_cost`` and ``duration_cost``
