@@ -327,6 +327,7 @@ class MappingProjection(TransmissiveProjection_Base):
                                                   params=params)
 
         self.learning_mechanism = None
+        self.has_learning_projection = False
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
@@ -349,8 +350,6 @@ class MappingProjection(TransmissiveProjection_Base):
                                       name=name,
                                       prefs=prefs,
                                       context=self)
-
-        self.has_learning_projection = False
 
     # def _instantiate_sender(self, context=None):
             # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
@@ -472,13 +471,13 @@ class MappingProjection(TransmissiveProjection_Base):
             #    both a LearningProjection and parameterState[MATRIX] to receive it have been instantiated
             matrix_parameter_state = self._parameter_states[MATRIX]
 
-            # Assign current MATRIX to parameter state's baseValue, so that it is updated in call to execute()
-            matrix_parameter_state.baseValue = self.matrix
+            # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
+            matrix_parameter_state.base_value = self.matrix
 
             # Pass params for parameterState's function specified by instantiation in LearningProjection
             weight_change_params = matrix_parameter_state.paramsCurrent
 
-            # Update parameter state: combines weightChangeMatrix from LearningProjection with matrix baseValue
+            # Update parameter state: combines weightChangeMatrix from LearningProjection with matrix base_value
             matrix_parameter_state.update(weight_change_params, context=context)
 
             # MODIFIED 2/21/17 OLD: [REPLACE WITH ASSIGNMENT UNDER @property value IN ParmaterState??]
@@ -516,7 +515,7 @@ class MappingProjection(TransmissiveProjection_Base):
         """Returns matrix specification in self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
 
         Returns matrix param for MappingProjection, getting second item if it is
-         a ParamValueprojection or unnamed (matrix, projection) tuple
+         an unnamed (matrix, projection) tuple
         """
         return self._get_param_value_from_tuple(self.paramsCurrent[FUNCTION_PARAMS][MATRIX])
 
@@ -525,24 +524,20 @@ class MappingProjection(TransmissiveProjection_Base):
         """Assign matrix specification for self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
 
         Assigns matrix param for MappingProjection, assigning second item if it is
-         a ParamValueProjection or unnamed (matrix, projection) tuple
+         a 2-item tuple or unnamed (matrix, projection) tuple
         """
-
-        # Specification is a ParamValueProjection tuple, so allow
-        if isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], ParamValueProjection):
-            self.paramsCurrent[FUNCTION_PARAMS][MATRIX].value =  value
 
         # Specification is a two-item tuple, so validate that 2nd item is:
         # a projection keyword, projection subclass, or instance of a projection subclass
-        elif (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
-                      len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) is 2 and
-                  (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING_PROJECTION,
-                                                                      CONTROL_PROJECTION,
-                                                                      LEARNING_PROJECTION}
-                   or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection) or
-                       (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
-                            issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection)))
-              ):
+        if (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
+                    len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) is 2 and
+                (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING_PROJECTION,
+                                                                    CONTROL_PROJECTION,
+                                                                    LEARNING_PROJECTION}
+                 or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection) or
+                     (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
+                          issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection)))
+            ):
             # # MODIFIED 4/8/17 OLD:
             # self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1])
             # MODIFIED 4/8/17 NEW:

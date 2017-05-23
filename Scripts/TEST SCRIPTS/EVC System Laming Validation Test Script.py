@@ -24,9 +24,6 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 
 # Mechanisms:
 Input = TransferMechanism(name='Input',
-                          input_states=['HELLO']
-                          # output_states=['HELLO']
-                 # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
 
                  )
 
@@ -122,7 +119,7 @@ def show_results():
     print ('\t\t\tThreshold control signal (from EVC): {}'.
            format(re.sub('[\[,\],\n]','',str(float(Decision._parameter_states[THRESHOLD].value))),
                   mySystem.controller.output_states['threshold_ControlSignal'].value,
-                  Decision._parameter_states[THRESHOLD].receivesFromProjections[0].value
+                  Decision._parameter_states[THRESHOLD].afferents[0].value
                   ))
     print('\t\tOutput:')
     for result in results_for_decision:
@@ -140,7 +137,7 @@ def show_results():
 mySystem.controller.reportOutputPref = False
 
 # mySystem.show_graph(direction='LR')
-# mySystem.show_graph_with_control()
+# mySystem.show_graph(show_control=True)
 
 # mySystem.run(inputs=trial_list,
 # # mySystem.run(inputs=reversed_trial_list,

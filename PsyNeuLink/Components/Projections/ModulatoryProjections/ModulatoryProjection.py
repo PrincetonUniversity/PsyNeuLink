@@ -105,6 +105,7 @@ Class Reference
 """
 
 from PsyNeuLink.Components.Projections.Projection import Projection_Base
+from PsyNeuLink.Globals.Keywords import MODULATORY_PROJECTION
 
 class ModulatoryProjection_Base(Projection_Base):
     """
@@ -183,6 +184,7 @@ class ModulatoryProjection_Base(Projection_Base):
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """
+    componentCategory = MODULATORY_PROJECTION
 
     def __init__(self,
                  receiver,

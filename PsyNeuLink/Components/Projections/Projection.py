@@ -142,7 +142,7 @@ Sender
 ~~~~~~
 
 This must be an `OutputState`.  The projection is assigned to the outputState's
-`sendsToProjections <State.State_Base.sendsToProjections>` list, and outputState's `value
+`efferents <State.State_Base.efferents>` list, and outputState's `value
 <OutputState.OutputState.value>` is used as the :keyword:`variable` for projection's `function <Projection.function>`.
 A sender can be specified as:
 
@@ -186,7 +186,7 @@ Receiver
 ~~~~~~~~
 
 This must be an :doc:`InputState` or a :doc:`ParameterState`.  The projection is assigned to the receiver's
-`receivesFromProjections <State.State_Base.receivesFromProjections>` list, and the output of the projection's
+`afferents <State.State_Base.afferents>` list, and the output of the projection's
 `function <Projection.function>` is transmitted to its receiver.  A `receiver <Projection.receiver>` can be specified as:
 
   * an existing **inputState**;
@@ -243,14 +243,11 @@ kpProjectionTimeScaleLogEntry = "Projection TimeScale"
 
 projection_keywords = set()
 
-PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
-                            DEFAULT_MATRIX,
-                            IDENTITY_MATRIX,
-                            FULL_CONNECTIVITY_MATRIX,
-                            HOLLOW_MATRIX,
-                            RANDOM_CONNECTIVITY_MATRIX,
-                            LEARNING_PROJECTION,
-                            CONTROL_PROJECTION}
+PROJECTION_SPEC_KEYWORDS = {MAPPING_PROJECTION,
+                            LEARNING, LEARNING_PROJECTION,
+                            CONTROL, CONTROL_PROJECTION,
+                            GATING, GATING_PROJECTION}
+
 
 class ProjectionError(Exception):
     def __init__(self, error_value):
@@ -632,11 +629,11 @@ class Projection_Base(Projection):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
         Assume self.sender has been assigned in _validate_params, from either sender arg or PROJECTION_SENDER
-        Validate, set self.variable, and assign projection to sender's sendsToProjections attribute
+        Validate, set self.variable, and assign projection to sender's efferents attribute
 
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
         If self.sender is a State class reference, validate that it is a OutputState
-        Assign projection to sender's sendsToProjections attribute
+        Assign projection to sender's efferents attribute
         If self.value / self.variable is None, set to sender.value
         """
 
@@ -673,9 +670,9 @@ class Projection_Base(Projection):
             raise ProjectionError("Sender specified for {} ({}) must be a Mechanism or an OutputState".
                                   format(self.name, self.sender))
 
-        # Assign projection to sender's sendsToProjections list attribute
-        if not self in self.sender.sendsToProjections:
-            self.sender.sendsToProjections.append(self)
+        # Assign projection to sender's efferents list attribute
+        if not self in self.sender.efferents:
+            self.sender.efferents.append(self)
 
         # Validate projection's variable (self.variable) against sender.outputState.value
         if iscompatible(self.variable, self.sender.value):
@@ -701,7 +698,7 @@ class Projection_Base(Projection):
         self._instantiate_receiver(context=context)
 
     def _instantiate_receiver(self, context=None):
-        """Call receiver's owner to add projection to its receivesFromProjections list
+        """Call receiver's owner to add projection to its afferents list
 
         Notes:
         * Assume that subclasses implement this method in which they:
@@ -767,17 +764,20 @@ class Projection_Base(Projection):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
 
-def _is_projection_spec(spec):
+def _is_projection_spec(spec, include_matrix_keywords=True):
     """Evaluate whether spec is a valid Projection specification
 
     Return :keyword:`true` if spec is any of the following:
     + Projection class (or keyword string constant for one):
     + Projection object:
+    + 2-item tuple of which the second is a projection_spec (checked recursively with thi method):
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
+    + Matrix keyword (if include_matrix_keywords is set to `True`)
 
     Otherwise, return :keyword:`False`
     """
+
     if inspect.isclass(spec) and issubclass(spec, Projection):
         return True
     if isinstance(spec, Projection):
@@ -786,18 +786,26 @@ def _is_projection_spec(spec):
         return True
     if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS:
         return True
-    from PsyNeuLink.Components.Functions.Function import get_matrix
-    if get_matrix(spec) is not None:
-        return True
+    if include_matrix_keywords:
+        if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
+            return True
+        from PsyNeuLink.Components.Functions.Function import get_matrix
+        if get_matrix(spec) is not None:
+            return True
     if isinstance(spec, tuple) and len(spec) == 2:
         # Call recursively on first item, which should be a standard projection spec
         if _is_projection_spec(spec[0]):
             # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
-            if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
+            if _is_projection_subclass(spec[1], MAPPING_PROJECTION):
                 return True
             if _is_projection_subclass(spec[1], LEARNING_PROJECTION):
                 return True
+            if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
+                return True
+            if _is_projection_subclass(spec[1], GATING_PROJECTION):
+                return True
     return False
+
 
 def _is_projection_subclass(spec, keyword):
     """Evaluate whether spec is a valid specification of type
@@ -887,7 +895,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     # input_state is index into input_states OrderedDict, so get corresponding key and assign to input_state
     elif isinstance(state, int):
         try:
-            key = list(receiver.input_states.keys)[state]
+            key = receiver.input_states[state]
         except IndexError:
             raise ProjectionError("Attempt to assign projection_spec ({0}) to inputState {1} of {2} "
                                  "but it has only {3} input_states".
@@ -921,7 +929,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     # validate that projection has not already been assigned to receiver
     if receiver.verbosePref or projection_spec.sender.owner.verbosePref:
-        if projection_spec in receiver.receivesFromProjections:
+        if projection_spec in receiver.afferents:
             warnings.warn("Request to assign {} as projection to {} was ignored; it was already assigned".
                           format(projection_spec.name, receiver.owner.name))
 

@@ -17,7 +17,7 @@ A parameterState belongs to either a `mechanism <Mechanism>` or a `MappingProjec
 possibly modify the value of a parameter of its owner or it owner's function.  It can receive one or more
 `ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that modify that
 parameter.   The projections received by a parameterState are listed in its
-`receivesFromProjections <ParameterState.receivesFromProjections>` attribute.
+`afferents <ParameterState.afferents>` attribute.
 Its `function <ParameterState.function>` combines the values of these inputs, and uses the result to modify the value
 of the parameter for which it is responsible.
 
@@ -69,16 +69,16 @@ Parameters can be specified in one of several places:
       `pathway` for a process (see :ref:`Runtime Specification <ParameterState_Runtime_Parameters>` below).
 
 The value specified for the parameter (either explicitly or by default) is assigned as the parameterState's
-`baseValue <ParameterState.baseValue>`, and any projections assigned to it are added to its
-`receiveFromProjections <ParameterState.receivesFromProjections>` attribute. When the parameterState's owner is
-executed, the parameterState's `baseValue <ParameterState.baseValue>` is combined with the value of the projections
+`base_value <ParameterState.base_value>`, and any projections assigned to it are added to its
+`receiveFromProjections <ParameterState.afferents>` attribute. When the parameterState's owner is
+executed, the parameterState's `base_value <ParameterState.base_value>` is combined with the value of the projections
 it receives to determine the value of the parameter for which the parameterState is responsible
 (see `ParameterState_Execution` for details).
 
 The specification of a parameter can take any of the following forms:
 
     * A **value**.  This must be a valid value for the parameter.  it creates a default parameterState,
-      assigns the parameter's default value as the parameterState's `baseValue <ParameterState.baseValue>`,
+      assigns the parameter's default value as the parameterState's `base_value <ParameterState.base_value>`,
       and assigns the parameter's name as the name of the parameterState.
     ..
     * A reference to an existing **parameterState** object.
@@ -93,15 +93,15 @@ The specification of a parameter can take any of the following forms:
           future use, but its current use is not advised.
     ..
     * A `projection specification <Projection_In_Context_Specification>`.  This creates a default parameterState,
-      assigns the parameter's default value as the parameterState's `baseValue <ParameterState.baseValue>`,
+      assigns the parameter's default value as the parameterState's `base_value <ParameterState.base_value>`,
       and assigns the parameter's name as the name of the parameterState.  It also creates and/or assigns the
       specified projection, and assigns the parameterState as the projection's
       `receiver <Projection.Projection.receiver>`.  The projection must be a `ControlProjection` or
       `LearningProjection`, and its value must be a valid one for the parameter.
     ..
-    * A `ParamValueProjection` or 2-item (value, projection specification) **tuple**.  This creates a default
+    * A 2-item (value, projection specification) **tuple**.  This creates a default
       parameterState, uses the value (1st) item of the tuple as parameterState's
-      `baseValue <ParameterState.baseValue>`, and assigns the parameter's name as the name of the parameterState.
+      `base_value <ParameterState.base_value>`, and assigns the parameter's name as the name of the parameterState.
       The projection (2nd) item of the tuple is used to create and/or assign the specified projection, that is assigned
       the parameterState as its `receiver <Projection.Projection.receiver>`.  The projection must be a
       `ControlProjection` or `LearningProjection`, and its value must be a valid one for the parameter.
@@ -184,7 +184,7 @@ responsible.  When the parameterState is updated (i.e., the owner is executed) t
 combined (using the  parameterState's `function <ParameterState.function>`) and the result is used to modify the
 parameter for which the parameterState is responsible (see `Execution <ParameterState_Execution>` below).  The
 projections received by a parameterState are listed in its `receiveFromProjections
-<ParameterState.receivesFromProjections>` attribute. Like all PsyNeuLink components, it has the three following core
+<ParameterState.afferents>` attribute. Like all PsyNeuLink components, it has the three following core
 attributes:
 
 * `variable <ParameterState.variable>`:  this serves as a template for the `value <Projection.Projection.value>` of
@@ -199,7 +199,7 @@ attributes:
   parameterState.
 
 * `value <ParameterState.value>`:  this is the value assigned to the parameter for which the parameterState is
-  responsible.  It is the `baseValue <ParameterState.baseValue>` of the parameterState, modified by
+  responsible.  It is the `base_value <ParameterState.base_value>` of the parameterState, modified by
   aggregated value of the projections received by the parameterState returned by the
   `function <ParameterState.function>.
 
@@ -208,7 +208,7 @@ parameter for which it is responsible (as shown in the `figure <ParameterState_F
 
 .. ParameterState_BaseValue:
 
-* `baseValue <ParameterState.baseValue>`:  this is the default value of the parameter for which the
+* `base_value <ParameterState.base_value>`:  this is the default value of the parameter for which the
   parameterState is responsible.  It is combined with the result of the parameterState's
   `function <ParameterState.function>` to determine the value of the parameter for which the parameterState is
   responsible.
@@ -217,13 +217,13 @@ parameter for which it is responsible (as shown in the `figure <ParameterState_F
 
 * `parameterModulationOperation <ParameterState.parameterModulationOperation>`: this determines how the
   result of the parameterState's `function <ParameterState.function>` (the aggregated values of the projections it
-  receives) is combined with its `baseValue <ParameterState.baseValue>` to generate the value of the parameter
+  receives) is combined with its `base_value <ParameterState.base_value>` to generate the value of the parameter
   for which it is responsible.  This must be a value of `ModulationOperation`.  It can be specified in either
   the **parameter_modulation_operation** argument of the parameterState's constructor, or in a 
   PARAMETER_MODULATION_OPERATION entry of a `parameter dictionary <ParameterState_Specifying_Parameters>` in 
   either the **params** argument of the parameterState's constructor or within a PARAMETER_STATE_PARAMS 
   dictionary in a `runtime specification <ParameterState_Runtime_Parameters>`. The default is value is
-  `ModulationOperation.PRODUCT`, which multiples the parameterState's `baseValue <ParameterState.baseValue>` by the 
+  `ModulationOperation.PRODUCT`, which multiples the parameterState's `base_value <ParameterState.base_value>` by the 
   aggregated value of the result of the parameterState's `function <ParameterState.function>` to determine the value 
   of the parameter.
 
@@ -252,25 +252,25 @@ parameter's value.
        +--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
        | Component    | Impact of ParameterState on Parameter Value                                                                                                                  |
        +==============+==============================================================================================================================================================+
-       | A (brown)    | `baseValue <ParameterState.baseValue>` (default value of the parameter)                                                                                      |
+       | A (brown)    | `base_value <ParameterState.base_value>` (default value of the parameter)                                                                                      |
        +--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
        | B (blue)     | parameterState's `function <ParameterState.function>` combines `value <Projection.Projection.value>` of projections                                          |
        +--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
-       | C (green)    | parameterState's `parameterModulationOperation <ParameterState.parameterModulationOperation>` combines projections and `baseValue <ParameterState.baseValue>`|
+       | C (green)    | parameterState's `parameterModulationOperation <ParameterState.parameterModulationOperation>` combines projections and `base_value <ParameterState.base_value>`|
        +--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
        In example, the values for the parameters (shown in brown) -- ``param_x`` for the mechanism, and ``param_y``
-       for its ``function`` -- specify the :py:data:`baseValue <ParameterState.baseValue>` of the paramterState for
+       for its ``function`` -- specify the :py:data:`base_value <ParameterState.base_value>` of the paramterState for
        each parameter (labeled "A" in the figure).  These are the values that will be used for
        those parameters absent any other influences. However, ``param_y`` is assigned a ControlProjection, so its value
        will also be determined by the value of the ControlProjection to its parameterState;  that will be combined
-       with its `baseValue <ParameterState.baseValue>` using the
+       with its `base_value <ParameterState.base_value>` using the
        `parameterModulationOperation <ParameterState.parameterModulationOperation>`
        specified for the mechanism (``ModulationOperation.SUM``, shown in green, and labeled "C" in the figure). If
        there had been more than one ControlProjection specified, their values would have been combined using the
        parameterState's `function <ParameterState.function>` (lableled "B" in the figure), before combining the result
        with the
-       baseValue.
+       base_value.
 
 
 .. _ParameterState_Execution:
@@ -281,7 +281,7 @@ Execution
 A parameterState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
 When this occurs, the parameterState executes any `ControlProjections` and/or `LearningProjections` it receives, and
 calls its `function <ParameterState.function>` to aggregate their values.  It then combines the result with the
-parameterState's `baseValue <ParameterState.baseValue>` using its
+parameterState's `base_value <ParameterState.base_value>` using its
 `parameterModulationOperation <ParameterState.parameterModulationOperation>` attribute, combines the result with any 
 `runtime specification <ParameterState_Runtime_Parameters>` for the parameter using the `ModulationOperation` 
 specified for runtime parameters, and finally assigns the result as the `value <ParameterState.value>` of the 
@@ -340,15 +340,15 @@ The figure below shows how runtime paramter specification combines the others wa
        +--------------+--------------------------------------------------------------------+
        | Component    | Impact of ParameterState on Parameter Value (including at runtime) |
        +==============+====================================================================+
-       | A (brown)    | ``baseValue`` (default value of parameter``)                       |
+       | A (brown)    | ``base_value`` (default value of parameter``)                       |
        +--------------+--------------------------------------------------------------------+
        | B (blue)     | parameterState's ``function`` combines ``value`` of  projections   |
        +--------------+--------------------------------------------------------------------+
-       | C (green)    | runtime parameter influences projection-modulated ``baseValue``    |
+       | C (green)    | runtime parameter influences projection-modulated ``base_value``    |
        +--------------+--------------------------------------------------------------------+
        | D (violet)   | runtime specification of parameter value                           |
        +--------------+--------------------------------------------------------------------+
-       | E (red)      | combined projection values modulate ``baseValue``                  |
+       | E (red)      | combined projection values modulate ``base_value``                  |
        +--------------+--------------------------------------------------------------------+
        
        * 1st example:  param_x is given a runtime value (violet) but no runtime ModulationOperation;
@@ -421,7 +421,7 @@ class ParameterState(State_Base):
         Class methods
         -------------
             _instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
-            update_state: updates self.value from projections, baseValue and runtime in PARAMETER_STATE_PARAMS
+            update_state: updates self.value from projections, base_value and runtime in PARAMETER_STATE_PARAMS
 
         StateRegistry
         -------------
@@ -454,7 +454,7 @@ class ParameterState(State_Base):
 
     parameter_modulation_operation : ModulationOperation : default ModulationOperation.MULTIPLY
         specifies the operation by which the values of the projections received by the parameterState are used
-        to modify its `baseValue <ParameterState.baseValue>` before assigning it as the value of the parameter for
+        to modify its `base_value <ParameterState.base_value>` before assigning it as the value of the parameter for
         which the parameterState is responsible.
 
     params : Optional[Dict[param keyword, param value]]
@@ -479,7 +479,7 @@ class ParameterState(State_Base):
     owner : Mechanism
         the mechanism to which the parameterState belongs.
 
-    receivesFromProjections : Optional[List[Projection]]
+    afferents : Optional[List[Projection]]
         a list of the projections received by the parameterState (i.e., for which it is a
         `receiver <Projection.Projection.receiver>`); generally these are `ControlProjection(s) <ControlProjection>`
         and/or `LearningProjection(s) <LearningProjection>`.
@@ -492,7 +492,7 @@ class ParameterState(State_Base):
         performs an element-wise (Hadamard) aggregation  of the `value <Projecction.Projection.value>` of each
         projection received by the parameterState.
 
-    baseValue : number, list or np.ndarray
+    base_value : number, list or np.ndarray
         the default value for the parameterState.  It is combined with the aggregated value of any projections it
         receives using its `parameterModulationOperation <ParameterState.parameterModulationOperation>`
         and then assigned to `value <ParameterState.value>`.
@@ -500,11 +500,11 @@ class ParameterState(State_Base):
     parameterModulationOperation : ModulationOperation : default ModulationOperation.PRODUCT
         the arithmetic operation used to combine the aggregated value of any projections is receives
         (the result of the parameterState's `function <ParameterState.function>`) with its
-        `baseValue <ParameterState.baseValue>`, the result of which is assigned to `value <ParameterState.value>`.
+        `base_value <ParameterState.base_value>`, the result of which is assigned to `value <ParameterState.value>`.
 
     value : number, list or np.ndarray
         the aggregated value of the projections received by the ParameterState, combined with the
-        `baseValue <ParameterState.baseValue>` using its
+        `base_value <ParameterState.base_value>` using its
         `parameterModulationOperation <ParameterState.parameterModulationOperation>`
         COMMENT:
         as well as any runtime specification
@@ -579,7 +579,7 @@ class ParameterState(State_Base):
         self.parameterModulationOperation = self.paramsCurrent[PARAMETER_MODULATION_OPERATION]
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that parameterState (as identified by its name) is for a valid parameter for owner
+        """Insure that parameterState (as identified by its name) is for a valid parameter of the owner
 
         Parameter can be either owner's, or owner's function_object
         """
@@ -637,7 +637,7 @@ class ParameterState(State_Base):
 # DOCUMENTATION:  MORE HERE:
         - get ParameterStateParams
         - pass params to super, which aggregates inputs from projections
-        - combine input from projections (processed in super) with baseValue using paramModulationOperation
+        - combine input from projections (processed in super) with base_value using paramModulationOperation
         - combine result with value specified at runtime in PARAMETER_STATE_PARAMS
         - assign result to self.value
 
@@ -666,21 +666,21 @@ class ParameterState(State_Base):
             # If not, ignore (leave self.parameterModulationOperation assigned to previous value)
             pass
 
-        # If self.value has not been set, assign to baseValue
+        # If self.value has not been set, assign to base_value
         if self.value is None:
             if not context:
                 context = kwAssign + ' Base Value'
             else:
                 context = context + kwAssign + ' Base Value'
-            self.value = self.baseValue
+            self.value = self.base_value
 
-        # Otherwise, combine param's value with baseValue using modulatonOperation
+        # Otherwise, combine param's value with base_value using modulatonOperation
         else:
             if not context:
                 context = kwAssign + ' Modulated Value'
             else:
                 context = context + kwAssign + ' Modulated Value'
-            self.value = self.parameterModulationOperation(self.baseValue, self.value)
+            self.value = self.parameterModulationOperation(self.base_value, self.value)
         #endregion
 
         #region APPLY RUNTIME PARAM VALUES
@@ -719,6 +719,36 @@ class ParameterState(State_Base):
         # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
         # if self.name in self.owner.function_params:
         #     setattr(self.owner.function.__self__, self.name, self.value)
+
+    # # MODIFIED 5/22/17 NEW:
+    # @property
+    # def base_value(self):
+    #     try:
+    #         return getattr(self.owner, self.name)
+    #     except AttributeError:
+    #         return getattr(self.owner.function_object, self.name)
+    #
+    # @base_value.setter
+    # def base_value(self, value):
+    #     try:
+    #         return setattr(self.owner, self.name, value)
+    #     except AttributeError:
+    #         return setattr(self.owner.function_object, self.name, value)
+    #
+    # # MODIFIED 5/22/17 END
+
+    @property
+    def trans_projections(self):
+        raise ParameterStateError("PROGRAM ERROR: Attempt to access trans_projection for {};"
+                                  "it is a {} which does not have {}s".
+                                  format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
+
+    @trans_projections.setter
+    def trans_projections(self, value):
+        raise ParameterStateError("PROGRAM ERROR: Attempt to assign trans_projection to {};"
+                                  "it is a {} which cannot accept {}s".
+                                  format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
+
 
 
 def _instantiate_parameter_states(owner, context=None):
@@ -760,7 +790,6 @@ def _instantiate_parameter_states(owner, context=None):
     #                       and that, in turn, will overwrite their current values with the defaults from paramsCurrent)
     for param_name, param_value in owner.user_params_for_instantiation.items():
         _instantiate_parameter_state(owner, param_name, param_value, context=context)
-    # MODIFIED 4/1/17 END
 
 
 def _instantiate_parameter_state(owner, param_name, param_value, context):
@@ -834,9 +863,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     if param_name is FUNCTION_PARAMS:
         for function_param_name in param_value.keys():
             function_param_value = param_value[function_param_name]
-            # Assignment of ParameterState for Component objects, function or method are not currently supported
-            if isinstance(function_param_value, (function_type, method_type, Component)):
-                continue
+
             # IMPLEMENTATION NOTE:
             # The following is necessary since, if ANY parameters of a function are specified, entries are made
             #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values
@@ -849,7 +876,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             if function_param_value is None:
                 continue
 
-            # Assign parameterState for function_param to the component
+            if not _is_legal_param_value(owner, function_param_value):
+                continue
+
+            # Raise exception if the function parameter's name is the same as one that already exists for its owner
             if function_param_name in owner.user_params:
                 if inspect.isclass(owner.function):
                     function_name = owner.function.__name__
@@ -859,6 +889,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
+            # Assign parameterState for function_param to the component
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
                                       state_name=function_param_name,
@@ -869,9 +900,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                       context=context)
             if state:
                 owner._parameter_states[function_param_name] = state
-            continue
 
-    else:
+    elif _is_legal_param_value(owner, param_value):
         state = _instantiate_state(owner=owner,
                                   state_type=ParameterState,
                                   state_name=param_name,
@@ -883,3 +913,18 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         if state:
             owner._parameter_states[param_name] = state
 
+def _is_legal_param_value(owner, value):
+
+    # LEGAL PARAMETER VALUES:
+
+    # lists, arrays numeric values
+    if is_value_spec(value) or isinstance(value, tuple):
+        return True
+
+    # keyword that resolves to one of the above
+    if get_param_value_for_keyword(owner, value) is not None:
+        return True
+
+    # Assignment of ParameterState for Component objects, function or method are not currently supported
+    if isinstance(value, (function_type, method_type, Component)):
+        return False

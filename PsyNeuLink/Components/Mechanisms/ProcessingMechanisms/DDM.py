@@ -329,6 +329,7 @@ import logging
 import random
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, SEQUENTIAL
 
 logger = logging.getLogger(__name__)
 
@@ -588,8 +589,7 @@ class DDM(ProcessingMechanism_Base):
         self.threshold = thresh
 
         from PsyNeuLink.Components.States.OutputState import StandardOutputStates
-        self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states)
-        self.use_standard_output_states_indices = True
+        self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states, SEQUENTIAL)
 
         super(DDM, self).__init__(variable=default_input_value,
                                   output_states=output_states,
@@ -775,15 +775,6 @@ class DDM(ProcessingMechanism_Base):
 
         super()._instantiate_attributes_before_function(context=context)
 
-    # def _instantiate_attributes_after_function(self, context=None):
-    #
-    #     super()._instantiate_attributes_after_function(context=context)
-    #
-    #     if not isinstance(self.paramsCurrent[FUNCTION], NavarroAndFuss):
-    #         # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
-    #         del self.outputStates[DDM_RT_CORRECT_MEAN]
-    #         del self.outputStates[DDM_RT_CORRECT_VARIANCE]
-
     def _execute(self,
                  variable=None,
                  runtime_params=None,
@@ -800,7 +791,7 @@ class DDM(ProcessingMechanism_Base):
         Return current decision variable (self.outputState.value) and other output values (self.outputStates[].value
         Arguments:
         # CONFIRM:
-        variable (float): set to self.value (= self.inputValue)
+        variable (float): set to self.value (= self.input_value)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
             + DRIFT_RATE (float)
             + THRESHOLD (float)

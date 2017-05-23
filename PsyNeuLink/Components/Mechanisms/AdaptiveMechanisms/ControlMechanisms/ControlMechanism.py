@@ -33,7 +33,7 @@ ControlMechanisms can be created using the standard Python method of calling the
 A ControlMechanism is also created automatically whenever a `system is created <System_Creation>`, and assigned as
 the `controller <System_Execution_Control>` for that system. The `outputStates <OutputState>` to be monitored by a
 ControlMechanism are specified in its `monitored_output_states` argument, which can take  a number of
-`forms <ObjectiveMechanism_Monitored_States>`.  When the ControlMechanism is created, it automatically creates
+`forms <ObjectiveMechanism_Monitored_Values>`.  When the ControlMechanism is created, it automatically creates
 an ObjectiveMechanism that is used to monitor and evaluate the mechanisms and/or outputStates specified in its
 `monitor_for_control <ControlMechanism.monitor_for_control>` attribute.  The result of the evaluation is used to
 specify the value of the ControlMechanism's `ControlProjections <ControlProjection>`. How a ControlMechanism creates its
@@ -316,7 +316,7 @@ class ControlMechanism_Base(Mechanism_Base):
         # Check the parameterStates of the system's mechanisms for any ControlProjections with deferred_init()
         for mech in self.system.mechanisms:
             for parameter_state in mech._parameter_states:
-                for projection in parameter_state.receivesFromProjections:
+                for projection in parameter_state.afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
                     if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
                         # Get params specified with projection for its ControlSignal (cached in control_signal attrib)
@@ -399,8 +399,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Add ControlProjection to list of outputState's outgoing projections
         # (note: if it was deferred, it just added itself, skip)
-        if not projection in state.sendsToProjections:
-            state.sendsToProjections.append(projection)
+        if not projection in state.efferents:
+            state.efferents.append(projection)
 
         # Add ControlProjection to ControlMechanism's list of ControlProjections
         try:
@@ -435,7 +435,7 @@ class ControlMechanism_Base(Mechanism_Base):
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following mechanism outputStates:")
         for state in self.monitoring_mechanism.input_states:
-            for projection in state.receivesFromProjections:
+            for projection in state.afferents:
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitored_output_states.index(monitored_state)
@@ -458,7 +458,7 @@ class ControlMechanism_Base(Mechanism_Base):
         # Sort for consistency of output:
         state_names_sorted = sorted(self.output_states.names)
         for state_name in state_names_sorted:
-            for projection in self.output_states[state_name].sendsToProjections:
+            for projection in self.output_states[state_name].efferents:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
         print ("\n---------------------------------------------------------")

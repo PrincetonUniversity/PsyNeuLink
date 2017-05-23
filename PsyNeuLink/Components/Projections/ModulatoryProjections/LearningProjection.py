@@ -86,21 +86,22 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Functions.Function import Linear, BackPropagation
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
-                                                                            import LearningMechanism, ERROR_SIGNAL
+    import LearningMechanism, ERROR_SIGNAL
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
+    ObjectiveMechanism
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.Functions.Function import Linear, BackPropagation
 
 # Params:
 
-parameter_keywords.update({LEARNING_PROJECTION})
-projection_keywords.update({LEARNING_PROJECTION})
+parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
+projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
@@ -119,13 +120,6 @@ WEIGHT_CHANGE_PARAMS = "weight_change_params"
 
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
-
-TARGET_ERROR = "TARGET_ERROR"
-TARGET_ERROR_MEAN = "TARGET_ERROR_MEAN"
-TARGET_ERROR_SUM = "TARGET_ERROR_SUM"
-TARGET_SSE = "TARGET_SSE"
-TARGET_MSE = "TARGET_MSE"
-
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
@@ -471,7 +465,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
-        candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].receivesFromProjections[0].sender.owner
+        candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].afferents[0].sender.owner
         if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
             learned_projection.objective_mechanism = candidate_objective_mech
         learned_projection.learning_mechanism = learning_mechanism

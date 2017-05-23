@@ -338,8 +338,6 @@ Class Reference
 
 """
 
-
-import numpy as np
 from collections import Iterable
 
 from PsyNeuLink.Components.Component import function_type
@@ -549,10 +547,9 @@ def run(object,
 
     # SET LEARNING_RATE, if specified, for all learningProjections in process or system
     if object.learning_rate is not None:
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         for learning_mech in object.monitoringMechanisms.mechanisms:
-            for projection in learning_mech.output_state.sendsToProjections:
+            for projection in learning_mech.output_state.efferents:
                 if isinstance(projection, LearningProjection):
                     projection.function_object.learning_rate = object.learning_rate
 
@@ -840,11 +837,11 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         for target in object.targetMechanisms:
             # If any projection to a target does not have a sender in the stimulus dict, raise an exception
             if not any(mech is projection.sender.owner for
-                       projection in target.input_states[SAMPLE].receivesFromProjections
+                       projection in target.input_states[SAMPLE].afferents
                        for mech in stimuli.keys()):
                     raise RunError("Entry for {} is missing from specification of targets for run of {}".
                                    format(target.input_states[SAMPLE].
-                                          receivesFromProjections[0].sender.owner.name,
+                                          afferents[0].sender.owner.name,
                                           object.name))
 
         # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
@@ -855,11 +852,11 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         for mech in stimuli.keys():
             # If any mechanism in the stimulus dict does not have a projection to the target, raise an exception
             if not any(target is projection.receiver.owner for
-                       projection in mech.output_state.sendsToProjections
+                       projection in mech.output_state.efferents
                        for target in object.targetMechanisms):
                 raise RunError("{} is not a target mechanism in {}".format(mech.name, object.name))
             # Get target mech (comparator) for each entry in stimuli dict:
-            terminal_to_target_mapping[mech] = mech.output_state.sendsToProjections[0]
+            terminal_to_target_mapping[mech] = mech.output_state.efferents[0]
 
         # Insure that target lists in dict are accessed in the same order as the
         #   targets in the system's targetMechanisms list, by reassigning targets to an OrderedDict:
@@ -869,7 +866,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             # Get the process to which the TARGET mechanism belongs:
             try:
                 process = next(projection.sender.owner for
-                               projection in target.input_states[TARGET].receivesFromProjections if
+                               projection in target.input_states[TARGET].afferents if
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
