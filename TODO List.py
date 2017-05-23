@@ -199,6 +199,21 @@
 #              and use that in ObjectiveMechanism instead of args or tuple specs
 # IMPLEMENT: Add GATING entry to both input and otuput state dicts
 
+#  DOCUMENTATION: State Specification Dictionaries:
+#                            - general notion, schema and keys common to all states (in State)
+#                                  STATE_PROJECTIONS
+#                                  MODULATORY_PROJECTIONS
+#                            - specific ones for each subclass (in subclass pages)
+#                                  InputState:
+#                                      ??SOURCES [=STATE PROJECTIONS] can be string, mech, or outputState
+#                                      GATING [=MODULATORY PROJECTIONS]
+#                                  ParameterState:
+#                                      PARAMETER [=STATE_PROJECTIONS] can be(string, mech) or ParameterState
+#                                      LEARNING [=MODULATORY PROJECTIONS]
+#                                  OutputState:
+#                                      DESTINATIONS [=STATE_PROJECTIONS] can be string, mech, or inputStae
+#                                      GATING [=MODULATORY PROJECTIONS]
+
 #  DOCUMENTATION: Add weights and exponents specification (in state specificaditon dict or in function)
 #  DOCUMENTATION: Add `standard_output_states` to Mechanism
 #  DOCUMENTATION: Matrix specification as 2nd item of in 2-item tuple in list for input_states arg of Mechanism
