@@ -120,7 +120,7 @@ COMMENT:
           by assigning either a 2d array or a function that returns a 2d array to the ``control_signal_search_space``
           attribute.  The first dimension (or axis 0) of the 2d array must be an array of control allocation
           policies (of any length), each of which contains a value for each ControlProjection in the
-          EVCMechanism, assigned in the same order they are listed in its ``controlProjections`` attribute.
+          EVCMechanism, assigned in the same order they are listed in its ``control_projections`` attribute.
 COMMENT
 
 .. _EVC_Auxiliary_Functions:
@@ -1227,32 +1227,6 @@ class EVCMechanism(ControlMechanism_Base):
                 print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
                       " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
 
-    # FIX 5/23/17: MOVE THIS TO SUPER
-    def _instantiate_control_projection(self, projection, params=None, context=None):
-        """
-        """
-
-        if self.allocation_policy is None:
-            self.allocation_policy = np.array(defaultControlAllocation)
-        else:
-            self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
-
-        # Call super to instantiate ControlSignal outputStates
-        super()._instantiate_control_projection(projection=projection,
-                                                params=params,
-                                                context=context)
-
-        # Assign controlSignals in the order they are stored of OutputStates
-        self.control_signals = self.output_states
-
-        # # TEST PRINT
-        # print("\n{}.control_signals: ".format(self.name))
-        # for control_signal in self.control_signals:
-        #     print("{}".format(control_signal.name))
-
-    def _instantiate_function(self, context=None):
-        super()._instantiate_function(context=context)
-
     def _instantiate_attributes_after_function(self, context=None):
 
         super()._instantiate_attributes_after_function(context=context)
@@ -1289,7 +1263,7 @@ class EVCMechanism(ControlMechanism_Base):
         if isinstance(cost_Function, Function):
             # Insure that length of the weights and/or exponents arguments for the cost_function
             #    matches the number of control signals
-            num_control_projections = len(self.controlProjections)
+            num_control_projections = len(self.control_projections)
             if cost_Function.weights is not None:
                 num_cost_weights = len(cost_Function.weights)
                 if  num_cost_weights != num_control_projections:
