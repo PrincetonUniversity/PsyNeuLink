@@ -396,7 +396,7 @@ class ControlMechanism_Base(Mechanism_Base):
     def _instantiate_output_states(self, context=None):
 
         for control_signal in self.control_signals:
-            self._instantiate_control_signal(projection=control_signals, context=context)
+            self._instantiate_control_signal(control_signal=control_signals, context=context)
 
         super()._instantiate_output_states(context=context)
 
@@ -409,12 +409,18 @@ class ControlMechanism_Base(Mechanism_Base):
                 self._take_over_as_default_controller(context=context)
             if not self.system.enable_controller:
                 return
-            
+
+        # FIX: 5/23/17 CONSOLIDATE/SIMPLIFY THIS RE: control_signal ARG??  USE OF STATE_PROJECTIONS, ETC.
+        # FIX:         ?? WHERE WOULD CONTROL_PROJECTIONS HAVE BEEN SPECIFIED IN paramsCURRENT??
+        # FIX:         DOCUMENT THAT VALUE OF CONTROL ENTRY CAN BE A PROJECTION
+        # FIX:         RE-WRITE parse_state_spec TO TAKE TUPLE THAT SPECIFIES (PARAM VALUE, CONTROL SIGNAL)
+        #                       RATHER THAN (PARAM VALUE, CONTROL PROJECTION)
         # If ControlProjections were specified, implement them
         if CONTROL_PROJECTIONS in self.paramsCurrent:
             if self.paramsCurrent[CONTROL_PROJECTIONS]:
                 for key, projection in self.paramsCurrent[CONTROL_PROJECTIONS].items():
-                    self._instantiate_control_signal(projection, context=self.name)
+                    control_signal_spec = {CONTROL:[projection]}
+                    self._instantiate_control_signal(control_signal_spec, context=self.name)
 
     def _take_over_as_default_controller(self, context=None):
 
@@ -427,13 +433,18 @@ class ControlMechanism_Base(Mechanism_Base):
                     # If projection was deferred for init, initialize it now and instantiate for self
                     if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
                         # Get params specified with projection for its ControlSignal (cached in control_signal attrib)
-                        params = projection.control_signal
-                        self._instantiate_control_signal(projection, params=params, context=context)
+                        control_signal_spec = {CONTROL: [projection],
+                                               PARAMS: projection.control_signal}
+                        self._instantiate_control_signal(control_signal_spec, context=context)
 
+    # ---------------------------------------------------
     # IMPLEMENTATION NOTE:  IMPLEMENT _instantiate_output_states THAT CALLS THIS FOR EACH ITEM
     #                       DESIGN PATTERN SHOULD COMPLEMENT THAT FOR _instantiate_input_states of ObjectiveMechanism
     #                           (with control_signals taking the place of monitored_values)
-    def _instantiate_control_signal(self, projection=None, params=None, context=None):
+    #                       NOTES: CHANGE TO TAKE control_signal AS ARG (IF ANYTHING);
+    #                               PROJECTIONS AND PARAMS SHOULD BE PASSED BY ASSIGNING TO STATE SPECIFICATION DICT
+    # def _instantiate_control_signal(self, projection=None, params=None, context=None):
+    def _instantiate_control_signal(self, control_signal=None, context=None):
         """Add outputState (as ControlSignal) and assign as sender to requesting ControlProjection
 
         # Updates allocation_policy and control_signal_costs attributes to accommodate instantiated projection
@@ -454,6 +465,7 @@ class ControlMechanism_Base(Mechanism_Base):
         else:
             self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
 
+        NEED TO PARSE control_signal:  RUN IT THROUGH parse_state_spec
 
         # Validate projection (if specified) and get receiver's name
         if projection:
