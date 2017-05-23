@@ -149,7 +149,7 @@ class ControlMechanism_Base(Mechanism_Base):
     COMMENT:
         Description:
             # DOCUMENTATION NEEDED:
-              ._instantiate_control_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE
+              ._instantiate_control_signal INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE
              INSTANCE
             .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
             WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
@@ -395,8 +395,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
     def _instantiate_output_states(self, context=None):
 
-        for cs in self.control_signals:
-            self._instantiate_control_projection(projection=cs, context=context)
+        for control_signal in self.control_signals:
+            self._instantiate_control_signal(projection=control_signals, context=context)
 
         super()._instantiate_output_states(context=context)
 
@@ -414,7 +414,7 @@ class ControlMechanism_Base(Mechanism_Base):
         if CONTROL_PROJECTIONS in self.paramsCurrent:
             if self.paramsCurrent[CONTROL_PROJECTIONS]:
                 for key, projection in self.paramsCurrent[CONTROL_PROJECTIONS].items():
-                    self._instantiate_control_projection(projection, context=self.name)
+                    self._instantiate_control_signal(projection, context=self.name)
 
     def _take_over_as_default_controller(self, context=None):
 
@@ -428,13 +428,10 @@ class ControlMechanism_Base(Mechanism_Base):
                     if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
                         # Get params specified with projection for its ControlSignal (cached in control_signal attrib)
                         params = projection.control_signal
-                        self._instantiate_control_projection(projection, params=params, context=context)
+                        self._instantiate_control_signal(projection, params=params, context=context)
 
-    # IMPLEMENTATION NOTE:  INCORPORATE INTO _instantiate_output_states AND/OR
-    #                       MAKE THIS A COMPOSITION METHOD WHEN IT IS IMPLEMENTED
-    #                       LEAVE ALL ControlMechanism-SPECIFIC STUFF HERE,
-    #                           AND MOVE INSTANTIATION OF PROJCECTION TO Composition
-    def _instantiate_control_projection(self, projection, params=None, context=None):
+    # IMPLEMENTATION NOTE:  IMPLEMENT _instantiate_output_states THAT CALLS THIS FOR EACH ITEM
+=    def _instantiate_control_signal(self, projection, params=None, context=None):
         """Add outputState (as ControlSignal) and assign as sender to requesting ControlProjection
 
         # Updates allocation_policy and control_signal_costs attributes to accommodate instantiated projection
@@ -483,7 +480,7 @@ class ControlMechanism_Base(Mechanism_Base):
         output_state_value = self.allocation_policy[output_state_index]
 
         # FIX: CALL super()_instantiate_output_states ??
-        # FIX:     OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanis)
+        # FIX:     OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
         state = _instantiate_state(owner=self,
