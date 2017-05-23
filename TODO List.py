@@ -208,7 +208,7 @@
 #                                      ??SOURCES [=STATE PROJECTIONS] can be string, mech, or outputState
 #                                      GATING [=MODULATORY PROJECTIONS]
 #                                  ParameterState:
-#                                      PARAMETER [=STATE_PROJECTIONS] can be(string, mech) or ParameterState
+#                                      CONTROL [=MODULATORY_PROJECTIONS] can be(string, mech) or ParameterState
 #                                      LEARNING [=MODULATORY PROJECTIONS]
 #                                  OutputState:
 #                                      DESTINATIONS [=STATE_PROJECTIONS] can be string, mech, or inputStae
