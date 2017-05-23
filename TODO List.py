@@ -2379,7 +2379,7 @@
 #
 # - IMPLEMENT: controlSignals attribute:  list of control signals for mechanism
 #                                        (get from outputStates.efferents)
-# - IMPLEMENT: controlSignalSearchSpace argument in constructor, that can be:
+# - IMPLEMENT: control_signal_search_space argument in constructor, that can be:
 #                   - 2d array (each item of which is validated for length = len(self.controlSignals
 #                   - function that returns a 2d array, validate per above.
 #

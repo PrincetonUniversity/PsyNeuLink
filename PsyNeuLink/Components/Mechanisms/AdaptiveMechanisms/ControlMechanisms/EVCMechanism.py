@@ -105,9 +105,9 @@ The default EVC `function <EVCMechanism.function>` calculates the expected value
 grid search over every possible `allocation_policy`.  The set of allocationPolicies sampled is determined by the
 `allocation_samples` attribute of each `ControlSignal`. Each policy is constructed by drawing one value from the
 `allocation_samples` attribute of each of the EVCMechanism's ControlSignals.  An `allocation_policy` is constructed
-for every possible combination of values, and stored in the EVCMechanism's `controlSignalSearchSpace` attribute.  The
+for every possible combination of values, and stored in the EVCMechanism's `control_signal_search_space` attribute.  The
 EVCMechanism's `run_simulation` method is then used to simulate the system under each `allocation_policy` in
-`controlSignalSearchSpace`, calculate the EVC for each of those policies, and return the policy with the greatest EVC.
+`control_signal_search_space`, calculate the EVC for each of those policies, and return the policy with the greatest EVC.
 By default, only the maximum EVC is saved and returned.  However, by setting the `save_all_values_and_policies`
 attribute to `True`, each policy and its EVC can be saved for each simulation run (in `EVC_policies` and `EVC_values`,
 respectively). The EVC is calculated for each policy using the following four functions, each of which can be
@@ -116,8 +116,8 @@ or by assigning them directly to the corresponding attribute (see `note <EVCMech
 below):
 
 COMMENT:
-  [TBI:]  The ``controlSignalSearchSpace`` described above is constructed by default.  However, this can be customized
-          by assigning either a 2d array or a function that returns a 2d array to the ``controlSignalSearchSpace``
+  [TBI:]  The ``control_signal_search_space`` described above is constructed by default.  However, this can be customized
+          by assigning either a 2d array or a function that returns a 2d array to the ``control_signal_search_space``
           attribute.  The first dimension (or axis 0) of the 2d array must be an array of control allocation
           policies (of any length), each of which contains a value for each ControlProjection in the
           EVCMechanism, assigned in the same order they are listed in its ``controlProjections`` attribute.
@@ -222,8 +222,8 @@ However, this procedure can be modified by specifying a custom function for any 
 .. _EVCMechanism_Default_Function:
 
 The default `function <EVCMechanism.function>` for an EVCMechanism selects an `allocation_policy` by assessing
-the performance of the system under each of the policies in its `controlSignalSearchSpace`, and selecting the
-one that yields the maximum EVC. The `controlSignalSearchSpace` is constructed by creating a set of
+the performance of the system under each of the policies in its `control_signal_search_space`, and selecting the
+one that yields the maximum EVC. The `control_signal_search_space` is constructed by creating a set of
 allocationPolicies that represent all permutations of the `allocation` values to be sampled for each ControlSignal.
 Each `allocation_policy` in the set is constructed by drawing one value from the `allocation_samples` of each
 ControlSignal, and the set contains all combinations of these values.  For each `allocation_policy`, the default
@@ -554,10 +554,10 @@ class EVCMechanism(ControlMechanism_Base):
         determines the `allocation_policy <EVCMechanism.allocation_policy>` to use for the next round of the system's
         execution. The default function, `ControlSignalGridSearch`, conducts an exhaustive (*grid*) search of all
         combinations of the `allocation_samples` of its ControlSignals (and contained in its
-        `controlSignalSearchSpace` attribute), by executing the system (using `run_simulation`) for each
+        `control_signal_search_space` attribute), by executing the system (using `run_simulation`) for each
         combination, evaluating the result using `value_function`, and returning the allocation_policy that generated
         the highest value.  If a custom function is specified, it must accommodate a :keyword:`controller` argument that
-        specifies an EVCMechanism (and provides access to its attributes, including `controlSignalSearchSpace`),
+        specifies an EVCMechanism (and provides access to its attributes, including `control_signal_search_space`),
         and must return an array with the same format (number and type of elements) as the EVCMechanism's
         `allocation_policy` attribute.
 
@@ -576,7 +576,7 @@ class EVCMechanism(ControlMechanism_Base):
             controller.input_value is a list of current outcome values (values for monitored_states)
             controller.monitor_for_control_weights_and_exponents is a list of parameterizations for outputStates
             controller.control_signals is a list of controlSignal objects
-            controller.control_signalsearchSpace is a list of all allocationPolicies specifed by allocation_samples
+            controller.control_signal_search_space is a list of all allocationPolicies specifed by allocation_samples
             controlSignal.allocation_samples is the set of samples specified for that controlSignal
             [TBI:] controlSignal.allocation_range is the range that the controlSignal value can take
             controller.allocation_policy - holds current allocation_policy
@@ -662,13 +662,13 @@ class EVCMechanism(ControlMechanism_Base):
         :keyword:`outcome` argument that is a 1d array with the outcome of the current `allocation_policy`; and a
         :keyword:`cost` argument that is 1d array with the cost of the current `allocation_policy`.
 
-    controlSignalSearchSpace : 2d np.array
+    control_signal_search_space : 2d np.array
         an array that contains arrays of allocation policies.  Each allocation policy contains one value for each of
         the mechanism's ControlSignals.  By default, it is assigned a set of all possible allocation policies
         (using np.meshgrid to construct all permutations of ControlSignal values).
 
     EVC_max : 1d np.array with single value
-        the maximum EVC value over all allocation policies in `controlSignalSearchSpace`.
+        the maximum EVC value over all allocation policies in `control_signal_search_space`.
 
     EVC_max_state_values : 2d np.array
         an array of the values for the outputStates in `monitored_output_states` using the allocation policy that
@@ -679,11 +679,11 @@ class EVCMechanism(ControlMechanism_Base):
 
     save_all_values_and_policies : bool : default False
         specifies whether or not to save all allocation policies and associated EVC values (in addition to the max).
-        If it is specified, each policy tested in the `controlSignalSearchSpace` is saved in `EVC_policies` and their
+        If it is specified, each policy tested in the `control_signal_search_space` is saved in `EVC_policies` and their
         values are saved in `EVC_values`.
 
     EVC_policies : 2d np.array
-        array of allocation policies tested in `controlSignalSearchSpace`.  The values of each are stored in
+        array of allocation policies tested in `control_signal_search_space`.  The values of each are stored in
         `EVC_values`.
 
     EVC_values :  1d np.array
@@ -1318,9 +1318,9 @@ class EVCMechanism(ControlMechanism_Base):
         """Determine allocation_policy for next run of system
 
         Update prediction mechanisms
-        Construct controlSignalSearchSpace (from allocation_samples of each item in controlSignals):
+        Construct control_signal_search_space (from allocation_samples of each item in controlSignals):
             * get `allocation_samples` for each ControlSignal in `controlSignals`
-            * construct `controlSignalSearchSpace`: a 2D np.array of control allocation policies, each policy of which
+            * construct `control_signal_search_space`: a 2D np.array of control allocation policies, each policy of which
               is a different combination of values, one from the `allocation_samples` of each ControlSignal.
         Call self.function -- default is ControlSignalGridSearch
         Return an allocation_policy
@@ -1340,11 +1340,11 @@ class EVCMechanism(ControlMechanism_Base):
         for control_signal in self.control_signals:
             control_signal_sample_lists.append(control_signal.allocation_samples)
 
-        # Construct controlSignalSearchSpace:  set of all permutations of ControlProjection allocations
+        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.control_signalsearchSpace = \
+        self.control_signal_search_space = \
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
 
         # EXECUTE SEARCH
