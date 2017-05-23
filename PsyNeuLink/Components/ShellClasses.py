@@ -91,8 +91,6 @@ class Process(ShellClass):
 
 # ******************************************* MECHANISM ****************************************************************
 
-ParamValueProjection = namedtuple('ParamValueProjection', 'value projection')
-
 
 class Mechanism(ShellClass):
 

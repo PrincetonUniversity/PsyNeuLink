@@ -30,7 +30,7 @@ class Keywords:
         receive projections from other processes in the system. The `ORIGIN` mechanisms of a process or
         system are listed in its :keyword:`originMechanisms` attribute, and can be displayed using its :keyword:`show`
         method.  For additional details about `ORIGIN` mechanisms in processes, see
-        `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Ouput>`;
+        `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`;
         and for systems see `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
 
@@ -58,7 +58,7 @@ class Keywords:
         as it may send projections to other processes in the system.  The `TERMINAL` mechanisms of a process
         or system are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
         :keyword:`show` method.  For additional details about `TERMINAL` mechanisms in processes, see
-        `Process_Mechanisms` and `Process_Input_And_Ouput`; and for systems see `System_Mechanisms`.
+        `Process_Mechanisms` and `Process_Input_And_Output`; and for systems see `System_Mechanisms`.
 
     SINGLETON
         A `ProcessingMechanism` that is the only mechanism in a process and/or system.  It can serve the functions
@@ -133,6 +133,9 @@ class MatrixKeywords:
     def _values(self):
         return list(self.__dict__.values())
 
+    def _set(self):
+        return set(self.__dict__.values())
+
     def _names(self):
         return list(self.__dict__)
 
@@ -146,6 +149,7 @@ AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
 DEFAULT_MATRIX = IDENTITY_MATRIX
 
 MATRIX_KEYWORDS = MatrixKeywords()
+MATRIX_KEYWORD_SET = MATRIX_KEYWORDS._set()
 MATRIX_KEYWORD_VALUES = MATRIX_KEYWORDS._values()
 MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
 # MATRIX_KEYWORD_VALUES = list(MATRIX_KEYWORDS.__dict__.values())
@@ -181,7 +185,7 @@ EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = '| Assign' # Used in context for Log
 ASSIGN_VALUE = ': Assign value'
 kwAggregate = ': Aggregate' # Used in context for Log
-kwReceiver = "receiver"
+RECEIVER = "receiver"
 VALIDATE = 'Validate'
 COMMAND_LINE = "COMMAND_LINE"
 SET_ATTRIBUTE = "SET ATTRIBUTE"
@@ -301,6 +305,10 @@ MAPPING_PROJECTION = "MappingProjection"
 LEARNING_PROJECTION = "LearningProjection"
 CONTROL_PROJECTION = "ControlProjection"
 GATING_PROJECTION = "GatingProjection"
+TRANSMISSIVE_PROJECTION = "TransmissiveProjection"
+MODULATORY_PROJECTION = "ModulatoryProjection"
+MODULATORY_PROJECTIONS = "ModulatoryProjections"
+
 
 # Function:
 EXAMPLE_FUNCTION_TYPE = "EXAMPLE FUNCTION"
@@ -321,9 +329,9 @@ DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
 EVC_MECHANISM = "EVCMechanism"
 
 # MonitoringMechanisms:
-COMPARATOR_MECHANISM = "ComparatorMechanism"
-WEIGHTED_ERROR_MECHANISM = "WeightedErrorMechanism"
 OBJECTIVE_MECHANISM = "ObjectiveMechanism"
+COMPARATOR_MECHANISM = "ComparatorMechanism"
+MONITORING_MECHANISM = "MonitoringMechanism"
 
 # ProcessingMechanisms:
 TRANSFER_MECHANISM = "TransferMechanism"
@@ -399,6 +407,7 @@ HARD_CLAMP = "hard_clamp"
 LEARNING = 'learning'
 LEARNING_RATE = "learning_rate"
 CONTROL = 'control'
+GATING = 'gating'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"
@@ -489,20 +498,28 @@ STATE_PROJECTIONS = "StateProjections"  # Used to specify projection list to Sta
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
+kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
+kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
 
+# InputStates:
 PRIMARY = 'Primary'
 INPUT_STATES = 'input_states'
 INPUT_STATE_PARAMS = 'input_state_params'
-kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
-kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
+WEIGHT = 'weight'
+EXPONENT = 'exponent'
+
+# ParameterStates:
 PARAMETER_STATES = 'parameter_states'
 PARAMETER_STATE_PARAMS = 'parameter_state_params'
 PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
+
+# OutputStates:
 OUTPUT_STATES = 'output_states'
 OUTPUT_STATE_PARAMS = 'output_states_params'
 STANDARD_OUTPUT_STATES = 'standard_output_states'
 INDEX = 'index'
 CALCULATE = 'calculate'
+
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------
@@ -515,7 +532,7 @@ MAPPING_PROJECTION_PARAMS = "MappingProjectionParams"
 CONTROL_PROJECTION_PARAMS = "ControlProjectionParams"
 LEARNING_PROJECTION_PARAMS = 'LearningProjectionParams'
 PROJECTION_SENDER = 'projection_sender'
-kwSenderArg = 'sender'
+SENDER = 'sender'
 PROJECTION_SENDER_VALUE =  "projection_sender_value"
 kwProjectionReceiver = 'projection_receiver'
 kwReceiverArg = 'receiver'

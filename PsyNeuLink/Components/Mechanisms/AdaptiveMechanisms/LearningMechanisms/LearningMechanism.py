@@ -351,18 +351,18 @@ Class Reference
 
 """
 
-
-from PsyNeuLink.Components.Functions.Function import BackPropagation
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
+    import ObjectiveMechanism, ERROR_SIGNAL
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Functions.Function import BackPropagation
 
 # Params:
 
-parameter_keywords.update({LEARNING_PROJECTION})
-projection_keywords.update({LEARNING_PROJECTION})
+parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
+projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
@@ -386,7 +386,6 @@ ERROR_SIGNAL_INDEX = 3
 # Used to name input_states:
 ACTIVATION_INPUT = 'activation_input'     # inputState
 ACTIVATION_OUTPUT = 'activation_output'   # inputState
-ERROR_SIGNAL = 'error_signal'             # inputState and outputState
 LEARNING_SIGNAL = 'learning_signal'       #                outputState
 
 input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
@@ -618,7 +617,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
-        TEST = True
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has exactly three items: activation_input, activation_output and error_signal
@@ -712,7 +710,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     # IMPLEMENTATION NOTE: Assumes that the LearningMechanism projects to and modifies only a single MappingProjection
     @property
     def learned_projection(self):
-        learning_projections = self.output_states[LEARNING_SIGNAL].sendsToProjections
+        learning_projections = self.output_states[LEARNING_SIGNAL].efferents
         if learning_projections:
             return learning_projections[0].receiver.owner
         else:

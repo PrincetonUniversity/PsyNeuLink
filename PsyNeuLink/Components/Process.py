@@ -20,7 +20,7 @@
          * :ref:`Process_Pathway`
          * :ref:`Process_Mechanisms`
          * :ref:`Process_Projections`
-         * :ref:`Process_Input_And_Ouput`
+         * :ref:`Process_Input_And_Output`
          * :ref:`Process_Learning`
       * :ref:`Process_Execution`
       * :ref:`Process_Class_Reference`
@@ -144,7 +144,7 @@ Projections between mechanisms in the `pathway` of a process are specified in on
     `IDENTITY_MATRIX` is used for the projection;  if the formats do not match, or
     `learning has been specified <Process_Learning>` either for the projection or the process,
     then a `FULL_CONNECTIVITY_MATRIX` is used. If the mechanism is the `ORIGIN` mechanism (i.e., first in the
-    `pathway`), a `ProcessInputState <Process_Input_And_Ouput>` will be used as the sender,
+    `pathway`), a `ProcessInputState <Process_Input_And_Output>` will be used as the sender,
     and an `IDENTITY_MATRIX` is used for the projection.
 
 
@@ -326,25 +326,12 @@ import math
 import re
 
 import PsyNeuLink.Components
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.Mechanism import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
-    _is_learning_spec
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, \
-    _add_projection_to
-from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
-from PsyNeuLink.Globals.Registry import register_category
-import math
-import re
-
 import PsyNeuLink.Components
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
+    ObjectiveMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
     _is_learning_spec
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, \
@@ -656,7 +643,7 @@ class Process_Base(Process):
                   to receive the initial input to the Process.  However, this behavior can be modified with the process'
                   `clamp_input` attribute.
 
-    inputValue :  2d np.array : default ``variableInstanceDefault``
+    input_value :  2d np.array : default ``variableInstanceDefault``
         same as the :keyword:`variable` attribute of the process; contains the values of the ProcessInputStates in its
         `processInputStates` attribute.
 
@@ -1230,10 +1217,10 @@ class Process_Base(Process):
             #    add that to the pathway so that it can be identified and assigned for learning if so specified
             if i+1 == len(pathway):
                 if any(any(proj.receiver.owner is mech
-                           for proj in state.sendsToProjections)
+                           for proj in state.efferents)
                        for state in mech.output_states):
                     for state in mech.output_states:
-                        for proj in state.sendsToProjections:
+                        for proj in state.efferents:
                             if proj.receiver.owner is mech:
                                 pathway.append(MechanismTuple(proj,None,None))
                                 pathway.append(pathway[i-2])
@@ -1288,7 +1275,7 @@ class Process_Base(Process):
                     mech = item
 
                     # Check if first Mechanism already has any projections and, if so, issue appropriate warning
-                    if mech.input_state.receivesFromProjections:
+                    if mech.input_state.afferents:
                         self._issue_warning_about_existing_projections(mech, context)
 
                     # Assign input projection from Process
@@ -1312,7 +1299,7 @@ class Process_Base(Process):
                             try:
                                 learning_projections = list(projection for
                                                         projection in
-                                                        preceding_item._parameter_states[MATRIX].receivesFromProjections
+                                                        preceding_item._parameter_states[MATRIX].afferents
                                                         if isinstance(projection, LearningProjection))
 
                             # preceding_item doesn't have a parameterStates attrib, so assign one with self.learning
@@ -1356,7 +1343,7 @@ class Process_Base(Process):
     # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
 
                     # PRECEDING ITEM IS A MECHANISM
-                    projection_list = item.input_state.receivesFromProjections
+                    projection_list = item.input_state.afferents
                     projection_found = False
                     for projection in projection_list:
                         # Current mechanism DOES receive a projection from the preceding item
@@ -1397,7 +1384,7 @@ class Process_Base(Process):
                                 # Check if projection's matrix param has a learningSignal
                                 else:
                                     if not (any(isinstance(projection, LearningProjection) for
-                                                projection in matrix_param_state.receivesFromProjections)):
+                                                projection in matrix_param_state.afferents)):
                                         _add_projection_to(projection,
                                                           matrix_param_state,
                                                           projection_spec=self.learning)
@@ -1475,19 +1462,19 @@ class Process_Base(Process):
                         if item.value is DEFERRED_INITIALIZATION:
                             # Check sender arg
                             try:
-                                sender_arg = item.init_args[kwSenderArg]
+                                sender_arg = item.init_args[SENDER]
                             except AttributeError:
                                 raise ProcessError("PROGRAM ERROR: Value of {} is {} but it does not have init_args".
                                                    format(item, DEFERRED_INITIALIZATION))
                             except KeyError:
                                 raise ProcessError("PROGRAM ERROR: Value of {} is {} "
                                                    "but init_args does not have entry for {}".
-                                                   format(item.init_args[NAME], DEFERRED_INITIALIZATION, kwSenderArg))
+                                                   format(item.init_args[NAME], DEFERRED_INITIALIZATION, SENDER))
                             else:
                                 # If sender is not specified for the projection,
                                 #    assign mechanism that precedes in pathway
                                 if sender_arg is None:
-                                    item.init_args[kwSenderArg] = sender_mech
+                                    item.init_args[SENDER] = sender_mech
                                 elif sender_arg is not sender_mech:
                                     raise ProcessError("Sender of projection ({}) specified in item {} of"
                                                        " pathway for {} is not the mechanism ({}) "
@@ -1569,7 +1556,7 @@ class Process_Base(Process):
     def _issue_warning_about_existing_projections(self, mechanism, context=None):
 
         # Check where the projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
-        for projection in mechanism.input_state.receivesFromProjections:
+        for projection in mechanism.input_state.afferents:
 
             # Projection to first Mechanism in Pathway comes from a Process input
             if isinstance(projection.sender, ProcessInputState):
@@ -1810,7 +1797,7 @@ class Process_Base(Process):
                 input_state._deferred_init()
                 # Restrict projections to those from mechanisms in the current process
                 projections = []
-                for projection in input_state.receivesFromProjections:
+                for projection in input_state.afferents:
                     try:
                         if self in projection.sender.owner.processes:
                             projections.append(projection)
@@ -1822,12 +1809,12 @@ class Process_Base(Process):
             for parameter_state in mech._parameter_states:
                 parameter_state._deferred_init()
                 # MODIFIED 5/2/17 OLD:
-                # self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
+                # self._instantiate__deferred_init_projections(parameter_state.afferents)
                 # MODIFIED 5/2/17 NEW:
                 # Defer instantiation of ControlProjections to System
                 #   and there should not be any other type of projection to the ParameterState of a Mechanism
                 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-                if not all(isinstance(proj, ControlProjection) for proj in parameter_state.receivesFromProjections):
+                if not all(isinstance(proj, ControlProjection) for proj in parameter_state.afferents):
                     raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterState for a Mechanism")
                 # MODIFIED 5/2/17 END
 
@@ -1844,7 +1831,7 @@ class Process_Base(Process):
                 # then designate mech as a TARGET
                 if (isinstance(mech, ObjectiveMechanism) and
                         # any(projection.sender.owner.processes[self] == TERMINAL
-                        #     for projection in mech.input_states[SAMPLE].receivesFromProjections) and
+                        #     for projection in mech.input_states[SAMPLE].afferents) and
                         mech._learning_role is TARGET and
                         self.learning
                             ):
@@ -1879,7 +1866,7 @@ class Process_Base(Process):
                 for parameter_state in projection._parameter_states:
                     # Initialize each projection to the parameterState (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
-                    for param_projection in parameter_state.receivesFromProjections:
+                    for param_projection in parameter_state.afferents:
                         param_projection._deferred_init(context=context)
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _monitoring_mech_tuples
@@ -1930,14 +1917,14 @@ class Process_Base(Process):
              and report assignment if verbose
         """
 
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
         def trace_learning_objective_mechanism_projections(mech):
             """Recursively trace projections to Objective mechanisms;
                    return TARGET ObjectiveMechanism if one is found upstream;
                    return None if no TARGET ObjectiveMechanism is found.
             """
             for input_state in mech.input_states.values():
-                for projection in input_state.receivesFromProjections:
+                for projection in input_state.afferents:
                     sender = projection.sender.owner
                     # If projection is not from another ObjectiveMechanism, ignore
                     if not isinstance(sender, (ObjectiveMechanism)):
@@ -2227,7 +2214,7 @@ class Process_Base(Process):
             # For each inputState of the mechanism
             for input_state in mech.input_states:
                 # For each projection in the list
-                for projection in input_state.receivesFromProjections:
+                for projection in input_state.afferents:
 
                     # Skip learning if projection is an input from the Process or a system
                     # or comes from a mechanism that belongs to another process
@@ -2349,6 +2336,7 @@ class Process_Base(Process):
 
         print("\n\'{}\' executing with:\n- pathway: [{}]".
               format(append_type_to_name(self),
+              # format(self.name,
                      re.sub('[\[,\],\n]','',str(self.mechanismNames))))
         # # MODIFIED 2/17/17 OLD:
         # variable = [list(i) for i in self.variable]
@@ -2378,9 +2366,13 @@ class Process_Base(Process):
                      re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.value]))))
 
         if self.learning:
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import TARGET_MSE
-            print("\n- MSE: {:0.3}".
-                  format(float(self.targetMechanism.output_states[TARGET_MSE].value)))
+            from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+                import MSE
+            for mech in self.targetMechanisms:
+                if not MSE in mech.output_states:
+                    continue
+                print("\n- MSE: {:0.3}".
+                      format(float(mech.output_states[MSE].value)))
 
         elif separator:
             print("\n\n****************************************\n")
@@ -2494,13 +2486,13 @@ class ProcessInputState(OutputState):
         else:
             self.name = owner.name + "_" + name
         self.prefs = prefs
-        self.sendsToProjections = []
+        self.efferents = []
         self.owner = owner
         self.value = variable
         # MODIFIED 2/17/17 NEW:
         # self.owner.input = self.value
         # MODIFIED 2/17/17 END
-        # self.receivesFromProjections = []
+        # self.afferents = []
         # from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
         # from PsyNeuLink.Components.Functions.Function import Linear
         # self.index = PRIMARY_OUTPUT_STATE

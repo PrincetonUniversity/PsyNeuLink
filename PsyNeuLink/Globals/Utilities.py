@@ -84,7 +84,6 @@ from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.TimeScale import *
 
 
-
 class UtilitiesError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -164,6 +163,7 @@ def optional_parameter_spec(param):
         return True
     return parameter_spec(param)
 
+
 def parameter_spec(param):
     """Test whether param is a legal PsyNeuLink parameter specification
 
@@ -178,7 +178,7 @@ def parameter_spec(param):
     #     param = ??
     # if is_numeric(param):
     from PsyNeuLink.Components.Functions.Function import function_type
-    from PsyNeuLink.Components.Projections.Projection import Projection, ParamValueProjection
+    from PsyNeuLink.Components.Projections.Projection import Projection
     from PsyNeuLink.Components.Component import parameter_keywords
 
     if (isinstance(param, (numbers.Number,
@@ -186,7 +186,6 @@ def parameter_spec(param):
                            list,
                            tuple,
                            function_type,
-                           ParamValueProjection,
                            Projection)) or
         (inspect.isclass(param) and issubclass(param, Projection)) or
         param in parameter_keywords):
@@ -642,7 +641,7 @@ from collections import UserList
 class ContentAddressableList(UserList):
     """
     ContentAddressableList( component_type, key=None, list=None)
-
+    
     Implements dict-like list, that can be keyed by the names of the `compoments <Component>` in its entries.
 
     Supports:

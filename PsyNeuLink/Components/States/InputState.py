@@ -17,10 +17,10 @@ An inputState receives the input to a mechanism provided by the projections to t
 or system.  If the inputState belongs to an `ORIGIN` mechanism (see
 `role of mechanisms in processes and systems <Mechanism_Role_In_Processes_And_Systems>`), then it receives the input
 specified when that process or system is `run <Run>`.  The projections received by an inputState are
-listed in its `receivesFromProjections <InputState.receivesFromProjections>` attribute. Its
+listed in its `afferents <InputState.afferents>` attribute. Its
 `function <InputState.function>` combines the values of these inputs, and the result is assigned to an item
 corresponding to the inputState in the owner mechanism's :keyword:`variable <Mechanism.Mechanism_Base.variable>` and
-`inputValue <Mechanism.Mechanism_Base.inputValue>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
+`input_value <Mechanism.Mechanism_Base.input_value>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
 for additional details about the role of input_states in mechanisms).
 
 
@@ -45,6 +45,11 @@ the ``receiver`` of a MappingProjection from the  preceding mechanism in the pat
 An inputState must be owned by a mechanism. Therefore, if the inputState is created directly, its mechanism
 must be specified in the ``owner`` argument of its constructor; if the inputState is specified in the
 INPUT_STATES entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.
+
+.. _InputState_Specification
+
+InputState Specification
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 If one or more custom input_states need to be specified when a mechanism is created, or added to an existing mechanism,
 they can be specified in an entry of the mechanism's parameter dictionary, using the key :keyword`INPUT_STATES`
@@ -82,8 +87,8 @@ one of the specifications below:
       :ref:`projection specification dictionary <Projection_In_Context_Specification>`, or a list containing
       items that are either of those.
     ..
-    * A :any:`ParamValueProjection` tuple.  This creates a default inputState using the ``value`` item as its
-    ``variable``, and assigns the state as the ``receiver`` of the projection item.
+    * A **2-item tuple**.  This creates a default inputState using the first (value) item as its
+      :keyword:`variable`, and assigns the state as the :keyword:`receiver` of the 2nd (projection) item.
 
     .. note::
        In all cases, the resulting ``value`` of the inputState must be compatible with (that is, have the same number
@@ -127,7 +132,7 @@ Structure
 Every inputState is owned by a `mechanism <Mechanism>`. It can receive one or more
 `MappingProjections <MappingProjection>` from other mechanisms, as well as from the process or system to which its
 owner belongs (if it is the `ORIGIN` mechanism for that process or system).  The projections received by an
-inputState are listed in its `receivesFromProjections <InputState.receivesFromProjections>` attribute.
+inputState are listed in its `afferents <InputState.afferents>` attribute.
 
 Like all PsyNeuLink components, an inputState has the three following core attributes:
 
@@ -153,8 +158,8 @@ An inputState cannot be executed directly.  It is executed when the mechanism to
 When this occurs, the inputState executes any projections it receives, calls its `function <InputState.function>` to
 aggregate their values, and then assigns the result to the inputState's `value <InputState.value>` attribute.  This,
 in turn, is assigned to the item of the mechanism's `variable <Mechanism.Mechanism_Base.variable>` and
-`inputValue <Mechanism.Mechanism_Base.inputValue>` attributes corresponding to that inputState
-(see `mechanism variable and inputValue attributes <Mechanism_Variable>` for additional details).
+`input_value <Mechanism.Mechanism_Base.input_value>` attributes corresponding to that inputState
+(see `mechanism variable and input_value attributes <Mechanism_Variable>` for additional details).
 
 .. _InputState_Class_Reference:
 
@@ -274,7 +279,7 @@ class InputState(State_Base):
     owner : Mechanism
         the mechanism to which the inputState belongs.
 
-    receivesFromProjections : Optional[List[Projection]]
+    afferents : Optional[List[Projection]]
         a list of the projections received by the inputState
         (i.e., for which it is a `receiver <Projection.Projection.receiver>`).
 
@@ -326,7 +331,9 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
+                               WEIGHT:None,
+                               EXPONENT:None})
 
     #endregion
 
@@ -354,6 +361,28 @@ class InputState(State_Base):
                                                   name=name,
                                                   prefs=prefs,
                                                   context=self)
+
+
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate weights and exponents
+        
+        This needs to be done here, since paramClassDefault declarations assign None as default
+            (so that they can be ignored if not specified here or in the function)
+        """
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        
+        if WEIGHT in target_set and target_set[WEIGHT] is not None:
+            if not isinstance(target_set[WEIGHT], (int, float)):
+                raise InputStateError("{} parameter of {} for {} ({}) must be an int or float".
+                                      format(WEIGHT, self.name, self.owner.name, target_set[WEIGHT]))
+
+        if EXPONENT in target_set and target_set[EXPONENT] is not None:
+            if not isinstance(target_set[EXPONENT], (int, float)):
+                raise InputStateError("{} parameter of {} for {} ({}) must be an int or float".
+                                      format(EXPONENT, self.name, self.owner.name, target_set[EXPONENT]))
+
 
     def _instantiate_function(self, context=None):
         """Insure that function is LinearCombination and that output is compatible with owner.variable
@@ -394,6 +423,15 @@ class InputState(State_Base):
                                                   self.reference_value))
                                                   # self.owner.variable))
 
+    @property
+    def trans_projections(self):
+        return self.afferents
+
+    @trans_projections.setter
+    def trans_projections(self, assignment):
+        self.afferents = assignment
+
+
 def _instantiate_input_states(owner, context=None):
     """Call State._instantiate_state_list() to instantiate orderedDict of inputState(s)
 
@@ -406,7 +444,7 @@ def _instantiate_input_states(owner, context=None):
         - self.input_state contains the `primary inputState <Mechanism_InputStates>`:  first or only one in OrderedDict
         - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more input_states)
         - each inputState corresponds to an item in the variable of the owner's function
-        - the value of all of the input_states is stored in a list in inputValue
+        - the value of all of the input_states is stored in a list in input_value
         - if there is only one inputState, it is assigned the full value
 
     Note: State._instantiate_state_list()
@@ -456,9 +494,8 @@ def _instantiate_input_states(owner, context=None):
                           format(old_variable, append_type_to_name(owner),owner.variable))
 
 
-
-#     # Initialize self.inputValue to correspond to format of owner's variable, and zero it
+#     # Initialize self.input_value to correspond to format of owner's variable, and zero it
 # # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
 # # FIX:  IS THIS A LIST OR np.array (SHOULD BE A LIST)
-#     # ??REPLACE THIS WITH owner.inputValue = list(owner.variable) * 0.0??
-#     owner.inputValue = owner.variable.copy() * 0.0
+#     # ??REPLACE THIS WITH owner.input_value = list(owner.variable) * 0.0??
+#     owner.input_value = owner.variable.copy() * 0.0

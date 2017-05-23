@@ -282,6 +282,7 @@ Contributors
 
 with substantial assistance from:
 
+* **Abhishek Bhattacharjee**, Department of Computer Science, Rutgers University
 * **Mihai Capota**, Intel Labs, Intel Corporation
 * **Bryn Keller**, Intel Labs, Intel Corporation
 * **Garrett McGrath**, Princeton Neuroscience Institute, Princeton University
@@ -289,6 +290,8 @@ with substantial assistance from:
 * **Amitai Shenhav**, Cognitive, Linguistic, & Psychological Sciences, Brown University
 * **Michael Shvartsman**, Princeton Neuroscience Institute, Princeton University
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
+* **Jan Vesely**, Department of Computer Science, Rutgers University
+
 
 ..
    .. toctree::

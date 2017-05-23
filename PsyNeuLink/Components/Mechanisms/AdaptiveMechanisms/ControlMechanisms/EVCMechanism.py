@@ -293,7 +293,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCAu
     ControlSignalGridSearch, ValueFunction
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
 OBJECT = 0
@@ -568,7 +568,7 @@ class EVCMechanism(ControlMechanism_Base):
             controller._assign_simulation_inputs assigns value of prediction_mechanisms to inputs of ORIGIN mechanisms
             controller.run will execute a specified number of trials with the simulation inputs
             controller.monitored_states is a list of the mechanism outputStates being monitored for outcome
-            controller.inputValue is a list of current outcome values (values for monitored_states)
+            controller.input_value is a list of current outcome values (values for monitored_states)
             controller.monitor_for_control_weights_and_exponents is a list of parameterizations for outputStates
             controller.controlSignals is a list of controlSignal objects
             controller.controlSignalSearchSpace is a list of all allocationPolicies specifed by allocation_samples
@@ -833,7 +833,7 @@ class EVCMechanism(ControlMechanism_Base):
             #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
             for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
                                                             prediction_mechanism.input_states):
-                for projection in orig_input_state.receivesFromProjections:
+                for projection in orig_input_state.afferents:
                     MappingProjection(sender=projection.sender,
                                       receiver=prediction_input_state,
                                       matrix=projection.matrix)
@@ -861,7 +861,7 @@ class EVCMechanism(ControlMechanism_Base):
         #    the variable of the ORIGIN mechanism for each process in the system
         self.predictedInput = {}
         for i, origin_mech in zip(range(len(self.system.originMechanisms)), self.system.originMechanisms):
-            # self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].inputValue
+            # self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].input_value
             self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].variable
 
     def _instantiate_monitoring_mechanism(self, context=None):
@@ -936,7 +936,7 @@ class EVCMechanism(ControlMechanism_Base):
         """
 
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import _validate_monitored_value
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import _validate_monitored_value
 
         # PARSE SPECS
 
@@ -1442,7 +1442,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.input_states)
-        #    stored in self.inputValue = list(self.variable)
+        #    stored in self.input_value = list(self.variable)
         # self.monitoring_mechanism.execute(context=EVC_SIMULATION)
         self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
