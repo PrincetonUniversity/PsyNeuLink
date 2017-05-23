@@ -435,7 +435,7 @@ class ControlMechanism_Base(Mechanism_Base):
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """Add outputState (as ControlSignal) and assign as sender to requesting ControlProjection
 
-        # Updates allocation_policy and controlSignalCosts attributes to accommodate instantiated projection
+        # Updates allocation_policy and control_signal_costs attributes to accommodate instantiated projection
 
         Notes:  
         * params are expected to be for (i.e., to be passed to) ControlSignal;
@@ -525,11 +525,11 @@ class ControlMechanism_Base(Mechanism_Base):
         except AttributeError:
             self.control_projections = [projection]
 
-        # Update controlSignalCosts to accommodate instantiated projection
+        # Update control_signal_costs to accommodate instantiated projection
         try:
-            self.controlSignalCosts = np.append(self.controlSignalCosts, np.empty((1,1)),axis=0)
+            self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
         except AttributeError:
-            self.controlSignalCosts = np.empty((1,1))
+            self.control_signal_costs = np.empty((1,1))
 
         # Assign ControlSignals in the order they are stored of output_states
         self.control_signals = self.output_states

@@ -150,7 +150,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             NOT CURRENTLY IN USE:
             default_input_value : value, list or np.ndarray : :py:data:`defaultControlAllocation <LINK]>`
                 the default allocation for the ControlMechanism;
-                its length should equal the number of ``controlSignals``.
+                its length should equal the number of ``control_signals``.
 
         monitor_for_control : List[OutputState specification] : default None
             specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
@@ -304,7 +304,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     def _instantiate_gating_projection(self, projection, params=None, context=None):
         """Add outputState (as ControlSignal) and assign as sender to requesting GatingProjection
 
-        # Updates allocation_policy and controlSignalCosts attributes to accommodate instantiated projection
+        # Updates allocation_policy and control_signal_costs attributes to accommodate instantiated projection
 
         Notes:  
         * params are expected to be for (i.e., to be passed to) ControlSignal;
@@ -383,11 +383,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
         except AttributeError:
             self.gatingProjections = [projection]
 
-        # Update controlSignalCosts to accommodate instantiated projection
+        # Update control_signal_costs to accommodate instantiated projection
         try:
-            self.controlSignalCosts = np.append(self.controlSignalCosts, np.empty((1,1)),axis=0)
+            self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
         except AttributeError:
-            self.controlSignalCosts = np.empty((1,1))
+            self.control_signal_costs = np.empty((1,1))
 
         return state
 

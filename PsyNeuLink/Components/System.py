@@ -2825,7 +2825,7 @@ class System_Base(System):
             G.edge(objmech.name, controller.name, label=connector.name, color=control_color)
 
             # outgoing edges
-            for output_state in controller.controlSignals:
+            for output_state in controller.control_signals:
                 for projection in output_state.efferents:
                     edge_name
                     rcvr_name = projection.receiver.owner.name
