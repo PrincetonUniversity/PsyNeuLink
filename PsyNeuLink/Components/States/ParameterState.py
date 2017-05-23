@@ -750,7 +750,6 @@ class ParameterState(State_Base):
                                   format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
 
 
-
 def _instantiate_parameter_states(owner, context=None):
     """Call _instantiate_parameter_state for all params in user_params to instantiate ParameterStates for them
 

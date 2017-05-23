@@ -34,15 +34,10 @@ A ControlMechanism is also created automatically whenever a `system is created <
 the `controller <System_Execution_Control>` for that system. The values to be monitored by the ControlMechanism are  
 specified in the **monitor_for_control** argument of its constructor, and the parameters it controls are specified in
 the **control_signals** argument.  When the ControlMechanism is created, it automatically creates
-an ObjectiveMechanism that is used to monitor and evaluate the value specified in **monitor_for_control**
-as well as `ControlSignal <ControlSignals>` and `ControlProjections <ControlProjections>` used to control the parameter
-values specified in **control_signals**.
-
-Xx
-`monitor_for_control <ControlMechanism.monitor_for_control>` attribute.  The result of the evaluation is used to
-specify the value of the ControlMechanism's `ControlProjections <ControlProjection>`. How a ControlMechanism creates its
-ControlProjections and determines their value based on the outcome of its evaluation  depends on the
-`subclass <ControlMechanism>`.
+an ObjectiveMechanism (used to monitor and evaluate the values specified in **monitor_for_control**) 
+as well as `ControlSignals <ControlSignal>` and `ControlProjections <ControlProjection>` used to control the parameters
+specified in **control_signals**, as described below. The kind of ObjectiveMechanism created by a ControlMechanism,
+and how it evalutes the values it monitors, depends on the `subclass <ControlMechanism>` of ControlMechanism.
 
 .. _ControlMechanism_Control_Signals:
 
@@ -84,27 +79,36 @@ ObjectiveMechanism monitors each mechanism and/or outputState listed in the Cont
 'monitor_for_control <ControlMechanism.monitor_for_control>` attribute, and evaluates them using the its `function`.
 This information is used to set the value of the ControlMechanism's ControlSignals.
 
+.. _ControlMechanism_Examples:
+
+Examples
+~~~~~~~~
+
+EXAMPLES HERE
+
+COMMENT:
+EXAMPLES HERE OF THE DIFFERENT FORMS OF SPECIFICATION FOR **monitor_for_control** and **control_signals**
+COMMENT
+
+
 .. _ControlMechanism_Execution:
 
 Execution
 ---------
 
 A ControlMechanism that is a system's `controller` is always the last mechanism to be executed (see `System Control
-<System_Execution_Control>`).  Its `function <ControlMechanism.function>` takes as its input the values of the
-outputStates in its `monitored_output_states` attribute, and uses those to determine the value of its
-`ControlProjections <ControlProjection>`. In the subsequent round of execution, each ControlProjection's value is
-used by the `ParameterState` to which it projects to update the parameter being controlled.
+<System_Execution_Control>`).  Its `function <ControlMechanism.function>` takes as its input the value in its 
+*ERROR_SIGNAL* `input_state <ControlMechanism.input_state>`, and use that to determine its 
+`allocation_policy <ControlMechanism.allocation_policy>` that specifies the value assigned to each of its   
+`ControlSignals <ControlSignal>`.  Each of those is used by its associated `ControlProjection` to set the
+value of the ParameterState for the parameter it controls.  In the subsequent round of execution, 
+those parameter values are used by the mechanism when it executes.
 
 .. note::
    A `ParameterState` that receives a `ControlProjection` does not update its value until its owner mechanism
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the mechanism
    to which it belongs has executed.
-
-COMMENT:
-EXAMPLES HERE OF THE DIFFERENT FORMS OF SPECIFICATION FOR **monitor_for_control** and **control_signals**
-COMMENT
-
 
 .. _ControlMechanism_Class_Reference:
 
@@ -118,6 +122,7 @@ Class Reference
 
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.OutputState import OutputState
 
 ControlMechanismRegistry = {}
@@ -266,6 +271,7 @@ class ControlMechanism_Base(Mechanism_Base):
                  system=None,
                  monitor_for_control:tc.optional(list)=None,
                  function = Linear(slope=1, intercept=0),
+                 control_signals:tc.optional(list) = None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -290,14 +296,17 @@ class ControlMechanism_Base(Mechanism_Base):
         Check that len(WEIGHTS) = len(MONITOR_FOR_CONTROL)
         """
 
-        if SYSTEM in request_set:
-            if not isinstance(request_set[SYSTEM], System):
+        super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
+                                                                 target_set=target_set,
+                                                                 context=context)
+        if SYSTEM in target_set:
+            if not isinstance(target_set[SYSTEM], System):
                 raise KeyError
             else:
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
-        if MONITOR_FOR_CONTROL in request_set:
-            for spec in request_set[MONITOR_FOR_CONTROL]:
+        if MONITOR_FOR_CONTROL in target_set:
+            for spec in target_set[MONITOR_FOR_CONTROL]:
                 if isinstance(spec, MonitoredOutputStatesOption):
                     continue
                 if isinstance(spec, tuple):
@@ -312,9 +321,13 @@ class ControlMechanism_Base(Mechanism_Base):
                                                 "Mechanism or an OutputState of one in {}".
                                                 format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
 
-        super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
-                                                                 target_set=target_set,
-                                                                 context=context)
+        if CONTROL_SIGNALS in target_set:
+            for cs in target_set[CONTROL_SIGNALS]:
+                if isinstance(str, ParameterState):
+                    continue
+
+        
+        
 
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self
@@ -335,20 +348,27 @@ class ControlMechanism_Base(Mechanism_Base):
 
     def _instantiate_attributes_after_function(self, context=None):
         """Take over as default controller (if specified) and implement any specified ControlProjections
-
         """
-
+        
         if MAKE_DEFAULT_CONTROLLER in self.paramsCurrent:
             if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
                 self._take_over_as_default_controller(context=context)
             if not self.system.enable_controller:
                 return
-
+            
         # If ControlProjections were specified, implement them
         if CONTROL_PROJECTIONS in self.paramsCurrent:
             if self.paramsCurrent[CONTROL_PROJECTIONS]:
                 for key, projection in self.paramsCurrent[CONTROL_PROJECTIONS].items():
                     self._instantiate_control_projection(projection, context=self.name)
+
+    # def _instantiate_output_states(self, context=None):
+    #     """Instantiate ControlSignals specified in **control_signal** argument
+    #     """
+    #
+    #     for cs in self.control_signals:
+    #
+
 
     def _take_over_as_default_controller(self, context=None):
 
@@ -362,6 +382,11 @@ class ControlMechanism_Base(Mechanism_Base):
                         params = projection.control_signal
                         self._instantiate_control_projection(projection, params=params, context=context)
 
+
+
+
+    # IMPLEMENTATION NOTE:  INCORPORATE INTO _instantiate_output_states AND/OR
+    #                       MAKE THIS A COMPOSITION METHOD WHEN IT IS IMPLEMENTED
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """Add outputState (as ControlSignal) and assign as sender to requesting ControlProjection
 
