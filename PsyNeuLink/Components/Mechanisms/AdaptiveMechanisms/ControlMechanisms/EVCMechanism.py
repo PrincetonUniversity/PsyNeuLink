@@ -319,7 +319,7 @@ class ControlSignalCostOptions(IntEnum):
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
 ALLOCATION_POLICY = 'allocation_policy'
-CONTROL_SIGNAL_COST_OPTIONS = 'controlSignalCostOptions'
+CONTROL_SIGNAL_COST_OPTIONS = 'control_signal_cost_options'
 
 # ControlProjection Function Names
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
