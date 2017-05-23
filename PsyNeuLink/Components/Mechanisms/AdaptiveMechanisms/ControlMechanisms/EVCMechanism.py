@@ -575,12 +575,12 @@ class EVCMechanism(ControlMechanism_Base):
             controller.monitored_states is a list of the mechanism outputStates being monitored for outcome
             controller.input_value is a list of current outcome values (values for monitored_states)
             controller.monitor_for_control_weights_and_exponents is a list of parameterizations for outputStates
-            controller.control_signals is a list of controlSignal objects
+            controller.control_signals is a list of control_signal objects
             controller.control_signal_search_space is a list of all allocationPolicies specifed by allocation_samples
-            controlSignal.allocation_samples is the set of samples specified for that controlSignal
-            [TBI:] controlSignal.allocation_range is the range that the controlSignal value can take
+            control_signal.allocation_samples is the set of samples specified for that control_signal
+            [TBI:] control_signal.allocation_range is the range that the control_signal value can take
             controller.allocation_policy - holds current allocation_policy
-            controller.output_values is a list of current controlSignal values
+            controller.output_values is a list of current control_signal values
             controller.value_function - calls the three following functions (done explicitly, so each can be specified)
             controller.outcome_function - aggregates monitored outcomes (using specified weights and exponentiation)
             controller.cost_function - aggregate costs of control signals
@@ -703,7 +703,7 @@ class EVCMechanism(ControlMechanism_Base):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # This must be a list, as there may be more than one (e.g., one per controlSignal)
+    # This must be a list, as there may be more than one (e.g., one per control_signal)
     variableClassDefault = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import LinearCombination

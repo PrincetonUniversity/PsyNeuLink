@@ -2654,7 +2654,7 @@ print(my_system.run(inputs=input_list,
 
 # from Components.Projections.ControlProjection import *
 #
-# # Initialize controlSignal with some settings
+# # Initialize control_signal with some settings
 # settings = ControlSignalSettings.DEFAULTS | \
 #            ControlSignalSettings.DURATION_COST | \
 #            ControlSignalSettings.LOG
@@ -2671,7 +2671,7 @@ print(my_system.run(inputs=input_list,
 # # Can also change settings on the fly (note:  ControlProjection.OFF is just an enum defined in the ControlProjection module)
 # x.set_adjustment_cost(OFF)
 #
-# # Display some values in controlSignal (just to be sure it is set up OK)
+# # Display some values in control_signal (just to be sure it is set up OK)
 # print("Intensity Function: ", x.functions[kwControlSignalIntensityFunction].name)
 # print("Initial Intensity: ", x.intensity)
 #

@@ -426,7 +426,7 @@ class ControlSignal(OutputState):
                                                   self.reference_value))
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate allocation_samples and controlSignal cost functions
+        """Validate allocation_samples and control_signal cost functions
 
         Checks if:
         - cost functions are all appropriate
@@ -610,7 +610,7 @@ class ControlSignal(OutputState):
         Use self.function to assign intensity
             - if ignoreIntensityFunction is set (for efficiency, if the execute method it is the identity function):
                 ignore self.function
-                pass allocation (input to controlSignal) along as its output
+                pass allocation (input to control_signal) along as its output
         Update cost
         Assign intensity to value of ControlSignal (done in setter property for value)
 
@@ -690,7 +690,7 @@ class ControlSignal(OutputState):
                 cost_change_string = "+" + str(cost_change)
             print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
 
-        #region Record controlSignal values in owner mechanism's log
+        #region Record control_signal values in owner mechanism's log
         # Notes:
         # * Log control_signals for ALL states of a given mechanism in the mechanism's log
         # * Log control_signals for EACH state in a separate entry of the mechanism's log
