@@ -539,11 +539,11 @@
 #                                          for each predictionMechanism in self.system.prediction_mechanisms
 #             controller.monitored_states: list of the mechanism outputStates being monitored for outcomes
 #             controller.input_value: list of current outcome values for monitored_states
-#             controller.control_signals: list of controlSignal objects
-#             controlSignal.allocation_samples: set of samples specified for that controlSignal
-#             [TBI:] controlSignal.allocation_range: range that the controlSignal value can take
+#             controller.control_signals: list of control_signal objects
+#             control_signal.allocation_samples: set of samples specified for that control_signal
+#             [TBI:] control_signal.allocation_range: range that the control_signal value can take
 #             controller.allocation_policy: current allocation_policy
-#             controller.output_values: list of current controlSignal values
+#             controller.output_values: list of current control_signal values
 #             controller.value_function: calls the three following functions (done explicitly, so each can be specified)
 #             controller.outcome_aggregation function: aggregates outcomes (using specified weights and exponentiation)
 #             controller.cost_function:  aggregate costs of control signals
@@ -2387,7 +2387,7 @@
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (input_states)
 #
 # - IMPLEMENT: .add_projection(Mechanism or State) method:
-#                   - add controlSignal projection from EVC to specified Mechanism/State
+#                   - add control_signal projection from EVC to specified Mechanism/State
 #                   - validate that Mechanism / State.owner is in self.system
 #                   ?? use Mechanism.add_projection method
 # - IMPLEMENT: FUNCTION_PARAMS for cost:  operation (additive or multiplicative), weight?
@@ -2396,7 +2396,7 @@
 #               ONCE THAT IS DONE, THEN FIX: IN System._instantiate_attributes_before_function:
 #                                                         self.controller = EVCMechanism(params={SYSTEM: self})#
 # - IMPLEMENT: ??execute_system method, that calls execute.update with input pass to System at run time?
-# ? IMPLEMENT .add_projection(Mechanism or State) method that adds controlSignal projection
+# ? IMPLEMENT .add_projection(Mechanism or State) method that adds control_signal projection
 #                   validate that Mechanism / State.owner is in self.system
 #                   ? use Mechanism.add_projection method
 
@@ -2644,7 +2644,7 @@
 #            Coordinate this with system assignement to ControlMechanism
 #
 # FIX ************************************************
-# FIX: controlSignal prefs not getting assigned
+# FIX: control_signal prefs not getting assigned
 
 # Fix: rewrite this all with @property:
 #

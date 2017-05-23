@@ -75,7 +75,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
 
     # variableClassDefault = defaultControlAllocation
-    # This must be a list, as there may be more than one (e.g., one per controlSignal)
+    # This must be a list, as there may be more than one (e.g., one per control_signal)
     variableClassDefault = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
@@ -130,7 +130,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         """Instantiate requested controlProjection and associated inputState
         """
 
-        # Instantiate input_states and allocation_policy attribute for controlSignal allocations
+        # Instantiate input_states and allocation_policy attribute for control_signal allocations
         input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
         self._instantiate_default_input_state(input_name, defaultControlAllocation, context=context)
         self.allocation_policy = self.input_values

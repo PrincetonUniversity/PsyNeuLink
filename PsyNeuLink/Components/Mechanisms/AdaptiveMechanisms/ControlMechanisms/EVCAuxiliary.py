@@ -148,7 +148,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             * Call `_compute_EVC` for each allocation_policy to calculate the EVC, identify the  maximum,
                 and assign to `EVC_max`.
             * Set `EVC_max_policy` to the `allocation_policy` (outputState.values) corresponding to EVC_max.
-            * Set value for each controlSignal (outputState.value) to the values in `EVC_max_policy`.
+            * Set value for each control_signal (outputState.value) to the values in `EVC_max_policy`.
             * Return an allocation_policy.
 
             Note:
@@ -378,7 +378,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(controller.outputState.value))
 
         #region ASSIGN AND RETURN allocation_policy
-        # Convert EVC_max_policy into 2d array with one controlSignal allocation per item,
+        # Convert EVC_max_policy into 2d array with one control_signal allocation per item,
         #     assign to controller.allocation_policy, and return (where it will be assigned to controller.value).
         #     (note:  the conversion is to be consistent with use of controller.value for assignments to control_signals.value)
         controller.allocation_policy = np.array(controller.EVC_max_policy).reshape(len(controller.EVC_max_policy), -1)
