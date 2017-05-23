@@ -758,7 +758,6 @@ class System_Base(System):
                                'learning': False
                                })
 
-
     # FIX 5/23/17: ADD control_signals ARGUMENT HERE (AND DOCUMENT IT ABOVE)
     @tc.typecheck
     def __init__(self,
@@ -768,6 +767,7 @@ class System_Base(System):
                  controller=SystemDefaultControlMechanism,
                  enable_controller=False,
                  monitor_for_control=None,
+                 control_signals=None,
                  # learning=None,
                  learning_rate=None,
                  targets=None,
@@ -786,6 +786,7 @@ class System_Base(System):
                                                   controller=controller,
                                                   enable_controller=enable_controller,
                                                   monitor_for_control=monitor_for_control,
+                                                  control_signals=control_signals,
                                                   learning_rate=learning_rate,
                                                   targets=targets,
                                                   params=params)
@@ -826,9 +827,9 @@ class System_Base(System):
 
         # Instantiate controller from class specification
         else:
-            # FIX 5/23/17: ADD control_signals ARGUMENT HERE
             self.controller = self.controller(system=self,
-                                              monitor_for_control=monitor_for_control)
+                                              monitor_for_control=monitor_for_control,
+                                              control_signals=control_signals)
 
         # Check whether controller has input, and if not then disable
         # # MODIFIED 5/10/17 OLD:

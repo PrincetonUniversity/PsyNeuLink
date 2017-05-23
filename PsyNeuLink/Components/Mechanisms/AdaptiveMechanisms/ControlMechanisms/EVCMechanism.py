@@ -742,6 +742,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                   prediction_mechanism_type=prediction_mechanism_type,
                                                   prediction_mechanism_params=prediction_mechanism_params,
                                                   monitor_for_control=monitor_for_control,
+                                                  control_signals=control_signals,
                                                   function=function,
                                                   value_function=value_function,
                                                   outcome_function=outcome_function,

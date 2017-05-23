@@ -274,8 +274,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(monitor_for_control=monitor_for_control,
-                                                  function=function,
                                                   control_signals=control_signals,
+                                                  function=function,
                                                   params=params)
 
         super(ControlMechanism_Base, self).__init__(variable=default_input_value,

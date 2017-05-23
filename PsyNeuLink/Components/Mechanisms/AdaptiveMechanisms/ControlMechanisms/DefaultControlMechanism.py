@@ -92,12 +92,14 @@ class DefaultControlMechanism(ControlMechanism_Base):
                  # default_input_value=None,
                  system=None,
                  monitor_for_control:tc.optional(list)=None,
+                 control_signals:tc.optional(list)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
         super(DefaultControlMechanism, self).__init__(#default_input_value =default_input_value,
                                                     monitor_for_control=monitor_for_control,
+                                                    control_signals=control_signals,
                                                     params=params,
                                                     name=name,
                                                     prefs=prefs,
