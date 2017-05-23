@@ -323,12 +323,15 @@ After each execution of the mechanism:
 Class Reference
 ---------------
 """
+import logging
 
 # from numpy import sqrt, random, abs, tanh, exp
+import random
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, SEQUENTIAL
 
+logger = logging.getLogger(__name__)
 
 DECISION_VARIABLE='DECISION_VARIABLE'
 RESPONSE_TIME = 'RESPONSE_TIME'
@@ -563,8 +566,9 @@ class DDM(ProcessingMechanism_Base):
                  name=None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs: is_pref_set = None,
-                 # context=None):
-                 context=componentType + INITIALIZING):
+                 thresh=0,
+                 context=componentType + INITIALIZING
+    ):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -582,6 +586,7 @@ class DDM(ProcessingMechanism_Base):
 
         # # Conflict with above
         # self.size = size
+        self.threshold = thresh
 
         from PsyNeuLink.Components.States.OutputState import StandardOutputStates
         self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states, SEQUENTIAL)
@@ -820,14 +825,14 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
             if self.function_params['integration_type'] == 'diffusion':
-                result = self.function(self.variable, context=context)
+                result = self.function(self.input_state.value, context=context)
 
-                # if INITIALIZING not in context:
-                #     logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
-                # if abs(result) >= self.threshold:
-                # #     logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
-                #     self.is_finished = True
-                #
+                if INITIALIZING not in context:
+                    logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
+                if abs(result) >= self.threshold:
+                    logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
+                    self.is_finished = True
+
                 return np.array([result, [0.0], [0.0], [0.0]])
             else:
                 raise MechanismError(
@@ -878,7 +883,7 @@ class DDM(ProcessingMechanism_Base):
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
 
             # Convert ER to decision variable:
-            if random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
+            if random.random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold

@@ -5,8 +5,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
-
-# from PsyNeuLink.Globals.Run import run, construct_inputs
+from PsyNeuLink.Globals.TimeScale import TimeScale
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic,
@@ -139,4 +138,6 @@ x.run(num_executions=10,
       inputs=stim_list,
       targets=target_list,
       call_before_trial=print_header,
-      call_after_trial=show_target)
+      call_after_trial=show_target,
+      termination_processing={TimeScale.TRIAL: AfterNCalls(Output_Layer, 1)}
+)

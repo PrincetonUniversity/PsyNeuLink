@@ -25,10 +25,10 @@ A LearningMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies 
 <MappingProjection.matrix>`) of a `MappingProjection`.  It's function takes an `error_signal` (usually the output of
 an `ObjectiveMechanism` or another `LearningMechanism`) and generates a `learning_signal` that is used to modify
 the MappingProjection by way of a `LearningProjection`.  A LearningMechanism can modify only MappingProjections that
-link ProcessingMechanisms in the same `system <System>` or `process <Process>` to which it belongs.  The learning  
-components of a system can be displayed using the system's `show_graph` method with its **show_learning** argument 
-assigned :keyword:``True`.  LearningMechanisms are execute after all of the ProcessingMechanisms in that system or 
-process have been executed.  If they belong to a system, they are executed before the  
+link ProcessingMechanisms in the same `system <System>` or `process <Process>` to which it belongs.  The learning
+components of a system can be displayed using the system's `show_graph` method with its **show_learning** argument
+assigned :keyword:``True`.  LearningMechanisms are execute after all of the ProcessingMechanisms in that system or
+process have been executed.  If they belong to a system, they are executed before the
 `control components <ControlMechanism>` for that system have been executed.
 
 COMMENT:
@@ -336,7 +336,7 @@ been executed, including the ObjectiveMechanism(s) that provide the `error_signa
 LearningMechanism is executed, it uses the value of its `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>`
 inputState to calculate changes to the `matrix <MappingProjection.MappingProjection.matrix>` of its
 `MappingProjection`.  The changes are assigned as the value of its `learning_signal` attribute (as well as the 1st item
-of its `output_values <LearningMechanism.output_values>` attribute) and used as the `value <LearningProjection.value>` 
+of its `output_values <LearningMechanism.output_values>` attribute) and used as the `value <LearningProjection.value>`
 of the `LearningProjection` from the LearningMechanism to the `MATRIX` parameterState of its `learned_projection`.
 However, these but are not applied to the `matrix <MappingProjection.MappingProjection.matrix>` itself until the next
 time the `learned_projection` is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).

@@ -16,8 +16,8 @@
 Overview
 --------
 
-Component is the base class for all of the objects used to create compositions (`processes <Process>` or 
-`systems <System>`) in PsyNeuLink.  It defines a common set of attributes possessed, and methods used by all 
+Component is the base class for all of the objects used to create compositions (`processes <Process>` or
+`systems <System>`) in PsyNeuLink.  It defines a common set of attributes possessed, and methods used by all
 component objects.
 
 .. _Component_Creation:
@@ -26,7 +26,7 @@ Creating a Component
 --------------------
 
 A Component is never created directly.  However, its __init__() method is always called when a subclass is instantiated;
-that, in turn, calls a standard set of methods (listed `below <Component_Methods>`) as part of the initialization 
+that, in turn, calls a standard set of methods (listed `below <Component_Methods>`) as part of the initialization
 procedure.
 
 .. _Component_Structure:
@@ -43,125 +43,125 @@ Every component has the following set of core attributes that govern its operati
 
 .. _Component_Variable:
 
-* **variable** - the value of the `variable <Component.variable>` attribute is used as the input to its 
-  `function <Component.function>`.  Specification of the variable in the constructor for a component determines both 
-  its format (e.g., whether it's value is numeric, its dimensionality and shape if it is an array, etc.) as well as 
-  its default value (the value used when the component is executed and no input is provided). 
+* **variable** - the value of the `variable <Component.variable>` attribute is used as the input to its
+  `function <Component.function>`.  Specification of the variable in the constructor for a component determines both
+  its format (e.g., whether it's value is numeric, its dimensionality and shape if it is an array, etc.) as well as
+  its default value (the value used when the component is executed and no input is provided).
 
 .. _Component_Function:
 
-* **function** - the `function <Component.function>` attribute determines the computation that a component carries out.  
+* **function** - the `function <Component.function>` attribute determines the computation that a component carries out.
   It is always a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink component).
-  
+
   .. note::
      The `function <Component.function>` of a component can be assigned either a `Function <Function>` object or any
-     other callable object in python.  If the latter is assigned, it will be "wrapped" in a `UserDefinedFunction`.  
-  
-  All components have a default `function <Component.function>` (with a default set of parameters), that is used if it 
-  is not otherwise specified.  The `function <Component.function>` can be specified in the 
-  function argument of the constructor for the component, using one of the following: 
+     other callable object in python.  If the latter is assigned, it will be "wrapped" in a `UserDefinedFunction`.
 
-    * **class** - this must be a subclass of `Function <Function>`, as in the following example::   
+  All components have a default `function <Component.function>` (with a default set of parameters), that is used if it
+  is not otherwise specified.  The `function <Component.function>` can be specified in the
+  function argument of the constructor for the component, using one of the following:
+
+    * **class** - this must be a subclass of `Function <Function>`, as in the following example::
 
         my_component = SomeComponent(function=SomeFunction)
-      
-      This will create a default instance of the specified subclass, using default values for its parameters. 
+
+      This will create a default instance of the specified subclass, using default values for its parameters.
     |
     * **Function** - this can be either an existing `Function <Function>` object or the constructor for one, as in the
       following examples:
-            
+
         my_component = SomeComponent(function=SomeFunction)
-        
+
         or
-        
+
         some_function = SomeFunction(some_param=1)
         my_component = SomeComponent(some_function)
-        
-      The specified Function will be used as a template to create a new Function object that is assigned to the 
-      `function_object` attribute of the component, the `function <Function.function>` of which will be assigned as  
+
+      The specified Function will be used as a template to create a new Function object that is assigned to the
+      `function_object` attribute of the component, the `function <Function.function>` of which will be assigned as
       the 'function <Component.function>` attribute of the component.
-    
+
       .. note::
-      
-        In the current implementation of PsyNeuLink, if a `Function <Function>` object (or the constructor for one) is 
-        used to specify the `function <Component.function>` attribute of a component, the Function object specified (or 
-        created) is used to determine attributes of the Function object created for and assigned to the component, but  
-        is not *itself* assigned to the component.  This is so that `Functions <Function>` can be used as templates for 
+
+        In the current implementation of PsyNeuLink, if a `Function <Function>` object (or the constructor for one) is
+        used to specify the `function <Component.function>` attribute of a component, the Function object specified (or
+        created) is used to determine attributes of the Function object created for and assigned to the component, but
+        is not *itself* assigned to the component.  This is so that `Functions <Function>` can be used as templates for
         more than one component, without being assigned simultaneously to multiple components.
 
-  A `function <Component.function>` can also be specified in an entry of a 
-  `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the 
-  **params** argument of the constructor for the component, with the keyword FUNCTION as its key, and one of the 
-  specifications above as its value, as in the following example::  
+  A `function <Component.function>` can also be specified in an entry of a
+  `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the
+  **params** argument of the constructor for the component, with the keyword FUNCTION as its key, and one of the
+  specifications above as its value, as in the following example::
 
         my_component = SomeComponent(params={FUNCTION:SomeFunction(some_param=1)})
 
-* **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters 
+* **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters
   for the component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and
-  its value the value of that parameter.  This dictionary is read-only. Changes to the value of the function's 
-  parameters must be made by assigning a value to the corresponding attribute of the component's 
-  `function_object <Component.function_object>` attribute (e.g., myMechanism.function_object.my_parameter), 
-  or in a FUNCTION_PARAMS dict using its `assign_params` method.  The parameters for the function can be specified 
+  its value the value of that parameter.  This dictionary is read-only. Changes to the value of the function's
+  parameters must be made by assigning a value to the corresponding attribute of the component's
+  `function_object <Component.function_object>` attribute (e.g., myMechanism.function_object.my_parameter),
+  or in a FUNCTION_PARAMS dict using its `assign_params` method.  The parameters for the function can be specified
   when the component is created in one of the following ways:
-  
+
   * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>` argument,
     as in the following example::
 
         my_component = SomeComponent(function=SomeFunction(some_param=1, some_param=2)
 
   * in an argument of the **component's constructor** -- if all of the allowable functions for a component's
-    `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear 
+    `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear
     as arguments in the constructor of the component itself, which can be used to set their values.
 
-  * in an entry of a `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the 
-    **params** argument of the constructor for the component.  The entry must use the keyword 
+  * in an entry of a `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the
+    **params** argument of the constructor for the component.  The entry must use the keyword
     FUNCTION_PARAMS as its key, and its value must be a dictionary containing the parameters and their values.
-    The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the 
+    The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the
     parameter's value, as in the example below::
-    
+
         my_component = SomeComponent(function=SomeFunction
                                      params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
-  
+
   See `ParameterState_Specifying_Parameters` for details concerning different ways in which the value of a parameter
   can be specified.
 
 .. _Component_Function_Object:
 
-* **function_object** - the `function_object` attribute refers to the `Function <Function>` assigned to the component; 
-  The Function's `function <Function.function>` is assigned to the `function <Component>` attribute of the 
-  component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to 
+* **function_object** - the `function_object` attribute refers to the `Function <Function>` assigned to the component;
+  The Function's `function <Function.function>` is assigned to the `function <Component>` attribute of the
+  component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
   those parameters (see `function_params <Component.function_params>` above).
 
 .. _Component_User_Params:
 
 * **user_params** - the `user_params` attribute contains a dictionary of all of the user-modifiable attributes for the
-  the component.  This dictionary is read-only.  Changes to the value of an attribute must be made by assigning a 
+  the component.  This dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
   value to the attribute directly, or using the component's `assign_params` method.
-..  
+..
 COMMENT:
   INCLUDE IN DEVELOPERS' MANUAL
     * **paramClassDefaults**
-    
+
     * **paramInstanceDefaults**
 COMMENT
 
-* **value** - the `value <Component.value>` attribute contains the result (return value) of the component's 
-  `function <Component.function>` after the function is called.     
+* **value** - the `value <Component.value>` attribute contains the result (return value) of the component's
+  `function <Component.function>` after the function is called.
 ..
-* **name** - the `name <Component.name>` attribute contains the name assigned to the component when it was created.  
-  If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for 
+* **name** - the `name <Component.name>` attribute contains the name assigned to the component when it was created.
+  If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for
   conventions used in assigning default names and handling of duplicate names).
 ..
 * **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the component when
   it was created.  If it was not specified, a default is assigned using `classPreferences` defined in __init__.py
   Each individual preference is accessible as an attribute of the component, the name of which is the name of the
-  preference (see `PreferenceSet <LINK>` for details).  
+  preference (see `PreferenceSet <LINK>` for details).
 
 COMMENT:
 * **log**
 COMMENT
 
-      
+
 .. _Component_Methods:
 
 Component Methods
@@ -169,69 +169,69 @@ Component Methods
 
 COMMENT:
    INCLUDE IN DEVELOPERS' MANUAL
-    
-    There are two sets of methods that belong to every component: one set that is called when it is initialized; and 
-    another set that can be called to perform various operations common to all components.  Each of these is described 
-    briefly below.  All of these methods can be overridden by subclasses to implement customized operations, however   
-    it is strongly recommended that the method be called on super() at some point, so that the standard operations are 
-    carried out.  Whether customization operations should be performed before or after the call to super is discussed in 
-    the descriptions below where relevant. 
-    
+
+    There are two sets of methods that belong to every component: one set that is called when it is initialized; and
+    another set that can be called to perform various operations common to all components.  Each of these is described
+    briefly below.  All of these methods can be overridden by subclasses to implement customized operations, however
+    it is strongly recommended that the method be called on super() at some point, so that the standard operations are
+    carried out.  Whether customization operations should be performed before or after the call to super is discussed in
+    the descriptions below where relevant.
+
     .. _Component_Initialization_Methods:
-    
+
     Initialization Methods
     ^^^^^^^^^^^^^^^^^^^^^^
-    
+
     These methods can be overridden by the subclass to customize the initialization process, but should always call the
     corresponding method of the Component base class (using ``super``) to insure full initialization.  There are two
-    categories of initializion methods:  validation and instantiation.  
-    
-    
+    categories of initializion methods:  validation and instantiation.
+
+
     .. _Component_Validation_Methods:
-    
-    * **Validation methods** perform a strictly *syntactic* check, to determine if a value being validated conforms 
-    to the format expected for it by the component (i.e., the type of the value and, if it is iterable, the type its 
-    elements and/or its length).  The value itself is not checked in any other way (e.g., whether it equals a particular 
-    value or falls in a specified range).  If the validation fails, and exception is raised.  Validation methods never 
+
+    * **Validation methods** perform a strictly *syntactic* check, to determine if a value being validated conforms
+    to the format expected for it by the component (i.e., the type of the value and, if it is iterable, the type its
+    elements and/or its length).  The value itself is not checked in any other way (e.g., whether it equals a particular
+    value or falls in a specified range).  If the validation fails, and exception is raised.  Validation methods never
     make changes the actual value of an attribute, but they may change its format (e.g., from a list to an ndarray) to
     comply with requirements of the component.
-    
-      * `_validate_variable <Component._validate_variable>` validates the value provided to the keyword:`variable` 
-        argument in the constructor for the component.  If it is overridden, customized validation should generally 
-        performed *prior* to the call to super(), to allow final processing by the Component base class. 
-        
-      * `_validate_params <Component._validate_params>` validates the value of any parameters specified in the 
-        constructor for the component (whether they are made directly in the argument for a parameter, or in a 
-        `parameter specification dictionary <ParameterState_Specifying_Parameters>`.  If it is overridden by a subclass, 
+
+      * `_validate_variable <Component._validate_variable>` validates the value provided to the keyword:`variable`
+        argument in the constructor for the component.  If it is overridden, customized validation should generally
+        performed *prior* to the call to super(), to allow final processing by the Component base class.
+
+      * `_validate_params <Component._validate_params>` validates the value of any parameters specified in the
+        constructor for the component (whether they are made directly in the argument for a parameter, or in a
+        `parameter specification dictionary <ParameterState_Specifying_Parameters>`.  If it is overridden by a subclass,
         customized validation should generally be performed *after* the call to super().
-    
-    * **Instantiation methods** create, assign, and/or perform *semantic* checks on the values of component attributes.  
-      Semantic checks may include value and/or range checks, as well as checks of formatting and/or value 
+
+    * **Instantiation methods** create, assign, and/or perform *semantic* checks on the values of component attributes.
+      Semantic checks may include value and/or range checks, as well as checks of formatting and/or value
       compatibility with other attributes of the component and/or the attributes of other components (for example, the
-      _instantiate_function method checks that the input of the component's `function <Comonent.function>` is compatible 
+      _instantiate_function method checks that the input of the component's `function <Comonent.function>` is compatible
       with its `variable <Component.variable>`).
-    
-      * `_instantiate_defaults <Component._instantiate_defaults>` first calls the validation methods, and then  
+
+      * `_instantiate_defaults <Component._instantiate_defaults>` first calls the validation methods, and then
         assigns the default values for all of the attributes of the instance of the component being created.
-        
+
         _instantiate_attributes_before_function
         _instantiate_function
         _instantiate_attributes_after_function
-    
+
     .. _Component_Callable_Methods:
-    
+
     Callable Methods
     ^^^^^^^^^^^^^^^^
-    
+
     initialize
 COMMENT
 
 .. _Component_Assign_Params:
 
-* **assign_params** - the `assign_params` method is used to assign the value of one or more parameters of a 
-  component.  Each parameter is specified as an entry in a dict in the **request_set** argument;  
-  parameters for the component's function are specified as entries in a FUNCTION_PARAMS dict within 
-  **request_set** dict.   
+* **assign_params** - the `assign_params` method is used to assign the value of one or more parameters of a
+  component.  Each parameter is specified as an entry in a dict in the **request_set** argument;
+  parameters for the component's function are specified as entries in a FUNCTION_PARAMS dict within
+  **request_set** dict.
 
 * **reset_params** - the `reset_params` method is used to reset the value of all user_params to their default
   (paramClass
@@ -248,7 +248,7 @@ Calls the :keyword:`execute` method of the subclass that, in turn, calls its :ke
 COMMENT:
    INCLUDE IN DEVELOPERS' MANUAL
     .. _Component_Class_Reference:
-    
+
     Class Reference
     ---------------
 COMMENT
@@ -298,17 +298,17 @@ class ResetMode(Enum):
 from collections import UserDict
 class ParamsDict(UserDict):
     """Create, set and get attribute of owner for each key in dict
-    
+
     Creates and maintains an interface to attributes of a component via a dict:
         - any assignment to an entry of the dict creates or updates the value of the attribute with the name of the key
         - any query retrieves the value of the attribute with the name of the key
     Dict itself is maintained in self.data
-    
-    Notes:  
-    * This provides functionality similar to the __dict__ attribute of a python object, 
+
+    Notes:
+    * This provides functionality similar to the __dict__ attribute of a python object,
         but is restricted to the attributes relevant to its role as a PsyNeuLink component.
     * It insures that any instantiation of a function_params attribute is a ReadOnlyOrderedDict
-     
+
     """
 
     def __init__(self, owner, dict=None):
@@ -702,6 +702,10 @@ class Component(object):
         #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
 
+    def __repr__(self):
+        return '({0} {1})'.format(type(self).__name__, self.name)
+        #return '{1}'.format(type(self).__name__, self.name)
+
     def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
         """
@@ -1019,10 +1023,10 @@ class Component(object):
 
     def _create_attributes_for_params(self, make_as_properties=False, **kwargs):
         """Create property on parent class of object for all attributes passed in kwargs dict.
-         
+
         If attribute or property already exists, do nothing.
-        Create backing field for attribute with "_" prefixed to attribute name, 
-            and assign value provided in kwargs as its default value. 
+        Create backing field for attribute with "_" prefixed to attribute name,
+            and assign value provided in kwargs as its default value.
         """
 
         if make_as_properties:
@@ -2058,7 +2062,7 @@ class Component(object):
             # FUNCTION is a generic function (presumably user-defined), so "wrap" it in UserDefinedFunction:
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
-                
+
 
                 from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
                 self.paramsCurrent[FUNCTION] = UserDefinedFunction(function=function, context=context).function

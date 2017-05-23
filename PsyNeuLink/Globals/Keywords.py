@@ -384,6 +384,7 @@ DISTANCE_METRICS = {DIFFERENCE, EUCLIDEAN, ANGLE, CORRELATION, PEARSON, CROSS_EN
 #region ----------------------------------------------    SYSTEM   ----------------------------------------------------
 
 SYSTEM = "System"
+SCHEDULER = "scheduler"
 SYSTEM_INIT = 'System.__init__'
 DEFAULT_SYSTEM = "DefaultSystem"
 CONTROLLER = "controller"
@@ -461,6 +462,10 @@ kwMechanismAdjustFunction = "MECHANISM ADJUST FUNCTION"
 kwMechanismInterrogateFunction = "MECHANISM INTERROGATE FUNCTION"
 kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 # TBI: kwMechanismAccuracyFunction = "MECHANISM ACCURACY FUNCTION"
+
+#DDM
+kwThreshold = 'thresh'
+kwInitialPoint = 'initial_point'
 #endregion
 
 
