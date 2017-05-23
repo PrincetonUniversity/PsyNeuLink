@@ -864,6 +864,7 @@ class EVCMechanism(ControlMechanism_Base):
             # self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].input_value
             self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].variable
 
+    # FIX: MOVE THIS TO ControlMechanism??
     def _instantiate_monitoring_mechanism(self, context=None):
         """
         Assign inputState to controller for each state to be monitored;
