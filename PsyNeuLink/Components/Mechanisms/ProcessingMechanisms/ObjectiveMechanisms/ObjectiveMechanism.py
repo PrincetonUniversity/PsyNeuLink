@@ -554,6 +554,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             except KeyError:
                 pass
 
+    # IMPLEMENTATION NOTE: FOR Composition, BREAK THIS UP SO THAT monitored_values CAN BE IMPLEMENTED
+    #                      ONE AT TIME (IN A CALL TO _instantiate_monitored_value THAT INSTANTATEs
+    #                      ADDS an input_state FOR EACH ITEM IN monitored_values
+    #                      (AKIN _instantiate_control_signal)
     def _instantiate_input_states(self, context=None):
         """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.variable
         

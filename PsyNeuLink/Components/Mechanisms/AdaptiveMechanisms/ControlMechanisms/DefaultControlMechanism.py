@@ -128,7 +128,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # if self.input_states is None:
         #     self.input_value = None
 
-    def _instantiate_control_projection(self, projection, params=None, context=None):
+    def _instantiate_control_signal(self, projection, params=None, context=None):
         """Instantiate requested controlProjection and associated inputState
         """
 
@@ -139,7 +139,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
         # Call super to instantiate outputStates
         # Note: params carries any specified with ControlProjection for the control_signal
-        super()._instantiate_control_projection(projection=projection,
+        super()._instantiate_control_signal(projection=projection,
                                                 params=params,
                                                 context=context)
 

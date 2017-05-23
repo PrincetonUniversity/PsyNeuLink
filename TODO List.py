@@ -2455,12 +2455,12 @@
 # BACKGROUND INFO:
 # _instantiate_sender normally called from Projection in _instantiate_attributes_before_function
 #      calls sendsToProjection.append
-# _instantiate_control_projection normally called from ControlProjection in _instantiate_sender
+# _instantiate_control_signal normally called from ControlProjection in _instantiate_sender
 #
 # Instantiate EVC:  __init__ / _instantiate_attributes_after_function:
 #     take_over_as_default(): [ControlMechanism]
 #         iterate through old controller’s outputStates
-#             _instantiate_control_projection() for current controller
+#             _instantiate_control_signal() for current controller
 #                 _instantiate_state() [Mechanism]
 #                     state_type() [OutputState]
 #
