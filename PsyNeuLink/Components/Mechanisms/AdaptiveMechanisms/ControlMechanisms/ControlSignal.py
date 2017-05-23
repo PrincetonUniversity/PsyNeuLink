@@ -14,7 +14,7 @@ Overview
 
 A ControlSignal is an `OutputState` specialized for use with an `EVCMechanism`. It is used to modify the
 parameter of a mechanism or of its :keyword:`function` that has been
-`specified for control <ControlMechanism_Specifying_Control>`, in a system that regulates its performance using an
+`specified for control <ControlMechanism_Control_Signals>`, in a system that regulates its performance using an
 `EVCMechanism` as its `controller`.  A ControlSignal is associated with a `ControlProjection` to the `parameterState
 <ParameterState>` for the parameter to be controlled.  It receives an `allocation` value specified by the
 EVCMechanism's `function <EVCMechanism.function>`, and uses that to compute an `intensity` that is assigned as the
@@ -29,7 +29,7 @@ Creating a ControlSignal
 ------------------------
 
 A ControlSignal is created automatically whenever the parameter of a mechanism or of its function
-is `specified for control <ControlMechanism_Specifying_Control>` and the mechanism belongs to a system for which
+is `specified for control <ControlMechanism_Control_Signals>` and the mechanism belongs to a system for which
 an `EVCMechanism` is the `controller`.  Although a ControlSignal can be created using its constructor, or any of the
 other ways for `creating an outputState <OutputStates_Creation>`,  this is neither necessary nor advisable,
 as a ControlSignal has dedicated components and requirements for configuration that must be met for it to function
