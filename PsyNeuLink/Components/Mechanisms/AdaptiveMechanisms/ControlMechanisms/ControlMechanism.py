@@ -293,8 +293,6 @@ class ControlMechanism_Base(Mechanism_Base):
         Check that all items in CONTROL_SIGNALS are parameters or ParameterStates for Mechanisms in self.system
         """
 
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
-                import ControlSignal, _is_control_signal_spec
 
 
         super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
@@ -323,6 +321,9 @@ class ControlMechanism_Base(Mechanism_Base):
                                                 format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
 
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
+
+            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
+                    import ControlSignal, _is_control_signal_spec
 
             for spec in target_set[CONTROL_SIGNALS]:
 
@@ -457,6 +458,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
         Returns ControlSignal (OutputState)
         """
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
+                import ControlSignal, _is_control_signal_spec
 
         if self.allocation_policy is None:
             self.allocation_policy = np.array(defaultControlAllocation)
