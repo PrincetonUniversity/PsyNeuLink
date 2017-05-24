@@ -1981,7 +1981,6 @@ def _parse_state_spec(owner,
     #                               OutputState, projection's variable .
     # Don't allow matrix keywords -- force them to be converted from a string into a value (below)
     elif _is_projection_spec(state_spec, include_matrix_keywords=False):
-    # elif _is_proj_spec(state_spec):
         # state_spec = state_variable
         state_dict[VARIABLE] =  value
         if state_dict[PARAMS] is None:
