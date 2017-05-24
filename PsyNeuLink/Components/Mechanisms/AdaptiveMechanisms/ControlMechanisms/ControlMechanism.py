@@ -471,8 +471,9 @@ class ControlMechanism_Base(Mechanism_Base):
             self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
 
         # Parse control_signal to get projection and params
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
         control_signal_dict = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
-        projection = control_signal_dict[MODULATORY_PROJECTIONS]
+        projection = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS]
         params = control_signal_dict[PARAMS]
 
         # Validate projection (if specified) and get receiver's name
