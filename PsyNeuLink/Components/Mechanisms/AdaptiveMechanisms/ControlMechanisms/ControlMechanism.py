@@ -398,15 +398,24 @@ class ControlMechanism_Base(Mechanism_Base):
 
     def _instantiate_output_states(self, context=None):
 
-        for control_signal in self.control_signals:
-            self._instantiate_control_signal(control_signal=control_signal, context=context)
+        if self.control_signals:
+            for control_signal in self.control_signals:
+                self._instantiate_control_signal(control_signal=control_signal, context=context)
 
-        super()._instantiate_output_states(context=context)
+        # IMPLEMENTATION NOTE:  Don't want to call this because it instantiates undesired default outputState
+        # super()._instantiate_output_states(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
-        """Take over as default controller (if specified) and implement any specified ControlProjections
+        """Implment ControlSignals specifed in control_signals arg or "locally" in parameter specification(s)
+
+        Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
+            that insures that any ControlSignals specified in control_signals arg are instantiated first
+        Then calls _take_over_as_default_controller to instantiate any ControlProjections/ControlSignals specified 
+            along with parameter specification(s) (i.e., as part of a (<param value>, ControlProjection) tuple
         """
-        
+
+        super()._instantiate_attributes_after_function(context=context)
+
         if MAKE_DEFAULT_CONTROLLER in self.paramsCurrent:
             if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
                 self._take_over_as_default_controller(context=context)
@@ -418,12 +427,15 @@ class ControlMechanism_Base(Mechanism_Base):
         # FIX:         DOCUMENT THAT VALUE OF CONTROL ENTRY CAN BE A PROJECTION
         # FIX:         RE-WRITE parse_state_spec TO TAKE TUPLE THAT SPECIFIES (PARAM VALUE, CONTROL SIGNAL)
         #                       RATHER THAN (PARAM VALUE, CONTROL PROJECTION)
+        # FIX: NOT CLEAR THIS IS GETTING USED AT ALL; ALSO, ??REDUNDANT WITH CALL IN _instantiate_output_states
         # If ControlProjections were specified, implement them
         if CONTROL_PROJECTIONS in self.paramsCurrent:
             if self.paramsCurrent[CONTROL_PROJECTIONS]:
                 for key, projection in self.paramsCurrent[CONTROL_PROJECTIONS].items():
                     control_signal_spec = {CONTROL:[projection]}
                     self._instantiate_control_signal(control_signal_spec, context=self.name)
+
+
 
     def _take_over_as_default_controller(self, context=None):
 
@@ -477,6 +489,7 @@ class ControlMechanism_Base(Mechanism_Base):
         # Parse control_signal to get projection and params
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
         control_signal_dict = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
+        # FIX: 5/23/17 NEED TO HANDLE CASE IN WHICH "control_signal_dict" is actually a ControlSignal
         # FIX: 5/23/17 ??IS [CONTROL] THE RIGHT KEY TO USE HERE (VS. [PARAMS] OR [PARAMS][MODULATORY_PROJECTIONS]
         # FIX: 5/23/17 **SHOULD HANDLE MULTIPLE PROJECTIONS
         # projection = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS]
