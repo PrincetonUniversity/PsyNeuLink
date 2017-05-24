@@ -1326,15 +1326,6 @@ class State_Base(State):
     def projections(self, assignment):
         self._projections = assignment
 
-    # @property
-    # def afferents(self):
-    #     return self._afferents
-    #
-    # @afferents.setter
-    # def afferents(self, assignment):
-    #     self._afferents = assignment
-
-# **************************************************************************************
 
 def _instantiate_state_list(owner,
                            state_list,              # list of State specs, (state_spec, params) tuples, or None
@@ -1533,15 +1524,15 @@ def _instantiate_state_list(owner,
                     state_constraint_value = constraint_value[index]
 
             state = _instantiate_state(owner=owner,
-                                                state_type=state_type,
-                                                state_name=state_name,
-                                                state_spec=state_spec,
-                                                state_params=state_params,
-                                                constraint_value=state_constraint_value,
-                                                constraint_value_name=constraint_value_name,
-                                                context=context)
+                                       state_type=state_type,
+                                       state_name=state_name,
+                                       state_spec=state_spec,
+                                       state_params=state_params,
+                                       constraint_value=state_constraint_value,
+                                       constraint_value_name=constraint_value_name,
+                                       context=context)
 
-            # Get name of state, and use as index to assign to states OrderedDict
+            # Get name of state, and use as index to assign to states ContentAddressableList
             states[state.name] = state
         return states
 
@@ -1779,6 +1770,7 @@ def _check_state_ownership(owner, param_name, mechanism_state):
     return mechanism_state
 
 
+# FIX 5/23/17:  UPDATE TO ACCOMODATE (param, ControlSignal) TUPLE
 @tc.typecheck
 def _parse_state_spec(owner,
                       state_type:_is_state_type,
@@ -1945,16 +1937,25 @@ def _parse_state_spec(owner,
                     state_dict[PARAMS] = {}
                 state_dict[PARAMS].update(params)
 
-    # 2-item tuple (spec, projection)
+    # # 2-item tuple (spec, projection)
+    # 2-item tuple (spec, Component)
     elif isinstance(state_spec, tuple):
         if len(state_spec) != 2:
             raise StateError("Tuple provided as state_spec for {} of {} ({}) must have exactly two items".
                              format(state_type_name, owner.name, state_spec))
-        if not _is_projection_spec(state_spec[1]):
-            raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a projection specification".
+        # # MODIFIED 5/23/17 OLD:
+        # if not _is_projection_spec(state_spec[1]):
+        #     raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a projection specification".
+        #                      format(state_type_name, owner.__class__.__name__, state_spec[1]))
+        # MODIFIED 5/23/17 NEW:
+        if not (_is_projection_spec(state_spec[1]) or isinstance(state_spec[1], (Mechanism, State))):
+            raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
+                             "for a mechanism, state, or projection".
                              format(state_type_name, owner.__class__.__name__, state_spec[1]))
+        # MODIFIED 5/23/17 END
         # Put projection spec from second item of tuple in params
         params = params or {}
+        # FIX 5/23/17: NEED TO HANDLE NON-MODULATORY PROJECTION SPECS
         params.update({STATE_PROJECTIONS:[state_spec[1]]})
 
         # Parse state_spec in first item of tuple (without params)
@@ -1980,7 +1981,6 @@ def _parse_state_spec(owner,
     #                               OutputState, projection's variable .
     # Don't allow matrix keywords -- force them to be converted from a string into a value (below)
     elif _is_projection_spec(state_spec, include_matrix_keywords=False):
-    # elif _is_proj_spec(state_spec):
         # state_spec = state_variable
         state_dict[VARIABLE] =  value
         if state_dict[PARAMS] is None:

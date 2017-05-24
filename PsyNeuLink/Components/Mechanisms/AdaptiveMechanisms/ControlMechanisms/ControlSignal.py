@@ -14,7 +14,7 @@ Overview
 
 A ControlSignal is an `OutputState` specialized for use with an `EVCMechanism`. It is used to modify the
 parameter of a mechanism or of its :keyword:`function` that has been
-`specified for control <ControlMechanism_Specifying_Control>`, in a system that regulates its performance using an
+`specified for control <ControlMechanism_Control_Signals>`, in a system that regulates its performance using an
 `EVCMechanism` as its `controller`.  A ControlSignal is associated with a `ControlProjection` to the `parameterState
 <ParameterState>` for the parameter to be controlled.  It receives an `allocation` value specified by the
 EVCMechanism's `function <EVCMechanism.function>`, and uses that to compute an `intensity` that is assigned as the
@@ -29,7 +29,7 @@ Creating a ControlSignal
 ------------------------
 
 A ControlSignal is created automatically whenever the parameter of a mechanism or of its function
-is `specified for control <ControlMechanism_Specifying_Control>` and the mechanism belongs to a system for which
+is `specified for control <ControlMechanism_Control_Signals>` and the mechanism belongs to a system for which
 an `EVCMechanism` is the `controller`.  Although a ControlSignal can be created using its constructor, or any of the
 other ways for `creating an outputState <OutputStates_Creation>`,  this is neither necessary nor advisable,
 as a ControlSignal has dedicated components and requirements for configuration that must be met for it to function
@@ -127,7 +127,7 @@ Class Reference
 # import Components
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import *
-from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
 from PsyNeuLink.Components.States.State import *
 
 
@@ -137,16 +137,28 @@ from PsyNeuLink.Components.States.State import *
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
+# # Default control allocation mode values:
+# class DefaultControlAllocationMode(Enum):
+#     GUMBY_MODE = 0.0
+#     BADGER_MODE = 1.0
+#     TEST_MODE = 240
+# defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
+DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
+
+CONTROL_SIGNAL_COST_OPTIONS = 'control_signal_cost_options'
+class ControlSignalCostOptions(IntEnum):
+    NONE               = 0
+    INTENSITY_COST     = 1 << 1
+    ADJUSTMENT_COST    = 1 << 2
+    DURATION_COST      = 1 << 3
+    ALL                = INTENSITY_COST | ADJUSTMENT_COST | DURATION_COST
+    DEFAULTS           = INTENSITY_COST
+
 
 class ControlSignalError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-PRIMARY_OUTPUT_STATE = 0
-
-class OutputStateError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
 
     def __str__(self):
         return repr(self.error_value)
@@ -426,7 +438,7 @@ class ControlSignal(OutputState):
                                                   self.reference_value))
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate allocation_samples and controlSignal cost functions
+        """Validate allocation_samples and control_signal cost functions
 
         Checks if:
         - cost functions are all appropriate
@@ -511,7 +523,7 @@ class ControlSignal(OutputState):
                                              "a list or 1D np.array of numbers".
                                          format(allocation_samples, self.name))
 
-        # # If allocation_policy has been assigned, set self.value to it so it reflects the number of  controlSignals;
+        # # If allocation_policy has been assigned, set self.value to it so it reflects the number of  control_signals;
         # #    this is necessary, since function is not fully executed during initialization (in _instantiate_function)
         # #    it returns default_allocation policy which has only a singel item,
         # #    however validation of indices for outputStates requires that proper number of items be in self.value
@@ -561,7 +573,7 @@ class ControlSignal(OutputState):
 
             self.paramsCurrent[cost_function_name] = cost_function
 
-        self.controlSignalCostOptions = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
+        self.control_signal_cost_options = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
 
         # Assign instance attributes
         self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
@@ -573,11 +585,7 @@ class ControlSignal(OutputState):
         self.intensity = self.allocation
 
         # Default cost params
-        # # MODIFIED 1/23/17 OLD:
-        # self.intensity_cost = self.intensityCostFunction(self.intensity)
-        # MODIFIED 1/23/17 NEW:
         self.intensity_cost = self.intensity_cost_function(self.intensity)
-        # MODIFIED 1/23/17 END
         self.adjustment_cost = 0
         self.duration_cost = 0
         self.last_duration_cost = self.duration_cost
@@ -610,7 +618,7 @@ class ControlSignal(OutputState):
         Use self.function to assign intensity
             - if ignoreIntensityFunction is set (for efficiency, if the execute method it is the identity function):
                 ignore self.function
-                pass allocation (input to controlSignal) along as its output
+                pass allocation (input to control_signal) along as its output
         Update cost
         Assign intensity to value of ControlSignal (done in setter property for value)
 
@@ -658,17 +666,17 @@ class ControlSignal(OutputState):
         # compute cost(s)
         new_cost = intensity_cost = adjustment_cost = duration_cost = 0
 
-        if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
+        if self.control_signal_cost_options & ControlSignalCostOptions.INTENSITY_COST:
             intensity_cost = self.intensity_cost = self.intensity_cost_function(self.intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
 
-        if self.controlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
+        if self.control_signal_cost_options & ControlSignalCostOptions.ADJUSTMENT_COST:
             adjustment_cost = self.adjustment_cost = self.adjustment_cost_function(intensity_change)
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
 
-        if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
+        if self.control_signal_cost_options & ControlSignalCostOptions.DURATION_COST:
             duration_cost = self.duration_cost = self.duration_cost_function([self.last_duration_cost, new_cost])
             if self.prefs.verbosePref:
                 print("++ Used duration cost")
@@ -690,10 +698,10 @@ class ControlSignal(OutputState):
                 cost_change_string = "+" + str(cost_change)
             print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
 
-        #region Record controlSignal values in owner mechanism's log
+        #region Record control_signal values in owner mechanism's log
         # Notes:
-        # * Log controlSignals for ALL states of a given mechanism in the mechanism's log
-        # * Log controlSignals for EACH state in a separate entry of the mechanism's log
+        # * Log control_signals for ALL states of a given mechanism in the mechanism's log
+        # * Log control_signals for EACH state in a separate entry of the mechanism's log
 
         # Get receiver mechanism and state
         controller = self.owner
@@ -798,27 +806,27 @@ class ControlSignal(OutputState):
             if not self.paramsCurrent[cost_function_name]:
                 raise ControlSignalError("Unable to toggle {} ON as function assignment is \'None\'".
                                          format(cost_function_name))
-            self.controlSignalCostOptions |= cost_option
+            self.control_signal_cost_options |= cost_option
         else:
-            self.controlSignalCostOptions &= ~cost_option
+            self.control_signal_cost_options &= ~cost_option
 
     # def set_intensity_cost(self, assignment=ON):
     #     if assignment:
-    #         self.controlSignalCostOptions |= ControlSignalCostOptions.INTENSITY_COST
+    #         self.control_signal_cost_options |= ControlSignalCostOptions.INTENSITY_COST
     #     else:
-    #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.INTENSITY_COST
+    #         self.control_signal_cost_options &= ~ControlSignalCostOptions.INTENSITY_COST
     #
     # def set_adjustment_cost(self, assignment=ON):
     #     if assignment:
-    #         self.controlSignalCostOptions |= ControlSignalCostOptions.ADJUSTMENT_COST
+    #         self.control_signal_cost_options |= ControlSignalCostOptions.ADJUSTMENT_COST
     #     else:
-    #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.ADJUSTMENT_COST
+    #         self.control_signal_cost_options &= ~ControlSignalCostOptions.ADJUSTMENT_COST
     #
     # def set_duration_cost(self, assignment=ON):
     #     if assignment:
-    #         self.controlSignalCostOptions |= ControlSignalCostOptions.DURATION_COST
+    #         self.control_signal_cost_options |= ControlSignalCostOptions.DURATION_COST
     #     else:
-    #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.DURATION_COST
+    #         self.control_signal_cost_options &= ~ControlSignalCostOptions.DURATION_COST
     #
     def get_costs(self):
         """Return three-element list with the values of ``intensity_cost``, ``adjustment_cost`` and ``duration_cost``
@@ -839,3 +847,48 @@ class ControlSignal(OutputState):
     def value(self, assignment):
         self._value = assignment
 
+
+# FIX: 5/23/17 MODIFY TO USE SPECIFICATION DICTIONARY RATHER THAN TUPLE (AND MAYBE _parse_state_spec)
+def _is_control_signal_spec(owner, spec):
+    """Validate ControlSignal specification and 
+    
+    If valid, return either ControlSignal or (<param_name>, Mechanism) tuple
+    If invalid, return None
+    
+    """
+
+    if isinstance(spec, ControlSignal):
+        return spec
+
+    if isinstance(spec, ParameterState):
+        return (spec.name, spec.owner)
+
+    if isinstance(spec, tuple):
+
+        param_name = spec[0]
+        mech = spec[1]
+        # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
+        if not isinstance(param_name, str):
+            raise ControlMechanismError("1st item of tuple in specification of {} for {} ({}) "
+                                        "must be a string".format(CONTROL_SIGNAL, owner.name, param_name))
+        # Check that 2nd item is a mechanism
+        if not isinstance(mech, Mechanism):
+            raise ControlMechanismError("2nd item of tuple in specification of {} for {} ({}) "
+                                        "must be a Mechanism".format(CONTROL_SIGNAL, owner.name, mech))
+        # Check that param (named by str) is an attribute of the mechanism
+        if not hasattr(mech, param_name) and not hasattr(mech.function_object, param_name):
+            raise ControlMechanismError("{} (in specification of {}  {}) is not an attribute of {} or its function"
+                                        .format(param_name, CONTROL_SIGNAL, owner.name, mech))
+        # Check that the mechanism has a parameterState for the param
+        if not param_name in mech._parameter_states.names:
+            raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
+                                        "specified in {} for {}".
+                                        format(param_name, mech.name, CONTROL_SIGNAL, owner.name))
+        return spec
+
+    # Tuple (parameter name, mechanism) specification
+    else:
+        raise ControlMechanismError("Specification of {} for {} ({}) must be a "
+                                    "ParameterState, a tuple specifying a parameter and mechanism, "
+                                    "or an existing ControlSignal".
+                                    format(CONTROL_SIGNAL, self.name, spec))

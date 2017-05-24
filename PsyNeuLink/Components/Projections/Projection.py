@@ -465,7 +465,7 @@ class Projection_Base(Projection):
                           context=context)
 
 # FIX: 6/23/16 NEEDS ATTENTION *******************************************************A
-#      NOTE: SENDER IS NOT YET KNOWN FOR DEFAULT controlSignal
+#      NOTE: SENDER IS NOT YET KNOWN FOR DEFAULT control_signal
 #      WHY IS self.sender IMPLEMENTED WHEN sender IS NOT??
 
         self.sender = sender

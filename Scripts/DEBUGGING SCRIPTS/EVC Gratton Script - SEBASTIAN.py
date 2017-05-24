@@ -114,8 +114,8 @@ mySystem.show()
 mySystem.controller.show()
 
 # configure EVC components
-mySystem.controller.controlSignals[0].intensity_cost_function = Exponential(rate =  0.8046).function
-mySystem.controller.controlSignals[1].intensity_cost_function = Exponential(rate =  0.8046).function
+mySystem.controller.control_signals[0].intensity_cost_function = Exponential(rate =  0.8046).function
+mySystem.controller.control_signals[1].intensity_cost_function = Exponential(rate =  0.8046).function
 
 
 # Loop over the KEYS in this dict

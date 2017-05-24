@@ -333,6 +333,7 @@ def system(default_input_value=None,
            controller=SystemDefaultControlMechanism,
            enable_controller:bool=False,
            monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+           control_signals:tc.optional(list)=None,
            # learning:tc.optional(_is_learning_spec)=None,
            learning_rate:tc.optional(parameter_spec)=None,
            targets:tc.optional(tc.any(list, np.ndarray))=None,
@@ -346,8 +347,9 @@ def system(default_input_value=None,
     processes=None,                           \
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
-    enable_controller=:keyword:`False`,       \
-    monitor_for_control=`None`,               \
+    enable_controller=:keyword:False,         \
+    monitor_for_control=None,                 \
+    control_signals=None,                     \
     learning_rate=None,                       \
     targets=None,                             \
     params=None,                              \
@@ -362,7 +364,8 @@ def system(default_input_value=None,
         initial_values=None,                      \
         controller=SystemDefaultControlMechanism, \
         enable_controller=:keyword:`False`,       \
-        monitor_for_control=`None`,               \
+        monitor_for_control=None,                 \
+        control_signals=None,                     \
         learning=None,                            \
         targets=None                              \
         params=None,                              \
@@ -461,6 +464,7 @@ def system(default_input_value=None,
                        initial_values=initial_values,
                        enable_controller=enable_controller,
                        monitor_for_control=monitor_for_control,
+                       control_signals=control_signals,
                        # learning=learning,
                        learning_rate=learning_rate,
                        targets=targets,
@@ -478,8 +482,9 @@ class System_Base(System):
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
-    monitor_for_control=`None`,               \
-    learning_rate=None,                       \
+    monitor_for_control=None,                 \
+    control_signals=None,                     \
+    learning_rate=None,                       \ 
     targets=None,                             \
     params=None,                              \
     name=None,                                \
@@ -758,6 +763,7 @@ class System_Base(System):
                                'learning': False
                                })
 
+    # FIX 5/23/17: ADD control_signals ARGUMENT HERE (AND DOCUMENT IT ABOVE)
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
@@ -766,6 +772,7 @@ class System_Base(System):
                  controller=SystemDefaultControlMechanism,
                  enable_controller=False,
                  monitor_for_control=None,
+                 control_signals=None,
                  # learning=None,
                  learning_rate=None,
                  targets=None,
@@ -784,6 +791,7 @@ class System_Base(System):
                                                   controller=controller,
                                                   enable_controller=enable_controller,
                                                   monitor_for_control=monitor_for_control,
+                                                  control_signals=control_signals,
                                                   learning_rate=learning_rate,
                                                   targets=targets,
                                                   params=params)
@@ -825,7 +833,8 @@ class System_Base(System):
         # Instantiate controller from class specification
         else:
             self.controller = self.controller(system=self,
-                                              monitor_for_control=monitor_for_control)
+                                              monitor_for_control=monitor_for_control,
+                                              control_signals=control_signals)
 
         # Check whether controller has input, and if not then disable
         # # MODIFIED 5/10/17 OLD:
@@ -2038,7 +2047,8 @@ class System_Base(System):
 
             except AttributeError as error_msg:
                 if not 'INIT' in context:
-                    raise SystemError("Problem executing controller for {}: {}".format(self.name, error_msg))
+                    raise SystemError("PROGRAM ERROR: Problem executing controller for {}: {}".
+                                      format(self.name, error_msg))
         #endregion
 
         # Report completion of system execution and value of designated outputs
@@ -2824,7 +2834,7 @@ class System_Base(System):
             G.edge(objmech.name, controller.name, label=connector.name, color=control_color)
 
             # outgoing edges
-            for output_state in controller.controlSignals:
+            for output_state in controller.control_signals:
                 for projection in output_state.efferents:
                     edge_name
                     rcvr_name = projection.receiver.owner.name

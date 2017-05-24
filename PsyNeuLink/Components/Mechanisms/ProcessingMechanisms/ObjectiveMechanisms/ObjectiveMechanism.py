@@ -16,7 +16,7 @@
 #      if it is a name or value, no projection is called for (assumes that it is a TARGET, and that the projection
 #                    will be implemented by Composition
 
-# *********************************************  ObjectiveMechanism *******************************************************
+# *********************************************  ObjectiveMechanism ****************************************************
 
 """
 
@@ -466,9 +466,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
         #                       since params have not yet been validated and so self.params is not yet available
         if variable is not None and len(variable) != len(self.user_params[MONITORED_VALUES]):
-                raise ObjectiveMechanismError("The number of items specified for the default_input_value arg ({}) of {} "
-                                     "must match the number of items specified for its monitored_values arg ({})".
-                                     format(len(variable), self.name, len(self.user_params[MONITORED_VALUES])))
+            raise ObjectiveMechanismError("The number of items specified for the default_input_value arg ({}) of {} "
+                                          "must match the number of items specified for its monitored_values arg ({})".
+                                          format(len(variable), self.name, len(self.user_params[MONITORED_VALUES])))
 
         super()._validate_variable(variable=variable, context=context)
 
@@ -554,6 +554,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             except KeyError:
                 pass
 
+    # IMPLEMENTATION NOTE: FOR Composition, BREAK THIS UP SO THAT monitored_values CAN BE IMPLEMENTED
+    #                      ONE AT TIME (IN A CALL TO _instantiate_monitored_value THAT INSTANTATEs
+    #                      ADDS an input_state FOR EACH ITEM IN monitored_values
+    #                      (AKIN _instantiate_control_signal)
     def _instantiate_input_states(self, context=None):
         """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.variable
         
