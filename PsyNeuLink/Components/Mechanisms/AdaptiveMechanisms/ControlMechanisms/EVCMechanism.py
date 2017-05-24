@@ -296,30 +296,14 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism i
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
+
 OBJECT = 0
 WEIGHT = 1
 EXPONENT = 2
 
-# # Default control allocation mode values:
-# class DefaultControlAllocationMode(Enum):
-#     GUMBY_MODE = 0.0
-#     BADGER_MODE = 1.0
-#     TEST_MODE = 240
-# defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
-DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
-
-class ControlSignalCostOptions(IntEnum):
-    NONE               = 0
-    INTENSITY_COST     = 1 << 1
-    ADJUSTMENT_COST    = 1 << 2
-    DURATION_COST      = 1 << 3
-    ALL                = INTENSITY_COST | ADJUSTMENT_COST | DURATION_COST
-    DEFAULTS           = INTENSITY_COST
-
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
 ALLOCATION_POLICY = 'allocation_policy'
-CONTROL_SIGNAL_COST_OPTIONS = 'control_signal_cost_options'
 
 # ControlProjection Function Names
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
