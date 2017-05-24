@@ -322,6 +322,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
             for spec in target_set[CONTROL_SIGNALS]:
 
+                # FIX: 5/23/17 MODIFY TO USE SPECIFICATION DICTIONARY RATHER THAN TUPLE (AND MAYBE _parse_state_spec)
                 # ControlSignal specification
                 # Check that all of its ControlProjections are to mechanisms in the controller's system
                 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
@@ -353,11 +354,11 @@ class ControlMechanism_Base(Mechanism_Base):
                         raise ControlMechanismError("2nd item of tuple in specification in {} arg for {} ({}) "
                                                     "must be a Mechanism".format(CONTROL_SIGNALS, self.name, mech_spec))
                     # Check that param (named by str) is an attribute of the mechanism
-                    if not hasattr(param_name, mech_spec):
+                    if not hasattr(mech_spec, param_name) and not hasattr(mech_spec.function_object, param_name):
                         raise ControlMechanismError("{} is not an attribute of {} (in {} arg for {})"
                                                     .format(param_name, mech_spec, CONTROL_SIGNALS, self.name))
                     # Check that the mechanism has a parameterState for the param
-                    if not any(param_name in mech_spec._parameter_states):
+                    if not param_name in mech_spec._parameter_states.names:
                         raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
                                                     "specified in the {} argument for {}".
                                                     format(param_name, mech_spec.name, CONTROL_SIGNALS, self.name))
@@ -398,7 +399,7 @@ class ControlMechanism_Base(Mechanism_Base):
     def _instantiate_output_states(self, context=None):
 
         for control_signal in self.control_signals:
-            self._instantiate_control_signal(control_signal=control_signals, context=context)
+            self._instantiate_control_signal(control_signal=control_signal, context=context)
 
         super()._instantiate_output_states(context=context)
 
