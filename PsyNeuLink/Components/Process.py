@@ -1042,12 +1042,12 @@ class Process_Base(Process):
 
         from PsyNeuLink.Components.Mechanisms.Mechanism import _is_mechanism_spec
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
-        # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
         self.runtime_params_dict = {}
 
         # Kristen modified 5/24
         # in  ALL mechanism tuples, the middle entry is set to zero (formerly used for specifying runtime params)
-        # if _is_mechanism_spec, runtime_params_dict[mechanism] is set to runtime params
+        # rightmost entry is set to zero (formerly phase spec)
+        # if _is_mechanism_spec, runtime_params_dict[mechanism] is set to actual runtime params
 
         for i in range(len(pathway)):
             config_item = pathway[i]
@@ -1060,7 +1060,7 @@ class Process_Base(Process):
                     if _is_mechanism_spec(config_item[0]) or _is_projection_spec(config_item[0]):
 
                         # Replace it with a tuple of length 3
-                        pathway[i] = MechanismTuple(config_item[0],0,0)
+                        pathway[i] = MechanismTuple(config_item[0])
                         # if it's a mechanism, set the runtime params to none
                         if _is_mechanism_spec(config_item[0]):
                             self.runtime_params_dict[config_item[0]] = None
@@ -1073,7 +1073,7 @@ class Process_Base(Process):
                 if len(config_item) is 2:
 
                     # Replace it with a tuple of length 3
-                    pathway[i] = MechanismTuple(config_item[0],0,0)
+                    pathway[i] = MechanismTuple(config_item[0])
 
                     # If it's a mechanism
                     if _is_mechanism_spec(config_item[0]):
@@ -1098,7 +1098,7 @@ class Process_Base(Process):
                 # If the item is a mechanism or a projection
                 if _is_mechanism_spec(pathway[i]) or _is_projection_spec(pathway[i]):
                     # wrap it in a tuple of len 3
-                    pathway[i] = MechanismTuple(pathway[i],0,0)
+                    pathway[i] = MechanismTuple(pathway[i])
                     # if it's a mechanism, set runtime params to None
                     if _is_mechanism_spec(pathway[i]):
                         self.runtime_params_dict[pathway[i]] = None

@@ -2067,10 +2067,10 @@ def _is_mechanism_spec(spec):
 
 # MechanismTuple indices
 OBJECT_ITEM = 0
-PARAMS_ITEM = 1
-PHASE_ITEM = 2
+# PARAMS_ITEM = 1
+# PHASE_ITEM = 2
 
-MechanismTuple = namedtuple('MechanismTuple', 'mechanism, params, phase')
+MechanismTuple = namedtuple('MechanismTuple', 'mechanism')
 
 from collections import UserList, Iterable
 class MechanismList(UserList):
