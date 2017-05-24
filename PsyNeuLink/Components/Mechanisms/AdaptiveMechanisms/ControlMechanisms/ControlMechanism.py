@@ -293,6 +293,10 @@ class ControlMechanism_Base(Mechanism_Base):
         Check that all items in CONTROL_SIGNALS are parameters or ParameterStates for Mechanisms in self.system
         """
 
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
+                import ControlSignal, _is_control_signal_spec
+
+
         super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,
                                                                  context=context)
@@ -319,9 +323,6 @@ class ControlMechanism_Base(Mechanism_Base):
                                                 format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
 
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
-
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
-                import ControlSignal
 
             for spec in target_set[CONTROL_SIGNALS]:
 
@@ -599,13 +600,14 @@ class ControlMechanism_Base(Mechanism_Base):
                                                       "that is not a ControlProjection, to outputState of {1}".
                                                       format(projection, self.name))
                 if projection.value is DEFERRED_INITIALIZATION:
-                    projection.init_args['sender']=state
+                    projection.init_args['sender']=control_signal
                     if projection.init_args['name'] is None:
+                        # FIX 5/23/17: CLEAN UP NAME STUFF BELOW:
                         projection.init_args['name'] = CONTROL_PROJECTION + \
-                                                       ' for ' + receiver.owner.name + ' ' + receiver.name
+                                                       ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
                     projection._deferred_init()
                 else:
-                    projection.sender = state
+                    projection.sender = control_signal
 
         else:
             # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
@@ -614,23 +616,18 @@ class ControlMechanism_Base(Mechanism_Base):
                                            receiver=parameter_state,
                                            name=CONTROL_PROJECTION + control_signal_name)
             control_projections = [projection]
-
             # FIX 5/23/17: MAKE SURE PROJECTION's VALUE IS COMPATIBLE WITH RECEIVER'S VARIABLE
-
-        # Assign outputState as ControlProjection's sender
-        for projection in control_projections:
-
 
         # UPDATE output_states AND control_projections -----------------------------------------------------------------
 
         try:
-            self.output_states[state.name] = state
+            self.output_states[control_signal.name] = control_signal
         except (AttributeError, TypeError):
             from PsyNeuLink.Components.States.State import State_Base
-            self.output_states = ContentAddressableList(component_type=State_Base, list=[state])
+            self.output_states = ContentAddressableList(component_type=State_Base, list=[control_signal])
 
         # Add index assignment to outputState
-        state.index = output_state_index
+        control_signal.index = output_state_index
 
 
         # FIX: MOVE THESE TO ABOVE, WITH ControlProjections ------------------------------
@@ -638,8 +635,8 @@ class ControlMechanism_Base(Mechanism_Base):
         # Add ControlProjection to list of outputState's outgoing projections
         # (note: if it was deferred, it just added itself, skip)
         for projection in control_projections:
-            if not projection in state.efferents:
-                state.efferents.append(projection)
+            if not projection in control_signal.efferents:
+                control_signal.efferents.append(projection)
 
             # Add ControlProjection to ControlMechanism's list of ControlProjections
             try:
@@ -659,7 +656,7 @@ class ControlMechanism_Base(Mechanism_Base):
         # (Re-)assign control_signals attribute to output_states
         self.control_signals = self.output_states
 
-        return state
+        return control_signal
 
     def _execute(self,
                     variable=None,
