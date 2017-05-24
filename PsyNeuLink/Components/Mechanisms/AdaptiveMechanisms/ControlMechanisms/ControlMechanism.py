@@ -320,64 +320,41 @@ class ControlMechanism_Base(Mechanism_Base):
 
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
 
+            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
+                import ControlSignal
+
             for spec in target_set[CONTROL_SIGNALS]:
 
-                # FIX: 5/23/17 MODIFY TO USE SPECIFICATION DICTIONARY RATHER THAN TUPLE (AND MAYBE _parse_state_spec)
-                # ControlSignal specification
-                # Check that all of its ControlProjections are to mechanisms in the controller's system
-                from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
-                    import ControlSignal
-                if isinstance(spec, ControlSignal):
+                # Validate as ControlSignal specification
+                validated_spec = _is_control_signal_spec(self, spec)
+
+                # Specification is for a Parameter
+                if isinstance(validated_spec, tuple):
+                    param_name = validated_spec[0]
+                    mech = validated_spec[1]
+                    # Check that the mechanism to which the parameter belongs is in the controller's system
+                    if not mech in self.system.mechanisms:
+                        raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
+                                                    "must be for a Mechanism in {}".
+                                                    format(param_name,
+                                                           CONTROL_SIGNALS,
+                                                           self.name,
+                                                           mech.name,
+                                                           self.system.name))
+                # Specification is for a ControlSignal
+                elif isinstance(validated_spec, ControlSignal):
+                    #  Check that any ControlProjections it has are to mechanisms in the controller's system
                     if not all(control_proj.receiver.owner in self.system.mechanisms
                                for control_proj in spec.efferents):
                         raise ControlMechanismError("The ControlSignal specified in the {} arg for {} ({}) "
                                                     "has one more more ControlProjections to a mechanism "
                                                     "that is not in {}".
                                                     format(CONTROL_SIGNALS, self.name, spec.name, self.system.name))
-                    continue
-
-                # ParameterState specification
-                if isinstance(spec, ParameterState):
-                    mech_spec = ParameterState.owner
-                    param_name = ParameterState.name
-
-                # Tuple (parameter name, mechanism) specification
-                elif isinstance(spec, tuple):
-                    param_name = spec[0]
-                    mech_spec = spec[1]
-                    # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
-                    if not isinstance(param_name, str):
-                        raise ControlMechanismError("1st item of tuple in specification in {} arg for {} ({}) "
-                                                    "must be a string".format(CONTROL_SIGNALS, self.name, param_name))
-                    # Check that 2nd item is a mechanism
-                    if not isinstance(mech_spec, Mechanism):
-                        raise ControlMechanismError("2nd item of tuple in specification in {} arg for {} ({}) "
-                                                    "must be a Mechanism".format(CONTROL_SIGNALS, self.name, mech_spec))
-                    # Check that param (named by str) is an attribute of the mechanism
-                    if not hasattr(mech_spec, param_name) and not hasattr(mech_spec.function_object, param_name):
-                        raise ControlMechanismError("{} is not an attribute of {} (in {} arg for {})"
-                                                    .format(param_name, mech_spec, CONTROL_SIGNALS, self.name))
-                    # Check that the mechanism has a parameterState for the param
-                    if not param_name in mech_spec._parameter_states.names:
-                        raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
-                                                    "specified in the {} argument for {}".
-                                                    format(param_name, mech_spec.name, CONTROL_SIGNALS, self.name))
-
                 else:
-                    raise ControlMechanismError("Specification in {} arg for {} ({}) must be a "
-                                                "ParameterState, a tuple specifying a parameter and mechanism, "
-                                                "or an existing ControlSignal".
-                                                format(MONITOR_FOR_CONTROL, self.name, spec))
+                    raise ControlMechanismError("PROGRAM ERROR: unrecognized ControlSignal specification for {} ({})".
+                                                format(self.name, spec))
 
-                # Check that the mechanism (to which the param belongs) is in the controller's system
-                if not mech_spec in self.system.mechanisms:
-                    raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
-                                                "must be for a Mechanism in {}".
-                                                format(param_name,
-                                                       CONTROL_SIGNALS,
-                                                       self.name,
-                                                       mech_spec.name,
-                                                       self.system.name))
+
 
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self
@@ -406,7 +383,7 @@ class ControlMechanism_Base(Mechanism_Base):
         # super()._instantiate_output_states(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
-        """Implment ControlSignals specifed in control_signals arg or "locally" in parameter specification(s)
+        """Implment ControlSignals specified in control_signals arg or "locally" in parameter specification(s)
 
         Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
             that insures that any ControlSignals specified in control_signals arg are instantiated first
@@ -464,7 +441,6 @@ class ControlMechanism_Base(Mechanism_Base):
     # FIX          TRACK DOWN WHERE PARAMS ARE BEING HANDED OFF TO ControlProjection
     # FIX                   AND MAKE SURE THEY ARE NOW ADDED TO ControlSignal SPECIFICATION DICT
     #
-    # def _instantiate_control_signal(self, projection=None, params=None, context=None):
     def _instantiate_control_signal(self, control_signal=None, context=None):
         """Add outputState (as ControlSignal) and assign as sender to requesting ControlProjection
 
@@ -486,75 +462,148 @@ class ControlMechanism_Base(Mechanism_Base):
         else:
             self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
 
+        # PARSE control_signal SPECIFICATION ------------------------------------------------------------------------
+
         # Parse control_signal to get projection and params
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
-        # FIX 5/23/17: FIX parse_state_spec TO HANDLE MODULATORY PROJECTIONS SPECIFIED IN TUPLE
-        control_signal_dict = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
-        # FIX 5/23/17: NEED TO HANDLE CASE IN WHICH "control_signal_dict" is actually a ControlSignal
-        # FIX 5/23/17: ??IS [CONTROL] THE RIGHT KEY TO USE HERE (VS. [PARAMS] OR [PARAMS][MODULATORY_PROJECTIONS]
-        # FIX 5/23/17: **SHOULD HANDLE MULTIPLE PROJECTIONS
-        # projection = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS]
-        control_projections = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS]
-        params = control_signal_dict[PARAMS]
+
+        # Handle special case in which specification is a (<param_name>, Mechanism) tuple
+        # Note: this is a convenience notation that precludes any customization of the ControlSignal
+        if (isinstance(control_signal, tuple) and
+                isinstance(control_signal[0], str) and
+                isinstance(control_signal[1], Mechanism)):
+            spec = control_signal
+
+        # Parse control_signal specification using State._parse_state_spec()
+        else:
+            # FIX 5/23/17: FIX parse_state_spec TO HANDLE MODULATORY PROJECTIONS SPECIFIED IN TUPLE
+            control_signal_dict = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
+
+            if isinstance(control_signal_dict, ControlSignal):
+                spec = control_signal_dict
+
+            else:
+                # FIX 5/23/17: ??IS [CONTROL] THE RIGHT KEY TO USE (VS. [PARAMS] OR [PARAMS][MODULATORY_PROJECTIONS]
+                # FIX 5/23/17: SHOULD ACTUALLY JUST BE CONTROL (SINCE IT CAN BE A PROJECTION, MECHANISM OR CONTROLSIGNAL
+                # projection = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS]
+                # control_projections = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS]
+                spec = control_signal_dict[PARAMS][STATE_PROJECTIONS]
+                params = control_signal_dict[PARAMS]
+
+        control_projections = []
+
+        # VALIDATE OR INSTANTIATE ControlSignal ------------------------------------------------------------------------
+
+        # Specification is already a ControlSignal
+        if isinstance(spec, ControlSignal):
+            # Deferred Initialization, so assign owner, name, and initialize
+            if spec.value is DEFERRED_INITIALIZATION:
+                # FIX 5/23/17:
+                # NEED TO IMPLEMENT DEFERRED_INITIALIZATION FOR ControlSignal
+                # CALL DEFERRED INIT WITH SELF AS OWNER ??AND NAME FROM control_signal_dict?? (OR WAS IT SPECIFIED)
+                # OR ASSIGN NAME IF IT IS DEFAULT, USING CONTROL_SIGNAL_DICT??
+                pass
+            elif not spec.owner is self:
+                raise ControlMechanismError("Attempt to assign ControlSignal to {} ({}) that is already owned by {}".
+                                            format(self.name, spec.name, spec.owner.name))
+            param_name = spec.name
+            control_projections = spec.efferents
+
+        # Specification is a ParameterState, (Parameter, Mechanism) tuple, or Projection:
+        #    - get param_name and control_projections
+        #    - instantiate OutputState for ControlSignal
+        else:
+            # ParameterState
+            if isinstance(spec, ParameterState):
+                param_name = spec.name
+
+            # (Parameter, Mechanism) tuple
+            elif isinstance(spec, tuple):
+                param_name, mech = _is_control_signal_spec(self, spec)
+
+            # (Projection)
+            elif isinstance(spec, ControlProjection):
+                control_projections = [spec]
+                # Get receiver and use to assign name of ControlSignal
+                # get name of projection receiver (for use in naming the ControlSignal)
+                if projection.value is DEFERRED_INITIALIZATION:
+                    param_name = projection.init_args['receiver'].name
+                else:
+                    param_name = projection.receiver.name
+
+            else:
+                if isinstance(spec, list):
+                    raise ControlMechanismError("PROGRAM ERROR: list of ControlProjections (should be, but) "
+                                                "is not currently supported as specification in a ControlSignal")
+                else:
+                    raise ControlMechanismError("PROGRAM ERROR: unrecognized specification of ControlSignal "
+                                                "should have been detected in ControlSignal._validate_params()")
+
+            # Instantiate OutputState for ControlSignal
+
+            output_state_name = param_name + '_' + ControlSignal.__name__
+
+            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
+                import ControlSignal
+            from PsyNeuLink.Components.States.State import _instantiate_state
+
+            # Get constraint for OutputState's value
+            #    - get ControlMechanism's value
+            self._update_value(context=context)
+            # - get OutputState's index
+            try:
+                output_state_index = len(self.output_states)
+            except (AttributeError, TypeError):
+                output_state_index = 0
+            # - get constraint for OutputState's value
+            output_state_constraint_value = self.allocation_policy[output_state_index]
+
+            # FIX 5/23/17: CALL super()_instantiate_output_states ??
+            # FIX:         OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
+            state = _instantiate_state(owner=self,
+                                       state_type=ControlSignal,
+                                       state_name=output_state_name,
+                                       state_spec=defaultControlAllocation,
+                                       state_params=params,
+                                       constraint_value=output_state_constraint_value,
+                                       constraint_value_name='Default control allocation',
+                                       context=context)
+
+        # VALIDATE OR INSTANTIATE ControlProjection(s) TO ControlSignal  -----------------------------------------------
+
+        # Instantiate or validate ControlProjections
 
         # Validate projection (if specified) and get receiver's name
-        for projection in control_projections:
-            self._validate_projection(projection)
+        if control_projections:
+            for projection in control_projections:
+                self._validate_projection(projection)
 
-            # get name of projection receiver (for use in naming the ControlSignal)
-            if projection.value is DEFERRED_INITIALIZATION:
-                receiver = projection.init_args['receiver']
-            else:
-                receiver = projection.receiver
+                from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+                if not isinstance(projection, ControlProjection):
+                    raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
+                                                      "that is not a ControlProjection, to outputState of {1}".
+                                                      format(projection, self.name))
+                if projection.value is DEFERRED_INITIALIZATION:
+                    projection.init_args['sender']=state
+                    if projection.init_args['name'] is None:
+                        projection.init_args['name'] = CONTROL_PROJECTION + \
+                                                       ' for ' + receiver.owner.name + ' ' + receiver.name
+                    projection._deferred_init()
+                else:
+                    projection.sender = state
 
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-            if not isinstance(projection, ControlProjection):
-                raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
-                                                  "that is not a ControlProjection, to outputState of {1}".
-                                                  format(projection, self.name))
-        # Otherwise, use name specified in control_signals
+        else:
+            INSTANTIATE ControlProjection AND MAKE SURE ITS VALUE IS COMPATIBLE WITH RECEIVER'S VARIABLE
 
-        #  Update self.value by evaluating function
-        self._update_value(context=context)
-
-        # Instantiate new outputState and assign as sender of ControlProjection
-        try:
-            output_state_index = len(self.output_states)
-        except (AttributeError, TypeError):
-            output_state_index = 0
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
-        output_state_name = receiver.name + '_' + ControlSignal.__name__
-        output_state_value = self.allocation_policy[output_state_index]
-
-        # FIX: CALL super()_instantiate_output_states ??
-        # FIX:     OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
-        from PsyNeuLink.Components.States.State import _instantiate_state
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
-        state = _instantiate_state(owner=self,
-                                   state_type=ControlSignal,
-                                   state_name=output_state_name,
-                                   state_spec=defaultControlAllocation,
-                                   state_params=params,
-                                   constraint_value=output_state_value,
-                                   constraint_value_name='Default control allocation',
-                                   # constraint_output_state_index=output_item_output_state_index,
-                                   context=context)
 
         # Assign outputState as ControlProjection's sender
         for projection in control_projections:
-            if projection.value is DEFERRED_INITIALIZATION:
-                projection.init_args['sender']=state
-                if projection.init_args['name'] is None:
-                    projection.init_args['name'] = CONTROL_PROJECTION + ' for ' + receiver.owner.name + ' ' + receiver.name
-                projection._deferred_init()
-            else:
-                projection.sender = state
+
 
         # Update self.output_state and self.output_states
         try:
             self.output_states[state.name] = state
         except (AttributeError, TypeError):
-            # self.output_states = OrderedDict({output_state_name:state})
             from PsyNeuLink.Components.States.State import State_Base
             self.output_states = ContentAddressableList(component_type=State_Base, list=[state])
 
@@ -579,7 +628,7 @@ class ControlMechanism_Base(Mechanism_Base):
         except AttributeError:
             self.control_signal_costs = np.empty((1,1))
 
-        # Assign ControlSignals in the order they are stored of output_states
+        # (Re-)assign control_signals attribute to output_states
         self.control_signals = self.output_states
 
         return state
@@ -608,16 +657,8 @@ class ControlMechanism_Base(Mechanism_Base):
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitored_output_states.index(monitored_state)
 
-                # # MODIFIED 1/9/16 OLD:
-                # exponent = \
-                #     np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].__self__.exponents[
-                #     monitored_state_index])
-                # weight = \
-                #     np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].__self__.weights[monitored_state_index])
-                # MODIFIED 1/9/16 NEW:
                 weight = self.monitor_for_control_weights_and_exponents[monitored_state_index][0]
                 exponent = self.monitor_for_control_weights_and_exponents[monitored_state_index][1]
-                # MODIFIED 1/9/16 END
 
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                        format(monitored_state_mech.name, monitored_state.name, weight, exponent))
