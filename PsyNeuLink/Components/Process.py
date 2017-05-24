@@ -1045,6 +1045,10 @@ class Process_Base(Process):
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
         self.runtime_params_dict = {}
 
+        # Kristen modified 5/24
+        # in  ALL mechanism tuples, the middle entry is set to zero (formerly used for specifying runtime params)
+        # if _is_mechanism_spec, runtime_params_dict[mechanism] is set to runtime params
+
         for i in range(len(pathway)):
             config_item = pathway[i]
             if isinstance(config_item, tuple):
@@ -1064,8 +1068,8 @@ class Process_Base(Process):
                         raise ProcessError("Third item of tuple ({}) in entry {} of pathway for {}"
                                            " must be a phase value".
                                            format(config_item[2], i, self.name))
-
-                    self.runtime_params_dict[config_item[0]] = config_item[1]
+                    if _is_mechanism_spec(config_item[0]):
+                        self.runtime_params_dict[config_item[0]] = config_item[1]
 
                     pathway[i] = MechanismTuple(config_item[0], config_item[1], config_item[2])
 
@@ -1073,8 +1077,8 @@ class Process_Base(Process):
                 if len(config_item) is 1:
                     if _is_mechanism_spec(config_item[0]) or _is_projection_spec(config_item[0]):
                         # Pad with None
-
-                        self.runtime_params_dict[config_item[0]] = None
+                        if _is_mechanism_spec(config_item[0]):
+                            self.runtime_params_dict[config_item[0]] = None
 
                         pathway[i] = MechanismTuple(config_item[0],
                                                           0,
@@ -1091,16 +1095,16 @@ class Process_Base(Process):
                     second_tuple_item = config_item[1]
                     if _is_mechanism_spec(config_item[0]):
                         if isinstance(second_tuple_item, dict):
-
-                            self.runtime_params_dict[config_item[0]] = config_item[1]
+                            if _is_mechanism_spec(config_item[0]):
+                                self.runtime_params_dict[config_item[0]] = config_item[1]
 
                             pathway[i] = MechanismTuple(config_item[0],
                                                               0,
                                                               DEFAULT_PHASE_SPEC)
                         # If the second item is a number, assume it is meant as a phase spec and move it to third item
                         elif isinstance(second_tuple_item, (int, float)):
-
-                            self.runtime_params_dict[config_item[0]] = None
+                            if _is_mechanism_spec(config_item[0]):
+                                self.runtime_params_dict[config_item[0]] = None
 
                             pathway[i] = MechanismTuple(config_item[0],
                                                               0,
@@ -1137,7 +1141,8 @@ class Process_Base(Process):
 
                     # Kristen 5/24 commenting out below because pathway[i] is not a component object, so we cannot
                     # store it as the dict key. This 'else' case will never have runtime params so it shouldn't matter
-                    # self.runtime_params_dict[pathway[i]] = None
+                    if _is_mechanism_spec(pathway[i]):
+                        self.runtime_params_dict[pathway[i]] = None
 
                     pathway[i] = MechanismTuple(pathway[i],
                                                       0,
