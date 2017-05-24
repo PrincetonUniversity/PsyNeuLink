@@ -462,13 +462,28 @@ def _instantiate_input_states(owner, context=None):
                                          constraint_value_name="function variable",
                                          context=context)
 
+
+    # FIX: 5/23/17:  SHOULD APPEND THIS TO LIST OF EXISTING INPUT_STATES RATHER THAN JUST ASSIGN;
+    #                THAT WAY CAN USE INCREMENTALLY IN COMPOSITION
+    # if context and 'COMMAND_LINE' in context:
+    #     if owner.input_states:
+    #         owner.input_states.extend(state_list)
+    #     else:
+    #         owner.input_states = state_list
+    # else:
+    #     if owner._input_states:
+    #         owner._input_states.extend(state_list)
+    #     else:
+    #         owner._input_states = state_list
+
     # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
     # FIX: Hack to prevent recursion in calls to setter and assign_params
     if context and 'COMMAND_LINE' in context:
         owner.input_states = state_list
     else:
         owner._input_states = state_list
-    # owner.input_states = state_list
+
+
 
     # Check that number of input_states and their variables are consistent with owner.variable,
     #    and adjust the latter if not
@@ -492,10 +507,3 @@ def _instantiate_input_states(owner, context=None):
             warnings.warn("Variable for {} ({}) has been adjusted "
                           "to match number and format of its input_states: ({})".
                           format(old_variable, append_type_to_name(owner),owner.variable))
-
-
-#     # Initialize self.input_value to correspond to format of owner's variable, and zero it
-# # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
-# # FIX:  IS THIS A LIST OR np.array (SHOULD BE A LIST)
-#     # ??REPLACE THIS WITH owner.input_value = list(owner.variable) * 0.0??
-#     owner.input_value = owner.variable.copy() * 0.0

@@ -488,16 +488,17 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Parse control_signal to get projection and params
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
+        # FIX 5/23/17: FIX parse_state_spec TO HANDLE MODULATORY PROJECTIONS SPECIFIED IN TUPLE
         control_signal_dict = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
-        # FIX: 5/23/17 NEED TO HANDLE CASE IN WHICH "control_signal_dict" is actually a ControlSignal
-        # FIX: 5/23/17 ??IS [CONTROL] THE RIGHT KEY TO USE HERE (VS. [PARAMS] OR [PARAMS][MODULATORY_PROJECTIONS]
-        # FIX: 5/23/17 **SHOULD HANDLE MULTIPLE PROJECTIONS
+        # FIX 5/23/17: NEED TO HANDLE CASE IN WHICH "control_signal_dict" is actually a ControlSignal
+        # FIX 5/23/17: ??IS [CONTROL] THE RIGHT KEY TO USE HERE (VS. [PARAMS] OR [PARAMS][MODULATORY_PROJECTIONS]
+        # FIX 5/23/17: **SHOULD HANDLE MULTIPLE PROJECTIONS
         # projection = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS]
-        projection = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS][0]
+        control_projections = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS]
         params = control_signal_dict[PARAMS]
 
         # Validate projection (if specified) and get receiver's name
-        if projection:
+        for projection in control_projections:
             self._validate_projection(projection)
 
             # get name of projection receiver (for use in naming the ControlSignal)
@@ -540,13 +541,14 @@ class ControlMechanism_Base(Mechanism_Base):
                                    context=context)
 
         # Assign outputState as ControlProjection's sender
-        if projection.value is DEFERRED_INITIALIZATION:
-            projection.init_args['sender']=state
-            if projection.init_args['name'] is None:
-                projection.init_args['name'] = CONTROL_PROJECTION + ' for ' + receiver.owner.name + ' ' + receiver.name
-            projection._deferred_init()
-        else:
-            projection.sender = state
+        for projection in control_projections:
+            if projection.value is DEFERRED_INITIALIZATION:
+                projection.init_args['sender']=state
+                if projection.init_args['name'] is None:
+                    projection.init_args['name'] = CONTROL_PROJECTION + ' for ' + receiver.owner.name + ' ' + receiver.name
+                projection._deferred_init()
+            else:
+                projection.sender = state
 
         # Update self.output_state and self.output_states
         try:
@@ -561,14 +563,15 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Add ControlProjection to list of outputState's outgoing projections
         # (note: if it was deferred, it just added itself, skip)
-        if not projection in state.efferents:
-            state.efferents.append(projection)
+        for projection in control_projections:
+            if not projection in state.efferents:
+                state.efferents.append(projection)
 
-        # Add ControlProjection to ControlMechanism's list of ControlProjections
-        try:
-            self.control_projections.append(projection)
-        except AttributeError:
-            self.control_projections = [projection]
+            # Add ControlProjection to ControlMechanism's list of ControlProjections
+            try:
+                self.control_projections.append(projection)
+            except AttributeError:
+                self.control_projections = [projection]
 
         # Update control_signal_costs to accommodate instantiated projection
         try:
