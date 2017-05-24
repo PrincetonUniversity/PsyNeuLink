@@ -434,9 +434,12 @@ class ControlMechanism_Base(Mechanism_Base):
                 for projection in parameter_state.afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
                     if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
-                        # Get params specified with projection for its ControlSignal (cached in control_signal attrib)
-                        control_signal_spec = {CONTROL: [projection],
-                                               PARAMS: projection.control_signal}
+                        # FIX 5/23/17: MODIFY THIS WHEN (param, ControlProjection) tuple
+                        # FIX:         IS REPLACED WITH (param, ControlSignal) tuple
+                        # Add projection itself to any params specified in the ControlProjection for the ControlSignal
+                        #    (cached in the ControlProjection's control_signal attrib)
+                        projection.control_signal.update({MODULATORY_PROJECTIONS: [projection]})
+                        control_signal_spec = {PARAMS: projection.control_signal}
                         self._instantiate_control_signal(control_signal_spec, context=context)
 
     # ---------------------------------------------------
@@ -473,7 +476,10 @@ class ControlMechanism_Base(Mechanism_Base):
         # Parse control_signal to get projection and params
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
         control_signal_dict = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
-        projection = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS]
+        # FIX: 5/23/17 ??IS [CONTROL] THE RIGHT KEY TO USE HERE (VS. [PARAMS] OR [PARAMS][MODULATORY_PROJECTIONS]
+        # FIX: 5/23/17 **SHOULD HANDLE MULTIPLE PROJECTIONS
+        # projection = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS]
+        projection = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS][0]
         params = control_signal_dict[PARAMS]
 
         # Validate projection (if specified) and get receiver's name
