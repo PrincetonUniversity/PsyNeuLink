@@ -247,6 +247,7 @@ PARAMS = "params"
 NAME = "name"
 PREFS_ARG = "prefs"
 CONTEXT = "context"
+STANDARD_ARGS = {NAME, VARIABLE, VALUE, PARAMS, PREFS_ARG, CONTEXT}
 
 INITIAL_VALUES = 'initial_values'
 

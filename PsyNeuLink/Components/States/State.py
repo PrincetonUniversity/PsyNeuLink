@@ -1790,12 +1790,13 @@ def _parse_state_spec(owner,
         if force_dict is True: parse into state specification_dictionary 
             (replacing any components with their id to avoid problems with deepcopy)   
     Otherwise, return state specification dictionary using arguments provided as defaults
-    Warn if variable is assigned is assigned the default value, and verbosePref is set on owner.
+    Warn if variable is assigned the default value, and verbosePref is set on owner.
     **value** arg should generally be a constraint for the value of the state;  
         if state_spec is a Projection, and method is being called from:
             InputState, value should be the projection's value; 
             ParameterState, value should be the projection's value; 
-            OutputState, value should be the projection's variable 
+            OutputState, value should be the projection's variable
+    Any entries with keys other than XXX are moved to entries of the dict in the PARAMS entry
     """
 
     from PsyNeuLink.Components.Projections.Projection import projection_keywords
@@ -1898,6 +1899,7 @@ def _parse_state_spec(owner,
     #                          "class of state being instantiated ({})".format(state_spec, state_type))
 
     # Specification dict
+    # - move any entries other than for standard args into dict in params entry
     elif isinstance(state_spec, dict):
         # Dict has a single entry of the form {<STATE_NAME>:<STATE SPECIFICATION DICT>},
         #     so assign STATE_NAME as name, and return parsed SPECIFICATION_DICT
@@ -1926,7 +1928,7 @@ def _parse_state_spec(owner,
                       format(VARIABLE, state_type, owner.name, state_spec))
             # Move all params-relevant entries from state_spec into params
             for spec in [param_spec for param_spec in state_spec.copy()
-                         if not param_spec in {NAME, VARIABLE, VALUE, PARAMS, PREFS_ARG, CONTEXT}]:
+                         if not param_spec in STANDARD_ARGS]:
                 params = params or {}
                 params[spec] = state_spec[spec]
                 # del state_spec[spec]

@@ -76,13 +76,13 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                                        Decision.PROBABILITY_UPPER_THRESHOLD,
                                        (Decision.RESPONSE_TIME, -1, 1)],
                   # ParameterState state specification dictionary
-                  # control_signals=[{NAME: DRIFT_RATE, # FIX: SHOULD BE RENAMED OR AKA'D "PARAMETER" REQUIRED IF PARAMETER_STATE IS A MECHANISM
-                  #                   STATE_PROJECTIONS: Decision}, # FIX: SHOULD BE RENAMED OR AKA'D "PARAMETER_STATE"
-                  #                   PARAMS: ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)},
-                  #                  {NAME: THRESHOLD,
-                  #                   STATE_PROJECTIONS: Decision}],
-                  control_signals=[(DRIFT_RATE, Decision),
-                                   (THRESHOLD, Decision)],
+                  control_signals=[{NAME: DRIFT_RATE, # FIX: SHOULD BE RENAMED OR AKA'D "PARAMETER" REQUIRED IF PARAMETER_STATE IS A MECHANISM
+                                    STATE_PROJECTIONS: Decision, # FIX: SHOULD BE RENAMED OR AKA'D "PARAMETER_STATE"
+                                    PARAMS: {ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}},
+                                   {NAME: THRESHOLD,
+                                    STATE_PROJECTIONS: Decision}],
+                  # control_signals=[(DRIFT_RATE, Decision),
+                  #                  (THRESHOLD, Decision)],
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')

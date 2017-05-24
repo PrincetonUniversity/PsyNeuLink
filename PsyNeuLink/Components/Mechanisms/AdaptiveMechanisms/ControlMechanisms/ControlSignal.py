@@ -848,7 +848,9 @@ class ControlSignal(OutputState):
         self._value = assignment
 
 
-# FIX: 5/23/17 MODIFY TO USE SPECIFICATION DICTIONARY RATHER THAN TUPLE (AND MAYBE _parse_state_spec)
+# FIX 5/23/17: MODIFY TO USE SPECIFICATION DICTIONARY RATHER THAN TUPLE
+# FIX          OR TO CALL State._parse_state_spec (like ObjectiveMechanism.monitored_values)
+
 def _is_control_signal_spec(owner, spec):
     """Validate ControlSignal specification and 
     
@@ -863,8 +865,10 @@ def _is_control_signal_spec(owner, spec):
     if isinstance(spec, ParameterState):
         return (spec.name, spec.owner)
 
+    # tuple (str, Mechanism):
+    #    string must be the name of an attribute of the Mechanism,
+    #    and the Mechanism has a ParameterState with the name of that attribute
     if isinstance(spec, tuple):
-
         param_name = spec[0]
         mech = spec[1]
         # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
@@ -886,9 +890,15 @@ def _is_control_signal_spec(owner, spec):
                                         format(param_name, mech.name, CONTROL_SIGNAL, owner.name))
         return spec
 
-    # Tuple (parameter name, mechanism) specification
+    # ControlSignal specification dictionary, must have the following entries:
+    #    NAME:str - must be the name of an attribute of MECHANISM
+    #    MECHANISM:Mechanism - must have an attribute and corresponding ParameterState with PARAMETER
+    #    PARAMS:dict - entries must be valid ControlSignal parameters (e.g,. ALLOCATION_SAMPLES)
+    if isinstance(spec, dict):
+        pass
+
     else:
         raise ControlMechanismError("Specification of {} for {} ({}) must be a "
                                     "ParameterState, a tuple specifying a parameter and mechanism, "
                                     "or an existing ControlSignal".
-                                    format(CONTROL_SIGNAL, self.name, spec))
+                                    format(CONTROL_SIGNAL, owner.name, spec))
