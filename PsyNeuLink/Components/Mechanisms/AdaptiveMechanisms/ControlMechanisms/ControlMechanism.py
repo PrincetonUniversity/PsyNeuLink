@@ -414,8 +414,6 @@ class ControlMechanism_Base(Mechanism_Base):
                     control_signal_spec = {CONTROL:[projection]}
                     self._instantiate_control_signal(control_signal_spec, context=self.name)
 
-
-
     def _take_over_as_default_controller(self, context=None):
 
         # FIX 5/23/17: INTEGRATE THIS WITH ASSIGNMENT OF control_signals
