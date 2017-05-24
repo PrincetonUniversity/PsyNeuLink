@@ -120,6 +120,7 @@ Class Reference
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.States.OutputState import OutputState
 
 ControlMechanismRegistry = {}
@@ -323,7 +324,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
                 # ControlSignal specification
                 # Check that all of its ControlProjections are to mechanisms in the controller's system
-                from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
+                from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
+                    import ControlSignal
                 if isinstance(spec, ControlSignal):
                     if not all(control_proj.receiver.owner in self.system.mechanisms
                                for control_proj in spec.efferents):
@@ -441,8 +443,11 @@ class ControlMechanism_Base(Mechanism_Base):
     # IMPLEMENTATION NOTE:  IMPLEMENT _instantiate_output_states THAT CALLS THIS FOR EACH ITEM
     #                       DESIGN PATTERN SHOULD COMPLEMENT THAT FOR _instantiate_input_states of ObjectiveMechanism
     #                           (with control_signals taking the place of monitored_values)
-    #                       NOTES: CHANGE TO TAKE control_signal AS ARG (IF ANYTHING);
-    #                               PROJECTIONS AND PARAMS SHOULD BE PASSED BY ASSIGNING TO STATE SPECIFICATION DICT
+    # FIX 5/23/17: PROJECTIONS AND PARAMS SHOULD BE PASSED BY ASSIGNING TO STATE SPECIFICATION DICT
+    # FIX          UPDATE parse_state_spec TO ACCOMODATE (param, ControlSignal) TUPLE
+    # FIX          TRACK DOWN WHERE PARAMS ARE BEING HANDED OFF TO ControlProjection
+    # FIX                   AND MAKE SURE THEY ARE NOW ADDED TO ControlSignal SPECIFICATION DICT
+    #
     # def _instantiate_control_signal(self, projection=None, params=None, context=None):
     def _instantiate_control_signal(self, control_signal=None, context=None):
         """Add outputState (as ControlSignal) and assign as sender to requesting ControlProjection
@@ -465,7 +470,10 @@ class ControlMechanism_Base(Mechanism_Base):
         else:
             self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
 
-        NEED TO PARSE control_signal:  RUN IT THROUGH parse_state_spec
+        # Parse control_signal to get projection and params
+        control_signal_dict = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
+        projection = control_signal_dict[MODULATORY_PROJECTIONS]
+        params = control_signal_dict[PARAMS]
 
         # Validate projection (if specified) and get receiver's name
         if projection:

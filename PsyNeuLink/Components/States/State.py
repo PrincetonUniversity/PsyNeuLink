@@ -1779,6 +1779,7 @@ def _check_state_ownership(owner, param_name, mechanism_state):
     return mechanism_state
 
 
+# FIX 5/23/17:  UPDATE TO ACCOMODATE (param, ControlSignal) TUPLE
 @tc.typecheck
 def _parse_state_spec(owner,
                       state_type:_is_state_type,
