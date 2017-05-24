@@ -32,7 +32,7 @@ def test_reinforcement():
         target=0,
     )
 
-    # print ('reward prediction weights: \n', action_selection.input_states[0].receivesFromProjections[0].matrix)
+    # print ('reward prediction weights: \n', action_selection.input_states[0].afferents[0].matrix)
     # print ('targetMechanism weights: \n', action_selection.output_states.sendsToProjections[0].matrix)
 
     reward_values = [10, 10, 10]
@@ -46,7 +46,7 @@ def test_reinforcement():
         print("\n\n**** TRIAL: ", CentralClock.trial)
 
     def show_weights():
-        print('Reward prediction weights: \n', action_selection.input_states[0].receivesFromProjections[0].matrix)
+        print('Reward prediction weights: \n', action_selection.input_states[0].afferents[0].matrix)
         print('\nAction selected:  {}; predicted reward: {}'.format(
             np.nonzero(action_selection.output_states.value)[0][0],
             action_selection.output_states.value[np.nonzero(action_selection.output_states.value)[0][0]],
@@ -81,12 +81,12 @@ def test_reinforcement():
     mech_objective_action = s.mechanisms[2]
     mech_learning_input_to_action = s.mechanisms[3]
 
-    reward_prediction_weights = action_selection.input_states[0].receivesFromProjections[0]
+    reward_prediction_weights = action_selection.input_states[0].afferents[0]
 
     expected_output = [
         (input_layer.output_states.values, [np.array([1., 1., 1.])]),
         (action_selection.output_states.values, [np.array([0., 3.38417298, 0.])]),
-        (pytest.helpers.expand_np_ndarray(mech_objective_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array([6.61582702]), np.array(6.615827015625), np.array(6.615827015625), np.array(43.7691671006736), np.array(43.7691671006736)])),
+        (pytest.helpers.expand_np_ndarray(mech_objective_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array([6.61582702]), np.array(43.7691671006736)])),
         (pytest.helpers.expand_np_ndarray(mech_learning_input_to_action.output_states.values), pytest.helpers.expand_np_ndarray(([np.array(
             [
                 [0.        , 0.        , 0.        ],
