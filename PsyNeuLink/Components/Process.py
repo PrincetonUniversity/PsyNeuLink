@@ -1051,99 +1051,57 @@ class Process_Base(Process):
 
         for i in range(len(pathway)):
             config_item = pathway[i]
+
+            # if this element of the pathway is a tuple
             if isinstance(config_item, tuple):
-                if len(config_item) is 3:
-                    # Check that first item is either a mechanism or projection specification
-                    if not _is_mechanism_spec(config_item[0]) or _is_projection_spec(config_item[0]):
-                        raise ProcessError("First item of tuple ({}) in entry {} of pathway for {}"
-                                           " is neither a mechanism nor a projection specification".
-                                           format(config_item[0], i, self.name))
-                    # Check that second item is a dict (presumably of params)
-                    if config_item[1] is not None and not isinstance(config_item[1], dict):
-                        raise ProcessError("Second item of tuple ({}) in entry {} of pathway for {}"
-                                           " must be a params dict".
-                                           format(config_item[1], i, self.name))
-                    # Check that third item is a int (presumably a phase spec)
-                    if not isinstance(config_item[2], numbers.Number):
-                        raise ProcessError("Third item of tuple ({}) in entry {} of pathway for {}"
-                                           " must be a phase value".
-                                           format(config_item[2], i, self.name))
-                    if _is_mechanism_spec(config_item[0]):
-                        self.runtime_params_dict[config_item[0]] = config_item[1]
-
-                    pathway[i] = MechanismTuple(config_item[0], config_item[1], config_item[2])
-
-                # If the tuple has only one item, check that it is a Mechanism or Projection specification
+                # and the tuple has 1 item
                 if len(config_item) is 1:
+                    # if the tuple contains either a mechanism or a projection
                     if _is_mechanism_spec(config_item[0]) or _is_projection_spec(config_item[0]):
-                        # Pad with None
+
+                        # Replace it with a tuple of length 3
+                        pathway[i] = MechanismTuple(config_item[0],0,0)
+                        # if it's a mechanism, set the runtime params to none
                         if _is_mechanism_spec(config_item[0]):
                             self.runtime_params_dict[config_item[0]] = None
-
-                        pathway[i] = MechanismTuple(config_item[0],
-                                                          0,
-                                                          DEFAULT_PHASE_SPEC)
+                    # otherwise the tuple is not valid
                     else:
                         raise ProcessError("First item of tuple ({}) in entry {} of pathway for {}"
                                            " is neither a mechanism nor a projection specification".
                                            format(config_item[0], i, self.name))
                 # If the tuple has two items
                 if len(config_item) is 2:
-                    # Mechanism
-                    #     check whether second item is a params dict or a phaseSpec
-                    #     and assign it to the appropriate position in the tuple, padding other with None
-                    second_tuple_item = config_item[1]
+
+                    # Replace it with a tuple of length 3
+                    pathway[i] = MechanismTuple(config_item[0],0,0)
+
+                    # If it's a mechanism
                     if _is_mechanism_spec(config_item[0]):
-                        if isinstance(second_tuple_item, dict):
+                        # and its second element is a dict
+                        if isinstance(config_item[1], dict):
+                            # set the mechanism's runtime params to be the second element
                             self.runtime_params_dict[config_item[0]] = config_item[1]
-
-                            pathway[i] = MechanismTuple(config_item[0],
-                                                              0,
-                                                              DEFAULT_PHASE_SPEC)
-                        # If the second item is a number, assume it is meant as a phase spec and move it to third item
-                        elif isinstance(second_tuple_item, (int, float)):
-                            if _is_mechanism_spec(config_item[0]):
-                                self.runtime_params_dict[config_item[0]] = None
-
-                            pathway[i] = MechanismTuple(config_item[0],
-                                                              0,
-                                                              second_tuple_item)
+                        # if the second element is not a dict, then it's not valid
                         else:
                             raise ProcessError("Second item of tuple ({}) in item {} of pathway for {}"
-                                               " is neither a params dict nor phaseSpec (int or float)".
-                                               format(second_tuple_item, i, self.name))
-                    # Projection
-                    #     check that second item is a projection spec for a LearningProjection
-                    #     if so, leave it there, and pad third item with None
-                    elif _is_projection_spec(config_item[0]):
-                        if (_is_projection_spec(second_tuple_item) and
-                                _is_projection_subclass(second_tuple_item, LEARNING_PROJECTION)):
-                            pathway[i] = MechanismTuple(config_item[0],
-                                                              0,
-                                                              DEFAULT_PHASE_SPEC)
-                        else:
-                            raise ProcessError("Second item of tuple ({}) in item {} of pathway for {}"
-                                               " should be 'LearningProjection' or absent".
-                                               format(second_tuple_item, i, self.name))
+                                               " is not a params dict.".
+                                               format(config_item[1], i, self.name))
+                    # if the first element is not a mechanism, then it's not valid
                     else:
-                        raise ProcessError("First item of tuple ({}) in item {} of pathway for {}"
-                                           " is neither a mechanism nor a projection spec".
-                                           format(config_item[0], i, self.name))
-                # tuple should not have more than 3 items
-                if len(config_item) > 3:
-                    raise ProcessError("The tuple for item {} of pathway for {} has more than three items {}".
+                        raise ProcessError("Projection cannot have a runtime params dict".format(config_item[0],
+                                                                                                 i, self.name))
+                # tuple should not have more than 2 items
+                if len(config_item) > 2:
+                    raise ProcessError("The tuple for item {} of pathway for {} has more than two items {}".
                                        format(i, self.name, config_item))
             else:
-                # Convert item to tuple, padded with None
+                # If the item is a mechanism or a projection
                 if _is_mechanism_spec(pathway[i]) or _is_projection_spec(pathway[i]):
-                    # Pad with None for param and DEFAULT_PHASE_SPEC for phase
-
+                    # wrap it in a tuple of len 3
+                    pathway[i] = MechanismTuple(pathway[i],0,0)
+                    # if it's a mechanism, set runtime params to None
                     if _is_mechanism_spec(pathway[i]):
                         self.runtime_params_dict[pathway[i]] = None
-
-                    pathway[i] = MechanismTuple(pathway[i],
-                                                      0,
-                                                      DEFAULT_PHASE_SPEC)
                 else:
                     raise ProcessError("Item of {} of pathway for {}"
                                        " is neither a mechanism nor a projection specification".
