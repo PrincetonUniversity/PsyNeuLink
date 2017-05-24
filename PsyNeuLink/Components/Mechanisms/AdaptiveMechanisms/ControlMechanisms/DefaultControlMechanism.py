@@ -75,7 +75,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
 
     # variableClassDefault = defaultControlAllocation
-    # This must be a list, as there may be more than one (e.g., one per controlSignal)
+    # This must be a list, as there may be more than one (e.g., one per control_signal)
     variableClassDefault = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
@@ -92,12 +92,14 @@ class DefaultControlMechanism(ControlMechanism_Base):
                  # default_input_value=None,
                  system=None,
                  monitor_for_control:tc.optional(list)=None,
+                 control_signals:tc.optional(list)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
         super(DefaultControlMechanism, self).__init__(#default_input_value =default_input_value,
                                                     monitor_for_control=monitor_for_control,
+                                                    control_signals=control_signals,
                                                     params=params,
                                                     name=name,
                                                     prefs=prefs,
@@ -126,20 +128,22 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # if self.input_states is None:
         #     self.input_value = None
 
-    def _instantiate_control_projection(self, projection, params=None, context=None):
+    def _instantiate_control_signal(self, control_signal, context=None):
         """Instantiate requested controlProjection and associated inputState
         """
 
-        # Instantiate input_states and allocation_policy attribute for controlSignal allocations
+        if isinstance(control_signal, dict):
+            projection = control_signal[CONTROL][0]
+
+        # Instantiate input_states and allocation_policy attribute for control_signal allocations
         input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
         self._instantiate_default_input_state(input_name, defaultControlAllocation, context=context)
         self.allocation_policy = self.input_values
 
         # Call super to instantiate outputStates
-        # Note: params carries any specified with ControlProjection for the control_signal
-        super()._instantiate_control_projection(projection=projection,
-                                                params=params,
-                                                context=context)
+        # Note: any params specified with ControlProjection for the control_signal
+        #           should be in PARAMS entry of dict passed in control_signal arg
+        super()._instantiate_control_signal(control_signal=control_signal, context=context)
 
     def _instantiate_default_input_state(self, input_state_name, input_state_value, context=None):
         """Instantiate inputState for ControlMechanism

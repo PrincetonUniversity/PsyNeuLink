@@ -77,7 +77,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
     #     kp<pref>: <setting>...}
 
     # variableClassDefault = defaultControlAllocation
-    # This must be a list, as there may be more than one (e.g., one per controlSignal)
+    # This must be a list, as there may be more than one (e.g., one per control_signal)
     variableClassDefault = defaultControlAllocation
 
     def __init__(self,

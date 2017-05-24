@@ -150,9 +150,9 @@ def test_EVC():
 
         #   ControlSignal Values
         #       drift rate
-        (mySystem.controller.controlSignals[0].value, np.array(1.0)),
+        (mySystem.controller.control_signals[0].value, np.array(1.0)),
         #       threshold
-        (mySystem.controller.controlSignals[1].value, np.array(1.0)),
+        (mySystem.controller.control_signals[1].value, np.array(1.0)),
 
         #    Output State Values
         #       decision variable
