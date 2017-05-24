@@ -430,9 +430,9 @@ class ControlMechanism_Base(Mechanism_Base):
                         # FIX:         IS REPLACED WITH (param, ControlSignal) tuple
                         # Add projection itself to any params specified in the ControlProjection for the ControlSignal
                         #    (cached in the ControlProjection's control_signal attrib)
-                        projection.control_signal.update({MODULATORY_PROJECTIONS: [projection]})
-                        control_signal_spec = {PARAMS: projection.control_signal}
-                        self._instantiate_control_signal(control_signal_spec, context=context)
+                        control_signal_params = projection.control_signal or {}
+                        control_signal_params.update({MODULATORY_PROJECTIONS: [projection]})
+                        self._instantiate_control_signal(control_signal_params, context=context)
 
     # ---------------------------------------------------
     # IMPLEMENTATION NOTE:  IMPLEMENT _instantiate_output_states THAT CALLS THIS FOR EACH ITEM

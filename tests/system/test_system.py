@@ -106,6 +106,8 @@ def test_danglingControlledMech():
 
     # no assert, should only complete without error
 
+test_danglingControlledMech()
+
 
 class TestDocumentationExamples:
 
