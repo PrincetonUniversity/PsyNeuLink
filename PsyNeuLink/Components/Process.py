@@ -1095,8 +1095,7 @@ class Process_Base(Process):
                     second_tuple_item = config_item[1]
                     if _is_mechanism_spec(config_item[0]):
                         if isinstance(second_tuple_item, dict):
-                            if _is_mechanism_spec(config_item[0]):
-                                self.runtime_params_dict[config_item[0]] = config_item[1]
+                            self.runtime_params_dict[config_item[0]] = config_item[1]
 
                             pathway[i] = MechanismTuple(config_item[0],
                                                               0,
@@ -1139,8 +1138,6 @@ class Process_Base(Process):
                 if _is_mechanism_spec(pathway[i]) or _is_projection_spec(pathway[i]):
                     # Pad with None for param and DEFAULT_PHASE_SPEC for phase
 
-                    # Kristen 5/24 commenting out below because pathway[i] is not a component object, so we cannot
-                    # store it as the dict key. This 'else' case will never have runtime params so it shouldn't matter
                     if _is_mechanism_spec(pathway[i]):
                         self.runtime_params_dict[pathway[i]] = None
 
