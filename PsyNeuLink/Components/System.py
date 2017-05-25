@@ -266,8 +266,8 @@ from toposort import *
 
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple, \
-    PARAMS_ITEM, PHASE_ITEM
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
+    # PARAMS_ITEM, PHASE_ITEM
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.ShellClasses import *
@@ -2444,7 +2444,7 @@ class System_Base(System):
 
         # Add controller to execution list for printing if enabled
         if self.enable_controller:
-            sorted_execution_list.append(MechanismTuple(self.controller, None, self.controller.phaseSpec))
+            sorted_execution_list.append(MechanismTuple(self.controller))
 
 
         mech_names_from_exec_list = list(mech_tuple.mechanism.name for mech_tuple in self.executionList)
