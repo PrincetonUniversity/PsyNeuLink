@@ -474,6 +474,88 @@ class ControlMechanism_Base(Mechanism_Base):
         control_projection = None
         control_signal_params = None
 
+# NEW -----------------------------------------------------------------------------------------------------
+
+        control_signal_spec = _parse_state_spec(state_type=ControlSignal,
+                                 state_spec=control_signal)
+
+        # Specification is already a ControlSignal
+        if isinstance(control_signal_spec, ControlSignal):
+            # Deferred Initialization, so assign owner, name, and initialize
+            if control_signal_spec.value is DEFERRED_INITIALIZATION:
+                # FIX 5/23/17:  IMPLEMENT DEFERRED_INITIALIZATION FOR ControlSignal
+                # CALL DEFERRED INIT WITH SELF AS OWNER ??AND NAME FROM control_signal_dict?? (OR WAS IT SPECIFIED)
+                # OR ASSIGN NAME IF IT IS DEFAULT, USING CONTROL_SIGNAL_DICT??
+                pass
+            elif not control_signal_spec.owner is self:
+                raise ControlMechanismError("Attempt to assign ControlSignal to {} ({}) that is already owned by {}".
+                                            format(self.name, spec.name, spec.owner.name))
+            control_signal = control_signal_spec
+            control_signal_name = spec.name
+            control_projections = spec.efferents
+
+            # IMPLEMENTATION NOTE:
+            #    THIS IS TO HANDLE FUTURE POSSIBILITY OF MULTIPLE ControlProjections FROM A SIGN ControlSignal;
+            #    FOR NOW, HOWEVER, ONLY A SINGLE ONE IS SUPPORTED
+            # parameter_states = [proj.recvr for proj in control_projections]
+            if len(control_projections) > 1:
+                raise ControlMechanismError("PROGRAM ERROR: list of ControlProjections is not currently supported "
+                                            "as specification in a ControlSignal")
+            else:
+                control_projection = control_projections[0]
+                parameter_state = control_projection.receiver
+
+        # Specification is a ParameterState
+        elif isinstance(control_signal_spec, ParameterState):
+            param_name = control_signal_spec.name
+            parameter_state = control_signal_spec
+
+        # Specification was tuple or dict, parsed, and returned as dict
+        elif isinstance(control_signal_spec, dict):
+            param_name = control_signal_spec[NAME]
+            control_signal_params = control_signal_spec[PARAMS]
+            if MECHANISM in control_signal_spec[PARAMS]:
+                mech = control_signal_spec[PARAMS][MECHANISM]
+                was_in = 'DICT'
+            elif PROJECTION_SPECS in control_signal_spec[PARAMS]:
+                spec = control_signal_spec[PARAMS][PROJECTION_SPECS]
+                if isinstance(spec, Mechanism):
+                    mech = spec
+                elif (isinstance(spec, ControlProjection) or
+                              spec in {CONTROL, CONTROL_PROJECTION} or
+                    isclass(spec) and isubclass(spec, ControlProjection)):
+
+                was_in = 'TUPLE'
+            else:
+                raise ControlMechanismError("Mechanism for parameter to be controlled by {} ({}) must be specified "
+                                            "either in a (param_name, Mechanism) tuple or the MECHANISM entry of a "
+                                            "ControlSignal specification dictionary".
+                                            format(self.name, param_name))
+            try:
+                parameter_state = mech._parameter_states[param_name]
+            except KeyError:
+                # Check that param (named by str) is an attribute of the mechanism
+                if not hasattr(mech, param_name) and not hasattr(mech.function_object, param_name):
+                    raise ControlMechanismError("{} (in specification of {}  {}) is not an attribute "
+                                                "of {} or its function"
+                                                .format(param_name, CONTROL_SIGNAL, owner.name, mech))
+                # Check that the mechanism has a parameterState for the param
+                if not param_name in mech._parameter_states.names:
+                    raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
+                                                "specified in {} for {}".
+                                                format(param_name, mech.name, CONTROL_SIGNAL, owner.name))
+
+
+            IF ERROR CHECK WHETHER IT WAS A TUPLE AND IF SO GIVE INFORAMTIVE ERRORS
+
+            DEAL WITH CONTROL SIGNAL SPECIFIED IN PARAM SPECIFICATION TUPLE (REQUIRES DEFERRED_INIT??)
+
+            DEAL WITH SPECIFICATION AS CONTROL PROJECTION in PARAM SPECIFIATION TUPLE
+
+
+
+# NEW END -----------------------------------------------------------------------------------------------------
+
         # Handle special case in which specification is a (<param_name>, Mechanism) tuple
         # Note: this is a convenience notation that precludes any customization of the ControlSignal
         if (isinstance(control_signal, tuple) and
@@ -494,6 +576,7 @@ class ControlMechanism_Base(Mechanism_Base):
                 # FIX         (SINCE IT CAN BE A PROJECTION, MECHANISM OR CONTROLSIGNAL
                 spec = control_signal_dict[PARAMS][MODULATORY_PROJECTIONS]
                 control_signal_params = control_signal_dict[PARAMS]
+
 
         # VALIDATE OR INSTANTIATE ControlSignal --------------------------------------------------------------------
 

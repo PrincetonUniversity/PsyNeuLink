@@ -1945,16 +1945,11 @@ def _parse_state_spec(owner,
         if len(state_spec) != 2:
             raise StateError("Tuple provided as state_spec for {} of {} ({}) must have exactly two items".
                              format(state_type_name, owner.name, state_spec))
-        # # MODIFIED 5/23/17 OLD:
-        # if not _is_projection_spec(state_spec[1]):
-        #     raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a projection specification".
-        #                      format(state_type_name, owner.__class__.__name__, state_spec[1]))
-        # MODIFIED 5/23/17 NEW:
+        # IMPLEMENTATION NOTE: Mechanism allowed in tuple to accomodate specification of param for ControlSignal
         if not (_is_projection_spec(state_spec[1]) or isinstance(state_spec[1], (Mechanism, State))):
             raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
                              "for a mechanism, state, or projection".
                              format(state_type_name, owner.__class__.__name__, state_spec[1]))
-        # MODIFIED 5/23/17 END
         # Put projection spec from second item of tuple in params
         params = params or {}
         # FIX 5/23/17: NEED TO HANDLE NON-MODULATORY PROJECTION SPECS
@@ -1975,7 +1970,7 @@ def _parse_state_spec(owner,
         state_dict[PARAMS].update(params)
 
     # Projection class, object, or keyword:
-    #     set to variable to value and assign projection spec to STATE_PROJECTIONS entry in params
+    #     set variable to value and assign projection spec to STATE_PROJECTIONS entry in params
     # IMPLEMENTATION NOTE:  It is the caller's responsibility to assign the value arg
     #                           appropriately for the state being requested, for:
     #                               InputState, projection's value;
