@@ -1041,7 +1041,6 @@ class Process_Base(Process):
     def _standardize_config_entries(self, pathway, context=None):
 
         from PsyNeuLink.Components.Mechanisms.Mechanism import _is_mechanism_spec
-        import time
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
         self.runtime_params_dict = {}
 
@@ -1097,16 +1096,13 @@ class Process_Base(Process):
             else:
                 # If the item is a mechanism or a projection
                 if _is_mechanism_spec(pathway[i]) or _is_projection_spec(pathway[i]):
-                    print(pathway[i])
-                    print(_is_projection_spec(pathway[i]))
-                    print()
-                    time.sleep(1)
-                    # wrap it in a tuple of len 1
-                    pathway[i] = MechanismTuple(pathway[i])
                     # if it's a mechanism, set runtime params to None
                     if _is_mechanism_spec(pathway[i]):
-                        print(pathway[i])
                         self.runtime_params_dict[pathway[i]] = None
+                    # wrap it in a tuple of len 1
+                    pathway[i] = MechanismTuple(pathway[i])
+
+
                 else:
                     raise ProcessError("Item of {} of pathway for {}"
                                        " is neither a mechanism nor a projection specification".
@@ -1147,7 +1143,7 @@ class Process_Base(Process):
                 continue
 
             previous_item_was_projection = False
-            mech = item
+            mech = item[0]
 
             # INSTANTIATE MECHANISM  -----------------------------------------------------------------------------
 
@@ -1157,7 +1153,6 @@ class Process_Base(Process):
 
             # Entry is NOT already a Mechanism object
             if not isinstance(mech, Mechanism):
-                print(mech)
                 # Note: need full pathname for mechanism factory method, as "mechanism" is used as local variable below
                 mech = PsyNeuLink.Components.Mechanisms.Mechanism.mechanism(mech, context=context)
                 if not mech:
@@ -1169,6 +1164,7 @@ class Process_Base(Process):
                 #                           format(params, i, self.name))
                 # Replace Pathway entry with new tuple containing instantiated Mechanism object and params
                 pathway[i] = MechanismTuple(mech)
+
 
             # Entry IS already a Mechanism object
             # Add entry to _mech_tuples and name to mechanismNames list
@@ -1241,7 +1237,7 @@ class Process_Base(Process):
                 # Note: does not include learning (even if specified for the process)
                 if i == 0:
                     # Relabel for clarity
-                    mech = item
+                    mech = item[0]
 
                     # Check if first Mechanism already has any projections and, if so, issue appropriate warning
                     if mech.input_state.afferents:
@@ -1255,9 +1251,11 @@ class Process_Base(Process):
                 #region SUBSEQUENT ENTRIES
 
                 # Item is a Mechanism
+                item = item[0]
                 if isinstance(item, Mechanism):
 
                     preceding_item = pathway[i-1][OBJECT_ITEM]
+
 
                     # PRECEDING ITEM IS A PROJECTION
                     if isinstance(preceding_item, Projection):
@@ -1522,6 +1520,7 @@ class Process_Base(Process):
                     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
                     # IMPLEMENTATION NOTE:  params is currently ignored
                     pathway[i] = MechanismTuple(projection)
+
 
     def _issue_warning_about_existing_projections(self, mechanism, context=None):
 
