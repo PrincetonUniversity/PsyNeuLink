@@ -473,17 +473,27 @@ class ControlMechanism_Base(Mechanism_Base):
     # FIX                   AND MAKE SURE THEY ARE NOW ADDED TO ControlSignal SPECIFICATION DICT
     #
     def _instantiate_control_signal(self, control_signal=None, context=None):
-        """Add outputState (as ControlSignal) and assign as sender to requesting ControlProjection
+        """Instantiate OutputState for ControlSignal and assign (if specified) or instantiate ControlProjection
 
-        # Updates allocation_policy and control_signal_costs attributes to accommodate instantiated projection
+        # Extends allocation_policy and control_signal_costs attributes to accommodate instantiated projection
 
-        Notes:  
+        Notes:
+        * control_signal arg can be a:
+            - ControlSignal object;
+            - ControlProjection;
+            - ParameterState;
+            - params dict, from _take_over_as_default_controller(), containing a ControlProjection;
+            - tuple (param_name, Mechanism), from control_signals arg of constructor;
+                    [NOTE: this is a convenience format;
+                           it precludes specification of ControlSignal params (e.g., ALLOCATION_SAMPLES)]
+            - ControlSignal specification dictionary, from control_signals arg of constructor
+                    [NOTE: this must have at least NAME:str (param name) and MECHANISM:Mechanism entries; 
+                           it can also include a PARAMS entry with a params dict containing ControlSignal params] 
+        * State._parse_state_spec() is used to parse control_signal arg
         * params are expected to be for (i.e., to be passed to) ControlSignal;
         * wait to instantiate deferred_init() projections until after ControlSignal is instantiated,
              so that correct outputState can be assigned as its sender;
         * index of outputState is incremented based on number of ControlSignals already instantiated;
-        * assume that self.allocation_policy has already been extended 
-            to include the particular (indexed) allocation to be used for the outputState being created here.
 
         Returns ControlSignal (OutputState)
         """
