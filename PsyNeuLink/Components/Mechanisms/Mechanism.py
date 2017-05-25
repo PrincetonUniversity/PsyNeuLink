@@ -1181,7 +1181,7 @@ class Mechanism_Base(Mechanism):
                 # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
                 params[INPUT_STATES] = None
 
-        # VALIDATE EXECUTE METHOD PARAMS
+        # VALIDATE FUNCTION_PARAMS
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
@@ -1218,11 +1218,8 @@ class Mechanism_Base(Mechanism):
                                      self.__class__.__name__,
                                      default_value))
 
-        # FIX: MAKE SURE OUTPUT OF EXECUTE FUNCTION / SELF.VALUE  IS 2D ARRAY, WITH LENGTH == NUM OUTPUT STATES
-
         # VALIDATE OUTPUT STATE(S)
 
-        # FIX: MAKE SURE # OF OUTPUTS == LENGTH OF OUTPUT OF EXECUTE FUNCTION / SELF.VALUE
         # OUTPUT_STATES is specified, so validate:
         if OUTPUT_STATES in params and params[OUTPUT_STATES] is not None:
 
