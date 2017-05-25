@@ -1282,14 +1282,23 @@ class Mechanism_Base(Mechanism):
         super()._instantiate_attributes_before_function(context=context)
 
     def _instantiate_function(self, context=None):
+        """Assign weights and exponents if specified in input_states
+        """
 
         super()._instantiate_function(context=context)
 
-        # FIX: IF SOME INPUT_STATES ARE SPECIFIED BUT OTHERS ARE NOT, *AND* FUNCTION'S PARAM IS SPECIFIED
-        # FIX:  CONSIDER DEFERRING TO FUNCTION'S SPEC IF INPUT_STATE'S SPEC IS NONE
         if self.input_states and any(input_state.weight is not None for input_state in self.input_states):
-            weights = [[input_state.weight if input_state.weight is not None else 1.0]
-                       for input_state in self.input_states]
+
+            # Construct defaults:
+            #    from function_object.weights if specified else 1's
+            try:
+                default_weights = self.function_object.weights
+            except AttributeError:
+                default_weights = [1.0] * len(self.input_states)
+
+            # Assign any weights specified in input_state spec
+            weights = [[input_state.weight if input_state.weight is not None else default_weight]
+                       for input_state, default_weight in zip(self.input_states, default_weights)]
             self.function_object.weights = weights
 
             # MODIFIED 5/22/17 NEW:
@@ -1298,18 +1307,23 @@ class Mechanism_Base(Mechanism):
             # MODIFIED 5/22/17 END
 
         if self.input_states and any(input_state.exponent is not None for input_state in self.input_states):
-            exponents = [[input_state.exponent if input_state.exponent is not None else 1.0]
-                       for input_state in self.input_states]
+
+            # Construct defaults:
+            #    from function_object.weights if specified else 1's
+            try:
+                default_exponents = self.function_object.exponents
+            except AttributeError:
+                default_exponents = [1.0] * len(self.input_states)
+
+            # Assign any exponents specified in input_state spec
+            exponents = [[input_state.exponent if input_state.exponent is not None else default_exponent]
+                       for input_state, default_exponent in zip(self.input_states, default_exponents)]
             self.function_object.exponents = exponents
 
             # MODIFIED 5/22/17 NEW:
             # FIX: THIS SHOULDN'T BE NECESSARY (??WHY ISN'T ParameterState base_value GETTING UPDATED WITH ASSIGNMENT:
             self._parameter_states[EXPONENTS].base_value = exponents
             # MODIFIED 5/22/17 END
-
-        pass
-
-        # Assign weights and exponents from input_states if function has those parameters
 
     def _instantiate_attributes_after_function(self, context=None):
 
