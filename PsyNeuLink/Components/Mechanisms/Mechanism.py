@@ -1080,7 +1080,7 @@ class Mechanism_Base(Mechanism):
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITOR_FOR_CONTROL
-
+        
         Go through target_set params (populated by Component._validate_params) and validate values for:
             + TIME_SCALE:  <TimeScale>
             + INPUT_STATES:
@@ -1094,9 +1094,9 @@ class Mechanism_Base(Mechanism):
             + OUTPUT_STATES:
                 <MechanismsOutputState object or class, specification dict, or numeric value(s);
                 if it is missing or not one of the above types, it is set to None here;
-                    and then to default value of self.value (output of execute method) in instantiate_outputState
+                    and then to default value of self.value (output of execute method) in instantiate_output_state
                     (since execute method must be instantiated before self.value is known)
-                if OUTPUT_STATES is a list or OrderedDict, it is passed along (to instantiate_outputStates)
+                if OUTPUT_STATES is a list or OrderedDict, it is passed along (to instantiate_output_states)
                 if it is a OutputState class ref, object or specification dict, it is placed in a list
             + MONITORED_STATES:
                 ** DOCUMENT
@@ -1106,11 +1106,6 @@ class Mechanism_Base(Mechanism):
         TBI - Generalize to go through all params, reading from each its type (from a registry),
                                    and calling on corresponding subclass to get default values (if param not found)
                                    (as PROJECTION_TYPE and PROJECTION_SENDER are currently handled)
-
-        :param request_set: (dict)
-        :param target_set: (dict)
-        :param context: (str)
-        :return:
         """
 
         # Perform first-pass validation in Function.__init__():
@@ -1119,7 +1114,7 @@ class Mechanism_Base(Mechanism):
 
         params = target_set
 
-        #region VALIDATE TIME SCALE
+        #VALIDATE TIME SCALE
         try:
             param_value = params[TIME_SCALE]
         except KeyError:
@@ -1134,11 +1129,9 @@ class Mechanism_Base(Mechanism):
                 if self.prefs.verbosePref:
                     print("Value for {0} ({1}) param of {2} must be of type {3};  default will be used: {4}".
                           format(TIME_SCALE, param_value, self.name, type(TimeScale), timeScaleSystemDefault))
-        #endregion
 
-        #region VALIDATE INPUT STATE(S)
+        # VALIDATE INPUT STATE(S)
 
-        # MODIFIED 5/10/17 NEW:
         # INPUT_STATES is specified, so validate:
         if INPUT_STATES in params and params[INPUT_STATES] is not None:
 
@@ -1149,8 +1142,8 @@ class Mechanism_Base(Mechanism):
                 param_value = [param_value]
             # Validate each item in the list or OrderedDict
             # Note:
-            # * number of input_states is validated against length of the owner mechanism's execute method variable (EMV)
-            #     in instantiate_inputState, where an inputState is assigned to each item (value) of the EMV
+            # * number of input_states is validated against length of the owner mechanism's variable
+            #     in instantiate_inputState, where an input_state is assigned to each item of variable
             i = 0
             for key, item in param_value if isinstance(param_value, dict) else enumerate(param_value):
                 from PsyNeuLink.Components.States.InputState import InputState
@@ -1158,8 +1151,8 @@ class Mechanism_Base(Mechanism):
                 if not ((isclass(item) and (issubclass(item, InputState) or # InputState class ref
                                                 issubclass(item, Projection))) or    # Project class ref
                             isinstance(item, InputState) or      # InputState object
-                            isinstance(item, dict) or                     # InputState specification dict
-                            isinstance(item, str) or                      # Name (to be used as key in input_states dict)
+                            isinstance(item, dict) or            # InputState specification dict
+                            isinstance(item, str) or             # Name (to be used as key in input_states dict)
                             iscompatible(item, **{kwCompatibilityNumeric: True})):   # value
                     # set to None, so it is set to default (self.variable) in instantiate_inputState
                     param_value[key] = None
@@ -1187,13 +1180,8 @@ class Mechanism_Base(Mechanism):
                 # - set to None, so that it is set to default (self.variable) in instantiate_inputState
                 # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
                 params[INPUT_STATES] = None
-        # MODIFIED 5/10/17 END
 
-
-
-        #endregion
-
-        #region VALIDATE EXECUTE METHOD PARAMS
+        # VALIDATE EXECUTE METHOD PARAMS
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
@@ -1229,66 +1217,18 @@ class Mechanism_Base(Mechanism):
                                      self.execute.__self__.componentName,
                                      self.__class__.__name__,
                                      default_value))
-        #endregion
+
         # FIX: MAKE SURE OUTPUT OF EXECUTE FUNCTION / SELF.VALUE  IS 2D ARRAY, WITH LENGTH == NUM OUTPUT STATES
 
-        #region VALIDATE OUTPUT STATE(S)
+        # VALIDATE OUTPUT STATE(S)
 
         # FIX: MAKE SURE # OF OUTPUTS == LENGTH OF OUTPUT OF EXECUTE FUNCTION / SELF.VALUE
-        # # MODIFIED 5/10/17 OLD:
-        # try:
-        #     param_value = params[OUTPUT_STATES]
-        #
-        # except KeyError:
-        #     if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
-        #         pass
-        #     else:
-        #         # OUTPUT_STATES not specified:
-        #         # - set to None, so that it is set to default (self.value) in instantiate_outputState
-        #         # Notes:
-        #         # * if in VERBOSE mode, warning will be issued in instantiate_outputState, where default value is known
-        #         # * number of outputStates is validated against length of owner mechanism's execute method output (EMO)
-        #         #     in instantiate_outputState, where an outputState is assigned to each item (value) of the EMO
-        #         params[OUTPUT_STATES] = None
-        #
-        # else:
-        #     # OUTPUT_STATES is specified, so validate:
-        #     # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_outputState)
-        #     if not isinstance(param_value, (ContentAddressableList, list, OrderedDict)):
-        #         param_value = [param_value]
-        #     # Validate each item in the list or OrderedDict
-        #     i = 0
-        #     for key, item in param_value if isinstance(param_value, dict) else enumerate(param_value):
-        #         from PsyNeuLink.Components.States.OutputState import OutputState
-        #         # If not valid...
-        #         if not ((isclass(item) and issubclass(item, OutputState)) or # OutputState class ref
-        #                     isinstance(item, OutputState) or   # OutputState object
-        #                     isinstance(item, dict) or                   # OutputState specification dict
-        #                     isinstance(item, str) or                    # Name (to be used as key in outputStates dict)
-        #                     iscompatible(item, **{kwCompatibilityNumeric: True})):  # value
-        #             # set to None, so it is set to default (self.value) in instantiate_outputState
-        #             param_value[key] = None
-        #             if self.prefs.verbosePref:
-        #                 print("Item {0} of {1} param ({2}) in {3} is not a"
-        #                       " OutputState, specification dict or value, nor a list of dict of them; "
-        #                       "output ({4}) of execute method for {5} will be used"
-        #                       " to create a default outputState for {3}".
-        #                       format(i,
-        #                              OUTPUT_STATES,
-        #                              param_value,
-        #                              self.__class__.__name__,
-        #                              self.value,
-        #                              self.execute.__self__.name))
-        #         i += 1
-        #     params[OUTPUT_STATES] = param_value
-        # MODIFIED 5/10/17 NEW:
-
         # OUTPUT_STATES is specified, so validate:
         if OUTPUT_STATES in params and params[OUTPUT_STATES] is not None:
 
             param_value = params[OUTPUT_STATES]
 
-            # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_outputState)
+            # If it is a single item or a non-OrderedDict, place in list (for use here and in instantiate_output_state)
             if not isinstance(param_value, (ContentAddressableList, list, OrderedDict)):
                 param_value = [param_value]
             # Validate each item in the list or OrderedDict
@@ -1301,7 +1241,7 @@ class Mechanism_Base(Mechanism):
                             isinstance(item, dict) or                   # OutputState specification dict
                             isinstance(item, str) or                    # Name (to be used as key in outputStates dict)
                             iscompatible(item, **{kwCompatibilityNumeric: True})):  # value
-                    # set to None, so it is set to default (self.value) in instantiate_outputState
+                    # set to None, so it is set to default (self.value) in instantiate_output_state
                     param_value[key] = None
                     if self.prefs.verbosePref:
                         print("Item {0} of {1} param ({2}) in {3} is not a"
@@ -1324,15 +1264,12 @@ class Mechanism_Base(Mechanism):
                 pass
             else:
                 # OUTPUT_STATES not specified:
-                # - set to None, so that it is set to default (self.value) in instantiate_outputState
+                # - set to None, so that it is set to default (self.value) in instantiate_output_state
                 # Notes:
-                # * if in VERBOSE mode, warning will be issued in instantiate_outputState, where default value is known
+                # * if in VERBOSE mode, warning will be issued in instantiate_output_state, where default value is known
                 # * number of outputStates is validated against length of owner mechanism's execute method output (EMO)
-                #     in instantiate_outputState, where an outputState is assigned to each item (value) of the EMO
+                #     in instantiate_output_state, where an outputState is assigned to each item (value) of the EMO
                 params[OUTPUT_STATES] = None
-        # MODIFIED 5/10/17 END
-
-
 
     def _validate_inputs(self, inputs=None):
         # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and MonitoringMechanism do not
