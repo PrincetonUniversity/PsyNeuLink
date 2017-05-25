@@ -473,9 +473,11 @@ class ControlMechanism_Base(Mechanism_Base):
         control_projection = None
         control_signal_params = None
 
+        control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
+
         def _get_parameter_state(param_name, mech):
             try:
-                parameter_state = mech._parameter_states[param_name]
+                return mech._parameter_states[param_name]
             except KeyError:
                 # Check that param (named by str) is an attribute of the mechanism
                 if not (hasattr(mech, param_name) or hasattr(mech.function_object, param_name)):
@@ -487,9 +489,6 @@ class ControlMechanism_Base(Mechanism_Base):
                     raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
                                                 "specified in {} for {}".
                                                 format(param_name, mech.name, CONTROL_SIGNAL, owner.name))
-
-
-        control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
 
         # Specification is a ParameterState
         if isinstance(control_signal_spec, ParameterState):
@@ -503,8 +502,9 @@ class ControlMechanism_Base(Mechanism_Base):
             control_signal_params = control_signal_spec[PARAMS]
 
             # control_signal was a specification dict, with MECHANISM as an entry (and parameter as NAME)
-            if MECHANISM in control_signal_spec[PARAMS]:
-                mech = control_signal_spec[PARAMS][MECHANISM]
+            if MECHANISM in control_signal_params:
+                mech = control_signal_params[MECHANISM]
+                del control_signal_params[MECHANISM]
 
             # Specification was originally a tuple, either in parameter specification or control_signal arg;
             #    1st item was either assigned to the NAME entry of the control_signal_spec dict
@@ -512,8 +512,19 @@ class ControlMechanism_Base(Mechanism_Base):
             #        or used as param value, if it was a parameter specification tuple
             #    2nd item was placed CONTROL_SIGNAL_PARAMS entry of params dict in control_signal_spec dict,
             #        so parse:
-            elif CONTROL_SIGNAL_SPECS in control_signal_spec[PARAMS]:
-                spec = control_signal_spec[PARAMS][CONTROL_SIGNAL_SPECS]
+            # FIX 5/23/17: NEED TO GET THE KEYWORDS STRAIGHT FOR PASSING ControlSignal SPECIFICATIONS
+            # IMPLEMENTATION NOTE:
+            #     CONTROL_SIGNAL_SPECS is used by _take_over_as_default_controller,
+            #                          to pass specification from a parameter specification tuple
+            #     STATE_PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
+            #                       here, the tuple comes from a (param, mechanism) specification in control_signal arg
+            elif any(kw in control_signal_spec[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, STATE_PROJECTIONS}):
+                if CONTROL_SIGNAL_SPECS in control_signal_spec[PARAMS]:
+                    spec = control_signal_params[CONTROL_SIGNAL_SPECS]
+                    del control_signal_params[CONTROL_SIGNAL_SPECS]
+                elif STATE_PROJECTIONS in control_signal_spec[PARAMS]:
+                    spec = control_signal_params[STATE_PROJECTIONS]
+                    del control_signal_params[STATE_PROJECTIONS]
 
                 # ControlSignal
                 if isinstance(spec, ControlSignal):
@@ -521,8 +532,10 @@ class ControlMechanism_Base(Mechanism_Base):
 
                 else:
                     # Mechanism
-                    if isinstance(spec, Mechanism):
-                        mech = spec
+                    # IMPLEMENTATION NOTE: Mechanism was placed in list in STATE_PROJECTIONS entry by _parse_state_spec
+                    if isinstance(spec, list) and isinstance(spec[0], Mechanism):
+                        mech = spec[0]
+                        parameter_state = _get_parameter_state(param_name, mech)
 
                     # Projection (in a list)
                     elif isinstance(spec, list):
@@ -536,14 +549,18 @@ class ControlMechanism_Base(Mechanism_Base):
                                                         "currently supported in specification of a ControlSignal")
                         # Get receiver mech
                         if control_projection.value is DEFERRED_INITIALIZATION:
-                            mech = control_projection.init_args['receiver'].owner
+                            parameter_state = control_projection.init_args['receiver']
                         else:
-                            mech = control_projection.receiver.owner
+                            parameter_state = control_projection.receiver
+                        param_name = parameter_state.name
+
                     else:
                         raise ControlMechanismError("PROGRAM ERROR: failure to parse specification of {} for {}".
                                                     format(CONTROL_SIGNAL, self.name))
-
-                    parameter_state = _get_parameter_state(param_name, mech)
+            else:
+                raise ControlMechanismError("PROGRAM ERROR: No entry found in params dict with specification of "
+                                            "parameter Mechanism or ControlProjection for {} of {}".
+                                            format(CONTROL_SIGNAL, self.name))
 
 
         # Specification is a ControlSignal (either passed in directly, or parsed from tuple above)
