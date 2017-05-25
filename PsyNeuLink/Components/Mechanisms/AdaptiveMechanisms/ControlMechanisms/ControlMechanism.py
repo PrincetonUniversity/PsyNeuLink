@@ -123,8 +123,6 @@ from PsyNeuLink.Components.States.OutputState import OutputState
 
 ControlMechanismRegistry = {}
 
-CONTROL_SIGNAL_SPECS = 'CONTROL_SIGNAL_SPECS'
-
 class ControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -543,7 +541,7 @@ class ControlMechanism_Base(Mechanism_Base):
             control_signal_params = control_signal_spec[PARAMS]
 
             # control_signal was a specification dict, with MECHANISM as an entry (and parameter as NAME)
-            if MECHANISM in control_signal_params:
+            if control_signal_params and MECHANISM in control_signal_params:
                 mech = control_signal_params[MECHANISM]
                 del control_signal_params[MECHANISM]
                 parameter_state = _get_parameter_state(param_name, mech)
@@ -560,7 +558,8 @@ class ControlMechanism_Base(Mechanism_Base):
             #                          to pass specification from a parameter specification tuple
             #     STATE_PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
             #                       here, the tuple comes from a (param, mechanism) specification in control_signal arg
-            elif any(kw in control_signal_spec[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, STATE_PROJECTIONS}):
+            elif (control_signal_params and
+                    any(kw in control_signal_spec[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, STATE_PROJECTIONS})):
                 if CONTROL_SIGNAL_SPECS in control_signal_spec[PARAMS]:
                     spec = control_signal_params[CONTROL_SIGNAL_SPECS]
                     del control_signal_params[CONTROL_SIGNAL_SPECS]

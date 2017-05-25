@@ -101,7 +101,9 @@ state_keywords.update({STATE_VALUE,
                        STATE_PARAMS,
                        STATE_PROJECTIONS,
                        MODULATORY_PROJECTIONS,
-                       PROJECTION_TYPE})
+                       PROJECTION_TYPE,
+                       CONTROL_PROJECTION_PARAMS,
+                       CONTROL_SIGNAL_SPECS})
 
 def _is_state_type (spec):
     if issubclass(spec, State):
@@ -1901,9 +1903,10 @@ def _parse_state_spec(owner,
     # Specification dict
     # - move any entries other than for standard args into dict in params entry
     elif isinstance(state_spec, dict):
-        # Dict has a single entry of the form {<STATE_NAME>:<STATE SPECIFICATION DICT>},
-        #     so assign STATE_NAME as name, and return parsed SPECIFICATION_DICT
-        if len(state_spec) == 1 and list(state_spec.keys())[0] not in state_keywords:
+        # Dict has a single entry in which the key is not a recognized keyword,
+        #    so assume it is of the form {<STATE_NAME>:<STATE SPECIFICATION DICT>}:
+        #    assign STATE_NAME as name, and return parsed SPECIFICATION_DICT
+        if len(state_spec) == 1 and list(state_spec.keys())[0] not in (state_keywords | STANDARD_ARGS):
             name, state_spec = list(state_spec.items())[0]
             state_dict = _parse_state_spec(owner=owner,
                                            state_type=state_type,

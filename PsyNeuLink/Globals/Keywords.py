@@ -480,6 +480,7 @@ PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
 CONTROL_SIGNAL = 'control_signal'
 CONTROL_SIGNALS = 'control_signals'
+CONTROL_SIGNAL_SPECS = 'CONTROL_SIGNAL_SPECS'
 CONTROL_PROJECTIONS = 'ControlProjections'
 OUTCOME_FUNCTION = 'outcome_function'
 COST_FUNCTION = 'cost_function'
