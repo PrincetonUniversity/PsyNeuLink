@@ -292,8 +292,6 @@ class ControlMechanism_Base(Mechanism_Base):
         Check that all items in CONTROL_SIGNALS are parameters or ParameterStates for Mechanisms in self.system
         """
 
-
-
         super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,
                                                                  context=context)
@@ -322,17 +320,35 @@ class ControlMechanism_Base(Mechanism_Base):
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
 
             from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
-                    import ControlSignal, _is_control_signal_spec
+                import ControlSignal
 
             for spec in target_set[CONTROL_SIGNALS]:
 
-                # Validate as ControlSignal specification
-                validated_spec = _is_control_signal_spec(self, spec)
+                # Specification is for a tuple (str, Mechanism):
+                #    string must be the name of an attribute of the Mechanism,
+                #    the Mechanism must have a ParameterState with the name of that attribute,
+                #    and the Mechanism must be in the current system.
+                if isinstance(spec, tuple):
+                    param_name = spec[0]
+                    mech = spec[1]
 
-                # Specification is for a Parameter
-                if isinstance(validated_spec, tuple):
-                    param_name = validated_spec[0]
-                    mech = validated_spec[1]
+                    # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
+                    if not isinstance(param_name, str):
+                        raise ControlMechanismError("1st item of tuple in specification of {} for {} ({}) "
+                                                    "must be a string".format(CONTROL_SIGNAL, owner.name, param_name))
+                    # Check that 2nd item is a mechanism
+                    if not isinstance(mech, Mechanism):
+                        raise ControlMechanismError("2nd item of tuple in specification of {} for {} ({}) "
+                                                    "must be a Mechanism".format(CONTROL_SIGNAL, owner.name, mech))
+                    # Check that param (named by str) is an attribute of the mechanism
+                    if not hasattr(mech, param_name) and not hasattr(mech.function_object, param_name):
+                        raise ControlMechanismError("{} (in specification of {}  {}) is not an attribute of {} or its function"
+                                                    .format(param_name, CONTROL_SIGNAL, owner.name, mech))
+                    # Check that the mechanism has a parameterState for the param
+                    if not param_name in mech._parameter_states.names:
+                        raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
+                                                    "specified in {} for {}".
+                                                    format(param_name, mech.name, CONTROL_SIGNAL, owner.name))
                     # Check that the mechanism to which the parameter belongs is in the controller's system
                     if not mech in self.system.mechanisms:
                         raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
@@ -342,8 +358,9 @@ class ControlMechanism_Base(Mechanism_Base):
                                                            self.name,
                                                            mech.name,
                                                            self.system.name))
+
                 # Specification is for a ControlSignal
-                elif isinstance(validated_spec, ControlSignal):
+                elif isinstance(spec, ControlSignal):
                     #  Check that any ControlProjections it has are to mechanisms in the controller's system
                     if not all(control_proj.receiver.owner in self.system.mechanisms
                                for control_proj in spec.efferents):
@@ -351,11 +368,26 @@ class ControlMechanism_Base(Mechanism_Base):
                                                     "has one more more ControlProjections to a mechanism "
                                                     "that is not in {}".
                                                     format(CONTROL_SIGNALS, self.name, spec.name, self.system.name))
+
+                # ControlSignal specification dictionary, must have the following entries:
+                #    NAME:str - must be the name of an attribute of MECHANISM
+                #    MECHANISM:Mechanism - must have an attribute and corresponding ParameterState with PARAMETER
+                #    PARAMS:dict - entries must be valid ControlSignal parameters (e.g,. ALLOCATION_SAMPLES)
+                elif isinstance(spec, dict):
+                    if not NAME in spec:
+                        raise ControlMechanismError("Specification dict for {} of {} must have a NAME entry".
+                                                    format(CONTROL_SIGNAL, self.name))
+                    if not MECHANISM in spec:
+                        raise ControlMechanismError("Specification dict for {} of {} must have a MECHANISM entry".
+                                                    format(CONTROL_SIGNAL, self.name))
                 else:
-                    raise ControlMechanismError("PROGRAM ERROR: unrecognized ControlSignal specification for {} ({})".
-                                                format(self.name, spec))
-
-
+                    # raise ControlMechanismError("PROGRAM ERROR: unrecognized ControlSignal specification for {} ({})".
+                    #                             format(self.name, spec))
+                    #
+                    raise ControlMechanismError("Specification of {} for {} ({}) must be a "
+                                                "ParameterState, a tuple specifying a parameter and mechanism, a "
+                                                "ControlSignal specification dictionary, or an existing ControlSignal".
+                                                format(CONTROL_SIGNAL, self.name, spec))
 
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self
@@ -455,8 +487,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         Returns ControlSignal (OutputState)
         """
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
-                import ControlSignal, _is_control_signal_spec
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 
 
@@ -505,6 +536,7 @@ class ControlMechanism_Base(Mechanism_Base):
             if MECHANISM in control_signal_params:
                 mech = control_signal_params[MECHANISM]
                 del control_signal_params[MECHANISM]
+                parameter_state = _get_parameter_state(param_name, mech)
 
             # Specification was originally a tuple, either in parameter specification or control_signal arg;
             #    1st item was either assigned to the NAME entry of the control_signal_spec dict
