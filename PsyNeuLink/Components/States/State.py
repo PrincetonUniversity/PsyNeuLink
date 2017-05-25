@@ -101,7 +101,9 @@ state_keywords.update({STATE_VALUE,
                        STATE_PARAMS,
                        STATE_PROJECTIONS,
                        MODULATORY_PROJECTIONS,
-                       PROJECTION_TYPE})
+                       PROJECTION_TYPE,
+                       CONTROL_PROJECTION_PARAMS,
+                       CONTROL_SIGNAL_SPECS})
 
 def _is_state_type (spec):
     if issubclass(spec, State):
@@ -1790,12 +1792,13 @@ def _parse_state_spec(owner,
         if force_dict is True: parse into state specification_dictionary 
             (replacing any components with their id to avoid problems with deepcopy)   
     Otherwise, return state specification dictionary using arguments provided as defaults
-    Warn if variable is assigned is assigned the default value, and verbosePref is set on owner.
+    Warn if variable is assigned the default value, and verbosePref is set on owner.
     **value** arg should generally be a constraint for the value of the state;  
         if state_spec is a Projection, and method is being called from:
             InputState, value should be the projection's value; 
             ParameterState, value should be the projection's value; 
-            OutputState, value should be the projection's variable 
+            OutputState, value should be the projection's variable
+    Any entries with keys other than XXX are moved to entries of the dict in the PARAMS entry
     """
 
     from PsyNeuLink.Components.Projections.Projection import projection_keywords
@@ -1898,10 +1901,12 @@ def _parse_state_spec(owner,
     #                          "class of state being instantiated ({})".format(state_spec, state_type))
 
     # Specification dict
+    # - move any entries other than for standard args into dict in params entry
     elif isinstance(state_spec, dict):
-        # Dict has a single entry of the form {<STATE_NAME>:<STATE SPECIFICATION DICT>},
-        #     so assign STATE_NAME as name, and return parsed SPECIFICATION_DICT
-        if len(state_spec) == 1 and list(state_spec.keys())[0] not in state_keywords:
+        # Dict has a single entry in which the key is not a recognized keyword,
+        #    so assume it is of the form {<STATE_NAME>:<STATE SPECIFICATION DICT>}:
+        #    assign STATE_NAME as name, and return parsed SPECIFICATION_DICT
+        if len(state_spec) == 1 and list(state_spec.keys())[0] not in (state_keywords | STANDARD_ARGS):
             name, state_spec = list(state_spec.items())[0]
             state_dict = _parse_state_spec(owner=owner,
                                            state_type=state_type,
@@ -1926,7 +1931,7 @@ def _parse_state_spec(owner,
                       format(VARIABLE, state_type, owner.name, state_spec))
             # Move all params-relevant entries from state_spec into params
             for spec in [param_spec for param_spec in state_spec.copy()
-                         if not param_spec in {NAME, VARIABLE, VALUE, PARAMS, PREFS_ARG, CONTEXT}]:
+                         if not param_spec in STANDARD_ARGS]:
                 params = params or {}
                 params[spec] = state_spec[spec]
                 # del state_spec[spec]
@@ -1943,16 +1948,11 @@ def _parse_state_spec(owner,
         if len(state_spec) != 2:
             raise StateError("Tuple provided as state_spec for {} of {} ({}) must have exactly two items".
                              format(state_type_name, owner.name, state_spec))
-        # # MODIFIED 5/23/17 OLD:
-        # if not _is_projection_spec(state_spec[1]):
-        #     raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a projection specification".
-        #                      format(state_type_name, owner.__class__.__name__, state_spec[1]))
-        # MODIFIED 5/23/17 NEW:
+        # IMPLEMENTATION NOTE: Mechanism allowed in tuple to accomodate specification of param for ControlSignal
         if not (_is_projection_spec(state_spec[1]) or isinstance(state_spec[1], (Mechanism, State))):
             raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
                              "for a mechanism, state, or projection".
                              format(state_type_name, owner.__class__.__name__, state_spec[1]))
-        # MODIFIED 5/23/17 END
         # Put projection spec from second item of tuple in params
         params = params or {}
         # FIX 5/23/17: NEED TO HANDLE NON-MODULATORY PROJECTION SPECS
@@ -1973,7 +1973,7 @@ def _parse_state_spec(owner,
         state_dict[PARAMS].update(params)
 
     # Projection class, object, or keyword:
-    #     set to variable to value and assign projection spec to STATE_PROJECTIONS entry in params
+    #     set variable to value and assign projection spec to STATE_PROJECTIONS entry in params
     # IMPLEMENTATION NOTE:  It is the caller's responsibility to assign the value arg
     #                           appropriately for the state being requested, for:
     #                               InputState, projection's value;
