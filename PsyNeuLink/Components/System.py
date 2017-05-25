@@ -1105,28 +1105,6 @@ class System_Base(System):
                 # If the sender is already in the System's mechanisms dict
                 if sender_mech_tuple.mechanism in self.mechanismsDict:
                     existing_mech_tuple = self._allMechanisms._get_tuple_for_mech(sender_mech)
-                    if not sender_mech_tuple is existing_mech_tuple:
-                        # Contents of tuple are the same, so use the tuple in _allMechanisms
-                        if (sender_mech_tuple.phase == existing_mech_tuple.phase and
-                                    sender_mech_tuple.params == existing_mech_tuple.params):
-                            pass
-                        # Contents of tuple are different, so raise exception
-                        else:
-                            if sender_mech_tuple.phase != existing_mech_tuple.phase:
-                                offending_tuple_field = 'phase'
-                                offending_value = PHASE_ITEM
-                            else:
-                                offending_tuple_field = 'process_input'
-                                offending_value = PARAMS_ITEM
-                            raise SystemError("The same mechanism in different processes must have the same parameters:"
-                                              "the {} ({}) for {} in {} does not match the value({}) in {}".
-                                              format(offending_tuple_field,
-                                                     sender_mech_tuple.mechanism,
-                                                     sender_mech_tuple[offending_value],
-                                                     process,
-                                                     existing_mech_tuple[offending_value],
-                                                     self.mechanismsDict[sender_mech_tuple.mechanism]
-                                                     ))
                     # Add to entry's list
                     self.mechanismsDict[sender_mech].append(process)
                 else:
