@@ -2071,6 +2071,7 @@ class Process_Base(Process):
 
         # Execute each Mechanism in the pathway, in the order listed, except those used for learning
         for mechanism in self._mech_tuples:
+            mechanism = mechanism[0]
             if (isinstance(mechanism, LearningMechanism) or
                     (isinstance(mechanism, ObjectiveMechanism) and mechanism._role is LEARNING)):
                 continue
@@ -2079,7 +2080,7 @@ class Process_Base(Process):
             mechanism.execute(clock=clock,
                               time_scale=self.timeScale,
                               # time_scale=time_scale,
-                              runtime_params=params,
+                              # runtime_params=params,
                               context=context)
             if report_output:
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
@@ -2149,7 +2150,7 @@ class Process_Base(Process):
 
         # THEN, execute Objective and LearningMechanisms
         for mechanism in self._monitoring_mech_tuples:
-
+            mechanism = mechanism[0]
             # # MODIFIED 3/22/17 NEW:
             # # If learning_rate was specified for process and this is a LearningMechanism
             # if process_learning_rate_spec_dict is not None and isinstance(mechanism, LearningMechanism):
@@ -2163,14 +2164,14 @@ class Process_Base(Process):
 
             mechanism.execute(clock=clock,
                               time_scale=self.timeScale,
-                              runtime_params=params,
+                              # runtime_params=params,
                               context=context)
 
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for item in self._mech_tuples:
             mech = item.mechanism
-            params = item.params
+            # params = item.params
 
             # IMPLEMENTATION NOTE:
             #    This implementation restricts learning to parameterStates of projections to input_states
@@ -2196,7 +2197,10 @@ class Process_Base(Process):
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
                             context = context + SEPARATOR_BAR + LEARNING
-                            parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
+
+                            # NOTE: This will need to be updated when runtime params are reenabled
+                            # parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
+                            parameter_state.update(time_scale=TimeScale.TRIAL, context=context)
 
                     # Not all Projection subclasses instantiate parameterStates
                     except AttributeError as e:
