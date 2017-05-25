@@ -2439,7 +2439,7 @@ class System_Base(System):
 
 
         # Sort by phaseSpec and, within each phase, by mechanism name
-        sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple.phase)
+#        sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple.phase)
 
 
         # Add controller to execution list for printing if enabled

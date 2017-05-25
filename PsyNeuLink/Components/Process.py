@@ -894,7 +894,7 @@ class Process_Base(Process):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate initial_values args
            Note: validation of target (for learning) is deferred until _instantiate_target since,
-                 if it doesn't have a TARGET mechanism (see _check_for_target_mechanism), 
+                 if it doesn't have a TARGET mechanism (see _check_for_target_mechanism),
                  it will not need a target.
         """
 
@@ -1130,7 +1130,7 @@ class Process_Base(Process):
             # Can't be first entry, and can never have two in a row
 
             # Config entry is a Projection
-            if _is_projection_spec(item):
+            if _is_projection_spec(item[0]):
                 # Projection not allowed as first entry
                 if i==0:
                     raise ProcessError("Projection cannot be first entry in pathway ({0})".format(self.name))
@@ -2070,7 +2070,7 @@ class Process_Base(Process):
             self._report_process_initiation(separator=True)
 
         # Execute each Mechanism in the pathway, in the order listed, except those used for learning
-        for mechanism, params, phase_spec in self._mech_tuples:
+        for mechanism in self._mech_tuples:
             if (isinstance(mechanism, LearningMechanism) or
                     (isinstance(mechanism, ObjectiveMechanism) and mechanism._role is LEARNING)):
                 continue
@@ -2148,7 +2148,7 @@ class Process_Base(Process):
         # # MODIFIED 3/22/17 END
 
         # THEN, execute Objective and LearningMechanisms
-        for mechanism, params, phase_spec in self._monitoring_mech_tuples:
+        for mechanism in self._monitoring_mech_tuples:
 
             # # MODIFIED 3/22/17 NEW:
             # # If learning_rate was specified for process and this is a LearningMechanism
