@@ -197,7 +197,7 @@ class ControlMechanism_Base(Mechanism_Base):
             specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
             specification options).
 
-        control_signals : List[Attribute of Mechanism or its function, ParameterState, or tuple[str, Mechanism]
+        control_signals : List[parameter of Mechanism or its function, ParameterState, tuple[str, Mechanism] or dict]
             specifies the parameters to be controlled by the ControlMechanism 
             (see `control_signals <ControMechanism.control_signals>` for details).
 
@@ -232,7 +232,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
     control_signals : List[ControlSignal]
         list of `ControlSignals <ControlSignals>` for the ControlMechanism, each of which sends a `ControlProjection`
-        to the parameterState for the parameter it controls (this is the same as ControlMechanism's 
+        to the `parameterState <ParameterState>` for the parameter it controls (same as ControlMechanism's 
         `output_states <ControlMechanism.output_states>` attribute).
 
 
@@ -245,7 +245,7 @@ class ControlMechanism_Base(Mechanism_Base):
     allocation_policy : 2d np.array
         array of values assigned to each ControlSignal listed in the 
         `control_signals <ControlMechanism.control_signals>` attribute
-        (this is the same as the ControlMechanism's `value <ControlMechanism.value>` attribute).
+        (same as the ControlMechanism's `value <ControlMechanism.value>` attribute).
     """
 
     componentType = "ControlMechanism"
