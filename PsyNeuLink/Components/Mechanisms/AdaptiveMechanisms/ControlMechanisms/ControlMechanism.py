@@ -657,7 +657,7 @@ class ControlMechanism_Base(Mechanism_Base):
             # - get constraint for OutputState's value
             output_state_constraint_value = self.allocation_policy[output_state_index]
 
-            control_signal_params.updat(CONTROLLED_PARAM:param_name)
+            control_signal_params.update({CONTROLLED_PARAM:param_name})
 
             # FIX 5/23/17: CALL super()_instantiate_output_states ??
             # FIX:         OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
