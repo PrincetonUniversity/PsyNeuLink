@@ -1611,8 +1611,8 @@ class Process_Base(Process):
         if self.variable is None:
             self.variable = []
             seen = set()
-            mech_list = list(object_item for object_item in self._mechs)
-            for mech in mech_list:
+            # mech_list = list(object_item for object_item in self._mechs)
+            for mech in self._mechs:
                 # Skip repeat mechansims (don't add another element to self.variable)
                 if mech in seen:
                     continue
