@@ -2428,32 +2428,32 @@ class System_Base(System):
         mech_names_from_exec_list = list(mech_tuple.mechanism.name for mech_tuple in self.executionList)
         mech_names_from_sorted_exec_list = list(mech_tuple.mechanism.name for mech_tuple in sorted_execution_list)
 
-        print ("\n\tExecution list: ".format(self.name))
-        phase = 0
-        print("\t\tPhase {}:".format(phase))
-        for mech_tuple in sorted_execution_list:
-            if mech_tuple.phase != phase:
-                phase = mech_tuple.phase
-                print("\t\tPhase {}:".format(phase))
-            print ("\t\t\t{}".format(mech_tuple.mechanism.name))
-
-        print ("\n\tOrigin mechanisms: ".format(self.name))
-        for mech_tuple in self.originMechanisms.mech_tuples_sorted:
-            print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
-
-        print ("\n\tTerminal mechanisms: ".format(self.name))
-        for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
-            print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
-            for output_state in mech_tuple.mechanism.output_states:
-                print("\t\t\t{0}".format(output_state.name))
-
-        # if any(process.learning for process in self.processes):
-        if self.learning:
-            print ("\n\tTarget mechanisms: ".format(self.name))
-            for mech_tuple in self.targetMechanisms.mech_tuples:
-                print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
-
-        print ("\n---------------------------------------------------------")
+        # print ("\n\tExecution list: ".format(self.name))
+        # phase = 0
+        # print("\t\tPhase {}:".format(phase))
+        # for mech_tuple in sorted_execution_list:
+        #     if mech_tuple.phase != phase:
+        #         phase = mech_tuple.phase
+        #         print("\t\tPhase {}:".format(phase))
+        #     print ("\t\t\t{}".format(mech_tuple.mechanism.name))
+        #
+        # print ("\n\tOrigin mechanisms: ".format(self.name))
+        # for mech_tuple in self.originMechanisms.mech_tuples_sorted:
+        #     print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+        #
+        # print ("\n\tTerminal mechanisms: ".format(self.name))
+        # for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
+        #     print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+        #     for output_state in mech_tuple.mechanism.output_states:
+        #         print("\t\t\t{0}".format(output_state.name))
+        #
+        # # if any(process.learning for process in self.processes):
+        # if self.learning:
+        #     print ("\n\tTarget mechanisms: ".format(self.name))
+        #     for mech_tuple in self.targetMechanisms.mech_tuples:
+        #         print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+        #
+        # print ("\n---------------------------------------------------------")
 
 
     def inspect(self):
