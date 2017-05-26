@@ -2130,7 +2130,7 @@ class MechanismList(UserList):
     @property
     def mech_tuples_sorted(self):
         """Return list of mech_tuples sorted by mechanism name"""
-        return sorted(self.mech_tuples, key=lambda mech_tuple: mech_tuple[0].name)
+        return sorted(self.mech_tuples, key=lambda mech_tuple: mech_tuple.name)
 
     @property
     def mechanisms(self):
