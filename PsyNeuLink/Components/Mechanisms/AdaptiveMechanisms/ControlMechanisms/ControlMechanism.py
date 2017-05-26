@@ -355,9 +355,9 @@ class ControlMechanism_Base(Mechanism_Base):
                     if not mech in self.system.mechanisms:
                         raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
                                                     "must be for a Mechanism in {}".
-                                                    format(param_name,
-                                                           CONTROL_SIGNALS,
+                                                    format(CONTROL_SIGNALS,
                                                            self.name,
+                                                           param_name,
                                                            mech.name,
                                                            self.system.name))
 

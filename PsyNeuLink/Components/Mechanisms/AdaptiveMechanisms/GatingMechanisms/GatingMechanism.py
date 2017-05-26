@@ -227,7 +227,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     #     kp<pref>: <setting>...}
 
     # variableClassDefault = defaultControlAllocation
-    # This must be a list, as there may be more than one (e.g., one per control_signal)
+    # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
     variableClassDefault = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
@@ -236,10 +236,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
-                 system=None,
-                 monitor_for_control:tc.optional(list)=None,
+                 default_gating_policy=None,
                  function = Linear(slope=1, intercept=0),
+                 gating_signals:tc.optional(list) = None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -248,33 +247,104 @@ class GatingMechanism(AdaptiveMechanism_Base):
         # self.system = None
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(monitor_for_control=monitor_for_control,
+        params = self._assign_args_to_param_dicts(gating_signals=gating_signals,
                                                   function=function,
                                                   params=params)
 
-        super(GatingMechanism_Base, self).__init__(variable=default_input_value,
+        super(GatingMechanism_Base, self).__init__(variable=default_gating_policy,
                                                     params=params,
                                                     name=name,
                                                     prefs=prefs,
                                                     context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate SYSTEM, MONITOR_FOR_CONTROL and FUNCTION_PARAMS
+        """Validate GATING_SIGNALS
 
-        If system is specified, validate it
-        Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputStates for Mechanisms in self.system
-        Check that len(WEIGHTS) = len(MONITOR_FOR_CONTROL)
+        Check that all items in GATING_SIGNALS are InputStates or OutputStates for Mechanisms in self.system
         """
 
-        if SYSTEM in request_set:
-            if not isinstance(request_set[SYSTEM], System):
-                raise KeyError
-            else:
-                self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
-
         super(GatingMechanism, self)._validate_params(request_set=request_set,
-                                                                 target_set=target_set,
-                                                                 context=context)
+                                                      target_set=target_set,
+                                                      context=context)
+
+        if GATING_SIGNALS in target_set and target_set[GATING_SIGNALS]:
+
+            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
+
+            for spec in target_set[GATING_SIGNALS]:
+
+                # Specification is for a tuple (str, Mechanism):
+                #    string must be the name of an InputState or OutputState of the Mechanism,
+                #    and the Mechanism must be in the current system.
+                if isinstance(spec, tuple):
+                    state_name = spec[0]
+                    mech = spec[1]
+
+                    # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
+                    if not isinstance(state_name, str):
+                        raise GatingMechanismError("1st item of tuple in specification of {} for {} ({}) "
+                                                    "must be a string".format(GATING_SIGNAL, owner.name, state_name))
+                    # Check that 2nd item is a mechanism
+                    if not isinstance(mech, Mechanism):
+                        raise GatingMechanismError("2nd item of tuple in specification of {} for {} ({}) "
+                                                    "must be a Mechanism".format(GATING_SIGNAL, owner.name, mech))
+
+                # Specification is for a GatingSignal
+                elif isinstance(spec, GatingSignal):
+                    state_name = spec.name
+                    mech = spec.owner
+                    #  Check that any GatingProjections it has are to mechanisms in the controller's system
+                    if not all(gating_proj.receiver.owner in self.system.mechanisms
+                               for gating_proj in spec.efferents):
+                        raise GatingMechanismError("The GatingSignal specified in the {} arg for {} ({}) "
+                                                    "has one more more GatingProjections to a mechanism "
+                                                    "that is not in {}".
+                                                    format(GATING_SIGNALS, self.name, spec.name, self.system.name))
+
+                # GatingSignal specification dictionary, must have the following entries:
+                #    NAME:str - must be the name of an InputState or OutputState of MECHANISM
+                #    MECHANISM:Mechanism - must be a Mechanism in self.system
+                #    PARAMS:dict - entries must be valid GatingSignal parameters (e.g,. MODULATION_OPERATION)
+                elif isinstance(spec, dict):
+                    if not NAME in spec:
+                        raise GatingMechanismError("Specification dict for {} of {} must have a NAME entry".
+                                                    format(GATING_SIGNAL, self.name))
+                    state_name = spec[NAME]
+                    if not MECHANISM in spec:
+                        raise GatingMechanismError("Specification dict for {} of {} must have a MECHANISM entry".
+                                                    format(GATING_SIGNAL, self.name))
+                    mech = spec[MECHANISM]
+
+                else:
+                    # raise GatingMechanismError("PROGRAM ERROR: unrecognized GatingSignal specification for {} ({})".
+                    #                             format(self.name, spec))
+                    #
+                    raise GatingMechanismError("Specification of {} for {} ({}) must be an InputState, OutputState, "
+                                               "a tuple specifying a name for one and a mechanism to which it belongs ,"
+                                               "a GatingSignal specification dictionary, or an existing GatingSignal".
+                                                format(GATING_SIGNAL, self.name, spec))
+
+                # Check that specified state is an InputState or OutputState of the Mechanism
+                if state_name in mech.input_states:
+                    state_type = INPUT_STATE
+                elif state_name in mech.output_states:
+                    state_type = OUTPUT_STATE
+                else:
+                    raise GatingMechanismError("{} (in specification of {}  {}) is not an "
+                                               "InputState or OutputState of {}".
+                                                format(state_name, GATING_SIGNAL, owner.name, mech))
+
+                # Check that the Mechanism is in the controller's system
+                if not mech in self.system.mechanisms:
+                    raise GatingMechanismError("Specification in {} arg for {} ({} {} of {}) "
+                                                "must be for a Mechanism in {}".
+                                                format(GATING_SIGNALS,
+                                                       self.name,
+                                                       state_name,
+                                                       state_type,
+                                                       mech.name,
+                                                       self.system.name))
+
 
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self
@@ -318,14 +388,14 @@ class GatingMechanism(AdaptiveMechanism_Base):
                 for projection in parameter_state.afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
                     if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
-                        # Get params specified with projection for its ControlSignal (cached in control_signal attrib)
-                        params = projection.control_signal
+                        # Get params specified with projection for its ControlSignal (cached in GATING_SIGNAL attrib)
+                        params = projection.GATING_SIGNAL
                         self._instantiate_gating_projection(projection, params=params, context=context)
 
     def _instantiate_gating_projection(self, projection, params=None, context=None):
         """Add outputState (as ControlSignal) and assign as sender to requesting GatingProjection
 
-        # Updates allocation_policy and control_signal_costs attributes to accommodate instantiated projection
+        # Updates allocation_policy and GATING_SIGNAL_costs attributes to accommodate instantiated projection
 
         Notes:  
         * params are expected to be for (i.e., to be passed to) ControlSignal;
@@ -404,11 +474,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
         except AttributeError:
             self.gatingProjections = [projection]
 
-        # Update control_signal_costs to accommodate instantiated projection
+        # Update GATING_SIGNAL_costs to accommodate instantiated projection
         try:
-            self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
+            self.GATING_SIGNAL_costs = np.append(self.GATING_SIGNAL_costs, np.empty((1,1)),axis=0)
         except AttributeError:
-            self.control_signal_costs = np.empty((1,1))
+            self.GATING_SIGNAL_costs = np.empty((1,1))
 
         return state
 
