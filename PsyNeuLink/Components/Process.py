@@ -672,28 +672,28 @@ class Process_Base(Process):
     outputState : State
         the `primary outputState <OutputState_Primary>` of the `TERMINAL` mechanism in the process.
 
-      .. _mech_tuples : List[MechanismTuple]
+      .. _mechs : List[MechanismTuple]
              :class:`MechanismTuple` for all mechanisms in the process, listed in the order specified in pathway.
              MechanismTuples are of the form: (mechanism, runtime_params, phase) where runtime_params is dictionary
              of {argument keyword: argument values} entries and phase is an int.
              Note:  the list includes monitoring mechanisms (used for learning).
 
       .. _allMechanisms : MechanismList
-             Contains all mechanisms in the system (based on _mech_tuples).
+             Contains all mechanisms in the system (based on _mechs).
 
-      .. _origin_mech_tuples : List[MechanismTuple]
+      .. _origin_mechs : List[MechanismTuple]
              Contains a tuple for the `ORIGIN` mechanism of the process.
              (Note:  the use of a list is for compatibility with the MechanismList object)
 
-      .. _terminal_mech_tuples : List[MechanismTuple]
+      .. _terminal_mechs : List[MechanismTuple]
              Contains a tuple for the `TERMINAL` mechanism of the process.
              (Note:  the use of a list is for compatibility with the MechanismList object)
 
-      .. _target_mech_tuples : List[MechanismTuple]
+      .. _target_mechs : List[MechanismTuple]
              Contains a tuple for the `TARGET` mechanism of the process.
              (Note:  the use of a list is for compatibility with the MechanismList object)
 
-      .. _monitoring_mech_tuples : List[MechanismTuple]
+      .. _monitoring_mechs : List[MechanismTuple]
              `MechanismTuples <Mechanism.MechanismTuples>` for all `MonitoringMechanism <MonitoringMechanisms>` in the
              process (used for learning).
 
@@ -716,7 +716,7 @@ class Process_Base(Process):
                   methods that are also used for systems.
 
         COMMENT:
-            based on _origin_mech_tuples;  process.input contains the input to `ORIGIN` mechanism.
+            based on _origin_mechs;  process.input contains the input to `ORIGIN` mechanism.
         COMMENT
 
     terminalMechanisms : MechanismList
@@ -726,13 +726,13 @@ class Process_Base(Process):
                   methods that are also used for systems.
 
         COMMENT:
-            based on _terminal_mech_tuples; process.output contains the output of the `TERMINAL` mechanism.
+            based on _terminal_mechs; process.output contains the output of the `TERMINAL` mechanism.
         COMMENT
 
     monitoringMechanisms : MechanismList
         a list of all of the monitoring mechanisms in the process.
 
-        .. based on _monitoring_mech_tuples
+        .. based on _monitoring_mechs
 
     targetMechanisms : MechanismList
         a list with the `TARGET` mechanism of the process.
@@ -741,7 +741,7 @@ class Process_Base(Process):
                   methods that are also used for systems.
 
         COMMENT:
-            based on _target_mech_tuples
+            based on _target_mechs
         COMMENT
 
     systems : List[System]
@@ -894,7 +894,7 @@ class Process_Base(Process):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate initial_values args
            Note: validation of target (for learning) is deferred until _instantiate_target since,
-                 if it doesn't have a TARGET mechanism (see _check_for_target_mechanism), 
+                 if it doesn't have a TARGET mechanism (see _check_for_target_mechanism),
                  it will not need a target.
         """
 
@@ -938,7 +938,7 @@ class Process_Base(Process):
             super(Process_Base, self)._instantiate_function(context=context)
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
         else:
-            self.value = self.pathway[-1][OBJECT_ITEM].output_state.value
+            self.value = self.pathway[-1].output_state.value
 
 # DOCUMENTATION:
 #         Uses paramClassDefaults[PATHWAY] == [Mechanism_Base.defaultMechanism] as default
@@ -986,9 +986,9 @@ class Process_Base(Process):
         :return:
         """
         pathway = self.paramsCurrent[PATHWAY]
-        self._mech_tuples = []
-        self._monitoring_mech_tuples = []
-        self._target_mech_tuples = []
+        self._mechs = []
+        self._monitoring_mechs = []
+        self._target_mechs = []
 
         self._standardize_config_entries(pathway=pathway, context=context)
 
@@ -997,23 +997,23 @@ class Process_Base(Process):
 
         # Identify origin and terminal mechanisms in the process and
         #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
-        self.firstMechanism = pathway[0][OBJECT_ITEM]
+        self.firstMechanism = pathway[0]
         self.firstMechanism.processes[self] = ORIGIN
-        self._origin_mech_tuples = [pathway[0]]
-        self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
+        self._origin_mechs = [pathway[0]]
+        self.originMechanisms = MechanismList(self, self._origin_mechs)
 
         # Assign last mechanism in pathwway to lastMechanism attribute
         i = -1
-        while not isinstance(pathway[i][OBJECT_ITEM],Mechanism_Base):
+        while not isinstance(pathway[i],Mechanism_Base):
             i -=1
-        self.lastMechanism = pathway[i][OBJECT_ITEM]
+        self.lastMechanism = pathway[i]
 
         if self.lastMechanism is self.firstMechanism:
             self.lastMechanism.processes[self] = SINGLETON
         else:
             self.lastMechanism.processes[self] = TERMINAL
-        self._terminal_mech_tuples = [pathway[-1]]
-        self.terminalMechanisms = MechanismList(self, self._terminal_mech_tuples)
+        self._terminal_mechs = [pathway[-1]]
+        self.terminalMechanisms = MechanismList(self, self._terminal_mechs)
 
         # # Assign process outputState to last mechanisms in pathway
         # self.outputState = self.lastMechanism.outputState
@@ -1034,116 +1034,72 @@ class Process_Base(Process):
         else:
             self._learning_enabled = False
 
-        self._allMechanisms = MechanismList(self, self._mech_tuples)
-        self.monitoringMechanisms = MechanismList(self, self._monitoring_mech_tuples)
-        self.targetMechanisms = MechanismList(self, self._target_mech_tuples)
+        self._allMechanisms = MechanismList(self, self._mechs)
+        self.monitoringMechanisms = MechanismList(self, self._monitoring_mechs)
+        self.targetMechanisms = MechanismList(self, self._target_mechs)
 
     def _standardize_config_entries(self, pathway, context=None):
 
         from PsyNeuLink.Components.Mechanisms.Mechanism import _is_mechanism_spec
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
-        # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
         self.runtime_params_dict = {}
 
         # Kristen modified 5/24
         # in  ALL mechanism tuples, the middle entry is set to zero (formerly used for specifying runtime params)
-        # if _is_mechanism_spec, runtime_params_dict[mechanism] is set to runtime params
+        # rightmost entry is set to zero (formerly phase spec)
+        # if _is_mechanism_spec, runtime_params_dict[mechanism] is set to actual runtime params
 
         for i in range(len(pathway)):
             config_item = pathway[i]
+            # if this element of the pathway is a tuple
             if isinstance(config_item, tuple):
-                if len(config_item) is 3:
-                    # Check that first item is either a mechanism or projection specification
-                    if not _is_mechanism_spec(config_item[0]) or _is_projection_spec(config_item[0]):
-                        raise ProcessError("First item of tuple ({}) in entry {} of pathway for {}"
-                                           " is neither a mechanism nor a projection specification".
-                                           format(config_item[0], i, self.name))
-                    # Check that second item is a dict (presumably of params)
-                    if config_item[1] is not None and not isinstance(config_item[1], dict):
-                        raise ProcessError("Second item of tuple ({}) in entry {} of pathway for {}"
-                                           " must be a params dict".
-                                           format(config_item[1], i, self.name))
-                    # Check that third item is a int (presumably a phase spec)
-                    if not isinstance(config_item[2], numbers.Number):
-                        raise ProcessError("Third item of tuple ({}) in entry {} of pathway for {}"
-                                           " must be a phase value".
-                                           format(config_item[2], i, self.name))
-                    if _is_mechanism_spec(config_item[0]):
-                        self.runtime_params_dict[config_item[0]] = config_item[1]
-
-                    pathway[i] = MechanismTuple(config_item[0], config_item[1], config_item[2])
-
-                # If the tuple has only one item, check that it is a Mechanism or Projection specification
+                # and the tuple has 1 item
                 if len(config_item) is 1:
+                    # if the tuple contains either a mechanism or a projection
                     if _is_mechanism_spec(config_item[0]) or _is_projection_spec(config_item[0]):
-                        # Pad with None
+
+                        # Replace it with just the mech or proj
+                        pathway[i] = config_item
+                        # if it's a mechanism, set the runtime params to None
                         if _is_mechanism_spec(config_item[0]):
                             self.runtime_params_dict[config_item[0]] = None
-
-                        pathway[i] = MechanismTuple(config_item[0],
-                                                          0,
-                                                          DEFAULT_PHASE_SPEC)
+                    # otherwise the tuple is not valid
                     else:
                         raise ProcessError("First item of tuple ({}) in entry {} of pathway for {}"
                                            " is neither a mechanism nor a projection specification".
                                            format(config_item[0], i, self.name))
                 # If the tuple has two items
                 if len(config_item) is 2:
-                    # Mechanism
-                    #     check whether second item is a params dict or a phaseSpec
-                    #     and assign it to the appropriate position in the tuple, padding other with None
-                    second_tuple_item = config_item[1]
+
+                    # Replace it with just the mech or proj
+                    pathway[i] = config_item[0]
+
+                    # If it's a mechanism
                     if _is_mechanism_spec(config_item[0]):
-                        if isinstance(second_tuple_item, dict):
+                        # and its second element is a dict
+                        if isinstance(config_item[1], dict):
+                            # set the mechanism's runtime params to be the second element
                             self.runtime_params_dict[config_item[0]] = config_item[1]
-
-                            pathway[i] = MechanismTuple(config_item[0],
-                                                              0,
-                                                              DEFAULT_PHASE_SPEC)
-                        # If the second item is a number, assume it is meant as a phase spec and move it to third item
-                        elif isinstance(second_tuple_item, (int, float)):
-                            if _is_mechanism_spec(config_item[0]):
-                                self.runtime_params_dict[config_item[0]] = None
-
-                            pathway[i] = MechanismTuple(config_item[0],
-                                                              0,
-                                                              second_tuple_item)
+                        # if the second element is not a dict, then it's not valid
                         else:
                             raise ProcessError("Second item of tuple ({}) in item {} of pathway for {}"
-                                               " is neither a params dict nor phaseSpec (int or float)".
-                                               format(second_tuple_item, i, self.name))
-                    # Projection
-                    #     check that second item is a projection spec for a LearningProjection
-                    #     if so, leave it there, and pad third item with None
-                    elif _is_projection_spec(config_item[0]):
-                        if (_is_projection_spec(second_tuple_item) and
-                                _is_projection_subclass(second_tuple_item, LEARNING_PROJECTION)):
-                            pathway[i] = MechanismTuple(config_item[0],
-                                                              0,
-                                                              DEFAULT_PHASE_SPEC)
-                        else:
-                            raise ProcessError("Second item of tuple ({}) in item {} of pathway for {}"
-                                               " should be 'LearningProjection' or absent".
-                                               format(second_tuple_item, i, self.name))
+                                               " is not a params dict.".
+                                               format(config_item[1], i, self.name))
+                    # if the first element is not a mechanism, then it's not valid
                     else:
-                        raise ProcessError("First item of tuple ({}) in item {} of pathway for {}"
-                                           " is neither a mechanism nor a projection spec".
-                                           format(config_item[0], i, self.name))
-                # tuple should not have more than 3 items
-                if len(config_item) > 3:
-                    raise ProcessError("The tuple for item {} of pathway for {} has more than three items {}".
+                        raise ProcessError("Projection cannot have a runtime params dict".format(config_item[0],
+                                                                                                 i, self.name))
+                # config_item should not have more than 2 elements
+                if len(config_item) > 2:
+                    raise ProcessError("The tuple for item {} of pathway for {} has more than two items {}".
                                        format(i, self.name, config_item))
             else:
-                # Convert item to tuple, padded with None
+                # If the item is a mechanism or a projection
                 if _is_mechanism_spec(pathway[i]) or _is_projection_spec(pathway[i]):
-                    # Pad with None for param and DEFAULT_PHASE_SPEC for phase
-
+                    # if it's a mechanism, set runtime params to None
                     if _is_mechanism_spec(pathway[i]):
                         self.runtime_params_dict[pathway[i]] = None
 
-                    pathway[i] = MechanismTuple(pathway[i],
-                                                      0,
-                                                      DEFAULT_PHASE_SPEC)
                 else:
                     raise ProcessError("Item of {} of pathway for {}"
                                        " is neither a mechanism nor a projection specification".
@@ -1159,12 +1115,12 @@ class Process_Base(Process):
         previous_item_was_projection = False
 
         for i in range(len(pathway)):
-            item, params, phase_spec = pathway[i]
+            item = pathway[i]
 
             # Get max phaseSpec for Mechanisms in pathway
-            if not phase_spec:
-                phase_spec = 0
-            self._phaseSpecMax = int(max(math.floor(float(phase_spec)), self._phaseSpecMax))
+            # if not phase_spec:
+            #     phase_spec = 0
+            # self._phaseSpecMax = int(max(math.floor(float(phase_spec)), self._phaseSpecMax))
 
             # VALIDATE PLACEMENT OF PROJECTION ENTRIES  ----------------------------------------------------------
 
@@ -1200,19 +1156,20 @@ class Process_Base(Process):
                     raise ProcessError("Entry {0} ({1}) is not a recognized form of Mechanism specification".
                                        format(i, mech))
                 # Params in mech tuple must be a dict or None
-                if params and not isinstance(params, dict):
-                    raise ProcessError("Params entry ({0}) of tuple in item {1} of pathway for {2} is not a dict".
-                                          format(params, i, self.name))
+                # if params and not isinstance(params, dict):
+                #     raise ProcessError("Params entry ({0}) of tuple in item {1} of pathway for {2} is not a dict".
+                #                           format(params, i, self.name))
                 # Replace Pathway entry with new tuple containing instantiated Mechanism object and params
-                pathway[i] = MechanismTuple(mech, params, phase_spec)
+                pathway[i] = mech
+
 
             # Entry IS already a Mechanism object
-            # Add entry to _mech_tuples and name to mechanismNames list
-            mech.phaseSpec = phase_spec
+            # Add entry to _mechs and name to mechanismNames list
+            # mech.phaseSpec = phase_spec
             # Add Process to the mechanism's list of processes to which it belongs
             if not self in mech.processes:
                 mech.processes[self] = INTERNAL
-                self._mech_tuples.append(pathway[i])
+                self._mechs.append(pathway[i])
             # self.mechanismNames.append(mech.name)
 
             # FIX: ADD RECURRENT PROJECTION AND MECHANISM
@@ -1227,7 +1184,7 @@ class Process_Base(Process):
                     for state in mech.output_states:
                         for proj in state.efferents:
                             if proj.receiver.owner is mech:
-                                pathway.append(MechanismTuple(proj,None,None))
+                                pathway.append(proj)
                                 pathway.append(pathway[i-2])
 
 
@@ -1268,7 +1225,7 @@ class Process_Base(Process):
                                  {MATRIX: matrix_spec}}
 
         for i in range(len(pathway)):
-                item, params, phase_spec = pathway[i]
+                item = pathway[i]
 
                 #region FIRST ENTRY
 
@@ -1291,9 +1248,11 @@ class Process_Base(Process):
                 #region SUBSEQUENT ENTRIES
 
                 # Item is a Mechanism
+                item = item
                 if isinstance(item, Mechanism):
 
-                    preceding_item = pathway[i-1][OBJECT_ITEM]
+                    preceding_item = pathway[i-1]
+
 
                     # PRECEDING ITEM IS A PROJECTION
                     if isinstance(preceding_item, Projection):
@@ -1438,18 +1397,18 @@ class Process_Base(Process):
 
 
                     # Get sender for projection
-                    sender_mech=pathway[i-1][OBJECT_ITEM]
+                    sender_mech=pathway[i-1]
 
                     # Get receiver for projection
                     try:
-                        receiver_mech=pathway[i+1][OBJECT_ITEM]
+                        receiver_mech=pathway[i+1]
                     except IndexError:
                        # There are no more entries in the pathway
                        #    so the projection had better project to a mechanism already in the pathway;
                        #    otherwise, raise and exception
                        try:
                            receiver_mech = item.receiver.owner
-                           if not receiver_mech in [mech_tuple[0] for mech_tuple in pathway]:
+                           if not receiver_mech in [mech_tuple for mech_tuple in pathway]:
                                raise AttributeError
                        except AttributeError:
                            raise ProcessError("The last entry in the pathway for {} is a project specification {}, "
@@ -1522,27 +1481,28 @@ class Process_Base(Process):
                         projection = item
 
                         # TEST
-                        if params:
-                            projection.matrix = params
+                        # if params:
+                        #     projection.matrix = params
 
                     # projection spec is a MappingProjection class reference
                     elif inspect.isclass(item) and issubclass(item, MappingProjection):
-                        if params:
-                            # Note:  If self.learning is specified, it has already been added to projection_params above
-                            projection_params = params
+                        # if params:
+                        #     # Note:  If self.learning is specified, it has already been added to projection_params above
+                        #     projection_params = params
                         projection = MappingProjection(sender=sender_mech,
                                              receiver=receiver_mech,
-                                             params=projection_params)
+                                             # params=projection_params
+                                                       )
 
                     # projection spec is a matrix spec, a keyword for one, or a (matrix, LearningProjection) tuple
                     # Note: this is tested above by call to _is_projection_spec()
                     elif (isinstance(item, (np.matrix, str, tuple)) or
                               (isinstance(item, np.ndarray) and item.ndim == 2)):
                         # If a LearningProjection is explicitly specified for this projection, use it
-                        if params:
-                            matrix_spec = (item, params)
+                        # if params:
+                        #     matrix_spec = (item, params)
                         # If a LearningProjection is not specified for this projection but self.learning is, use that
-                        elif self.learning:
+                        if self.learning:
                             matrix_spec = (item, self.learning)
                         # Otherwise, do not include any LearningProjection
                         else:
@@ -1556,7 +1516,8 @@ class Process_Base(Process):
                     # Reassign Pathway entry
                     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
                     # IMPLEMENTATION NOTE:  params is currently ignored
-                    pathway[i] = MechanismTuple(projection, params, DEFAULT_PHASE_SPEC)
+                    pathway[i] = projection
+
 
     def _issue_warning_about_existing_projections(self, mechanism, context=None):
 
@@ -1575,9 +1536,9 @@ class Process_Base(Process):
                               format(mechanism.name, self.name, projection.sender.owner.name))
                     return
 
-            # (C) Projection to first Mechanism in Pathway comes from one in the Process' _mech_tuples;
+            # (C) Projection to first Mechanism in Pathway comes from one in the Process' _mechs;
             #     so warn if verbose pref is set
-            if projection.sender.owner in list(item[0] for item in self._mech_tuples):
+            if projection.sender.owner in list(item for item in self._mechs):
                 if self.prefs.verbosePref:
                     print("WARNING: first mechanism ({0}) in pathway for {1} receives "
                           "a (recurrent) projection from another mechanism {2} in {1}".
@@ -1650,7 +1611,7 @@ class Process_Base(Process):
         if self.variable is None:
             self.variable = []
             seen = set()
-            mech_list = list(mech_tuple[OBJECT_ITEM] for mech_tuple in self._mech_tuples)
+            mech_list = list(mech_tuple for mech_tuple in self._mechs)
             for mech in mech_list:
                 # Skip repeat mechansims (don't add another element to self.variable)
                 if mech in seen:
@@ -1777,24 +1738,24 @@ class Process_Base(Process):
 
         Description:
             For learning:
-                go through _mech_tuples in reverse order of pathway since
+                go through _mechs in reverse order of pathway since
                     LearningProjections are processed from the output (where the training signal is provided) backwards
                 exhaustively check all of components of each mechanism,
                     including all projections to its input_states and parameterStates
                 initialize all items that specified deferred initialization
-                construct a _monitoring_mech_tuples of mechanism tuples (mech, params, phase_spec):
+                construct a _monitoring_mechs of mechanism tuples (mech, params, phase_spec):
                     assign phase_spec for each MonitoringMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
-                add _monitoring_mech_tuples to the Process' _mech_tuples
-                assign input projection from Process to first mechanism in _monitoring_mech_tuples
+                add _monitoring_mechs to the Process' _mechs
+                assign input projection from Process to first mechanism in _monitoring_mechs
 
         IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningProjection
                              this is implemented to be fully general, but at present may be overkill
                              since the only objects that currently use deferred initialization are LearningProjections
         """
 
-        # For each mechanism in the Process, in backwards order through its _mech_tuples
-        for item in reversed(self._mech_tuples):
-            mech = item[OBJECT_ITEM]
+        # For each mechanism in the Process, in backwards order through its _mechs
+        for item in reversed(self._mechs):
+            mech = item
             mech._deferred_init()
 
             # For each inputState of the mechanism
@@ -1823,12 +1784,12 @@ class Process_Base(Process):
                     raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterState for a Mechanism")
                 # MODIFIED 5/2/17 END
 
-        # Label monitoring mechanisms and add _monitoring_mech_tuples to _mech_tuples for execution
-        if self._monitoring_mech_tuples:
+        # Label monitoring mechanisms and add _monitoring_mechs to _mechs for execution
+        if self._monitoring_mechs:
 
             # Add designations to newly created MonitoringMechanisms:
-            for mech_tuple in self._monitoring_mech_tuples:
-                mech = mech_tuple[OBJECT_ITEM]
+            for mech_tuple in self._monitoring_mechs:
+                mech = mech_tuple
                 # If
                 # - mech is a TARGET ObjectiveMechanism, and
                 # - the mech that projects to mech is a TERMINAL for the current process, and
@@ -1840,7 +1801,7 @@ class Process_Base(Process):
                         mech._learning_role is TARGET and
                         self.learning
                             ):
-                    mech_tuple[0].processes[self] = TARGET
+                    mech_tuple.processes[self] = TARGET
                 else:
                     # mech must be a LearningMechanism;
                     # If a learning_rate has been specified for the process, assign that to all LearningMechanisms
@@ -1850,10 +1811,10 @@ class Process_Base(Process):
                         mech.function_object.learning_rate = self.learning_rate
 
                     # Assign its label
-                    mech_tuple[0].processes[self] = MONITORING
+                    mech_tuple.processes[self] = MONITORING
 
-            # Add _monitoring_mech_tuples to _mech_tuples
-            self._mech_tuples.extend(self._monitoring_mech_tuples)
+            # Add _monitoring_mechs to _mechs
+            self._mechs.extend(self._monitoring_mechs)
 
             # IMPLEMENTATION NOTE:
             #   MonitoringMechanisms for learning are assigned _phaseSpecMax;
@@ -1874,34 +1835,30 @@ class Process_Base(Process):
                     for param_projection in parameter_state.afferents:
                         param_projection._deferred_init(context=context)
                         if isinstance(param_projection, LearningProjection):
-                            # Get ObjectiveMechanism if there is one, and add to _monitoring_mech_tuples
+                            # Get ObjectiveMechanism if there is one, and add to _monitoring_mechs
                             try:
                                 objective_mechanism = projection.objective_mechanism
                             except AttributeError:
                                 pass
                             else:
-                                # If objective_mechanism is not already in _monitoring_mech_tuples,
+                                # If objective_mechanism is not already in _monitoring_mechs,
                                 #     pack in tuple and add it
-                                if objective_mechanism and not any(objective_mechanism is mech_tuple.mechanism for
-                                                                    mech_tuple in self._monitoring_mech_tuples):
-                                    objective_mech_tuple = MechanismTuple(objective_mechanism,
-                                                                           None,
-                                                                           self._phaseSpecMax+1)
-                                    self._monitoring_mech_tuples.append(objective_mech_tuple)
-                            # Get LearningMechanism and add to _monitoring_mech_tuples; raise exception if not found
+                                if objective_mechanism and not any(objective_mechanism is mech_tuple for
+                                                                    mech_tuple in self._monitoring_mechs):
+                                    # objective_mech_tuple = objective_mechanism
+                                    self._monitoring_mechs.append(objective_mechanism)
+                            # Get LearningMechanism and add to _monitoring_mechs; raise exception if not found
                             try:
                                 learning_mechanism = projection.learning_mechanism
                             except AttributeError:
                                 raise ProcessError("{} is missing a LearningMechanism".format(param_projection.name))
                             else:
-                                # If learning_mechanism is not already in _monitoring_mech_tuples,
+                                # If learning_mechanism is not already in _monitoring_mechs,
                                 #     pack in tuple and add it
-                                if learning_mechanism and not any(learning_mechanism is mech_tuple.mechanism for
-                                                                    mech_tuple in self._monitoring_mech_tuples):
-                                    learning_mech_tuple = MechanismTuple(learning_mechanism,
-                                                                           None,
-                                                                           self._phaseSpecMax+1)
-                                    self._monitoring_mech_tuples.append(learning_mech_tuple)
+                                if learning_mechanism and not any(learning_mechanism is mech_tuple for
+                                                                    mech_tuple in self._monitoring_mechs):
+                                    # learning_mech_tuple = learning_mechanism
+                                    self._monitoring_mechs.append(learning_mechanism)
 
             # Not all Projection subclasses instantiate parameterStates
             except AttributeError as e:
@@ -1949,10 +1906,10 @@ class Process_Base(Process):
             raise ProcessError("PROGRAM ERROR: _check_for_target_mechanism should only be called"
                                " for a process if it has a learning specification")
 
-        target_mechs = list(mech_tuple.mechanism
-                           for mech_tuple in self._mech_tuples
-                            if (isinstance(mech_tuple.mechanism, ObjectiveMechanism) and
-                                mech_tuple.mechanism._learning_role is TARGET))
+        target_mechs = list(mech_tuple
+                           for mech_tuple in self._mechs
+                            if (isinstance(mech_tuple, ObjectiveMechanism) and
+                                mech_tuple._learning_role is TARGET))
 
         if not target_mechs:
 
@@ -1960,7 +1917,7 @@ class Process_Base(Process):
             #   (in case terminal mechanism of process is part of another process that has learning implemented)
             #    in which case, shouldn't assign target ObjectiveMechanism, but rather just a LearningMechanism)
             try:
-                target_mech = trace_learning_objective_mechanism_projections(self._monitoring_mech_tuples[0][0])
+                target_mech = trace_learning_objective_mechanism_projections(self._monitoring_mechs[0][0])
             except IndexError:
                 raise ProcessError("Learning specified for {} but no ObjectiveMechanisms or LearningMechanisms found"
                                    .format(self.name))
@@ -1986,7 +1943,7 @@ class Process_Base(Process):
 
         else:
             self.targetMechanism = target_mechs[0]
-            self._target_mech_tuples.append(MechanismTuple(target_mechs[0], None, None))
+            self._target_mechs.append(target_mechs[0])
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as TARGET ObjectiveMechanism for output of \'{}\'".
                       format(self.targetMechanism.name, self.name))
@@ -2110,7 +2067,7 @@ class Process_Base(Process):
             self._report_process_initiation(separator=True)
 
         # Execute each Mechanism in the pathway, in the order listed, except those used for learning
-        for mechanism, params, phase_spec in self._mech_tuples:
+        for mechanism in self._mechs:
             if (isinstance(mechanism, LearningMechanism) or
                     (isinstance(mechanism, ObjectiveMechanism) and mechanism._role is LEARNING)):
                 continue
@@ -2119,7 +2076,7 @@ class Process_Base(Process):
             mechanism.execute(clock=clock,
                               time_scale=self.timeScale,
                               # time_scale=time_scale,
-                              runtime_params=params,
+                              # runtime_params=params,
                               context=context)
             if report_output:
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
@@ -2144,9 +2101,9 @@ class Process_Base(Process):
 
     def _execute_learning(self, target=None, clock=CentralClock, context=None):
     # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
-        """ Update each LearningProjection for mechanisms in _mech_tuples of process
+        """ Update each LearningProjection for mechanisms in _mechs of process
 
-        # Begin with projection(s) to last Mechanism in _mech_tuples, and work backwards
+        # Begin with projection(s) to last Mechanism in _mechs, and work backwards
 
         """
 
@@ -2188,8 +2145,7 @@ class Process_Base(Process):
         # # MODIFIED 3/22/17 END
 
         # THEN, execute Objective and LearningMechanisms
-        for mechanism, params, phase_spec in self._monitoring_mech_tuples:
-
+        for mechanism in self._monitoring_mechs:
             # # MODIFIED 3/22/17 NEW:
             # # If learning_rate was specified for process and this is a LearningMechanism
             # if process_learning_rate_spec_dict is not None and isinstance(mechanism, LearningMechanism):
@@ -2203,14 +2159,14 @@ class Process_Base(Process):
 
             mechanism.execute(clock=clock,
                               time_scale=self.timeScale,
-                              runtime_params=params,
+                              # runtime_params=params,
                               context=context)
 
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
-        for item in self._mech_tuples:
-            mech = item.mechanism
-            params = item.params
+        for item in self._mechs:
+            mech = item
+            # params = item.params
 
             # IMPLEMENTATION NOTE:
             #    This implementation restricts learning to parameterStates of projections to input_states
@@ -2236,7 +2192,10 @@ class Process_Base(Process):
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
                             context = context + SEPARATOR_BAR + LEARNING
-                            parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
+
+                            # NOTE: This will need to be updated when runtime params are reenabled
+                            # parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
+                            parameter_state.update(time_scale=TimeScale.TRIAL, context=context)
 
                     # Not all Projection subclasses instantiate parameterStates
                     except AttributeError as e:
@@ -2406,18 +2365,18 @@ class Process_Base(Process):
         #     print ("\t\t{}".format(mech_name))
 
         print ("\n\tMechanisms:")
-        for mech_tuple in self._mech_tuples:
-            print ("\t\t{} (phase: {})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+        for mech_tuple in self._mechs:
+            print ("\t\t{} (phase: {})".format(mech_tuple.name, mech_tuple.phase))
 
 
         print ("\n\tOrigin mechanism: ".format(self.name))
-        for mech_tuple in self.originMechanisms.mech_tuples_sorted:
-            print("\t\t{} (phase: {})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+        for mech_tuple in self.originMechanisms.mechs_sorted:
+            print("\t\t{} (phase: {})".format(mech_tuple.name, mech_tuple.phase))
 
         print ("\n\tTerminal mechanism: ".format(self.name))
-        for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
-            print("\t\t{} (phase: {})".format(mech_tuple.mechanism.name, mech_tuple.phase))
-            for output_state_name in mech_tuple.mechanism.output_states:
+        for mech_tuple in self.terminalMechanisms.mechs_sorted:
+            print("\t\t{} (phase: {})".format(mech_tuple.name, mech_tuple.phase))
+            for output_state_name in mech_tuple.output_states:
                 print("\t\t\t{0}".format(output_state_name))
 
         print ("\n---------------------------------------------------------")
@@ -2545,7 +2504,7 @@ class ProcessList(UserList):
         """Return first process tuple containing specified process from list of process_tuples
         """
         # FIX:
-        # if list(item[MECHANISM] for item in self.mech_tuples).count(mech):
+        # if list(item[MECHANISM] for item in self.mechs).count(mech):
         #     if self.owner.verbosePref:
         #         print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
         #               format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
@@ -2553,7 +2512,7 @@ class ProcessList(UserList):
 
     @property
     def process_tuples_sorted(self):
-        """Return list of mech_tuples sorted by mechanism name"""
+        """Return list of mechs sorted by mechanism name"""
         return sorted(self.process_tuples, key=lambda process_tuple: process_tuple[0].name)
 
     @property
@@ -2577,9 +2536,9 @@ class ProcessList(UserList):
         # MODIFIED 11/1/16 END
 
     @property
-    def _mech_tuples(self):
-        return self.__mech_tuples__
+    def _mechs(self):
+        return self.__mechs__
 
-    @_mech_tuples.setter
-    def _mech_tuples(self, value):
-        self.__mech_tuples__ = value
+    @_mechs.setter
+    def _mechs(self, value):
+        self.__mechs__ = value

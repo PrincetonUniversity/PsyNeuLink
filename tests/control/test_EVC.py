@@ -87,8 +87,8 @@ def test_EVC():
         inputs=stim_list_dict,
     )
 
-    RewardPrediction = mySystem.executionList[3][0]
-    InputPrediction = mySystem.executionList[4][0]
+    RewardPrediction = mySystem.executionList[3]
+    InputPrediction = mySystem.executionList[4]
 
     # rearranging mySystem.results into a format that we can compare with pytest
     results_array = []

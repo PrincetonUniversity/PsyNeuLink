@@ -494,6 +494,7 @@ def run(object,
     """
 
     inputs = _construct_stimulus_sets(object, inputs)
+
     if targets:
         targets = _construct_stimulus_sets(object, targets, is_target=True)
 
@@ -730,7 +731,6 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
     return stim_list_array
 
 def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
-
     object_type = _get_obect_type(object)
 
     # Check for header
@@ -778,26 +778,31 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
     execution_offset = 0  # Used for indexing w/ headers
     stim_list = []
 
+    # NOTE: never happens as guessed
+    # if object.numPhases > 1:
+    #     print('NUM PHASES: {0}'.format(object.numPhases))
+    #     import code
+    #     code.interact(local=locals())
+
     for execution in range(num_input_sets):
         execution_len = 0  # Used for indexing w/ headers
         stimuli_in_execution = []
         for phase in range(object.numPhases):
             stimuli_in_phase = []
             for mech_num in range(num_mechs):
-                mech, runtime_params, phase_spec = list(object.originMechanisms.mech_tuples)[mech_num]
+                mech = list(object.originMechanisms.mechs)[mech_num]
                 mech_len = np.size(mechs[mech_num].variable)
                 # Assign stimulus of appropriate size for mech and fill with 0's
                 stimulus = np.zeros(mech_len)
                 # Assign input elements to stimulus if phase is correct one for mech
-                if phase == phase_spec:
-                    for stim_elem in range(mech_len):
-                        if headers:
-                            input_index = headers.index(mech) + execution_offset
-                        else:
-                            input_index = input_elem
-                        stimulus[stim_elem] = inputs_flattened[input_index]
-                        input_elem += 1
-                        execution_len += 1
+                for stim_elem in range(mech_len):
+                    if headers:
+                        input_index = headers.index(mech) + execution_offset
+                    else:
+                        input_index = input_elem
+                    stimulus[stim_elem] = inputs_flattened[input_index]
+                    input_elem += 1
+                    execution_len += 1
                 # Otherwise, assign vector of 0's with proper length
                 stimuli_in_phase.append(stimulus)
             stimuli_in_execution.append(stimuli_in_phase)
@@ -927,6 +932,12 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                 stims_in_execution.append(stimuli[mech][i])
             stim_list.append(stims_in_execution)
 
+    # NOTE: never happens as guessed
+    # if object.numPhases > 1:
+    #     print('NUM PHASES: {0}'.format(object.numPhases))
+    #     import code
+    #     code.interact(local=locals())
+
     # Otherwise, for inputs to a system, construct stimulus from dict with phases
     elif object_type is SYSTEM:
         for execution in range(num_input_sets):
@@ -935,19 +946,14 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                 stimuli_in_phase = []
                 # Only assign inputs to originMechanisms
                 #    and assign them in the order they appear in originMechanisms and fill out each phase
-                for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
+                for mech in object.originMechanisms.mechs:
                     # Assign input elements to stimulus if phase is correct one for mech
-                    if phase == phase_spec:
-                        # Get stimulus for mech for current execution, and enforce 2d to accomodate input_states per mech
-                        stimulus = np.atleast_2d(stimuli[mech][execution])
-                        if not isinstance(stimulus, Iterable):
-                            stimulus = np.atleast_2d([stimulus])
-                    # Otherwise, pad stimulus for this phase with zeros
-                    else:
-                        if not isinstance(stimuli[mech][execution], Iterable):
-                            stimulus = np.atleast_2d(np.zeros(1))
-                        else:
-                            stimulus = np.atleast_2d(np.zeros(len(stimuli[mech][execution])))
+
+                    # Get stimulus for mech for current execution, and enforce 2d to accomodate input_states per mech
+                    stimulus = np.atleast_2d(stimuli[mech][execution])
+                    if not isinstance(stimulus, Iterable):
+                        stimulus = np.atleast_2d([stimulus])
+
                     stimuli_in_phase.append(stimulus)
 
                 stimuli_in_execution.append(stimuli_in_phase)
