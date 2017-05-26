@@ -790,7 +790,7 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
         for phase in range(object.numPhases):
             stimuli_in_phase = []
             for mech_num in range(num_mechs):
-                mech = list(object.originMechanisms.mech_tuples)[mech_num]
+                mech = list(object.originMechanisms.mechs)[mech_num]
                 mech_len = np.size(mechs[mech_num].variable)
                 # Assign stimulus of appropriate size for mech and fill with 0's
                 stimulus = np.zeros(mech_len)
@@ -946,7 +946,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                 stimuli_in_phase = []
                 # Only assign inputs to originMechanisms
                 #    and assign them in the order they appear in originMechanisms and fill out each phase
-                for mech in object.originMechanisms.mech_tuples:
+                for mech in object.originMechanisms.mechs:
                     # Assign input elements to stimulus if phase is correct one for mech
 
                     # Get stimulus for mech for current execution, and enforce 2d to accomodate input_states per mech
