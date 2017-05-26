@@ -2123,14 +2123,14 @@ class MechanismList(UserList):
         """
         if list(item for item in self.mechs).count(mech):
             if self.owner.verbosePref:
-                print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
+                print("PROGRAM ERROR:  {} found in more than one object_item in {} in {}".
                       format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
-        return next((mech_tuple for mech_tuple in self.mechs if mech_tuple is mech), None)
+        return next((object_item for object_item in self.mechs if object_item is mech), None)
 
     @property
     def mechs_sorted(self):
         """Return list of mechs sorted by mechanism name"""
-        return sorted(self.mechs, key=lambda mech_tuple: mech_tuple.name)
+        return sorted(self.mechs, key=lambda object_item: object_item.name)
 
     @property
     def mechanisms(self):

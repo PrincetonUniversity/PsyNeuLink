@@ -1408,7 +1408,7 @@ class Process_Base(Process):
                        #    otherwise, raise and exception
                        try:
                            receiver_mech = item.receiver.owner
-                           if not receiver_mech in [mech_tuple for mech_tuple in pathway]:
+                           if not receiver_mech in [object_item for object_item in pathway]:
                                raise AttributeError
                        except AttributeError:
                            raise ProcessError("The last entry in the pathway for {} is a project specification {}, "
@@ -1611,7 +1611,7 @@ class Process_Base(Process):
         if self.variable is None:
             self.variable = []
             seen = set()
-            mech_list = list(mech_tuple for mech_tuple in self._mechs)
+            mech_list = list(object_item for object_item in self._mechs)
             for mech in mech_list:
                 # Skip repeat mechansims (don't add another element to self.variable)
                 if mech in seen:
@@ -1788,8 +1788,8 @@ class Process_Base(Process):
         if self._monitoring_mechs:
 
             # Add designations to newly created MonitoringMechanisms:
-            for mech_tuple in self._monitoring_mechs:
-                mech = mech_tuple
+            for object_item in self._monitoring_mechs:
+                mech = object_item
                 # If
                 # - mech is a TARGET ObjectiveMechanism, and
                 # - the mech that projects to mech is a TERMINAL for the current process, and
@@ -1801,7 +1801,7 @@ class Process_Base(Process):
                         mech._learning_role is TARGET and
                         self.learning
                             ):
-                    mech_tuple.processes[self] = TARGET
+                    object_item.processes[self] = TARGET
                 else:
                     # mech must be a LearningMechanism;
                     # If a learning_rate has been specified for the process, assign that to all LearningMechanisms
@@ -1811,7 +1811,7 @@ class Process_Base(Process):
                         mech.function_object.learning_rate = self.learning_rate
 
                     # Assign its label
-                    mech_tuple.processes[self] = MONITORING
+                    object_item.processes[self] = MONITORING
 
             # Add _monitoring_mechs to _mechs
             self._mechs.extend(self._monitoring_mechs)
@@ -1843,9 +1843,9 @@ class Process_Base(Process):
                             else:
                                 # If objective_mechanism is not already in _monitoring_mechs,
                                 #     pack in tuple and add it
-                                if objective_mechanism and not any(objective_mechanism is mech_tuple for
-                                                                    mech_tuple in self._monitoring_mechs):
-                                    # objective_mech_tuple = objective_mechanism
+                                if objective_mechanism and not any(objective_mechanism is object_item for
+                                                                    object_item in self._monitoring_mechs):
+                                    # objective_object_item = objective_mechanism
                                     self._monitoring_mechs.append(objective_mechanism)
                             # Get LearningMechanism and add to _monitoring_mechs; raise exception if not found
                             try:
@@ -1855,9 +1855,9 @@ class Process_Base(Process):
                             else:
                                 # If learning_mechanism is not already in _monitoring_mechs,
                                 #     pack in tuple and add it
-                                if learning_mechanism and not any(learning_mechanism is mech_tuple for
-                                                                    mech_tuple in self._monitoring_mechs):
-                                    # learning_mech_tuple = learning_mechanism
+                                if learning_mechanism and not any(learning_mechanism is object_item for
+                                                                    object_item in self._monitoring_mechs):
+                                    # learning_object_item = learning_mechanism
                                     self._monitoring_mechs.append(learning_mechanism)
 
             # Not all Projection subclasses instantiate parameterStates
@@ -1906,10 +1906,10 @@ class Process_Base(Process):
             raise ProcessError("PROGRAM ERROR: _check_for_target_mechanism should only be called"
                                " for a process if it has a learning specification")
 
-        target_mechs = list(mech_tuple
-                           for mech_tuple in self._mechs
-                            if (isinstance(mech_tuple, ObjectiveMechanism) and
-                                mech_tuple._learning_role is TARGET))
+        target_mechs = list(object_item
+                           for object_item in self._mechs
+                            if (isinstance(object_item, ObjectiveMechanism) and
+                                object_item._learning_role is TARGET))
 
         if not target_mechs:
 
@@ -2365,18 +2365,18 @@ class Process_Base(Process):
         #     print ("\t\t{}".format(mech_name))
 
         print ("\n\tMechanisms:")
-        for mech_tuple in self._mechs:
-            print ("\t\t{} (phase: {})".format(mech_tuple.name, mech_tuple.phase))
+        for object_item in self._mechs:
+            print ("\t\t{} (phase: {})".format(object_item.name, object_item.phase))
 
 
         print ("\n\tOrigin mechanism: ".format(self.name))
-        for mech_tuple in self.originMechanisms.mechs_sorted:
-            print("\t\t{} (phase: {})".format(mech_tuple.name, mech_tuple.phase))
+        for object_item in self.originMechanisms.mechs_sorted:
+            print("\t\t{} (phase: {})".format(object_item.name, object_item.phase))
 
         print ("\n\tTerminal mechanism: ".format(self.name))
-        for mech_tuple in self.terminalMechanisms.mechs_sorted:
-            print("\t\t{} (phase: {})".format(mech_tuple.name, mech_tuple.phase))
-            for output_state_name in mech_tuple.output_states:
+        for object_item in self.terminalMechanisms.mechs_sorted:
+            print("\t\t{} (phase: {})".format(object_item.name, object_item.phase))
+            for output_state_name in object_item.output_states:
                 print("\t\t\t{0}".format(output_state_name))
 
         print ("\n---------------------------------------------------------")
@@ -2506,7 +2506,7 @@ class ProcessList(UserList):
         # FIX:
         # if list(item[MECHANISM] for item in self.mechs).count(mech):
         #     if self.owner.verbosePref:
-        #         print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
+        #         print("PROGRAM ERROR:  {} found in more than one object_item in {} in {}".
         #               format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
         return next((ProcessTuple for ProcessTuple in self.process_tuples if ProcessTuple.process is process), None)
 
