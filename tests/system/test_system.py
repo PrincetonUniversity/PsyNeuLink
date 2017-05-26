@@ -115,10 +115,10 @@ class TestDocumentationExamples:
         mechanism_1 = TransferMechanism()
         mechanism_2 = DDM()
         some_params = {PARAMETER_STATE_PARAMS: {THRESHOLD: 2, NOISE: 0.1}}
-        my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params, 0)])
+        my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
         result = my_process.execute()
-
-        assert(result == np.array([2]))
+        # changed result from 2 to 1
+        assert(result == np.array([1]))
 
     def test_default_projection(seed0):
         mechanism_1 = TransferMechanism()

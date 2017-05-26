@@ -291,7 +291,7 @@ Class Reference
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCAuxiliary import \
     ControlSignalGridSearch, ValueFunction
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
@@ -791,7 +791,7 @@ class EVCMechanism(ControlMechanism_Base):
         # self.predictionProcesses = []
 
         # List of prediction mechanism tuples (used by system to execute them)
-        self.prediction_mech_tuples = []
+        self.prediction_mechs = []
 
         # Get any params specified for predictionMechanism(s) by EVCMechanism
         try:
@@ -840,14 +840,14 @@ class EVCMechanism(ControlMechanism_Base):
             self.origin_prediction_mechanisms[origin_mech] = prediction_mechanism
 
             # Add to list of EVCMechanism's prediction_mech_tuples
-            prediction_mech_tuple = MechanismTuple(prediction_mechanism, None, origin_mech.phaseSpec)
-            self.prediction_mech_tuples.append(prediction_mech_tuple)
+            # prediction_mech_tuple = prediction_mechanism
+            self.prediction_mechs.append(prediction_mechanism)
 
             # Add to system executionGraph and executionList
-            self.system.executionGraph[prediction_mech_tuple] = set()
-            self.system.executionList.append(prediction_mech_tuple)
+            self.system.executionGraph[prediction_mechanism] = set()
+            self.system.executionList.append(prediction_mechanism)
 
-        self.predictionMechanisms = MechanismList(self, self.prediction_mech_tuples)
+        self.predictionMechanisms = MechanismList(self, self.prediction_mechs)
 
         # Assign list of destinations for predicted_inputs:
         #    the variable of the ORIGIN mechanism for each process in the system
@@ -898,9 +898,8 @@ class EVCMechanism(ControlMechanism_Base):
                           name = self.system.name + ' outcome signal'
                           )
 
-        self.system.executionList.append(MechanismTuple(self.monitoring_mechanism, None, self.system.numPhases - 1))
-        self.system.executionGraph[MechanismTuple(self.monitoring_mechanism, None, self.system.numPhases - 1)] = set(
-            self.system.executionList[:-1])
+        self.system.executionList.append(self.monitoring_mechanism)
+        self.system.executionGraph[self.monitoring_mechanism] = set(self.system.executionList[:-1])
 
     def _get_monitored_states(self, context=None):
         """
