@@ -947,7 +947,6 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                 # Only assign inputs to originMechanisms
                 #    and assign them in the order they appear in originMechanisms and fill out each phase
                 for mech in object.originMechanisms.mech_tuples:
-                    mech = mech[0]
                     # Assign input elements to stimulus if phase is correct one for mech
 
                     # Get stimulus for mech for current execution, and enforce 2d to accomodate input_states per mech
