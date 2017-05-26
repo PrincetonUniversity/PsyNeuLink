@@ -48,19 +48,19 @@ ControlMechanisms are used to control the parameter values of mechanisms and/or 
 specified for control by assigning it a `ControlProjection` (along with the parameter's value) when creating the 
 mechanism or function to which the parameter belongs (see `Mechanism_Parameters`), or by specifying the parameter in 
 the **control_signals**  argument of the constructor for the ControlMechanism.  The **control_signals** argument must 
-be a list, each item of which must refer to a parameter to be controlled specified in any of the following forms:
+be a list, each item of which must refer to a parameter to be controlled specified in any of the following ways:
 
   * *ParameterState* (of a Mechanism) for the parameter;
   |
   * *tuple*, with the *name* of the parameter as its 1st item. and the *mechanism* to which it belongs as the 2nd;
     note that this is a convenience notation, which is simpler to use than a specification dictionary (see below), 
-    but precludes the specification of any of the `ControlSignal's parameters <ControlSignal_Structure>`.
+    but precludes specification of any `ControlSignal parameters <ControlSignal_Structure>`.
   |
   * *specification dictionary*, that must contain the following two entries:
-    * *NAME*:str, where the string is the name of the parameter to be controlled;
-    * *MECHANISM*:Mechanism, where Mechanism is the Mechanism to which the parameter belongs 
+    * *NAME*:str - a string that is the name of the parameter to be controlled;
+    * *MECHANISM*:Mechanism - the Mechanism to which the parameter belongs; 
       (note: the Mechanism itself should be specified even if the parameter belongs to its function).
-    It can also contain entries for any other ControlSignal parameters to be speicified
+    The dictionary can also contain entries for any other ControlSignal parameters to be specified
     (e.g., *ALLOCATION_SAMPLES*:list to specify `allocation_samples <ControlSignal.allocation_samples>`).
 
 A `ControlSignal` is created for each item listed in **control_signals**, and all of a ControlMechanism's ControlSignals 

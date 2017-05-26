@@ -13,18 +13,21 @@ Overview
 --------
 
 A GatingMechanism is an `AdaptiveMechanism` that modifies the inputState(s) and/or outputState(s) of one or more 
-`ProcessingMechanisms`.   It's function takes a value and uses that to calculate a `gating_policy`:  a list of 
+`ProcessingMechanisms`.   It's function takes a value 
+COMMENT:
+    ??FROM WHERE?
+COMMENT
+and uses that to calculate a `gating_policy`:  a list of 
 `gating` values, one for each of states that it gates.  Each of these values is assigned as the value of a 
-corresponding `GatingSignal` (a subclass of `OutputState` used by ControlMechanisms), and used by the
-associated `GatingProjection` to gate the state to which it projects.  
+corresponding `GatingSignal` (a subclass of `OutputState`), and used by an associated `GatingProjection` to modulate 
+the state to which it projects.  
 COMMENT: TBI
 The gating components of a system can be displayed using the system's 
 `show_graph` method with its **show_gating** argument assigned :keyword:``True`.  
 COMMENT
-?????
-The gating components of a 
-system are executed after all ProcessingMechanisms and `learning components <LearningMechanism>` in that system have 
-been executed.
+The gating components of a system are executed after all `ProcessingMechanisms <ProcessingMechanism>`, 
+`LearningMechanisms <LearningMechanism>`, and  `ControlMechanisms <ControlMechanism>` in that system have been executed.
+
 
 .. _GatingMechanism_Creation:
 
@@ -33,21 +36,52 @@ Creating A GatingMechanism
 
 GatingMechanisms can be created using the standard Python method of calling the constructor for the desired type.
 COMMENT: ??TBI
-A GatingMechanism is also created automatically if a `gating is specified <GatingMechanism_Specifying_Gating>` for a 
-state but its `sender <GatingProjection.sender>` is not assigned.  In that case, a Gating
-COMMENT
-When gating is specified for a state, a `GatingProjection` is automatically instantiated that projects from the
-designated GatingMechanism to the state. How a GatingMechanism creates its `GatingProjections <GatingProjection>` and 
-determines their value depends on the `subclass <GatingMechanism>`.
+A GatingMechanism is also created automatically if `gating is specified <GatingMechanism_Specifying_Gating>` for an 
+inputState or outputState, which case a `GatingProjection` is also automatically created, that projects 
+from the GatingMechanism to the specified state. How a GatingMechanism creates its `GatingProjections 
+<GatingProjection>` and determines their value depends on the `subclass <GatingMechanism>`.
 
 .. _GatingMechanism_Specifying_Gating:
 
 Specifying gating
 ~~~~~~~~~~~~~~~~~
 
-Gating can be specified for an `InputState` or `OutputState` in any of the following way:
+GatingMechanisms are used to modulate the function of an inputState or outputState.  An inputState or outputState 
+can be specified for gating by assigning it a `GatingProjection` in the **input_states** or **output_states** 
+arguments of the constructor for the mechanism to which it belongs (see `Mechanism_States <LINK>`), or by specifying 
+the **gating_signals**  argument of the constructor for the GatingMechanism.  The **gating_signals** argument must 
+be a list, each item of which must refer to a state to be gated, specified in any of the following ways:
+
+  * *InputState* or *OutputState;
+  |
+  * *tuple*, with the *name* of the state as its 1st item. and a `GatingProjection` or `gating keyword <LINK>`  
+  as the 2nd item; note that this is a convenience notation, which is simpler to use than a specification dictionary 
+  (see below), but precludes specification of any `GatingSignal parameters <GatingSignal_Structure>`.
+  |
+  * *specification dictionary*, that must contain the following two entries:
+    * *NAME* - a string that is the name of the state to be gated;
+    * *MECHANISM*:Mechanism - the Mechanism to which the state belongs. 
+    The dictionary can also contain entries for any other GatingSignal parameters to be specified
+    (e.g., *MODULATION_OPERATION*:ModulationOperation to specify the type of gating modulation to implement).
+
+A `GatingSignal` is created for each item listed in **gating_signals**, and all of a GatingMechanism's GatingSignals 
+are listed in GatingMechanism's `gating_signals <GatingMechanism.gating_signals>` attribute.  Each GatingSignal is 
+assigned a `GatingProjection` to the inputState or outputState of the mechanism specified, that is used to modulate 
+the state's value. GatingSignals are a type of `OutputState`, and so they are also listed in the GatingMechanism's 
+`output_states <GatingMechanism.outut_states>` attribute.
+
+*** PUT IN InputState AND OutputState DOCUMENTATION
+
+Gating can be also be specified for an `InputState` or `OutputState` when it is created in any of the following ways:
+
+    * in a 2-item tuple, in which the first item is a `state specification <LINK>`, 
+      and the second item is a `gating specification <>`
 
 XXX DOCUMENTATION NEEDED HERE
+#              with keywords GATE (==GATE_PRIMARY) GATE_ALL, GATE_PRIMARY
+#              or an entry in the state specification dictionary with the key "GATING", and a value that is the
+#              keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOpearation value, GatingProjection, or its constructor
+
 
 .. _GatingMechanism_Execution:
 

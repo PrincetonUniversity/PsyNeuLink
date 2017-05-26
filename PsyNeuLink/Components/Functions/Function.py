@@ -1354,18 +1354,68 @@ class LinearCombination(
 # region ***********************************  TRANSFER FUNCTIONS  ***********************************************
 # endregion
 
+BOUNDS = 'bounds'
+ADDIITIVE_PARAM = 'additive_param'
+MULTIPLICATIVE_PARAM = 'multiplicative_param'
+
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape
 
     All TransferFunctions must have the attribute `bounds` that specifies the lower and upper limits of the result;
         if there are none, the attribute is set to `None`;  if it has at least one bound, the attribute is set to a
         tuple specifying the lower and upper bounds, respectively, with `None` as the entry for no bound.
+        
+    All TransferFunctions must also have two attributes - multiplictive_param and additive_param - each of which 
+        is assigned the name of one of the function's parameters;  this is for use by ModulatoryProjections 
+        (and, in particular, GatingProjections, when the TransferFunction is used as the function of an 
+        InputState or OutputState). 
+     
     """
     componentType = TRANFER_FUNCTION_TYPE
+    
+    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
+    def __init__(self, variable_default,
+                         params,
+                         owner,
+                         prefs,
+                         context):
+
+        if not hasattr(self, BOUNDS):
+            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
+                                format(self.__class__.__name__, BOUNDS))
+
+        if not hasattr(self, MULTIPLICATIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
+                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
+
+        if not hasattr(self, ADDIITIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
+                                format(self.__class__.__name__, ADDIITIVE_PARAM))
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    @property
+    def multiplicative(self):
+        return getattr(self, self.multiplicative_param)
+    
+    @multiplicative.setter
+    def multiplicative(self, val):
+        setattr(self, self.multiplicative_param, val)
+        
+    @property
+    def additive(self):
+        return getattr(self, self.additive_param)
+
+    @additive.setter
+    def additive(self, val):
+        setattr(self, self.additive_param, val)
 
 
-class Linear(
-    TransferFunction):  # --------------------------------------------------------------------------------------
+class Linear(TransferFunction):  # -------------------------------------------------------------------------------------
     """
     Linear(                \
          variable_default, \
@@ -1435,7 +1485,10 @@ class Linear(
     """
 
     componentName = LINEAR_FUNCTION
+
     bounds = None
+    multiplicative_param = SLOPE
+    additive_param = INTERCEPT
 
     classPreferences = {
         kwPreferenceSetName: 'LinearClassPreferences',
@@ -1574,8 +1627,7 @@ class Linear(
         return self.slope
 
 
-class Exponential(
-    TransferFunction):  # ---------------------------------------------------------------------------------
+class Exponential(TransferFunction):  # --------------------------------------------------------------------------------
     """
     Exponential(           \
          variable_default, \
@@ -1641,7 +1693,10 @@ class Exponential(
     """
 
     componentName = EXPONENTIAL_FUNCTION
+
     bounds = (0, None)
+    multiplicative_param = RATE
+    additive_param = SCALE
 
 
     variableClassDefault = 0
@@ -1794,6 +1849,8 @@ class Logistic(
     parameter_keywords.update({GAIN, BIAS})
 
     bounds = (0,1)
+    multiplicative_param = GAIN
+    additive_param = BIAS
 
     variableClassDefault = 0
 
@@ -1948,6 +2005,10 @@ class SoftMax(
 
     componentName = SOFTMAX_FUNCTION
 
+    bounds = (0,1)
+    multiplicative_param = GAIN
+    additive_param = None
+
     variableClassDefault = 0
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -1966,6 +2027,8 @@ class SoftMax(
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   output=output,
                                                   params=params)
+        if output is MAX_VAL:
+            bounds = None
 
         super().__init__(variable_default=variable_default,
                          params=params,
@@ -2196,6 +2259,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     componentName = LINEAR_MATRIX_FUNCTION
 
     bounds = None
+    multiplicative_param = None
+    additive_param = None
 
     DEFAULT_FILLER_VALUE = 0
 
