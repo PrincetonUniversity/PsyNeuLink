@@ -273,8 +273,21 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
             for spec in target_set[GATING_SIGNALS]:
 
+                # Specification is for a GatingSignal
+                if isinstance(spec, GatingSignal):
+                    state_name = spec.name
+                    mech = spec.owner
+                    #  Check that any GatingProjections it has are to mechanisms in the controller's system
+                    if not all(gating_proj.receiver.owner in self.system.mechanisms
+                               for gating_proj in spec.efferents):
+                        raise GatingMechanismError("The GatingSignal specified in the {} arg for {} ({}) "
+                                                    "has one more more GatingProjections to a mechanism "
+                                                    "that is not in {}".
+                                                    format(GATING_SIGNALS, self.name, spec.name, self.system.name))
+                    continue
+
                 # Specification is for a tuple (str, Mechanism):
-                if isinstance(spec, tuple):
+                elif isinstance(spec, tuple):
                     state_name = spec[0]
                     mech = spec[1]
                     # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
@@ -285,18 +298,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
                     if not isinstance(mech, Mechanism):
                         raise GatingMechanismError("2nd item of tuple in specification of {} for {} ({}) "
                                                     "must be a Mechanism".format(GATING_SIGNAL, owner.name, mech))
-
-                # Specification is for a GatingSignal
-                elif isinstance(spec, GatingSignal):
-                    state_name = spec.name
-                    mech = spec.owner
-                    #  Check that any GatingProjections it has are to mechanisms in the controller's system
-                    if not all(gating_proj.receiver.owner in self.system.mechanisms
-                               for gating_proj in spec.efferents):
-                        raise GatingMechanismError("The GatingSignal specified in the {} arg for {} ({}) "
-                                                    "has one more more GatingProjections to a mechanism "
-                                                    "that is not in {}".
-                                                    format(GATING_SIGNALS, self.name, spec.name, self.system.name))
 
                 # GatingSignal specification dictionary, must have the following entries:
                 #    NAME:str - must be the name of an InputState or OutputState of MECHANISM

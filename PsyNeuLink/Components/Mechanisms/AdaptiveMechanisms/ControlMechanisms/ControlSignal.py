@@ -352,7 +352,8 @@ class ControlSignal(OutputState):
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_TYPE: MAPPING_PROJECTION,
-        CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS,
+        CONTROLLED_PARAM:None,
+        CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS
     })
     #endregion
 
