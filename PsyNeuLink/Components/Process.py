@@ -1538,7 +1538,7 @@ class Process_Base(Process):
 
             # (C) Projection to first Mechanism in Pathway comes from one in the Process' _mechs;
             #     so warn if verbose pref is set
-            if projection.sender.owner in list(item for item in self._mechs):
+            if projection.sender.owner in self._mechs:
                 if self.prefs.verbosePref:
                     print("WARNING: first mechanism ({0}) in pathway for {1} receives "
                           "a (recurrent) projection from another mechanism {2} in {1}".
@@ -1843,8 +1843,7 @@ class Process_Base(Process):
                             else:
                                 # If objective_mechanism is not already in _monitoring_mechs,
                                 #     pack in tuple and add it
-                                if objective_mechanism and not any(objective_mechanism is object_item for
-                                                                    object_item in self._monitoring_mechs):
+                                if objective_mechanism and not objective_mechanism in self._monitoring_mechs:
                                     # objective_object_item = objective_mechanism
                                     self._monitoring_mechs.append(objective_mechanism)
                             # Get LearningMechanism and add to _monitoring_mechs; raise exception if not found
