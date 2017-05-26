@@ -18,9 +18,15 @@ It's function takes a value (usually the output of an `ObjectiveMechanism`) and 
 to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is assigned as
 the value of a corresponding `ControlSignal` (a subclass of `OutputState` used by ControlMechanisms), and conveyed by
 the associated `ControlProjection` to the `parameterState <ParameterState>` of the relevant ProcessingMechanism.
-A ControlMechanism can regulate only the parameters of mechanism in the system for which it is the
+A ControlMechanism can regulate only the parameters of mechanisms in the system for which it is the
 `controller <System_Execution_Control>`.  The control components of a system can be displayed using the system's 
-`show_graph` method with its **show_control** argument assigned :keyword:``True`.  The control components of a 
+`show_graph` method with its **show_control** argument assigned :keyword:``True`.  
+COMMENT: TBI
+The control components of a system can be displayed using the system's 
+`show_graph` method with its **show_control** argument assigned as :keyword:``True`.  
+COMMENT
+
+The control components of a 
 system are executed after all ProcessingMechanisms and `learning components <LearningMechanism>` in that system have 
 been executed.
 
@@ -46,26 +52,28 @@ Specifying Parameters to Control
 
 ControlMechanisms are used to control the parameter values of mechanisms and/or their functions.  A parameter can be 
 specified for control by assigning it a `ControlProjection` (along with the parameter's value) when creating the 
-mechanism or function to which the parameter belongs (see `Mechanism_Parameters`), or by specifying the parameter in 
-the **control_signals**  argument of the constructor for the ControlMechanism.  The **control_signals** argument must 
-be a list, each item of which must refer to a parameter to be controlled specified in any of the following ways:
+mechanism or function to which the parameter belongs (see `Mechanism_Parameters`).  The parameters to be controlled by
+a ControlMechanism can also be specified in the **control_signals**  argument of the constructor for a ControlMechanism.  
+The **control_signals** argument must be a list, each item of which must refer to a parameter to be controlled specified 
+in any of the following ways:
 
-  * *ParameterState* (of a Mechanism) for the parameter;
+  * *ParameterState* of the Mechanism to which the parameter belongs;
   |
   * *tuple*, with the *name* of the parameter as its 1st item. and the *mechanism* to which it belongs as the 2nd;
-    note that this is a convenience notation, which is simpler to use than a specification dictionary (see below), 
-    but precludes specification of any `ControlSignal parameters <ControlSignal_Structure>`.
+    note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
+    but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
   |
-  * *specification dictionary*, that must contain the following two entries:
+  * *specification dictionary*, that must contain at least the following two entries:
     * *NAME*:str - a string that is the name of the parameter to be controlled;
     * *MECHANISM*:Mechanism - the Mechanism to which the parameter belongs; 
       (note: the Mechanism itself should be specified even if the parameter belongs to its function).
     The dictionary can also contain entries for any other ControlSignal parameters to be specified
-    (e.g., *ALLOCATION_SAMPLES*:list to specify `allocation_samples <ControlSignal.allocation_samples>`).
+    (e.g., *MODULATION_OPERATION*:ModulationOperation to specify how the parameter will be modulated;
+    see `below <ControlSignal_Structure>` for a list of parameters).
 
-A `ControlSignal` is created for each item listed in **control_signals**, and all of a ControlMechanism's ControlSignals 
-are listed in ControlMechanism's `control_signals <ControlMechanism.control_signals>` attribute.  Each ControlSignal is 
-assigned a `ControlProjection` to the parameterState of the mechanisms associated with the specified parameter of the
+A `ControlSignal` is created for each item listed in **control_signals**, and all of the ControlSignals for a 
+ControlMechanism are listed in its `control_signals <ControlMechanism.control_signals>` attribute.  Each ControlSignal
+is assigned a `ControlProjection` to the parameterState of the mechanisms associated with the specified parameter of the
 mechanism or its function, that is used to control the parameter's value. ControlSignals are a type of `OutputState`, 
 and so they are also listed in the ControlMechanism's `output_states <ControlMechanism.outut_states>` attribute.
 
@@ -155,12 +163,6 @@ class ControlMechanism_Base(Mechanism_Base):
 
     COMMENT:
         Description:
-            # DOCUMENTATION NEEDED:
-              ._instantiate_control_signal INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE
-             INSTANCE
-            .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
-            WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
-
             Protocol for instantiating unassigned ControlProjections (i.e., w/o a sender specified):
                If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple) 
                    it is flagged for deferred_init() in its __init__ method
@@ -189,38 +191,35 @@ class ControlMechanism_Base(Mechanism_Base):
                 + MONITOR_FOR_CONTROL: List[]
     COMMENT
 
-    COMMENT:
-        Arguments
-        ---------
+    Arguments
+    ---------
 
-        monitor_for_control : List[OutputState specification] : default None
-            specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
-            specification options).
+    monitor_for_control : List[OutputState specification] : default None
+        specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
+        specification options).
 
-        control_signals : List[parameter of Mechanism or its function, ParameterState, tuple[str, Mechanism] or dict]
-            specifies the parameters to be controlled by the ControlMechanism 
-            (see `control_signals <ControMechanism.control_signals>` for details).
+    control_signals : List[parameter of Mechanism or its function, ParameterState, tuple[str, Mechanism] or dict]
+        specifies the parameters to be controlled by the ControlMechanism 
+        (see `control_signals <ControlMechanism.control_signals>` for details).
 
-        function : TransferFunction : default Linear(slope=1, intercept=0)
-            specifies function used to combine values of monitored output states.
-            
-        params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
-            for the mechanism, parameters for its function, and/or a custom function and its parameters. Values
-            specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-            constructor.
+    function : TransferFunction : default Linear(slope=1, intercept=0)
+        specifies function used to combine values of monitored output states.
+        
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
+        for the mechanism, parameters for its function, and/or a custom function and its parameters. Values
+        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor.
 
-        name : str : default ControlMechanism-<index>
-            a string used for the name of the mechanism.
-            If not is specified, a default is assigned by `MechanismRegistry`
-            (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default ControlMechanism-<index>
+        a string used for the name of the mechanism.
+        If not is specified, a default is assigned by `MechanismRegistry`
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-        prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-            the `PreferenceSet` for the mechanism.
-            If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-            (see :doc:`PreferenceSet <LINK>` for details).
-    COMMENT
-
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+        the `PreferenceSet` for the mechanism.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
@@ -233,19 +232,15 @@ class ControlMechanism_Base(Mechanism_Base):
     control_signals : List[ControlSignal]
         list of `ControlSignals <ControlSignals>` for the ControlMechanism, each of which sends a `ControlProjection`
         to the `parameterState <ParameterState>` for the parameter it controls (same as ControlMechanism's 
-        `output_states <ControlMechanism.output_states>` attribute).
+        `output_states <Mechanism.output_states>` attribute).
 
-
-    COMMENT:  [REPLACE THIS WITH control_signals]    
     control_projections : List[ControlProjection]
-        list of `ControlProjections <ControlProjection>` managed by the ControlMechanism.
-        There is one for each ouputState in the `outputStates` dictionary.
-    COMMENT
+        list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
 
     allocation_policy : 2d np.array
-        array of values assigned to each ControlSignal listed in the 
-        `control_signals <ControlMechanism.control_signals>` attribute
-        (same as the ControlMechanism's `value <ControlMechanism.value>` attribute).
+        each item is the value assigned to the corresponding ControlSignal in `control_signals`
+        (same as the ControlMechanism's `value <Mechanism.value>` attribute).
+        
     """
 
     componentType = "ControlMechanism"

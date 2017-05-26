@@ -12,20 +12,20 @@
 Overview
 --------
 
-A GatingMechanism is an `AdaptiveMechanism` that modifies the inputState(s) and/or outputState(s) of one or more 
-`ProcessingMechanisms`.   It's function takes a value 
+A GatingMechanism is an `AdaptiveMechanism` that modulates the value of the inputState(s) and/or outputState(s) of 
+one or more `ProcessingMechanisms`.   It's function takes a value 
 COMMENT:
     ??FROM WHERE?
 COMMENT
-and uses that to calculate a `gating_policy`:  a list of 
-`gating` values, one for each of states that it gates.  Each of these values is assigned as the value of a 
-corresponding `GatingSignal` (a subclass of `OutputState`), and used by an associated `GatingProjection` to modulate 
-the state to which it projects.  
+and uses that to calculate a `gating_policy`:  a list of `gating <LINK>` values, one for each of states that it 
+gates.  Each of these values is assigned as the value of a `GatingSignal` (a subclass of `OutputState`) in the
+GatingMechanism, and used by an associated `GatingProjection` to modulate the value of the state to which it projects.  
+A GatingMechanism can regulate only the parameters of mechanisms in the `System` to which it belongs. 
 COMMENT: TBI
 The gating components of a system can be displayed using the system's 
-`show_graph` method with its **show_gating** argument assigned :keyword:``True`.  
+`show_graph` method with its **show_gating** argument assigned as :keyword:``True`.  
 COMMENT
-The gating components of a system are executed after all `ProcessingMechanisms <ProcessingMechanism>`, 
+The gating components of a system are executed after all `Proces singMechanisms <ProcessingMechanism>`, 
 `LearningMechanisms <LearningMechanism>`, and  `ControlMechanisms <ControlMechanism>` in that system have been executed.
 
 
@@ -35,9 +35,8 @@ Creating A GatingMechanism
 ---------------------------
 
 GatingMechanisms can be created using the standard Python method of calling the constructor for the desired type.
-COMMENT: ??TBI
 A GatingMechanism is also created automatically if `gating is specified <GatingMechanism_Specifying_Gating>` for an 
-inputState or outputState, which case a `GatingProjection` is also automatically created, that projects 
+inputState or outputState, in which case a `GatingProjection` is also automatically created that projects 
 from the GatingMechanism to the specified state. How a GatingMechanism creates its `GatingProjections 
 <GatingProjection>` and determines their value depends on the `subclass <GatingMechanism>`.
 
@@ -46,42 +45,43 @@ from the GatingMechanism to the specified state. How a GatingMechanism creates i
 Specifying gating
 ~~~~~~~~~~~~~~~~~
 
-GatingMechanisms are used to modulate the function of an inputState or outputState.  An inputState or outputState 
-can be specified for gating by assigning it a `GatingProjection` in the **input_states** or **output_states** 
-arguments of the constructor for the mechanism to which it belongs (see `Mechanism_States <LINK>`), or by specifying 
-the **gating_signals**  argument of the constructor for the GatingMechanism.  The **gating_signals** argument must 
-be a list, each item of which must refer to a state to be gated, specified in any of the following ways:
+GatingMechanisms are used to modulate the value of an `inputState <InputState>` or `outputState <OutputState>`.  
+An inputState or outputState can be specified for gating by assigning it a `GatingProjection` in the 
+**input_states** or **output_states** arguments of the constructor for the mechanism to which it belongs 
+(see `Mechanism_States <LINK>`).  The inputStates and outputStates to be gated by a GatingMechanism can also be 
+specified in the  **gating_signals**  argument of the constructor for a GatingMechanism.  The **gating_signals** 
+argument must be a list, each item of which must refer to a state to be gated specified in any of the following ways:
 
-  * *InputState* or *OutputState;
+  * *InputState* or *OutputState of the Mechanism to which the state belongs;
   |
-  * *tuple*, with the *name* of the state as its 1st item. and a `GatingProjection` or `gating keyword <LINK>`  
-  as the 2nd item; note that this is a convenience notation, which is simpler to use than a specification dictionary 
-  (see below), but precludes specification of any `GatingSignal parameters <GatingSignal_Structure>`.
+  * *tuple*, with the *name* of the state as its 1st item. and the mechanism to which it belongs as the 2nd;  
+    note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
+    but precludes specification of any parameters <GatingSignal_Structure>` for the GatingSignal.
   |
-  * *specification dictionary*, that must contain the following two entries:
+  * *specification dictionary*, that must contain at least the following two entries:
     * *NAME* - a string that is the name of the state to be gated;
     * *MECHANISM*:Mechanism - the Mechanism to which the state belongs. 
     The dictionary can also contain entries for any other GatingSignal parameters to be specified
-    (e.g., *MODULATION_OPERATION*:ModulationOperation to specify the type of gating modulation to implement).
+    (e.g., *MODULATION_OPERATION*:ModulationOperation to specify how the value of the state will be modulated;
+    see `below <GatingSignal_Structure>` for a list of parameters).
 
-A `GatingSignal` is created for each item listed in **gating_signals**, and all of a GatingMechanism's GatingSignals 
-are listed in GatingMechanism's `gating_signals <GatingMechanism.gating_signals>` attribute.  Each GatingSignal is 
+A `GatingSignal` is created for each item listed in **gating_signals**, and all of the GatingSignals for a  
+GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.  Each GatingSignal is 
 assigned a `GatingProjection` to the inputState or outputState of the mechanism specified, that is used to modulate 
 the state's value. GatingSignals are a type of `OutputState`, and so they are also listed in the GatingMechanism's 
 `output_states <GatingMechanism.outut_states>` attribute.
 
-*** PUT IN InputState AND OutputState DOCUMENTATION
+COMMENT:
+  *** PUT IN InputState AND OutputState DOCUMENTATION
 
-Gating can be also be specified for an `InputState` or `OutputState` when it is created in any of the following ways:
+  Gating can be also be specified for an `InputState` or `OutputState` when it is created in any of the following ways:
 
     * in a 2-item tuple, in which the first item is a `state specification <LINK>`, 
       and the second item is a `gating specification <>`
 
-XXX DOCUMENTATION NEEDED HERE
-#              with keywords GATE (==GATE_PRIMARY) GATE_ALL, GATE_PRIMARY
-#              or an entry in the state specification dictionary with the key "GATING", and a value that is the
-#              keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOpearation value, GatingProjection, or its constructor
-
+    * keywords GATE (==GATE_PRIMARY) GATE_ALL, GATE_PRIMARY
+        or an entry in the state specification dictionary with the key "GATING", and a value that is the
+        keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOpearation value, GatingProjection, or its constructor
 
 .. _GatingMechanism_Execution:
 
@@ -96,6 +96,12 @@ of feedback loops in a System).  When executd, a GatingMechanism uses its input 
 `GatingSignals <GatingSignal>` and their corresponding `GatingProjections <GatingProjection>`.  In the subsequent 
 round of execution , each GatingProjection's value is used by the state to which it projects to modulate the 
 `value <State.value>` of that state.
+
+When a GatingMechanism executes, the value of each item in its `gating_policy` are assigned as the values of each of
+the corresponding GatingSignals in its `gating_signals` attribute.  Those, in turn, as used by their associated
+`GatingProjections` to modulate the value of the state to which they project.  This is done by assigning the
+GatingSignal's value to a parameter of the state's function, as specified by the GatingSignal's `modulation_operation` 
+parameter (see `GatingSignal_Execution` for details). 
 
 .. note::
    A state that receives a `GatingProjection` does not update its value until its owner mechanism executes 
@@ -128,11 +134,11 @@ class GatingMechanismError(Exception):
 class GatingMechanism(AdaptiveMechanism_Base):
     """
     GatingMechanism_Base(     \
-    default_input_value=None,  \
-    monitor_for_control=None,  \
-    function=Linear,           \
-    params=None,               \
-    name=None,                 \
+    default_input_value=None, \
+    gating_signals=None       \
+    function=Linear,          \
+    params=None,              \
+    name=None,                \
     prefs=None)
 
     Abstract class for GatingMechanism.
@@ -143,89 +149,70 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     COMMENT:
         Description:
-            # DOCUMENTATION NEEDED:
-              ._instantiate_gating_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE
-             INSTANCE
-            .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
-            WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
-
+            # VERIFY:
             Protocol for instantiating unassigned GatingProjections (i.e., w/o a sender specified):
-               If sender is not specified for a GatingProjection (e.g., in a parameter specification tuple) 
+               If sender is not specified for a GatingProjection (e.g., in an inputState or OutputState tuple spec) 
                    it is flagged for deferred_init() in its __init__ method
-               When the next ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
-                   its _take_over_as_default_controller method is called in _instantiate_attributes_after_function;
-                   it then iterates through all of the parameterStates of all of the mechanisms in its system, 
-                   identifies ones without a sender specified, calls its deferred_init() method,
-                   instantiates a ControlSignal for it, and assigns it as the GatingProjection's sender.
-
-            MONITOR_FOR_CONTROL param determines which states will be monitored.
-                specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
-                this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
-                ?? if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from
-                    system.executionGraph by default
-                if MonitoredOutputStatesOption is used, it applies to any mechanisms specified in the list for which
-                    no outputStates are listed; it is overridden for any mechanism for which outputStates are
-                    explicitly listed
-                TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applies to
-                    just that mechanism
+               When the next GatingMechanism is instantiated, if its params[MAKE_DEFAULT_GATING_MECHANISM] == True, its
+                   _take_over_as_default_gating_mechanism method is called in _instantiate_attributes_after_function;
+                   it then iterates through all of the inputStates and outputStates of all of the mechanisms in its 
+                   system, identifies ones without a sender specified, calls its deferred_init() method,
+                   instantiates a GatingSignal for it, and assigns it as the GatingProjection's sender.
 
         Class attributes:
             + componentType (str): System Default Mechanism
             + paramClassDefaults (dict):
                 + FUNCTION: Linear
                 + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
-                + MONITOR_FOR_CONTROL: List[]
     COMMENT
 
-    COMMENT:
-        Arguments
-        ---------
+    Arguments
+    ---------
 
-            NOT CURRENTLY IN USE:
-            default_input_value : value, list or np.ndarray : :py:data:`defaultControlAllocation <LINK]>`
-                the default allocation for the ControlMechanism;
-                its length should equal the number of ``control_signals``.
+    default_gating_policy : value, list or np.ndarray : :py:data:`defaultGatingPolicy <LINK]>`
+        the default value for each of the GatingMechanism's GatingSignals;
+        its length must equal the number of items specified in the **gating_signals** arg.
 
-        monitor_for_control : List[OutputState specification] : default None
-            specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
-            specification options).
+    gating_signals : List[InputState or OutputState, tuple[str, Mechanism], or dict]
+        specifies the inputStates and/or outputStates to be gated by the GatingMechanism;
+        the number of items must equal the length of the **default_gating_policy** arg 
+        (see `gating_signals <GatingMechanism.gating_signals>` for details).
 
-        function : TransferFunction : default Linear(slope=1, intercept=0)
-            specifies function used to combine values of monitored output states.
+    function : TransferFunction : default Linear(slope=1, intercept=0)
+        specifies function used to combine values of monitored output states.
+        
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
+        for the mechanism, parameters for its function, and/or a custom function and its parameters. Values
+        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor.
 
-        params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
-            for the mechanism, parameters for its function, and/or a custom function and its parameters. Values
-            specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-            constructor.
+    name : str : default ControlMechanism-<index>
+        a string used for the name of the mechanism.
+        If not is specified, a default is assigned by `MechanismRegistry`
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-        name : str : default GatingMechanism-<index>
-            a string used for the name of the mechanism.
-            If not is specified, a default is assigned by `MechanismRegistry`
-            (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-        prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-            the `PreferenceSet` for the mechanism.
-            If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-            (see :doc:`PreferenceSet <LINK>` for details).
-    COMMENT
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+        the `PreferenceSet` for the mechanism.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
 
 
     Attributes
     ----------
 
-    gatingProjections : List[GatingProjection]
-        list of `GatingProjections <GatingProjection>` managed by the GatingMechanism.
-        There is one for each ouputState in the `outputStates` dictionary.
+    gating_signals : List[GatingSignal]
+        list of `GatingSignals <ControlSignals>` for the GatingMechanism, each of which sends a `GatingProjection`
+        to the `inputState <InputState>` or `outputState <OutputState>` that it gates (same as GatingMechanism's 
+        `output_states <Mechanism.output_states>` attribute).
 
-    controlProjectionCosts : 2d np.array
-        array of costs associated with each of the control signals in the `control_projections` attribute.
+    gating_projections : List[GatingProjection]
+        list of `GatingProjections <GatingProjection>`, one for each `GatingSignal` in `gating_signals`.
 
-    allocation_policy : 2d np.array
-        array of values assigned to each control signal in the `control_projections` attribute.
-        This is the same as the ControlMechanism's `value <ControlMechanism.value>` attribute.
-
-
+    gating_policy : 2d np.array
+        each items is the value assigned to the corresponding GatingSignal listed in `gating_signals`
+        (same as the GatingMechanism's `value <Mechanism.value>` attribute).
+        
     """
 
     componentType = "GatingMechanism"
