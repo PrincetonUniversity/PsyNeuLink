@@ -799,7 +799,7 @@ class EVCMechanism(ControlMechanism_Base):
         # self.predictionProcesses = []
 
         # List of prediction mechanism tuples (used by system to execute them)
-        self.prediction_mech_tuples = []
+        self.prediction_mechs = []
 
         # Get any params specified for predictionMechanism(s) by EVCMechanism
         try:
@@ -848,14 +848,14 @@ class EVCMechanism(ControlMechanism_Base):
             self.origin_prediction_mechanisms[origin_mech] = prediction_mechanism
 
             # Add to list of EVCMechanism's prediction_mech_tuples
-            prediction_mech_tuple = prediction_mechanism
-            self.prediction_mech_tuples.append(prediction_mech_tuple)
+            # prediction_mech_tuple = prediction_mechanism
+            self.prediction_mechs.append(prediction_mechanism)
 
             # Add to system executionGraph and executionList
-            self.system.executionGraph[prediction_mech_tuple] = set()
-            self.system.executionList.append(prediction_mech_tuple)
+            self.system.executionGraph[prediction_mechanism] = set()
+            self.system.executionList.append(prediction_mechanism)
 
-        self.predictionMechanisms = MechanismList(self, self.prediction_mech_tuples)
+        self.predictionMechanisms = MechanismList(self, self.prediction_mechs)
 
         # Assign list of destinations for predicted_inputs:
         #    the variable of the ORIGIN mechanism for each process in the system
