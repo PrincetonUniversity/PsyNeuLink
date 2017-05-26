@@ -1,3 +1,5 @@
+import pytest
+import random
 import numpy as np
 
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
@@ -181,3 +183,88 @@ def test_EVC():
     for i in range(len(expected_output)):
         val, expected = expected_output[i]
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+
+
+@pytest.mark.stress
+@pytest.mark.parametrize(
+    'num_inputs', [
+        10,
+        100,
+    ]
+)
+def test_EVC_stress(num_inputs):
+    # Mechanisms
+    Input = TransferMechanism(
+        name='Input'
+    )
+    Reward = TransferMechanism(
+        output_states=[RESULT, MEAN, VARIANCE],
+        name='Reward'
+    )
+    Decision = DDM(
+        function=BogaczEtAl(
+            drift_rate=(
+                1.0,
+                ControlProjection(
+                    function=Linear,
+                    control_signal={
+                        ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                    },
+                ),
+            ),
+            threshold=(
+                1.0,
+                ControlProjection(
+                    function=Linear,
+                    control_signal={
+                        ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                    },
+                ),
+            ),
+            noise=(0.5),
+            starting_point=(0),
+            t0=0.45
+        ),
+        output_states=[
+            DECISION_VARIABLE,
+            RESPONSE_TIME,
+            PROBABILITY_UPPER_THRESHOLD
+        ],
+        name='Decision',
+    )
+
+    # Processes:
+    TaskExecutionProcess = process(
+        default_input_value=[0],
+        pathway=[(Input), IDENTITY_MATRIX, (Decision)],
+        name='TaskExecutionProcess',
+    )
+
+    RewardProcess = process(
+        default_input_value=[0],
+        pathway=[(Reward)],
+        name='RewardProcess',
+    )
+
+    # System:
+    mySystem = system(
+        processes=[TaskExecutionProcess, RewardProcess],
+        controller=EVCMechanism,
+        enable_controller=True,
+        monitor_for_control=[
+            Reward,
+            Decision.PROBABILITY_UPPER_THRESHOLD,
+            (Decision.RESPONSE_TIME, -1, 1)
+        ],
+        name='EVC Test System',
+    )
+
+    # Stimuli
+    stim_list_dict = {
+        Input: [random.random() for x in range(num_inputs)],
+        Reward: [20 for x in range(num_inputs)]
+    }
+
+    mySystem.run(
+        inputs=stim_list_dict,
+    )
