@@ -326,8 +326,21 @@ class ControlMechanism_Base(Mechanism_Base):
 
             for spec in target_set[CONTROL_SIGNALS]:
 
+                # Specification is for a ControlSignal
+                if isinstance(spec, ControlSignal):
+                    param_name = spec.controlled_param
+                    mech = spec.owner
+                    #  Check that any ControlProjections it has are to mechanisms in the controller's system
+                    if not all(control_proj.receiver.owner in self.system.mechanisms
+                               for control_proj in spec.efferents):
+                        raise ControlMechanismError("The ControlSignal specified in the {} arg for {} ({}) "
+                                                    "has one more more ControlProjections to a mechanism "
+                                                    "that is not in {}".
+                                                    format(CONTROL_SIGNALS, self.name, spec.name, self.system.name))
+                    continue
+
                 # Specification is for a tuple (str, Mechanism):
-                if isinstance(spec, tuple):
+                elif isinstance(spec, tuple):
                     param_name = spec[0]
                     mech = spec[1]
                     # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
@@ -339,17 +352,6 @@ class ControlMechanism_Base(Mechanism_Base):
                         raise ControlMechanismError("2nd item of tuple in specification of {} for {} ({}) "
                                                     "must be a Mechanism".format(CONTROL_SIGNAL, owner.name, mech))
 
-                # Specification is for a ControlSignal
-                elif isinstance(spec, ControlSignal):
-                    param_name = spec.name
-                    mech = spec.owner
-                    #  Check that any ControlProjections it has are to mechanisms in the controller's system
-                    if not all(control_proj.receiver.owner in self.system.mechanisms
-                               for control_proj in spec.efferents):
-                        raise ControlMechanismError("The ControlSignal specified in the {} arg for {} ({}) "
-                                                    "has one more more ControlProjections to a mechanism "
-                                                    "that is not in {}".
-                                                    format(CONTROL_SIGNALS, self.name, spec.name, self.system.name))
 
                 # ControlSignal specification dictionary, must have the following entries:
                 #    NAME:str - must be the name of an attribute of MECHANISM
@@ -376,7 +378,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
                 # Check that param_name is the name of an attribute of the mechanism
                 if not hasattr(mech, param_name) and not hasattr(mech.function_object, param_name):
-                    raise ControlMechanismError("{} (in specification of {}  {}) is not an "
+                    raise ControlMechanismError("{} (in specification of {} for {}) is not an "
                                                 "attribute of {} or its function"
                                                 .format(param_name, CONTROL_SIGNAL, self.name, mech))
                 # Check that the mechanism has a parameterState for the param
