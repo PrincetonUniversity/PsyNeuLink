@@ -78,10 +78,10 @@ class TestInit:
 
         sched = Scheduler(system=mySystem)
 
-        integrator_ColorInputPrediction = mySystem.executionList[7][0]
-        integrator_RewardPrediction = mySystem.executionList[8][0]
-        integrator_WordInputPrediction = mySystem.executionList[9][0]
-        objective_EVC_mech = mySystem.executionList[10][0]
+        integrator_ColorInputPrediction = mySystem.executionList[7]
+        integrator_RewardPrediction = mySystem.executionList[8]
+        integrator_WordInputPrediction = mySystem.executionList[9]
+        objective_EVC_mech = mySystem.executionList[10]
 
         expected_consideration_queue = [
             {Color_Input, Word_Input, Reward, integrator_ColorInputPrediction, integrator_WordInputPrediction, integrator_RewardPrediction},
