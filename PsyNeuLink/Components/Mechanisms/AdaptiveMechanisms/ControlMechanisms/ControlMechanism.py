@@ -378,12 +378,12 @@ class ControlMechanism_Base(Mechanism_Base):
                 if not hasattr(mech, param_name) and not hasattr(mech.function_object, param_name):
                     raise ControlMechanismError("{} (in specification of {}  {}) is not an "
                                                 "attribute of {} or its function"
-                                                .format(param_name, CONTROL_SIGNAL, owner.name, mech))
+                                                .format(param_name, CONTROL_SIGNAL, self.name, mech))
                 # Check that the mechanism has a parameterState for the param
                 if not param_name in mech._parameter_states.names:
                     raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
                                                 "specified in {} for {}".
-                                                format(param_name, mech.name, CONTROL_SIGNAL, owner.name))
+                                                format(param_name, mech.name, CONTROL_SIGNAL, self.name))
                 # Check that the mechanism to which the parameter belongs is in the controller's system
                 if not mech in self.system.mechanisms:
                     raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
@@ -656,6 +656,8 @@ class ControlMechanism_Base(Mechanism_Base):
                 output_state_index = 0
             # - get constraint for OutputState's value
             output_state_constraint_value = self.allocation_policy[output_state_index]
+
+            control_signal_params.updat(CONTROLLED_PARAM:param_name)
 
             # FIX 5/23/17: CALL super()_instantiate_output_states ??
             # FIX:         OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
