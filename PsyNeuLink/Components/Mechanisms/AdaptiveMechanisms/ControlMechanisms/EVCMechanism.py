@@ -291,7 +291,7 @@ Class Reference
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCAuxiliary import \
     ControlSignalGridSearch, ValueFunction
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
@@ -848,7 +848,7 @@ class EVCMechanism(ControlMechanism_Base):
             self.origin_prediction_mechanisms[origin_mech] = prediction_mechanism
 
             # Add to list of EVCMechanism's prediction_mech_tuples
-            prediction_mech_tuple = MechanismTuple(prediction_mechanism)
+            prediction_mech_tuple = prediction_mechanism
             self.prediction_mech_tuples.append(prediction_mech_tuple)
 
             # Add to system executionGraph and executionList
@@ -905,8 +905,8 @@ class EVCMechanism(ControlMechanism_Base):
                           name = self.system.name + ' outcome signal'
                           )
 
-        self.system.executionList.append(MechanismTuple(self.monitoring_mechanism))
-        self.system.executionGraph[MechanismTuple(self.monitoring_mechanism)] = set(self.system.executionList[:-1])
+        self.system.executionList.append(self.monitoring_mechanism)
+        self.system.executionGraph[self.monitoring_mechanism] = set(self.system.executionList[:-1])
 
     def _get_monitored_states(self, context=None):
         """
