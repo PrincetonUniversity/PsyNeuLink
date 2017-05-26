@@ -289,7 +289,7 @@
 #               (??and change reference to it in DOCS from "primary" to "results" outputState
 #         * create sets of input_states and outputStates either at top of module or in class (below paramClassDefaults)
 #         * parse input_state and output_state specs for duplicate names or entries, and update dicts accordingly
-#              (so that default versions can be modified, not just added to -- seee Mechanism._filter_params
+#              (so that default versions can be modified, not just added to -- see Mechanism._filter_params
 #         * implement GatingProjection spec:  can be only value for input_state or output_state arg,
 #              with keywords GATE (==GATE_PRIMARY) GATE_ALL, GATE_PRIMARY
 #              or an entry in the state specification dictionary with the key "GATING", and a value that is the
