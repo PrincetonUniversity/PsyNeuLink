@@ -2097,7 +2097,7 @@ class MechanismList(UserList):
 
     def __init__(self, owner, tuples_list:list):
         super().__init__()
-        self.mech_tuples = tuples_list
+        self.mechs = tuples_list
         self.owner = owner
         # for item in tuples_list:
         #     if not isinstance(item, MechanismTuple):
@@ -2109,28 +2109,28 @@ class MechanismList(UserList):
     def __getitem__(self, item):
         """Return specified mechanism in MechanismList
         """
-        # return list(self.mech_tuples[item])[MECHANISM]
-        return self.mech_tuples[item]
+        # return list(self.mechs[item])[MECHANISM]
+        return self.mechs[item]
 
     def __setitem__(self, key, value):
         raise ("MechanismList is read only ")
 
     def __len__(self):
-        return (len(self.mech_tuples))
+        return (len(self.mechs))
 
     def _get_tuple_for_mech(self, mech):
-        """Return first mechanism tuple containing specified mechanism from the list of mech_tuples
+        """Return first mechanism tuple containing specified mechanism from the list of mechs
         """
-        if list(item for item in self.mech_tuples).count(mech):
+        if list(item for item in self.mechs).count(mech):
             if self.owner.verbosePref:
                 print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
                       format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
-        return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple is mech), None)
+        return next((mech_tuple for mech_tuple in self.mechs if mech_tuple is mech), None)
 
     @property
-    def mech_tuples_sorted(self):
-        """Return list of mech_tuples sorted by mechanism name"""
-        return sorted(self.mech_tuples, key=lambda mech_tuple: mech_tuple.name)
+    def mechs_sorted(self):
+        """Return list of mechs sorted by mechanism name"""
+        return sorted(self.mechs, key=lambda mech_tuple: mech_tuple.name)
 
     @property
     def mechanisms(self):
