@@ -191,7 +191,7 @@ class Scheduler(object):
         self.termination_conds = None
 
         if system is not None:
-            self.nodes = [m[0] for m in system.executionList]
+            self.nodes = [m for m in system.executionList]
             self._init_consideration_queue_from_system(system)
         elif nodes is not None:
             self.nodes = nodes
@@ -210,7 +210,7 @@ class Scheduler(object):
         for dependency_set in list(toposort(system.executionGraph)):
             new_set = set()
             for d in dependency_set:
-                new_set.add(d.mechanism)
+                new_set.add(d)
             dependencies.append(new_set)
         self.consideration_queue = dependencies
         logger.debug('Consideration queue: {0}'.format(self.consideration_queue))

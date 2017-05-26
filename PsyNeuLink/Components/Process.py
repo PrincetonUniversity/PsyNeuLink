@@ -938,7 +938,7 @@ class Process_Base(Process):
             super(Process_Base, self)._instantiate_function(context=context)
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
         else:
-            self.value = self.pathway[-1][OBJECT_ITEM].output_state.value
+            self.value = self.pathway[-1].output_state.value
 
 # DOCUMENTATION:
 #         Uses paramClassDefaults[PATHWAY] == [Mechanism_Base.defaultMechanism] as default
@@ -997,16 +997,16 @@ class Process_Base(Process):
 
         # Identify origin and terminal mechanisms in the process and
         #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
-        self.firstMechanism = pathway[0][OBJECT_ITEM]
+        self.firstMechanism = pathway[0]
         self.firstMechanism.processes[self] = ORIGIN
         self._origin_mech_tuples = [pathway[0]]
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
 
         # Assign last mechanism in pathwway to lastMechanism attribute
         i = -1
-        while not isinstance(pathway[i][OBJECT_ITEM],Mechanism_Base):
+        while not isinstance(pathway[i],Mechanism_Base):
             i -=1
-        self.lastMechanism = pathway[i][OBJECT_ITEM]
+        self.lastMechanism = pathway[i]
 
         if self.lastMechanism is self.firstMechanism:
             self.lastMechanism.processes[self] = SINGLETON
@@ -1058,9 +1058,9 @@ class Process_Base(Process):
                     # if the tuple contains either a mechanism or a projection
                     if _is_mechanism_spec(config_item[0]) or _is_projection_spec(config_item[0]):
 
-                        # Replace it with a tuple of length 1
-                        pathway[i] = MechanismTuple(config_item[0])
-                        # if it's a mechanism, set the runtime params to none
+                        # Replace it with just the mech or proj
+                        pathway[i] = config_item
+                        # if it's a mechanism, set the runtime params to None
                         if _is_mechanism_spec(config_item[0]):
                             self.runtime_params_dict[config_item[0]] = None
                     # otherwise the tuple is not valid
@@ -1071,8 +1071,8 @@ class Process_Base(Process):
                 # If the tuple has two items
                 if len(config_item) is 2:
 
-                    # Replace it with a tuple of length 1
-                    pathway[i] = MechanismTuple(config_item[0])
+                    # Replace it with just the mech or proj
+                    pathway[i] = config_item[0]
 
                     # If it's a mechanism
                     if _is_mechanism_spec(config_item[0]):
@@ -1099,9 +1099,6 @@ class Process_Base(Process):
                     # if it's a mechanism, set runtime params to None
                     if _is_mechanism_spec(pathway[i]):
                         self.runtime_params_dict[pathway[i]] = None
-                    # wrap it in a tuple of len 1
-                    pathway[i] = MechanismTuple(pathway[i])
-
 
                 else:
                     raise ProcessError("Item of {} of pathway for {}"
@@ -1130,7 +1127,7 @@ class Process_Base(Process):
             # Can't be first entry, and can never have two in a row
 
             # Config entry is a Projection
-            if _is_projection_spec(item[0]):
+            if _is_projection_spec(item):
                 # Projection not allowed as first entry
                 if i==0:
                     raise ProcessError("Projection cannot be first entry in pathway ({0})".format(self.name))
@@ -1143,7 +1140,7 @@ class Process_Base(Process):
                 continue
 
             previous_item_was_projection = False
-            mech = item[0]
+            mech = item
 
             # INSTANTIATE MECHANISM  -----------------------------------------------------------------------------
 
@@ -1163,7 +1160,7 @@ class Process_Base(Process):
                 #     raise ProcessError("Params entry ({0}) of tuple in item {1} of pathway for {2} is not a dict".
                 #                           format(params, i, self.name))
                 # Replace Pathway entry with new tuple containing instantiated Mechanism object and params
-                pathway[i] = MechanismTuple(mech)
+                pathway[i] = mech
 
 
             # Entry IS already a Mechanism object
@@ -1187,7 +1184,7 @@ class Process_Base(Process):
                     for state in mech.output_states:
                         for proj in state.efferents:
                             if proj.receiver.owner is mech:
-                                pathway.append(MechanismTuple(proj))
+                                pathway.append(proj)
                                 pathway.append(pathway[i-2])
 
 
@@ -1237,7 +1234,7 @@ class Process_Base(Process):
                 # Note: does not include learning (even if specified for the process)
                 if i == 0:
                     # Relabel for clarity
-                    mech = item[0]
+                    mech = item
 
                     # Check if first Mechanism already has any projections and, if so, issue appropriate warning
                     if mech.input_state.afferents:
@@ -1251,10 +1248,10 @@ class Process_Base(Process):
                 #region SUBSEQUENT ENTRIES
 
                 # Item is a Mechanism
-                item = item[0]
+                item = item
                 if isinstance(item, Mechanism):
 
-                    preceding_item = pathway[i-1][OBJECT_ITEM]
+                    preceding_item = pathway[i-1]
 
 
                     # PRECEDING ITEM IS A PROJECTION
@@ -1400,18 +1397,18 @@ class Process_Base(Process):
 
 
                     # Get sender for projection
-                    sender_mech=pathway[i-1][OBJECT_ITEM]
+                    sender_mech=pathway[i-1]
 
                     # Get receiver for projection
                     try:
-                        receiver_mech=pathway[i+1][OBJECT_ITEM]
+                        receiver_mech=pathway[i+1]
                     except IndexError:
                        # There are no more entries in the pathway
                        #    so the projection had better project to a mechanism already in the pathway;
                        #    otherwise, raise and exception
                        try:
                            receiver_mech = item.receiver.owner
-                           if not receiver_mech in [mech_tuple[0] for mech_tuple in pathway]:
+                           if not receiver_mech in [mech_tuple for mech_tuple in pathway]:
                                raise AttributeError
                        except AttributeError:
                            raise ProcessError("The last entry in the pathway for {} is a project specification {}, "
@@ -1519,7 +1516,7 @@ class Process_Base(Process):
                     # Reassign Pathway entry
                     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
                     # IMPLEMENTATION NOTE:  params is currently ignored
-                    pathway[i] = MechanismTuple(projection)
+                    pathway[i] = projection
 
 
     def _issue_warning_about_existing_projections(self, mechanism, context=None):
@@ -1541,7 +1538,7 @@ class Process_Base(Process):
 
             # (C) Projection to first Mechanism in Pathway comes from one in the Process' _mech_tuples;
             #     so warn if verbose pref is set
-            if projection.sender.owner in list(item[0] for item in self._mech_tuples):
+            if projection.sender.owner in list(item for item in self._mech_tuples):
                 if self.prefs.verbosePref:
                     print("WARNING: first mechanism ({0}) in pathway for {1} receives "
                           "a (recurrent) projection from another mechanism {2} in {1}".
@@ -1614,7 +1611,7 @@ class Process_Base(Process):
         if self.variable is None:
             self.variable = []
             seen = set()
-            mech_list = list(mech_tuple[OBJECT_ITEM] for mech_tuple in self._mech_tuples)
+            mech_list = list(mech_tuple for mech_tuple in self._mech_tuples)
             for mech in mech_list:
                 # Skip repeat mechansims (don't add another element to self.variable)
                 if mech in seen:
@@ -1758,7 +1755,7 @@ class Process_Base(Process):
 
         # For each mechanism in the Process, in backwards order through its _mech_tuples
         for item in reversed(self._mech_tuples):
-            mech = item[OBJECT_ITEM]
+            mech = item
             mech._deferred_init()
 
             # For each inputState of the mechanism
@@ -1792,7 +1789,7 @@ class Process_Base(Process):
 
             # Add designations to newly created MonitoringMechanisms:
             for mech_tuple in self._monitoring_mech_tuples:
-                mech = mech_tuple[OBJECT_ITEM]
+                mech = mech_tuple
                 # If
                 # - mech is a TARGET ObjectiveMechanism, and
                 # - the mech that projects to mech is a TERMINAL for the current process, and
@@ -1804,7 +1801,7 @@ class Process_Base(Process):
                         mech._learning_role is TARGET and
                         self.learning
                             ):
-                    mech_tuple[0].processes[self] = TARGET
+                    mech_tuple.processes[self] = TARGET
                 else:
                     # mech must be a LearningMechanism;
                     # If a learning_rate has been specified for the process, assign that to all LearningMechanisms
@@ -1814,7 +1811,7 @@ class Process_Base(Process):
                         mech.function_object.learning_rate = self.learning_rate
 
                     # Assign its label
-                    mech_tuple[0].processes[self] = MONITORING
+                    mech_tuple.processes[self] = MONITORING
 
             # Add _monitoring_mech_tuples to _mech_tuples
             self._mech_tuples.extend(self._monitoring_mech_tuples)
@@ -1846,10 +1843,10 @@ class Process_Base(Process):
                             else:
                                 # If objective_mechanism is not already in _monitoring_mech_tuples,
                                 #     pack in tuple and add it
-                                if objective_mechanism and not any(objective_mechanism is mech_tuple.mechanism for
+                                if objective_mechanism and not any(objective_mechanism is mech_tuple for
                                                                     mech_tuple in self._monitoring_mech_tuples):
-                                    objective_mech_tuple = MechanismTuple(objective_mechanism)
-                                    self._monitoring_mech_tuples.append(objective_mech_tuple)
+                                    # objective_mech_tuple = objective_mechanism
+                                    self._monitoring_mech_tuples.append(objective_mechanism)
                             # Get LearningMechanism and add to _monitoring_mech_tuples; raise exception if not found
                             try:
                                 learning_mechanism = projection.learning_mechanism
@@ -1858,10 +1855,10 @@ class Process_Base(Process):
                             else:
                                 # If learning_mechanism is not already in _monitoring_mech_tuples,
                                 #     pack in tuple and add it
-                                if learning_mechanism and not any(learning_mechanism is mech_tuple.mechanism for
+                                if learning_mechanism and not any(learning_mechanism is mech_tuple for
                                                                     mech_tuple in self._monitoring_mech_tuples):
-                                    learning_mech_tuple = MechanismTuple(learning_mechanism)
-                                    self._monitoring_mech_tuples.append(learning_mech_tuple)
+                                    # learning_mech_tuple = learning_mechanism
+                                    self._monitoring_mech_tuples.append(learning_mechanism)
 
             # Not all Projection subclasses instantiate parameterStates
             except AttributeError as e:
@@ -1909,10 +1906,10 @@ class Process_Base(Process):
             raise ProcessError("PROGRAM ERROR: _check_for_target_mechanism should only be called"
                                " for a process if it has a learning specification")
 
-        target_mechs = list(mech_tuple.mechanism
+        target_mechs = list(mech_tuple
                            for mech_tuple in self._mech_tuples
-                            if (isinstance(mech_tuple.mechanism, ObjectiveMechanism) and
-                                mech_tuple.mechanism._learning_role is TARGET))
+                            if (isinstance(mech_tuple, ObjectiveMechanism) and
+                                mech_tuple._learning_role is TARGET))
 
         if not target_mechs:
 
@@ -1946,7 +1943,7 @@ class Process_Base(Process):
 
         else:
             self.targetMechanism = target_mechs[0]
-            self._target_mech_tuples.append(MechanismTuple(target_mechs[0]))
+            self._target_mech_tuples.append(target_mechs[0])
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as TARGET ObjectiveMechanism for output of \'{}\'".
                       format(self.targetMechanism.name, self.name))
@@ -2071,7 +2068,6 @@ class Process_Base(Process):
 
         # Execute each Mechanism in the pathway, in the order listed, except those used for learning
         for mechanism in self._mech_tuples:
-            mechanism = mechanism[0]
             if (isinstance(mechanism, LearningMechanism) or
                     (isinstance(mechanism, ObjectiveMechanism) and mechanism._role is LEARNING)):
                 continue
@@ -2150,7 +2146,6 @@ class Process_Base(Process):
 
         # THEN, execute Objective and LearningMechanisms
         for mechanism in self._monitoring_mech_tuples:
-            mechanism = mechanism[0]
             # # MODIFIED 3/22/17 NEW:
             # # If learning_rate was specified for process and this is a LearningMechanism
             # if process_learning_rate_spec_dict is not None and isinstance(mechanism, LearningMechanism):
@@ -2170,7 +2165,7 @@ class Process_Base(Process):
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for item in self._mech_tuples:
-            mech = item.mechanism
+            mech = item
             # params = item.params
 
             # IMPLEMENTATION NOTE:
@@ -2371,17 +2366,17 @@ class Process_Base(Process):
 
         print ("\n\tMechanisms:")
         for mech_tuple in self._mech_tuples:
-            print ("\t\t{} (phase: {})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+            print ("\t\t{} (phase: {})".format(mech_tuple.name, mech_tuple.phase))
 
 
         print ("\n\tOrigin mechanism: ".format(self.name))
         for mech_tuple in self.originMechanisms.mech_tuples_sorted:
-            print("\t\t{} (phase: {})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+            print("\t\t{} (phase: {})".format(mech_tuple.name, mech_tuple.phase))
 
         print ("\n\tTerminal mechanism: ".format(self.name))
         for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
-            print("\t\t{} (phase: {})".format(mech_tuple.mechanism.name, mech_tuple.phase))
-            for output_state_name in mech_tuple.mechanism.output_states:
+            print("\t\t{} (phase: {})".format(mech_tuple.name, mech_tuple.phase))
+            for output_state_name in mech_tuple.output_states:
                 print("\t\t\t{0}".format(output_state_name))
 
         print ("\n---------------------------------------------------------")

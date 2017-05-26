@@ -266,7 +266,7 @@ from toposort import *
 
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
     # PARAMS_ITEM, PHASE_ITEM
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
@@ -1093,7 +1093,7 @@ class System_Base(System):
             # FIX: ??REPLACE WITH:  for sender_mech_tuple in Process._mech_tuples
             for sender_mech_tuple in process._mech_tuples:
 
-                sender_mech = sender_mech_tuple.mechanism
+                sender_mech = sender_mech_tuple
 
                 # THIS IS NOW DONE IN _instantiate_graph
                 # # Add system to the Mechanism's list of systems of which it is member
@@ -1103,7 +1103,7 @@ class System_Base(System):
                 # Assign sender mechanism entry in self.mechanismsDict, with mech_tuple as key and its Process as value
                 #     (this is used by Process._instantiate_pathway() to determine if Process is part of System)
                 # If the sender is already in the System's mechanisms dict
-                if sender_mech_tuple.mechanism in self.mechanismsDict:
+                if sender_mech_tuple in self.mechanismsDict:
                     existing_mech_tuple = self._allMechanisms._get_tuple_for_mech(sender_mech)
                     # Add to entry's list
                     self.mechanismsDict[sender_mech].append(process)
@@ -1369,7 +1369,7 @@ class System_Base(System):
         if self.verbosePref:
             warnings.warn("In the system graph for \'{}\':".format(self.name))
             for receiver_mech_tuple, dep_set in self.executionGraph.items():
-                mech = receiver_mech_tuple.mechanism
+                mech = receiver_mech_tuple
                 if not dep_set:
                     print("\t\'{}\' is an {} mechanism".
                           format(mech.name, mech.systems[self]))
@@ -1381,7 +1381,7 @@ class System_Base(System):
                         status = 'an ' + status
                     print("\t\'{}\' is {} mechanism that receives projections from:".format(mech.name, status))
                     for sender_mech_tuple in dep_set:
-                        print("\t\t\'{}\'".format(sender_mech_tuple.mechanism.name))
+                        print("\t\t\'{}\'".format(sender_mech_tuple.name))
 
         # For each mechanism (represented by its tuple) in the graph, add entry to relevant list(s)
         # Note: ignore mechanisms belonging to controllerProcesses (e.g., instantiated by EVCMechanism)
@@ -1394,7 +1394,7 @@ class System_Base(System):
 
         for mech_tuple in self.executionGraph:
 
-            mech = mech_tuple.mechanism
+            mech = mech_tuple
 
             if mech.systems[self] in {ORIGIN, SINGLETON}:
                 for process, status in mech.processes.items():
@@ -1403,22 +1403,22 @@ class System_Base(System):
                     self._origin_mech_tuples.append(mech_tuple)
                     break
 
-            if mech_tuple.mechanism.systems[self] in {TERMINAL, SINGLETON}:
+            if mech_tuple.systems[self] in {TERMINAL, SINGLETON}:
                 for process, status in mech.processes.items():
                     if process._isControllerProcess:
                         continue
                     self._terminal_mech_tuples.append(mech_tuple)
                     break
 
-            if mech_tuple.mechanism.systems[self] in {INITIALIZE_CYCLE}:
+            if mech_tuple.systems[self] in {INITIALIZE_CYCLE}:
                 for process, status in mech.processes.items():
                     if process._isControllerProcess:
                         continue
                     self.recurrent_init_mech_tuples.append(mech_tuple)
                     break
 
-            if isinstance(mech_tuple.mechanism, ControlMechanism_Base):
-                if not mech_tuple.mechanism in self._control_mech_tuple:
+            if isinstance(mech_tuple, ControlMechanism_Base):
+                if not mech_tuple in self._control_mech_tuple:
                     self._control_mech_tuple.append(mech_tuple)
 
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
@@ -2324,12 +2324,12 @@ class System_Base(System):
         # Print output value of primary (first) outputState of each terminal Mechanism in System
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
         print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, clock.time_step))
-        for mech_tuple in self._terminal_mech_tuples:
-            if mech_tuple.mechanism.phaseSpec == (clock.time_step % self.numPhases):
-                print("- output for {0}: {1}".
-                      format(mech_tuple.mechanism.name,
-                             re.sub('[\[,\],\n]','',str(["{:0.3}".
-                                                format(float(i)) for i in mech_tuple.mechanism.output_state.value]))))
+        # for mech_tuple in self._terminal_mech_tuples:
+        #     if mech_tuple.mechanism.phaseSpec == (clock.time_step % self.numPhases):
+        #         print("- output for {0}: {1}".
+        #               format(mech_tuple.mechanism.name,
+        #                      re.sub('[\[,\],\n]','',str(["{:0.3}".
+        #                                         format(float(i)) for i in mech_tuple.mechanism.output_state.value]))))
         if self.learning:
             from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
                 import MSE
@@ -2404,7 +2404,7 @@ class System_Base(System):
         # for i in range(len(self.execution_sets)):
             print ("\t\tSet {0}:\n\t\t\t".format(i),end='')
             print("{ ",end='')
-            sorted_mechs_names_in_set = sorted(list(mech_tuple.mechanism.name
+            sorted_mechs_names_in_set = sorted(list(mech_tuple.name
                                                     for mech_tuple in self.execution_sets[i]))
             for name in sorted_mechs_names_in_set:
                 print("{0} ".format(name), end='')
@@ -2422,11 +2422,11 @@ class System_Base(System):
 
         # Add controller to execution list for printing if enabled
         if self.enable_controller:
-            sorted_execution_list.append(MechanismTuple(self.controller))
+            sorted_execution_list.append(self.controller)
 
 
-        mech_names_from_exec_list = list(mech_tuple.mechanism.name for mech_tuple in self.executionList)
-        mech_names_from_sorted_exec_list = list(mech_tuple.mechanism.name for mech_tuple in sorted_execution_list)
+        mech_names_from_exec_list = list(mech_tuple.name for mech_tuple in self.executionList)
+        mech_names_from_sorted_exec_list = list(mech_tuple.name for mech_tuple in sorted_execution_list)
 
         # print ("\n\tExecution list: ".format(self.name))
         # phase = 0
@@ -2563,7 +2563,7 @@ class System_Base(System):
         result = []
         for dependency_set in toposort(data):
             d_iter = iter(dependency_set)
-            result.extend(sorted(dependency_set, key=lambda item : next(d_iter).mechanism.name))
+            result.extend(sorted(dependency_set, key=lambda item : next(d_iter).name))
         return result
 
     def _cache_state(self):
@@ -2648,7 +2648,7 @@ class System_Base(System):
 
         :rtype: list of Mechanism objects
         """
-        return list(mech_tuple[0] for mech_tuple in self.executionGraph)
+        return list(mech_tuple for mech_tuple in self.executionGraph)
 
     def show_graph(self,
                    direction = 'BT',
