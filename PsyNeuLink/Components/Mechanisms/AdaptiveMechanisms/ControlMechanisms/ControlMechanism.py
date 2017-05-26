@@ -328,8 +328,6 @@ class ControlMechanism_Base(Mechanism_Base):
 
                 # Specification is for a ControlSignal
                 if isinstance(spec, ControlSignal):
-                    param_name = spec.controlled_param
-                    mech = spec.owner
                     #  Check that any ControlProjections it has are to mechanisms in the controller's system
                     if not all(control_proj.receiver.owner in self.system.mechanisms
                                for control_proj in spec.efferents):
@@ -346,11 +344,11 @@ class ControlMechanism_Base(Mechanism_Base):
                     # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
                     if not isinstance(param_name, str):
                         raise ControlMechanismError("1st item of tuple in specification of {} for {} ({}) "
-                                                    "must be a string".format(CONTROL_SIGNAL, owner.name, param_name))
+                                                    "must be a string".format(CONTROL_SIGNAL, self.name, param_name))
                     # Check that 2nd item is a mechanism
                     if not isinstance(mech, Mechanism):
                         raise ControlMechanismError("2nd item of tuple in specification of {} for {} ({}) "
-                                                    "must be a Mechanism".format(CONTROL_SIGNAL, owner.name, mech))
+                                                    "must be a Mechanism".format(CONTROL_SIGNAL, self.name, mech))
 
 
                 # ControlSignal specification dictionary, must have the following entries:
@@ -366,7 +364,15 @@ class ControlMechanism_Base(Mechanism_Base):
                         raise ControlMechanismError("Specification dict for {} of {} must have a MECHANISM entry".
                                                     format(CONTROL_SIGNAL, self.name))
                     mech = spec[MECHANISM]
-                    # FIX: VALIDATE THAT ALL KEYS FOR ALL OTHER ENTRIES ARE FOR ATTRIBUTES OF CONTROL_SIGNAL
+                    # Check that all of the other entries in the specifcation dictionary are valid ControlSignal params
+                    for param in spec:
+                        if param in {NAME, MECHANISM}:
+                            continue
+                        if not hasattr(mech, param):
+                            raise ControlMechanismError("Entry in specification dictionary for {} arg of {} ({}) "
+                                                       "is not a valid {} parameter".
+                                                       format(CONTROL_SIGNAL, self.name, param,
+                                                              ControlSignal.__class__.__name__))
                 else:
                     # raise ControlMechanismError("PROGRAM ERROR: unrecognized ControlSignal specification for {} ({})".
                     #                             format(self.name, spec))
@@ -395,7 +401,6 @@ class ControlMechanism_Base(Mechanism_Base):
                                                        param_name,
                                                        mech.name,
                                                        self.system.name))
-
 
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self

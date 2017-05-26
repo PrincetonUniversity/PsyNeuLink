@@ -470,8 +470,9 @@ kwInitialPoint = 'initial_point'
 #endregion
 
 
-#region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
+#region ----------------------------------------    MODULATORY MECHANISMS ----------------------------------------------
 
+# ControlMechanism / EVCMechanism
 MAKE_DEFAULT_CONTROLLER = "make_default_controller"
 MONITOR_FOR_CONTROL = "monitor_for_control"
 PREDICTION_MECHANISM = "Prediction Mechanism"
@@ -491,6 +492,14 @@ SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
 SYSTEM_DEFAULT_CONTROLLER = "DefaultController"
 EVC_SIMULATION = 'SIMULATING'
 ALLOCATION_SAMPLES = "allocation_samples"
+
+# ControlMechanism
+MAKE_DEFAULT_GATING_MECHANISM = "make_default_gating_mechanism"
+GATING_SIGNAL = 'gating_signal'
+GATING_SIGNALS = 'gating_signals'
+GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
+GATED_STATE = "gated_state"
+GATING_PROJECTIONS = 'GatingProjections'
 
 #endregion
 

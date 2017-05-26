@@ -120,6 +120,7 @@ Class Reference
 
 from collections import OrderedDict
 
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.ShellClasses import *
 
@@ -251,11 +252,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                   function=function,
                                                   params=params)
 
-        super(GatingMechanism_Base, self).__init__(variable=default_gating_policy,
-                                                    params=params,
-                                                    name=name,
-                                                    prefs=prefs,
-                                                    context=self)
+        super().__init__(variable=default_gating_policy,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate GATING_SIGNALS
@@ -275,8 +276,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
                 # Specification is for a GatingSignal
                 if isinstance(spec, GatingSignal):
-                    state_name = spec.name
-                    mech = spec.owner
                     #  Check that any GatingProjections it has are to mechanisms in the controller's system
                     if not all(gating_proj.receiver.owner in self.system.mechanisms
                                for gating_proj in spec.efferents):
@@ -312,8 +311,15 @@ class GatingMechanism(AdaptiveMechanism_Base):
                         raise GatingMechanismError("Specification dict for {} of {} must have a MECHANISM entry".
                                                     format(GATING_SIGNAL, self.name))
                     mech = spec[MECHANISM]
-                    # FIX: VALIDATE THAT ALL KEYS FOR ALL OTHER ENTRIES ARE FOR ATTRIBUTES OF GATING_SIGNAL
-
+                    # Check that all of the other entries in the specification dictionary are valid GatingSignal params
+                    for param in spec:
+                        if param in {NAME, MECHANISM}:
+                            continue
+                        if not hasattr(mech, param):
+                            raise GatingMechanismError("Entry in specification dictionary for {} arg of {} ({}) "
+                                                       "is not a valid {} parameter".
+                                                       format(GATING_SIGNAL, self.name, param,
+                                                              GatingSignal.__class__.__name__))
                 else:
                     # raise GatingMechanismError("PROGRAM ERROR: unrecognized GatingSignal specification for {} ({})".
                     #                             format(self.name, spec))
@@ -344,7 +350,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                        mech.name,
                                                        self.system.name))
 
-
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self
         """
@@ -357,18 +362,13 @@ class GatingMechanism(AdaptiveMechanism_Base):
             raise GatingMechanismError("Attempt to assign GatingProjection {} to a mechanism ({}) that is not in {}".
                                               format(projection.name, receiver_mech.name, self.system.name))
 
-    def _instantiate_monitored_output_states(self, context=None):
-        raise GatingMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
-                                          format(self.__class__.__name__,
-                                                 self.__class__.__bases__[0].__name__))
-
     def _instantiate_attributes_after_function(self, context=None):
-        """Take over as default controller (if specified) and implement any specified GatingProjections
+        """Take over as default GatingMechanism (if specified) and implement any specified GatingProjections
 
         """
 
-        if MAKE_DEFAULT_CONTROLLER in self.paramsCurrent:
-            if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
+        if MAKE_DEFAULT_GATING_MECHANISM in self.paramsCurrent:
+            if self.paramsCurrent[MAKE_DEFAULT_GATING_MECHANISM]:
                 self._take_over_as_default_controller(context=context)
             if not self.system.enable_controller:
                 return
