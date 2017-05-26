@@ -292,8 +292,11 @@
 # IMPLEMENT: modulation_operation FOR ModulatoryProjections
 #            function_type or method_type SPECIFICATION IN ADDITION TO ModulationOperation FOR modulation_operation
 #                 parameter of ModulatoryFunctions
-# IMPLEMENT: additive and multiplicative ATTRIBUTES FOR TransferFunctions (REQIURE THESE, AND DOCUMENT FOR TransferFct)
+# IMPLEMENT: modualtion_operation For ControlSignal, that assigns its value to its ControlProjection
 # IMPLEMENT: CONSTRAINT ON STATE FUNCTIONS TO BE A TransferFunction
+# DOCUMENTATION: ModulatoryMechanism: describe how they work, i.e., that they assign the value of their
+#                  outputState to the paraemter of the state's function specified in their modulation_operation param
+# DOCUMENTATION: GatingSignal (per ControlSignal) -- describe modulation_operation in both
 # DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction
 # DOCUMENTATION: UPDATE ParameterState_Parameter_Modulation_Operation WITH REFACTORING OF modulation_operation arg/param
 # FIX: is_param_spec to allow tuple with projection specification in it TO PASS TYPECHECK
