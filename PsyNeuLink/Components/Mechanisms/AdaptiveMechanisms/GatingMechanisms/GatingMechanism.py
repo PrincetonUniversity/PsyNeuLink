@@ -353,7 +353,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self
         """
-
         if projection.value is DEFERRED_INITIALIZATION:
             receiver_mech = projection.init_args['receiver'].owner
         else:
@@ -364,14 +363,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_attributes_after_function(self, context=None):
         """Take over as default GatingMechanism (if specified) and implement any specified GatingProjections
-
         """
-
         if MAKE_DEFAULT_GATING_MECHANISM in self.paramsCurrent:
             if self.paramsCurrent[MAKE_DEFAULT_GATING_MECHANISM]:
-                self._take_over_as_default_controller(context=context)
-            if not self.system.enable_controller:
-                return
+                self._take_over_as_default_gating_mechanism(context=context)
 
         # If GatingProjections were specified, implement them
         if GATING_PROJECTIONS in self.paramsCurrent:
@@ -379,17 +374,19 @@ class GatingMechanism(AdaptiveMechanism_Base):
                 for key, projection in self.paramsCurrent[GATING_PROJECTIONS].items():
                     self._instantiate_gating_projection(projection, context=self.name)
 
-    def _take_over_as_default_controller(self, context=None):
+    def _take_over_as_default_gating_mechanism(self, context=None):
 
-        # Check the parameterStates of the system's mechanisms for any GatingProjections with deferred_init()
+        # Check the input_states and output_states of the system's mechanisms
+        #    for any GatingProjections with deferred_init()
         for mech in self.system.mechanisms:
-            for parameter_state in mech._parameter_states:
-                for projection in parameter_state.afferents:
+            for state in mech._input_states + mech._output_states:
+                for projection in state.mod_afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
                     if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
-                        # Get params specified with projection for its ControlSignal (cached in GATING_SIGNAL attrib)
+                        # Get params specified with projection for its GatingSignal (cached in GATING_SIGNAL attrib)
                         params = projection.GATING_SIGNAL
                         self._instantiate_gating_projection(projection, params=params, context=context)
+
 
     def _instantiate_gating_projection(self, projection, params=None, context=None):
         """Add outputState (as ControlSignal) and assign as sender to requesting GatingProjection

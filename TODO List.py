@@ -299,6 +299,7 @@
 # DOCUMENTATION: GatingSignal (per ControlSignal) -- describe modulation_operation in both
 # DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction
 # DOCUMENTATION: UPDATE ParameterState_Parameter_Modulation_Operation WITH REFACTORING OF modulation_operation arg/param
+# FIX:           MODIFY ParameterState and LearningProjection so that latter projects to mod_afferents (vs. afferents)
 # FIX: is_param_spec to allow tuple with projection specification in it TO PASS TYPECHECK
 # FIX: PARSING OF input_state AND output_state ARGS IN Mechanism CONSTRUCTORS:
 # FIX:    * input_states arg crashes
