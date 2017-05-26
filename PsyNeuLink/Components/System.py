@@ -1260,7 +1260,7 @@ class System_Base(System):
                     #     and would introduce a cycle irrespective of the tuple in which it appears in the graph
                     # FIX: MODIFY THIS TO (GO BACK TO) USING if receiver_tuple in self.executionGraph
                     # FIX  BUT CHECK THAT THEY ARE IN DIFFERENT PHASES
-                    if receiver in self.execution_graph_mechs:
+                    if receiver in self.executionGraph:
                         # Try assigning receiver as dependent of current mechanism and test toposort
                         try:
                             # If receiver_tuple already has dependencies in its set, add sender_mech to set
@@ -1465,7 +1465,7 @@ class System_Base(System):
         # FIX: ONLY CHECK ONES THAT RECEIVE PROJECTIONS
         if self.initial_values is not None:
             for mech, value in self.initial_values.items():
-                if not mech in self.execution_graph_mechs:
+                if not mech in self.executionGraph:
                     raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
                                       format(mech.name, self.name))
                 mech._update_value
@@ -1913,7 +1913,7 @@ class System_Base(System):
         self._execution_id = execution_id or _get_unique_id()
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
         # self.learningExecutionList
-        for mech in self.execution_graph_mechs:
+        for mech in self.executionGraph:
             mech._execution_id = self._execution_id
         for learning_mech in self.learningExecutionList:
             learning_mech._execution_id = self._execution_id
@@ -2642,13 +2642,13 @@ class System_Base(System):
         """
         return self._phaseSpecMax + 1
 
-    @property
-    def execution_graph_mechs(self):
-        """Mechanisms whose mechs appear as keys in self.executionGraph
-
-        :rtype: list of Mechanism objects
-        """
-        return list(object_item for object_item in self.executionGraph)
+    # @property
+    # def execution_graph_mechs(self):
+    #     """Mechanisms whose mechs appear as keys in self.executionGraph
+    #
+    #     :rtype: list of Mechanism objects
+    #     """
+    #     return self.executionGraph
 
     def show_graph(self,
                    direction = 'BT',
