@@ -158,8 +158,6 @@ class State_Base(State):
     name=None,   \
     prefs=None)
 
-
-
     Abstract class for State.
 
     .. note::
@@ -273,6 +271,9 @@ class State_Base(State):
 
     efferents : Optional[List[Projection]]
         list of projections for which the state is a :keyword:`sender`.
+        
+    mod_afferents : Optional[List[GatingProjection]]
+        list of GatingProjections for which the state is a :keyword:`receiver`.
 
     function : TransferFunction : default determined by type
         used to determine the state's own value from the value of the projection(s) it receives;  the parameters that 
@@ -416,6 +417,7 @@ class State_Base(State):
 
         self.afferents = []
         self.efferents = []
+        self.mod_afferents = []
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(variable_default=variable,
