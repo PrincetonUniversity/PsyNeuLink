@@ -2043,16 +2043,16 @@ class MechanismList(UserList):
         each item is an outputState.value
     """
 
-    def __init__(self, owner, tuples_list:list):
+    def __init__(self, owner, components_list:list):
         super().__init__()
-        self.mechs = tuples_list
+        self.mechs = components_list
         self.owner = owner
-        # for item in tuples_list:
+        # for item in components_list:
         #     if not isinstance(item, MechanismTuple):
-        #         raise MechanismError("The following item in the tuples_list arg of MechanismList()"
+        #         raise MechanismError("The following item in the components_list arg of MechanismList()"
         #                              " is not a MechanismTuple: {}".format(item))
 
-        self.process_tuples = tuples_list
+        self.process_tuples = components_list
 
     def __getitem__(self, item):
         """Return specified mechanism in MechanismList
@@ -2066,19 +2066,19 @@ class MechanismList(UserList):
     def __len__(self):
         return (len(self.mechs))
 
-    def _get_tuple_for_mech(self, mech):
-        """Return first mechanism tuple containing specified mechanism from the list of mechs
-        """
-        if list(item for item in self.mechs).count(mech):
-            if self.owner.verbosePref:
-                print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
-                      format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
-        return next((mech_tuple for mech_tuple in self.mechs if mech_tuple is mech), None)
+    # def _get_tuple_for_mech(self, mech):
+    #     """Return first mechanism tuple containing specified mechanism from the list of mechs
+    #     """
+    #     if list(item for item in self.mechs).count(mech):
+    #         if self.owner.verbosePref:
+    #             print("PROGRAM ERROR:  {} found in more than one object_item in {} in {}".
+    #                   format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
+    #     return next((object_item for object_item in self.mechs if object_item is mech), None)
 
     @property
     def mechs_sorted(self):
         """Return list of mechs sorted by mechanism name"""
-        return sorted(self.mechs, key=lambda mech_tuple: mech_tuple.name)
+        return sorted(self.mechs, key=lambda object_item: object_item.name)
 
     @property
     def mechanisms(self):

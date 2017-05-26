@@ -839,8 +839,8 @@ class EVCMechanism(ControlMechanism_Base):
             # # FIX: REPLACE REFERENCE TO THIS ELSEWHERE WITH REFERENCE TO MECH_TUPLES BELOW
             self.origin_prediction_mechanisms[origin_mech] = prediction_mechanism
 
-            # Add to list of EVCMechanism's prediction_mech_tuples
-            # prediction_mech_tuple = prediction_mechanism
+            # Add to list of EVCMechanism's prediction_object_items
+            # prediction_object_item = prediction_mechanism
             self.prediction_mechs.append(prediction_mechanism)
 
             # Add to system executionGraph and executionList
