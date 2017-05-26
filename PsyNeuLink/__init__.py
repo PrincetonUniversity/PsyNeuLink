@@ -23,10 +23,30 @@ from PsyNeuLink.Globals.Defaults import DefaultControlAllocationMode
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
 
+
+# https://stackoverflow.com/a/17276457/3131666
+class Whitelist(logging.Filter):
+    def __init__(self, *whitelist):
+        self.whitelist = [logging.Filter(name) for name in whitelist]
+
+    def filter(self, record):
+        return any(f.filter(record) for f in self.whitelist)
+
+
+class Blacklist(Whitelist):
+    def filter(self, record):
+        return not Whitelist.filter(self, record)
+
+
 logging.basicConfig(
     level=logging.ERROR,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
+for handler in logging.root.handlers:
+    handler.addFilter(Blacklist(
+        'PsyNeuLink.scheduling.Scheduler',
+        'PsyNeuLink.scheduling.condition',
+    ))
 
 __all__ = ['System',
            'system',
