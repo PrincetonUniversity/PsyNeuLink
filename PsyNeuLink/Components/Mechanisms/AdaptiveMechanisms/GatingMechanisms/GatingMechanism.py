@@ -274,12 +274,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
             for spec in target_set[GATING_SIGNALS]:
 
                 # Specification is for a tuple (str, Mechanism):
-                #    string must be the name of an InputState or OutputState of the Mechanism,
-                #    and the Mechanism must be in the current system.
                 if isinstance(spec, tuple):
                     state_name = spec[0]
                     mech = spec[1]
-
                     # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
                     if not isinstance(state_name, str):
                         raise GatingMechanismError("1st item of tuple in specification of {} for {} ({}) "
@@ -314,6 +311,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                         raise GatingMechanismError("Specification dict for {} of {} must have a MECHANISM entry".
                                                     format(GATING_SIGNAL, self.name))
                     mech = spec[MECHANISM]
+                    # FIX: VALIDATE THAT ALL KEYS FOR ALL OTHER ENTRIES ARE FOR ATTRIBUTES OF GATING_SIGNAL
 
                 else:
                     # raise GatingMechanismError("PROGRAM ERROR: unrecognized GatingSignal specification for {} ({})".
