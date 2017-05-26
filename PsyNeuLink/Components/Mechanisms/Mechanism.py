@@ -2095,16 +2095,16 @@ class MechanismList(UserList):
         each item is an outputState.value
     """
 
-    def __init__(self, owner, tuples_list:list):
+    def __init__(self, owner, components_list:list):
         super().__init__()
-        self.mechs = tuples_list
+        self.mechs = components_list
         self.owner = owner
-        # for item in tuples_list:
+        # for item in components_list:
         #     if not isinstance(item, MechanismTuple):
-        #         raise MechanismError("The following item in the tuples_list arg of MechanismList()"
+        #         raise MechanismError("The following item in the components_list arg of MechanismList()"
         #                              " is not a MechanismTuple: {}".format(item))
 
-        self.process_tuples = tuples_list
+        self.process_tuples = components_list
 
     def __getitem__(self, item):
         """Return specified mechanism in MechanismList

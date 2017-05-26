@@ -1113,7 +1113,7 @@ class System_Base(System):
                 if not sender_object_item in self._all_mechs:
                     self._all_mechs.append(sender_object_item)
 
-            process._allMechanisms = MechanismList(process, tuples_list=process._mechs)
+            process._allMechanisms = MechanismList(process, components_list=process._mechs)
 
         # # MODIFIED 2/8/17 OLD: [SEE ABOVE]
         # self.variable = convert_to_np_array(self.variable, 2)
