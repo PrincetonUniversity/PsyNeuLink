@@ -2118,14 +2118,14 @@ class MechanismList(UserList):
     def __len__(self):
         return (len(self.mechs))
 
-    def _get_tuple_for_mech(self, mech):
-        """Return first mechanism tuple containing specified mechanism from the list of mechs
-        """
-        if list(item for item in self.mechs).count(mech):
-            if self.owner.verbosePref:
-                print("PROGRAM ERROR:  {} found in more than one object_item in {} in {}".
-                      format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
-        return next((object_item for object_item in self.mechs if object_item is mech), None)
+    # def _get_tuple_for_mech(self, mech):
+    #     """Return first mechanism tuple containing specified mechanism from the list of mechs
+    #     """
+    #     if list(item for item in self.mechs).count(mech):
+    #         if self.owner.verbosePref:
+    #             print("PROGRAM ERROR:  {} found in more than one object_item in {} in {}".
+    #                   format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
+    #     return next((object_item for object_item in self.mechs if object_item is mech), None)
 
     @property
     def mechs_sorted(self):

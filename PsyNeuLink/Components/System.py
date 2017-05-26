@@ -1104,7 +1104,7 @@ class System_Base(System):
                 #     (this is used by Process._instantiate_pathway() to determine if Process is part of System)
                 # If the sender is already in the System's mechanisms dict
                 if sender_object_item in self.mechanismsDict:
-                    existing_object_item = self._allMechanisms._get_tuple_for_mech(sender_mech)
+                    # existing_object_item = self._allMechanisms._get_tuple_for_mech(sender_mech)
                     # Add to entry's list
                     self.mechanismsDict[sender_mech].append(process)
                 else:
@@ -1234,17 +1234,17 @@ class System_Base(System):
 
                 for projection in output_state.efferents:
                     receiver = projection.receiver.owner
-                    receiver_tuple = self._allMechanisms._get_tuple_for_mech(receiver)
+                    # receiver_tuple = self._allMechanisms._get_tuple_for_mech(receiver)
 
                     # If receiver is not in system's list of mechanisms, must belong to a process that has
                     #    not been included in the system, so ignore it
-                    if not receiver_tuple or is_monitoring_mech(receiver):
+                    if not receiver or is_monitoring_mech(receiver):
                         continue
 
                     try:
-                        self.graph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                        self.graph[receiver].add(sender_mech)
                     except KeyError:
-                        self.graph[receiver_tuple] = {self._allMechanisms._get_tuple_for_mech(sender_mech)}
+                        self.graph[receiver] = {sender_mech}
 
                     # Use toposort to test whether the added dependency produced a cycle (feedback loop)
                     # Do not include dependency (or receiver on sender) in executionGraph for this projection
@@ -1264,19 +1264,19 @@ class System_Base(System):
                         # Try assigning receiver as dependent of current mechanism and test toposort
                         try:
                             # If receiver_tuple already has dependencies in its set, add sender_mech to set
-                            if self.executionGraph[receiver_tuple]:
-                                self.executionGraph[receiver_tuple].\
-                                    add(self._allMechanisms._get_tuple_for_mech(sender_mech))
-                            # If receiver_tuple set is empty, assign sender_mech to set
+                            if self.executionGraph[receiver]:
+                                self.executionGraph[receiver].\
+                                    add(sender_mech)
+                            # If receiver set is empty, assign sender_mech to set
                             else:
-                                self.executionGraph[receiver_tuple] = \
-                                    {self._allMechanisms._get_tuple_for_mech(sender_mech)}
+                                self.executionGraph[receiver] = \
+                                    {sender_mech}
                             # Use toposort to test whether the added dependency produced a cycle (feedback loop)
                             list(toposort(self.executionGraph))
                         # If making receiver dependent on sender produced a cycle (feedback loop), remove from graph
                         except ValueError:
-                            self.executionGraph[receiver_tuple].\
-                                remove(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                            self.executionGraph[receiver].\
+                                remove(sender_mech)
                             # Assign sender_mech INITIALIZE_CYCLE as system status if not ORIGIN or not yet assigned
                             if not sender_mech.systems or not (sender_mech.systems[self] in {ORIGIN, SINGLETON}):
                                 sender_mech.systems[self] = INITIALIZE_CYCLE
@@ -1289,11 +1289,11 @@ class System_Base(System):
                         try:
                             # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
                             # FIX: DOES THAT SCREW UP ORIGINS?
-                            self.executionGraph[receiver_tuple].\
-                                add(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                            self.executionGraph[receiver].\
+                                add(sender_mech)
                         except KeyError:
-                            self.executionGraph[receiver_tuple] = \
-                                {self._allMechanisms._get_tuple_for_mech(sender_mech)}
+                            self.executionGraph[receiver] = \
+                                {sender_mech}
 
                     if not sender_mech.systems:
                         sender_mech.systems[self] = INTERNAL
@@ -1344,7 +1344,7 @@ class System_Base(System):
                     # For all input_states for the first_mech
                     for input_state in first_mech.input_states):
                 # Assign its set value as empty, marking it as a "leaf" in the graph
-                object_item = self._allMechanisms._get_tuple_for_mech(first_mech)
+                object_item = first_mech
                 self.graph[object_item] = set()
                 self.executionGraph[object_item] = set()
                 first_mech.systems[self] = ORIGIN
@@ -1774,11 +1774,11 @@ class System_Base(System):
                         item.function_object.learning_rate is None):
                 item.function_object.learning_rate = self.learning_rate
 
-            object_item = self._allMechanisms._get_tuple_for_mech(item)
-            if not object_item in self._monitoring_mechs:
-                self._monitoring_mechs.append(object_item)
-            if isinstance(item, ObjectiveMechanism) and not object_item in self._target_mechs:
-                self._target_mechs.append(object_item)
+            # object_item = self._allMechanisms._get_tuple_for_mech(item)
+            if not item in self._monitoring_mechs:
+                self._monitoring_mechs.append(item)
+            if isinstance(item, ObjectiveMechanism) and not item in self._target_mechs:
+                self._target_mechs.append(item)
         self.monitoringMechanisms = MechanismList(self, self._monitoring_mechs)
         self.targetMechanisms = MechanismList(self, self._target_mechs)
         # MODIFIED 3/12/17 END
