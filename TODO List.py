@@ -183,12 +183,31 @@
 # SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
 # SEARCH & REPLACE: monitored_values -> monitor_values
 
+# FIX State:
+#         Consolidate _instantiate_state_lists into _instantiate_state,
+#             and have other methods loop on their own through calls to _instantiate_state
+#
+#         LINE 1543:
+#                     # FIX 5/21/17: CHECK FOR DICT HERE AND USE NAME PARAM AS NAME IF IT IS IN THE DICT
+#           ALTERNATIVE: DON'T BOTHER WITH NAMES IN _instantiate_state_list(), AND REMAND TO _instantiate_state()
+#
+#         State._parse_state_spec:  if state_spec is a value, set both [VARIABLE] and [VALUE] to it??
+#         State._instantiate_state:  set constraint to constraint_dict[VALUE] rather than VARIABLE
+
+
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
 #
-# IMPLEMENT:  **control** arg for ControlMechanism, and **train** arg for LearningMechanism
-# IMPLEMENT:  Ability to pass outputState specifications to Objective mechanism via controller of system
-# FIX:  ??WHY IS ASSIGNMENT TO <component>.function_object.<param>
+# IMPLEMENT:  **gating** arg for GatingMechanism (comparable to **control** arg for ControlMechanism)
+# IMPLEMENT:  **train** arg for LearningMechanism (comparable to **control** arg for ControlMechanism)
+# FIX: base_value assignment problem: ??WHY IS ASSIGNMENT TO <component>.function_object.<param>
 # FIX:      NOT UPDATING <component>._parameter_states[PARAM].base_value?
+#             Mechanism._instantiate_function (~LINE 1355):
+#             MODIFIED 5/22/17 NEW:
+#             FIX: THIS SHOULDN'T BE NECESSARY ??WHY ISN'T ParameterState base_value GETTING UPDATED WITH ASSIGNMENT:
+#             ParameterState:
+#                 # @property
+#                 # def base_value(self):
+
 # IMPLEMENT:  MODULATION_PROJECTION ENTRIES OF STATE SPECIFICATION DICTIONARY
 # IMPLEMENT: standard_output_states for ObjectiveMechanism, LCA, RecurrentTransfer, and Intregrator
 #              (use ones at top of OutputState)
@@ -213,16 +232,16 @@
 #                                  OutputState:
 #                                      DESTINATIONS [=STATE_PROJECTIONS] can be string, mech, or inputStae
 #                                      GATING [=MODULATORY PROJECTIONS]
-
-#  DOCUMENTATION: Add weights and exponents specification (in state specificaditon dict or in function)
-#  DOCUMENTATION: Add `standard_output_states` to Mechanism
+#  DOCUMENTATION: Add mention of weights and exponents specification (in state specificaditon dict or in function)
+#  DOCUMENTATION: Add mention of `standard_output_states` to Mechanism
+#  DOCUMENTATION: Add mention of specification dictionary format for **control_signals** arg for ControlMechanism
 #  DOCUMENTATION: Matrix specification as 2nd item of in 2-item tuple in list for input_states arg of Mechanism
 #  FIX: `error_signal` as default primary outputState
-#  FIX: MAKE SURE THAT System AND/OR EVCMechanism ASSIGN OutputStates TO MONITORY ONLY
-#  FIX:  TO THOSE MECHANISMS FOR WHICH THE OUTPUTSTATE WERE SPECIFIED (UNLESS GIVEN A GENERIC NAME)
+#  FIX: MAKE SURE THAT System AND/OR EVCMechanism ASSIGN OutputStates TO MONITOR ONLY
+#  FIX:      THOSE MECHANISMS FOR WHICH THE OUTPUTSTATES WERE SPECIFIED (UNLESS GIVEN A GENERIC NAME)
 #      PROTOCOL:
-#          a) Mechanism implements emptyp input_state and output_state in paramClassDefaults,
-#                to insure that they are included in user_params
+#          a) Mechanism implements empty input_state and output_state in paramClassDefaults,
+#                to insure that they are included in user_params - STILL TRUE, OR SET TO None??
 #          b) If any are specified in constructor args (input_states or output_states), they totally override
 #                paramClassDefaults [??CURRENTLY DEALT WITH IN Mechanism._filter_params??]
 #          c) Subclass implements default set in module, and uses those as defaults for constructor args

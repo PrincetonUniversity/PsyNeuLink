@@ -50,9 +50,18 @@ mechanism or function to which the parameter belongs (see `Mechanism_Parameters`
 the **control_signals**  argument of the constructor for the ControlMechanism.  The **control_signals** argument must 
 be a list, each item of which must refer to a parameter to be controlled specified in any of the following forms:
 
-  * a **ParameterState** (of a Mechanism) for the parameter;
+  * *ParameterState* (of a Mechanism) for the parameter;
   |
-  * a **tuple**, with the *name* of the parameter as its 1st item. and the *mechanism* to which it belongs as the 2nd.
+  * *tuple*, with the *name* of the parameter as its 1st item. and the *mechanism* to which it belongs as the 2nd;
+    note that this is a convenience notation, which is simpler to use than a specification dictionary (see below), 
+    but precludes the specification of any of the `ControlSignal's parameters <ControlSignal_Structure>`.
+  |
+  * *specification dictionary*, that must contain the following two entries:
+    * *NAME*:str, where the string is the name of the parameter to be controlled;
+    * *MECHANISM*:Mechanism, where Mechanism is the Mechanism to which the parameter belongs 
+      (note: the Mechanism itself should be specified even if the parameter belongs to its function).
+    It can also contain entries for any other ControlSignal parameters to be speicified
+    (e.g., *ALLOCATION_SAMPLES*:list to specify `allocation_samples <ControlSignal.allocation_samples>`).
 
 A `ControlSignal` is created for each item listed in **control_signals**, and all of a ControlMechanism's ControlSignals 
 are listed in ControlMechanism's `control_signals <ControlMechanism.control_signals>` attribute.  Each ControlSignal is 
@@ -188,7 +197,7 @@ class ControlMechanism_Base(Mechanism_Base):
             specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
             specification options).
 
-        control_signals : List[Attribute of Mechanism or its function, ParameterState, or tuple[str, Mechanism]
+        control_signals : List[parameter of Mechanism or its function, ParameterState, tuple[str, Mechanism] or dict]
             specifies the parameters to be controlled by the ControlMechanism 
             (see `control_signals <ControMechanism.control_signals>` for details).
 
@@ -223,7 +232,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
     control_signals : List[ControlSignal]
         list of `ControlSignals <ControlSignals>` for the ControlMechanism, each of which sends a `ControlProjection`
-        to the parameterState for the parameter it controls (this is the same as ControlMechanism's 
+        to the `parameterState <ParameterState>` for the parameter it controls (same as ControlMechanism's 
         `output_states <ControlMechanism.output_states>` attribute).
 
 
@@ -236,7 +245,7 @@ class ControlMechanism_Base(Mechanism_Base):
     allocation_policy : 2d np.array
         array of values assigned to each ControlSignal listed in the 
         `control_signals <ControlMechanism.control_signals>` attribute
-        (this is the same as the ControlMechanism's `value <ControlMechanism.value>` attribute).
+        (same as the ControlMechanism's `value <ControlMechanism.value>` attribute).
     """
 
     componentType = "ControlMechanism"
