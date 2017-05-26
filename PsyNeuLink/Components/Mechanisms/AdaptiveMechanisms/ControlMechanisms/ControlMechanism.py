@@ -327,13 +327,9 @@ class ControlMechanism_Base(Mechanism_Base):
             for spec in target_set[CONTROL_SIGNALS]:
 
                 # Specification is for a tuple (str, Mechanism):
-                #    string must be the name of an attribute of the Mechanism,
-                #    the Mechanism must have a ParameterState with the name of that attribute,
-                #    and the Mechanism must be in the current system.
                 if isinstance(spec, tuple):
                     param_name = spec[0]
                     mech = spec[1]
-
                     # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
                     if not isinstance(param_name, str):
                         raise ControlMechanismError("1st item of tuple in specification of {} for {} ({}) "
@@ -342,27 +338,11 @@ class ControlMechanism_Base(Mechanism_Base):
                     if not isinstance(mech, Mechanism):
                         raise ControlMechanismError("2nd item of tuple in specification of {} for {} ({}) "
                                                     "must be a Mechanism".format(CONTROL_SIGNAL, owner.name, mech))
-                    # Check that param (named by str) is an attribute of the mechanism
-                    if not hasattr(mech, param_name) and not hasattr(mech.function_object, param_name):
-                        raise ControlMechanismError("{} (in specification of {}  {}) is not an attribute of {} or its function"
-                                                    .format(param_name, CONTROL_SIGNAL, owner.name, mech))
-                    # Check that the mechanism has a parameterState for the param
-                    if not param_name in mech._parameter_states.names:
-                        raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
-                                                    "specified in {} for {}".
-                                                    format(param_name, mech.name, CONTROL_SIGNAL, owner.name))
-                    # Check that the mechanism to which the parameter belongs is in the controller's system
-                    if not mech in self.system.mechanisms:
-                        raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
-                                                    "must be for a Mechanism in {}".
-                                                    format(CONTROL_SIGNALS,
-                                                           self.name,
-                                                           param_name,
-                                                           mech.name,
-                                                           self.system.name))
 
                 # Specification is for a ControlSignal
                 elif isinstance(spec, ControlSignal):
+                    param_name = spec.name
+                    mech = spec.owner
                     #  Check that any ControlProjections it has are to mechanisms in the controller's system
                     if not all(control_proj.receiver.owner in self.system.mechanisms
                                for control_proj in spec.efferents):
@@ -379,9 +359,12 @@ class ControlMechanism_Base(Mechanism_Base):
                     if not NAME in spec:
                         raise ControlMechanismError("Specification dict for {} of {} must have a NAME entry".
                                                     format(CONTROL_SIGNAL, self.name))
+                    param_name = spec[NAME]
                     if not MECHANISM in spec:
                         raise ControlMechanismError("Specification dict for {} of {} must have a MECHANISM entry".
                                                     format(CONTROL_SIGNAL, self.name))
+                    mech = spec[MECHANISM]
+                    # FIX: VALIDATE THAT ALL KEYS FOR ALL OTHER ENTRIES ARE FOR ATTRIBUTES OF CONTROL_SIGNAL
                 else:
                     # raise ControlMechanismError("PROGRAM ERROR: unrecognized ControlSignal specification for {} ({})".
                     #                             format(self.name, spec))
@@ -390,6 +373,27 @@ class ControlMechanism_Base(Mechanism_Base):
                                                 "ParameterState, a tuple specifying a parameter and mechanism, a "
                                                 "ControlSignal specification dictionary, or an existing ControlSignal".
                                                 format(CONTROL_SIGNAL, self.name, spec))
+
+                # Check that param_name is the name of an attribute of the mechanism
+                if not hasattr(mech, param_name) and not hasattr(mech.function_object, param_name):
+                    raise ControlMechanismError("{} (in specification of {}  {}) is not an "
+                                                "attribute of {} or its function"
+                                                .format(param_name, CONTROL_SIGNAL, owner.name, mech))
+                # Check that the mechanism has a parameterState for the param
+                if not param_name in mech._parameter_states.names:
+                    raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
+                                                "specified in {} for {}".
+                                                format(param_name, mech.name, CONTROL_SIGNAL, owner.name))
+                # Check that the mechanism to which the parameter belongs is in the controller's system
+                if not mech in self.system.mechanisms:
+                    raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
+                                                "must be for a Mechanism in {}".
+                                                format(CONTROL_SIGNALS,
+                                                       self.name,
+                                                       param_name,
+                                                       mech.name,
+                                                       self.system.name))
+
 
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self
