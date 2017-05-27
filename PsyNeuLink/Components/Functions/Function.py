@@ -1355,8 +1355,12 @@ class LinearCombination(
 # endregion
 
 BOUNDS = 'bounds'
-ADDIITIVE_PARAM = 'additive_param'
+ADDITIVE_PARAM = 'additive_param'
 MULTIPLICATIVE_PARAM = 'multiplicative_param'
+
+class ModulationParam():
+    ADDITIVE = ADDITIVE_PARAM
+    MULTIPLICATIVE = MULTIPLICATIVE_PARAM
 
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape
@@ -1388,9 +1392,9 @@ class TransferFunction(Function_Base):
             raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
                                 format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
 
-        if not hasattr(self, ADDIITIVE_PARAM):
+        if not hasattr(self, ADDITIVE_PARAM):
             raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDIITIVE_PARAM))
+                                format(self.__class__.__name__, ADDITIVE_PARAM))
 
         super().__init__(variable_default=variable_default,
                          params=params,

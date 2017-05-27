@@ -513,13 +513,13 @@ class OutputState(State_Base):
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
     #endregion
 
-    tc.typecheck
+    @tc.typecheck
     def __init__(self,
                  owner,
                  reference_value,
                  variable=None,
                  index=PRIMARY_OUTPUT_STATE,
-                 calculate:function_type=Linear,
+                 calculate:is_function_type=Linear,
                  function=LinearCombination(operation=SUM),
                  params=None,
                  name=None,
@@ -546,7 +546,6 @@ class OutputState(State_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
-
 
     def _validate_variable(self, variable, context=None):
         """Insure variable is compatible with output component of owner.function relevant to this state

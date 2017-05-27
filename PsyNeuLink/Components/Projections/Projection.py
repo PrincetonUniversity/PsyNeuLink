@@ -806,7 +806,6 @@ def _is_projection_spec(spec, include_matrix_keywords=True):
                 return True
     return False
 
-
 def _is_projection_subclass(spec, keyword):
     """Evaluate whether spec is a valid specification of type
 
@@ -841,6 +840,24 @@ def _is_projection_subclass(spec, keyword):
         if _is_projection_subclass(spec[keyword], keyword):
             return True
     return False
+
+@tc.typecheck
+def _validate_projection_receiver_mech(sender_mech:Mechanism, projection:Projection, context=None):
+    """Insure that projection is to mechanism within the same system as self
+    """
+    if projection.value is DEFERRED_INITIALIZATION:
+        receiver_mech = projection.init_args['receiver'].owner
+    else:
+        receiver_mech = projection.receiver.owner
+
+    if not receiver_mech in sender_mech.system.mechanisms:
+        raise ProjectionError("Attempt to assign a {} ({}) from {} to a mechanism ({}) "
+                              "that is not in the same system ({})".
+                                          format(projection.__class__.__name__,
+                                                 projection.name,
+                                                 sender_mech.name,
+                                                 receiver_mech.name,
+                                                 sender_mech.system.name))
 
 def _add_projection_to(receiver, state, projection_spec, context=None):
     """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
