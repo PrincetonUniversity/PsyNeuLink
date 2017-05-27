@@ -285,6 +285,9 @@
 # ------------------------------------------------------------------------------------------------------------------
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
+# FIX: MAKE ControlSignal stateful (since its last_allocation attribute pertains to a prior state)
+# FIX: DEAL WITH DEPENDENCY OF costFunctionNames: referenced in ControlSignal but defined in EVCMechanism
+# IMPLEMENT: Support for multiple GatingProjections from a single GatingSignal
 # IMPLEMENT: Abstract modulatory projection in AdaptiveMechanism
 #                - using _instantiate_output_states and _instantiate_projections
 #                - should parallel implementation of input_states and monitored_values in ObjectiveMechanism
@@ -299,6 +302,7 @@
 # DOCUMENTATION: GatingSignal (per ControlSignal) -- describe modulation_operation in both
 # DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction
 # DOCUMENTATION: UPDATE ParameterState_Parameter_Modulation_Operation WITH REFACTORING OF modulation_operation arg/param
+# DOCUMENTATION: UPDATE ControlSignal to describe modulation_operation attribute (as in GatingSignal)
 # FIX:           MODIFY ParameterState and LearningProjection so that latter projects to mod_afferents (vs. afferents)
 # FIX: is_param_spec to allow tuple with projection specification in it TO PASS TYPECHECK
 # FIX: PARSING OF input_state AND output_state ARGS IN Mechanism CONSTRUCTORS:

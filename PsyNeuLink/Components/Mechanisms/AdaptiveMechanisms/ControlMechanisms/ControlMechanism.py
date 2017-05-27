@@ -137,6 +137,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Monitored
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.Projections.Projection import _validate_projection_receiver_mech
 
 ControlMechanismRegistry = {}
 
@@ -254,7 +255,6 @@ class ControlMechanism_Base(Mechanism_Base):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # variableClassDefault = defaultControlAllocation
     # This must be a list, as there may be more than one (e.g., one per control_signal)
     variableClassDefault = defaultControlAllocation
 
@@ -514,8 +514,8 @@ class ControlMechanism_Base(Mechanism_Base):
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 
 
-        # EXTEND allocation_policy TO ACCOMODATE NEW ControlSignal -------------------------------------------------
-        #        also used to determine contraint on ControlSignal value
+        # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
+        #        also used to determine constraint on ControlSignal value
 
         if self.allocation_policy is None:
             self.allocation_policy = np.array(defaultControlAllocation)
@@ -537,7 +537,7 @@ class ControlMechanism_Base(Mechanism_Base):
                 if not (hasattr(mech, param_name) or hasattr(mech.function_object, param_name)):
                     raise ControlMechanismError("{} (in specification of {}  {}) is not an attribute "
                                                 "of {} or its function"
-                                                .format(param_name, CONTROL_SIGNAL, owner.name, mech))
+                                                .format(param_name, CONTROL_SIGNAL, self.name, mech))
                 # Check that the mechanism has a parameterState for the param
                 if not param_name in mech._parameter_states.names:
                     raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
@@ -558,6 +558,8 @@ class ControlMechanism_Base(Mechanism_Base):
             # control_signal was a specification dict, with MECHANISM as an entry (and parameter as NAME)
             if control_signal_params and MECHANISM in control_signal_params:
                 mech = control_signal_params[MECHANISM]
+                # Delete MECHANISM entry as it is not a parameter of ControlSignal
+                #     (which will balk at it in ControlSignal._validate_params)
                 del control_signal_params[MECHANISM]
                 parameter_state = _get_parameter_state(param_name, mech)
 
@@ -569,10 +571,12 @@ class ControlMechanism_Base(Mechanism_Base):
             #        so parse:
             # FIX 5/23/17: NEED TO GET THE KEYWORDS STRAIGHT FOR PASSING ControlSignal SPECIFICATIONS
             # IMPLEMENTATION NOTE:
-            #     CONTROL_SIGNAL_SPECS is used by _take_over_as_default_controller,
-            #                          to pass specification from a parameter specification tuple
-            #     STATE_PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
-            #                       here, the tuple comes from a (param, mechanism) specification in control_signal arg
+            #    CONTROL_SIGNAL_SPECS is used by _take_over_as_default_controller,
+            #                         to pass specification from a parameter specification tuple
+            #    STATE_PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
+            #                      here, the tuple comes from a (param, mechanism) specification in control_signal arg
+            #    Delete whichever one it was, as neither is a recognized ControlSignal param
+            #        (which will balk at it in ControlSignal._validate_params)
             elif (control_signal_params and
                     any(kw in control_signal_spec[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, STATE_PROJECTIONS})):
                 if CONTROL_SIGNAL_SPECS in control_signal_spec[PARAMS]:
@@ -601,7 +605,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                         "must contain a single ControlProjection".
                                                         format(CONTROL_SIGNAL_SPECS, CONTROL_SIGNAL, self.name))
                         if len(spec)>1:
-                            raise ControlMechanismError("PROGRAM ERROR: list of ControlProjections is not "
+                            raise ControlMechanismError("PROGRAM ERROR: Multiple ControlProjections is not "
                                                         "currently supported in specification of a ControlSignal")
                         # Get receiver mech
                         if control_projection.value is DEFERRED_INITIALIZATION:
@@ -635,7 +639,7 @@ class ControlMechanism_Base(Mechanism_Base):
             control_projections = control_signal_spec.efferents
 
             # IMPLEMENTATION NOTE:
-            #    THIS IS TO HANDLE FUTURE POSSIBILITY OF MULTIPLE ControlProjections FROM A SIGN ControlSignal;
+            #    THIS IS TO HANDLE FUTURE POSSIBILITY OF MULTIPLE ControlProjections FROM A SINGLE ControlSignal;
             #    FOR NOW, HOWEVER, ONLY A SINGLE ONE IS SUPPORTED
             # parameter_states = [proj.recvr for proj in control_projections]
             if len(control_projections) > 1:
@@ -681,12 +685,12 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Validate control_projection (if specified) and get receiver's name
         if control_projection:
-            self._validate_projection(control_projection)
+            _validate_projection_receiver_mech(self, control_projection, context=context)
 
             from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
             if not isinstance(control_projection, ControlProjection):
-                raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
-                                                  "that is not a ControlProjection, to outputState of {1}".
+                raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {}, "
+                                                  "that is not a ControlProjection, to ControlSignal of {}".
                                                   format(control_projection, self.name))
             if control_projection.value is DEFERRED_INITIALIZATION:
                 control_projection.init_args['sender']=control_signal
