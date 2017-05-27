@@ -126,7 +126,6 @@ from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
 from PsyNeuLink.Components.Projections.Projection import _validate_projection_receiver_mech
-from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
 
 GatingMechanismRegistry = {}
 
@@ -262,9 +261,28 @@ class GatingMechanism(AdaptiveMechanism_Base):
                          context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate GATING_SIGNALS
+        """Validate items in the GATING_SIGNALS param (**gating_signals** argument of constructor)
 
-        Check that all items in GATING_SIGNALS are InputStates or OutputStates for Mechanisms in self.system
+        Check that GATING_SIGNALS is a list, and that every item is one of the following:
+            - an existing InputState or OutputState for a Mechanisms in self.system
+            - an existing GatingSignal
+            - a list of state specifications (see below)
+            - a dictionary that contains either a:
+                - single state specification:
+                    NAME:str - contains the name of an InputState or OutputState belonging to MECHANISM
+                    MECHANISM:Mechanism - contains a reference to a Mechanism in self.system that owns NAME'd state
+                    <PARAM_KEYWORD>:<GatingSignal param value>
+                - multiple state specification:
+                    NAME:str - used as name of GatingSignal
+                    STATE_PROJECTIONS:List[tuple, dict] - each item must be state specification tuple or dict
+                    <PARAM_KEYWORD>:<GatingSignal param value>
+        
+        Each state specification must be a:
+            - (str, Mechanism) tuple
+            - {NAME:str, MECHANISM:Mechanism} dict
+            where:
+                str is the name of an InputState or OutputState of the Mechanism,
+                Mechanism is a reference to an existing that belongs to self.system 
         """
 
         super(GatingMechanism, self)._validate_params(request_set=request_set,
@@ -274,6 +292,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
         if GATING_SIGNALS in target_set and target_set[GATING_SIGNALS]:
 
             from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
+            if not isinstance(target_set[GATING_SIGNALS], list):
+                raise GatingMechanismError("{} arg of {} must be list of {} specifications".
+                                           format(GATING_SIGNAL, self.owner, GATING_SIGNAL))
 
             for spec in target_set[GATING_SIGNALS]:
 
@@ -288,70 +309,56 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                     format(GATING_SIGNALS, self.name, spec.name, self.system.name))
                     continue
 
-                # Specification is for a tuple (str, Mechanism):
-                elif isinstance(spec, tuple):
-                    state_name = spec[0]
-                    mech = spec[1]
-                    # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
-                    if not isinstance(state_name, str):
-                        raise GatingMechanismError("1st item of tuple in specification of {} for {} ({}) "
-                                                    "must be a string".format(GATING_SIGNAL, owner.name, state_name))
-                    # Check that 2nd item is a mechanism
-                    if not isinstance(mech, Mechanism):
-                        raise GatingMechanismError("2nd item of tuple in specification of {} for {} ({}) "
-                                                    "must be a Mechanism".format(GATING_SIGNAL, owner.name, mech))
+                # Specification is for an existing InputState or OutputState,
+                #    so check that it's owner belongs to self.system
+                if isinstance(spec, (InputState, OutputState)) and not spec.owner.system in self.system.mechanisms:
+                    raise GatingMechanismError("The state specified in the {} arg for {} ({}) "
+                                                "belongs to a mechanism that is not in the same system ({})".
+                                                format(GATING_SIGNALS, self.name, spec.name, spec.owner.system.name))
 
-                # GatingSignal specification dictionary, must have the following entries:
-                #    NAME:str - must be the name of an InputState or OutputState of MECHANISM
-                #    MECHANISM:Mechanism - must be a Mechanism in self.system
-                #    PARAMS:dict - entries must be valid GatingSignal parameters (e.g,. MODULATION_OPERATION)
-                elif isinstance(spec, dict):
-                    if not NAME in spec:
-                        raise GatingMechanismError("Specification dict for {} of {} must have a NAME entry".
-                                                    format(GATING_SIGNAL, self.name))
-                    state_name = spec[NAME]
-                    if not MECHANISM in spec:
-                        raise GatingMechanismError("Specification dict for {} of {} must have a MECHANISM entry".
-                                                    format(GATING_SIGNAL, self.name))
-                    mech = spec[MECHANISM]
-                    # Check that all of the other entries in the specification dictionary are valid GatingSignal params
-                    for param in spec:
-                        if param in {NAME, MECHANISM}:
+
+                # Specification is a list, presumably of one or more states specs
+                if isinstance(spec, list):
+                    # Validate each item in the list, which should be a state spec
+                    for state_spec in spec:
+                        _parse_gating_state_spec(self, state_spec)
+
+                # Specification is a dict that could be for a single state spec or a list of ones
+                if isinstance(spec, dict):
+                    # If it has a STATE_PROJECTIONS entry, it must be for a list
+                    if STATE_PROJECTIONS in spec:
+                        # Validate that the STATE_PROJECTIONS entry has a list
+                        state_specs = spec[STATE_PROJECTIONS]
+                        if not isinstance(state_specs, list):
+                            raise GatingMechanismError("The {} entry of the dict in the {} arg for {} must be "
+                                                       "a list of state specifications".
+                                                        format(STATE_PROJECTIONS, GATING_SIGNALS, self.name))
+                        # Validate each item in the list, which should be a state spec
+                        for state_spec in state_specs:
+                            _parse_gating_state_spec(self, state_spec)
+                    # If it doesn't have a STATE_PROJECTIONS entry, it must be for a single state spec,
+                    #    so parse it for NAME and MECHANISM entries
+                    else:
+                        _parse_gating_state_spec(self, state_spec)
+
+                    # Check that all of the other entries in the dict are for valid GatingSignal params
+                    for entry in spec:
+                        if entry in {NAME, MECHANISM, STATE_PROJECTIONS}:
                             continue
-                        if not hasattr(mech, param):
+                        if not hasattr(self, entry):
                             raise GatingMechanismError("Entry in specification dictionary for {} arg of {} ({}) "
                                                        "is not a valid {} parameter".
-                                                       format(GATING_SIGNAL, self.name, param,
+                                                       format(GATING_SIGNAL, self.name, entry,
                                                               GatingSignal.__class__.__name__))
                 else:
                     # raise GatingMechanismError("PROGRAM ERROR: unrecognized GatingSignal specification for {} ({})".
                     #                             format(self.name, spec))
-                    #
-                    raise GatingMechanismError("Specification of {} for {} ({}) must be an InputState, OutputState, "
+                    raise GatingMechanismError("Specification of {} for {} ({}) must be an InputState or OutputState, "
                                                "a tuple specifying a name for one and a mechanism to which it belongs ,"
-                                               "a GatingSignal specification dictionary, or an existing GatingSignal".
-                                                format(GATING_SIGNAL, self.name, spec))
-
-                # Check that specified state is an InputState or OutputState of the Mechanism
-                if state_name in mech.input_states:
-                    state_type = INPUT_STATE
-                elif state_name in mech.output_states:
-                    state_type = OUTPUT_STATE
-                else:
-                    raise GatingMechanismError("{} (in specification of {}  {}) is not an "
-                                               "InputState or OutputState of {}".
-                                                format(state_name, GATING_SIGNAL, owner.name, mech))
-
-                # Check that the Mechanism is in the controller's system
-                if not mech in self.system.mechanisms:
-                    raise GatingMechanismError("Specification in {} arg for {} ({} {} of {}) "
-                                                "must be for a Mechanism in {}".
-                                                format(GATING_SIGNALS,
-                                                       self.name,
-                                                       state_name,
-                                                       state_type,
-                                                       mech.name,
-                                                       self.system.name))
+                                               "a list of state specifications, "
+                                               "a {} specification dict with one or more state specifications and "
+                                               "entries for {} parameters, or an existing GatingSignal".
+                                                format(GATING_SIGNAL, self.name, spec, GATING_SIGNAL, GATING_SIGNAL))
 
     def _instantiate_output_states(self, context=None):
 
@@ -426,6 +433,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         Returns GatingSignal (OutputState)
         """
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
 
         # EXTEND gating_policy TO ACCOMMODATE NEW GatingSignal -------------------------------------------------
         #        also used to determine constraint on GatingSignal value
@@ -441,6 +449,15 @@ class GatingMechanism(AdaptiveMechanism_Base):
         gating_signal_params = None
 
         gating_signal_spec = _parse_state_spec(owner=self, state_type=GatingSignal, state_spec=gating_signal)
+
+
+        # # FIX: MOVE THIS TO INSTANTIATION BELOW
+        # # If there is a NAME entry, use as name of the GatingSignal itself
+        # if NAME in spec:
+        #     state_name = spec[NAME]
+        # # Otherwise, assign default, appending '_'+GATING_SIGNAL, and index as needed
+
+
 
         def _get_state(state_name, mech):
             if state_name in mech._input_states:
@@ -649,7 +666,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         Must be overriden by subclass
         """
-        raise GatingMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
+        # FIX: THIS NEEDS TO BE IMPLEMENTED
+        return [0]
+        # raise GatingMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
 
     def show(self):
 
@@ -663,3 +682,60 @@ class GatingMechanism(AdaptiveMechanism_Base):
             for projection in self.output_states[state_name].efferents:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
         print ("\n---------------------------------------------------------")
+
+
+def _parse_gating_state_spec(owner, proj_spec):
+
+    if isinstance(proj_spec, tuple):
+        state_name = proj_spec[0]
+        mech = proj_spec[1]
+        # Check that 1st item is a str (presumably the name of one of the mechanism's states)
+        if not isinstance(state_name, str):
+            raise GatingMechanismError("1st item of specification tuple for the state to be gated by {} of {} ({})"
+                                       "must be a string that is the name of the state".
+                                       format(GATING_SIGNAL, owner.name, state_name))
+        # Check that 2nd item is a mechanism
+        if not isinstance(mech, Mechanism):
+            raise GatingMechanismError("2nd item of specification tuple for the state to be gated by {} of {} ({})"
+                                       "must be a Mechanism that is the mech to which the state {} belongs".
+                                       format(GATING_SIGNAL, owner.name, mech, state_name))
+
+    elif isinstance(proj_spec, dict):
+        if not NAME in proj_spec:
+            raise GatingMechanismError("Specification dict for the state to be gated by {} of {} must have a "
+                                       "NAME entry that is the name of the state".
+                                       format(GATING_SIGNAL, owner.name))
+        state_name = proj_spec[NAME]
+
+        # GatingSignal projects to a single state (named in NAME entry)
+        if not MECHANISM in proj_spec:
+            raise GatingMechanismError("Specification dict for state to be gated by {} of {} ({}) must have a "
+                                       "MECHANISM entry that specifies the mechanism to which the state belongs".
+                                       format(GATING_SIGNAL, owner.name, state_name))
+        mech = proj_spec[MECHANISM]
+
+    else:
+        raise GatingMechanismError("Specification for the state to be gated by {} of {} ({}) must be a dict or tuple".
+                                   format(GATING_SIGNAL, owner.name, type(proj_spec)))
+
+    # Check that specified state is an InputState or OutputState of the Mechanism
+    if state_name in mech.input_states:
+        state_type = INPUT_STATE
+    elif state_name in mech.output_states:
+        state_type = OUTPUT_STATE
+    else:
+        raise GatingMechanismError("{} (in specification of {}  {}) is not an "
+                                   "InputState or OutputState of {}".
+                                    format(state_name, GATING_SIGNAL, owner.name, mech))
+
+    # Check that the Mechanism is in GatingMechanism's system
+    if not mech in owner.system.mechanisms:
+        raise GatingMechanismError("Specification in {} arg for {} ({} {} of {}) "
+                                    "must be for a Mechanism in {}".
+                                    format(GATING_SIGNALS,
+                                           owner.name,
+                                           state_name,
+                                           state_type,
+                                           mech.name,
+                                           owner.system.name))
+    return (state_name, state_type, mech)

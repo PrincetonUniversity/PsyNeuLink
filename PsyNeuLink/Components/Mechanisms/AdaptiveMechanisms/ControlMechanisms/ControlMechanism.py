@@ -341,7 +341,7 @@ class ControlMechanism_Base(Mechanism_Base):
                 elif isinstance(spec, tuple):
                     param_name = spec[0]
                     mech = spec[1]
-                    # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
+                    # Check that 1st item is a str (presumably the name of the mechanism's attribute for the param)
                     if not isinstance(param_name, str):
                         raise ControlMechanismError("1st item of tuple in specification of {} for {} ({}) "
                                                     "must be a string".format(CONTROL_SIGNAL, self.name, param_name))
