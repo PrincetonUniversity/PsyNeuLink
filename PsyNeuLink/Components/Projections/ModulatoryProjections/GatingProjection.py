@@ -67,9 +67,8 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components import DefaultGatingMechanism
+# from PsyNeuLink.Components import DefaultGatingMechanism
 from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 
