@@ -537,6 +537,11 @@ def _parse_gating_signal_spec(owner, state_spec):
             str is the name of an InputState or OutputState of the Mechanism,
             Mechanism is a reference to an existing that belongs to self.system 
     
+    Checks for duplicate state specifications within state_spec or with any existing GatingSignal of the owner
+        (i.e., states that will receive more than one GatingProjection from the owner)
+        
+    If state_spec is already a GatingSignal, it is returned (in the GATING_SIGNAL entry) along with its parsed elements 
+    
     Returns dictionary with the following entries:
         NAME:str - name of either the gated state (if there is only one) or the GatingSignal
         STATES:list - list of states to be gated
