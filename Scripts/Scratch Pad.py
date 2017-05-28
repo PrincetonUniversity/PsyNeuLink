@@ -2215,7 +2215,7 @@ class ScratchPadError(Exception):
 
 print("TEST parse_gated_state_spec")
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import _parse_gated_state_spec
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import _parse_gating_signal_spec
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
@@ -2225,29 +2225,29 @@ mech_1 = DDM()
 mech_2 = DDM()
 
 single_dict = {NAME:'Default_input_state', MECHANISM:mech_1}
-a = _parse_gated_state_spec(owner=gating_mech, state_spec=single_dict)
+a = _parse_gating_signal_spec(owner=gating_mech, state_spec=single_dict)
 print('\nsingle_dict:', a)
 
 single_tuple = ('Default_input_state', mech_1)
-b = _parse_gated_state_spec(gating_mech, state_spec=single_tuple)
+b = _parse_gating_signal_spec(gating_mech, state_spec=single_tuple)
 print('\nsingle_tuple:', b)
 
 multi_states_dicts = {'MY_SIGNAL':[{NAME:'Default_input_state',
                                    MECHANISM:mech_1},
                                    {NAME:'Default_input_state',
                                    MECHANISM:mech_1}]}
-c = _parse_gated_state_spec(gating_mech, state_spec=multi_states_dicts)
+c = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_dicts)
 print('\nmulti_states_dicts:', c)
 
 multi_states_tuples = {'MY_SIGNAL':[('Default_input_state',mech_1),
                                    ('Default_input_state',mech_2)]}
-d = _parse_gated_state_spec(gating_mech, state_spec=multi_states_tuples)
+d = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_tuples)
 print('\nmulti_states_tuples:', d)
 
 multi_states_combo = {'MY_SIGNAL':[{NAME:'Default_input_state',
                                    MECHANISM:mech_1},
                                    ('Default_input_state',mech_2)]}
-e = _parse_gated_state_spec(gating_mech, state_spec=multi_states_combo)
+e = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_combo)
 print('\nmulti_states_combo:', e)
 
 #endregion

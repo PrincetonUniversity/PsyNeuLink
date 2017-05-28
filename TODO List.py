@@ -341,7 +341,7 @@
 #             setter (context => SET_ATTRIBUTE)…
 #             assign_params (context = SET_ATTRIBUTE)
 
-# IMPLEMENT: Consolidate State._parse_state_spec and GatingSignal._parse_gated_state_spec;
+# IMPLEMENT: Consolidate State._parse_state_spec and GatingSignal._parse_gating_signal_spec;
 #              include arg that specifies keywords to look for in dicts
 
 # FIX: REPLACE: kwConstants must == arg names
