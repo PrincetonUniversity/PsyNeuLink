@@ -125,6 +125,7 @@ from PsyNeuLink.Components.States.State import State_Base, _instantiate_state, _
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import gating_signal_keywords
 from PsyNeuLink.Components.Projections.Projection import _validate_projection_receiver_mech
 
 GatingMechanismRegistry = {}
@@ -497,6 +498,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
         else:
 
             gating_signal_name = gating_signal_spec[NAME]
+            # FIX: CALL REGISTRY FOR NAME HERE (AS FOR OUTPUTSTATE IN MECHANISM
+            if self.gating_signals and gating_signal_name in self.gating_signals.names:
+                gating_signal_name = gating_signal_name + '-' + repr(len(self.gating_signals))
 
             # from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
             # from PsyNeuLink.Components.States.State import _instantiate_state
@@ -641,21 +645,24 @@ def _parse_gating_signal_spec(owner, state_spec):
     from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
 
     GATING_SIGNAL_SUFFIX = '_' + GatingSignal.__name__
+    DEFAULT_GATING_SIGNAL_NAME = 'Default'+ GATING_SIGNAL_SUFFIX
 
-    def _get_default_gating_signal_name():
-        """Return default name for gating signal
-        Default_GatingSignal if it is the first,  
-        Default_GatingSignal-2 for second
-        Default_GatingSignal-3 for third, etc. 
-        """
-
-        if owner.gating_signals:
-            index = len(owner.gating_signals) or ""
-        else:
-            index = ''
-        if index:
-            index = repr(index+1)
-        return 'Default'+GATING_SIGNAL_SUFFIX+index
+    # def _get_default_gating_signal_name():
+    #     """Return default name for gating signal
+    #     Default_GatingSignal if it is the first,
+    #     Default_GatingSignal-2 for second
+    #     Default_GatingSignal-3 for third, etc.
+    #     """
+    #
+    #     # FIX: USE REGISTRY HERE (AS FOR OUTPUTSTATE REGISTRY ON MECHANISM)
+    #     if owner.gating_signals:
+    #         # # Get the number of existing gating_signals with the default name
+    #         # index = len([gs for gs in owner.gating_signals if ('Default'+ GATING_SIGNAL_SUFFIX) in gs.name])
+    #     else:
+    #         index = ''
+    #     if index:
+    #         index = repr(index+1)
+    #     return 'Default'+GATING_SIGNAL_SUFFIX+index
 
     # Specification is for a GatingSignal - return as is
     if isinstance(state_spec, GatingSignal):
@@ -725,7 +732,8 @@ def _parse_gating_signal_spec(owner, state_spec):
         for spec in state_spec:
             spec_dict = _parse_gating_signal_spec(owner, spec)
             state_name = None
-            gating_signal_name = _get_default_gating_signal_name()
+            # gating_signal_name = _get_default_gating_signal_name()
+            gating_signal_name = DEFAULT_GATING_SIGNAL_NAME
             states.extend(spec_dict[STATES])
 
     # Specification is a dict that could be for a single state state_spec or a list of ones
@@ -749,12 +757,14 @@ def _parse_gating_signal_spec(owner, state_spec):
             if NAME in state_spec:
                 state_name = state_spec[NAME]
                 gating_signal_name = state_name
+            else:
+                gating_signal_name = DEFAULT_GATING_SIGNAL_NAME
 
         # If it doesn't have a STATES entry
         else:
             # If there is a non-keyword key, treat as the name to be used for the GatingSignal,
             #    and the value a state spec or list of ones
-            state_name = next((key for key in state_spec if not key in {NAME, STATES, MECHANISM, PARAMS} ), None)
+            state_name = next((key for key in state_spec if not key in gating_signal_keywords), None)
             if state_name:
                 gating_signal_name = state_name
                 spec_dict = _parse_gating_signal_spec(owner, state_spec[gating_signal_name])
@@ -776,16 +786,16 @@ def _parse_gating_signal_spec(owner, state_spec):
                                                format(GATING_SIGNAL, owner.name, state_name))
                 mech = state_spec[MECHANISM]
 
-        # Check that all of the other entries in the dict are for valid GatingSignal params, and place them in params
-        for entry in state_spec:
-            if entry in {NAME, MECHANISM, STATES, state_name}:
-                continue
-            if not hasattr(GatingSignal, entry):
+        # Check that all of the other entries in the dict are for valid GatingSignal params
+        #    - skip any entries specifying gating signal
+        #    - place others in params
+        for param_entry in [entry for entry in state_spec if not entry in {gating_signal_name, MECHANISM}]:
+            if not param_entry in gating_signal_keywords:
                 raise GatingMechanismError("Entry in specification dictionary for {} arg of {} ({}) "
                                            "is not a valid {} parameter".
-                                           format(GATING_SIGNAL, owner.name, entry,
+                                           format(GATING_SIGNAL, owner.name, param_entry,
                                                   GatingSignal.__name__))
-            params[entry] = state_spec[entry]
+            params[param_entry] = state_spec[param_entry]
 
     else:
         # raise GatingMechanismError("PROGRAM ERROR: unrecognized GatingSignal specification for {} ({})".
@@ -821,6 +831,8 @@ def _parse_gating_signal_spec(owner, state_spec):
                                                mech.name,
                                                owner.system.name))
         states = [state]
+
+    # FIX: CHECK HERE ??OR ABOVE?? FOR DUPLICATES
 
     return {NAME: gating_signal_name,
             STATES: states,

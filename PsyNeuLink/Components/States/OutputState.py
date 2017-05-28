@@ -567,9 +567,9 @@ class OutputState(State_Base):
 
         # Insure that self.variable is compatible with (relevant item of) output value of owner's function
         if not iscompatible(self.variable, self.reference_value):
-            raise OutputStateError("Value ({0}) of outputState for {1} is not compatible with "
-                                           "the output ({2}) of its function".
-                                           format(self.value,
+            raise OutputStateError("Variable ({}) of outputState for {} is not compatible with "
+                                           "the output ({}) of its function".
+                                           format(self.variable,
                                                   self.owner.name,
                                                   self.reference_value))
 
