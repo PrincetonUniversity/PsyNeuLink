@@ -2230,8 +2230,10 @@ single_dict = {NAME:'Default_input_state', MECHANISM:mech_1}
 a = _parse_gating_signal_spec(owner=gating_mech, state_spec=single_dict)
 print('\nsingle_dict:', a)
 
+# THESE ARE A HACK TO ASSIGN A PRE-EXISTING GATING SIGNAL TO gating_mech WITHOUTH HAVING TO CONSTRUCT ONE
 x = DDM()
 x.name ='Default_input_state_GatingSignal'
+x.efferents = []
 gating_mech._gating_signals = [x]
 
 single_tuple = ('Default_input_state', mech_1)
