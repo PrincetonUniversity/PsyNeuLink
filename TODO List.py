@@ -285,6 +285,8 @@
 # ------------------------------------------------------------------------------------------------------------------
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
+# FIX: ADD "GATING" KEYWORD and GatingSignal CLASS TO INPUT_STATE TUPLE SPECIFICATION,
+#     WHICH SHOULD INSTANTIATE A DEFERRED_INIT GatingProjection (JUST LIKE A ControlProjection)
 # FIX: MAKE ControlSignal stateful (since its last_allocation attribute pertains to a prior state)
 # FIX: DEAL WITH DEPENDENCY OF costFunctionNames: referenced in ControlSignal but defined in EVCMechanism
 # IMPLEMENT: Support for multiple GatingProjections from a single GatingSignal
@@ -338,6 +340,9 @@
 #             instantiate_output_state (context = None or SET_ATTRIBUTE)
 #             setter (context => SET_ATTRIBUTE)…
 #             assign_params (context = SET_ATTRIBUTE)
+
+# IMPLEMENT: Consolidate State._parse_state_spec and GatingSignal._parse_gated_state_spec;
+#              include arg that specifies keywords to look for in dicts
 
 # FIX: REPLACE: kwConstants must == arg names
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)

@@ -506,7 +506,8 @@ GATING_PROJECTIONS = 'GatingProjections'
 #region ----------------------------------------------    STATES  ------------------------------------------------------
 
 STATE = "State"
-# These are use for dict specification of State
+# These are used as keys in State specification dictionaries
+STATES = "STATES"
 STATE_PROJECTIONS = "StateProjections"  # Used to specify projection list to State
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
