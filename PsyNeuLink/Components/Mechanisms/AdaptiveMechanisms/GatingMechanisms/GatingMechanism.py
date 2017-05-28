@@ -277,7 +277,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                            format(GATING_SIGNAL, self.name))
 
             for spec in target_set[GATING_SIGNALS]:
-                _parse_gated_state_spec(self, spec)
+                _parse_gating_signal_spec(self, spec)
 
     def _instantiate_output_states(self, context=None):
 
@@ -364,107 +364,108 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # PARSE gating_signal SPECIFICATION -----------------------------------------------------------------------
 
-        gating_projection = None
-        gating_signal_params = None
+        # # FIX: BEGIN REPLACEMENT WITH _parse_gating_signal_spec: vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        #
+        # gating_signal_spec = _parse_state_spec(owner=self, state_type=GatingSignal, state_spec=gating_signal)
+        #
+        #
+        # # # FIX: MOVE THIS TO INSTANTIATION BELOW
+        # # # If there is a NAME entry, use as name of the GatingSignal itself
+        # # if NAME in spec:
+        # #     state_name = spec[NAME]
+        # # # Otherwise, assign default, appending '_'+GATING_SIGNAL, and index as needed
+        #
+        # def _get_state(state_name, mech):
+        #     if state_name in mech._input_states:
+        #         return mech._input_states[state_name]
+        #     elif state_name in mech._output_states:
+        #         return mech._output_states[state_name]
+        #     else:
+        #         raise GatingMechanismError("{} (in specification of {}  {}) is not an InputState or OutputState of {}".
+        #                                     format(param_name, self.name, mech))
+        #
+        # # Specification is an InputState or OutputState
+        # if isinstance(gating_signal_spec, (InputState, OutputState)):
+        #     mech = gating_signal_spec.owner
+        #     state_name = gating_signal_spec.name
+        #     state = _get_state(state_name, mech)
+        #
+        # # Specification was tuple or dict, and parsed into a dict
+        # elif isinstance(gating_signal_spec, dict):
+        #     state_name = gating_signal_spec[NAME]
+        #     gating_signal_params = gating_signal_spec[PARAMS]
+        #
+        #     # gating_signal was a specification dict, with MECHANISM as an entry (and state as NAME)
+        #     if gating_signal_params and MECHANISM in gating_signal_params:
+        #         mech = gating_signal_params[MECHANISM]
+        #         # Delete MECHANISM entry as it is not a parameter of GatingSignal
+        #         #     (which will balk at it in GatingSignal._validate_params)
+        #         del gating_signal_params[MECHANISM]
+        #         state = _get_state(state_name, mech)
+        #
+        #     # Specification was originally a tuple, either in parameter specification or gating_signal arg;
+        #     #    1st item was either assigned to the NAME entry of the gating_signal_spec dict
+        #     #        (if tuple was a (state_name, Mechanism tuple) for gating_signal arg;
+        #     #    2nd item was placed GATING_SIGNAL_PARAMS entry of params dict in gating_signal_spec dict,
+        #     #        so parse:
+        #     # FIX 5/23/17: NEED TO GET THE KEYWORDS STRAIGHT FOR PASSING GatingSignal SPECIFICATIONS
+        #     # IMPLEMENTATION NOTE:
+        #     #    GATING_SIGNAL_SPECS is used by _take_over_as_default_gating_mechanism;
+        #     #                        to pass specification from a state specification tuple
+        #     #    STATE_PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
+        #     #                      here, the tuple comes from a (state, mechanism) specification in gating_signal arg
+        #     #    Delete whichever one it was, as neither is a recognized GatingSignal param
+        #     #        (which will balk at it in GatingSignal._validate_params)
+        #     elif (gating_signal_params and
+        #             any(kw in gating_signal_spec[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, STATE_PROJECTIONS})):
+        #         if CONTROL_SIGNAL_SPECS in gating_signal_spec[PARAMS]:
+        #             spec = gating_signal_params[CONTROL_SIGNAL_SPECS]
+        #             del gating_signal_params[CONTROL_SIGNAL_SPECS]
+        #         elif STATE_PROJECTIONS in gating_signal_spec[PARAMS]:
+        #             spec = gating_signal_params[STATE_PROJECTIONS]
+        #             del gating_signal_params[STATE_PROJECTIONS]
+        #
+        #         # GatingSignal
+        #         if isinstance(spec, GatingSignal):
+        #             gating_signal_spec = spec
+        #
+        #         else:
+        #             # Mechanism
+        #             # IMPLEMENTATION NOTE: Mechanism was placed in list in STATE_PROJECTIONS entry by _parse_state_spec
+        #             if isinstance(spec, list) and isinstance(spec[0], Mechanism):
+        #                 mech = spec[0]
+        #                 state = _get_state(state_name, mech)
+        #
+        #             # Projection (in a list)
+        #             elif isinstance(spec, list):
+        #                 gating_projection = spec[0]
+        #                 if not isinstance(gating_projection, GatingProjection):
+        #                     raise GatingMechanismError("PROGRAM ERROR: list in {} entry of params dict for {} of {} "
+        #                                                 "must contain a single GatingProjection".
+        #                                                 format(GATING_SIGNAL_SPECS, GATING_SIGNAL, self.name))
+        #                 if len(spec)>1:
+        #                     raise GatingMechanismError("PROGRAM ERROR: Multiple GatingProjections is not "
+        #                                                 "currently supported in specification of a GatingSignal")
+        #                 # Get receiver mech
+        #                 if gating_projection.value is DEFERRED_INITIALIZATION:
+        #                     state = gating_projection.init_args['receiver']
+        #                 else:
+        #                     state = gating_projection.receiver
+        #                 state_name = state.name
+        #
+        #             else:
+        #                 raise GatingMechanismError("PROGRAM ERROR: failure to parse specification of {} for {}".
+        #                                             format(GATING_SIGNAL, self.name))
+        #     else:
+        #         raise GatingMechanismError("PROGRAM ERROR: No entry found in params dict with specification of "
+        #                                     "parameter Mechanism or ControlProjection for {} of {}".
+        #                                     format(GATING_SIGNAL, self.name))
+        #
+        # # FIX: END REPLACEMENT WITH _parse_gating_signal_spec: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-        # FIX: BEGIN REPLACEMENT WITH _parse_gated_state_spec: vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-        gating_signal_spec = _parse_state_spec(owner=self, state_type=GatingSignal, state_spec=gating_signal)
-
-
-        # # FIX: MOVE THIS TO INSTANTIATION BELOW
-        # # If there is a NAME entry, use as name of the GatingSignal itself
-        # if NAME in spec:
-        #     state_name = spec[NAME]
-        # # Otherwise, assign default, appending '_'+GATING_SIGNAL, and index as needed
-
-        def _get_state(state_name, mech):
-            if state_name in mech._input_states:
-                return mech._input_states[state_name]
-            elif state_name in mech._output_states:
-                return mech._output_states[state_name]
-            else:
-                raise GatingMechanismError("{} (in specification of {}  {}) is not an InputState or OutputState of {}".
-                                            format(param_name, self.name, mech))
-
-        # Specification is an InputState or OutputState
-        if isinstance(gating_signal_spec, (InputState, OutputState)):
-            mech = gating_signal_spec.owner
-            state_name = gating_signal_spec.name
-            state = _get_state(state_name, mech)
-
-        # Specification was tuple or dict, and parsed into a dict
-        elif isinstance(gating_signal_spec, dict):
-            state_name = gating_signal_spec[NAME]
-            gating_signal_params = gating_signal_spec[PARAMS]
-
-            # gating_signal was a specification dict, with MECHANISM as an entry (and state as NAME)
-            if gating_signal_params and MECHANISM in gating_signal_params:
-                mech = gating_signal_params[MECHANISM]
-                # Delete MECHANISM entry as it is not a parameter of GatingSignal 
-                #     (which will balk at it in GatingSignal._validate_params)
-                del gating_signal_params[MECHANISM]
-                state = _get_state(state_name, mech)
-
-            # Specification was originally a tuple, either in parameter specification or gating_signal arg;
-            #    1st item was either assigned to the NAME entry of the gating_signal_spec dict
-            #        (if tuple was a (state_name, Mechanism tuple) for gating_signal arg;
-            #    2nd item was placed GATING_SIGNAL_PARAMS entry of params dict in gating_signal_spec dict,
-            #        so parse:
-            # FIX 5/23/17: NEED TO GET THE KEYWORDS STRAIGHT FOR PASSING GatingSignal SPECIFICATIONS
-            # IMPLEMENTATION NOTE:
-            #    GATING_SIGNAL_SPECS is used by _take_over_as_default_gating_mechanism;
-            #                        to pass specification from a state specification tuple
-            #    STATE_PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
-            #                      here, the tuple comes from a (state, mechanism) specification in gating_signal arg
-            #    Delete whichever one it was, as neither is a recognized GatingSignal param
-            #        (which will balk at it in GatingSignal._validate_params)
-            elif (gating_signal_params and
-                    any(kw in gating_signal_spec[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, STATE_PROJECTIONS})):
-                if CONTROL_SIGNAL_SPECS in gating_signal_spec[PARAMS]:
-                    spec = gating_signal_params[CONTROL_SIGNAL_SPECS]
-                    del gating_signal_params[CONTROL_SIGNAL_SPECS]
-                elif STATE_PROJECTIONS in gating_signal_spec[PARAMS]:
-                    spec = gating_signal_params[STATE_PROJECTIONS]
-                    del gating_signal_params[STATE_PROJECTIONS]
-
-                # GatingSignal
-                if isinstance(spec, GatingSignal):
-                    gating_signal_spec = spec
-
-                else:
-                    # Mechanism
-                    # IMPLEMENTATION NOTE: Mechanism was placed in list in STATE_PROJECTIONS entry by _parse_state_spec
-                    if isinstance(spec, list) and isinstance(spec[0], Mechanism):
-                        mech = spec[0]
-                        state = _get_state(state_name, mech)
-
-                    # Projection (in a list)
-                    elif isinstance(spec, list):
-                        gating_projection = spec[0]
-                        if not isinstance(gating_projection, GatingProjection):
-                            raise GatingMechanismError("PROGRAM ERROR: list in {} entry of params dict for {} of {} "
-                                                        "must contain a single GatingProjection".
-                                                        format(GATING_SIGNAL_SPECS, GATING_SIGNAL, self.name))
-                        if len(spec)>1:
-                            raise GatingMechanismError("PROGRAM ERROR: Multiple GatingProjections is not "
-                                                        "currently supported in specification of a GatingSignal")
-                        # Get receiver mech
-                        if gating_projection.value is DEFERRED_INITIALIZATION:
-                            state = gating_projection.init_args['receiver']
-                        else:
-                            state = gating_projection.receiver
-                        state_name = state.name
-
-                    else:
-                        raise GatingMechanismError("PROGRAM ERROR: failure to parse specification of {} for {}".
-                                                    format(GATING_SIGNAL, self.name))
-            else:
-                raise GatingMechanismError("PROGRAM ERROR: No entry found in params dict with specification of "
-                                            "parameter Mechanism or ControlProjection for {} of {}".
-                                            format(GATING_SIGNAL, self.name))
-
-        # FIX: END REPLACEMENT WITH _parse_gated_state_spec: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        # gating_projection = None
+        # gating_signal_params = None
+        gating_signal_spec = _parse_gating_signal_spec(owner=self, state_spec=gating_signal)
 
         # Specification is a GatingSignal (either passed in directly, or parsed from tuple above)
         if isinstance(gating_signal_spec, GatingSignal):
@@ -494,7 +495,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # Instantiate OutputState for GatingSignal
         else:
-            gating_signal_name = state_name + '_' + GatingSignal.__name__
+
+            gating_signal_name = gating_signal_spec[NAME]
 
             # from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
             # from PsyNeuLink.Components.States.State import _instantiate_state
@@ -604,7 +606,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         print ("\n---------------------------------------------------------")
 
 
-def _parse_gated_state_spec(owner, state_spec):
+def _parse_gating_signal_spec(owner, state_spec):
     """Take specifications for one or more states to be gated, and return GatingSignal specification dictionary
 
     state_spec can take any of the following forms:
@@ -636,8 +638,25 @@ def _parse_gated_state_spec(owner, state_spec):
     
     from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
     from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+
+    GATING_SIGNAL_SUFFIX = '_' + GatingSignal.__name__
     # FIX: ADD GatingProjection TO ALLOWABLE STATE SPECS:
     #     IF GatingProjection:  USE RECEIVER TO GET STATE (AND NAME IF NEEDED)
+
+    def _get_default_gating_signal_name():
+        """Return default name for gating signal
+        Default_GatingSignal if it is the first,  
+        Default_GatingSignal-2 for second
+        Default_GatingSignal-3 for third, etc. 
+        """
+
+        if owner.gating_signals:
+            index = len(owner.gating_signals) or ""
+        else:
+            index = ''
+        if index:
+            index = repr(index+1)
+        return 'Default'+GATING_SIGNAL_SUFFIX+index
 
     # Specification is for a GatingSignal - return as is
     if isinstance(state_spec, GatingSignal):
@@ -655,19 +674,21 @@ def _parse_gated_state_spec(owner, state_spec):
     #    - if it is a single spec (state name and mech):
     #        validate that the mech is in self.system, has a state of that name, and then return the state
     #    - if it is a list:
-    #        iterate through list, calling _parse_gated_state_spec recursively, to build up the list of states
+    #        iterate through list, calling _parse_gating_signal_spec recursively, to build up the list of states
 
     states = []
     params = {}
 
+    # Specification is for an existing GatingProjection
+    #    so check if it is to a state of a mechanism in self.system
     if isinstance(state_spec, GatingProjection):
-        #  Check it is to a state of a mechanism in self.system
         if not state_spec.receiver.owner in owner.system.mechanisms:
             raise GatingMechanismError("The GatingSignal specified in the {} arg for {} ({}) "
                                        "has one more more GatingProjections to a mechanism "
                                        "that is not in {}".
                                        format(GATING_SIGNALS, owner.name, state_spec.name, owner.system.name))
         state_name = state_spec.receiver.name
+        gating_signal_name = state_name + GATING_SIGNAL_SUFFIX
         mech = state_spec.reciever.owner
 
     # Specification is for an existing InputState or OutputState,
@@ -680,11 +701,13 @@ def _parse_gated_state_spec(owner, state_spec):
                                                state_spec.name,
                                                state_spec.owner.system.name))
         state_name = state_spec.name
+        gating_signal_name = state_name + GATING_SIGNAL_SUFFIX
         mech = state_spec.owner
 
     elif isinstance(state_spec, tuple):
         state_name = state_spec[0]
         mech = state_spec[1]
+        gating_signal_name = state_name + GATING_SIGNAL_SUFFIX
         # Check that 1st item is a str (presumably the name of one of the mechanism's states)
         if not isinstance(state_name, str):
             raise GatingMechanismError("1st item of specification tuple for the state to be gated by {} of {} ({})"
@@ -703,8 +726,9 @@ def _parse_gated_state_spec(owner, state_spec):
         #    - assign state_name as None,
         #        since there is no single name that can be used as the name for the GatingSignal
         for spec in state_spec:
-            spec_dict = _parse_gated_state_spec(owner, spec)
-            state_name = None # Default name will be assigned to GatingSignal in _instantiate_gating_signal
+            spec_dict = _parse_gating_signal_spec(owner, spec)
+            state_name = None
+            gating_signal_name = _get_default_gating_signal_name()
             states.extend(spec_dict[STATES])
 
     # Specification is a dict that could be for a single state state_spec or a list of ones
@@ -723,10 +747,11 @@ def _parse_gated_state_spec(owner, state_spec):
             #    - assign state_name to the NAME entry
             #        (which will be used as the name for the GatingSignal in _instantiate_gating_signal)
             for spec in state_specs:
-                spec_dict = _parse_gated_state_spec(owner, spec)
+                spec_dict = _parse_gating_signal_spec(owner, spec)
                 states.extend(spec_dict[STATES])
             if NAME in state_spec:
                 state_name = state_spec[NAME]
+                gating_signal_name = state_name
 
         # If it doesn't have a STATES entry
         else:
@@ -734,9 +759,9 @@ def _parse_gated_state_spec(owner, state_spec):
             #    and the value a state spec or list of ones
             state_name = next((key for key in state_spec if not key in {NAME, STATES, MECHANISM, PARAMS} ), None)
             if state_name:
-                spec_dict = _parse_gated_state_spec(owner, state_spec[state_name])
+                gating_signal_name = state_name
+                spec_dict = _parse_gating_signal_spec(owner, state_spec[gating_signal_name])
                 states = spec_dict[STATES]
-
             # Otherwise, it must be for a single state state_spec,
             #    which means it must have a NAME and a MECHANISM entry:
             else:
@@ -745,6 +770,7 @@ def _parse_gated_state_spec(owner, state_spec):
                                                "NAME entry that is the name of the state".
                                                format(GATING_SIGNAL, owner.name))
                 state_name = state_spec[NAME]
+                gating_signal_name = state_name + GATING_SIGNAL_SUFFIX
 
                 # GatingSignal projects to a single state (named in NAME entry)
                 if not MECHANISM in state_spec:
@@ -799,6 +825,8 @@ def _parse_gated_state_spec(owner, state_spec):
                                                owner.system.name))
         states = [state]
 
-    return {NAME: state_name,
+    # gating_signal_name = state_name or _get_default_gating_signal_name()
+
+    return {NAME: gating_signal_name,
             STATES: states,
             PARAMS: params}
