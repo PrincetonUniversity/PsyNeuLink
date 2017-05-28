@@ -640,8 +640,6 @@ def _parse_gating_signal_spec(owner, state_spec):
     from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
 
     GATING_SIGNAL_SUFFIX = '_' + GatingSignal.__name__
-    # FIX: ADD GatingProjection TO ALLOWABLE STATE SPECS:
-    #     IF GatingProjection:  USE RECEIVER TO GET STATE (AND NAME IF NEEDED)
 
     def _get_default_gating_signal_name():
         """Return default name for gating signal
@@ -669,13 +667,11 @@ def _parse_gating_signal_spec(owner, state_spec):
                                         format(GATING_SIGNALS, owner.name, state_spec.name, owner.system.name))
         return state_spec
 
-
     # For all other specs:
     #    - if it is a single spec (state name and mech):
     #        validate that the mech is in self.system, has a state of that name, and then return the state
     #    - if it is a list:
     #        iterate through list, calling _parse_gating_signal_spec recursively, to build up the list of states
-
     states = []
     params = {}
 
@@ -824,8 +820,6 @@ def _parse_gating_signal_spec(owner, state_spec):
                                                mech.name,
                                                owner.system.name))
         states = [state]
-
-    # gating_signal_name = state_name or _get_default_gating_signal_name()
 
     return {NAME: gating_signal_name,
             STATES: states,
