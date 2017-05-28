@@ -2220,6 +2220,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.Gating
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Functions.Function import ModulationParam
+from PsyNeuLink.Components.States.OutputState import OutputState
 
 gating_mech = GatingMechanism()
 mech_1 = DDM()
@@ -2228,6 +2229,10 @@ mech_2 = DDM()
 single_dict = {NAME:'Default_input_state', MECHANISM:mech_1}
 a = _parse_gating_signal_spec(owner=gating_mech, state_spec=single_dict)
 print('\nsingle_dict:', a)
+
+x = DDM()
+x.name ='Default_input_state_GatingSignal'
+gating_mech._gating_signals = [x]
 
 single_tuple = ('Default_input_state', mech_1)
 b = _parse_gating_signal_spec(gating_mech, state_spec=single_tuple)
