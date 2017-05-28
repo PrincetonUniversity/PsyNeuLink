@@ -472,6 +472,8 @@ kwInitialPoint = 'initial_point'
 
 #region ----------------------------------------    MODULATORY MECHANISMS ----------------------------------------------
 
+MODULATION_OPERATION = 'modulation_operation'
+
 # ControlMechanism / EVCMechanism
 MAKE_DEFAULT_CONTROLLER = "make_default_controller"
 MONITOR_FOR_CONTROL = "monitor_for_control"
