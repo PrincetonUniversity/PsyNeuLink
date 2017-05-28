@@ -201,6 +201,10 @@ class GatingSignal(OutputState):
     paramClassDefaults.update({
         PROJECTION_TYPE: GATING_PROJECTION,
         GATED_STATE:None,
+        MODULATION_OPERATION:None # This must be here, despite also being an argument in the constructor (below):
+                                  # - it is in the constructor to expose it to the user;
+                                  # - it is here to expose it as part of the class for validation of
+                                  #     GatingSignal specifications inGatingMechanism._parse_gating_signal
     })
     #endregion
 

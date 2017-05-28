@@ -463,8 +463,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
         #
         # # FIX: END REPLACEMENT WITH _parse_gating_signal_spec: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-        # gating_projection = None
-        # gating_signal_params = None
+        gating_projection = None
+        gating_signal_params = None
         gating_signal_spec = _parse_gating_signal_spec(owner=self, state_spec=gating_signal)
 
         # Specification is a GatingSignal (either passed in directly, or parsed from tuple above)
@@ -512,7 +512,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
             # - get constraint for OutputState's value
             output_state_constraint_value = self.gating_policy[output_state_index]
 
-            gating_signal_params.update({GATED_STATE:state_name})
+            # gating_signal_params.update({GATED_STATE:state_name})
+            gating_signal_params.update(gating_signal_spec[PARAMS])
 
             # FIX 5/23/17: CALL super()_instantiate_output_states ??
             # FIX:         OR AGGREGATE ALL GatingSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
@@ -779,7 +780,7 @@ def _parse_gating_signal_spec(owner, state_spec):
         for entry in state_spec:
             if entry in {NAME, MECHANISM, STATES, state_name}:
                 continue
-            if not hasattr(owner, entry):
+            if not hasattr(GatingSignal, entry):
                 raise GatingMechanismError("Entry in specification dictionary for {} arg of {} ({}) "
                                            "is not a valid {} parameter".
                                            format(GATING_SIGNAL, owner.name, entry,
