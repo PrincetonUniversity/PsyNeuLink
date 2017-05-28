@@ -71,6 +71,8 @@ Class Reference
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
+
 
 parameter_keywords.update({GATING_PROJECTION, GATING})
 projection_keywords.update({GATING_PROJECTION, GATING})
@@ -201,7 +203,7 @@ class GatingProjection(ModulatoryProjection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_SENDER: GatingMechanism,
-        PROJECTION_SENDER_VALUE: defaultGatingSignal})
+        PROJECTION_SENDER_VALUE: defaultGatingPolicy})
 
     @tc.typecheck
     def __init__(self,

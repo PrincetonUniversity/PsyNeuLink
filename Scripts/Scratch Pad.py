@@ -2213,9 +2213,9 @@ class ScratchPadError(Exception):
 
 #region TEST parse_state_spec @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-print("TEST parse_state_spec")
+print("TEST parse_gated_state_spec")
 
-from PsyNeuLink.Components.States.State import _parse_state_spec
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import _parse_gated_state_spec
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
@@ -2224,32 +2224,31 @@ gating_mech = GatingMechanism()
 mech_1 = DDM()
 mech_2 = DDM()
 
-single_dict = {NAME:'Input_State_1', MECHANISM:mech_1}
-a = _parse_state_spec(owner=gating_mech, state_type=GatingSignal, state_spec=single_dict)
+single_dict = {NAME:'Default_input_state', MECHANISM:mech_1}
+a = _parse_gated_state_spec(owner=gating_mech, state_spec=single_dict)
 print('\nsingle_dict:', a)
 
-single_tuple = ('Input_State_1', mech_1)
-b = _parse_state_spec(gating_mech, state_type=GatingSignal, state_spec=single_tuple)
+single_tuple = ('Default_input_state', mech_1)
+b = _parse_gated_state_spec(gating_mech, state_spec=single_tuple)
 print('\nsingle_tuple:', b)
 
-multi_states_dicts = {'MY_SIGNAL':{{NAME:'Input_State_1',
+multi_states_dicts = {'MY_SIGNAL':[{NAME:'Default_input_state',
                                    MECHANISM:mech_1},
-                                   {NAME:'Input_State_2',
-                                   MECHANISM:mech_1}}}
-c = _parse_state_spec(gating_mech, state_type=GatingSignal, state_spec=multi_states_dicts)
+                                   {NAME:'Default_input_state',
+                                   MECHANISM:mech_1}]}
+c = _parse_gated_state_spec(gating_mech, state_spec=multi_states_dicts)
 print('\nmulti_states_dicts:', c)
 
-multi_states_tuples = {'MY_SIGNAL':{('Input_State_1',mech_1),
-                                   ('Input_State_2',mech_2)}}
-d = _parse_state_spec(gating_mech, state_type=GatingSignal, state_spec=multi_states_tuples)
+multi_states_tuples = {'MY_SIGNAL':[('Default_input_state',mech_1),
+                                   ('Default_input_state',mech_2)]}
+d = _parse_gated_state_spec(gating_mech, state_spec=multi_states_tuples)
 print('\nmulti_states_tuples:', d)
 
-multi_states_combo = {'MY_SIGNAL':{{NAME:'Input_State_1',
+multi_states_combo = {'MY_SIGNAL':[{NAME:'Default_input_state',
                                    MECHANISM:mech_1},
-                                   ('Input_State_2',mech_2)}}
-e = _parse_state_spec(gating_mech, state_type=GatingSignal, state_spec=multi_states_combo)
+                                   ('Default_input_state',mech_2)]}
+e = _parse_gated_state_spec(gating_mech, state_spec=multi_states_combo)
 print('\nmulti_states_combo:', e)
-
 
 #endregion
 
