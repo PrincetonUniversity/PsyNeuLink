@@ -282,6 +282,13 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_output_states(self, context=None):
 
+        # Create registry for GatingSignals (to manage names)
+        from PsyNeuLink.Globals.Registry import register_category
+        register_category(entry=GatingSignal,
+                          base_class=State_Base,
+                          registry=self._stateRegistry,
+                          context=context)
+
         if self.gating_signals:
             for gating_signal in self.gating_signals:
                 self._instantiate_gating_signal(gating_signal=gating_signal, context=context)
@@ -326,7 +333,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
                         gating_signal_specs = projection.gating_signal or {}
                         gating_signal_specs.update({GATING_SIGNAL_SPECS: [projection]})
                         self._instantiate_gating_signal(gating_signal_specs, context=context)
-
 
     def _instantiate_gating_signal(self, gating_signal=None, context=None):
         """Instantiate OutputState for GatingSignal and assign (if specified) or instantiate GatingProjection
@@ -400,7 +406,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
         else:
 
             gating_signal_name = gating_signal_spec[NAME]
-            # FIX: CALL REGISTRY FOR NAME HERE (AS FOR OUTPUTSTATE IN MECHANISM
+            # FIX: ??CALL REGISTRY FOR NAME HERE (AS FOR OUTPUTSTATE IN MECHANISM?? -
+            # FIX:  OR IS THIS DONE AUTOMATICALLY IN _instantiate_state??)
             if self.gating_signals and gating_signal_name in self.gating_signals.names:
                 gating_signal_name = gating_signal_name + '-' + repr(len(self.gating_signals))
 
@@ -434,6 +441,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # VALIDATE OR INSTANTIATE GatingProjection(s) TO GatingSignal  -------------------------------------------
 
+        # FIX: DEAL WITH MULTIPLE STATES / PROJECTIONS HERE
         # Validate gating_projection (if specified) and get receiver's name
         if gating_projection:
             _validate_projection_receiver_mech(self, gating_projection, context=context)

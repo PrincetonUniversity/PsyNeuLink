@@ -199,6 +199,7 @@
 #
 # IMPLEMENT:  **gating** arg for GatingMechanism (comparable to **control** arg for ControlMechanism)
 # IMPLEMENT:  **train** arg for LearningMechanism (comparable to **control** arg for ControlMechanism)
+# FIX: check for duplicate names (using state Registry) and/or states (as at end of _parse_gating_signal_spec)
 # FIX: base_value assignment problem: ??WHY IS ASSIGNMENT TO <component>.function_object.<param>
 # FIX:      NOT UPDATING <component>._parameter_states[PARAM].base_value?
 #             Mechanism._instantiate_function (~LINE 1355):

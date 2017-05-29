@@ -408,6 +408,7 @@ class State_Base(State):
             raise StateError("\'owner\' argument ({0}) for {1} must be a mechanism or projection".
                                       format(owner, name))
 
+        # Register state with StateRegistry of owner (mechanism to which the state is being assigned)
         register_category(entry=self,
                           base_class=State_Base,
                           name=name,
