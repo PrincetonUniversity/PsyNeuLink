@@ -292,9 +292,10 @@ kwComponentCategory = "Function_Base"
 
 # Mechanisms:
 PROCESSING_MECHANISM = "ProcessingMechanism"
-MONITORING_MECHANISM = "MonitoringMechanism"
-CONTROL_MECHANISM = "ControlMechanism"
+ADAPTIVE_MECHANISM = "AdpativeMechanism"
 LEARNING_MECHANISM = "LearningMechanism"
+CONTROL_MECHANISM = "ControlMechanism"
+GATING_MECHANISM = 'GatingMechanism'
 
 # States:
 INPUT_STATE = "InputState"
