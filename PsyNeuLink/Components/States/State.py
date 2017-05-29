@@ -785,13 +785,15 @@ class State_Base(State):
                 # FIX: UPDATE WITH MODULATION_MODS
                 # FIX: GENERALIZE THIS TO BE FOR ALL ModulatoryProjections
                 from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
-                if isinstance(projection_spec, GatingProjection)
+                if isinstance(projection_spec, GatingProjection):
                     self.mod_afferents.append(projection_spec)
                 else:
                     self.afferents.append(projection_spec)
                 continue
 
-            # Projection specification is valid, so assign projection to State's afferents list
+            # Projection is instantiated, so:
+            #    - validate value
+            #    - assign to State's afferents or mod_afferents list
             elif iscompatible(self.variable, projection_spec.value):
                 # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlProjection)
                 #    may have already called this method and assigned projection to self.afferents list
