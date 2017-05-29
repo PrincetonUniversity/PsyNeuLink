@@ -214,6 +214,8 @@ class ControlProjection(ModulatoryProjection_Base):
         PROJECTION_SENDER: ControlMechanism_Base,
         PROJECTION_SENDER_VALUE: defaultControlAllocation})
 
+    # FIX: UPDATE WITH MODULATION_MODS
+    # FIX:  control_signal -> modulatory_signal_params
     @tc.typecheck
     def __init__(self,
                  sender=None,

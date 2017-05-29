@@ -472,6 +472,9 @@ class ControlMechanism_Base(Mechanism_Base):
                         # FIX:         IS REPLACED WITH (param, ControlSignal) tuple
                         # Add projection itself to any params specified in the ControlProjection for the ControlSignal
                         #    (cached in the ControlProjection's control_signal attrib)
+                        # FIX: UPDATE WITH MODULATION_MODS
+                        # FIX:  control_signal_specs -> modulatory_signal_specs
+                        # FIX:  control_signal -> modulatory_signal_params
                         control_signal_specs = projection.control_signal or {}
                         control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
                         self._instantiate_control_signal(control_signal_specs, context=context)
@@ -546,7 +549,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Specification is a ParameterState
         if isinstance(control_signal_spec, ParameterState):
-            mech = control_signal_spec.owner
+            mech = control_signal_spec.ownerf
             param_name = control_signal_spec.name
             parameter_state = _get_parameter_state(param_name, mech)
 

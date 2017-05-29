@@ -290,10 +290,18 @@
 # ------------------------------------------------------------------------------------------------------------------
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
-# FIX: ControlProjection: CHANGE control_signal -> control_signal_params
+# FIX: MODIFY ControlProjections and LearningProjections TO FUNCTION LIKE GatingProjections:
+# FIX:        - CHANGE control_signal -> modulatory_signal_params (AS for GatingProjection)
 # FIX:                    (AND WHERE REFERENCED (??AS control_signal_specs??) IN ControlSignal AND ControlMechanism)
-# FIX: State._instantiate_projections_to_state:
+# FIX:                    DO THE SAME FOR LearningProjection
+# FIX:        - ControlMechanism AND LearningMechanism SHOULD IMPLEMENT modulation_operation PARAM,
+# FIX:                    THAT TAKES VALUE OF ModulationParam AS VALUE
+# FIX:        - State._instantiate_projections_to_state:
 # FIX:                    Assign ControlProjections and LearningProjections to mod_afferents (like GatingProjections)
+# FIX:        - State.update:
+# FIX:                    ControlProjection LearningProjection values SHOULD MODIFY PARAMETER OF STATE'S FUNCTION
+# FIX:                          BASED ON THEIR modulation_operation PARAMETER
+
 # FIX: ADD "GATING" KEYWORD and GatingSignal CLASS TO INPUT_STATE TUPLE SPECIFICATION,
 #     WHICH SHOULD INSTANTIATE A DEFERRED_INIT GatingProjection (JUST LIKE A ControlProjection)
 # FIX: MAKE ControlSignal stateful (since its last_allocation attribute pertains to a prior state)
