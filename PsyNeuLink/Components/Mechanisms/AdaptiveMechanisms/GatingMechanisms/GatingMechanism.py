@@ -481,19 +481,22 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         return gating_signal
 
-    def _execute(self,
-                    variable=None,
-                    runtime_params=None,
-                    clock=CentralClock,
-                    time_scale=TimeScale.TRIAL,
-                    context=None):
-        """Updates GatingProjections based on inputs
-
-        Must be overriden by subclass
-        """
-        # FIX: THIS NEEDS TO BE IMPLEMENTED
-        return [0]
-        # raise GatingMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
+    # IMPLEMENTATION NOTE: Not necessary, since (for now) all it does is convey self.variable to self.value
+    # def _execute(self,
+    #                 variable=None,
+    #                 runtime_params=None,
+    #                 clock=CentralClock,
+    #                 time_scale=TimeScale.TRIAL,
+    #                 context=None):
+    #     """Updates GatingSignals based on inputs
+    #     """
+    #     gating_policy = self.function(controller=self,
+    #                                   variable=variable,
+    #                                   runtime_params=runtime_params,
+    #                                   time_scale=time_scale,
+    #                                   context=context)
+    #     return gating_policy
+    #
 
     def show(self):
 

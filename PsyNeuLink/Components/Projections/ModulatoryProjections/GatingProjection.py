@@ -76,6 +76,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.Gating
 
 parameter_keywords.update({GATING_PROJECTION, GATING})
 projection_keywords.update({GATING_PROJECTION, GATING})
+GATING_SIGNAL_PARAMS = 'gating_signal_params'
 
 class GatingProjectionError(Exception):
     def __init__(self, error_value):
@@ -210,7 +211,7 @@ class GatingProjection(ModulatoryProjection_Base):
                  sender=None,
                  receiver=None,
                  function=Linear,
-                 gating_signal:tc.optional(dict)=None,
+                 gating_signal_params:tc.optional(dict)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -218,7 +219,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                  gating_signal=gating_signal,
+                                                  gating_signal_params=gating_signal_params,
                                                   params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
@@ -228,7 +229,7 @@ class GatingProjection(ModulatoryProjection_Base):
             self.init_args['context'] = self
             self.init_args['name'] = name
             # Delete this as it has breen moved to params dict (so it will not be passed to Projection.__init__)
-            del self.init_args[GATING_SIGNAL]
+            del self.init_args[GATING_SIGNAL_PARAMS]
 
             # Flag for deferred initialization
             self.value = DEFERRED_INITIALIZATION
@@ -288,7 +289,7 @@ class GatingProjection(ModulatoryProjection_Base):
             from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignalError
             if isinstance(self.sender, GatingMechanism_Base):
                 try:
-                    params = params or self.gating_signal
+                    params = params or self.gating_signal_params
                     self.sender._instantiate_gating_projection(self, params=params, context=context)
                 except GatingSignalError as error_msg:
                     raise FunctionError("Error in attempt to specify GatingSignal for {} of {}".
