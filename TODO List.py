@@ -197,6 +197,10 @@
 
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
 #
+# IMPLEMENT: Override input_states and output_states properties with assignments to:
+#                monitored_values (for input_states of ObjectiveMechanism)
+#                control_signals (for output_states of ControlMechanism)
+#                gating_signals (for output_states of GatingMechanism)
 # IMPLEMENT:  **gating** arg for GatingMechanism (comparable to **control** arg for ControlMechanism)
 # IMPLEMENT:  **train** arg for LearningMechanism (comparable to **control** arg for ControlMechanism)
 # FIX: check for duplicate names (using state Registry) and/or states (as at end of _parse_gating_signal_spec)
