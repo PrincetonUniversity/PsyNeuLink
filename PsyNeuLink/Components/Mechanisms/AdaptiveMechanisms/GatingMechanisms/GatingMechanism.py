@@ -184,7 +184,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
         (see `gating_signals <GatingMechanism.gating_signals>` for details).
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
-        specifies function used to combine values of monitored output states.
+        specifies function used to transform input to `gating_policy` to value;  the default is an identity function
+        that simply assigns the GatingMechanism's input to its `value`.
         
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
@@ -215,8 +216,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
         list of `GatingProjections <GatingProjection>`, one for each `GatingSignal` in `gating_signals`.
 
     gating_policy : 2d np.array
-        each items is the value assigned to the corresponding GatingSignal listed in `gating_signals`
+        each item is the value assigned to the corresponding GatingSignal listed in `gating_signals`;
         (same as the GatingMechanism's `value <Mechanism.value>` attribute).
+        Default is a single item used by all of the `gating_signals`. 
         
     """
 
