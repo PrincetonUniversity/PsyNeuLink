@@ -359,6 +359,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         Returns GatingSignal (OutputState)
         """
+
         from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
 
         # EXTEND gating_policy TO ACCOMMODATE NEW GatingSignal -------------------------------------------------
@@ -369,9 +370,16 @@ class GatingMechanism(AdaptiveMechanism_Base):
         else:
             self.gating_policy = np.append(self.gating_policy, defaultGatingPolicy)
 
+        # GET index FOR GatingSignal OutputState
+        try:
+            output_state_index = len(self.gating_signals)
+        except (AttributeError, TypeError):
+            output_state_index = 0
+
+
         # PARSE gating_signal SPECIFICATION -----------------------------------------------------------------------
 
-        gating_projection = None
+        gating_projections = None
         gating_signal_params = None
 
         gating_signal_spec = _parse_gating_signal_spec(owner=self, state_spec=gating_signal)
@@ -391,17 +399,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
             gating_signal_name = gating_signal.name
             gating_projections = gating_signal.efferents
 
-            # IMPLEMENTATION NOTE:
-            #    THIS IS TO HANDLE FUTURE POSSIBILITY OF MULTIPLE GatingProjections FROM A SINGLE GatingSignal;
-            #    FOR NOW, HOWEVER, ONLY A SINGLE ONE IS SUPPORTED
-            # parameter_states = [proj.recvr for proj in control_projections]
-            if len(gating_projections) > 1:
-                raise GatingMechanismError("PROGRAM ERROR: list of ControlProjections is not currently supported "
-                                            "as specification in a ControlSignal")
-            else:
-                gating_projection = gating_projections[0]
-                state = gating_projection.receiver
-
         # Instantiate OutputState for GatingSignal
         else:
 
@@ -417,11 +414,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
             # Get constraint for OutputState's value
             #    - get GatingMechanism's value
             self._update_value(context=context)
-            # - get OutputState's index
-            try:
-                output_state_index = len(self.output_states)
-            except (AttributeError, TypeError):
-                output_state_index = 0
             # - get constraint for OutputState's value
             output_state_constraint_value = self.gating_policy[output_state_index]
 
@@ -441,53 +433,49 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # VALIDATE OR INSTANTIATE GatingProjection(s) TO GatingSignal  -------------------------------------------
 
-        # FIX: DEAL WITH MULTIPLE STATES / PROJECTIONS HERE
-        # Validate gating_projection (if specified) and get receiver's name
-        if gating_projection:
-            _validate_projection_receiver_mech(self, gating_projection, context=context)
-
-            if not isinstance(gating_projection, GatingProjection):
-                raise GatingMechanismError("PROGRAM ERROR: Attempt to assign {}, "
-                                                  "that is not a GatingProjection, to GatingSignal of {}".
-                                                  format(gating_projection, self.name))
-            if gating_projection.value is DEFERRED_INITIALIZATION:
-                gating_projection.init_args['sender']=gating_signal
-                if gating_projection.init_args['name'] is None:
-                    # FIX 5/23/17: CLEAN UP NAME STUFF BELOW:
-                    gating_projection.init_args['name'] = CONTROL_PROJECTION + \
-                                                   ' for ' + state.owner.name + ' ' + state.name
-                gating_projection._deferred_init()
-            else:
-                gating_projection.sender = gating_signal
+        # Validate gating_projections (if specified)
+        if gating_projections:
+            for gating_projection in gating_projections:
+                if not isinstance(gating_projection, GatingProjection):
+                    raise GatingMechanismError("PROGRAM ERROR: Attempt to assign {}, "
+                                                      "that is not a GatingProjection, to GatingSignal of {}".
+                                                      format(gating_projection, self.name))
+                _validate_projection_receiver_mech(self, gating_projection, context=context)
+                state = gating_projection.receiver
+                if gating_projection.value is DEFERRED_INITIALIZATION:
+                    gating_projection.init_args['sender']=gating_signal
+                    if gating_projection.init_args['name'] is None:
+                        gating_projection.init_args['name'] = GATING_PROJECTION + \
+                                                              ' for ' + state.name + ' of ' + state.owner.name
+                    gating_projection._deferred_init()
+                else:
+                    gating_projection.sender = gating_signal
 
         # Instantiate GatingProjection
         else:
-            # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-            gating_projection = GatingProjection(sender=gating_signal,
-                                           receiver=state,
-                                           name=GATING_PROJECTION + gating_signal_name)
+            for state in gating_signal_spec[STATES]:
+                # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+                gating_projection = GatingProjection(sender=gating_signal,
+                                               receiver=state,
+                                               name=GATING_PROJECTION + gating_signal_name)
+                # Add gating_projection to GatingSignal.efferents
+                gating_signal.efferents.append(gating_projection)
 
-        # Add GatingProjection to list of outputState's outgoing projections
-        # (note: if it was deferred, it just added itself, skip)
-        if not gating_projection in gating_signal.efferents:
-            gating_signal.efferents.append(gating_projection)
+        # Add GatingProjections to GatingMechanism's list of GatingProjections
+        for gating_projection in gating_projections:
+            try:
+                self.gating_projections.append(gating_projection)
+            except AttributeError:
+                self.gating_projections = [gating_projection]
 
-        # Add GatingProjection to GatingMechanism's list of GatingProjections
-        try:
-            self.gating_projections.append(gating_projection)
-        except AttributeError:
-            self.gating_projections = [gating_projection]
-
-        # UPDATE output_states AND gating_projections -------------------------------------------------------------
-
+        # FIX: CONSIDER OVERRIDING output_states PROPERTY WITH ASSIGNMENT TO gating_signals
+        # UPDATE output_states
         try:
             self.output_states[gating_signal.name] = gating_signal
         except (AttributeError, TypeError):
             self.output_states = ContentAddressableList(component_type=State_Base, list=[gating_signal])
-
         # Add index assignment to outputState
         gating_signal.index = output_state_index
-
         # (Re-)assign control_signals attribute to output_states
         self.gating_signals = self.output_states
 
