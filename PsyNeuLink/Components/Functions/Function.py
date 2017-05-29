@@ -991,6 +991,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  operation: tc.enum(SUM, PRODUCT) = SUM,
+                 scale: parameter_spec = 1.0,
+                 offset: parameter_spec = 0.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -998,6 +1000,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(operation=operation,
+                                                  scale=scale,
+                                                  offset=offset,
                                                   params=params)
 
         super().__init__(variable_default=variable_default,
@@ -1024,8 +1028,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Returns a scalar value for each array in `variable <Reduce.variable>` that is either the sum or
-        product of the elements in that array.
+        Calculate sum or product of the elements for each array in `variable <Reduce.variable>`, 
+        apply `scale <Reduce.scale>` and/or `offset <Reduce.offset>`, and return array of resulting values.        
 
         Arguments
         ---------
@@ -1054,12 +1058,14 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         self._check_args(variable=variable, params=params, context=context)
 
         operation = self.paramsCurrent[OPERATION]
+        scale = self.paramsCurrent[SCALE]
+        offset = self.paramsCurrent[OFFSET]
 
         # Calculate using relevant aggregation operation and return
         if (operation is SUM):
-            result = np.sum(self.variable)
+            result = np.sum(self.variable) * scale + offset
         elif operation is PRODUCT:
-            result = np.product(self.variable)
+            result = np.product(self.variable) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
                                 format(self.paramsCurrent[OPERATION].self.Operation.SUM))
@@ -1269,11 +1275,11 @@ class LinearCombination(
                  context=componentName + INITIALIZING):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(scale=scale,
-                                                  offset=offset,
-                                                  weights=weights,
+        params = self._assign_args_to_param_dicts(weights=weights,
                                                   exponents=exponents,
                                                   operation=operation,
+                                                  scale=scale,
+                                                  offset=offset,
                                                   params=params)
 
         super().__init__(variable_default=variable_default,

@@ -324,6 +324,7 @@
 # DOCUMENTATION: UPDATE ParameterState_Parameter_Modulation_Operation WITH REFACTORING OF modulation_operation arg/param
 # DOCUMENTATION: UPDATE ControlSignal to describe modulation_operation attribute (as in GatingSignal)
 # DOCUMENTATION: ADD ENTRIES FOR variable, function, vaue, params, name and prefs to GatingMechanism and ControlMechaism
+# FIX: State.update(): THERE *MUST* BE A MORE EFFICIENT WAY OF DOING ALL OF THIS (INCLUDING DEALING WITH stateParams)
 # FIX:           MODIFY ParameterState and LearningProjection so that latter projects to mod_afferents (vs. afferents)
 # FIX: is_param_spec to allow tuple with projection specification in it TO PASS TYPECHECK
 # FIX: PARSING OF input_state AND output_state ARGS IN Mechanism CONSTRUCTORS:

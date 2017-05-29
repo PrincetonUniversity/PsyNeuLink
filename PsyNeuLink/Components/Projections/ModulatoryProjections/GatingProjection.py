@@ -276,11 +276,22 @@ class GatingProjection(ModulatoryProjection_Base):
                                             format(self.receiver, self.name))
 
     def _instantiate_receiver(self, context=None):
-        """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
+        """Assign state if receiver is Mechanism, and match output to param being modulated
         """
+        # If receiver specification was a Mechanism, re-assign to the mechanism's primary inputState
         if isinstance(self.receiver, Mechanism):
             # If Mechanism is specified as receiver, assign GatingProjection to primary inputState as the default
             self.receiver = self.receiver.input_states[0]
+
+        # # Match type of GatingProjection.value to type to the parameter being modulated
+        # modulated_param = self.sender.modulation_operation
+        # function = self.receiver.function_object
+        # function_param = function.params[modulated_param]
+        # function_param_value = function.params[function_param]
+        # gating_projection_function = self.function.__self__
+        # gating_projection_function.functionOutputType = type(function_param_value)
+        # # ASSIGN FUNCTION TYPE TO FUNCTION HERE
+
         super()._instantiate_receiver(context=context)
 
     def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
