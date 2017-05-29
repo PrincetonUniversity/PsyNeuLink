@@ -265,7 +265,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
-        super()._validate_params(self, request_set=request_set, target_set=target_set, context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if INITIALIZING in context:
             from PsyNeuLink.Components.States.InputState import InputState

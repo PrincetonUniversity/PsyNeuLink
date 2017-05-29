@@ -319,6 +319,7 @@
 # DOCUMENTATION: ModulatoryMechanism: describe how they work, i.e., that they assign the value of their
 #                  outputState to the paraemter of the state's function specified in their modulation_operation param
 # DOCUMENTATION: GatingSignal (per ControlSignal) -- describe modulation_operation in both
+# DOCUMENTATION: Various forms of specification;  if Mechainsm: assume primary InputState
 # DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction
 # DOCUMENTATION: UPDATE ParameterState_Parameter_Modulation_Operation WITH REFACTORING OF modulation_operation arg/param
 # DOCUMENTATION: UPDATE ControlSignal to describe modulation_operation attribute (as in GatingSignal)

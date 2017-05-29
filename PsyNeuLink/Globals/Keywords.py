@@ -496,13 +496,14 @@ SYSTEM_DEFAULT_CONTROLLER = "DefaultController"
 EVC_SIMULATION = 'SIMULATING'
 ALLOCATION_SAMPLES = "allocation_samples"
 
-# ControlMechanism
+# GatingMechanism
 MAKE_DEFAULT_GATING_MECHANISM = "make_default_gating_mechanism"
 GATING_SIGNAL = 'gating_signal'
 GATING_SIGNALS = 'gating_signals'
 GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
 GATED_STATE = "gated_state"
 GATING_PROJECTIONS = 'GatingProjections'
+GATING_POLICY = 'gating_policy'
 
 #endregion
 

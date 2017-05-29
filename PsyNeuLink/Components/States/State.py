@@ -514,10 +514,6 @@ class State_Base(State):
                                        target_set[PROJECTION_TYPE],
                                        self.owner.name))
 
-
-
-
-
     def _instantiate_function(self, context=None):
         """Insure that output of function (self.value) is compatible with its input (self.variable)
 
@@ -641,6 +637,7 @@ class State_Base(State):
                         #   (remainder will occur as part of deferred init for
                         #    LearningProjection, ControlProjection or GatingProjection)
                         continue
+
                     elif isinstance(projection_spec, GatingProjection):
                         # Assign projection to mod_afferents
                         self.mod_afferents.append(projection_spec)
@@ -791,24 +788,42 @@ class State_Base(State):
                     self.afferents.append(projection_spec)
                 continue
 
-            # Projection is instantiated, so:
+            # Projection was instantiated, so:
             #    - validate value
             #    - assign to State's afferents or mod_afferents list
-            elif iscompatible(self.variable, projection_spec.value):
-                # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlProjection)
-                #    may have already called this method and assigned projection to self.afferents list
-                if not projection_spec in self.afferents:
-                    self.afferents.append(projection_spec)
+            # FIX: UPDATE WITH MODULATION_MODS
+            # FIX: GENERALIZE THIS TO BE FOR ALL ModulatoryProjections
+            from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+            # If it is a GatingProjection:
+            #    - check that projection's value is compatible with value of the function's param being used for gating
+            #    - assign projection to mod_afferents
+            if isinstance(projection_spec, GatingProjection):
+                function_param = getattr(self.function_object, projection_spec.sender.modulation_operation)
+                if iscompatible(function_param, projection_spec.value):
+                    # This is needed to avoid duplicates, since instantiation of projection (e.g, by Mechanism)
+                    #    may have already called this method and assigned projection to self.afferents list
+                    if not projection_spec in self.mod_afferents:
+                        self.mod_afferents.append(projection_spec)
+                    continue
+            # Otherwise:
+            #    - check that projection's value is compatible with the state's variable
+            #    - assign projection to afferents
+            else:
+                if iscompatible(self.variable, projection_spec.value):
+                    # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlProjection)
+                    #    may have already called this method and assigned projection to self.afferents list
+                    if not projection_spec in self.afferents:
+                        self.afferents.append(projection_spec)
+                    continue
 
             # Projection specification is not valid
-            else:
-                raise StateError("{}Output of function for {}{} ( ({})) is not compatible with value of {} ({})".
-                                 format(item_prefix_string,
-                                        default_string,
-                                        projection_spec.name,
-                                        projection_spec.value,
-                                        item_suffix_string,
-                                        self.value))
+            raise StateError("{}Output of function for {}{} ( ({})) is not compatible with value of {} ({})".
+                             format(item_prefix_string,
+                                    default_string,
+                                    projection_spec.name,
+                                    projection_spec.value,
+                                    item_suffix_string,
+                                    self.value))
 
     def _instantiate_projection_from_state(self, projection_spec, receiver, context=None):
         """Instantiate outgoing projection from a state and assign it to self.efferents
@@ -1258,6 +1273,16 @@ class State_Base(State):
             # Add projection_value to list (for aggregation below)
             projection_value_list.append(projection_value)
         #endregion
+
+        # If the state receives any modulatory projections
+        if self.mod_afferents:
+            # mod_value = self.mod_aggregation_operation([mod_proj.execute() for mod_proj in self.mod_afferents])
+            # Execute each modulatory projection and assign its value to the specified function param
+            for mod_proj in self.mod_afferents:
+                # FIX: THIS MAY NEED TO BE FURTHER DE-REFERENCED
+                function_param = mod_proj.sender.modulation_operation
+                function_param_value = mod_proj.execute()
+                self.stateParams[FUNCTION_PARAMS].update({function_param:function_param_value})
 
         #region Aggregate projection values
 
