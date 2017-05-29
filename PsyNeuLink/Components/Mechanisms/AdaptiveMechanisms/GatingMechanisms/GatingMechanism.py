@@ -384,7 +384,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # PARSE gating_signal SPECIFICATION -----------------------------------------------------------------------
 
-        gating_projections = None
+        gating_projections = []
         modulatory_signal_params = {}
 
         gating_signal_spec = _parse_gating_signal_spec(owner=self, state_spec=gating_signal)
@@ -465,6 +465,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                      name=GATING_PROJECTION + gating_signal_name)
                 # Add gating_projection to GatingSignal.efferents
                 gating_signal.efferents.append(gating_projection)
+                gating_projections.append(gating_projection)
 
         # Add GatingProjections to GatingMechanism's list of GatingProjections
         for gating_projection in gating_projections:
@@ -482,7 +483,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         # Add index assignment to outputState
         gating_signal.index = output_state_index
         # (Re-)assign control_signals attribute to output_states
-        self.gating_signals = self.output_states
+        self._gating_signals = self.output_states
 
         return gating_signal
 

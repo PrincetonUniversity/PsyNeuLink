@@ -798,8 +798,10 @@ class State_Base(State):
             #    - check that projection's value is compatible with value of the function's param being used for gating
             #    - assign projection to mod_afferents
             if isinstance(projection_spec, GatingProjection):
-                function_param = getattr(self.function_object, projection_spec.sender.modulation_operation)
-                if iscompatible(function_param, projection_spec.value):
+                modulatory_param = getattr(self.function_object, projection_spec.sender.modulation_operation)
+                modulatory_param_value = self.function_object.params[modulatory_param]
+                projection_spec_value = type_match(projection_spec.value, type(modulatory_param_value))
+                if iscompatible(modulatory_param_value, projection_spec_value):
                     # This is needed to avoid duplicates, since instantiation of projection (e.g, by Mechanism)
                     #    may have already called this method and assigned projection to self.afferents list
                     if not projection_spec in self.mod_afferents:
@@ -1179,7 +1181,7 @@ class State_Base(State):
             # Get State params
             self.stateParams = params[self.paramsType]
         except (KeyError, TypeError):
-            self.stateParams = None
+            self.stateParams = {}
         except (AttributeError):
             raise StateError("PROGRAM ERROR: paramsType not specified for {}".format(self.name))
         #endregion
@@ -1279,10 +1281,19 @@ class State_Base(State):
             # mod_value = self.mod_aggregation_operation([mod_proj.execute() for mod_proj in self.mod_afferents])
             # Execute each modulatory projection and assign its value to the specified function param
             for mod_proj in self.mod_afferents:
-                # FIX: THIS MAY NEED TO BE FURTHER DE-REFERENCED
-                function_param = mod_proj.sender.modulation_operation
-                function_param_value = mod_proj.execute()
-                self.stateParams[FUNCTION_PARAMS].update({function_param:function_param_value})
+                # FIX: THERE *MUST* BE A MORE EFFICIENT WAY OF DOING ALL OF THIS (INCLUDING DEALING WITH stateParams)
+                function_param_spec = mod_proj.sender.modulation_operation
+                function_param = self.function_object.params[function_param_spec]
+                function_param_value = self.function_object.params[function_param]
+                modulatory_value = mod_proj.execute()
+                modulatory_param = type_match(modulatory_value, type(function_param_value))
+                if self.stateParams:
+                    if FUNCTION_PARAMS in self.stateParams:
+                        self.stateParams[FUNCTION_PARAMS].update({function_param:modulatory_param})
+                    else:
+                        self.stateParams[FUNCTION_PARAMS].update({function_param:modulatory_param})
+                else:
+                    self.stateParams[FUNCTION_PARAMS] = {function_param:modulatory_param}
 
         #region Aggregate projection values
 
