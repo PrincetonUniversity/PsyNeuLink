@@ -2226,7 +2226,7 @@ gating_mech = GatingMechanism()
 mech_1 = DDM()
 mech_2 = DDM()
 
-single_dict = {NAME:'Default_input_state', MECHANISM:mech_1}
+single_dict = {NAME:'DECISION_VARIABLE', MECHANISM:mech_1}
 a = _parse_gating_signal_spec(owner=gating_mech, state_spec=single_dict)
 print('\nsingle_dict:', a)
 
@@ -2235,14 +2235,15 @@ x = DDM()
 x.name ='Default_input_state_GatingSignal'
 x.efferents = []
 gating_mech._gating_signals = [x]
+# --------------------------------------------------------------
 
-single_tuple = ('Default_input_state', mech_1)
+single_tuple = ('DECISION_VARIABLE', mech_1)
 b = _parse_gating_signal_spec(gating_mech, state_spec=single_tuple)
 print('\nsingle_tuple:', b)
 
-multi_states_dicts = {'MY_SIGNAL':[{NAME:'Default_input_state',
+multi_states_dicts = {'MY_SIGNAL':[{NAME:'DECISION_VARIABLE',
                                    MECHANISM:mech_1},
-                                   {NAME:'Default_input_state',
+                                   {NAME:'RESPONSE_TIME',
                                    MECHANISM:mech_1}],
                       MODULATION_OPERATION: ModulationParam.ADDITIVE}
 c = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_dicts)
