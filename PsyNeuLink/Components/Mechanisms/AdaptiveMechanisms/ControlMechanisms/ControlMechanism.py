@@ -749,7 +749,7 @@ class ControlMechanism_Base(Mechanism_Base):
                     clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
-        """Updates ControlProjections based on inputs
+        """Updates ControlSignals based on inputs
 
         Must be overriden by subclass
         """
