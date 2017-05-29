@@ -565,13 +565,13 @@ class State_Base(State):
     def _instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a state and assign them to self.afferents
 
-        For each projection spec in STATE_PROJECTIONS, check that it is one or a list of any of the following:
+        For each spec in projections arg, check that it is one or a list of any of the following:
         + Projection class (or keyword string constant for one):
             implements default projection for projection class
         + Projection object:
             checks that receiver is self
             checks that projection function output is compatible with self.value
-        + specification dict:
+        + specification dict (usually from STATE_PROJECTIONS entry of params dict):
             checks that projection function output is compatible with self.value
             implements projection
             dict must contain:
@@ -579,7 +579,9 @@ class State_Base(State):
                 + PROJECTION_PARAMS:<dict> - must be dict of params for PROJECTION_TYPE
         If any of the conditions above fail:
             a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]
-        Each projection in the list is added to self.afferents
+        For each projection:
+            if it is a MappingProjection or ControlProjection, it is added to self.afferents
+            if it is a GatingProjection, it is added to self.mod_afferents 
         If kwMStateProjections is absent or empty, no projections are created
         """
 
@@ -596,11 +598,7 @@ class State_Base(State):
         default_string = ""
         kwDefault = "default "
 
-        # MODIFIED 12/1/16 OLD:
-        # default_projection_type = self.paramsCurrent[PROJECTION_TYPE]
-        # MODIFIED 12/1/16 NEW:
         default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
-        # MODIFIED 12/1/16 END
 
         # Instantiate each projection specification in the projection_list, and
         # - insure it is in self.afferents
@@ -614,6 +612,7 @@ class State_Base(State):
                 item_suffix_string = ""
 
 # FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION_SPEC
+# FIX: OR A _parse_projection_spec METHOD
             projection_object = None # flags whether projection object has been instantiated; doesn't store object
             projection_type = None   # stores type of projection to instantiate
             projection_params = {}
@@ -626,10 +625,13 @@ class State_Base(State):
             #     note: in that case, projection will be in self.afferents list
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.value is DEFERRED_INITIALIZATION:
-                    from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-                    # from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
-                    from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-                    # if isinstance(projection_spec, (LearningProjection, GatingProjection, ControlProjection)):
+                    from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection \
+                        import LearningProjection
+                    from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection \
+                        import GatingProjection
+                    from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection \
+                        import ControlProjection
+                    # FIX: MOVE THESE TO mod_afferents AS WELL
                     if isinstance(projection_spec, (LearningProjection, ControlProjection)):
                         # Assign projection to parameterState
                         self.afferents.append(projection_spec)
@@ -638,7 +640,18 @@ class State_Base(State):
                         #   (remainder will occur as part of deferred init for
                         #    LearningProjection, ControlProjection or GatingProjection)
                         continue
-                    # Complete init for other projections (e.g., ControlProjection)
+                    elif isinstance(projection_spec, GatingProjection):
+                        # Assign projection to mod_afferents
+                        self.mod_afferents.append(projection_spec)
+                        projection_spec.init_args[RECEIVER] = self
+                        # # Skip any further initialization for now
+                        # #   (remainder will occur as part of deferred init for
+                        # #    LearningProjection, ControlProjection or GatingProjection)
+                        # continue
+                        projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
+                        projection_spec._deferred_init()
+
+                    # Complete init for other (presumably Mapping) projections
                     else:
                         # Assume init was deferred because receiver could not be determined previously
                         #  (e.g., specified in function arg for receiver object, or as standalone projection in script)
@@ -675,7 +688,7 @@ class State_Base(State):
                     projection_type = default_projection_type
                     default_string = kwDefault
                     if self.prefs.verbosePref:
-                        print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
+                        warnings.warn("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                               format(item_prefix_string,
                                      PROJECTION_TYPE,
                                      STATE_PROJECTIONS,
@@ -685,8 +698,8 @@ class State_Base(State):
                     # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
                     projection_type, error_str = self._parse_projection_ref(projection_spec=projection_type,
                                                                            context=self)
-                    if error_str:
-                        print("{0}{1} {2}; default {4} will be assigned".
+                    if error_str and self.prefs.verbosePref:
+                        warnings.warn("{0}{1} {2}; default {4} will be assigned".
                               format(item_prefix_string,
                                      PROJECTION_TYPE,
                                      error_str,
@@ -699,7 +712,7 @@ class State_Base(State):
                     projection_params = projection_spec[PROJECTION_PARAMS]
                 except KeyError:
                     if self.prefs.verbosePref:
-                        print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
+                        warnings.warn("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                               format(item_prefix_string,
                                      PROJECTION_PARAMS,
                                      STATE_PROJECTIONS, state_name_string,
@@ -711,8 +724,8 @@ class State_Base(State):
             #       so projection is NOT yet in self.afferents list
             else:
                 projection_type, err_str = self._parse_projection_ref(projection_spec=projection_spec,context=self)
-                if err_str:
-                    print("{0}{1} {2}; default {4} will be assigned".
+                if err_str and self.verbosePref:
+                    warnings.warn("{0}{1} {2}; default {4} will be assigned".
                           format(item_prefix_string,
                                  PROJECTION_TYPE,
                                  err_str,
@@ -791,7 +804,7 @@ class State_Base(State):
                                         self.value))
 
     def _instantiate_projection_from_state(self, projection_spec, receiver, context=None):
-        """Instantiate projection from a state and assign it to self.efferents
+        """Instantiate outgoing projection from a state and assign it to self.efferents
 
         Check that projection_spec is one of the following:
         + Projection class (or keyword string constant for one):
