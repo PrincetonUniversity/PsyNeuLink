@@ -631,7 +631,8 @@ class State_Base(State):
                         import GatingProjection
                     from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection \
                         import ControlProjection
-                    # FIX: MOVE THESE TO mod_afferents AS WELL
+                    # FIX: UPDATE WITH MODULATION_MODS:
+                    # FIX:    MOVE THESE TO mod_afferents (LIKE GatingProjection)
                     if isinstance(projection_spec, (LearningProjection, ControlProjection)):
                         # Assign projection to parameterState
                         self.afferents.append(projection_spec)
@@ -740,7 +741,7 @@ class State_Base(State):
                     projection_type = default_projection_type
                     default_string = kwDefault
                     if self.prefs.verbosePref:
-                        print("{0}{1} is not a Projection object or specification for one{2}; "
+                        warnings.warn("{0}{1} is not a Projection object or specification for one{2}; "
                               "default {3} will be assigned".
                               format(item_prefix_string,
                                      projection_spec.name,
@@ -752,27 +753,25 @@ class State_Base(State):
             #       to it's sender's efferents list:
             #           when a projection is instantiated, it assigns itself to:
             #               its receiver's .afferents attribute (in Projection._instantiate_receiver)
-            #               its sender's .efferents list attribute (in Projection._instantiate_sender)
+            #               its sender's .efferents attribute (in Projection._instantiate_sender)
             if not projection_object:
-                # # MODIFIED 5/21/17 OLD:
-                # projection_spec = projection_type(receiver=self,
-                #                                   name=self.owner.name+' '+self.name+' '+projection_type.className,
-                #                                   # name=self.owner.name + ' '+projection_type.className,
-                #                                   params=projection_params,
-                #                                   context=context)
-                # MODIFIED 5/21/17 NEW:
                 kwargs = {RECEIVER:self,
                           NAME:self.owner.name+' '+self.name+' '+projection_type.className,
                           PARAMS:projection_params,
                           CONTEXT:context}
-                # FIX: ??DO SOMETHING COMPARABLE FOR ModulatoryProjections:
                 from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
                     import TransmissiveProjection_Base
+                from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
+                    import ModulatoryProjection_Base, MODULATORY_SIGNAL_PARAMS
+                # If projection_spec was in the form of a matrix keyword, move it to matrix entry in params dict
                 if issubclass(projection_type, TransmissiveProjection_Base) and projection_spec in MATRIX_KEYWORD_SET:
-                    # projection_params.update({MATRIX:projection_spec})
                     kwargs.update({MATRIX:projection_spec})
+                # If projection_spec was in the form of a ModulationParam value,
+                #    move it to MODULATION_SIGNAL_PARAMS entry in params dict
+                elif (issubclass(projection_type, ModulatoryProjection_Base) and
+                          isinstance(projection_spec, ModulationParam)):
+                    kwargs[PARAMS].update({MODULATORY_SIGNAL_PARAMS:projection_spec})
                 projection_spec = projection_type(**kwargs)
-                # MODIFIED 5/21/17 END
 
             # Check that output of projection's function (projection_spec.value is compatible with
             #    variable of the State to which it projects;  if it is not, raise exception:
@@ -783,7 +782,13 @@ class State_Base(State):
             # Initialization of projection is deferred
             if projection_spec.value is DEFERRED_INITIALIZATION:
                 # Assign instantiated "stub" so it is found on deferred initialization pass (see Process)
-                self.afferents.append(projection_spec)
+                # FIX: UPDATE WITH MODULATION_MODS
+                # FIX: GENERALIZE THIS TO BE FOR ALL ModulatoryProjections
+                from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+                if isinstance(projection_spec, GatingProjection)
+                    self.mod_afferents.append(projection_spec)
+                else:
+                    self.afferents.append(projection_spec)
                 continue
 
             # Projection specification is valid, so assign projection to State's afferents list

@@ -107,6 +107,8 @@ Class Reference
 from PsyNeuLink.Components.Projections.Projection import Projection_Base
 from PsyNeuLink.Globals.Keywords import MODULATORY_PROJECTION
 
+MODULATORY_SIGNAL_PARAMS = 'modulatory_signal_params'
+
 class ModulatoryProjection_Base(Projection_Base):
     """
     ModulatoryProjection(                   \
