@@ -284,7 +284,7 @@ class GatingProjection(ModulatoryProjection_Base):
             self.receiver = self.receiver.input_states[0]
 
         # # Match type of GatingProjection.value to type to the parameter being modulated
-        # modulated_param = self.sender.modulation_operation
+        # modulated_param = self.sender.modulation
         # function = self.receiver.function_object
         # function_param = function.params[modulated_param]
         # function_param_value = function.params[function_param]

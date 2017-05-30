@@ -798,7 +798,7 @@ class State_Base(State):
             #    - check that projection's value is compatible with value of the function's param being used for gating
             #    - assign projection to mod_afferents
             if isinstance(projection_spec, GatingProjection):
-                modulatory_param = getattr(self.function_object, projection_spec.sender.modulation_operation)
+                modulatory_param = getattr(self.function_object, projection_spec.sender.modulation)
                 modulatory_param_value = self.function_object.params[modulatory_param]
                 projection_spec_value = type_match(projection_spec.value, type(modulatory_param_value))
                 if iscompatible(modulatory_param_value, projection_spec_value):
@@ -1282,7 +1282,7 @@ class State_Base(State):
             # Execute each modulatory projection and assign its value to the specified function param
             for mod_proj in self.mod_afferents:
                 # FIX: THERE *MUST* BE A MORE EFFICIENT WAY OF DOING ALL OF THIS (INCLUDING DEALING WITH stateParams)
-                function_param_spec = mod_proj.sender.modulation_operation
+                function_param_spec = mod_proj.sender.modulation
                 function_param = self.function_object.params[function_param_spec]
                 function_param_value = self.function_object.params[function_param]
                 modulatory_value = mod_proj.execute()

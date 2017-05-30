@@ -36,14 +36,42 @@ constructor (or any of the other ways for `creating an outputState <OutputStates
 necessary nor advisable, as a ControlSignal has dedicated components and requirements for configuration that must be 
 met for it to function properly.
 
+.. _ControlSignal_Specification:
+
+Specifying ControlSignals
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a ControlSignal is specified in context (e.g., the **control_signals** argument of the constructor for a
+`ControlMechanism`, the specification can take any of the following forms:
+
+  * a *ParameterState* of the Mechanism to which the parameter belongs;
+  |
+  * a *tuple*, with the *name* of the parameter as its 1st item. and the *mechanism* to which it belongs as the 2nd;
+    note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
+    but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
+  |
+  * a *specification dictionary*, that must contain at least the following two entries:
+    * *NAME*:str - a string that is the name of the parameter to be controlled;
+    * *MECHANISM*:Mechanism - the Mechanism to which the parameter belongs; 
+      (note: the Mechanism itself should be specified even if the parameter belongs to its function).
+    The dictionary can also contain entries for any other ControlSignal attributes to be specified
+    (e.g., a MODULATION and/or an ALLOCATION_SAMPLES entry; see `below <ControlSignal_Structure>` for a
+    description of ControlSignal attributes).
+
 .. _ControlSignal_Structure:
 
 Structure
 ---------
 
 A ControlSignal is owned by an `ControlMechanism`, and associated with a `ControlProjection` that projects to the
-`parameterState <ParameterState>` associated with the paramter to be controlled.  A ControlSignal has the following
+`parameterState <ParameterState>` associated with the parameter to be controlled.  A ControlSignal has the following
 primary attributes:
+
+.. _ControlSignal_Modulation:
+
+* `modulation <ControlSignal.modulation>` : determines how the ControlProjection is used by the ParameterState to 
+which it projects to modify its value (see `Modulatory Projections <ModulatoryProjection.modulation>` for an 
+explanation of how the modulation is specified and used to modulate a function).  
 
 .. _ControlSignal_Allocation:
 
