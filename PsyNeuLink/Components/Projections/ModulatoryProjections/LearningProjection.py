@@ -166,7 +166,7 @@ class LearningProjection(ModulatoryProjection_Base):
                                                  # Note:  assumes MappingProjection.function is LinearCombination
                     default
                     + FUNCTION_PARAMS: {OPERATION: SUM},
-                    + PARAMETER_MODULATION_OPERATION: ModulationOperation.ADD,
+                    + PARAMETER_MODULATION_OPERATION: Modulation.ADD,
                     + PROJECTION_TYPE: LEARNING_PROJECTION
 
             + paramNames (dict)
@@ -248,7 +248,7 @@ class LearningProjection(ModulatoryProjection_Base):
        `function <MappingProjection.function>` of the receiver is `LinearCombination`.  By default it passes
        the following dictionary of specifications to the `receiver <LearningProjection.receiver>`::
            FUNCTION_PARAMS: {OPERATION: SUM,
-                             PARAMETER_MODULATION_OPERATION: ModulationOperation.ADD,
+                             PARAMETER_MODULATION_OPERATION: Modulation.ADD,
                              PROJECTION_TYPE: LEARNING_PROJECTION}
 
     learning_rate : Optional[float]
@@ -298,7 +298,7 @@ class LearningProjection(ModulatoryProjection_Base):
                                WEIGHT_CHANGE_PARAMS:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes MappingProjection.function is LinearCombination
                                        FUNCTION_PARAMS: {OPERATION: SUM},
-                                       PARAMETER_MODULATION_OPERATION: ModulationOperation.ADD,
+                                       PARAMETER_MODULATION_OPERATION: Modulation.ADD,
                                        PROJECTION_TYPE: LEARNING_PROJECTION}
                                })
 

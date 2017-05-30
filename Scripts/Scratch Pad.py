@@ -309,14 +309,14 @@ class ScratchPadError(Exception):
 # #
 # # # my_process = process(pathway=[transfer_mechanism_1,
 # # #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
-# # #                                                                                     ModulationOperation.OVERRIDE)}}),
+# # #                                                                                     Modulation.OVERRIDE)}}),
 # # #                               transfer_mechanism_2])
 # # # my_process.run(inputs=[[[0]]])
 # #
 # # # mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
 # # # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
 # # print(transfer_mechanism_3.execute(input=1.0,
-# #                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
+# #                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, Modulation.OVERRIDE)}}))
 # #
 #
 # my_control = ControlProjection(name='MY CONTROL')
@@ -362,7 +362,7 @@ class ScratchPadError(Exception):
 # transfer_mechanism_1.execute()
 # # my_process = process(pathway=[transfer_mechanism_1,
 # #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
-# #                                                                                     ModulationOperation.OVERRIDE)}}),
+# #                                                                                     Modulation.OVERRIDE)}}),
 # #                               transfer_mechanism_2])
 # # my_process.run(inputs=[[[0]]])
 #
@@ -370,13 +370,13 @@ class ScratchPadError(Exception):
 # # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
 # transfer_mechanism_3.function_object.runtimeParamStickyAssignmentPref = False
 # print(transfer_mechanism_3.execute(input=1.0,
-#                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.OVERRIDE)}}))
+#                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, Modulation.OVERRIDE)}}))
 # # print(transfer_mechanism_3.execute(input=1.0))
 # print(transfer_mechanism_3.execute(input=1.0,
 #                                    runtime_params={PARAMETER_STATE_PARAMS:{INTERCEPT:(100.0,
-#                                                                                    ModulationOperation.OVERRIDE),
+#                                                                                    Modulation.OVERRIDE),
 #                                                                             # SLOPE:(6.0,
-#                                                                             #        ModulationOperation.OVERRIDE
+#                                                                             #        Modulation.OVERRIDE
 #                                                                                       }}))
 # # print(transfer_mechanism_3.run(inputs=[1.0],
 # #                                num_executions=3))
@@ -621,63 +621,63 @@ class ScratchPadError(Exception):
 
 #region TEST RecurrentTransferMechanism / LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-print("TEST RecurrentTransferMechanism / LCA")
-my_auto = LCA(
-        size=3,
-        output_states=[LCA_OUTPUT.RESULT,
-                       LCA_OUTPUT.ENTROPY,
-                       LCA_OUTPUT.ENERGY,
-                       LCA_OUTPUT.MAX_VS_AVG]
-        # inhibition
-)
-
-# my_auto = RecurrentTransferMechanism(
-#         default_input_value=[0,0,0],
-#         size=3,
-#         function=Logistic,
-#         # matrix=RANDOM_CONNECTIVITY_MATRIX,
-#         matrix=np.array([[1,1,1],[1,1,1],[1,1,1]])
-#         # matrix=[[1,1,1],[1,1,1],[1,1,1]]
-# )
-
-# my_auto = TransferMechanism(default_input_value=[0,0,0],
-#                             # function=Logistic
-#                             )
+# # print("TEST RecurrentTransferMechanism / LCA")
+# # my_auto = LCA(
+# #         size=3,
+# #         output_states=[LCA_OUTPUT.RESULT,
+# #                        LCA_OUTPUT.ENTROPY,
+# #                        LCA_OUTPUT.ENERGY,
+# #                        LCA_OUTPUT.MAX_VS_AVG]
+# #         # inhibition
+# # )
 #
-# my_auto_matrix = MappingProjection(sender=my_auto,
-#                                    receiver=my_auto,
-#                                    matrix=FULL_CONNECTIVITY_MATRIX)
-
-# THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
-#                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
-my_process = process(pathway=[my_auto],
-
-# THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
-# my_process = process(pathway=[my_auto, my_auto_matrix],
-                     target=[0,0,0],
-                     learning=LEARNING
-                     )
-
-# my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
-#                      learning=LEARNING,
-#                      target=[0,0,0])
-
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
+# # my_auto = RecurrentTransferMechanism(
+# #         default_input_value=[0,0,0],
+# #         size=3,
+# #         function=Logistic,
+# #         # matrix=RANDOM_CONNECTIVITY_MATRIX,
+# #         matrix=np.array([[1,1,1],[1,1,1],[1,1,1]])
+# #         # matrix=[[1,1,1],[1,1,1],[1,1,1]]
+# # )
 #
-input_list = {my_auto:[1,1,1]}
-target_list = {my_auto:[0,0,0]}
-
-# print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
-
-my_system = system(processes=[my_process],
-                   targets=[0,0,0])
-
-print(my_system.run(inputs=input_list,
-                    targets=target_list,
-                    num_executions=5))
+# # my_auto = TransferMechanism(default_input_value=[0,0,0],
+# #                             # function=Logistic
+# #                             )
+# #
+# # my_auto_matrix = MappingProjection(sender=my_auto,
+# #                                    receiver=my_auto,
+# #                                    matrix=FULL_CONNECTIVITY_MATRIX)
+#
+# # THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
+# #                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
+# my_process = process(pathway=[my_auto],
+#
+# # THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
+# # my_process = process(pathway=[my_auto, my_auto_matrix],
+#                      target=[0,0,0],
+#                      learning=LEARNING
+#                      )
+#
+# # my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
+# #                      learning=LEARNING,
+# #                      target=[0,0,0])
+#
+# # print(my_process.execute([1,1,1]))
+# # print(my_process.execute([1,1,1]))
+# # print(my_process.execute([1,1,1]))
+# # print(my_process.execute([1,1,1]))
+# #
+# input_list = {my_auto:[1,1,1]}
+# target_list = {my_auto:[0,0,0]}
+#
+# # print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
+#
+# my_system = system(processes=[my_process],
+#                    targets=[0,0,0])
+#
+# print(my_system.run(inputs=input_list,
+#                     targets=target_list,
+#                     num_executions=5))
 
 #endregion
 
@@ -1587,9 +1587,8 @@ print(my_system.run(inputs=input_list,
 #         return self._prefs
 #
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-#
-# # - TEST: Preferences:
+
+#region TEST: Preferences @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # # x = DDM()
 # # x.prefs.show()
@@ -1597,7 +1596,7 @@ print(my_system.run(inputs=input_list,
 # DDM_prefs = ComponentPreferenceSet(
 #                 reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
 #                 verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
-#                 kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
+#                 kpFunctionRuntimeParams_pref=PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.TYPE)
 #                 )
 # DDM_prefs.show()
 # # DDM.classPreferences = DDM_prefs
@@ -1607,9 +1606,8 @@ print(my_system.run(inputs=input_list,
 #
 
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# # - TEST:  GET ATTRIBUTE LIST
+#region TEST:  GET ATTRIBUTE LIST @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # class x:
 #     def __init__(self):
@@ -1629,10 +1627,9 @@ print(my_system.run(inputs=input_list,
 #         print (value)
 
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# - TEST:  PROPERTY GETTER AND SETTER
-
+#region TEST:  PROPERTY GETTER AND SETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
 # ************
 # 
 # EXAMPLE:
@@ -1872,7 +1869,6 @@ print(my_system.run(inputs=input_list,
 #
 #
 #
-
 #endregion
 
 #region TEST:  DICTIONARY MERGE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -1897,7 +1893,7 @@ print(my_system.run(inputs=input_list,
 #
 #endregion
 
-# #region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # # state_params = None
 # state_params = {}
 # # state_params = {'Already there': 0}
@@ -1921,8 +1917,6 @@ print(my_system.run(inputs=input_list,
 # except TypeError:
 #     pass
 # #endregion
-
-# print(state_params)
 
 #region TEST:  ORDERED DICTIONARY ORDERING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # from collections import OrderedDict
@@ -2217,7 +2211,58 @@ print(my_system.run(inputs=input_list,
 
 #endregion
 
-# region TEST parse_monitored_value
+#region TEST parse_state_spec @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+print("TEST parse_gated_state_spec")
+
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import _parse_gating_signal_spec
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Components.Functions.Function import ModulationParam
+from PsyNeuLink.Components.States.OutputState import OutputState
+
+gating_mech = GatingMechanism()
+mech_1 = DDM()
+mech_2 = DDM()
+
+single_dict = {NAME:'DECISION_VARIABLE', MECHANISM:mech_1}
+a = _parse_gating_signal_spec(owner=gating_mech, state_spec=single_dict)
+print('\nsingle_dict:', a)
+
+# THESE ARE A HACK TO ASSIGN A PRE-EXISTING GATING SIGNAL TO gating_mech WITHOUTH HAVING TO CONSTRUCT ONE
+x = DDM()
+x.name ='Default_input_state_GatingSignal'
+x.efferents = []
+gating_mech._gating_signals = [x]
+# --------------------------------------------------------------
+
+single_tuple = ('DECISION_VARIABLE', mech_1)
+b = _parse_gating_signal_spec(gating_mech, state_spec=single_tuple)
+print('\nsingle_tuple:', b)
+
+multi_states_dicts = {'MY_SIGNAL':[{NAME:'DECISION_VARIABLE',
+                                   MECHANISM:mech_1},
+                                   {NAME:'RESPONSE_TIME',
+                                   MECHANISM:mech_1}],
+                      MODULATION: ModulationParam.ADDITIVE}
+c = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_dicts)
+print('\nmulti_states_dicts:', c)
+
+multi_states_tuples = {'MY_SIGNAL':[('Default_input_state',mech_1),
+                                   ('Default_input_state',mech_2)]}
+d = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_tuples)
+print('\nmulti_states_tuples:', d)
+
+multi_states_combo = {'MY_SIGNAL':[{NAME:'Default_input_state',
+                                   MECHANISM:mech_1},
+                                   ('Default_input_state',mech_2)]}
+e = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_combo)
+print('\nmulti_states_combo:', e)
+
+#endregion
+
+# region TEST parse_monitored_value @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import *
 # from PsyNeuLink.Components.States.OutputState import OutputState
