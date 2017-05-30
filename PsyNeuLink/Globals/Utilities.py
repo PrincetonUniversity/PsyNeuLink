@@ -92,11 +92,25 @@ class UtilitiesError(Exception):
         return repr(self.error_value)
 
 
+# MODULATION_OVERRIDE = 'Modulation.OVERRIDE'
+# elif x is 2:
+# return 'Modulation.MULTIPLY'
+# elif x is 3:
+# return 'Modulation.ADD'
+#
+
 class Modulation(Enum):
     DISABLED = 0
     ADD = lambda runtime, default : runtime + default
     MULTIPLY = lambda runtime, default : runtime * default
     OVERRIDE = lambda runtime, default : runtime
+
+def is_modulation_operation(val):
+    try:
+        val(0,0)
+        return True
+    except:
+        return False
 
 def get_modulationOperation_name(operation):
         x = operation(1,2)
