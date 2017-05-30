@@ -301,7 +301,11 @@
 # FIX:        - State.update:
 # FIX:                    ControlProjection LearningProjection values SHOULD MODIFY PARAMETER OF STATE'S FUNCTION
 # FIX:                          BASED ON THEIR modulation_operation PARAMETER
-
+# FIX: Specification of modulation_operation for GatingSignal:
+#             - modualtion_operation -> modulation
+#             - add attribute to GatingMechanism, used as default for all GatingSignals unless individually specified
+#             - DOCUMENT that to specify for individual GatingSignals, need to use specification dictionary format,
+#                  and specify it in a MODULATION entry of the PARAMS dict
 # FIX: ADD "GATING" KEYWORD and GatingSignal CLASS TO INPUT_STATE TUPLE SPECIFICATION,
 #     WHICH SHOULD INSTANTIATE A DEFERRED_INIT GatingProjection (JUST LIKE A ControlProjection)
 # FIX: MAKE ControlSignal stateful (since its last_allocation attribute pertains to a prior state)
