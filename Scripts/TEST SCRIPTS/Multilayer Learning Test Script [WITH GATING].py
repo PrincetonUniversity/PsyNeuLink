@@ -165,6 +165,9 @@ elif COMPOSITION is SYSTEM:
     composition = x
 
     # x.show_graph(show_learning=True)
+
+    Gating_Mechanism.execute()
+
     results = x.run(
         num_executions=10,
         # inputs=stim_list,
