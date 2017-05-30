@@ -320,6 +320,19 @@
 #                 parameter of ModulatoryFunctions
 # IMPLEMENT: modualtion_operation For ControlSignal, that assigns its value to its ControlProjection
 # IMPLEMENT: CONSTRAINT ON STATE FUNCTIONS TO BE A TransferFunction
+# DOCUMENTATION:
+#   *** PUT IN InputState AND OutputState DOCUMENTATION
+#
+#   Gating can be also be specified for an `InputState` or `OutputState` when it is created
+#     in any of the following ways:
+#
+#     * in a 2-item tuple, in which the first item is a `state specification <LINK>`,
+#       and the second item is a `gating specification <>`
+#
+#     * keywords GATE (==GATE_PRIMARY) GATE_ALL, GATE_PRIMARY
+#         or an entry in the state specification dictionary with the key "GATING", and a value that is the
+#         keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOperation value, GatingProjection, or its constructor
+#
 # DOCUMENTATION: ModulatoryMechanism: describe how they work, i.e., that they assign the value of their
 #                  outputState to the paraemter of the state's function specified in their modulation param
 # DOCUMENTATION: GatingSignal (per ControlSignal) -- describe modulation in both

@@ -70,19 +70,11 @@ GatingSignals are a type of `OutputState`, and so they are also listed in the Ga
 Modulation
 ^^^^^^^^^^
 
-The manner by which a GatingSignal modulates the value of the states it gates 
-
-COMMENT:
-  *** PUT IN InputState AND OutputState DOCUMENTATION
-
-  Gating can be also be specified for an `InputState` or `OutputState` when it is created in any of the following ways:
-
-    * in a 2-item tuple, in which the first item is a `state specification <LINK>`, 
-      and the second item is a `gating specification <>`
-
-    * keywords GATE (==GATE_PRIMARY) GATE_ALL, GATE_PRIMARY
-        or an entry in the state specification dictionary with the key "GATING", and a value that is the
-        keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOpearation value, GatingProjection, or its constructor
+Each GatingMechanism has a `modulation <GatingSignal.modulation>` attribute, that provides a default for the way
+in which its GatingSignals modulate the value of the states they gate 
+(see `modulation <ModulatoryProjection.modulation>` for an explanation of how this attribute is specified and used to 
+modulate the value of a state).  Each GatingSignal uses this value, unless its value is 
+`individually specified <GatingSignal_Modulation>`. 
 
 .. _GatingMechanism_Execution:
 
@@ -98,8 +90,8 @@ of feedback loops in a System).  When executd, a GatingMechanism uses its input 
 round of execution , each GatingProjection's value is used by the state to which it projects to modulate the 
 `value <State.value>` of that state.
 
-When a GatingMechanism executes, the value of each item in its `gating_policy` are assigned as the values of each of
-the corresponding GatingSignals in its `gating_signals` attribute.  Those, in turn, as used by their associated
+When a GatingMechanism executes, the value of each item in its `gating_policy` is assigned as the value of each of
+the corresponding GatingSignals in its `gating_signals` attribute.  These, in turn, are used by their associated
 `GatingProjections` to modulate the value of the state to which they project.  This is done by assigning the
 GatingSignal's value to a parameter of the state's function, as specified by the GatingSignal's `modulation` 
 parameter (see `GatingSignal_Execution` for details). 
@@ -246,6 +238,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                  default_gating_policy=None,
                  function = Linear(slope=1, intercept=0),
                  gating_signals:tc.optional(list) = None,
+                 modulation:is_modulation_operation = Modulation.MULTIPLY,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -255,6 +248,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gating_signals=gating_signals,
+                                                  modulation=modulation,
                                                   function=function,
                                                   params=params)
 
