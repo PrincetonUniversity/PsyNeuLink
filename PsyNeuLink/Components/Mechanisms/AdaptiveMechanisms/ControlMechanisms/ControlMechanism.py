@@ -54,22 +54,8 @@ ControlMechanisms are used to control the parameter values of mechanisms and/or 
 specified for control by assigning it a `ControlProjection` (along with the parameter's value) when creating the 
 mechanism or function to which the parameter belongs (see `Mechanism_Parameters`).  The parameters to be controlled by
 a ControlMechanism can also be specified in the **control_signals**  argument of the constructor for a ControlMechanism.  
-The **control_signals** argument must be a list, each item of which must refer to a parameter to be controlled specified 
-in any of the following ways:
-
-  * *ParameterState* of the Mechanism to which the parameter belongs;
-  |
-  * *tuple*, with the *name* of the parameter as its 1st item. and the *mechanism* to which it belongs as the 2nd;
-    note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
-    but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
-  |
-  * *specification dictionary*, that must contain at least the following two entries:
-    * *NAME*:str - a string that is the name of the parameter to be controlled;
-    * *MECHANISM*:Mechanism - the Mechanism to which the parameter belongs; 
-      (note: the Mechanism itself should be specified even if the parameter belongs to its function).
-    The dictionary can also contain entries for any other ControlSignal parameters to be specified
-    (e.g., *MODULATION_OPERATION*:ModulationOperation to specify how the parameter will be modulated;
-    see `below <ControlSignal_Structure>` for a list of parameters).
+The **control_signals** argument must be a list, each item of which can use any of the forms used for 
+`specifying a ControlSignal <ControlSignal_Specification>`.
 
 A `ControlSignal` is created for each item listed in **control_signals**, and all of the ControlSignals for a 
 ControlMechanism are listed in its `control_signals <ControlMechanism.control_signals>` attribute.  Each ControlSignal

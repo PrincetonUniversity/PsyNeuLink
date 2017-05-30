@@ -10,7 +10,7 @@
 #
 #
 from PsyNeuLink.Globals.Log import *
-from PsyNeuLink.Globals.Utilities import ModulationOperation
+from PsyNeuLink.Globals.Utilities import Modulation
 from PsyNeuLink.Globals.Preferences.PreferenceSet import *
 
 # Keypaths for preferences:
@@ -45,7 +45,7 @@ SystemDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
     kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),
-    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.MULTIPLY, PreferenceLevel.SYSTEM),
+    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.SYSTEM)}
 
 CategoryDefaultPreferencesDict = {
@@ -54,7 +54,7 @@ CategoryDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     kpLogPref: PreferenceEntry(LogLevel.VALUE_ASSIGNMENT, PreferenceLevel.CATEGORY),
-    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.CATEGORY),
+    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.CATEGORY),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.CATEGORY)}
 
 TypeDefaultPreferencesDict = {
@@ -63,7 +63,7 @@ TypeDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.TYPE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.TYPE),
     kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
-    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.ADD,PreferenceLevel.TYPE),
+    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.ADD,PreferenceLevel.TYPE),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.TYPE)}
 
 SubtypeDefaultPreferencesDict = {
@@ -72,7 +72,7 @@ SubtypeDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
     kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
-    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.ADD,PreferenceLevel.SUBTYPE),
+    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.ADD,PreferenceLevel.SUBTYPE),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.SUBTYPE)}
 
 InstanceDefaultPreferencesDict = {
@@ -81,7 +81,7 @@ InstanceDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
-    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.OVERRIDE, PreferenceLevel.INSTANCE),
+    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.OVERRIDE, PreferenceLevel.INSTANCE),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
 # Dict of default dicts
@@ -119,7 +119,7 @@ class ComponentPreferenceSet(PreferenceSet):
             - paramValidation (bool):  enables/disables run-time validation of the execute method of a Function object
             - reportOutput (bool): enables/disables reporting of execution of execute method
             - log (bool): enables/disables logging for a given object
-            - functionRunTimeParams (ModulationOperation): uses run-time params to modulate execute method params
+            - functionRunTimeParams (Modulation): uses run-time params to modulate execute method params
         Implement the following preference levels:
             - SYSTEM: system level default settings (Function.classPreferences)
             - CATEGORY: category-level default settings:
@@ -218,7 +218,7 @@ class ComponentPreferenceSet(PreferenceSet):
             kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
             kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
             kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),
-            kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.MULTIPLY, PreferenceLevel.SYSTEM),
+            kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM),
             kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.SYSTEM)
 
     }

@@ -309,14 +309,14 @@ class ScratchPadError(Exception):
 # #
 # # # my_process = process(pathway=[transfer_mechanism_1,
 # # #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
-# # #                                                                                     ModulationOperation.OVERRIDE)}}),
+# # #                                                                                     Modulation.OVERRIDE)}}),
 # # #                               transfer_mechanism_2])
 # # # my_process.run(inputs=[[[0]]])
 # #
 # # # mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
 # # # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
 # # print(transfer_mechanism_3.execute(input=1.0,
-# #                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
+# #                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, Modulation.OVERRIDE)}}))
 # #
 #
 # my_control = ControlProjection(name='MY CONTROL')
@@ -362,7 +362,7 @@ class ScratchPadError(Exception):
 # transfer_mechanism_1.execute()
 # # my_process = process(pathway=[transfer_mechanism_1,
 # #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
-# #                                                                                     ModulationOperation.OVERRIDE)}}),
+# #                                                                                     Modulation.OVERRIDE)}}),
 # #                               transfer_mechanism_2])
 # # my_process.run(inputs=[[[0]]])
 #
@@ -370,13 +370,13 @@ class ScratchPadError(Exception):
 # # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
 # transfer_mechanism_3.function_object.runtimeParamStickyAssignmentPref = False
 # print(transfer_mechanism_3.execute(input=1.0,
-#                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.OVERRIDE)}}))
+#                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, Modulation.OVERRIDE)}}))
 # # print(transfer_mechanism_3.execute(input=1.0))
 # print(transfer_mechanism_3.execute(input=1.0,
 #                                    runtime_params={PARAMETER_STATE_PARAMS:{INTERCEPT:(100.0,
-#                                                                                    ModulationOperation.OVERRIDE),
+#                                                                                    Modulation.OVERRIDE),
 #                                                                             # SLOPE:(6.0,
-#                                                                             #        ModulationOperation.OVERRIDE
+#                                                                             #        Modulation.OVERRIDE
 #                                                                                       }}))
 # # print(transfer_mechanism_3.run(inputs=[1.0],
 # #                                num_executions=3))
@@ -1596,7 +1596,7 @@ class ScratchPadError(Exception):
 # DDM_prefs = ComponentPreferenceSet(
 #                 reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
 #                 verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
-#                 kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
+#                 kpFunctionRuntimeParams_pref=PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.TYPE)
 #                 )
 # DDM_prefs.show()
 # # DDM.classPreferences = DDM_prefs
@@ -2245,7 +2245,7 @@ multi_states_dicts = {'MY_SIGNAL':[{NAME:'DECISION_VARIABLE',
                                    MECHANISM:mech_1},
                                    {NAME:'RESPONSE_TIME',
                                    MECHANISM:mech_1}],
-                      MODULATION_OPERATION: ModulationParam.ADDITIVE}
+                      MODULATION: ModulationParam.ADDITIVE}
 c = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_dicts)
 print('\nmulti_states_dicts:', c)
 

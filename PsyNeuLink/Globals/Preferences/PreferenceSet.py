@@ -804,17 +804,17 @@ class PreferenceSet(object):
                 # GET TABLE INFO
                 # Get base_value of pref
                 base_value, level = self.__dict__[pref_name]
-                # This is needed because value of ModulationOperation is callable (lambda function)
+                # This is needed because value of Modulation is callable (lambda function)
                 if inspect.isfunction(base_value):
-                    if 'ModulationOperation' in repr(base_value):
+                    if 'Modulation' in repr(base_value):
                         base_value = get_modulationOperation_name(base_value)
                 # Get current_value of pref
                 current_value, msg = self.get_pref_setting_for_level(pref_ivar_name=pref_name, requested_level=level)
                 if msg:
                     error_messages.append(msg)
-                # Get name of ModulationOperation (the value of which is a lambda function)
+                # Get name of Modulation (the value of which is a lambda function)
                 if inspect.isfunction(current_value):
-                    if 'ModulationOperation' in repr(current_value):
+                    if 'Modulation' in repr(current_value):
                         current_value = get_modulationOperation_name(current_value)
                 # Get name of any enums
                 if isinstance(base_value, (Enum, IntEnum)):

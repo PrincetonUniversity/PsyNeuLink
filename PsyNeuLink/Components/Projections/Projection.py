@@ -752,7 +752,7 @@ class Projection_Base(Projection):
 
             # Get its type
             param_type = type(param_template[state_name])
-            # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or ModulationOperation)
+            # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or Modulation)
             if param_type is tuple:
                 param_type = type(param_template[state_name][0])
 

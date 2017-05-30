@@ -52,9 +52,9 @@ Structure
 
 A ModulatoryProjection has the same basic structure as a `Projection`, augmented by type-specific attributes
 and methods described under each type of projection.  In addition, all ModulatoryProjections have a 
-`modulation_operation <ModulatoryProjection.modulation_operation>` attribute that determines how the projection 
-modifies the value of the state to which it projects.  The modulation_operation is specified using a value of 
-`ModulationOperation`, which designates either a parameter of the state's function to modulate, or one of two other 
+`modulation <ModulatoryProjection.modulation>` attribute that determines how the projection 
+modifies the value of the state to which it projects.  The modulation is specified using a value of 
+`Modulation`, which designates either a parameter of the state's function to modulate, or one of two other 
 actions to take, as follows:
 
     * `ModulatonOperation.ADDITIVE` - this specifies use of the parameter designated by the  
@@ -73,9 +73,9 @@ actions to take, as follows:
 
 These values can be assigned when a state is created, or at `runtime <>` 
 
-The `modulation_operation <ModulatoryProjection>` parameter can also be specified using a custom function or method, 
+The `modulation <ModulatoryProjection>` parameter can also be specified using a custom function or method, 
 so long as it receives and returns values that are compatible with the `value <State.value>` of the state. 
-If the `modulation_operation <ModulatoryProjection>` parameter is not specified for a ModulatoryProjection,
+If the `modulation <ModulatoryProjection>` parameter is not specified for a ModulatoryProjection,
 a default specified by the state itself is used.
 
 .. _ModulatoryProjection_Execution:
@@ -89,7 +89,7 @@ A ModulatoryProjection, like any projection, cannot be executed directly.  It is
 which it projects — its `receiver <Projection.receiver>` — is updated;  that occurs when the state's owner mechanism 
 is executed.  When a ModulatoryProjection executes, it gets the value of its `sender <Projection.sender>`, 
 and uses that to adjust the parameter of the state's function (determined by its 
-`modulation_operation <ModulatoryProjection.modulate_operation>` attribute. 
+`modulation <ModulatoryProjection.modulate_operation>` attribute. 
 
 .. note::
    The change made to the parameter of the state's function in response to the execution of a ModulatoryProjection
@@ -114,7 +114,7 @@ class ModulatoryProjection_Base(Projection_Base):
     ModulatoryProjection(                   \
                  sender=None,               \
                  receiver=None,             \
-                 modulation_operation=None, \
+                 modulation=None, \
                  params=None,               \
                  name=None,                 \
                  prefs=None)
@@ -129,7 +129,7 @@ class ModulatoryProjection_Base(Projection_Base):
     receiver : Optional[State or Mechanism]
         specifies the state to which the ModulatoryProjection projects, and the value of which is modulated by it.
 
-    modulation_operation : Optional[ModulationOperation, function or method] : default determined by State
+    modulation : Optional[Modulation, function or method] : default determined by State
         specifies the manner by which the ModulatoryProjection modulates the `value <State.value>` of the 
         `state <State>` to which it projects.    
 
@@ -162,7 +162,7 @@ class ModulatoryProjection_Base(Projection_Base):
     variable : 2d np.array
         same as `learning_signal <LearningProjection.learning_signal>`.
 
-    modulation_operation : Optional[Function parameter name]
+    modulation : Optional[Function parameter name]
         the manner by which the ModulataoryProjection modulates the `value <State.value>` of the state to which it
         projects - see `ModulatoryProjection_Structure` for a description of specifications.
 

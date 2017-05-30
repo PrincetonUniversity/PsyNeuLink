@@ -11,7 +11,7 @@ Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic,
                                 default_input_value = np.zeros(2),
                                 params={STATE_PARAMS:{PARAMETER_STATE_PARAMS:{
-                                    PARAMETER_MODULATION_OPERATION:ModulationOperation.ADD}}})
+                                    PARAMETER_MODULATION_OPERATION:Modulation.ADD}}})
 
 Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
