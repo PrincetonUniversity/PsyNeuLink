@@ -101,9 +101,10 @@ Class Reference
 
 """
 
+from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
+from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.State import *
 
 class GatingSignalError(Exception):
     def __init__(self, error_value):
@@ -121,7 +122,7 @@ class GatingSignal(OutputState):
     GatingSignal(                                                \
         owner,                                                   \
         function=LinearCombination(operation=SUM),               \
-        modulation=Modulation.MULTIPLICATIVE  \
+        modulation=Modulation.MULTIPLY                           \
         params=None,                                             \
         name=None,                                               \
         prefs=None)
@@ -252,7 +253,8 @@ class GatingSignal(OutputState):
                  index=PRIMARY_OUTPUT_STATE,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
-                 modulation=ModulationParam.MULTIPLICATIVE,
+                 # modulation:tc.optional(is_modulation_operation)=Modulation.MULTIPLY,
+                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

@@ -216,6 +216,11 @@ class ModulationParam():
     ADDITIVE = ADDITIVE_PARAM
     MULTIPLICATIVE = MULTIPLICATIVE_PARAM
 
+def _is_modulation_param(val):
+    if val in ModulationParam.__dict__.values():
+        return True
+    else:
+        return False
 
 # *******************************   get_param_value_for_keyword ********************************************************
 
