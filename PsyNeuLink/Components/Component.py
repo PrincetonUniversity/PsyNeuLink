@@ -2338,7 +2338,7 @@ def make_property(name, default_value):
         self.user_params.__additem__(name, val)
 
         # # MODIFIED 4/20/17 NEW:
-        # # Update parameterState.value if there is one
+        # # Update parameterState.base_value if there is one
         # try:
         #     if name in self.parameterStates:
         #         self.parameterStates[name].base_value = val
@@ -2353,7 +2353,7 @@ def make_property(name, default_value):
             self.owner.function_params.__additem__(name, val)
 
             # # MODIFIED 4/20/17 NEW:
-            # # Update value of owner's parameterState
+            # # Update base_value of owner's parameterState if there is one
             # try:
             #     if name in self.owner.parameterStates:
             #         self.owner.parameterStates[name].base_value = val

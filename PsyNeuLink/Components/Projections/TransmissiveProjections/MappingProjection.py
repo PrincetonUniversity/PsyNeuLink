@@ -133,7 +133,7 @@ In addition to its `function <MappingProjection.function>`, MappingProjections u
   Used to determine how the value of any projections to the `parameterState <ParameterState>` for the
   `matrix <MappingProjection.matrix>` influence it.  For example, this is used for a `LearningProjection` to apply
   weight changes to the `matrix <MappingProjection.matrix>` during learning. The
-  :keyword:`matrix_modulation_operation` attribute must be assigned a value of `ModulationOperation` and the operation
+  :keyword:`matrix_modulation_operation` attribute must be assigned a value of `Modulation` and the operation
   is always applied in an element-wise (Hadamard) manner. The default operation is ADD.
 
 .. _Projection_Execution:
@@ -177,7 +177,7 @@ class MappingProjection(TransmissiveProjection_Base):
         sender=None,                                        \
         receiver=None,                                      \
         matrix=DEFAULT_MATRIX,                              \
-        matrix_modulation_operation=ModulationOperation.ADD, \
+        matrix_modulation_operation=Modulation.ADD, \
         params=None,                                        \
         name=None,                                          \
         prefs=None)
@@ -238,7 +238,7 @@ class MappingProjection(TransmissiveProjection_Base):
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
         value of the `sender <MappingProjection.sender>`.
 
-    matrix_modulation_operation : ModulationOperation : default ModulationOperation.ADD
+    matrix_modulation_operation : Modulation : default Modulation.ADD
         specifies the operation used to combine the value of any projections to the matrix's parameterState with the
         `matrix <MappingProjection.matrix>` itself.  Most commonly used with `LearningProjections <LearningProjection>`.
 
@@ -269,7 +269,7 @@ class MappingProjection(TransmissiveProjection_Base):
     receiver: InputState
         identifies the destination of the projection.
 
-    matrix_modulation_operation : ModulationOperation
+    matrix_modulation_operation : Modulation
         determines the operation used to combine the value of any projections to the matrix's parameterState with the
         `matrix <MappingProjection.matrix>` itself.
 
@@ -315,7 +315,7 @@ class MappingProjection(TransmissiveProjection_Base):
                  sender=None,
                  receiver=None,
                  matrix=DEFAULT_MATRIX,
-                 matrix_modulation_operation=ModulationOperation.ADD,
+                 matrix_modulation_operation=Modulation.ADD,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

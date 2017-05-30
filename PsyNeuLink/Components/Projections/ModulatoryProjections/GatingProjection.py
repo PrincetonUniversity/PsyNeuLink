@@ -67,11 +67,13 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components import DefaultGatingMechanism
+# from PsyNeuLink.Components import DefaultGatingMechanism
 from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Projections.Projection import *
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
+    import ModulatoryProjection_Base, MODULATORY_SIGNAL_PARAMS
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
+
 
 parameter_keywords.update({GATING_PROJECTION, GATING})
 projection_keywords.update({GATING_PROJECTION, GATING})
@@ -202,14 +204,14 @@ class GatingProjection(ModulatoryProjection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_SENDER: GatingMechanism,
-        PROJECTION_SENDER_VALUE: defaultGatingSignal})
+        PROJECTION_SENDER_VALUE: defaultGatingPolicy})
 
     @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,
                  function=Linear,
-                 gating_signal:tc.optional(dict)=None,
+                 modulatory_signal_params:tc.optional(dict)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -217,7 +219,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                  gating_signal=gating_signal,
+                                                  modulatory_signal_params=modulatory_signal_params,
                                                   params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
@@ -227,7 +229,7 @@ class GatingProjection(ModulatoryProjection_Base):
             self.init_args['context'] = self
             self.init_args['name'] = name
             # Delete this as it has breen moved to params dict (so it will not be passed to Projection.__init__)
-            del self.init_args[GATING_SIGNAL]
+            del self.init_args[MODULATORY_SIGNAL_PARAMS]
 
             # Flag for deferred initialization
             self.value = DEFERRED_INITIALIZATION
@@ -242,86 +244,62 @@ class GatingProjection(ModulatoryProjection_Base):
                          prefs=prefs,
                          context=self)
 
-
     def _instantiate_sender(self, params=None, context=None):
-# FIX: NEEDS TO BE BETTER INTEGRATED WITH super()._instantiate_sender
-        """Check if DefaultGatingMechanism is being assigned and if so configures it for the requested GatingProjection
-
-        If self.sender is a Mechanism, re-assign to <Mechanism>.outputState
-        Insure that sender.value = self.variable
-
-        This method overrides the corresponding method of Projection, before calling it, to check if the
-            DefaultGatingMechanism is being assigned as sender and, if so:
-            - creates a projection-dedicated inputState and outputState in DefaultGatingMechanism
-            - puts them in DefaultGatingMechanism's input_states and outputStates attributes
-            - lengthens variable of DefaultGatingMechanism to accommodate the GatingProjection channel
-            - updates value of DefaultGatingMechanism (in resposne to new variable)
-        Notes:
-            * the default function of the DefaultGatingMechanism simply maps the inputState value to the outputState
-            * the params arg is assumed to be a dictionary of params for the gating_signal of the GatingMechanism
-
-        :return:
+        """Check that sender is not a process and that, if specified as a Mechanism, it is a GatingMechanism 
         """
 
+        # A Process can't be the sender of a GatingProjection
         if isinstance(self.sender, Process):
-            raise ProjectionError("Illegal attempt to add a GatingProjection from a Process {0} "
-                                  "to a mechanism {0} in pathway list".format(self.name, self.sender.name))
+            raise ProjectionError("PROGRAM ERROR: attempt to add a {} from a Process {0} "
+                                  "to a mechanism {0} in pathway list".
+                                  format(GATING_PROJECTION, self.name, self.sender.name))
 
-        # If sender is a class:
-        # - assume it is Mechanism or State class ref (as validated in _validate_params)
-        # - implement default sender of the corresponding type
-        if inspect.isclass(self.sender):
-            # self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
-# FIX 6/28/16:  IF CLASS IS GatingMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
-            self.sender = self.sender(self.paramsCurrent[PROJECTION_SENDER_VALUE])
-
-# FIX:  THE FOLLOWING CAN BE CONDENSED:
-# FIX:      ONLY TEST FOR GatingMechanism_Base (TO IMPLEMENT PROJECTION)
-# FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super._instantiate_sender
-# FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP _instantiate_gating_projection FOR GatingMechanism)
-        # If sender is a Mechanism (rather than a State) object, get (or instantiate) its State
-        #    (Note:  this includes GatingMechanism)
+        # If sender is specified as a Mechanism, validate that it is a GatingMechanism
         if isinstance(self.sender, Mechanism):
-            # If sender is a GatingMechanism, call it to instantiate its GatingSignal projection
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism_Base
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignalError
-            if isinstance(self.sender, GatingMechanism_Base):
-                try:
-                    params = params or self.gating_signal
-                    self.sender._instantiate_gating_projection(self, params=params, context=context)
-                except GatingSignalError as error_msg:
-                    raise FunctionError("Error in attempt to specify GatingSignal for {} of {}".
-                                        format(self.name, self.receiver.owner.name, error_msg))
+            if not isinstance(self.sender, GatingMechanism):
+                raise GatingProjectionError("Mechanism specified as sender for {} ({}) must be a {} (but it is a {})".
+                                    format(GATING_MECHANISM,self.name, self.sender.name,self.sender.__class__.__name__))
 
         # Call super to instantiate sender
-
         super()._instantiate_sender(context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
-        super()._validate_params(self, request_set=request_set, target_set=target_set, context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if INITIALIZING in context:
+            from PsyNeuLink.Components.States.InputState import InputState
+            from PsyNeuLink.Components.States.OutputState import OutputState
             if not isinstance(self.receiver, (InputState, OutputState, Mechanism)):
                 raise GatingProjectionError("Receiver specified for {} {} is not a "
                                             "Mechanism, InputState or OutputState".
                                             format(self.receiver, self.name))
 
     def _instantiate_receiver(self, context=None):
-        # FIX: THIS NEEDS TO BE PUT BEFORE _instantiate_function SINCE THAT USES self.receiver
-        """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
-
-        Overrides Projection._instantiate_receiver, to determine if the receiver is specified as a Mechanism,
-            and, if so, assigns receiver as its primary inputState (the default receiver for a GatingMechanism);
-            otherwise, passes control to Projection._instantiate_receiver for validation
-
+        """Assign state if receiver is Mechanism, and match output to param being modulated
         """
+        # If receiver specification was a Mechanism, re-assign to the mechanism's primary inputState
         if isinstance(self.receiver, Mechanism):
-            self.receiver = self.receiver.input_state
+            # If Mechanism is specified as receiver, assign GatingProjection to primary inputState as the default
+            self.receiver = self.receiver.input_states[0]
+
+        # # Match type of GatingProjection.value to type to the parameter being modulated
+        # modulated_param = self.sender.modulation
+        # function = self.receiver.function_object
+        # function_param = function.params[modulated_param]
+        # function_param_value = function.params[function_param]
+        # gating_projection_function = self.function.__self__
+        # gating_projection_function.functionOutputType = type(function_param_value)
+        # # ASSIGN FUNCTION TYPE TO FUNCTION HERE
 
         super()._instantiate_receiver(context=context)
 
     def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
+    # def execute(self, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         self.variable = self.sender.value
         self.value = self.function(variable=self.variable, params=params, time_scale=time_scale, context=context)
         return self.value
+
+    @property
+    def gating_policy(self):
+        return self.sender.value

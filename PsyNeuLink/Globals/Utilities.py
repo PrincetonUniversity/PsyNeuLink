@@ -39,7 +39,7 @@ ENUM
 ~~~~
 
 * `Autonumber`
-* `ModulationOperation`
+* `Modulation`
 * `get_modulationOperation_name`
 
 KVO
@@ -92,7 +92,7 @@ class UtilitiesError(Exception):
         return repr(self.error_value)
 
 
-class ModulationOperation(Enum):
+class Modulation(Enum):
     DISABLED = 0
     ADD = lambda runtime, default : runtime + default
     MULTIPLY = lambda runtime, default : runtime * default
@@ -101,11 +101,11 @@ class ModulationOperation(Enum):
 def get_modulationOperation_name(operation):
         x = operation(1,2)
         if x is 1:
-            return 'ModulationOperation.OVERRIDE'
+            return 'Modulation.OVERRIDE'
         elif x is 2:
-            return 'ModulationOperation.MULTIPLY'
+            return 'Modulation.MULTIPLY'
         elif x is 3:
-            return 'ModulationOperation.ADD'
+            return 'Modulation.ADD'
 
 
 

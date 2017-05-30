@@ -292,9 +292,10 @@ kwComponentCategory = "Function_Base"
 
 # Mechanisms:
 PROCESSING_MECHANISM = "ProcessingMechanism"
-MONITORING_MECHANISM = "MonitoringMechanism"
-CONTROL_MECHANISM = "ControlMechanism"
+ADAPTIVE_MECHANISM = "AdpativeMechanism"
 LEARNING_MECHANISM = "LearningMechanism"
+CONTROL_MECHANISM = "ControlMechanism"
+GATING_MECHANISM = 'GatingMechanism'
 
 # States:
 INPUT_STATE = "InputState"
@@ -470,8 +471,11 @@ kwInitialPoint = 'initial_point'
 #endregion
 
 
-#region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
+#region ----------------------------------------    MODULATORY MECHANISMS ----------------------------------------------
 
+MODULATION = 'modulation'
+
+# ControlMechanism / EVCMechanism
 MAKE_DEFAULT_CONTROLLER = "make_default_controller"
 MONITOR_FOR_CONTROL = "monitor_for_control"
 PREDICTION_MECHANISM = "Prediction Mechanism"
@@ -481,6 +485,7 @@ PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
 CONTROL_SIGNAL = 'control_signal'
 CONTROL_SIGNALS = 'control_signals'
 CONTROL_SIGNAL_SPECS = 'CONTROL_SIGNAL_SPECS'
+CONTROLLED_PARAM = 'controlled_param'
 CONTROL_PROJECTIONS = 'ControlProjections'
 OUTCOME_FUNCTION = 'outcome_function'
 COST_FUNCTION = 'cost_function'
@@ -491,12 +496,22 @@ SYSTEM_DEFAULT_CONTROLLER = "DefaultController"
 EVC_SIMULATION = 'SIMULATING'
 ALLOCATION_SAMPLES = "allocation_samples"
 
+# GatingMechanism
+MAKE_DEFAULT_GATING_MECHANISM = "make_default_gating_mechanism"
+GATING_SIGNAL = 'gating_signal'
+GATING_SIGNALS = 'gating_signals'
+GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
+GATED_STATE = "gated_state"
+GATING_PROJECTIONS = 'GatingProjections'
+GATING_POLICY = 'gating_policy'
+
 #endregion
 
 #region ----------------------------------------------    STATES  ------------------------------------------------------
 
 STATE = "State"
-# These are use for dict specification of State
+# These are used as keys in State specification dictionaries
+STATES = "STATES"
 STATE_PROJECTIONS = "StateProjections"  # Used to specify projection list to State
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"

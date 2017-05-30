@@ -12,16 +12,16 @@
 Overview
 --------
 
-A ControlSignal is an `OutputState` specialized for use with an `EVCMechanism`. It is used to modify the
+A ControlSignal is an `OutputState` specialized for use with a `ControlMechanism`. It is used to modify the
 parameter of a mechanism or of its :keyword:`function` that has been
-`specified for control <ControlMechanism_Control_Signals>`, in a system that regulates its performance using an
-`EVCMechanism` as its `controller`.  A ControlSignal is associated with a `ControlProjection` to the `parameterState
-<ParameterState>` for the parameter to be controlled.  It receives an `allocation` value specified by the
-EVCMechanism's `function <EVCMechanism.function>`, and uses that to compute an `intensity` that is assigned as the
-`value <ControlProjection.ControlProjection.value>` of its ControlProjection. The parameterState that receives the
-ControlProjection uses that value to modify the :keyword:`value` of the mechanism's (or function's) parameter for
+`specified for control <ControlMechanism_Control_Signals>`, in a system that regulates its performance using a
+`ControlMechanism` as its `controller`.  A ControlSignal is associated with a `ControlProjection` to the 
+`parameterState <ParameterState>` for the parameter to be controlled.  It receives an `allocation` value specified by 
+the ControlMechanism's `function <ControlMechanism.function>`, and uses that to compute an `intensity` that is assigned 
+as the `value <ControlProjection.ControlProjection.value>` of its ControlProjection. The parameterState that receives 
+the ControlProjection uses that value to modify the :keyword:`value` of the mechanism's (or function's) parameter for
 which it is responsible.  A ControlSignal also calculates a `cost`, based on its `intensity` and/or its time course,
-that is used by the EVCMechanism to adapt its `allocation` in the future.
+that is used by the ControlMechanism to adapt its `allocation` in the future.
 
 .. _ControlSignal_Creation:
 
@@ -30,29 +30,58 @@ Creating a ControlSignal
 
 A ControlSignal is created automatically whenever the parameter of a mechanism or of its function
 is `specified for control <ControlMechanism_Control_Signals>` and the mechanism belongs to a system for which
-an `EVCMechanism` is the `controller`.  Although a ControlSignal can be created using its constructor, or any of the
-other ways for `creating an outputState <OutputStates_Creation>`,  this is neither necessary nor advisable,
-as a ControlSignal has dedicated components and requirements for configuration that must be met for it to function
-properly.
+an `ControlMechanism` is the `controller`.  ControlSignals can also be specified in the **control_signals**
+argument of the constructor for a `ControlMechanism`.  Although a ControlSignal can be created directly using its 
+constructor (or any of the other ways for `creating an outputState <OutputStates_Creation>`), this is neither 
+necessary nor advisable, as a ControlSignal has dedicated components and requirements for configuration that must be 
+met for it to function properly.
+
+.. _ControlSignal_Specification:
+
+Specifying ControlSignals
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a ControlSignal is specified in context (e.g., the **control_signals** argument of the constructor for a
+`ControlMechanism`, the specification can take any of the following forms:
+
+  * a *ParameterState* of the Mechanism to which the parameter belongs;
+  |
+  * a *tuple*, with the *name* of the parameter as its 1st item. and the *mechanism* to which it belongs as the 2nd;
+    note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
+    but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
+  |
+  * a *specification dictionary*, that must contain at least the following two entries:
+    * *NAME*:str - a string that is the name of the parameter to be controlled;
+    * *MECHANISM*:Mechanism - the Mechanism to which the parameter belongs; 
+      (note: the Mechanism itself should be specified even if the parameter belongs to its function).
+    The dictionary can also contain entries for any other ControlSignal attributes to be specified
+    (e.g., a MODULATION and/or an ALLOCATION_SAMPLES entry; see `below <ControlSignal_Structure>` for a
+    description of ControlSignal attributes).
 
 .. _ControlSignal_Structure:
 
 Structure
 ---------
 
-A ControlSignal is owned by an `EVCMechanism`, and associated with a `ControlProjection` that projects to the
-`parameterState <ParameterState>` associated with the paramter to be controlled.  A ControlSignal has the following
+A ControlSignal is owned by an `ControlMechanism`, and associated with a `ControlProjection` that projects to the
+`parameterState <ParameterState>` associated with the parameter to be controlled.  A ControlSignal has the following
 primary attributes:
+
+.. _ControlSignal_Modulation:
+
+* `modulation <ControlSignal.modulation>` : determines how the ControlProjection is used by the ParameterState to 
+which it projects to modify its value (see `Modulatory Projections <ModulatoryProjection.modulation>` for an 
+explanation of how the modulation is specified and used to modulate a function).  
 
 .. _ControlSignal_Allocation:
 
-* `allocation`: assigned to the ControlSignal by the EVCMechanism to which it belongs, and converted to its
+* `allocation`: assigned to the ControlSignal by the ControlMechanism to which it belongs, and converted to its
   `intensity` by its `function <ControlSignal.function>`. Its value corresponds to the current round of execution of
-  the EVCMechanism to which the ControlSignal belongs.  The value in the previous round of execution can be accessed
-  using the ControlSignal's `last_allocation` attribute.
+  the ControlMechanism to which the ControlSignal belongs.  The value in the previous round of execution can be 
+  accessed using the ControlSignal's `last_allocation` attribute.
 ..
-* `allocation_samples`:  list of the allocation values to be sampled when the `EVCMechanism` to which the
-  ControlSignal belongs determines its `allocation_policy <EVCMechanism.EVCMechanism.allocation_policy>`.
+* `allocation_samples`:  list of the allocation values to be sampled if the `ControlMechanism` to which the
+  ControlSignal belongs determines its `allocation_policy <ControlMechanism.allocation_policy>` by sampling.
 ..
 * `function <ControlSignal.function>`: converts the ControlSignal's `allocation` to its `intensity`.  By default this
   is an identity function (:keyword:`Linear(slope=1, intercept=0))`), that simpy uses the `allocation` as the
@@ -63,8 +92,8 @@ primary attributes:
 
 * `intensity`:  the result of the ControlSignal`s `function <ControlSignal.function>` applied to its `allocation`,
   and used to modify the value of the parameter for which the ControlSignal is responsible.  Its value corresponds
-  to the current round of execution of the EVCMechanism to which the ControlSignal belongs.  The value in the previous
-  round of execution can be accessed using the ControlSignal's `lastIntensity` attribute.
+  to the current round of execution of the ControlMechanism to which the ControlSignal belongs.  The value in the 
+  previous round of execution can be accessed using the ControlSignal's `lastIntensity` attribute.
 
 .. _ControlSignal_Costs:
 
@@ -103,19 +132,18 @@ primary attributes:
 Execution
 ---------
 
-A ControlSignal cannot be executed directly.  It is executed whenever the `EVCMechanism` to which it belongs is
-executed.  When this occurs, the EVCMechanism provides the ControlSignal with an `allocation`, that is used by its
+A ControlSignal cannot be executed directly.  It is executed whenever the `ControlMechanism` to which it belongs is
+executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation`, that is used by its
 `function <ControlSignal.function>` to compute its `intensity` for that round of execution.  The `intensity` is used
 by its associated `ControlProjection` to set the :keyword:`value` of the `parameterState <ParameterState>` to which it
 projects. The paramemterState uses that value, in turn, to modify the value of the mechanism or function parameter
 being controlled.  The ControlSignal's `intensity`is also used by its `cost functions <ControlSignal_Cost_Functions>`
-to compute its `cost` attribute. That is used, along with its `allocation_samples` attribute, by the EVCMechanism to
-evaluate the `expected value of control (EVC) <EVCMechanism_EVC>` of the current
-`allocation_policy <EVCMechanism.EVCMechanism.allocation_policy>`, and (possibly) adjust the ControlSignal's
-`allocation` for the next round of execution.
+to compute its `cost` attribute. That is used, along with its `allocation_samples` attribute, by the ControlMechanism
+to evaluate the current `allocation_policy <ControlMechanism.allocation_policy>`, and (possibly) adjust the 
+ControlSignal's `allocation` for the next round of execution.
 
 .. note::
-   The changes in a parameter in response to the execution of an EVCMechanism are not applied until the mechanism
+   The changes in a parameter in response to the execution of a ControlMechanism are not applied until the mechanism
    with the parameter being controlled is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
    "lazy" updating).
 
@@ -125,7 +153,8 @@ Class Reference
 """
 
 # import Components
-from PsyNeuLink.Components.Functions.Function import *
+# FIX: EVCMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCMechanism
+#            SHOULD THEY BE LIMITED TO EVC??
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import *
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
 from PsyNeuLink.Components.States.State import *
@@ -166,38 +195,39 @@ class ControlSignalError(Exception):
 
 class ControlSignal(OutputState):
     """
-    OutputState(                                     \
-    owner,                                           \
-    function=LinearCombination(operation=SUM),       \
-    intensity_cost_function=Exponential,             \
-    adjustment_cost_function=Linear,                 \
-    duration_cost_function=Integrator,               \
-    cost_combination_function=Reduce(operation=SUM), \
-    allocation_samples=DEFAULT_ALLOCATION_SAMPLES,   \
-    params=None,                                     \
-    name=None,                                       \
-    prefs=None)
+    ControlSignal(                                       \
+        owner,                                           \
+        function=LinearCombination(operation=SUM),       \
+        intensity_cost_function=Exponential,             \
+        adjustment_cost_function=Linear,                 \
+        duration_cost_function=Integrator,               \
+        cost_combination_function=Reduce(operation=SUM), \
+        allocation_samples=DEFAULT_ALLOCATION_SAMPLES,   \
+        params=None,                                     \
+        name=None,                                       \
+        prefs=None)
 
-    A subclass of OutputState that represents the output of an `EVCmechanism` provided to a `ControlProjection`.
+    A subclass of OutputState that represents the ControlSignal of a `ControlMechanism` provided to a 
+    `ControlProjection`.
 
     COMMENT:
 
         Description
         -----------
-            The OutputState class is a type in the State category of Component,
-            It is used primarily as the sender for MappingProjections
+            The ControlSignal class is a subtype of the OutputState type in the State category of Component,
+            It is used as the sender for ControlProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to self.value
 
         Class attributes:
-            + componentType (str) = OUTPUT_STATES
+            + componentType (str) = CONTROL_SIGNAL
             + paramClassDefaults (dict)
                 + FUNCTION (LinearCombination)
                 + FUNCTION_PARAMS   (Operation.PRODUCT)
             + paramNames (dict)
 
         Class methods:
-            function (executes function specified in params[FUNCTION];  default: LinearCombination with Operation.SUM)
+            function (executes function specified in params[FUNCTION];  default: Linear)
 
         StateRegistry
         -------------
@@ -209,13 +239,13 @@ class ControlSignal(OutputState):
     Arguments
     ---------
 
-    owner : Mechanism
-        specifies the `EVCMechanism` to which to assign the ControlSignal.
+    owner : ControlMechanism
+        specifies the `ControlMechanism` to which to assign the ControlSignal.
 
-    function : Function or method : default LinearCombination(operation=SUM)
+    function : Function or method : default Linear
         specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`.
 
-    intensity_cost_function : Optional[TransferFuntion] : default Exponential
+    intensity_cost_function : Optional[TransferFunction] : default Exponential
         specifies the function used to calculate the contribution of the ControlSignal's `intensity` to its `cost`.
 
     adjustment_cost_function : Optional[TransferFunction] : default Linear
@@ -231,7 +261,7 @@ class ControlSignal(OutputState):
 
     allocation_samples : list : default range(0.1, 1, 0.1)
         specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
-        `allocation_policy <EVCMechanism.EVCMechanism.allocation_policy>` (see `ControlSignal_Execution`).
+        `allocation_policy <ControlMechanism.allocation_policy>` (see `ControlSignal_Execution`).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -252,8 +282,8 @@ class ControlSignal(OutputState):
     Attributes
     ----------
 
-    owner : EVCMechanism
-        the `EVCMechanism` to which the ControlSignal belongs.
+    owner : ControlMechanism
+        the `ControlMechanism` to which the ControlSignal belongs.
 
     allocation : float : default: defaultControlAllocation
         value used as `variable <ControlSignal.variable>` for the ControlSignal's `function <ControlSignal.function>`
@@ -264,7 +294,7 @@ class ControlSignal(OutputState):
 
     allocation_samples : list : DEFAULT_SAMPLE_VALUES
         set of values to sample by the ControlSignal's `owner <ControlSignal.owner>` to determine its
-        `allocation_policy <EVCMechanism.EVCMechanism.allocation_policy>`.
+        `allocation_policy <ControlMechanism.allocation_policy>`.
 
     variable : number, list or np.ndarray
         same as `allocation`;  used by `function <ControlSignal.function>` to compute the ControlSignal's `intensity`.
@@ -351,13 +381,14 @@ class ControlSignal(OutputState):
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        PROJECTION_TYPE: MAPPING_PROJECTION,
-        CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS,
+        PROJECTION_TYPE: CONTROL_PROJECTION,
+        CONTROLLED_PARAM:None,
+        CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS
     })
     #endregion
 
 
-    tc.typecheck
+    @tc.typecheck
     def __init__(self,
                  owner,
                  reference_value,
@@ -409,33 +440,6 @@ class ControlSignal(OutputState):
                          name=name,
                          prefs=prefs,
                          context=self)
-
-
-    def _validate_variable(self, variable, context=None):
-        """Insure variable is compatible with output component of owner.function relevant to this state
-
-        Validate self.variable against component of owner's value (output of owner's function)
-             that corresponds to this outputState (since that is what is used as the input to OutputState);
-             this should have been provided as reference_value in the call to OutputState__init__()
-
-        Note:
-        * This method is called only if the parameterValidationPref is True
-
-        :param variable: (anything but a dict) - variable to be validated:
-        :param context: (str)
-        :return none:
-        """
-        super(OutputState,self)._validate_variable(variable, context)
-
-        self.variableClassDefault = self.reference_value
-
-        # Insure that self.variable is compatible with (relevant item of) output value of owner's function
-        if not iscompatible(self.variable, self.reference_value):
-            raise OutputStateError("Value ({0}) of outputState for {1} is not compatible with "
-                                           "the output ({2}) of its function".
-                                           format(self.value,
-                                                  self.owner.name,
-                                                  self.reference_value))
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions
