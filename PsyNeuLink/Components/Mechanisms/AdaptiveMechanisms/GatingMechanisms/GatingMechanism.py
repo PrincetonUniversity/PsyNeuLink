@@ -112,12 +112,12 @@ Class Reference
 #                      ADD IN GENERIC CONTROL STUFF FROM DefaultGatingMechanism
 
 from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.States.State import State_Base, _instantiate_state, _parse_state_spec
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal \
     import GatingSignal, _parse_gating_signal_spec
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import gating_signal_keywords
+from PsyNeuLink.Components.States.State import State_Base, _instantiate_state, _parse_state_spec
 from PsyNeuLink.Components.Projections.Projection import _validate_projection_receiver_mech
 
 GatingMechanismRegistry = {}
@@ -133,7 +133,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     GatingMechanism_Base(                                    \
     default_input_value=None,                                \
     gating_signals=None                                      \
-    modulation=Modulation.MULTIPLICATIVE                     \
+    modulation=Modulation.MULTIPLY                           \
     function=Linear,                                         \
     params=None,                                             \
     name=None,                                               \
@@ -238,7 +238,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                  default_gating_policy=None,
                  function = Linear(slope=1, intercept=0),
                  gating_signals:tc.optional(list) = None,
-                 modulation:is_modulation_operation = Modulation.MULTIPLY,
+                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
