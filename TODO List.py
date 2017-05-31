@@ -307,6 +307,10 @@
 #            State.update should use modulated_param rather than modulation
 #            modulation as @property that validates value and then calls _instantiate_modulated_param
 
+# IMPLEMENT: all_afferents as @property = afferents + mod_afferents
+#            all_efferents as @property = efferents + mod_efferents
+#            SEARCH & REPLACE afferents + mod_afferents -> all_afferents, AND SAME FOR efferents
+
 # FIX: NAMES OF ControlProjections AND GatingProjections
 # FIX: GET RID OF ControlSignal LINE 434: self.reference_value = reference_value
 # FIX: UPDATE WITH MODULATION_MODS
