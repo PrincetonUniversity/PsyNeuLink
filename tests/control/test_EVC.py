@@ -25,7 +25,7 @@ def test_EVC():
                 1.0,
                 ControlProjection(
                     function=Linear,
-                    control_signal={
+                    control_signal_params={
                         ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                     },
                 ),
@@ -34,7 +34,7 @@ def test_EVC():
                 1.0,
                 ControlProjection(
                     function=Linear,
-                    control_signal={
+                    control_signal_params={
                         ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                     },
                 ),
