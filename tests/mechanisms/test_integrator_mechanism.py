@@ -3,7 +3,7 @@ import pytest
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Functions.Function import Integrator
+from PsyNeuLink.Components.Functions.Function import Integrator, SimpleIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Globals.Keywords import ADAPTIVE, CONSTANT, DIFFUSION, SIMPLE
 from PsyNeuLink.Globals.TimeScale import TimeScale
@@ -465,3 +465,26 @@ def test_integrator_type_diffusion_rate_list_input_float():
         and "must match the length" in str(error_text)
         and "of the default input" in str(error_text)
     )
+
+
+## NEW INTEGRATOR FUNCTIONS ------------------------------------
+
+
+# ------------------------------------------------------------------------------------------------
+# TEST 1
+# time_constant = 1
+
+
+def test_simple_integrator():
+    I = IntegratorMechanism(
+            function = SimpleIntegrator(
+                initializer = 10.0,
+                rate = 5.0
+            )
+        )
+    P = process(pathway=[I])
+    val = P.execute(1)
+    assert val == 15
+
+
+# ------------------------------------------------------------------------------------------------
