@@ -797,13 +797,13 @@ class State_Base(State):
             #    - assign projection to mod_afferents
             if isinstance(projection_spec, (ControlProjection, GatingProjection)):
                 # Get the function parameter to be modulated
-                mod_param = getattr(self.function_object, projection_spec.sender.modulation)
+                function_param = getattr(self.function_object, projection_spec.sender.modulation)
                 # Get the value of the function parameter to be modulated
-                mod_param_value = self.function_object.params[mod_param]
+                function_param_value = self.function_object.params[function_param]
                 # Match the projection's value with the value of the function parameter
-                mod_proj_spec_value = type_match(projection_spec.value, type(mod_param_value))
+                mod_proj_spec_value = type_match(projection_spec.value, type(function_param_value))
                 # If the match was successful (i.e., they are compatible), assign the projection to mod_afferents
-                if iscompatible(mod_param_value, mod_proj_spec_value):
+                if iscompatible(function_param_value, mod_proj_spec_value):
                     # Avoid duplicates, since instantiation of projection (e.g, by Mechanism)
                     #    may have already called this method and assigned projection to self.mod_afferents
                     if not projection_spec in self.mod_afferents:
@@ -1280,9 +1280,9 @@ class State_Base(State):
 
         # If the state receives any modulatory projections
         if self.mod_afferents:
-            # mod_value = self.mod_aggregation_operation([mod_proj.execute() for mod_proj in self.mod_afferents])
             # Execute each modulatory projection and assign its value to the specified function param
             for mod_proj in self.mod_afferents:
+                # FIX: UPDATE WITH MODULATION_MODS
                 # FIX: THERE *MUST* BE A MORE EFFICIENT WAY OF DOING ALL OF THIS (INCLUDING DEALING WITH stateParams)
                 function_param_spec = mod_proj.sender.modulation
                 function_param = self.function_object.params[function_param_spec]
@@ -1293,7 +1293,7 @@ class State_Base(State):
                     if FUNCTION_PARAMS in self.stateParams:
                         self.stateParams[FUNCTION_PARAMS].update({function_param:modulatory_param})
                     else:
-                        self.stateParams[FUNCTION_PARAMS].update({function_param:modulatory_param})
+                        self.stateParams[FUNCTION_PARAMS] = {function_param:modulatory_param}
                 else:
                     self.stateParams[FUNCTION_PARAMS] = {function_param:modulatory_param}
 
