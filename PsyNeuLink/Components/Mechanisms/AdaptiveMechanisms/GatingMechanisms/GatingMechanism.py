@@ -133,7 +133,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     GatingMechanism_Base(                                    \
     default_input_value=None,                                \
     gating_signals=None                                      \
-    modulation=Modulation.MULTIPLY                           \
+    modulation=ModulationParam.MULTIPLICATIVE                \
     function=Linear,                                         \
     params=None,                                             \
     name=None,                                               \
@@ -175,6 +175,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
         specifies the inputStates and/or outputStates to be gated by the GatingMechanism;
         the number of items must equal the length of the **default_gating_policy** arg 
         (see `gating_signals <GatingMechanism.gating_signals>` for details).
+        
+    modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
+        specifies the default form of modulation to be used by the GatingMechanism's GatingSignals, unless
+        they are `individually specified <GatingSignal_Specification>`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to transform input to `gating_policy` to value;  the default is an identity function
@@ -212,6 +216,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
         each item is the value assigned to the corresponding GatingSignal listed in `gating_signals`;
         (same as the GatingMechanism's `value <Mechanism.value>` attribute).
         Default is a single item used by all of the `gating_signals`. 
+
+    modulation : ModulationParam
+        the default form of modulation used by the GatingMechanism's GatingSignals, unless they are 
+        `individually specified <GatingSignal_Specification>`.
         
     """
 
