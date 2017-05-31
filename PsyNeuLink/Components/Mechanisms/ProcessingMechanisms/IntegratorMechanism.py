@@ -191,14 +191,13 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     # Set default input_value to default bias for SigmoidLayer
     paramNames = paramClassDefaults.keys()
 
-    from PsyNeuLink.Components.Functions.Function import Integrator
+    from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator
 
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
                  size:tc.optional(int)=None,
-                 function=Integrator(rate=0.5,
-                                     integration_type=ADAPTIVE),
+                 function=AdaptiveIntegrator(rate=0.5),
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,

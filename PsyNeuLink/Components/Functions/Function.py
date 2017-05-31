@@ -2906,446 +2906,292 @@ class Integrator(
 
     componentName = INTEGRATOR_FUNCTION
 
-    variableClassDefault = [[0]]
+    # variableClassDefault = [[0]]
+    #
+    # paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    # # paramClassDefaults.update({INITIALIZER: variableClassDefault})
+    # paramClassDefaults.update({
+    #     NOISE: None,
+    #     RATE: None
+    # })
+    #
+    # @tc.typecheck
+    # def __init__(self,
+    #              variable_default=None,
+    #              rate: parameter_spec = 1.0,
+    #              integration_type: tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION) = CONSTANT,
+    #              noise=0.0,
+    #              time_step_size=1.0,
+    #              initializer=variableClassDefault,
+    #              params: tc.optional(dict) = None,
+    #              owner=None,
+    #              prefs: is_pref_set = None,
+    #              context="Integrator Init"):
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: variableClassDefault})
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
-
-    @tc.typecheck
-    def __init__(self,
-                 variable_default=None,
-                 rate: parameter_spec = 1.0,
-                 integration_type: tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION) = CONSTANT,
-                 noise=0.0,
-                 time_step_size=1.0,
-                 initializer=variableClassDefault,
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None,
-                 context="Integrator Init"):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  integration_type=integration_type,
-                                                  time_step_size=time_step_size,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  params=params)
-
-
-        # Assign here as default, for use in initialization of function
-        self.previous_value = self.paramClassDefaults[INITIALIZER]
-
-        super().__init__(variable_default=variable_default,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-        # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
-
-        self.auto_dependent = True
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-
-        # Handle list or array for rate specification
-        if RATE in request_set:
-            rate = request_set[RATE]
-            if isinstance(rate, (list, np.ndarray)):
-                if len(rate) != np.array(self.variable).size:
-                    # If the variable was not specified, then reformat it to match rate specification
-                    #    and assign variableClassDefault accordingly
-                    # Note: this situation can arise when the rate is parameterized (e.g., as an array) in the
-                    #       Integrator's constructor, where that is used as a specification for a function parameter
-                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
-                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
-                    #       the object itself, thus does not see the array specification for the input.
-                    if self._variable_not_specified:
-                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
-                        if self.verbosePref:
-                            warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} "
-                                          "must match the length ({}) of the default input ({});  "
-                                          "the default input has been updated to match".
-                                          format(len(rate),
-                                                 rate,
-                                                 self.name,
-                                                 np.array(self.variable).size),
-                                          self.variable)
-                    else:
-                        raise FunctionError("The length ({}) of the array specified for the rate parameter ({}) of {} "
-                                            "must match the length ({}) of the default input ({})".
-                                            format(len(rate),
-                                                   rate,
-                                                   self.name,
-                                                   np.array(self.variable).size,
-                                                   self.variable))
-                # OLD:
-                # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
-
-                # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
-                # to have a rate parameter of type ndarray/list
-
-        super()._validate_params(request_set=request_set,
-                                 target_set=target_set,
-                                 context=context)
-
-        if RATE in target_set:
-            if self.integration_type is ADAPTIVE:
-                if isinstance(target_set[RATE], (list, np.ndarray)):
-                    for r in target_set[RATE]:
-                        if r < 0.0 or r > 1.0:
-                            raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                                "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
-                                                format(target_set[RATE], self.name))
-                else:
-                    if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-                        raise FunctionError(
-                            "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                            "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
-
-        # self._validate_initializer()
-
-        if NOISE in target_set:
-            # FIX: SHOULDN'T THIS PASS target_set[NOISE] to _validate_noise() rather than use self.noise?
-            self._validate_noise(target_set[NOISE])
-
-        if TIME_STEP_SIZE in target_set:
-            time_step_size = target_set[TIME_STEP_SIZE]
-
-    # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
-    # need to be executed
-    def _validate_noise(self, noise):
-        self.noise_function = False
-        if self.integration_type == "diffusion":
-            if not isinstance(noise, float):
-                raise FunctionError("Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
-                                " float. Noise parameter is used to construct the standard DDM noise distribution"
-                                .format(self.name))
-
-        else:
-
-            # Noise is a list or array
-            if isinstance(noise, (np.ndarray, list)):
-                # Variable is a list/array
-                if isinstance(self.variable, (np.ndarray, list)):
-                    if len(noise) != np.array(self.variable).size:
-                        try:
-                            formatted_noise = list(map(lambda x: x.__qualname__, noise))
-                        except AttributeError:
-                            formatted_noise = noise
-                        raise FunctionError("The length ({}) of the array specified for the noise parameter ({}) of {} "
-                                            "must match the length ({}) of the default input ({}). If noise is specified as"
-                                            " an array or list, it must be of the same size as the input."
-                                            .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
-                                                    self.variable))
-                    else:
-                        # Noise is a list or array of functions
-                        if callable(noise[0]):
-                            self.noise_function = True
-                        # Noise is a list or array of floats
-                        elif isinstance(noise[0], float):
-                            self.noise_function = False
-                        # Noise is a list or array of invalid elements
-                        else:
-                            raise FunctionError("The elements of a noise list or array must be floats or functions.")
-                # Variable is not a list/array
-                else:
-                    raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
-                                        "default input value is also a list or array.".format(noise, self.name))
-
-            elif callable(noise):
-                self.noise_function = True
-                if isinstance(self.variable, (np.ndarray, list)):
-                    new_noise = []
-                    for i in self.variable:
-                        new_noise.append(self.noise)
-                    noise = new_noise
-            elif isinstance(noise, float):
-                self.noise_function = False
-            else:
-                raise FunctionError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
-                                    "array or list of functions.".format(noise, self.name))
-
-
-    def _validate_initializer(self, initializer):
-        # Initializer is a list or array
-        if isinstance(initializer[0], (np.ndarray, list)):
-            # Variable is a list/array
-            if isinstance(self.variable, (np.ndarray, list)):
-                if len(initializer[0]) != np.array(self.variable).size:
-                    try:
-                        formatted_initializer = list(map(lambda x: x.__qualname__, initializer[0]))
-                    except AttributeError:
-                        formatted_initializer = initializer[0]
-                    raise FunctionError("The length ({}) of the array specified for the initializer parameter "
-                                        "({}) of {} must match the length ({}) of the default input ({}). "
-                                        "If initializer is specified as an array or list, "
-                                        "it must be of the same size as the input."
-                                        .format(len(initializer[0]),
-                                                formatted_initializer,
-                                                self.name, np.array(self.variable).size,
-                                                self.variable))
-                else:
-                    if callable(initializer[0][0]):
-                        self.initializer_function = True
-                    # Initializer is a list or array of floats
-
-       # Variable is not a list/array
-            else:
-                raise FunctionError("The initializer parameter ({}) for {} may only be a list or array if the "
-                                    "default input value is also a list or array.".
-                                    format(self.initializer[0], self.name))
-
-        elif callable(initializer[0]):
-            self.initializer_function = True
-            if isinstance(self.variable, (np.ndarray, list)):
-                new_initializer = []
-                for i in self.variable:
-                    new_initializer.append(initializer[0])
-                initializer[0] = new_initializer
-        elif isinstance(initializer[0], float):
-            initializer_function = False
-        else:
-            raise FunctionError("initializer parameter ({}) for {} must be a number, function, "
-                                "array or list of floats, or array or list of functions.".
-                                format(initializer[0], self.name))
-
-    def function(self,
-                 variable=None,
-                 params=None,
-                 time_scale=TimeScale.TRIAL,
-                 context=None):
-        """
-        Return: some fraction of `variable <Linear.slope>` combined with some fraction of `previous_value
-        <Integrator.previous_value>` (see `integration_type <Integrator.integration_type>`).
-
-        Arguments
-        ---------
-
-        variable : number, list or np.array : default variableClassDefault
-           a single value or array of values to be integrated.
-
-        params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
-
-        Returns
-        -------
-
-        updated value of integral : 2d np.array
-
-        """
-
-        # FIX:  CONVERT TO NP?
-        # FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
-
-        self._check_args(variable=variable, params=params, context=context)
-
-        rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        integration_type = self.paramsCurrent[INTEGRATION_TYPE]
-
-        time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
-
-        # if noise is a function, execute it
-        if self.noise_function:
-            if isinstance(self.noise, (np.ndarray, list)):
-                noise = list(map(lambda x: x(), self.noise))
-            else:
-                noise = self.noise()
-        else:
-            noise = self.noise
-
-        try:
-            previous_value = params[INITIALIZER]
-        except (TypeError, KeyError):
-            previous_value = self.previous_value
-
-        previous_value = np.atleast_2d(previous_value)
-        new_value = self.variable
-
-        # Compute function based on integration_type param
-        if integration_type is CONSTANT:
-            value = previous_value + rate + noise
-        elif integration_type is SIMPLE:
-            value = previous_value + (new_value * rate) + noise
-        elif integration_type is ADAPTIVE:
-            value = (1 - rate) * previous_value + rate * new_value + noise
-        elif integration_type is DIFFUSION:
-            value = previous_value + rate * new_value * time_step_size + np.sqrt(time_step_size * noise) * np.random.normal()
-        else:
-            value = new_value
-
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context:
-            self.previous_value = value
-
-        return value
-
-# Trying commenting out DDMIntegrator entirely and forcing the integration_type to be DIFFUSION in the DDM *mechanism*
-# # FIX: SHOULD THIS EVEN ALLOW A INTEGRATION_TYPE PARAM IF IT REQUIRES THAT IT BE DIFFUSION??
-# class DDMIntegrator(
-#     Integrator):  # -------------------------------------------------------------------------------------
-#     """
-#     DDMIntegrator(                 \
-#         variable_default=None,  \
-#         rate=1.0,               \
-#         noise=0.5,              \
-#         time_step_size=1.0,     \
-#         params=None,            \
-#         owner=None,             \
-#         prefs:is_pref_set=None, \
-#         )
-#
-#     .. _DDMIntegrator:
-#
-#     Implement drift diffusion integration process.
-#     It is a subclass of the `Integrator` Function that enforces use of the DIFFUSION `integration_type
-#     <Integrator.integration_type>`.
-#
-#     Arguments
-#     ---------
-#
-#     variable_default : number, list or np.array : default variableClassDefault
-#         specifies a template for the value to be integrated;  if it is list or array, each element is independently
-#         integrated.
-#
-#     rate : float, list or 1d np.array : default 1.0
-#         specifies the rate of integration (drift component of a drift diffusion process).  If it is a list or array,
-#         it must be the same length as `variable <DDMIntegrator.variable_default>` and all elements must be floats
-#         between 0 and 1 (see `rate <Integrator.rate>` for details).
-#
-#     noise : float, list or 1d np.array : default 0.0
-#         specifies random value to be added in each call to `function <Integrator.function>` (corresponds to the
-#         diffusion component of the drift diffusion process). If it is a list or array, it must be the same length as
-#         `variable <DDMIntegrator.variable>` and all elements must be floats between 0 and 1
-#         (see `noise <DDMIntegrator.rate>` for details).
-#
-#     time_step_size : float : default 0.0
-#         determines the timing precision of the integration process when
-#         `integration_type <Integrator.integration_type>` is set to
-#         DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
-#
-#     initializer float, list or 1d np.array : default 0.0
-#         specifies starting value for integration.  If it is a list or array, it must be the same length as
-#         `variable_default <Integrator.variable_default>` (see `initializer <DDMIntegrator.initializer>` for details).
-#
-#     params : Optional[Dict[param keyword, param value]]
-#         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-#         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-#         arguments of the constructor.
-#
-#     owner : Component
-#         `component <Component>` to which to assign the Function.
-#
-#     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-#         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-#         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-#
-#
-#     Attributes
-#     ----------
-#
-#     variable : number or np.array
-#         current input value some portion of which (determined by `rate <DDMIntegrator.rate>` that will be added to
-#         prior value.  If it is an array, each element is independently integrated.
-#
-#     rate : 1d np.array
-#         determines the rate of integration based on current and prior values (corresponds to the drift component
-#         of the drift diffusion process).  All elements are between 0 and 1 (0 = no change; 1 = instantaneous change).
-#         If it has a single element, it applies to all elements of `variable <Integrator.variable>`;  if it has more
-#         than one element, each element applies to the corresponding element of `variable <Integrator.variable>`.
-#
-#     noise : float or 1d np.array
-#         determines the random value to be added in each call to `function <Integrator.function>` (corresponds to the
-#         diffusion component of the drift diffusion process).
-#
-#     time_step_size : float
-#         determines the timing precision of the integration process when
-#         `integration_type <Integrator.integration_type>` is set to DIFFUSION
-#         (and used to scale the `noise <Integrator.noise>` parameter appropriately).
-#
-#     initializer : float or 1d np.array
-#         determines the starting value for integration (i.e., the value to which
-#         `previous_value <Integrator.previous_value>`
-#         is set.  If it is assigned as a `runtime_param <LINK>` it resets `previous_value <Integrator.previous_value>`
-#         to the specified value (see `initializer <Integrator.initializer>` for details).
-#
-#     previous_value : 1d np.array : default variableClassDefault
-#         stores previous value with which `variable <Integrator.variable>` is integrated.
-#
-#     owner : Mechanism
-#         `component <Component>` to which the Function has been assigned.
-#
-#     prefs : PreferenceSet or specification dict : Projection.classPreferences
-#         the `PreferenceSet` for function. Specified in the `prefs` argument of the constructor for the function;
-#         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-#         (see :doc:`PreferenceSet <LINK>` for details).
-#
-#     """
-#
-#     componentName = DDM_INTEGRATOR_FUNCTION
-#
-#     @tc.typecheck
-#     def __init__(self,
-#                  variable_default=None,
-#                  rate=1.0,
-#                  noise=0.5,
-#                  time_step_size=1.0,
-#                  params: tc.optional(dict) = None,
-#                  owner=None,
-#                  prefs: is_pref_set = None,
-#                  context="DDMIntegrator Init"):
-#
-#         # Assign here as default, for use in initialization of function
-#         self.previous_value = self.paramClassDefaults[INITIALIZER]
-#         integration_type = DIFFUSION
-#
-#         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-#         params = self._assign_args_to_param_dicts(
-#             integration_type=integration_type,
-#             params=params,
-#             noise=noise,
-#             rate=rate,
-#             time_step_size=time_step_size)
-#
-#         super().__init__(variable_default=variable_default,
-#                          params=params,
-#                          owner=owner,
-#                          prefs=prefs,
-#                          context=context)
-#
-#         # Reassign to kWInitializer in case default value was overridden
-#         self.previous_value = [self.paramsCurrent[INITIALIZER]]
-#
-#     def _validate_params(self, request_set, target_set=None, context=None):
-#
-#         super()._validate_params(request_set=request_set,
-#                                  target_set=target_set,
-#                                  context=context)
-#
-#         noise = target_set[NOISE]
-#
-#         if (isinstance(noise, float) == False):
-#             raise FunctionError("noise parameter ({}) for {} must be a float.".
-#                                 format(noise, self.name))
-#
-#         integration_type = target_set[INTEGRATION_TYPE]
-#         if (integration_type != "diffusion"):
-#             raise FunctionError("integration_type parameter ({}) for {} must be diffusion. "
-#                                 "For alternate methods of accumulation, use the Integrator function".
-#                                 format(integration_type, self.name))
+    #     # Assign args to params and functionParams dicts (kwConstants must == arg names)
+    #     params = self._assign_args_to_param_dicts(rate=rate,
+    #                                               integration_type=integration_type,
+    #                                               time_step_size=time_step_size,
+    #                                               initializer=initializer,
+    #                                               noise=noise,
+    #                                               params=params)
+    #
+    #
+    #     # Assign here as default, for use in initialization of function
+    #     self.previous_value = self.paramClassDefaults[INITIALIZER]
+    #
+    #     super().__init__(variable_default=variable_default,
+    #                      params=params,
+    #                      owner=owner,
+    #                      prefs=prefs,
+    #                      context=context)
+    #
+    #     # Reassign to kWInitializer in case default value was overridden
+    #     self.previous_value = self.initializer
+    #
+    #     self.auto_dependent = True
+    #
+    # def _validate_params(self, request_set, target_set=None, context=None):
+    #
+    #     # Handle list or array for rate specification
+    #     if RATE in request_set:
+    #         rate = request_set[RATE]
+    #         if isinstance(rate, (list, np.ndarray)):
+    #             if len(rate) != np.array(self.variable).size:
+    #                 # If the variable was not specified, then reformat it to match rate specification
+    #                 #    and assign variableClassDefault accordingly
+    #                 # Note: this situation can arise when the rate is parameterized (e.g., as an array) in the
+    #                 #       Integrator's constructor, where that is used as a specification for a function parameter
+    #                 #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+    #                 #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
+    #                 #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
+    #                 #       the object itself, thus does not see the array specification for the input.
+    #                 if self._variable_not_specified:
+    #                     self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
+    #                     if self.verbosePref:
+    #                         warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} "
+    #                                       "must match the length ({}) of the default input ({});  "
+    #                                       "the default input has been updated to match".
+    #                                       format(len(rate),
+    #                                              rate,
+    #                                              self.name,
+    #                                              np.array(self.variable).size),
+    #                                       self.variable)
+    #                 else:
+    #                     raise FunctionError("The length ({}) of the array specified for the rate parameter ({}) of {} "
+    #                                         "must match the length ({}) of the default input ({})".
+    #                                         format(len(rate),
+    #                                                rate,
+    #                                                self.name,
+    #                                                np.array(self.variable).size,
+    #                                                self.variable))
+    #             # OLD:
+    #             # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+    #
+    #             # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
+    #             # to have a rate parameter of type ndarray/list
+    #
+    #     super()._validate_params(request_set=request_set,
+    #                              target_set=target_set,
+    #                              context=context)
+    #
+    #     if RATE in target_set:
+    #         if self.integration_type is ADAPTIVE:
+    #             if isinstance(target_set[RATE], (list, np.ndarray)):
+    #                 for r in target_set[RATE]:
+    #                     if r < 0.0 or r > 1.0:
+    #                         raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
+    #                                             "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+    #                                             format(target_set[RATE], self.name))
+    #             else:
+    #                 if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
+    #                     raise FunctionError(
+    #                         "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
+    #                         "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+    #
+    #     # self._validate_initializer()
+    #
+    #     if NOISE in target_set:
+    #         # FIX: SHOULDN'T THIS PASS target_set[NOISE] to _validate_noise() rather than use self.noise?
+    #         self._validate_noise(target_set[NOISE])
+    #
+    #     if TIME_STEP_SIZE in target_set:
+    #         time_step_size = target_set[TIME_STEP_SIZE]
+    #
+    # # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
+    # # need to be executed
+    # def _validate_noise(self, noise):
+    #     self.noise_function = False
+    #     if self.integration_type == "diffusion":
+    #         if not isinstance(noise, float):
+    #             raise FunctionError("Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
+    #                             " float. Noise parameter is used to construct the standard DDM noise distribution"
+    #                             .format(self.name))
+    #
+    #     else:
+    #
+    #         # Noise is a list or array
+    #         if isinstance(noise, (np.ndarray, list)):
+    #             # Variable is a list/array
+    #             if isinstance(self.variable, (np.ndarray, list)):
+    #                 if len(noise) != np.array(self.variable).size:
+    #                     try:
+    #                         formatted_noise = list(map(lambda x: x.__qualname__, noise))
+    #                     except AttributeError:
+    #                         formatted_noise = noise
+    #                     raise FunctionError("The length ({}) of the array specified for the noise parameter ({}) of {} "
+    #                                         "must match the length ({}) of the default input ({}). If noise is specified as"
+    #                                         " an array or list, it must be of the same size as the input."
+    #                                         .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
+    #                                                 self.variable))
+    #                 else:
+    #                     # Noise is a list or array of functions
+    #                     if callable(noise[0]):
+    #                         self.noise_function = True
+    #                     # Noise is a list or array of floats
+    #                     elif isinstance(noise[0], float):
+    #                         self.noise_function = False
+    #                     # Noise is a list or array of invalid elements
+    #                     else:
+    #                         raise FunctionError("The elements of a noise list or array must be floats or functions.")
+    #             # Variable is not a list/array
+    #             else:
+    #                 raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
+    #                                     "default input value is also a list or array.".format(noise, self.name))
+    #
+    #         elif callable(noise):
+    #             self.noise_function = True
+    #             if isinstance(self.variable, (np.ndarray, list)):
+    #                 new_noise = []
+    #                 for i in self.variable:
+    #                     new_noise.append(self.noise)
+    #                 noise = new_noise
+    #         elif isinstance(noise, float):
+    #             self.noise_function = False
+    #         else:
+    #             raise FunctionError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
+    #                                 "array or list of functions.".format(noise, self.name))
+    #
+    #
+    # def _validate_initializer(self, initializer):
+    #     # Initializer is a list or array
+    #     if isinstance(initializer[0], (np.ndarray, list)):
+    #         # Variable is a list/array
+    #         if isinstance(self.variable, (np.ndarray, list)):
+    #             if len(initializer[0]) != np.array(self.variable).size:
+    #                 try:
+    #                     formatted_initializer = list(map(lambda x: x.__qualname__, initializer[0]))
+    #                 except AttributeError:
+    #                     formatted_initializer = initializer[0]
+    #                 raise FunctionError("The length ({}) of the array specified for the initializer parameter "
+    #                                     "({}) of {} must match the length ({}) of the default input ({}). "
+    #                                     "If initializer is specified as an array or list, "
+    #                                     "it must be of the same size as the input."
+    #                                     .format(len(initializer[0]),
+    #                                             formatted_initializer,
+    #                                             self.name, np.array(self.variable).size,
+    #                                             self.variable))
+    #             else:
+    #                 if callable(initializer[0][0]):
+    #                     self.initializer_function = True
+    #                 # Initializer is a list or array of floats
+    #
+    #    # Variable is not a list/array
+    #         else:
+    #             raise FunctionError("The initializer parameter ({}) for {} may only be a list or array if the "
+    #                                 "default input value is also a list or array.".
+    #                                 format(self.initializer[0], self.name))
+    #
+    #     elif callable(initializer[0]):
+    #         self.initializer_function = True
+    #         if isinstance(self.variable, (np.ndarray, list)):
+    #             new_initializer = []
+    #             for i in self.variable:
+    #                 new_initializer.append(initializer[0])
+    #             initializer[0] = new_initializer
+    #     elif isinstance(initializer[0], float):
+    #         initializer_function = False
+    #     else:
+    #         raise FunctionError("initializer parameter ({}) for {} must be a number, function, "
+    #                             "array or list of floats, or array or list of functions.".
+    #                             format(initializer[0], self.name))
+    #
+    # def function(self,
+    #              variable=None,
+    #              params=None,
+    #              time_scale=TimeScale.TRIAL,
+    #              context=None):
+    #     """
+    #     Return: some fraction of `variable <Linear.slope>` combined with some fraction of `previous_value
+    #     <Integrator.previous_value>` (see `integration_type <Integrator.integration_type>`).
+    #
+    #     Arguments
+    #     ---------
+    #
+    #     variable : number, list or np.array : default variableClassDefault
+    #        a single value or array of values to be integrated.
+    #
+    #     params : Optional[Dict[param keyword, param value]]
+    #         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+    #         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+    #         arguments of the constructor.
+    #
+    #     time_scale :  TimeScale : default TimeScale.TRIAL
+    #         specifies whether the function is executed on the time_step or trial time scale.
+    #
+    #     Returns
+    #     -------
+    #
+    #     updated value of integral : 2d np.array
+    #
+    #     """
+    #
+    #     # FIX:  CONVERT TO NP?
+    #     # FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
+    #
+    #     self._check_args(variable=variable, params=params, context=context)
+    #
+    #     rate = np.array(self.paramsCurrent[RATE]).astype(float)
+    #     integration_type = self.paramsCurrent[INTEGRATION_TYPE]
+    #
+    #     time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
+    #
+    #     # if noise is a function, execute it
+    #     if self.noise_function:
+    #         if isinstance(self.noise, (np.ndarray, list)):
+    #             noise = list(map(lambda x: x(), self.noise))
+    #         else:
+    #             noise = self.noise()
+    #     else:
+    #         noise = self.noise
+    #
+    #     try:
+    #         previous_value = params[INITIALIZER]
+    #     except (TypeError, KeyError):
+    #         previous_value = self.previous_value
+    #
+    #     previous_value = np.atleast_2d(previous_value)
+    #     new_value = self.variable
+    #
+    #     # Compute function based on integration_type param
+    #     if integration_type is CONSTANT:
+    #         value = previous_value + rate + noise
+    #     elif integration_type is SIMPLE:
+    #         value = previous_value + (new_value * rate) + noise
+    #     elif integration_type is ADAPTIVE:
+    #         value = (1 - rate) * previous_value + rate * new_value + noise
+    #     elif integration_type is DIFFUSION:
+    #         value = previous_value + rate * new_value * time_step_size + np.sqrt(time_step_size * noise) * np.random.normal()
+    #     else:
+    #         value = new_value
+    #
+    #     # If this NOT an initialization run, update the old value
+    #     # If it IS an initialization run, leave as is
+    #     #    (don't want to count it as an execution step)
+    #     if not context or not INITIALIZING in context:
+    #         self.previous_value = value
+    #
+    #     return value
 
 class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
@@ -3490,9 +3336,7 @@ class SimpleIntegrator(
     def __init__(self,
                  variable_default=None,
                  rate: parameter_spec = 1.0,
-                 integration_type: tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION) = CONSTANT,
                  noise=0.0,
-                 time_step_size=1.0,
                  initializer=variableClassDefault,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -3501,8 +3345,6 @@ class SimpleIntegrator(
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  integration_type=integration_type,
-                                                  time_step_size=time_step_size,
                                                   initializer=initializer,
                                                   noise=noise,
                                                   params=params)
@@ -3566,82 +3408,58 @@ class SimpleIntegrator(
                                  target_set=target_set,
                                  context=context)
 
-        if RATE in target_set:
-            if self.integration_type is ADAPTIVE:
-                if isinstance(target_set[RATE], (list, np.ndarray)):
-                    for r in target_set[RATE]:
-                        if r < 0.0 or r > 1.0:
-                            raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                                "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
-                                                format(target_set[RATE], self.name))
-                else:
-                    if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-                        raise FunctionError(
-                            "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                            "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
-
         # self._validate_initializer()
 
         if NOISE in target_set:
             # FIX: SHOULDN'T THIS PASS target_set[NOISE] to _validate_noise() rather than use self.noise?
             self._validate_noise(target_set[NOISE])
 
-        if TIME_STEP_SIZE in target_set:
-            time_step_size = target_set[TIME_STEP_SIZE]
-
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
     def _validate_noise(self, noise):
         self.noise_function = False
-        if self.integration_type == "diffusion":
-            if not isinstance(noise, float):
-                raise FunctionError("Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
-                                " float. Noise parameter is used to construct the standard DDM noise distribution"
-                                .format(self.name))
 
-        else:
-
-            # Noise is a list or array
-            if isinstance(noise, (np.ndarray, list)):
-                # Variable is a list/array
-                if isinstance(self.variable, (np.ndarray, list)):
-                    if len(noise) != np.array(self.variable).size:
-                        try:
-                            formatted_noise = list(map(lambda x: x.__qualname__, noise))
-                        except AttributeError:
-                            formatted_noise = noise
-                        raise FunctionError("The length ({}) of the array specified for the noise parameter ({}) of {} "
-                                            "must match the length ({}) of the default input ({}). If noise is specified as"
-                                            " an array or list, it must be of the same size as the input."
-                                            .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
-                                                    self.variable))
-                    else:
-                        # Noise is a list or array of functions
-                        if callable(noise[0]):
-                            self.noise_function = True
-                        # Noise is a list or array of floats
-                        elif isinstance(noise[0], float):
-                            self.noise_function = False
-                        # Noise is a list or array of invalid elements
-                        else:
-                            raise FunctionError("The elements of a noise list or array must be floats or functions.")
-                # Variable is not a list/array
+        # Noise is a list or array
+        if isinstance(noise, (np.ndarray, list)):
+            # Variable is a list/array
+            if isinstance(self.variable, (np.ndarray, list)):
+                if len(noise) != np.array(self.variable).size:
+                    try:
+                        formatted_noise = list(map(lambda x: x.__qualname__, noise))
+                    except AttributeError:
+                        formatted_noise = noise
+                    raise FunctionError("The length ({}) of the array specified for the noise parameter ({}) of {} "
+                                        "must match the length ({}) of the default input ({}). If noise is specified as"
+                                        " an array or list, it must be of the same size as the input."
+                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
+                                                self.variable))
                 else:
-                    raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
-                                        "default input value is also a list or array.".format(noise, self.name))
-
-            elif callable(noise):
-                self.noise_function = True
-                if isinstance(self.variable, (np.ndarray, list)):
-                    new_noise = []
-                    for i in self.variable:
-                        new_noise.append(self.noise)
-                    noise = new_noise
-            elif isinstance(noise, float):
-                self.noise_function = False
+                    # Noise is a list or array of functions
+                    if callable(noise[0]):
+                        self.noise_function = True
+                    # Noise is a list or array of floats
+                    elif isinstance(noise[0], float):
+                        self.noise_function = False
+                    # Noise is a list or array of invalid elements
+                    else:
+                        raise FunctionError("The elements of a noise list or array must be floats or functions.")
+            # Variable is not a list/array
             else:
-                raise FunctionError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
-                                    "array or list of functions.".format(noise, self.name))
+                raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
+                                    "default input value is also a list or array.".format(noise, self.name))
+
+        elif callable(noise):
+            self.noise_function = True
+            if isinstance(self.variable, (np.ndarray, list)):
+                new_noise = []
+                for i in self.variable:
+                    new_noise.append(self.noise)
+                noise = new_noise
+        elif isinstance(noise, float):
+            self.noise_function = False
+        else:
+            raise FunctionError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
+                                "array or list of functions.".format(noise, self.name))
 
 
     def _validate_initializer(self, initializer):
@@ -3723,9 +3541,6 @@ class SimpleIntegrator(
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        integration_type = self.paramsCurrent[INTEGRATION_TYPE]
-
-        time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
 
         # if noise is a function, execute it
         if self.noise_function:
@@ -3899,9 +3714,7 @@ class ConstantIntegrator(
     def __init__(self,
                  variable_default=None,
                  rate: parameter_spec = 1.0,
-                 integration_type: tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION) = CONSTANT,
                  noise=0.0,
-                 time_step_size=1.0,
                  initializer=variableClassDefault,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -3910,8 +3723,6 @@ class ConstantIntegrator(
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  integration_type=integration_type,
-                                                  time_step_size=time_step_size,
                                                   initializer=initializer,
                                                   noise=noise,
                                                   params=params)
@@ -3976,86 +3787,61 @@ class ConstantIntegrator(
                                  target_set=target_set,
                                  context=context)
 
-        if RATE in target_set:
-            if self.integration_type is ADAPTIVE:
-                if isinstance(target_set[RATE], (list, np.ndarray)):
-                    for r in target_set[RATE]:
-                        if r < 0.0 or r > 1.0:
-                            raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                                "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
-                                                format(target_set[RATE], self.name))
-                else:
-                    if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-                        raise FunctionError(
-                            "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                            "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
-
         # self._validate_initializer()
 
         if NOISE in target_set:
             # FIX: SHOULDN'T THIS PASS target_set[NOISE] to _validate_noise() rather than use self.noise?
             self._validate_noise(target_set[NOISE])
 
-        if TIME_STEP_SIZE in target_set:
-            time_step_size = target_set[TIME_STEP_SIZE]
-
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
     def _validate_noise(self, noise):
         self.noise_function = False
-        if self.integration_type == "diffusion":
-            if not isinstance(noise, float):
-                raise FunctionError(
-                    "Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
-                    " float. Noise parameter is used to construct the standard DDM noise distribution"
-                    .format(self.name))
 
-        else:
-
-            # Noise is a list or array
-            if isinstance(noise, (np.ndarray, list)):
-                # Variable is a list/array
-                if isinstance(self.variable, (np.ndarray, list)):
-                    if len(noise) != np.array(self.variable).size:
-                        try:
-                            formatted_noise = list(map(lambda x: x.__qualname__, noise))
-                        except AttributeError:
-                            formatted_noise = noise
-                        raise FunctionError(
-                            "The length ({}) of the array specified for the noise parameter ({}) of {} "
-                            "must match the length ({}) of the default input ({}). If noise is specified as"
-                            " an array or list, it must be of the same size as the input."
-                            .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
-                                    self.variable))
-                    else:
-                        # Noise is a list or array of functions
-                        if callable(noise[0]):
-                            self.noise_function = True
-                        # Noise is a list or array of floats
-                        elif isinstance(noise[0], float):
-                            self.noise_function = False
-                        # Noise is a list or array of invalid elements
-                        else:
-                            raise FunctionError(
-                                "The elements of a noise list or array must be floats or functions.")
-                # Variable is not a list/array
+        # Noise is a list or array
+        if isinstance(noise, (np.ndarray, list)):
+            # Variable is a list/array
+            if isinstance(self.variable, (np.ndarray, list)):
+                if len(noise) != np.array(self.variable).size:
+                    try:
+                        formatted_noise = list(map(lambda x: x.__qualname__, noise))
+                    except AttributeError:
+                        formatted_noise = noise
+                    raise FunctionError(
+                        "The length ({}) of the array specified for the noise parameter ({}) of {} "
+                        "must match the length ({}) of the default input ({}). If noise is specified as"
+                        " an array or list, it must be of the same size as the input."
+                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
+                                self.variable))
                 else:
-                    raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
-                                        "default input value is also a list or array.".format(noise, self.name))
-
-            elif callable(noise):
-                self.noise_function = True
-                if isinstance(self.variable, (np.ndarray, list)):
-                    new_noise = []
-                    for i in self.variable:
-                        new_noise.append(self.noise)
-                    noise = new_noise
-            elif isinstance(noise, float):
-                self.noise_function = False
+                    # Noise is a list or array of functions
+                    if callable(noise[0]):
+                        self.noise_function = True
+                    # Noise is a list or array of floats
+                    elif isinstance(noise[0], float):
+                        self.noise_function = False
+                    # Noise is a list or array of invalid elements
+                    else:
+                        raise FunctionError(
+                            "The elements of a noise list or array must be floats or functions.")
+            # Variable is not a list/array
             else:
-                raise FunctionError(
-                    "noise parameter ({}) for {} must be a float, function, array or list of floats, or "
-                    "array or list of functions.".format(noise, self.name))
+                raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
+                                    "default input value is also a list or array.".format(noise, self.name))
+
+        elif callable(noise):
+            self.noise_function = True
+            if isinstance(self.variable, (np.ndarray, list)):
+                new_noise = []
+                for i in self.variable:
+                    new_noise.append(self.noise)
+                noise = new_noise
+        elif isinstance(noise, float):
+            self.noise_function = False
+        else:
+            raise FunctionError(
+                "noise parameter ({}) for {} must be a float, function, array or list of floats, or "
+                "array or list of functions.".format(noise, self.name))
 
     def _validate_initializer(self, initializer):
         # Initializer is a list or array
@@ -4136,9 +3922,6 @@ class ConstantIntegrator(
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        integration_type = self.paramsCurrent[INTEGRATION_TYPE]
-
-        time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
 
         # if noise is a function, execute it
         if self.noise_function:
@@ -4156,8 +3939,6 @@ class ConstantIntegrator(
 
         previous_value = np.atleast_2d(previous_value)
         new_value = self.variable
-
-        # Compute function based on integration_type param
 
         value = previous_value + rate + noise
 
@@ -4312,9 +4093,7 @@ class AdaptiveIntegrator(
     def __init__(self,
                  variable_default=None,
                  rate: parameter_spec = 1.0,
-                 integration_type: tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION) = CONSTANT,
                  noise=0.0,
-                 time_step_size=1.0,
                  initializer=variableClassDefault,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -4323,8 +4102,6 @@ class AdaptiveIntegrator(
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  integration_type=integration_type,
-                                                  time_step_size=time_step_size,
                                                   initializer=initializer,
                                                   noise=noise,
                                                   params=params)
@@ -4390,18 +4167,17 @@ class AdaptiveIntegrator(
                                  context=context)
 
         if RATE in target_set:
-            if self.integration_type is ADAPTIVE:
-                if isinstance(target_set[RATE], (list, np.ndarray)):
-                    for r in target_set[RATE]:
-                        if r < 0.0 or r > 1.0:
-                            raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                                "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
-                                                format(target_set[RATE], self.name))
-                else:
-                    if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-                        raise FunctionError(
-                            "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                            "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+            if isinstance(target_set[RATE], (list, np.ndarray)):
+                for r in target_set[RATE]:
+                    if r < 0.0 or r > 1.0:
+                        raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
+                                            "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+                                            format(target_set[RATE], self.name))
+            else:
+                if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
+                    raise FunctionError(
+                        "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
+                        "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
 
         # self._validate_initializer()
 
@@ -4409,66 +4185,56 @@ class AdaptiveIntegrator(
             # FIX: SHOULDN'T THIS PASS target_set[NOISE] to _validate_noise() rather than use self.noise?
             self._validate_noise(target_set[NOISE])
 
-        if TIME_STEP_SIZE in target_set:
-            time_step_size = target_set[TIME_STEP_SIZE]
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
     def _validate_noise(self, noise):
         self.noise_function = False
-        if self.integration_type == "diffusion":
-            if not isinstance(noise, float):
-                raise FunctionError(
-                    "Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
-                    " float. Noise parameter is used to construct the standard DDM noise distribution"
-                        .format(self.name))
 
-        else:
-
-            # Noise is a list or array
-            if isinstance(noise, (np.ndarray, list)):
-                # Variable is a list/array
-                if isinstance(self.variable, (np.ndarray, list)):
-                    if len(noise) != np.array(self.variable).size:
-                        try:
-                            formatted_noise = list(map(lambda x: x.__qualname__, noise))
-                        except AttributeError:
-                            formatted_noise = noise
-                        raise FunctionError(
-                            "The length ({}) of the array specified for the noise parameter ({}) of {} "
-                            "must match the length ({}) of the default input ({}). If noise is specified as"
-                            " an array or list, it must be of the same size as the input."
-                                .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
-                                        self.variable))
-                    else:
-                        # Noise is a list or array of functions
-                        if callable(noise[0]):
-                            self.noise_function = True
-                        # Noise is a list or array of floats
-                        elif isinstance(noise[0], float):
-                            self.noise_function = False
-                        # Noise is a list or array of invalid elements
-                        else:
-                            raise FunctionError(
-                                "The elements of a noise list or array must be floats or functions.")
-                # Variable is not a list/array
+        # Noise is a list or array
+        if isinstance(noise, (np.ndarray, list)):
+            # Variable is a list/array
+            if isinstance(self.variable, (np.ndarray, list)):
+                if len(noise) != np.array(self.variable).size:
+                    try:
+                        formatted_noise = list(map(lambda x: x.__qualname__, noise))
+                    except AttributeError:
+                        formatted_noise = noise
+                    raise FunctionError(
+                        "The length ({}) of the array specified for the noise parameter ({}) of {} "
+                        "must match the length ({}) of the default input ({}). If noise is specified as"
+                        " an array or list, it must be of the same size as the input."
+                            .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
+                                    self.variable))
                 else:
-                    raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
-                                        "default input value is also a list or array.".format(noise, self.name))
-
-            elif callable(noise):
-                self.noise_function = True
-                if isinstance(self.variable, (np.ndarray, list)):
-                    new_noise = []
-                    for i in self.variable:
-                        new_noise.append(self.noise)
-                    noise = new_noise
-            elif isinstance(noise, float):
-                self.noise_function = False
+                    # Noise is a list or array of functions
+                    if callable(noise[0]):
+                        self.noise_function = True
+                    # Noise is a list or array of floats
+                    elif isinstance(noise[0], float):
+                        self.noise_function = False
+                    # Noise is a list or array of invalid elements
+                    else:
+                        raise FunctionError(
+                            "The elements of a noise list or array must be floats or functions.")
+            # Variable is not a list/array
             else:
-                raise FunctionError(
-                    "noise parameter ({}) for {} must be a float, function, array or list of floats, or "
-                    "array or list of functions.".format(noise, self.name))
+                raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
+                                    "default input value is also a list or array.".format(noise, self.name))
+
+        elif callable(noise):
+            self.noise_function = True
+            if isinstance(self.variable, (np.ndarray, list)):
+                new_noise = []
+                for i in self.variable:
+                    new_noise.append(self.noise)
+                noise = new_noise
+        elif isinstance(noise, float):
+            self.noise_function = False
+        else:
+            raise FunctionError(
+                "noise parameter ({}) for {} must be a float, function, array or list of floats, or "
+                "array or list of functions.".format(noise, self.name))
 
     def _validate_initializer(self, initializer):
         # Initializer is a list or array
@@ -4549,10 +4315,6 @@ class AdaptiveIntegrator(
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        integration_type = self.paramsCurrent[INTEGRATION_TYPE]
-
-        time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
-
         # if noise is a function, execute it
         if self.noise_function:
             if isinstance(self.noise, (np.ndarray, list)):
@@ -4569,8 +4331,6 @@ class AdaptiveIntegrator(
 
         previous_value = np.atleast_2d(previous_value)
         new_value = self.variable
-
-        # Compute function based on integration_type param
 
         value = (1 - rate) * previous_value + rate * new_value + noise
 
@@ -4725,7 +4485,6 @@ class DriftDiffusionIntegrator(
     def __init__(self,
                  variable_default=None,
                  rate: parameter_spec = 1.0,
-                 integration_type: tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION) = CONSTANT,
                  noise=0.0,
                  time_step_size=1.0,
                  initializer=variableClassDefault,
@@ -4736,7 +4495,6 @@ class DriftDiffusionIntegrator(
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  integration_type=integration_type,
                                                   time_step_size=time_step_size,
                                                   initializer=initializer,
                                                   noise=noise,
@@ -4802,20 +4560,6 @@ class DriftDiffusionIntegrator(
                                  target_set=target_set,
                                  context=context)
 
-        if RATE in target_set:
-            if self.integration_type is ADAPTIVE:
-                if isinstance(target_set[RATE], (list, np.ndarray)):
-                    for r in target_set[RATE]:
-                        if r < 0.0 or r > 1.0:
-                            raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                                "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
-                                                format(target_set[RATE], self.name))
-                else:
-                    if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-                        raise FunctionError(
-                            "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                            "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
-
         # self._validate_initializer()
 
         if NOISE in target_set:
@@ -4829,59 +4573,11 @@ class DriftDiffusionIntegrator(
     # need to be executed
     def _validate_noise(self, noise):
         self.noise_function = False
-        if self.integration_type == "diffusion":
-            if not isinstance(noise, float):
-                raise FunctionError(
-                    "Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
-                    " float. Noise parameter is used to construct the standard DDM noise distribution"
-                        .format(self.name))
-
-        else:
-
-            # Noise is a list or array
-            if isinstance(noise, (np.ndarray, list)):
-                # Variable is a list/array
-                if isinstance(self.variable, (np.ndarray, list)):
-                    if len(noise) != np.array(self.variable).size:
-                        try:
-                            formatted_noise = list(map(lambda x: x.__qualname__, noise))
-                        except AttributeError:
-                            formatted_noise = noise
-                        raise FunctionError(
-                            "The length ({}) of the array specified for the noise parameter ({}) of {} "
-                            "must match the length ({}) of the default input ({}). If noise is specified as"
-                            " an array or list, it must be of the same size as the input."
-                                .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
-                                        self.variable))
-                    else:
-                        # Noise is a list or array of functions
-                        if callable(noise[0]):
-                            self.noise_function = True
-                        # Noise is a list or array of floats
-                        elif isinstance(noise[0], float):
-                            self.noise_function = False
-                        # Noise is a list or array of invalid elements
-                        else:
-                            raise FunctionError(
-                                "The elements of a noise list or array must be floats or functions.")
-                # Variable is not a list/array
-                else:
-                    raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
-                                        "default input value is also a list or array.".format(noise, self.name))
-
-            elif callable(noise):
-                self.noise_function = True
-                if isinstance(self.variable, (np.ndarray, list)):
-                    new_noise = []
-                    for i in self.variable:
-                        new_noise.append(self.noise)
-                    noise = new_noise
-            elif isinstance(noise, float):
-                self.noise_function = False
-            else:
-                raise FunctionError(
-                    "noise parameter ({}) for {} must be a float, function, array or list of floats, or "
-                    "array or list of functions.".format(noise, self.name))
+        if not isinstance(noise, float):
+            raise FunctionError(
+                "Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
+                " float. Noise parameter is used to construct the standard DDM noise distribution"
+                    .format(self.name))
 
     def _validate_initializer(self, initializer):
         # Initializer is a list or array
@@ -4962,7 +4658,6 @@ class DriftDiffusionIntegrator(
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        integration_type = self.paramsCurrent[INTEGRATION_TYPE]
 
         time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
 
@@ -4982,8 +4677,6 @@ class DriftDiffusionIntegrator(
 
         previous_value = np.atleast_2d(previous_value)
         new_value = self.variable
-
-        # Compute function based on integration_type param
 
         value = previous_value + rate * new_value * time_step_size + np.sqrt(
             time_step_size * noise) * np.random.normal()
@@ -5139,7 +4832,6 @@ class OrnsteinUhlenbeckIntegrator(
     def __init__(self,
                  variable_default=None,
                  rate: parameter_spec = 1.0,
-                 integration_type: tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION) = CONSTANT,
                  noise=0.0,
                  time_step_size=1.0,
                  initializer=variableClassDefault,
@@ -5150,7 +4842,6 @@ class OrnsteinUhlenbeckIntegrator(
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
-                                                  integration_type=integration_type,
                                                   time_step_size=time_step_size,
                                                   initializer=initializer,
                                                   noise=noise,
@@ -5216,20 +4907,6 @@ class OrnsteinUhlenbeckIntegrator(
                                  target_set=target_set,
                                  context=context)
 
-        if RATE in target_set:
-            if self.integration_type is ADAPTIVE:
-                if isinstance(target_set[RATE], (list, np.ndarray)):
-                    for r in target_set[RATE]:
-                        if r < 0.0 or r > 1.0:
-                            raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                                "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
-                                                format(target_set[RATE], self.name))
-                else:
-                    if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-                        raise FunctionError(
-                            "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                            "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
-
         # self._validate_initializer()
 
         if NOISE in target_set:
@@ -5243,14 +4920,11 @@ class OrnsteinUhlenbeckIntegrator(
     # need to be executed
     def _validate_noise(self, noise):
         self.noise_function = False
-        if self.integration_type == "diffusion":
-            if not isinstance(noise, float):
-                raise FunctionError(
-                    "Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
-                    " float. Noise parameter is used to construct the standard DDM noise distribution"
-                        .format(self.name))
-
-        else:
+        if not isinstance(noise, float):
+            raise FunctionError(
+                "Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
+                " float. Noise parameter is used to construct the standard DDM noise distribution"
+                    .format(self.name))
 
             # Noise is a list or array
             if isinstance(noise, (np.ndarray, list)):
@@ -5376,7 +5050,6 @@ class OrnsteinUhlenbeckIntegrator(
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        integration_type = self.paramsCurrent[INTEGRATION_TYPE]
 
         time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
 
@@ -5396,8 +5069,6 @@ class OrnsteinUhlenbeckIntegrator(
 
         previous_value = np.atleast_2d(previous_value)
         new_value = self.variable
-
-        # Compute function based on integration_type param
 
         value = previous_value + rate * new_value * time_step_size + np.sqrt(
             time_step_size * noise) * np.random.normal()
