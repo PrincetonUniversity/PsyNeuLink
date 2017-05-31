@@ -752,26 +752,24 @@ class State_Base(State):
             #               its receiver's .afferents attribute (in Projection._instantiate_receiver)
             #               its sender's .efferents attribute (in Projection._instantiate_sender)
             if not projection_object:
+                from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
+                    import TransmissiveProjection_Base
+                from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
+                    import ModulatoryProjection_Base
                 kwargs = {RECEIVER:self,
                           NAME:self.owner.name+' '+self.name+' '+projection_type.className,
                           PARAMS:projection_params,
                           CONTEXT:context}
                 # If the projection was specified with a keyword or attribute value
-                #     (e.g. a matrix spec for a MappingProjection,
-                #      or a value of ModulatoryParam for a ControlSignal or GattingSignal),
                 #     then move it to the relevant entry of the params dict for the projection
-                from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
-                    import TransmissiveProjection_Base
-                from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
-                    import ModulatoryProjection_Base, MODULATORY_SIGNAL_PARAMS
-                # If projection_spec was in the form of a matrix keyword, move it to matrix entry in params dict
+                # If projection_spec was in the form of a matrix keyword, move it to a matrix entry in the params dict
                 if issubclass(projection_type, TransmissiveProjection_Base) and projection_spec in MATRIX_KEYWORD_SET:
                     kwargs.update({MATRIX:projection_spec})
                 # If projection_spec was in the form of a ModulationParam value,
-                #    move it to MODULATION_SIGNAL_PARAMS entry in params dict
+                #    move it to a MODULATION entry in the params dict
                 elif (issubclass(projection_type, ModulatoryProjection_Base) and
                           isinstance(projection_spec, ModulationParam)):
-                    kwargs[PARAMS].update({MODULATORY_SIGNAL_PARAMS:projection_spec})
+                    kwargs[PARAMS].update({MODULATION:projection_spec})
                 projection_spec = projection_type(**kwargs)
 
             # Check that output of projection's function (projection_spec.value is compatible with
