@@ -290,6 +290,24 @@
 # ------------------------------------------------------------------------------------------------------------------
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
+
+# IMPLEMENT: LearningProjection as full Modulatory projection:
+#               add learning_signal_params attribute to LearningProjection that conveys them to learningSignal
+#               persistence param = 1 on MappingProjection MATRIX ParameterStates
+
+# IMPLEMENT: persistence param on States:
+#                specifies whether / how much of computed (modulated) value to reassign to param value
+#                     default for InputStates, OutputStates and most ParameterStates = 0 (full decay)
+#                     default for MATRIX ParameterState of MappingProjection  = 1 (weights get assigned to new vaue)
+#                make State.value an @property:
+#                     State.update assigns to backfield (for efficiency)
+#                     COMMAND_LINE assignment (to value):  issues warning that persistent value will be over-written
+#
+# IMPLEMENT: _instantiate_modulated_param that assigns actual function_param to modulated_param property
+#            State.update should use modulated_param rather than modulation
+#            modulation as @property that validates value and then calls _instantiate_modulated_param
+
+# FIX: NAMES OF ControlProjections AND GatingProjections
 # FIX: GET RID OF ControlSignal LINE 434: self.reference_value = reference_value
 # FIX: UPDATE WITH MODULATION_MODS
 # FIX: MODIFY ControlProjections and LearningProjections TO FUNCTION LIKE GatingProjections:
@@ -314,6 +332,7 @@
 #     WHICH SHOULD INSTANTIATE A DEFERRED_INIT GatingProjection (JUST LIKE A ControlProjection)
 # FIX: MAKE ControlSignal stateful (since its last_allocation attribute pertains to a prior state)
 # FIX: DEAL WITH DEPENDENCY OF costFunctionNames: referenced in ControlSignal but defined in EVCMechanism
+#
 # IMPLEMENT: Support for multiple GatingProjections from a single GatingSignal
 # IMPLEMENT: Abstract modulatory projection in AdaptiveMechanism
 #                - using _instantiate_output_states and _instantiate_projections

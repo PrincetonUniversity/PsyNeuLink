@@ -256,6 +256,7 @@ class ControlMechanism_Base(Mechanism_Base):
                  monitor_for_control:tc.optional(list)=None,
                  function = Linear(slope=1, intercept=0),
                  control_signals:tc.optional(list) = None,
+                 # modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
@@ -454,7 +455,7 @@ class ControlMechanism_Base(Mechanism_Base):
         # Check the parameterStates of the system's mechanisms for any ControlProjections with deferred_init()
         for mech in self.system.mechanisms:
             for parameter_state in mech._parameter_states:
-                for projection in parameter_state.afferents:
+                for projection in parameter_state.mod_afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
                     if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
                         # FIX 5/23/17: MODIFY THIS WHEN (param, ControlProjection) tuple
@@ -538,7 +539,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Specification is a ParameterState
         if isinstance(control_signal_spec, ParameterState):
-            mech = control_signal_spec.ownerf
+            mech = control_signal_spec.owner
             param_name = control_signal_spec.name
             parameter_state = _get_parameter_state(param_name, mech)
 
