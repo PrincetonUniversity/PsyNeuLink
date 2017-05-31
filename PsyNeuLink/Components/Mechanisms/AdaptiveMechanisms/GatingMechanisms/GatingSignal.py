@@ -119,12 +119,12 @@ gating_signal_keywords.update(component_keywords)
 
 class GatingSignal(OutputState):
     """
-    GatingSignal(                                                \
-        owner,                                                   \
-        function=LinearCombination(operation=SUM),               \
-        modulation=ModulationParam.MULTIPLICATIVE                \
-        params=None,                                             \
-        name=None,                                               \
+    GatingSignal(                                   \
+        owner,                                      \
+        function=LinearCombination(operation=SUM),  \
+        modulation=ModulationParam.MULTIPLICATIVE   \
+        params=None,                                \
+        name=None,                                  \
         prefs=None)
 
     A subclass of OutputState that represents the value of a GatingSignal provided to a `GatingProjection`.

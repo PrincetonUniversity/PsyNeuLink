@@ -70,9 +70,13 @@ primary attributes:
 .. _ControlSignal_Modulation:
 
 * `modulation <ControlSignal.modulation>` : determines how the ControlProjection is used by the ParameterState to 
-which it projects to modify its value (see `Modulatory Projections <ModulatoryProjection.modulation>` for an 
-explanation of how the modulation is specified and used to modulate a function).  
-
+  which it projects to modify its value (see `Modulatory Projections <ModulatoryProjection.modulation>` for an 
+  explanation of how the modulation is specified and used to modulate the value of a parameter). The default value 
+  is set to the value of the `modulation <ControlMechanism.modulation>` attribute of the ControlMechanism to which the 
+  ControlSignal belongs;  this the is same for all of the ControlSignals belonging to that ControlMechanism.  
+  However, the `modulation <ControlSignal.modulation>` can be specified individually for a ControlSignal using a 
+  specification dictionary where the ControlSignal is specified, as described `above <ControlSignal_Specification>`.    
+    
 .. _ControlSignal_Allocation:
 
 * `allocation`: assigned to the ControlSignal by the ControlMechanism to which it belongs, and converted to its
@@ -203,6 +207,7 @@ class ControlSignal(OutputState):
         duration_cost_function=Integrator,               \
         cost_combination_function=Reduce(operation=SUM), \
         allocation_samples=DEFAULT_ALLOCATION_SAMPLES,   \
+        modulation=ModulationParam.MULTIPLICATIVE        \
         params=None,                                     \
         name=None,                                       \
         prefs=None)
@@ -401,6 +406,7 @@ class ControlSignal(OutputState):
                  duration_cost_function:tc.optional(is_function_type)=Integrator,
                  cost_combination_function:tc.optional(is_function_type)=Reduce(operation=SUM),
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
+                 modulation:tc.optional(_is_modulation_param)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -421,6 +427,7 @@ class ControlSignal(OutputState):
                                                   duration_cost_function=duration_cost_function,
                                                   cost_combination_function=cost_combination_function,
                                                   allocation_samples=allocation_samples,
+                                                  modulation=modulation
                                                   params=params)
 
         self.reference_value = reference_value
@@ -440,6 +447,9 @@ class ControlSignal(OutputState):
                          name=name,
                          prefs=prefs,
                          context=self)
+
+        # Set default value of modulation to owner's value
+        self._modulation = self.modulation or owner.modulation
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions
