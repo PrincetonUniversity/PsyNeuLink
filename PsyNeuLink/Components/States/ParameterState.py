@@ -683,7 +683,7 @@ class ParameterState(State_Base):
             self.value = self.parameterModulationOperation(self.base_value, self.value)
         #endregion
 
-        #region APPLY RUNTIME PARAM VALUES
+        #region APPLY RUNTIME PARAM VALUES˚
         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
         if (not self.stateParams or self.prefs.runtimeParamModulationPref is Modulation.DISABLED):
             return
@@ -705,7 +705,6 @@ class ParameterState(State_Base):
         else:
             # If tuple, use param-specific Modulation as operation
             self.value = operation(value, self.value)
-
         #endregion
 
     @property
