@@ -629,27 +629,14 @@ class State_Base(State):
             #     note: in that case, projection will be in self.afferents list
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.value is DEFERRED_INITIALIZATION:
-                    # FIX: UPDATE WITH MODULATION_MODS:
-                    # FIX:  MOVE THIS TO mod_afferents BELOW ONCE LearningProjection MODULATES ParameterState Function
-                    if isinstance(projection_spec, LearningProjection):
-                        # Assign projection to parameterState
-                        self.afferents.append(projection_spec)
-                        projection_spec.init_args[RECEIVER] = self
-                        # Skip any further initialization for now
-                        #   (remainder will occur as part of deferred init for
-                        #    LearningProjection, ControlProjection or GatingProjection)
-                        continue
-
-                    elif isinstance(projection_spec, ModulatoryProjection_Base):
+                    if isinstance(projection_spec, ModulatoryProjection_Base):
                         # Assign projection to mod_afferents
                         self.mod_afferents.append(projection_spec)
                         projection_spec.init_args[RECEIVER] = self
                         # # Skip any further initialization for now
                         # #   (remainder will occur as part of deferred init for
-                        # #    LearningProjection, ControlProjection or GatingProjection)
-                        # continue
-                        projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
-                        projection_spec._deferred_init()
+                        # #    ControlProjection or GatingProjection)
+                        continue
 
                     # Complete init for other (presumably Mapping) projections
                     else:

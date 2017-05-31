@@ -288,6 +288,7 @@ Class Reference
 ---------------
 
 """
+from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCAuxiliary import \
     ControlSignalGridSearch, ValueFunction
@@ -705,6 +706,7 @@ class EVCMechanism(ControlMechanism_Base):
                  prediction_mechanism_params:tc.optional(dict)=None,
                  monitor_for_control:tc.optional(list)=None,
                  control_signals:tc.optional(list) = None,
+                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  function=ControlSignalGridSearch,
                  value_function=ValueFunction,
                  outcome_function=LinearCombination(operation=PRODUCT),
@@ -727,6 +729,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                   prediction_mechanism_params=prediction_mechanism_params,
                                                   monitor_for_control=monitor_for_control,
                                                   control_signals=control_signals,
+                                                  modulation=modulation,
                                                   function=function,
                                                   value_function=value_function,
                                                   outcome_function=outcome_function,
