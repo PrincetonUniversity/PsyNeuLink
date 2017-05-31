@@ -119,6 +119,7 @@ Class Reference
 
 
 from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _parse_state_spec
@@ -255,6 +256,7 @@ class ControlMechanism_Base(Mechanism_Base):
                  monitor_for_control:tc.optional(list)=None,
                  function = Linear(slope=1, intercept=0),
                  control_signals:tc.optional(list) = None,
+                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -263,6 +265,7 @@ class ControlMechanism_Base(Mechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(monitor_for_control=monitor_for_control,
                                                   control_signals=control_signals,
+                                                  modulation=modulation,
                                                   function=function,
                                                   params=params)
 

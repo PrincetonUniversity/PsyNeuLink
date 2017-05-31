@@ -290,6 +290,7 @@
 # ------------------------------------------------------------------------------------------------------------------
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
+# FIX: GET RID OF ControlSignal LINE 434: self.reference_value = reference_value
 # FIX: UPDATE WITH MODULATION_MODS
 # FIX: MODIFY ControlProjections and LearningProjections TO FUNCTION LIKE GatingProjections:
 # FIX:        - CHANGE control_signal -> modulatory_signal_params (AS for GatingProjection)
