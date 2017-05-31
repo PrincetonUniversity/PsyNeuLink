@@ -80,6 +80,8 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.Contr
 parameter_keywords.update({CONTROL_PROJECTION, CONTROL})
 projection_keywords.update({CONTROL_PROJECTION, CONTROL})
 
+CONTROL_SIGNAL_PARAMS = 'control_signal_params'
+
 class ControlProjectionError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -89,12 +91,13 @@ class ControlProjectionError(Exception):
 
 class ControlProjection(ModulatoryProjection_Base):
     """
-    ControlProjection( \
-     sender=None,      \
-     receiver=None,    \
-     function=Linear   \
-     params=None,      \
-     name=None,        \
+    ControlProjection(     \
+     sender=None,          \
+     receiver=None,        \
+     function=Linear       \
+     control_signal_params \
+     params=None,          \
+     name=None,            \
      prefs=None)
 
      Implements a projection that controls the parameter of a mechanism or its :keyword:`function`.
@@ -148,6 +151,11 @@ class ControlProjection(ModulatoryProjection_Base):
     function : TransferFunction : default Linear
         specifies the function used to convert the :keyword:`value` of the ControlProjection's
         `sender <ControlProjection.sender>`  to its own `value <ControlProjection.value>`.
+        
+    control_signal_params : Dict[param keyword, param value]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the `ControlSignal` that is the sender of the projection (see `ControlSignal_Structure` for a description
+        of ControlSignal parameters). 
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -214,14 +222,12 @@ class ControlProjection(ModulatoryProjection_Base):
         PROJECTION_SENDER: ControlMechanism_Base,
         PROJECTION_SENDER_VALUE: defaultControlAllocation})
 
-    # FIX: UPDATE WITH MODULATION_MODS
-    # FIX:  control_signal -> modulatory_signal_params
     @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,
                  function=Linear,
-                 control_signal:tc.optional(dict)=None,
+                 control_signal_params:tc.optional(dict)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -229,7 +235,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                  control_signal=control_signal,
+                                                  control_signal_params=control_signal_params,
                                                   params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
@@ -239,7 +245,7 @@ class ControlProjection(ModulatoryProjection_Base):
             self.init_args['context'] = self
             self.init_args['name'] = name
             # Delete this as it has been moved to params dict (so it will not be passed to Projection.__init__)
-            del self.init_args[CONTROL_SIGNAL]
+            del self.init_args[CONTROL_SIGNAL_PARAMS]
 
             # Flag for deferred initialization
             self.value = DEFERRED_INITIALIZATION

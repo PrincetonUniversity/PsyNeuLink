@@ -461,7 +461,7 @@ class ControlMechanism_Base(Mechanism_Base):
                         # FIX: UPDATE WITH MODULATION_MODS
                         # FIX:  control_signal_specs -> modulatory_signal_specs
                         # FIX:  control_signal -> modulatory_signal_params
-                        control_signal_specs = projection.control_signal or {}
+                        control_signal_specs = projection.control_signal_params or {}
                         control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
                         self._instantiate_control_signal(control_signal_specs, context=context)
 

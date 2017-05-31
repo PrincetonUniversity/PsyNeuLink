@@ -756,6 +756,8 @@ class State_Base(State):
                           NAME:self.owner.name+' '+self.name+' '+projection_type.className,
                           PARAMS:projection_params,
                           CONTEXT:context}
+                # FIX: UPDATE WITH MODULATION_MODS:
+                # FIX:         DEAL WITH control_signal_params and gating_signal_params INDIVIDUALLY
                 from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
                     import TransmissiveProjection_Base
                 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
