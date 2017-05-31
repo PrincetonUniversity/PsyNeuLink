@@ -33,11 +33,11 @@ Reward = TransferMechanism(name='Reward',
                   )
 
 Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear,
-                                                                      control_signal={
+                                                                      control_signal_params={
                                                                           ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)},
                                                                       )),
                                    threshold=(1.0, ControlProjection(function=Linear,
-                                                                     control_signal={
+                                                                     control_signal_params={
                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
                                                                      )),
                                    noise=(0.5),
