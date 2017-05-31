@@ -119,9 +119,9 @@ def show_results():
             mySystem.controller.output_states['drift_rate_ControlSignal'].value,
             re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision._parameter_states[DRIFT_RATE].value))))))
     print ('\t\t\tThreshold control signal (from EVC): {} / parameter value: {}'.
-           format(re.sub('[\[,\],\n]','',str(float(Decision._parameter_states[THRESHOLD].value))),
-                  mySystem.controller.output_states['threshold_ControlSignal'].value,
-                  Decision._parameter_states[THRESHOLD].mod_afferents[0].value
+           format(mySystem.controller.output_states['threshold_ControlSignal'].value,
+                  re.sub('[\[,\],\n]','',str(float(Decision._parameter_states[THRESHOLD].value)))
+                  # Decision._parameter_states[THRESHOLD].mod_afferents[0].value
                   ))
     print('\t\tOutput:')
     for result in results_for_decision:
