@@ -628,8 +628,8 @@ class State_Base(State):
                     from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection \
                         import ControlProjection
                     # FIX: UPDATE WITH MODULATION_MODS:
-                    # FIX:    MOVE THESE TO mod_afferents (LIKE GatingProjection)
-                    if isinstance(projection_spec, (LearningProjection, ControlProjection)):
+                    # FIX:    MOVE THIS TO mod_afferents ONCE LearningProjection MODULATES ParameterState Function
+                    if isinstance(projection_spec, LearningProjection):
                         # Assign projection to parameterState
                         self.afferents.append(projection_spec)
                         projection_spec.init_args[RECEIVER] = self
@@ -638,7 +638,7 @@ class State_Base(State):
                         #    LearningProjection, ControlProjection or GatingProjection)
                         continue
 
-                    elif isinstance(projection_spec, GatingProjection):
+                    elif isinstance(projection_spec, ModulatoryProjection_Base):
                         # Assign projection to mod_afferents
                         self.mod_afferents.append(projection_spec)
                         projection_spec.init_args[RECEIVER] = self
@@ -756,8 +756,10 @@ class State_Base(State):
                           NAME:self.owner.name+' '+self.name+' '+projection_type.className,
                           PARAMS:projection_params,
                           CONTEXT:context}
-                # FIX: UPDATE WITH MODULATION_MODS:
-                # FIX:         DEAL WITH control_signal_params and gating_signal_params INDIVIDUALLY
+                # If the projection was specified with a keyword or attribute value
+                #     (e.g. a matrix spec for a MappingProjection,
+                #      or a value of ModulatoryParam for a ControlSignal or GattingSignal),
+                #     then move it to the relevant entry of the params dict for the projection
                 from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
                     import TransmissiveProjection_Base
                 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
