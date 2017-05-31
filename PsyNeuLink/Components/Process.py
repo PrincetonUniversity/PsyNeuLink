@@ -1763,7 +1763,7 @@ class Process_Base(Process):
                 input_state._deferred_init()
                 # Restrict projections to those from mechanisms in the current process
                 projections = []
-                for projection in input_state.afferents:
+                for projection in input_state.afferents + input_state.mod_afferents:
                     try:
                         if self in projection.sender.owner.processes:
                             projections.append(projection)
@@ -1832,7 +1832,7 @@ class Process_Base(Process):
                 for parameter_state in projection._parameter_states:
                     # Initialize each projection to the parameterState (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
-                    for param_projection in parameter_state.afferents:
+                    for param_projection in parameter_state.afferents + parameter_state.mod_afferents:
                         param_projection._deferred_init(context=context)
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _monitoring_mechs
