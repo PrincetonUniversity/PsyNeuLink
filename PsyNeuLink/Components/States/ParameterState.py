@@ -706,6 +706,8 @@ class ParameterState(State_Base):
             # If tuple, use param-specific Modulation as operation
             self.value = operation(value, self.value)
 
+        TEST = True
+
         #endregion
 
     @property
