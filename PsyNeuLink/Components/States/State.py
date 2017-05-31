@@ -650,7 +650,7 @@ class State_Base(State):
                         projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
                         # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
-                        projection_spec._deferred_init()
+                        projection_spec._deferred_init()  # XXX
                 projection_object, default_class_name = self._check_projection_receiver(
                                                                                     projection_spec=projection_spec,
                                                                                     messages=[item_prefix_string,

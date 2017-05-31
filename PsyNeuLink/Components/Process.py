@@ -1773,14 +1773,14 @@ class Process_Base(Process):
 
             # For each parameterState of the mechanism
             for parameter_state in mech._parameter_states:
-                parameter_state._deferred_init()
+                parameter_state._deferred_init() # XXX
                 # MODIFIED 5/2/17 OLD:
                 # self._instantiate__deferred_init_projections(parameter_state.afferents)
                 # MODIFIED 5/2/17 NEW:
                 # Defer instantiation of ControlProjections to System
                 #   and there should not be any other type of projection to the ParameterState of a Mechanism
                 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-                if not all(isinstance(proj, ControlProjection) for proj in parameter_state.afferents):
+                if not all(isinstance(proj, ControlProjection) for proj in parameter_state.mod_afferents):
                     raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterState for a Mechanism")
                 # MODIFIED 5/2/17 END
 
@@ -1824,7 +1824,7 @@ class Process_Base(Process):
 
         # For each projection in the list
         for projection in projection_list:
-            projection._deferred_init()
+            projection._deferred_init() # XXX
 
             # FIX:  WHY DOESN'T THE PROJECTION HANDLE THIS? (I.E., IN ITS deferred_init() METHOD?)
             # For each parameter_state of the projection
@@ -1833,7 +1833,7 @@ class Process_Base(Process):
                     # Initialize each projection to the parameterState (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
                     for param_projection in parameter_state.afferents + parameter_state.mod_afferents:
-                        param_projection._deferred_init(context=context)
+                        param_projection._deferred_init(context=context) # XXX
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _monitoring_mechs
                             try:

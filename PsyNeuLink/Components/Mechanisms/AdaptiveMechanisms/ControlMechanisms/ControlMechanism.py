@@ -691,7 +691,7 @@ class ControlMechanism_Base(Mechanism_Base):
                     # FIX 5/23/17: CLEAN UP NAME STUFF BELOW:
                     control_projection.init_args['name'] = CONTROL_PROJECTION + \
                                                    ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
-                control_projection._deferred_init()
+                control_projection._deferred_init() # XXX
             else:
                 control_projection.sender = control_signal
 
