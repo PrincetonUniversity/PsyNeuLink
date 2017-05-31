@@ -388,7 +388,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         # PARSE gating_signal SPECIFICATION -----------------------------------------------------------------------
 
         gating_projections = []
-        modulatory_signal_params = {}
+        gating_signal_params = {}
 
         gating_signal_spec = _parse_gating_signal_spec(owner=self, state_spec=gating_signal)
 
@@ -426,7 +426,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             output_state_constraint_value = self.gating_policy[output_state_index]
 
             # gating_signal_params.update({GATED_STATE:state_name})
-            modulatory_signal_params.update(gating_signal_spec[PARAMS])
+            gating_signal_params.update(gating_signal_spec[PARAMS])
 
             # FIX 5/23/17: CALL super()_instantiate_output_states ??
             # FIX:         OR AGGREGATE ALL GatingSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
@@ -434,7 +434,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                state_type=GatingSignal,
                                                state_name=gating_signal_name,
                                                state_spec=defaultGatingPolicy,
-                                               state_params=modulatory_signal_params,
+                                               state_params=gating_signal_params,
                                                constraint_value=output_state_constraint_value,
                                                constraint_value_name='Default control allocation',
                                                context=context)

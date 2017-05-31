@@ -70,13 +70,13 @@ Class Reference
 # from PsyNeuLink.Components import DefaultGatingMechanism
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Projections.Projection import *
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
-    import ModulatoryProjection_Base, MODULATORY_SIGNAL_PARAMS
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
 
 
 parameter_keywords.update({GATING_PROJECTION, GATING})
 projection_keywords.update({GATING_PROJECTION, GATING})
+GATING_SIGNAL_PARAMS = 'gating_signal_params'
 
 class GatingProjectionError(Exception):
     def __init__(self, error_value):
@@ -211,7 +211,7 @@ class GatingProjection(ModulatoryProjection_Base):
                  sender=None,
                  receiver=None,
                  function=Linear,
-                 modulatory_signal_params:tc.optional(dict)=None,
+                 gating_signal_params:tc.optional(dict)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -219,7 +219,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                  modulatory_signal_params=modulatory_signal_params,
+                                                  gating_signal_params=gating_signal_params,
                                                   params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
@@ -229,7 +229,7 @@ class GatingProjection(ModulatoryProjection_Base):
             self.init_args['context'] = self
             self.init_args['name'] = name
             # Delete this as it has breen moved to params dict (so it will not be passed to Projection.__init__)
-            del self.init_args[MODULATORY_SIGNAL_PARAMS]
+            del self.init_args[GATING_SIGNAL_PARAMS]
 
             # Flag for deferred initialization
             self.value = DEFERRED_INITIALIZATION
