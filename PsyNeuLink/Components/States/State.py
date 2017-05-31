@@ -582,6 +582,14 @@ class State_Base(State):
         """
 
         from PsyNeuLink.Components.Projections.Projection import Projection_Base
+        from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
+            import TransmissiveProjection_Base
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
+            import ModulatoryProjection_Base
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+
         # If specification is not a list, wrap it in one for consistency of treatment below
         # (since specification can be a list, so easier to treat any as a list)
         projection_list = projections
@@ -621,14 +629,8 @@ class State_Base(State):
             #     note: in that case, projection will be in self.afferents list
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.value is DEFERRED_INITIALIZATION:
-                    from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection \
-                        import LearningProjection
-                    from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection \
-                        import GatingProjection
-                    from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection \
-                        import ControlProjection
                     # FIX: UPDATE WITH MODULATION_MODS:
-                    # FIX:    MOVE THIS TO mod_afferents ONCE LearningProjection MODULATES ParameterState Function
+                    # FIX:  MOVE THIS TO mod_afferents BELOW ONCE LearningProjection MODULATES ParameterState Function
                     if isinstance(projection_spec, LearningProjection):
                         # Assign projection to parameterState
                         self.afferents.append(projection_spec)
@@ -752,10 +754,6 @@ class State_Base(State):
             #               its receiver's .afferents attribute (in Projection._instantiate_receiver)
             #               its sender's .efferents attribute (in Projection._instantiate_sender)
             if not projection_object:
-                from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
-                    import TransmissiveProjection_Base
-                from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
-                    import ModulatoryProjection_Base
                 kwargs = {RECEIVER:self,
                           NAME:self.owner.name+' '+self.name+' '+projection_type.className,
                           PARAMS:projection_params,
@@ -782,9 +780,8 @@ class State_Base(State):
             if projection_spec.value is DEFERRED_INITIALIZATION:
                 # Assign instantiated "stub" so it is found on deferred initialization pass (see Process)
                 # FIX: UPDATE WITH MODULATION_MODS
-                # FIX: GENERALIZE THIS TO BE FOR ALL ModulatoryProjections
-                from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
-                if isinstance(projection_spec, GatingProjection):
+                # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
+                if isinstance(projection_spec, (ControlProjection, GatingProjection)):
                     self.mod_afferents.append(projection_spec)
                 else:
                     self.afferents.append(projection_spec)
@@ -794,18 +791,21 @@ class State_Base(State):
             #    - validate value
             #    - assign to State's afferents or mod_afferents list
             # FIX: UPDATE WITH MODULATION_MODS
-            # FIX: GENERALIZE THIS TO BE FOR ALL ModulatoryProjections
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
-            # If it is a GatingProjection:
-            #    - check that projection's value is compatible with value of the function's param being used for gating
+            # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
+            # If it is a ControlProjection or GatingProjection:
+            #    - check that projection's value is compatible with value of the function param being modulated
             #    - assign projection to mod_afferents
-            if isinstance(projection_spec, GatingProjection):
-                modulatory_param = getattr(self.function_object, projection_spec.sender.modulation)
-                modulatory_param_value = self.function_object.params[modulatory_param]
-                projection_spec_value = type_match(projection_spec.value, type(modulatory_param_value))
-                if iscompatible(modulatory_param_value, projection_spec_value):
-                    # This is needed to avoid duplicates, since instantiation of projection (e.g, by Mechanism)
-                    #    may have already called this method and assigned projection to self.afferents list
+            if isinstance(projection_spec, (ControlProjection, GatingProjection)):
+                # Get the function parameter to be modulated
+                mod_param = getattr(self.function_object, projection_spec.sender.modulation)
+                # Get the value of the function parameter to be modulated
+                mod_param_value = self.function_object.params[mod_param]
+                # Match the projection's value with the value of the function parameter
+                mod_proj_spec_value = type_match(projection_spec.value, type(mod_param_value))
+                # If the match was successful (i.e., they are compatible), assign the projection to mod_afferents
+                if iscompatible(mod_param_value, mod_proj_spec_value):
+                    # Avoid duplicates, since instantiation of projection (e.g, by Mechanism)
+                    #    may have already called this method and assigned projection to self.mod_afferents
                     if not projection_spec in self.mod_afferents:
                         self.mod_afferents.append(projection_spec)
                     continue
