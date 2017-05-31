@@ -1203,6 +1203,9 @@ class State_Base(State):
 
         for projection in self.afferents:
 
+            # FIX:  THIS SEEMS SLOPPY; WHY WOULDN'T IT HAVE A SENDER?
+            # FIX:  IF IT IS ONLY BECAUSE IT IS DEFERRED_INIT, THEN TEST FOR THAT AND RAISE EXCEPTION
+            # FIX:  IF IT IS FOR OTHER REASONS, SHOULD IDENTIFY AND DEAL WITH THOSE
             if hasattr(projection, 'sender'):
                 sender = projection.sender
             else:
@@ -1245,6 +1248,8 @@ class State_Base(State):
             if not projection_params:
                 projection_params = None
 
+            # FIX: UPDATE WITH MODULATION_MODS
+            # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
             # Update LearningSignals only if context == LEARNING;  otherwise, just get current value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection):
@@ -1268,10 +1273,26 @@ class State_Base(State):
             projection_value_list.append(projection_value)
         #endregion
 
+        # FIX: MOVE THIS TO ABOVE AFFERENTS, SINCE SHOULD INCLUDE EFFECT OF MODULATION BEFORE UPDATING OTHER PROJECTIONS
         # If the state receives any modulatory projections
         if self.mod_afferents:
             # Execute each modulatory projection and assign its value to the specified function param
             for mod_proj in self.mod_afferents:
+
+                # FIX:  THIS SEEMS SLOPPY; WHY WOULDN'T IT HAVE A SENDER?
+                # FIX:  IF IT IS ONLY BECAUSE IT IS DEFERRED_INIT, THEN TEST FOR THAT AND RAISE EXCEPTION
+                # FIX:  IF IT IS FOR OTHER REASONS, SHOULD IDENTIFY AND DEAL WITH THOSE
+                if hasattr(mod_proj, 'sender'):
+                    sender = mod_proj.sender
+                else:
+                    if self.verbosePref:
+                        warnings.warn("{} to {} {} of {} ignored [has no sender]".format(projection.__class__.__name__,
+                                                                                         self.name,
+                                                                                         self.__class__.__name__,
+                                                                                         self.owner.name))
+                    continue
+
+
                 # FIX: UPDATE WITH MODULATION_MODS
                 # FIX: THERE *MUST* BE A MORE EFFICIENT WAY OF DOING ALL OF THIS (INCLUDING DEALING WITH stateParams)
                 function_param_spec = mod_proj.sender.modulation

@@ -107,7 +107,7 @@ from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection
 mechanism_1 = TransferMechanism()
 mechanism_2 = DDM()
 some_params = {PARAMETER_STATE_PARAMS:{THRESHOLD:2,NOISE:0.1}}
-my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params, 0)])
+my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
 print(my_process.execute())
 
 # Default projection specification
