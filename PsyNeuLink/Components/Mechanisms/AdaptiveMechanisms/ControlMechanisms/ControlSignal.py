@@ -159,6 +159,7 @@ Class Reference
 # import Components
 # FIX: EVCMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
+from PsyNeuLink.Components.Functions.Function import _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import *
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
 from PsyNeuLink.Components.States.State import *
@@ -427,7 +428,7 @@ class ControlSignal(OutputState):
                                                   duration_cost_function=duration_cost_function,
                                                   cost_combination_function=cost_combination_function,
                                                   allocation_samples=allocation_samples,
-                                                  modulation=modulation
+                                                  modulation=modulation,
                                                   params=params)
 
         self.reference_value = reference_value
