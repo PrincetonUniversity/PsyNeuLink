@@ -122,7 +122,7 @@ class GatingSignal(OutputState):
     GatingSignal(                                                \
         owner,                                                   \
         function=LinearCombination(operation=SUM),               \
-        modulation=Modulation.MULTIPLY                           \
+        modulation=ModulationParam.MULTIPLICATIVE                \
         params=None,                                             \
         name=None,                                               \
         prefs=None)
@@ -253,20 +253,20 @@ class GatingSignal(OutputState):
                  index=PRIMARY_OUTPUT_STATE,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
-                 # modulation:tc.optional(is_modulation_operation)=Modulation.MULTIPLY,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 # modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 modulation:tc.optional(_is_modulation_param)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
-        # Note index and calculate are not used by ControlSignal, but included here for consistency with OutputState
+        # Note: index and calculate are not used by GatingSignal;
+        #       they are included here for consistency with OutputState and possible use by subclasses.
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   modulation=modulation,
                                                   params=params)
-        self.reference_value = reference_value
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
@@ -283,6 +283,10 @@ class GatingSignal(OutputState):
                          name=name,
                          prefs=prefs,
                          context=self)
+
+        # Set default value of modulation to owner's value
+        self._modulation = self.modulation or owner.modulation
+
 
 def _parse_gating_signal_spec(owner, state_spec):
     """Take specifications for one or more states to be gated, and return GatingSignal specification dictionary
