@@ -3,7 +3,8 @@ import pytest
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Functions.Function import Integrator, SimpleIntegrator, ConstantIntegrator, AdaptiveIntegrator
+from PsyNeuLink.Components.Functions.Function import Integrator, SimpleIntegrator, ConstantIntegrator
+from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Globals.Keywords import ADAPTIVE, CONSTANT, DIFFUSION, SIMPLE
 from PsyNeuLink.Globals.TimeScale import TimeScale
@@ -520,6 +521,45 @@ def test_adaptive_integrator():
     # constant integrator should not use an input value
     val = P.execute(1)
     assert val == 5.5
+
+
+# ------------------------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------------------------
+# TEST 4
+
+def test_drift_diffusion_integrator():
+    I = IntegratorMechanism(
+            function = DriftDiffusionIntegrator(
+                initializer = 10.0,
+                rate = 10,
+                time_step_size = 0.5
+            )
+        )
+    P = process(pathway=[I])
+    # constant integrator should not use an input value
+    val = P.execute(1)
+    assert val == 15
+
+
+# ------------------------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------------------------
+# TEST 5
+
+def test_ornstein_uhlenbeck_integrator():
+    I = IntegratorMechanism(
+            function = OrnsteinUhlenbeckIntegrator(
+                initializer = 10.0,
+                rate = 10,
+                time_step_size=0.5
+            )
+        )
+    P = process(pathway=[I])
+    # constant integrator should not use an input value
+    val = P.execute(1)
+    assert val == 15
 
 
 # ------------------------------------------------------------------------------------------------
