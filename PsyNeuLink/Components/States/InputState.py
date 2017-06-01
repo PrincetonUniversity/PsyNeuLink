@@ -436,6 +436,26 @@ class InputState(State_Base):
                                                   self.reference_value))
                                                   # self.owner.variable))
 
+    def _execute(self, function_params, context):
+        """Call self.function with self.variable
+
+        If there were no Transmissive projections, ignore and return None
+        """
+
+        # If there were any Transmissive projections:
+        if self._trans_proj_values:
+            # Combine projection values
+            combined_values = self.function(variable=self._trans_proj_values,
+                                            params=function_params,
+                                            context=context)
+            return combined_values
+
+        # There were no projections
+        else:
+            # mark combined_values as none, so that (after being assigned to self.value)
+            #    it is ignored in execute method (i.e., not combined with base_value)
+            return None
+
     @property
     def trans_projections(self):
         return self.afferents

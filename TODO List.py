@@ -370,6 +370,19 @@
 #         or an entry in the state specification dictionary with the key "GATING", and a value that is the
 #         keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOperation value, GatingProjection, or its constructor
 #
+# DOCUMENTATION: GENERAL PRINCIPLES:
+#                     InputState:
+#                           TransmissiveProjections -> variable
+#                           ModulatoryProjections -> state.function_param
+#                     ParameterStates:
+#                           mech.param -> variable
+#                           ModulatoryProjections -> state.function_param
+#                     OutputState:
+#                           owner's value -> variable
+#                           ModulatoryProjections -> state.function_param
+# DOCUMENTATION: Need to alwyas use the value of a parameter_state for a parameter, rather than its own value,
+#                   in order to insure that any modulation (control/learning) has beeen applied
+#                Do this in definition of property (using backfield as "base_vale")?
 # DOCUMENTATION: modulation argument/attribute in ControlSignal and GatingSignal
 # DOCUMENTATION: ModulatoryMechanism: describe how they work, i.e., that they assign the value of their
 #                  outputState to the paraemter of the state's function specified in their modulation param

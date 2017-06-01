@@ -335,7 +335,6 @@ class State_Base(State):
 
     #region CLASS ATTRIBUTES
 
-    kpState = "State"
     componentCategory = kwStateComponentCategory
     className = STATE
     suffix = " " + className
@@ -428,10 +427,16 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
 
+        # Enforce that only called from subclass
         if not isinstance(context, State_Base):
             raise StateError("Direct call to abstract class State() is not allowed; "
                                       "use state() or one of the following subclasses: {0}".
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
+
+        # Enforce that subclass must implement and _execute method
+        if not hasattr(self, '_execute'):
+            raise StateError("{}, as a subclass of {}, must implement an _execute() method".
+                             format(self.__class__.__name__, STATE))
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(persistence=persistence,
@@ -458,6 +463,7 @@ class State_Base(State):
         self.mod_afferents = []
         self._stateful = False
 
+        self._trans_proj_values = []
         # Create dict with entries for each ModualationParam and initialize - used in update() to coo
         self._mod_proj_values = {}
         for attrib, value in get_class_attributes(ModulationParam):
@@ -484,7 +490,7 @@ class State_Base(State):
 
 # # FIX LOG: EITHER GET RID OF THIS NOW THAT @property HAS BEEN IMPLEMENTED, OR AT LEAST INTEGRATE WITH IT
 #         # add state to KVO observer dict
-#         self.observers = {self.kpState: []}
+#         self.observers = {self.STATE: []}
 #
 # # FIX: WHY IS THIS COMMENTED OUT?  IS IT HANDLED BY SUBCLASSES??
     # def register_category(self):
@@ -1247,8 +1253,10 @@ class State_Base(State):
         gating_projection_params = merge_param_dicts(self.stateParams, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         #endregion
 
-        #For each projection: get its params, pass them to it, and get the projection's value
-        trans_proj_values = []
+        #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
+        self._trans_proj_values = []
+        for value in self._mod_proj_values:
+            self._mod_proj_values[value] = []
 
         from PsyNeuLink.Components.Process import ProcessInputState
         from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
@@ -1271,8 +1279,7 @@ class State_Base(State):
                              "Mechanisms and MappingProjections".
                              format(self.owner.name, self.owner.__class__.__name__, self.__class__.__name__,))
 
-
-        # Get values of Projections
+        # Get values of all Projections
         for projection in self.afferents + self.mod_afferents:
 
             # Only update if sender has also executed in this round
@@ -1327,7 +1334,7 @@ class State_Base(State):
 
             if isinstance(projection, TransmissiveProjection_Base):
                 # Add projection_value to list TransmissiveProjection values (for aggregation below)
-                trans_proj_values.append(projection_value)
+                self._trans_proj_values.append(projection_value)
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             elif isinstance(projection, ModulatoryProjection_Base):
@@ -1350,40 +1357,23 @@ class State_Base(State):
                     self.stateParams[FUNCTION_PARAMS].update({function_param: agg_mod_val})
 
 
-        # AGGREGATE TransmissiveProjection VALUES with CURRENT VALUE
-
-        # If there were any Transmissive projections:
-        if trans_proj_values:
-
-            try:
-                # pass only function params
-                function_params = self.stateParams[FUNCTION_PARAMS]
-            except (KeyError, TypeError):
-                function_params = None
-
-            # Combine projection values
-            combined_values = self.function(variable=trans_proj_values,
-                                            params=function_params,
-                                            context=context)
-
-            # If self.value is a number, convert combined_values back to number
-            if value_is_number and combined_values:
-                combined_values = combined_values[0]
-
-        # There were no projections
-        else:
-            # mark combined_values as none, so that (after being assigned to self.value)
-            #    it is ignored in execute method (i.e., not combined with base_value)
-            combined_values = None
-        #endregion
+        # CALL STATE'S function TO GET ITS VALUE
+        try:
+            # pass only function params (which implement the effects of any modulatory projections)
+            function_params = self.stateParams[FUNCTION_PARAMS]
+        except (KeyError, TypeError):
+            function_params = None
+        state_value = self._execute(function_params=function_params, context=context)
 
 
-        self.value = combined_values
+        # ASSIGN VALUE
 
-        # FIX: IF persistence is FULL or function, DEAL WITH prev_value
+        # If self.value is a number, convert combined_values back to number
+        if value_is_number and state_value:
+            combined_values = state_value[0]
 
-        # FIX: *** return combined_values, but only assign to self.value if persistence > 0
-        # FIX:     deal with base_value
+        self.value = state_value
+
 
     def execute(self, input=None, time_scale=None, params=None, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)

@@ -637,19 +637,17 @@ class OutputState(State_Base):
         if isinstance(self.calculate, type):
             self.calculate = self.calculate().function
 
+    def _execute(self, function_params, context):
+        """Call self.function with owner's value as variable
+        """
 
-    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
+        # IMPLEMENTATION NOTE: OutputStates don't current receive TransmissiveProjections,
+        #                      so there is no need to use their value (as do InputStates)
+        value = self.function(variable=self.owner.value[self.index],
+                                params=function_params,
+                                context=context)
 
-        super().update(params=params, time_scale=time_scale, context=context)
-
-        # FIX: FOR NOW, self.value IS ALWAYS None (SINCE OUTPUTSTATES DON'T GET PROJECTIONS, AND
-        # FIX:     AND State.update RETURNS None IF THERE ARE NO PROJECTIONS, SO IT ALWAYS USES CALCULATE (BELOW).
-        # FIX:     HOWEVER, NEED TO INTEGRATE self.value and self.function WITH calculate:
-        # IMPLEMENT: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE:
-        #            TO COMBINE self.value ASSIGNED IN CALL TO SUPER (FROM PROJECTIONS)
-        #            WITH calculate(self.owner.value[index]) PER BELOW
-
-        self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
+        return type_match(self.calculate(self.owner.value[self.index]), type(value))
 
     @property
     def trans_projections(self):

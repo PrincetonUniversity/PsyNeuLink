@@ -647,6 +647,24 @@ class ParameterState(State_Base):
                                                   self.owner.name,
                                                   self.reference_value))
 
+    def _execute(self, function_params, context):
+        """Call self.function with current parameter value as the variable
+
+        Get the value of the parameter of the owner Mechanism's function to which the ParameterState corresponds
+        Update its value in call to state's function
+        """
+
+        # Most commonly, ParameterState is for the parameter of a function
+        try:
+            param_value = self.owner.function_object.params[self.name]
+
+       # Otherwise, should be for an attribute of its owner:
+        except KeyError:
+            param_value = self.owner.params[self.name]
+
+        return self.function(variable=param_value,
+                             params=function_params,
+                             context=context)
 
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         """Parse params for parameterState params and XXX ***
@@ -722,7 +740,6 @@ class ParameterState(State_Base):
         else:
             # If tuple, use param-specific Modulation as operation
             self.value = operation(value, self.value)
-        #endregion
 
     @property
     def value(self):
