@@ -3092,6 +3092,8 @@ class Integrator(
                                 "array or list of floats, or array or list of functions.".
                                 format(initializer[0], self.name))
 
+    def function(self, *args, **kwargs):
+        raise FunctionError("Integrator is not meant to be called explicitly")
 
 class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
