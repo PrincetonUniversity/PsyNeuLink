@@ -1198,13 +1198,13 @@ class State_Base(State):
                 return (None, "not a Projection subclass")#
 
 
-    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
-        """Update each projection, combine them, and assign result to value
+    def _aggregate_projection_values(self, params=None, time_scale=TimeScale.TRIAL, context=None):
+        """Update each projection, combine them, and assign return result
 
         Call update for each projection in self.afferents (passing specified params)
         Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
-        Assign result to self.value
+        Returns combined values of
 
     Arguments:
     - context (str)
@@ -1345,9 +1345,10 @@ class State_Base(State):
                 else:
                     self.stateParams[FUNCTION_PARAMS].update({function_param: agg_mod_val})
 
-        # AGGREGATE TransmissiveProjection VALUES
 
-        # If there were projections:
+        # AGGREGATE TransmissiveProjection VALUES with CURRENT VALUE
+
+        # If there were any Transmissive projections:
         if trans_proj_values:
 
             try:
@@ -1372,10 +1373,10 @@ class State_Base(State):
             combined_values = None
         #endregion
 
-        # ASSIGN STATE VALUE
-        context = context + kwAggregate + ' Projection Inputs'
 
         self.value = combined_values
+
+        # FIX: IF persistence is FULL or function, DEAL WITH prev_value
 
         # FIX: *** return combined_values, but only assign to self.value if persistence > 0
         # FIX:     deal with base_value
