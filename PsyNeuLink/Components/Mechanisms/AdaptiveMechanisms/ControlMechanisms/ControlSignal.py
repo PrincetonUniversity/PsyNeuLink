@@ -398,7 +398,7 @@ class ControlSignal(OutputState):
                  function=LinearCombination(operation=SUM),
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
-                 duration_cost_function:tc.optional(is_function_type)=Integrator,
+                 duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
                  cost_combination_function:tc.optional(is_function_type)=Reduce(operation=SUM),
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
