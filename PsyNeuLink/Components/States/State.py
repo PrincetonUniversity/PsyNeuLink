@@ -1202,7 +1202,7 @@ class State_Base(State):
                 return (None, "not a Projection subclass")#
 
 
-    def _aggregate_projection_values(self, params=None, time_scale=TimeScale.TRIAL, context=None):
+    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         """Update each projection, combine them, and assign return result
 
         Call update for each projection in self.afferents (passing specified params)
