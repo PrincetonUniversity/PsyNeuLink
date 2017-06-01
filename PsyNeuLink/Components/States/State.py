@@ -76,16 +76,21 @@ components, a state has the three following core attributes:
     ..
     * `persistence <State.persistence`: this determines the extent to which the value of the most recently updated
       `value <State.value>` of the state persists from each round of execution to the next, or "decays" back toward 
-      its initially assigned value.  The attribute is a float in the range of 0-1:  when it is 0, the `value 
-      <State>` of the state returns fully to its initially assigned value after each round of execution;  when it is 1, 
-      the `value <State>` fully retains its updated value for the next round of execution.  `InputState <InputStates>` 
-      and `OutputStates <OutputStates>` typically have both an initial `value <State>` and `persistence` of 0, so that 
-      their value in each round of execution is determined entirely by their inputs in that round, with no accumulation 
-      from round to round.  The `persistence` of `ParameterStates <ParameterState>` is also typically 0, so that they
-      retain thier "base value", and any influence of `ControlSignals <ControlSignals>` that project to them is only
-      for that round of execution.  However, the *MATRIX* parameterState of a 
-      `MappingProjection <MappingProjection.matrix>` has a `persistence` of 1, so that the changes to its weights are
-      accumulated from each round of execution (training trial) to the next.
+      its initially assigned value.  The attribute takes one of three values:  `None`, *FULL*, or a function
+      (typically an `IntegratorFunction`).   If it is `None`, the `value <State.value>` of the state returns fully to
+      its initially assigned value after each round of execution;  if it is *FULL*, the `value <State.value>` fully
+      retains its updated value for the next round of execution.  If it is a function, then the `value <State.value>`
+      of the state retains a portion of its updated value as determined by the function (e.g., by the `rate` parameter
+      of an `Integrator` function).  By default, the `persistence <State.persistence>` of `InputState <InputStates>`
+      and `OutputStates <OutputStates>` is `None`;  since they also typically have an initial value of 0, their
+      `value <State.value>` in each round of execution is determined entirely by their inputs in that round, with no
+      accumulation from round to round.  The default `persistence <State.persistence>` of
+      `ParameterStates <ParameterState>` is also `None`, so that they retain their intially assigned value from round
+      to round, and any influence of a `ControlSignal` is only for that round of execution.  However, for the *MATRIX*
+      parameterState of a `MappingProjection <MappingProjection.matrix>`, the default `persistence <State.persistence>`
+      is *FULL*, so that its updated value (e.g., due to changes in its weights from a `LearningSignal`) is
+      fully retained, so that the changes to its `value <State.value>` are accumulated over rounds of execution
+      (i.e., training trials).
 
 Execution
 ---------
@@ -168,11 +173,11 @@ class StateError(Exception):
 #            THAT IS UPDATED BY THE STATE'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class State_Base(State):
     """
-    State_Base(     \
-    owner,          \
-    persistence:=0, \
-    params=None,    \
-    name=None,      \
+    State_Base(        \
+    owner,             \
+    persistence:=None, \
+    params=None,       \
+    name=None,         \
     prefs=None)
 
     Abstract class for State.
@@ -300,9 +305,9 @@ class State_Base(State):
     value : number, list or np.ndarray
         current value of the state (updated by `update <State.update>` method).
 
-    persistence : float or int between 0 and 1
-        determines the amount of the current (updated) `value <State>` of the state that is retained from each round 
-        of to the next (see description of `State attributes <State_Structure>` above for details). 
+    persistence : None, FULL or function
+        determines whether and how much of the current (updated) `value <State.value>` of the state is retained from
+        each round of execution to the next (see description of `State attributes <State_Structure>` above for details).
 
     name : str : default <State subclass>-<index>
         the name of the state.
@@ -348,8 +353,8 @@ class State_Base(State):
 
     @tc.typecheck
     def __init__(self,
-                 owner:tc.any(Mechanism, MappingProjection),
-                 persistence:is_unit_interval=0,
+                 owner:tc.any(Mechanism, Projection),
+                 persistence:tc.optional(tc.any(tc.enum(FULL), is_function_type))=None,
                  variable=None,
                  params=None,
                  name=None,
@@ -449,10 +454,10 @@ class State_Base(State):
         self.mod_afferents = []
         self._stateful = False
 
-        # Create dict with entries for each ModualationParam and initialize - used in update()
-        self._modulation_values = {}
+        # Create dict with entries for each ModualationParam and initialize - used in update() to coo
+        self._mod_proj_values = {}
         for attrib, value in get_class_attributes(ModulationParam):
-            self._modulation_values[getattr(ModulationParam,attrib)] = []
+            self._mod_proj_values[getattr(ModulationParam,attrib)] = []
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(variable_default=variable,
@@ -550,9 +555,8 @@ class State_Base(State):
 
         if PERSISTENCE in target_set:
             persistence = target_set[PERSISTENCE]
-            if not is_unit_interval(persistence):
-                raise StateError("Value of {} for {} of {} ({}) must be (or resolve to) a value "
-                                 "in the interval frm 0 to 1".
+            if persistence and not (persistence is FULL or is_function_type(persistence)):
+                raise StateError("Value of {} for {} of {} ({}) must be \'None\', \'FULL\', or a function".
                                  format(PERSISTENCE, self.name, self.owner.name, persistence))
             if persistence:
                 self._stateful = True
@@ -1240,7 +1244,7 @@ class State_Base(State):
         #endregion
 
         #For each projection: get its params, pass them to it, and get the projection's value
-        projection_value_list = []
+        trans_proj_values = []
 
         from PsyNeuLink.Components.Process import ProcessInputState
         from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
@@ -1301,11 +1305,13 @@ class State_Base(State):
                 projection_params = None
 
             # FIX: UPDATE WITH MODULATION_MODS
+            # ------------------------------------------------------------------------------------------------
             # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
             # Update LearningSignals only if context == LEARNING;  otherwise, just get current value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection) and not LEARNING in context:
                     projection_value = projection.value
+            # ------------------------------------------------------------------------------------------------
             else:
                 projection_value = projection.execute(params=projection_params,
                                                       time_scale=time_scale,
@@ -1317,18 +1323,20 @@ class State_Base(State):
 
             if isinstance(projection, TransmissiveProjection_Base):
                 # Add projection_value to list TransmissiveProjection values (for aggregation below)
-                projection_value_list.append(projection_value)
+                trans_proj_values.append(projection_value)
+
+            # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             elif isinstance(projection, ModulatoryProjection_Base):
-                # Execute each modulatory projection and
-                #     and add its value to the list in the dict entry for that type
-                meta_param, mod_param_name, mod_param_value = self._get_modulated_param(projection)
-                self._modulation_values[meta_param].append(type_match(projection_value,
+                mod_meta_param, mod_param_name, mod_param_value = self._get_modulated_param(projection)
+                self._mod_proj_values[mod_meta_param].append(type_match(projection_value,
                                                                            type(mod_param_value)))
 
-        # AGGREGATE MODULATORY VALUES OF EACH TYPE AND ASSIGN TO FUNCTION PARAMS
+        # AGGREGATE ModulatoryProjection VALUES 
 
-        # FIX: *** DEAL WITH mod_values HERE ***  (AND GET RID OF PARAM_MODULATION_OPERATION)
-        for mod_param, value_list in self._modulation_values.items():
+        # For each modulated parameter of the state's function, 
+        #    combine any values received from the relevant projections into a single modulation value
+        #    and assign that to the relevant entry in the params dict for the state's function.
+        for mod_param, value_list in self._mod_proj_values.items():
             if value_list:
                 agg_mod_val = mod_param.reduce(value_list)
                 function_param = self.function_object.params[mod_param.attrib_name]
@@ -1337,10 +1345,10 @@ class State_Base(State):
                 else:
                     self.stateParams[FUNCTION_PARAMS].update({function_param: agg_mod_val})
 
-        # AGGREGATE PROJECTION VALUES
+        # AGGREGATE TransmissiveProjection VALUES
 
         # If there were projections:
-        if projection_value_list:
+        if trans_proj_values:
 
             try:
                 # pass only function params
@@ -1349,7 +1357,7 @@ class State_Base(State):
                 function_params = None
 
             # Combine projection values
-            combined_values = self.function(variable=projection_value_list,
+            combined_values = self.function(variable=trans_proj_values,
                                             params=function_params,
                                             context=context)
 
@@ -1366,6 +1374,7 @@ class State_Base(State):
 
         # ASSIGN STATE VALUE
         context = context + kwAggregate + ' Projection Inputs'
+
         self.value = combined_values
 
         # FIX: *** return combined_values, but only assign to self.value if persistence > 0
@@ -1381,13 +1390,13 @@ class State_Base(State):
         """
 
         # Get function "meta-parameter" to be modulated from projection sender's modulation attribute
-        function_meta_param = mod_proj.sender.modulation
+        function_mod_meta_param = mod_proj.sender.modulation
 
         # Get the actual parameter of self.function_object to be modulated
-        function_param = self.function_object.params[function_meta_param.attrib_name]
+        function_param = self.function_object.params[function_mod_meta_param.attrib_name]
 
         # Return the parameter's value
-        return ModulatedParam(function_meta_param, function_param, self.function_object.params[function_param])
+        return ModulatedParam(function_mod_meta_param, function_param, self.function_object.params[function_param])
 
     @property
     def owner(self):

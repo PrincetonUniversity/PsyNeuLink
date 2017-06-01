@@ -201,7 +201,7 @@ class InputState(State_Base):
     reference_value=None,                      \
     function=LinearCombination(operation=SUM), \
     value=None,                                \
-    persistence=0,                             \
+    persistence=None,                          \
     params=None,                               \
     name=None,                                 \
     prefs=None)
@@ -256,9 +256,11 @@ class InputState(State_Base):
         specifies the function used to aggregate the values of the projections received by the inputState.
         It must produce a result that has the same format (number and type of elements) as its input.
 
-    persistence : float or int between 0 and 1 : default 0
-        species the amount of the current (updated) `value <State>` of the state to retain from each round of 
-        execution to the next (see description of `State attributes <State_Structure` for details). 
+    persistence : None, FULL, or function : default None
+        species whether and how much of the current (updated) `value <State.value>` of the state to retain from each
+        round of execution to the next (see description of `State attributes <State_Structure>` above for details).
+        If it is a function, it must accept as input and return a value that is compatible with (i.e. same format
+        and number of items as) the `value <InputState.value>` of the inputState.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -297,9 +299,9 @@ class InputState(State_Base):
     value : number, list or np.ndarray
         the aggregated value of the projections received by the inputState; output of `function <InputState.function>`.
 
-    persistence : float or int between 0 and 1
-        determines the amount of the current (updated) `value <State>` of the state that is retained from each round 
-        of execution to the next (see description of `State attributes <State_Structure` for details).  
+    persistence : None, FULL or function
+        determines whether and how much of the current (updated) `value <State.value>` of the state is retained from
+        each round of execution to the next (see description of `State attributes <State_Structure>` above for details).
 
     name : str : default <State subclass>-<index>
         the name of the inputState.
@@ -350,7 +352,7 @@ class InputState(State_Base):
                  reference_value=None,
                  variable=None,
                  function=LinearCombination(operation=SUM),
-                 persistence:is_unit_interval=0,
+                 persistence:tc.optional(tc.any(tc.enum(FULL), is_function_type))=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

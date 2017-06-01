@@ -52,6 +52,8 @@
 #      ADD SUBCLASSING OF PROJECTIONS:
 #                 TRANSMISSIVE (MappingProjection):  FROM PROCESSING MECHANISM
 #                 ADAPTIVE (LearningProjection, GatingProjection, ControlProjection): FROM ADAPTIVE MECHANISM
+#  17) State:  put persistence and integration_method as args or in params (i.e., paramClassDefaults, only on State?)
+#              None, FULL or IntegrationFunction
 
 # TASKS:
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
@@ -67,7 +69,8 @@
 # 10) IMPLEMENT TensorFLow wrapper
 # 11) IMPLEMENT Production System model (using scheduler??)
 # 12) IMPLEMENT LEABRA
-# 13) IMPLEMENT Model fitting
+# 13) IMPLEMENT MSPRT / KWTA
+# 14) IMPLEMENT Model fitting
 
 # VALIDATE: (then add to META TEST)
 #  RecurrentTransferMechanism
@@ -317,6 +320,7 @@
 #            all_efferents as @property = efferents + mod_efferents
 #            SEARCH & REPLACE afferents + mod_afferents -> all_afferents, AND SAME FOR efferents
 
+# FIX: INTEGRATE ControlSignal.intensity WITH persistence
 # FIX: NAMES OF ControlProjections AND GatingProjections
 # FIX: GET RID OF ControlSignal LINE 434: self.reference_value = reference_value
 # FIX: UPDATE WITH MODULATION_MODS
@@ -366,8 +370,11 @@
 #         or an entry in the state specification dictionary with the key "GATING", and a value that is the
 #         keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOperation value, GatingProjection, or its constructor
 #
+# DOCUMENTATION: modulation argument/attribute in ControlSignal and GatingSignal
 # DOCUMENTATION: ModulatoryMechanism: describe how they work, i.e., that they assign the value of their
 #                  outputState to the paraemter of the state's function specified in their modulation param
+# DOCUMENTATION: State functions: must be TransferFunction or CombinationFunction, and implement meta mod params
+# DOCUMENTATION: State: persistence:  uses function specified in integration_method argument; default: Weiner
 # DOCUMENTATION: GatingSignal (per ControlSignal) -- describe modulation in both
 # DOCUMENTATION: Various forms of specification;  if Mechainsm: assume primary InputState
 # DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction

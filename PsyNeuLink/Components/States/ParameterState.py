@@ -391,7 +391,7 @@ class ParameterState(State_Base):
     reference_value=None                                         \
     function=LinearCombination(operation=PRODUCT),               \
     variable=None,                                               \
-    persistence=0,                                               \
+    persistence=None,                                            \
     parameter_modulation_operation=Modulation.MULTIPLY,          \
     params=None,                                                 \
     name=None,                                                   \
@@ -451,14 +451,18 @@ class ParameterState(State_Base):
         specifies the function used to aggregate the values of the projections received by the parameterState.
         It must produce a result that has the same format (number and type of elements) as its input.
 
-    persistence : float or int between 0 and 1 : default 0
-        species the amount of the current (updated) `value <State>` of the parameter to retain from each round of 
-        execution to the next (see description of `State attributes <State_Structure` for details). 
+    persistence : None, FULL, or function : default None
+        species whether and how much of the current (updated) `value <State>` of the state to retain from each
+        round of execution to the next (see description of `State attributes <State_Structure>` above for details).
+        If it is a function, it must accept as input and return a value that is compatible with (i.e. same format
+        and number of items as) the `value <ParameterState.value>` of the parameterState.
 
-    parameter_modulation_operation : Modulation : default Modulation.MULTIPLY
-        specifies the operation by which the values of the projections received by the parameterState are used
-        to modify its `base_value <ParameterState.base_value>` before assigning it as the value of the parameter for
-        which the parameterState is responsible.
+    COMMENT:
+        parameter_modulation_operation : Modulation : default Modulation.MULTIPLY
+            specifies the operation by which the values of the projections received by the parameterState are used
+            to modify its `base_value <ParameterState.base_value>` before assigning it as the value of the parameter for
+            which the parameterState is responsible.
+    COMMENT
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -516,9 +520,9 @@ class ParameterState(State_Base):
         COMMENT
         .  This is the value assigned to the parameter for which the parameterState is responsible.
 
-    persistence : float or int between 0 and 1
-        determines the amount of the current (updated) `value <State>` of the state that is retained from each round 
-        of execution to the next (see description of `State attributes <State_Structure` for details).  
+    persistence : None, FULL or function
+        determines whether and how much of the current (updated) `value <State.value>` of the state is retained from
+        each round of execution to the next (see description of `State attributes <State_Structure>` above for details).
 
 
     name : str : default <State subclass>-<index>
@@ -564,7 +568,7 @@ class ParameterState(State_Base):
                  reference_value=None,
                  variable=None,
                  function=LinearCombination(operation=PRODUCT),
-                 persistence:is_unit_interval=0,
+                 persistence:tc.optional(tc.any(tc.enum(FULL), is_function_type))=None,
                  parameter_modulation_operation=Modulation.MULTIPLY,
                  params=None,
                  name=None,

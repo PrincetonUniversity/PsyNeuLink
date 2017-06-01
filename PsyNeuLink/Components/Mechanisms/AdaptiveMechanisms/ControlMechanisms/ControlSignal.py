@@ -208,6 +208,7 @@ class ControlSignal(OutputState):
         duration_cost_function=Integrator,               \
         cost_combination_function=Reduce(operation=SUM), \
         allocation_samples=DEFAULT_ALLOCATION_SAMPLES,   \
+        persistence=None,                                \
         modulation=ModulationParam.MULTIPLICATIVE        \
         params=None,                                     \
         name=None,                                       \
@@ -269,6 +270,16 @@ class ControlSignal(OutputState):
         specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
         `allocation_policy <ControlMechanism.allocation_policy>` (see `ControlSignal_Execution`).
 
+    persistence : None, FULL, or function : default None
+        species whether and how much of the current (updated) `value <ControlSignal.value>` of the ControlSignal to
+        retain from each round of execution to the next (see description of `State attributes <State_Structure>`
+        above for details). If it is a function, it must accept as input and return a value that is compatible with (
+        i.e. same format and number of items as) the `value <OutputState.value>` of the outputState.
+
+    COMMENT: [NEEDS DOCUMENTATION]
+    COMMENT
+    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
+
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
@@ -316,6 +327,13 @@ class ControlSignal(OutputState):
     value : number, list or np.ndarray
         result of `function <ControlSignal.function>`; same as `intensity`.
 
+    COMMENT:  [INTEGRATE THIS WITH PERSISTENCE??]
+    persistence : None, FULL or function
+        determines whether and how much of the current (updated) `value <ControlSignal.value>` of the ControlSignal
+        is retained from each round of execution to the next (see description of `State attributes <State_Structure>`
+        for details).
+    COMMENT
+
     last_intensity : float
         the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
 
@@ -349,6 +367,10 @@ class ControlSignal(OutputState):
 
     cost : float
         combined result of all cost functions that are enabled.
+
+    modulation : ModulationParam
+        specifies the way in which the output of the ControlSignal is used to modulate the value of the parameter
+        it's `ControlProjection` controls.
 
     efferents : [List[ControlProjection]]
         a list with one item -- the `ControlProjection` assigned to the ControlSignal.
@@ -407,6 +429,7 @@ class ControlSignal(OutputState):
                  duration_cost_function:tc.optional(is_function_type)=Integrator,
                  cost_combination_function:tc.optional(is_function_type)=Reduce(operation=SUM),
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
+                 persistence:tc.optional(tc.any(tc.enum(FULL), is_function_type))=None,
                  modulation:tc.optional(_is_modulation_param)=None,
                  params=None,
                  name=None,
@@ -444,6 +467,7 @@ class ControlSignal(OutputState):
                          variable=variable,
                          index=index,
                          calculate=calculate,
+                         persistence=persistence,
                          params=params,
                          name=name,
                          prefs=prefs,
