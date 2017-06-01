@@ -201,6 +201,7 @@ class InputState(State_Base):
     reference_value=None,                      \
     value=None,                                \
     function=LinearCombination(operation=SUM), \
+    persistence=0,                             \
     params=None,                               \
     name=None,                                 \
     prefs=None)
@@ -257,6 +258,10 @@ class InputState(State_Base):
         specifies the function used to aggregate the values of the projections received by the inputState.
         It must produce a result that has the same format (number and type of elements) as its input.
 
+    persistence : float or int between 0 and 1 : default 0
+        species the amount of the current (updated) `value <State>` of the state to retain from each round of 
+        execution to the next (see description of `State attributes <State_Structure` for details). 
+
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
         the inputState or its function, and/or a custom function and its parameters. Values specified for parameters in
@@ -293,6 +298,10 @@ class InputState(State_Base):
 
     value : number, list or np.ndarray
         the aggregated value of the projections received by the inputState; output of `function <InputState.function>`.
+
+    persistence : float or int between 0 and 1
+        determines the amount of the current (updated) `value <State>` of the state that is retained from each round 
+        of execution to the next (see description of `State attributes <State_Structure` for details).  
 
     name : str : default <State subclass>-<index>
         the name of the inputState.
