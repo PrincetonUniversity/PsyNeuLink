@@ -169,8 +169,7 @@ class StateError(Exception):
 class State_Base(State):
     """
     State_Base(     \
-    owner:          \
-    value=None,     \
+    owner,          \
     persistence:=0, \
     params=None,    \
     name=None,      \

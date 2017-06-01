@@ -389,8 +389,8 @@ class ParameterState(State_Base):
     ParameterState(                                              \
     owner,                                                       \
     reference_value=None                                         \
-    value=None,                                                  \
     function=LinearCombination(operation=PRODUCT),               \
+    variable=None,                                               \
     persistence=0,                                               \
     parameter_modulation_operation=Modulation.MULTIPLY,          \
     params=None,                                                 \
@@ -444,10 +444,8 @@ class ParameterState(State_Base):
     reference_value : number, list or np.ndarray
         specifies the default value of the parameter for which the parameterState is responsible.
 
-    value : number, list or np.ndarray
-        specifies the template for the parametersState's `variable <ParameterState.variable>` (since a parameterState's
-        `variable <ParameterState.variable>` and `value <ParameterState.value>` attributes must have the same format
-        (number and type of elements).
+    variable : number, list or np.ndarray
+        specifies the template for the parametersState's `variable <ParameterState.variable>`.
 
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to aggregate the values of the projections received by the parameterState.
