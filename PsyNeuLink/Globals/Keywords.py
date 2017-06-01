@@ -590,6 +590,7 @@ DRIFT_RATE = 'drift_rate'
 INTEGRATOR_FUNCTION = 'integrator_function'
 INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
+DECAY = 'decay'
 
 LOW = 'low'
 HIGH = 'high'

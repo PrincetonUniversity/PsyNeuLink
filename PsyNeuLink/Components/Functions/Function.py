@@ -4834,6 +4834,7 @@ class OrnsteinUhlenbeckIntegrator(
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  time_step_size=1.0,
+                 decay = 1.0,
                  initializer=variableClassDefault,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -4843,6 +4844,7 @@ class OrnsteinUhlenbeckIntegrator(
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
+                                                  decay = decay,
                                                   initializer=initializer,
                                                   noise=noise,
                                                   params=params)
@@ -4915,6 +4917,9 @@ class OrnsteinUhlenbeckIntegrator(
 
         if TIME_STEP_SIZE in target_set:
             time_step_size = target_set[TIME_STEP_SIZE]
+
+        if DECAY in target_set:
+            decay = target_set[DECAY]
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
@@ -5052,6 +5057,7 @@ class OrnsteinUhlenbeckIntegrator(
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
 
         time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
+        decay = self.paramsCurrent[DECAY]
 
         # if noise is a function, execute it
         if self.noise_function:
@@ -5070,7 +5076,7 @@ class OrnsteinUhlenbeckIntegrator(
         previous_value = np.atleast_2d(previous_value)
         new_value = self.variable
 
-        value = previous_value + rate * new_value * time_step_size + np.sqrt(
+        value = previous_value + decay * rate * new_value * time_step_size + np.sqrt(
             time_step_size * noise) * np.random.normal()
 
         # If this NOT an initialization run, update the old value
