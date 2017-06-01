@@ -424,7 +424,7 @@ class State_Base(State):
         # Create dict with entries for each ModualationParam and initialize - used in update()
         self._modulation_values = {}
         for attrib, value in get_class_attributes(ModulationParam):
-            self._modulation_values[attrib] = []
+            self._modulation_values[getattr(ModulationParam,attrib)] = []
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(variable_default=variable,
@@ -1283,15 +1283,20 @@ class State_Base(State):
                 # Execute each modulatory projection and
                 #     and add its value to the list in the dict entry for that type
                 meta_param, mod_param_name, mod_param_value = self._get_modulated_param(projection)
-                self._modulation_values[meta_param.name].append(type_match(projection_value,
+                self._modulation_values[meta_param].append(type_match(projection_value,
                                                                            type(mod_param_value)))
 
         # AGGREGATE MODULATORY VALUES OF EACH TYPE AND ASSIGN TO FUNCTION PARAMS
 
         # FIX: *** DEAL WITH mod_values HERE ***  (AND GET RID OF PARAM_MODULATION_OPERATION)
-            # meta_param.reduce_op
-            # function_object[param] =
-
+        for mod_param, value_list in self._modulation_values.items():
+            if value_list:
+                agg_mod_val = mod_param.reduce(value_list)
+                function_param = self.function_object.params[mod_param.attrib_name]
+                if not FUNCTION_PARAMS in self.stateParams:
+                    self.stateParams[FUNCTION_PARAMS] = {function_param: agg_mod_val}
+                else:
+                    self.stateParams[FUNCTION_PARAMS].update({function_param: agg_mod_val})
 
         # AGGREGATE PROJECTION VALUES
 
@@ -1320,10 +1325,11 @@ class State_Base(State):
             combined_values = None
         #endregion
 
-        #region ASSIGN STATE VALUE
+        # ASSIGN STATE VALUE
         context = context + kwAggregate + ' Projection Inputs'
         self.value = combined_values
-        #endregion
+
+        # FIX: *** return combined_values, but only assign to self.value if persistence > 0
 
     def execute(self, input=None, time_scale=None, params=None, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
