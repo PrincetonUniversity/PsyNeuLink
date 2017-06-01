@@ -459,12 +459,14 @@ def test_simple_integrator():
     I = IntegratorMechanism(
             function = SimpleIntegrator(
                 initializer = 10.0,
-                rate = 5.0
+                rate = 5.0,
+                scale = 2,
+                offset = 10,
             )
         )
     P = process(pathway=[I])
     val = P.execute(1)
-    assert val == 15
+    assert val == 40
 
 
 # ------------------------------------------------------------------------------------------------
@@ -477,13 +479,15 @@ def test_constant_integrator():
     I = IntegratorMechanism(
             function = ConstantIntegrator(
                 initializer = 10.0,
-                rate = 5.0
+                rate = 5.0,
+                scale = 2,
+                offset = 10,
             )
         )
     P = process(pathway=[I])
     # constant integrator should not use an input value
     val = P.execute(20000)
-    assert val == 15
+    assert val == 40
 
 
 # ------------------------------------------------------------------------------------------------
@@ -495,13 +499,15 @@ def test_adaptive_integrator():
     I = IntegratorMechanism(
             function = AdaptiveIntegrator(
                 initializer = 10.0,
-                rate = 0.5
+                rate = 0.5,
+                scale = 2,
+                offset = 10,
             )
         )
     P = process(pathway=[I])
     # constant integrator should not use an input value
     val = P.execute(1)
-    assert val == 5.5
+    assert val == 21
 
 
 # ------------------------------------------------------------------------------------------------
@@ -515,13 +521,15 @@ def test_drift_diffusion_integrator():
             function = DriftDiffusionIntegrator(
                 initializer = 10.0,
                 rate = 10,
-                time_step_size = 0.5
+                time_step_size = 0.5,
+                scale=2,
+                offset=10,
             )
         )
     P = process(pathway=[I])
     # constant integrator should not use an input value
     val = P.execute(1)
-    assert val == 15
+    assert val == 40
 
 
 # ------------------------------------------------------------------------------------------------
@@ -535,13 +543,15 @@ def test_ornstein_uhlenbeck_integrator():
                 initializer = 10.0,
                 rate = 10,
                 time_step_size=0.5,
-                decay = 0.1
+                decay = 0.1,
+                scale=2,
+                offset=10,
             )
         )
     P = process(pathway=[I])
     # constant integrator should not use an input value
     val = P.execute(1)
-    assert val == 10.5
+    assert val == 31
 
 
 # ------------------------------------------------------------------------------------------------
