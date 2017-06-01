@@ -553,13 +553,14 @@ def test_ornstein_uhlenbeck_integrator():
             function = OrnsteinUhlenbeckIntegrator(
                 initializer = 10.0,
                 rate = 10,
-                time_step_size=0.5
+                time_step_size=0.5,
+                decay = 0.1
             )
         )
     P = process(pathway=[I])
     # constant integrator should not use an input value
     val = P.execute(1)
-    assert val == 15
+    assert val == 10.5
 
 
 # ------------------------------------------------------------------------------------------------
