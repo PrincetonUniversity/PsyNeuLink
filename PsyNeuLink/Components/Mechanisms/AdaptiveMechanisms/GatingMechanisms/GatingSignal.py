@@ -122,6 +122,7 @@ class GatingSignal(OutputState):
     GatingSignal(                                   \
         owner,                                      \
         function=LinearCombination(operation=SUM),  \
+        persistence=None,                           \
         modulation=ModulationParam.MULTIPLICATIVE   \
         params=None,                                \
         name=None,                                  \
@@ -164,8 +165,16 @@ class GatingSignal(OutputState):
     function : Function or method : default Linear
         specifies the function used to determine the value of the GatingSignal from the value of its 
         `owner <GatingMechanism.owner>`.
-    
+
+    COMMENT: [NEEDS DOCUMENTATION]
+    COMMENT
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE 
+
+    persistence : None, FULL, or function : default None
+        species whether and how much of the current (updated) `value <State>` of the state to retain from each
+        round of execution to the next (see description of `State attributes <State_Structure>` above for details).
+        If it is a function, it must accept as input and return a value that is compatible with (i.e. same format
+        and number of items as) the `value <OutputState.value>` of the outputState.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -199,6 +208,11 @@ class GatingSignal(OutputState):
     value : number, list or np.ndarray
         result of `function <GatingSignal.function>`.
     
+    persistence : None, FULL or function
+        determines whether and how much of the current (updated) `value <GatingSignal.value>` of the GatingSignal
+        is retained from each round of execution to the next (see description of `State attributes <State_Structure>`
+        for details).
+
     modulation : ModulationParam
         specifies the way in which the output of the GatingSignal is used to modulate the value of the states
         to which its GatingProjections project.
@@ -253,6 +267,7 @@ class GatingSignal(OutputState):
                  index=PRIMARY_OUTPUT_STATE,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
+                 persistence:tc.optional(tc.any(tc.enum(FULL), is_function_type))=None,
                  # modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  modulation:tc.optional(_is_modulation_param)=None,
                  params=None,
@@ -279,6 +294,7 @@ class GatingSignal(OutputState):
                          variable=variable,
                          index=index,
                          calculate=calculate,
+                         persistence=persistence,
                          params=params,
                          name=name,
                          prefs=prefs,

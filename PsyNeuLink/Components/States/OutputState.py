@@ -340,7 +340,7 @@ class OutputState(State_Base):
     function=LinearCombination(operation=SUM), \
     index=PRIMARY_OUTPUT_STATE,                \
     calculate=Linear,                          \
-    persistence=0,                             \
+    persistence=None,                          \
     params=None,                               \
     name=None,                                 \
     prefs=None)
@@ -412,9 +412,11 @@ class OutputState(State_Base):
         has the same format (number and type of elements) as the item of the mechanism's
         `value <Mechanism.Mechanism_Base.value>`.
 
-    persistence : float or int between 0 and 1 : default 0
-        species the amount of the current (updated) `value <State>` of the state to retain from each round of 
-        execution to the next (see description of `State attributes <State_Structure` for details). 
+    persistence : None, FULL, or function : default None
+        species whether and how much of the current (updated) `value <State.value>` of the state to retain from each
+        round of execution to the next (see description of `State attributes <State_Structure>` above for details).
+        If it is a function, it must accept as input and return a value that is compatible with (i.e. same format
+        and number of items as) the `value <OutputState.value>` of the outputState.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -479,9 +481,9 @@ class OutputState(State_Base):
         by `calculate <OutputState.calculate>`;  the same value is assigned to the corresponding item of the owner
         mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
 
-    persistence : float or int between 0 and 1
-        determines the amount of the current (updated) `value <State>` of the state that is retained from each round 
-        of execution to the next (see description of `State attributes <State_Structure` for details).  
+    persistence : None, FULL or function
+        determines whether and how much of the current (updated) `value <State.value>` of the state is retained from
+        each round of execution to the next (see description of `State attributes <State_Structure>` above for details).
 
     efferents : Optional[List[Projection]]
         a list of the projections sent by the outputState (i.e., for which the outputState is a
@@ -531,7 +533,7 @@ class OutputState(State_Base):
                  function=LinearCombination(operation=SUM),
                  index=PRIMARY_OUTPUT_STATE,
                  calculate:is_function_type=Linear,
-                 persistence:is_unit_interval=0,
+                 persistence:tc.optional(tc.any(tc.enum(FULL), is_function_type))=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
