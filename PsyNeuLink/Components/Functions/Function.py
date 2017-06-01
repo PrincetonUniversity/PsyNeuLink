@@ -212,15 +212,32 @@ def is_function_type(x):
 ADDITIVE_PARAM = 'additive_param'
 MULTIPLICATIVE_PARAM = 'multiplicative_param'
 
+class AdditiveParam():
+    attrib_name = ADDITIVE_PARAM
+    name = 'ADDITIVE_PARAM'
+    init_val = 0
+    reduce_op = lambda x,y : np.add(x, y)
+
+class MultiplicativeParam():
+    attrib_name = MULTIPLICATIVE_PARAM
+    name = 'MULTIPLICATIVE'
+    init_val = 1
+    reduce_op = lambda x,y : np.multiply(x, y)
+
 class ModulationParam():
-    ADDITIVE = ADDITIVE_PARAM
-    MULTIPLICATIVE = MULTIPLICATIVE_PARAM
+    # ADDITIVE = ADDITIVE_PARAM
+    # MULTIPLICATIVE = MULTIPLICATIVE_PARAM
+    ADDITIVE = AdditiveParam
+    MULTIPLICATIVE = MultiplicativeParam
+
 
 def _is_modulation_param(val):
     if val in ModulationParam.__dict__.values():
         return True
     else:
         return False
+
+ModulatedParam = namedtuple('ModulatedParam', 'meta, param, val')
 
 # *******************************   get_param_value_for_keyword ********************************************************
 

@@ -109,8 +109,14 @@
 #             + MAPPING_PROJECTION_PARAMS:<dict>:
 #                  entry will be passed to all of the State's MappingProjections,
 #                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+#             + LEARNING_PROJECTION_PARAMS:<dict>:
+#                  entry will be passed to all of the State's LearningProjections,
+#                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
 #             + CONTROL_PROJECTION_PARAMS:<dict>:
 #                  entry will be passed to all of the State's ControlProjections,
+#                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+#             + GATING_PROJECTION_PARAMS:<dict>:
+#                  entry will be passed to all of the State's GatingProjections,
 #                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
 #             + <projectionName>:<dict>:
 #                  entry will be passed to the State's projection with the key's name,
@@ -1648,7 +1654,9 @@
 #              OUTPUT_STATE_PARAMS
 #              PROJECTION_PARAMS
 #              MAPPING_PROJECTION_PARAMS
+#              LEARNING_PROJECTION_PARAMS
 #              CONTROL_PROJECTION_PARAMS
+#              GATING_PROJECTION_PARAMS
 #              <projection name-specific> params
     # SORT OUT RUNTIME PARAMS PASSED IN BY MECHANISM:
     #    A - ONES FOR EXECUTE METHOD (AGGREGATION FUNCTION) OF inputState
@@ -2816,7 +2824,7 @@
 #             - assign LearningProjection to all MappingProjections
 # IMPLEMENT: learning argument and attribute for System (that assigns learning to all of its processes and,
 #            and raises and exception if they can't handle it
-# IMPLEMENT: LEARNING_PROJECTION_PARAMS to parallel CONTROL_PROJECTION_PARAMS
+# IMPLEMENT: LEARNING_PROJECTION_PARAMS and GATING_PROJECTION_PARAMS to parallel CONTROL_PROJECTION_PARAMS
 # IMPLEMENT: *** IF LEARNING IS SPECIFIED FOR PROCESS, REMOVE THE NEED TO SPECIFY TARGET:
 #                  AUTOMATICALLY ASSIGN IT TO BE SAME FORMAT AS OUTPUT OF TERMINAL MECHANISM:
 #                IN Process: WARN BUT SET TARGET TO self.terminal.outputState

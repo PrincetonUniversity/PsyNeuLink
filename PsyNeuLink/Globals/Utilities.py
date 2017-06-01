@@ -64,6 +64,7 @@ OTHER
 * `ReadOnlyOrderedDict`
 * `ContentAddressableList`
 * `make_readonly_property`
+* `get_class_attributes`
 
 """
 
@@ -889,3 +890,10 @@ def make_readonly_property(val):
     # Create the property
     prop = property(getter).setter(setter)
     return prop
+
+
+def get_class_attributes(cls):
+    boring = dir(type('dummy', (object,), {}))
+    return [item
+            for item in inspect.getmembers(cls)
+            if item[0] not in boring]
