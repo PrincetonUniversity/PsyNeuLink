@@ -521,8 +521,8 @@ class ParameterState(State_Base):
         .  This is the value assigned to the parameter for which the parameterState is responsible.
 
     persistence : None, FULL or function
-        determines whether and how much of the current (updated) `value <State.value>` of the state is retained from
-        each round of execution to the next (see description of `State attributes <State_Structure>` above for details).
+        determines whether and how much of the current (updated) `value <State>` of the state is retained from each
+        round of execution to the next (see description of `State attributes <State_Structure>` above for details).
 
 
     name : str : default <State subclass>-<index>
@@ -568,7 +568,7 @@ class ParameterState(State_Base):
                  reference_value=None,
                  variable=None,
                  function=LinearCombination(operation=PRODUCT),
-                 persistence:tc.optional(tc.any(tc.enum(FULL), is_function_type))=None,
+                 persistence:tc.optional(tc.any(FULL, is_function_type))=None,
                  parameter_modulation_operation=Modulation.MULTIPLY,
                  params=None,
                  name=None,
