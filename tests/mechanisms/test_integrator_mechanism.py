@@ -487,7 +487,8 @@ def test_constant_integrator():
     P = process(pathway=[I])
     # constant integrator should not use an input value
     val = P.execute(20000)
-    assert val == 40
+    val2 = P.execute(70000)
+    assert (val, val2) == (40, 100)
 
 
 # ------------------------------------------------------------------------------------------------
@@ -551,7 +552,13 @@ def test_ornstein_uhlenbeck_integrator():
     P = process(pathway=[I])
     # constant integrator should not use an input value
     val = P.execute(1)
-    assert val == 31
-
+    val2 = P.execute(1)
+    val3 = P.execute(1)
+    assert (val, val2, val3) == (31, 73, 157)
 
 # ------------------------------------------------------------------------------------------------
+def test_integrator_no_function():
+    I = IntegratorMechanism(time_scale=TimeScale.TIME_STEP)
+    P = process(pathway=[I])
+    val = float(P.execute(10))
+    assert val == 5
