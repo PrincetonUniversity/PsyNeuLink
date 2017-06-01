@@ -199,8 +199,8 @@ class InputState(State_Base):
     InputState(                                \
     owner,                                     \
     reference_value=None,                      \
-    value=None,                                \
     function=LinearCombination(operation=SUM), \
+    value=None,                                \
     persistence=0,                             \
     params=None,                               \
     name=None,                                 \
@@ -249,10 +249,8 @@ class InputState(State_Base):
         the value of the item of the owner mechanism's `variable <Mechanism.Mechanism_Base.variable>` attribute to which
         the inputState is assigned; used as the template for the inputState's `value <InputState.value>` attribute.
 
-    value : number, list or np.ndarray
-        specifies the template for the inputState's `variable <InputState.variable>` attribute (since an inputState's
-        `variable <InputState.variable>` and `value <InputState.value>` attributes must have the same format
-        (number and type of elements).
+    variable : number, list or np.ndarray
+        specifies the template for the inputState's `variable <InputState.variable>` attribute.
 
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to aggregate the values of the projections received by the inputState.
