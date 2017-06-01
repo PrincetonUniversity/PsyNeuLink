@@ -46,6 +46,8 @@ automatically by the objects to which they belong, and/or through specification 
 `specifying the parameters <ParameterState_Specifying_Parameters>` of a mechanism or its function to be controlled,
 or of a `MappingProjections to be learned <MappingProjection_Tuple_Specification>).
 
+.. _State_Structure:
+
 Structure
 ---------
 
@@ -301,7 +303,7 @@ class State_Base(State):
 
     persistence : float or int between 0 and 1
         determines the amount of the current (updated) `value <State>` of the state that is retained from each round 
-        of to the next. 
+        of to the next (see description of `State attributes <State_Structure>` above for details). 
 
     name : str : default <State subclass>-<index>
         the name of the state.
@@ -557,7 +559,6 @@ class State_Base(State):
                 self._stateful = True
             else:
                 self._stateful = False
-
 
     def _instantiate_function(self, context=None):
         """Insure that output of function (self.value) is compatible with its input (self.variable)

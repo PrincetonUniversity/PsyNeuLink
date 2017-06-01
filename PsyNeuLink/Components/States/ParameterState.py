@@ -391,7 +391,8 @@ class ParameterState(State_Base):
     reference_value=None                                         \
     value=None,                                                  \
     function=LinearCombination(operation=PRODUCT),               \
-    parameter_modulation_operation=Modulation.MULTIPLY, \
+    persistence=0,                                               \
+    parameter_modulation_operation=Modulation.MULTIPLY,          \
     params=None,                                                 \
     name=None,                                                   \
     prefs=None)
@@ -452,6 +453,10 @@ class ParameterState(State_Base):
         specifies the function used to aggregate the values of the projections received by the parameterState.
         It must produce a result that has the same format (number and type of elements) as its input.
 
+    persistence : float or int between 0 and 1 : default 0
+        species the amount of the current (updated) `value <State>` of the parameter to retain from each round of 
+        execution to the next (see description of `State attributes <State_Structure` for details). 
+
     parameter_modulation_operation : Modulation : default Modulation.MULTIPLY
         specifies the operation by which the values of the projections received by the parameterState are used
         to modify its `base_value <ParameterState.base_value>` before assigning it as the value of the parameter for
@@ -492,15 +497,17 @@ class ParameterState(State_Base):
         performs an element-wise (Hadamard) aggregation  of the `value <Projecction.Projection.value>` of each
         projection received by the parameterState.
 
-    base_value : number, list or np.ndarray
-        the default value for the parameterState.  It is combined with the aggregated value of any projections it
-        receives using its `parameterModulationOperation <ParameterState.parameterModulationOperation>`
-        and then assigned to `value <ParameterState.value>`.
-
-    parameterModulationOperation : Modulation : default Modulation.PRODUCT
-        the arithmetic operation used to combine the aggregated value of any projections is receives
-        (the result of the parameterState's `function <ParameterState.function>`) with its
-        `base_value <ParameterState.base_value>`, the result of which is assigned to `value <ParameterState.value>`.
+    COMMENT:
+        base_value : number, list or np.ndarray
+            the default value for the parameterState.  It is combined with the aggregated value of any projections it
+            receives using its `parameterModulationOperation <ParameterState.parameterModulationOperation>`
+            and then assigned to `value <ParameterState.value>`.
+    
+        parameterModulationOperation : Modulation : default Modulation.PRODUCT
+            the arithmetic operation used to combine the aggregated value of any projections is receives
+            (the result of the parameterState's `function <ParameterState.function>`) with its
+            `base_value <ParameterState.base_value>`, the result of which is assigned to `value <ParameterState.value>`.
+    COMMENT
 
     value : number, list or np.ndarray
         the aggregated value of the projections received by the ParameterState, combined with the
@@ -510,6 +517,11 @@ class ParameterState(State_Base):
         as well as any runtime specification
         COMMENT
         .  This is the value assigned to the parameter for which the parameterState is responsible.
+
+    persistence : float or int between 0 and 1
+        determines the amount of the current (updated) `value <State>` of the state that is retained from each round 
+        of execution to the next (see description of `State attributes <State_Structure` for details).  
+
 
     name : str : default <State subclass>-<index>
         the name of the inputState.

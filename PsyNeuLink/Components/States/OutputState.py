@@ -335,10 +335,12 @@ class OutputState(State_Base):
     """
     OutputState(                               \
     owner,                                     \
-    value=None,                                \
+    reference_value,                           \
+    variable=None,                             \
+    function=LinearCombination(operation=SUM), \
     index=PRIMARY_OUTPUT_STATE,                \
     calculate=Linear,                          \
-    function=LinearCombination(operation=SUM), \
+    persistence=0,                             \
     params=None,                               \
     name=None,                                 \
     prefs=None)
@@ -386,8 +388,17 @@ class OutputState(State_Base):
         **variable** argument.  It is used to insure the compatibility of the source of the
         input for the outputState with its `variable <OutputState.variable>`.
 
-    value : number, list or np.ndarray
-        specifies the template for the outputState's `value <OutputState.value>`.
+    variable : number, list or np.ndarray
+        specifies the template for the outputState's `variable <OutputState.variable>`.
+
+    function : Function, function, or method : default LinearCombination(operation=SUM)
+        function used to aggregate the values of the projections received by the outputState.
+        It must produce a result that has the same format (number and type of elements) as the item of the mechanism's
+        `value <Mechanism.Mechanism_Base.value>` to which the outputState is assigned (specified by its
+        **index** argument).
+
+        .. note::
+             This is not used a present (see `note <OutputState_Function_Note_2>` for additonal details).
 
     index : int : default PRIMARY_OUTPUT_STATE
         specifies the item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` used as input for the
@@ -401,14 +412,9 @@ class OutputState(State_Base):
         has the same format (number and type of elements) as the item of the mechanism's
         `value <Mechanism.Mechanism_Base.value>`.
 
-    function : Function, function, or method : default LinearCombination(operation=SUM)
-        function used to aggregate the values of the projections received by the outputState.
-        It must produce a result that has the same format (number and type of elements) as the item of the mechanism's
-        `value <Mechanism.Mechanism_Base.value>` to which the outputState is assigned (specified by its
-        **index** argument).
-
-        .. note::
-             This is not used a present (see `note <OutputState_Function_Note_2>` for additonal details).
+    persistence : float or int between 0 and 1 : default 0
+        species the amount of the current (updated) `value <State>` of the state to retain from each round of 
+        execution to the next (see description of `State attributes <State_Structure` for details). 
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -431,10 +437,6 @@ class OutputState(State_Base):
 
     owner : Mechanism
         the mechanism to which the outputState belongs.
-
-    efferents : Optional[List[Projection]]
-        a list of the projections sent by the outputState (i.e., for which the outputState is a
-        `sender <Projection.Projection.sender>`).
 
     variable : number, list or np.ndarray
         assigned the item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` specified by the
@@ -477,6 +479,14 @@ class OutputState(State_Base):
         by `calculate <OutputState.calculate>`;  the same value is assigned to the corresponding item of the owner
         mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
 
+    persistence : float or int between 0 and 1
+        determines the amount of the current (updated) `value <State>` of the state that is retained from each round 
+        of execution to the next (see description of `State attributes <State_Structure` for details).  
+
+    efferents : Optional[List[Projection]]
+        a list of the projections sent by the outputState (i.e., for which the outputState is a
+        `sender <Projection.Projection.sender>`).
+
     name : str : default <State subclass>-<index>
         name of the outputState.
         Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
@@ -518,9 +528,9 @@ class OutputState(State_Base):
                  owner,
                  reference_value,
                  variable=None,
+                 function=LinearCombination(operation=SUM),
                  index=PRIMARY_OUTPUT_STATE,
                  calculate:is_function_type=Linear,
-                 function=LinearCombination(operation=SUM),
                  persistence:is_unit_interval=0,
                  params=None,
                  name=None,
