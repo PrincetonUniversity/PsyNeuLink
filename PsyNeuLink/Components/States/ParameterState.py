@@ -554,6 +554,7 @@ class ParameterState(State_Base):
                  reference_value=None,
                  variable=None,
                  function=LinearCombination(operation=PRODUCT),
+                 persistence:is_unit_interval=0,
                  parameter_modulation_operation=Modulation.MULTIPLY,
                  params=None,
                  name=None,
@@ -562,8 +563,9 @@ class ParameterState(State_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                 parameter_modulation_operation=parameter_modulation_operation,
-                                                 params=params)
+                                                  # persistence=persistence,
+                                                  parameter_modulation_operation=parameter_modulation_operation,
+                                                  params=params)
 
         self.reference_value = reference_value
 
@@ -571,6 +573,7 @@ class ParameterState(State_Base):
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(ParameterState, self).__init__(owner,
                                              variable=variable,
+                                             persistence=persistence,
                                              params=params,
                                              name=name,
                                              prefs=prefs,

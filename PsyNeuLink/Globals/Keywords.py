@@ -518,6 +518,7 @@ kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
+PERSISTENCE = 'persistence'
 
 # InputStates:
 PRIMARY = 'Primary'
