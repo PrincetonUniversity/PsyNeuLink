@@ -216,13 +216,15 @@ class AdditiveParam():
     attrib_name = ADDITIVE_PARAM
     name = 'ADDITIVE_PARAM'
     init_val = 0
-    reduce_op = lambda x,y : np.add(x, y)
+    # reduce = Reduce(operation=SUM).function
+    reduce = lambda x : np.sum(x)
 
 class MultiplicativeParam():
     attrib_name = MULTIPLICATIVE_PARAM
     name = 'MULTIPLICATIVE'
     init_val = 1
-    reduce_op = lambda x,y : np.multiply(x, y)
+    reduce = lambda x: np.product(x)
+    # reduce = Reduce(operation=PRODUCT).function
 
 class ModulationParam():
     # ADDITIVE = ADDITIVE_PARAM
