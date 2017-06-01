@@ -2,7 +2,7 @@ import pytest
 import typecheck
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DDMError, DIFFUSION
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl, Integrator, NormalDist
+from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, NormalDist
 from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Globals.TimeScale import TimeScale
 
@@ -19,8 +19,7 @@ def test_DDM_Integrator():
     stim = 10
     T = DDM(
         name='DDM',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function=DriftDiffusionIntegrator(
         ),
         time_scale=TimeScale.TIME_STEP
     )
@@ -73,8 +72,7 @@ def test_DDM_zero_noise():
     stim = 10
     T = DDM(
         name='DDM',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=1.0,
             time_step_size=1.0
@@ -93,8 +91,7 @@ def test_DDM_noise_0_5():
     stim = 10
     T = DDM(
         name='DDM',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function=DriftDiffusionIntegrator(
             noise=0.5,
             rate=1.0,
             time_step_size=1.0
@@ -113,8 +110,7 @@ def test_DDM_noise_2_0():
     stim = 10
     T = DDM(
         name='DDM',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function=DriftDiffusionIntegrator(
             noise=2.0,
             rate=1.0,
             time_step_size=1.0
@@ -138,8 +134,8 @@ def test_DDM_noise_int():
         stim = 10
         T = DDM(
             name='DDM',
-            function=Integrator(
-                integration_type=DIFFUSION,
+            function=DriftDiffusionIntegrator(
+
                 noise=2,
                 rate=1.0,
                 time_step_size=1.0
@@ -159,8 +155,8 @@ def test_DDM_noise_fn():
         stim = 10
         T = DDM(
             name='DDM',
-            function=Integrator(
-                integration_type=DIFFUSION,
+            function=DriftDiffusionIntegrator(
+
                 noise=NormalDist().function,
                 rate=1.0,
                 time_step_size=1.0
@@ -183,8 +179,7 @@ def test_DDM_input_int():
     stim = 10
     T = DDM(
         name='DDM',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=1.0,
             time_step_size=1.0
@@ -203,8 +198,7 @@ def test_DDM_input_list_len_1():
     stim = [10]
     T = DDM(
         name='DDM',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=1.0,
             time_step_size=1.0
@@ -223,8 +217,7 @@ def test_DDM_input_float():
     stim = 10.0
     T = DDM(
         name='DDM',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=1.0,
             time_step_size=1.0
@@ -249,8 +242,8 @@ def test_DDM_input_list_len_2():
         T = DDM(
             name='DDM',
             default_input_value=[0, 0],
-            function=Integrator(
-                integration_type=DIFFUSION,
+            function=DriftDiffusionIntegrator(
+
                 noise=0.0,
                 rate=1.0,
                 time_step_size=1.0
@@ -275,8 +268,8 @@ def test_DDM_input_fn():
         stim = NormalDist().function
         T = DDM(
             name='DDM',
-            function=Integrator(
-                integration_type=DIFFUSION,
+            function=DriftDiffusionIntegrator(
+
                 noise=0.0,
                 rate=1.0,
                 time_step_size=1.0
@@ -299,8 +292,7 @@ def test_DDM_rate_int():
     stim = 10
     T = DDM(
         name='DDM',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=5,
             time_step_size=1.0
@@ -321,8 +313,7 @@ def test_DDM_rate_list_len_1():
     stim = 10
     T = DDM(
         name='DDM',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=[5],
             time_step_size=1.0
@@ -341,8 +332,7 @@ def test_DDM_rate_float():
     stim = 10
     T = DDM(
         name='DDM',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=5,
             time_step_size=1.0
@@ -366,8 +356,7 @@ def test_DDM_input_rate_negative():
     T = DDM(
         name='DDM',
         default_input_value=[0],
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
             time_step_size=1.0
@@ -397,8 +386,8 @@ def test_DDM_rate_fn():
         T = DDM(
             name='DDM',
             default_input_value=[0],
-            function=Integrator(
-                integration_type=DIFFUSION,
+            function=DriftDiffusionIntegrator(
+
                 noise=0.0,
                 rate=NormalDist().function,
                 time_step_size=1.0
