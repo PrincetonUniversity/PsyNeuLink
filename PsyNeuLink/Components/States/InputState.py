@@ -343,24 +343,28 @@ class InputState(State_Base):
                  reference_value=None,
                  variable=None,
                  function=LinearCombination(operation=SUM),
+                 persistence:is_unit_interval=0,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function, params=params)
+        params = self._assign_args_to_param_dicts(function=function,
+                                                  # persistence=persistence,
+                                                  params=params)
 
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of owner (to override assignment of componentName in super.__init__)
         super(InputState, self).__init__(owner,
-                                                  variable=variable,
-                                                  params=params,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=self)
+                                         variable=variable,
+                                         persistence=persistence,
+                                         params=params,
+                                         name=name,
+                                         prefs=prefs,
+                                         context=self)
 
 
 

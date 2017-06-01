@@ -34,6 +34,7 @@ TYPE CHECKING VALUE COMPARISON
 * `is_numeric_or_none`
 * `iscompatible`
 * `is_value_spec`
+* `is_unit_interval`
 
 ENUM
 ~~~~
@@ -868,10 +869,15 @@ class ContentAddressableList(UserList):
         return [np.ndarray.tolist(getattr(item, VALUE)) for item in self.data]
 
 
-
-
 def is_value_spec(spec):
     if isinstance(spec, (int, float, list, np.ndarray)):
+        return True
+    else:
+        return False
+
+
+def is_unit_interval(spec):
+    if isinstance(spec, (int, float)) and 0 <= spec <= 1:
         return True
     else:
         return False

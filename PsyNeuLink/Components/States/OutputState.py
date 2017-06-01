@@ -521,6 +521,7 @@ class OutputState(State_Base):
                  index=PRIMARY_OUTPUT_STATE,
                  calculate:is_function_type=Linear,
                  function=LinearCombination(operation=SUM),
+                 persistence:is_unit_interval=0,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -530,6 +531,7 @@ class OutputState(State_Base):
         params = self._assign_args_to_param_dicts(index=index,
                                                   calculate=calculate,
                                                   function=function,
+                                                  # persistence=persistence,
                                                   params=params)
 
         self.reference_value = reference_value
@@ -542,6 +544,7 @@ class OutputState(State_Base):
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super().__init__(owner,
                          variable=variable,
+                         persistence=persistence,
                          params=params,
                          name=name,
                          prefs=prefs,

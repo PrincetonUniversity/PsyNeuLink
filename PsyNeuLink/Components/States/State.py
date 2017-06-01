@@ -71,6 +71,19 @@ components, a state has the three following core attributes:
       receives;  for a `parameterState <ParameterState>`, this determines the value of the associated parameter;  
       for an `outputState <OutputState>`, it is the item of the  owner mechanism's :keyword:`value` to which the 
       outputState is assigned, possibly modified by its `calculate <OutputState_Calculate>` attribute.
+    ..
+    * `persistence <State.persistence`: this determines the extent to which the value of the most recently updated
+      `value <State.value>` of the state persists from each round of execution to the next, or "decays" back toward 
+      its initially assigned value.  The attribute is a float in the range of 0-1:  when it is 0, the `value 
+      <State>` of the state returns fully to its initially assigned value after each round of execution;  when it is 1, 
+      the `value <State>` fully retains its updated value for the next round of execution.  `InputState <InputStates>` 
+      and `OutputStates <OutputStates>` typically have both an initial `value <State>` and `persistence` of 0, so that 
+      their value in each round of execution is determined entirely by their inputs in that round, with no accumulation 
+      from round to round.  The `persistence` of `ParameterStates <ParameterState>` is also typically 0, so that they
+      retain thier "base value", and any influence of `ControlSignals <ControlSignals>` that project to them is only
+      for that round of execution.  However, the *MATRIX* parameterState of a 
+      `MappingProjection <MappingProjection.matrix>` has a `persistence` of 1, so that the changes to its weights are
+      accumulated from each round of execution (training trial) to the next.
 
 Execution
 ---------
@@ -95,6 +108,7 @@ import copy
 import collections
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Projections.Projection import projection_keywords, _is_projection_spec
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
 state_keywords = component_keywords.copy()
 state_keywords.update({STATE_VALUE,
@@ -152,11 +166,12 @@ class StateError(Exception):
 #            THAT IS UPDATED BY THE STATE'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class State_Base(State):
     """
-    State_Base(  \
-    owner        \
-    value=None,  \
-    params=None, \
-    name=None,   \
+    State_Base(     \
+    owner:          \
+    value=None,     \
+    persistence:=0, \
+    params=None,    \
+    name=None,      \
     prefs=None)
 
     Abstract class for State.
@@ -266,7 +281,7 @@ class State_Base(State):
 
     base_value : number, list or np.ndarray
         value with which the state was initialized.
-
+    
     afferents : Optional[List[Projection]]
         list of projections for which the state is a :keyword:`receiver`.
 
@@ -283,6 +298,10 @@ class State_Base(State):
 
     value : number, list or np.ndarray
         current value of the state (updated by `update <State.update>` method).
+
+    persistence : float or int between 0 and 1
+        determines the amount of the current (updated) `value <State>` of the state that is retained from each round 
+        of to the next. 
 
     name : str : default <State subclass>-<index>
         the name of the state.
@@ -326,9 +345,10 @@ class State_Base(State):
                                MODULATORY_PROJECTIONS:[]})
     paramNames = paramClassDefaults.keys()
 
-
+    @tc.typecheck
     def __init__(self,
-                 owner,
+                 owner:tc.any(Mechanism, MappingProjection),
+                 persistence:is_unit_interval=0,
                  variable=None,
                  params=None,
                  name=None,
@@ -378,6 +398,10 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
+                persistence = kargs[PERSISTENCE]
+            except (KeyError, NameError):
+                pass
+            try:
                 params = kargs[STATE_PARAMS]
             except (KeyError, NameError):
                 pass
@@ -399,15 +423,17 @@ class State_Base(State):
                                       "use state() or one of the following subclasses: {0}".
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
 
-        # FROM MECHANISM:
-        # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(persistence=persistence,
+                                                  params=params)
 
-        # VALIDATE owner
-        if isinstance(owner, (Mechanism, Projection)):
-            self.owner = owner
-        else:
-            raise StateError("\'owner\' argument ({0}) for {1} must be a mechanism or projection".
-                                      format(owner, name))
+        # # VALIDATE owner
+        # if isinstance(owner, (Mechanism, Projection)):
+        #     self.owner = owner
+        # else:
+        #     raise StateError("\'owner\' argument ({0}) for {1} must be a mechanism or projection".
+        #                               format(owner, name))
+        self.owner = owner
 
         # Register state with StateRegistry of owner (mechanism to which the state is being assigned)
         register_category(entry=self,
@@ -420,6 +446,7 @@ class State_Base(State):
         self.afferents = []
         self.efferents = []
         self.mod_afferents = []
+        self._stateful = False
 
         # Create dict with entries for each ModualationParam and initialize - used in update()
         self._modulation_values = {}
@@ -519,6 +546,18 @@ class State_Base(State):
                                        self.__class__.__name__,
                                        target_set[PROJECTION_TYPE],
                                        self.owner.name))
+
+        if PERSISTENCE in target_set:
+            persistence = target_set[PERSISTENCE]
+            if not is_unit_interval(persistence):
+                raise StateError("Value of {} for {} of {} ({}) must be (or resolve to) a value "
+                                 "in the interval frm 0 to 1".
+                                 format(PERSISTENCE, self.name, self.owner.name, persistence))
+            if persistence:
+                self._stateful = True
+            else:
+                self._stateful = False
+
 
     def _instantiate_function(self, context=None):
         """Insure that output of function (self.value) is compatible with its input (self.variable)
@@ -1330,6 +1369,7 @@ class State_Base(State):
         self.value = combined_values
 
         # FIX: *** return combined_values, but only assign to self.value if persistence > 0
+        # FIX:     deal with base_value
 
     def execute(self, input=None, time_scale=None, params=None, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
