@@ -103,6 +103,7 @@ state_keywords.update({STATE_VALUE,
                        MODULATORY_PROJECTIONS,
                        PROJECTION_TYPE,
                        CONTROL_PROJECTION_PARAMS,
+                       GATING_PROJECTION_PARAMS,
                        CONTROL_SIGNAL_SPECS})
 
 def _is_state_type (spec):
@@ -419,6 +420,11 @@ class State_Base(State):
         self.afferents = []
         self.efferents = []
         self.mod_afferents = []
+
+        # Create dict with entries for each ModualationParam and initialize - used in update()
+        self._modulation_values = {}
+        for attrib, value in get_class_attributes(ModulationParam):
+            self._modulation_values[attrib] = []
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(variable_default=variable,
@@ -786,10 +792,7 @@ class State_Base(State):
             #    - check that projection's value is compatible with value of the function param being modulated
             #    - assign projection to mod_afferents
             if isinstance(projection_spec, (ControlProjection, GatingProjection)):
-                # Get the function parameter to be modulated
-                function_param = getattr(self.function_object, projection_spec.sender.modulation)
-                # Get the value of the function parameter to be modulated
-                function_param_value = self.function_object.params[function_param]
+                function_param_value = self._get_modulated_param(projection_spec).val
                 # Match the projection's value with the value of the function parameter
                 mod_proj_spec_value = type_match(projection_spec.value, type(function_param_value))
                 # If the match was successful (i.e., they are compatible), assign the projection to mod_afferents
@@ -1168,7 +1171,8 @@ class State_Base(State):
 
     """
 
-        #region GET STATE-SPECIFIC PARAM_SPECS
+        # GET STATE-SPECIFIC PARAM_SPECS
+
         try:
             # Get State params
             self.stateParams = params[self.paramsType]
@@ -1178,34 +1182,55 @@ class State_Base(State):
             raise StateError("PROGRAM ERROR: paramsType not specified for {}".format(self.name))
         #endregion
 
-        #region FLAG FORMAT OF INPUT
+        # FLAG FORMAT OF INPUT
+
         if isinstance(self.value, numbers.Number):
             # Treat as single real value
             value_is_number = True
         else:
             # Treat as vector (list or np.array)
             value_is_number = False
-        #endregion
 
-        #region AGGREGATE INPUT FROM PROJECTION_SPECS
+        # AGGREGATE INPUT FROM PROJECTIONS
 
-        #region Get type-specific params from PROJECTION_PARAMS
+        # Get type-specific params from PROJECTION_PARAMS
         mapping_params = merge_param_dicts(self.stateParams, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
-        control_projection_params = merge_param_dicts(self.stateParams, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
         learning_projection_params = merge_param_dicts(self.stateParams, LEARNING_PROJECTION_PARAMS, PROJECTION_PARAMS)
+        control_projection_params = merge_param_dicts(self.stateParams, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
+        gating_projection_params = merge_param_dicts(self.stateParams, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         #endregion
 
-        #region For each projection: get its params, pass them to it, and get the projection's value
+        #For each projection: get its params, pass them to it, and get the projection's value
         projection_value_list = []
 
         from PsyNeuLink.Components.Process import ProcessInputState
+        from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
+            import TransmissiveProjection_Base
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
+            import ModulatoryProjection_Base
         from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
 
-        for projection in self.afferents:
+        # If owner is a Mechanism, get its execution_id
+        if isinstance(self.owner, (Mechanism, Process)):
+            self_id = self.owner._execution_id
+        # If owner is a MappingProjection, get it's sender's execution_id
+        elif isinstance(self.owner, MappingProjection):
+            self_id = self.owner.sender.owner._execution_id
+        else:
+            raise StateError("PROGRAM ERROR: Object ({}) of type {} has a {}, but this is only allowed for "
+                             "Mechanisms and MappingProjections".
+                             format(self.owner.name, self.owner.__class__.__name__, self.__class__.__name__,))
 
-            # FIX:  THIS SEEMS SLOPPY; WHY WOULDN'T IT HAVE A SENDER?
-            # FIX:  IF IT IS ONLY BECAUSE IT IS DEFERRED_INIT, THEN TEST FOR THAT AND RAISE EXCEPTION
-            # FIX:  IF IT IS FOR OTHER REASONS, SHOULD IDENTIFY AND DEAL WITH THOSE
+
+        # Get values of Projections
+        for projection in self.afferents + self.mod_afferents:
+
+            # Only update if sender has also executed in this round
+            #     (i.e., has same execution_id as owner)
+            # Get sender's execution id
             if hasattr(projection, 'sender'):
                 sender = projection.sender
             else:
@@ -1215,36 +1240,24 @@ class State_Base(State):
                                                                                      self.__class__.__name__,
                                                                                      self.owner.name))
                 continue
+            sender_id = sender.owner._execution_id
+            if sender_id != self_id:
+                continue
 
-            # Only update if sender has also executed in this round (i.e., has matching execution_id)
-            if isinstance(self.owner, (Mechanism, Process)):
-                if sender.owner._execution_id != self.owner._execution_id:
-                    continue
-            elif isinstance(self.owner, MappingProjection):
-                if sender.owner._execution_id != self.owner.sender.owner._execution_id:
-                    continue
-            else:
-                raise StateError("PROGRAM ERROR: Object ({}) of type {} has a {}, but this is only allowed for "
-                                 "Mechanisms and MappingProjections".
-                                 format(self.owner.name, self.owner.__class__.__name__, self.__class__.__name__,))
-
-            # FIX: FOR EACH PROJECTION TO INPUT_STATE, CHECK IF SENDER IS FROM PROCESS INPUT OR TARGET INPUT
-            # FIX: IF SO, ONLY INCLUDE IF THEY BELONG TO CURRENT PROCESS;
+            # Only accept projections from a Process to which the owner Mechanism belongs
             if isinstance(sender, ProcessInputState):
                 if not sender.owner in self.owner.processes.keys():
                     continue
 
-            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-
             # Merge with relevant projection type-specific params
             if isinstance(projection, MappingProjection):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, mapping_params, )
-            elif isinstance(projection, ControlProjection):
-                projection_params = merge_param_dicts(self.stateParams, projection.name, control_projection_params)
             elif isinstance(projection, LearningProjection):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, learning_projection_params)
+            elif isinstance(projection, ControlProjection):
+                projection_params = merge_param_dicts(self.stateParams, projection.name, control_projection_params)
+            elif isinstance(projection, GatingProjection):
+                projection_params = merge_param_dicts(self.stateParams, projection.name, gating_projection_params)
             if not projection_params:
                 projection_params = None
 
@@ -1252,16 +1265,9 @@ class State_Base(State):
             # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
             # Update LearningSignals only if context == LEARNING;  otherwise, just get current value
             # Note: done here rather than in its own method in order to exploit parsing of params above
-            if isinstance(projection, LearningProjection):
-                if LEARNING in context:
-                    projection_value = projection.execute(time_scale=time_scale,
-                                                          params=projection_params,
-                                                          context=context)
-                else:
+            if isinstance(projection, LearningProjection) and not LEARNING in context:
                     projection_value = projection.value
-
             else:
-                # Update all non-LearningProjections and get value
                 projection_value = projection.execute(params=projection_params,
                                                       time_scale=time_scale,
                                                       context=context)
@@ -1269,46 +1275,25 @@ class State_Base(State):
             # If this is initialization run and projection initialization has been deferred, pass
             if INITIALIZING in context and projection_value is DEFERRED_INITIALIZATION:
                 continue
-            # Add projection_value to list (for aggregation below)
-            projection_value_list.append(projection_value)
-        #endregion
 
-        # FIX: MOVE THIS TO ABOVE AFFERENTS, SINCE SHOULD INCLUDE EFFECT OF MODULATION BEFORE UPDATING OTHER PROJECTIONS
-        # If the state receives any modulatory projections
-        if self.mod_afferents:
-            # Execute each modulatory projection and assign its value to the specified function param
-            for mod_proj in self.mod_afferents:
+            if isinstance(projection, TransmissiveProjection_Base):
+                # Add projection_value to list TransmissiveProjection values (for aggregation below)
+                projection_value_list.append(projection_value)
+            elif isinstance(projection, ModulatoryProjection_Base):
+                # Execute each modulatory projection and
+                #     and add its value to the list in the dict entry for that type
+                meta_param, mod_param_name, mod_param_value = self._get_modulated_param(projection)
+                self._modulation_values[meta_param.name].append(type_match(projection_value,
+                                                                           type(mod_param_value)))
 
-                # FIX:  THIS SEEMS SLOPPY; WHY WOULDN'T IT HAVE A SENDER?
-                # FIX:  IF IT IS ONLY BECAUSE IT IS DEFERRED_INIT, THEN TEST FOR THAT AND RAISE EXCEPTION
-                # FIX:  IF IT IS FOR OTHER REASONS, SHOULD IDENTIFY AND DEAL WITH THOSE
-                if hasattr(mod_proj, 'sender'):
-                    sender = mod_proj.sender
-                else:
-                    if self.verbosePref:
-                        warnings.warn("{} to {} {} of {} ignored [has no sender]".format(projection.__class__.__name__,
-                                                                                         self.name,
-                                                                                         self.__class__.__name__,
-                                                                                         self.owner.name))
-                    continue
+        # AGGREGATE MODULATORY VALUES OF EACH TYPE AND ASSIGN TO FUNCTION PARAMS
+
+        # FIX: *** DEAL WITH mod_values HERE ***  (AND GET RID OF PARAM_MODULATION_OPERATION)
+            # meta_param.reduce_op
+            # function_object[param] =
 
 
-                # FIX: UPDATE WITH MODULATION_MODS
-                # FIX: THERE *MUST* BE A MORE EFFICIENT WAY OF DOING ALL OF THIS (INCLUDING DEALING WITH stateParams)
-                function_param_spec = mod_proj.sender.modulation
-                function_param = self.function_object.params[function_param_spec]
-                function_param_value = self.function_object.params[function_param]
-                modulatory_value = mod_proj.execute()
-                modulatory_param = type_match(modulatory_value, type(function_param_value))
-                if self.stateParams:
-                    if FUNCTION_PARAMS in self.stateParams:
-                        self.stateParams[FUNCTION_PARAMS].update({function_param:modulatory_param})
-                    else:
-                        self.stateParams[FUNCTION_PARAMS] = {function_param:modulatory_param}
-                else:
-                    self.stateParams[FUNCTION_PARAMS] = {function_param:modulatory_param}
-
-        #region Aggregate projection values
+        # AGGREGATE PROJECTION VALUES
 
         # If there were projections:
         if projection_value_list:
@@ -1342,6 +1327,21 @@ class State_Base(State):
 
     def execute(self, input=None, time_scale=None, params=None, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
+
+    from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+    @tc.typecheck
+    def _get_modulated_param(self, mod_proj:ModulatoryProjection_Base):
+        """Return the name and value of the parameter modulated by a ModulatoryProjection
+        """
+
+        # Get function "meta-parameter" to be modulated from projection sender's modulation attribute
+        function_meta_param = mod_proj.sender.modulation
+
+        # Get the actual parameter of self.function_object to be modulated
+        function_param = self.function_object.params[function_meta_param.attrib_name]
+
+        # Return the parameter's value
+        return ModulatedParam(function_meta_param, function_param, self.function_object.params[function_param])
 
     @property
     def owner(self):

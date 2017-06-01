@@ -406,8 +406,9 @@ specification of parameters for the  state or its function use the  standard for
 <ParameterState_Specifying_Parameters>`.  Parameters for all of the state's projections can be specified in an entry 
 with the key PROJECTION_PARAMS, and a subdictionary that contains the parameter specifications;  parameters for 
 projections of a particular type can be placed in an entry with a key specifying the type (MAPPING_PROJECTION_PARAMS, 
-CONTROL_PROJECTION_PARAMS, or LEARNING_PROJECTION_PARAMS; and parameters can for a specific projection can be placed 
-in an entry with a key specifying the name of the project and a dictionary with the specifications.
+LEARNING_PROJECTION_PARAMS, CONTROL_PROJECTION_PARAMS, or GATING_PROJECTION_PARAMS; and parameters can for a specific
+projection can be placed in an entry with a key specifying the name of the project and a dictionary with the
+specifications.
 
 COMMENT:
 ?? DO PROJECTION DICTIONARIES PERTAIN TO INCOMING OR OUTGOING PROJECTIONS OR BOTH??
@@ -433,8 +434,14 @@ state keyword: dict for state's params
             + MAPPING_PROJECTION_PARAMS:<dict>:
                  entry will be passed to all of the State's MappingProjections,
                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+            + LEARNING_PROJECTION_PARAMS:<dict>:
+                 entry will be passed to all of the State's LearningProjections,
+                 along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
             + CONTROL_PROJECTION_PARAMS:<dict>:
                  entry will be passed to all of the State's ControlProjections,
+                 along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+            + GATING_PROJECTION_PARAMS:<dict>:
+                 entry will be passed to all of the State's GatingProjections,
                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
             + <projectionName>:<dict>:
                  entry will be passed to the State's projection with the key's name,
