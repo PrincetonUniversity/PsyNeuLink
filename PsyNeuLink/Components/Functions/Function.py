@@ -2545,25 +2545,22 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
     def _validate_variable(self, variable, context=None):
-        """Insure that variable passed to LinearMatrix is a 1D np.array
+        """Insure that variable passed to LinearMatrix is a max 2D np.array
 
-        :param variable: (1D np.array)
+        :param variable: (max 2D np.array)
         :param context:
         :return:
         """
         super()._validate_variable(variable, context)
 
-        # Check that self.variable == 1D
+        # Check that self.variable <= 2D
         try:
-            is_not_1D = not self.variable.ndim is 1
-
+            if not self.variable.ndim <= 2:
+                raise FunctionError("variable ({0}) for {1} must be a numpy.ndarray of dimension at most 2".format(self.variable, self.__class__.__name__))
         except AttributeError:
-            raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be an np.ndarray".
-                                format(self.variable, self.__class__.__name__))
-        else:
-            if is_not_1D:
-                raise FunctionError("variable ({0}) for {1} must be a 1D np.ndarray".
+            raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be a numpy.ndarray".
                                     format(self.variable, self.__class__.__name__))
+
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate params and assign to targets
