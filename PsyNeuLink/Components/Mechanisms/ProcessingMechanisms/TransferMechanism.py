@@ -103,7 +103,7 @@ Class Reference
 
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
-from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction, Integrator, NormalDist
+from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction, AdaptiveIntegrator, NormalDist
 # from PsyNeuLink.Components.States.OutputState import *
 from PsyNeuLink.Components.States.OutputState \
     import StandardOutputStates, standard_output_states, PRIMARY_OUTPUT_STATE
@@ -600,10 +600,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             if not self.integrator_function:
 
-                self.integrator_function = Integrator(
+                self.integrator_function = AdaptiveIntegrator(
                                             self.input_state.value,
                                             initializer = self.previous_input,
-                                            integration_type= ADAPTIVE,
                                             noise = self.noise,
                                             rate = self.time_constant
                                             )
