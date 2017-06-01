@@ -1315,8 +1315,8 @@ class State_Base(State):
             if not projection_params:
                 projection_params = None
 
-            # FIX: UPDATE WITH MODULATION_MODS
             # ------------------------------------------------------------------------------------------------
+            # FIX: UPDATE WITH MODULATION_MODS
             # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
             # Update LearningSignals only if context == LEARNING;  otherwise, just get current value
             # Note: done here rather than in its own method in order to exploit parsing of params above
@@ -1332,12 +1332,22 @@ class State_Base(State):
             if INITIALIZING in context and projection_value is DEFERRED_INITIALIZATION:
                 continue
 
-            if isinstance(projection, TransmissiveProjection_Base):
+            # ------------------------------------------------------------------------------------------------
+            # FIX: UPDATE WITH MODULATION_MODS
+            # FIX:    REINSTATE ModulatoryProjection_Base ONCE LearningProjection MODULATES ParameterState Function
+            # if isinstance(projection, TransmissiveProjection_Base):
+            if isinstance(projection, (TransmissiveProjection_Base, LearningProjection)):
+            # ------------------------------------------------------------------------------------------------
                 # Add projection_value to list TransmissiveProjection values (for aggregation below)
                 self._trans_proj_values.append(projection_value)
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
-            elif isinstance(projection, ModulatoryProjection_Base):
+            # ------------------------------------------------------------------------------------------------
+            # FIX: UPDATE WITH MODULATION_MODS
+            # FIX:    REINSTATE ModulatoryProjection_Base ONCE LearningProjection MODULATES ParameterState Function
+            # elif isinstance(projection, ModulatoryProjection_Base):
+            elif isinstance(projection, (ControlProjection, GatingProjection)):
+            # ------------------------------------------------------------------------------------------------
                 mod_meta_param, mod_param_name, mod_param_value = self._get_modulated_param(projection)
                 self._mod_proj_values[mod_meta_param].append(type_match(projection_value,
                                                                            type(mod_param_value)))

@@ -380,7 +380,8 @@
 #                     OutputState:
 #                           owner's value -> variable
 #                           ModulatoryProjections -> state.function_param
-# DOCUMENTATION: Need to alwyas use the value of a parameter_state for a parameter, rather than its own value,
+# DOCUMENTATION: parameters always return the value of their parameterState if they have one
+#                (tested in getter for property)
 #                   in order to insure that any modulation (control/learning) has beeen applied
 #                Do this in definition of property (using backfield as "base_vale")?
 # DOCUMENTATION: modulation argument/attribute in ControlSignal and GatingSignal
