@@ -989,12 +989,15 @@ class Component(object):
             else:
                 self.user_params_for_instantiation[param_name] = param_value
 
+        # FIX: 6/1/17 - MAKE SURE FUNCTIONS DON'T GET ASSIGNED AS PROPERTIES, SINCE THEY DON'T HAVE ParameterStates
+        #                AND SO CAN'T RETURN A ParameterState.value AS THEIR VALUE
+
         # Provide opportunity for subclasses to filter final set of params in class-specific way
         # Note:  this is done here to preserve identity of user-specified params assigned to user_params above
         self._filter_params(params)
 
         # Create property on self for each parameter in user_params:
-        #    these will be validated whenever they are assigned a new value
+        #    these WILL be validated whenever they are assigned a new value
         self._create_attributes_for_params(make_as_properties=True, **self.user_params)
 
         # Create attribute on self for each parameter in paramClassDefaults not in user_params:
@@ -1028,7 +1031,6 @@ class Component(object):
         Create backing field for attribute with "_" prefixed to attribute name,
             and assign value provided in kwargs as its default value.
         """
-
         if make_as_properties:
             for arg_name, arg_value in kwargs.items():
                 if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
@@ -2312,7 +2314,14 @@ def make_property(name, default_value):
     backing_field = '_' + name
 
     def getter(self):
-        return getattr(self, backing_field)
+        # # MODIFIED 6/1/17 OLD:
+        # return getattr(self, backing_field)
+        # MODIFIED 6/1/17 NEW:
+        try:
+            return self._parameter_states[backing_field[1:]].value
+        except (AttributeError, TypeError):
+            return getattr(self, backing_field)
+        # MODIFIED 6/1/17 END
 
     def setter(self, val):
 
