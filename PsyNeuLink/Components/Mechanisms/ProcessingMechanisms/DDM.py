@@ -868,9 +868,11 @@ class DDM(ProcessingMechanism_Base):
             #                                NON_DECISION_TIME: t0},
             #                        context=context)
             # MODIFIED 6/1/17 NEW:
+            # self.function_object._drift_rate = float((self.variable * self._parameter_states[DRIFT_RATE].value))
             threshold = float(self._parameter_states[THRESHOLD].value)
 
-            result = self.function(params=runtime_params,
+            result = self.function(variable=self.variable,
+                    params=runtime_params,
                                    context=context)
             # MODIFIED 6/1/17 END
 
