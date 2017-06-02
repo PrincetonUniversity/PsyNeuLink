@@ -1303,7 +1303,13 @@ class Mechanism_Base(Mechanism):
             # Assign any weights specified in input_state spec
             weights = [[input_state.weight if input_state.weight is not None else default_weight]
                        for input_state, default_weight in zip(self.input_states, default_weights)]
-            self.function_object.weights = weights
+            self.function_object._weights = weights
+
+            TEST = self.function_object._weights
+            TEST = self.function_object.weights
+            TEST = self._parameter_states[WEIGHTS].value
+            TEST = self._parameter_states[WEIGHTS]._execute(function_params=None, context=None)
+            TEST = True
 
             # MODIFIED 6/1/17 OLD: [COMMENTED OUT]
             # # MODIFIED 5/22/17 NEW:
@@ -1324,7 +1330,7 @@ class Mechanism_Base(Mechanism):
             # Assign any exponents specified in input_state spec
             exponents = [[input_state.exponent if input_state.exponent is not None else default_exponent]
                        for input_state, default_exponent in zip(self.input_states, default_exponents)]
-            self.function_object.exponents = exponents
+            self.function_object._exponents = exponents
 
             # MODIFIED 6/1/17 OLD:  [COMMENTED OUT]
             # # MODIFIED 5/22/17 NEW:
