@@ -567,7 +567,11 @@ class ParameterState(State_Base):
                  owner,
                  reference_value=None,
                  variable=None,
-                 function=LinearCombination(operation=PRODUCT),
+                 # # MODIFIED 6/2/17 OLD:
+                 # function=LinearCombination(operation=PRODUCT),
+                 # MODIFIED 6/2/17 NEW:
+                 function=Linear(slope=1,intercept=0),
+                 # MODIFIED 6/2/17 END
                  persistence:tc.optional(tc.any(FULL, is_function_type))=None,
                  parameter_modulation_operation=Modulation.MULTIPLY,
                  params=None,
@@ -633,10 +637,16 @@ class ParameterState(State_Base):
 
         super()._instantiate_function(context=context)
 
-        # Insure that function is LinearCombination
-        if not isinstance(self.function.__self__, (LinearCombination)):
-            raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
-                                 format(self.function.__self__.componentName, FUNCTION, self.name))
+        # Insure that function is LinearCombination for Matrix param
+        # if self.name == MATRIX:
+        #     if not isinstance(self.function.__self__, (LinearCombination)):
+        #         raise StateError("{} ({}) of {} for {} param of \'{}\' {} must be of LinearCombination type".
+        #                              format(FUNCTION,
+        #                                     self.function.__self__.componentName,
+        #                                     PARAMETER_STATE,
+        #                                     self.name,
+        #                                     self.owner.name,
+        #                                     self.owner.componentName))
 
         # # Insure that output of function (self.value) is compatible with relevant parameter's reference_value
         if not iscompatible(self.value, self.reference_value):

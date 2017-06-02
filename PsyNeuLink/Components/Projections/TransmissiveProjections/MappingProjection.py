@@ -345,11 +345,11 @@ class MappingProjection(TransmissiveProjection_Base):
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super(MappingProjection, self).__init__(sender=sender,
-                                      receiver=receiver,
-                                      params=params,
-                                      name=name,
-                                      prefs=prefs,
-                                      context=self)
+                                                receiver=receiver,
+                                                params=params,
+                                                name=name,
+                                                prefs=prefs,
+                                                context=self)
 
     # def _instantiate_sender(self, context=None):
             # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:

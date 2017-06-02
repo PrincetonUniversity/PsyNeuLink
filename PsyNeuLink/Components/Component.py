@@ -645,7 +645,7 @@ class Component(object):
                    type(PsyNeuLink.Components.Functions.Function.Function_Base)
 
             if required_param not in self.paramClassDefaults.keys():
-                raise ComponentError("Param {} must be in paramClassDefaults for {}".
+                raise ComponentError("Param \'{}\' must be in paramClassDefaults for {}".
                                     format(required_param, self.name))
 
             # If the param does not match any of the types specified for it in type_requirements
@@ -2315,81 +2315,49 @@ class Component(object):
 COMPONENT_BASE_CLASS = Component
 
 
-# Autoprop
-# per Bryn Keller
-
-docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
-        'bar': 'Bar none, the most important property'}
-
 def make_property(name, default_value):
     backing_field = '_' + name
 
     def getter(self):
-        # # MODIFIED 6/1/17 OLD:
-        # return getattr(self, backing_field)
-        # MODIFIED 6/1/17 NEW:
         try:
-            # Most common (and therefore requires the greatest efficiency):
-            #    request for the value of a Function parameter for which the owner has a ParameterState
-            #    (e.g., slope or intercept parameter of a Linear Function)
+            # Get value of function param from ParameterState.value of owner
+            #    case: request is for the value of a Function parameter for which the owner has a ParameterState
+            #    example: slope or intercept parameter of a Linear Function)
+            #    rationale: most common and therefore requires the greatest efficiency
+            #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
             return self.owner._parameter_states[backing_field[1:]].value
         except (AttributeError, TypeError):
             try:
-                # Next most common: value of a parameter of a Mechanism or Projection that has a ParameterState
-                #    (e.g., matrix parameter of a MappingProjection)
+                # Get value of param from component's own ParameterState.value
+                #    case: request is for the value of a parameter of a Mechanism or Project that has a ParameterState
+                #    example: matrix parameter of a MappingProjection)
+                #    rationale: next most common case
+                #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
                 return self._parameter_states[backing_field[1:]].value
             except (AttributeError, TypeError):
-                # Least common: value of a parameter of a Component for which there is no attribute
+                # Get value of param from component's attribute
+                #    case: request is for the value of an attribute for which the component has no ParameterState
+                #    rationale: least common case
+                #    example: parameter of a Function belonging to a state (which don't themselves have ParameterStates)
+                #    note: use backing_field since referencing property rather than item in _parameter_states)
                 return getattr(self, backing_field)
-        # MODIFIED 6/1/17 END
 
     def setter(self, val):
 
-        # # MODIFIED 5/5/17 OLD:
-        # # if self.paramValidationPref and hasattr(self, backing_field):
-        # if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-        #     self._assign_params(request_set={backing_field[1:]:val}, context=SET_ATTRIBUTE)
-
-        # MODIFIED 5/5/17 NEW:
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
             val_str = val.__class__.__name__
             curr_context = SET_ATTRIBUTE + ': ' + val_str + ' for ' + backing_field[1:] + ' of ' + self.name
             self._assign_params(request_set={backing_field[1:]:val}, context=curr_context)
-
-        # MODIFIED 5/5/17 END
-
         else:
             setattr(self, backing_field, val)
 
-        # setattr(self, backing_field, val)
-
         # Update user_params dict with new value
         self.user_params.__additem__(name, val)
-
-        # # MODIFIED 4/20/17 NEW:
-        # # Update parameterState.base_value if there is one
-        # try:
-        #     if name in self.parameterStates:
-        #         self.parameterStates[name].base_value = val
-        #         # self.parameterStates[name].value = val
-        # except AttributeError:
-        #     pass
-        # # MODIFIED 4/20/17 END
 
         # If component is a Function and has an owner, update function_params dict for owner
         from PsyNeuLink.Components.Functions.Function import Function_Base
         if isinstance(self, Function_Base) and self.owner:
             self.owner.function_params.__additem__(name, val)
-
-            # # MODIFIED 4/20/17 NEW:
-            # # Update base_value of owner's parameterState if there is one
-            # try:
-            #     if name in self.owner.parameterStates:
-            #         self.owner.parameterStates[name].base_value = val
-            #         # self.owner.parameterStates[name].value = val
-            # except AttributeError:
-            #     pass
-            # # MODIFIED 4/20/17 END
 
     # Create the property
     prop = property(getter).setter(setter)
