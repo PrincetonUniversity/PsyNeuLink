@@ -514,7 +514,9 @@ class State_Base(State):
         else:
             context = context + kwAssign + ' Base Value'
 
-        self.base_value = self.variable
+        # # MODIFIED 6/1/17 OLD:
+        # self.base_value = self.variable
+        # MODIFIED 6/1/17 END
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """validate projection specification(s)
@@ -1444,13 +1446,16 @@ class State_Base(State):
             self.owner.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
             # self.owner.log.entries[self.name] = LogEntry(CentralClock, context, assignment)
 
-    @property
-    def base_value(self):
-        return self._baseValue
-
-    @base_value.setter
-    def base_value(self, value):
-        self._baseValue = value
+    # # MODIFIED 6/1/17 OLD: [COMMENTED OUT]
+    # @property
+    # def base_value(self):
+    #     return self._baseValue
+    #
+    # @base_value.setter
+    # def base_value(self, value):
+    #     self._baseValue = value
+    #
+    # MODIFIED 6/1/17 END
 
     @property
     def projections(self):

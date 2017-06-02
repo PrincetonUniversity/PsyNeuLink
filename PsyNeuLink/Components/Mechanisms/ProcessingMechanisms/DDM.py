@@ -852,20 +852,27 @@ class DDM(ProcessingMechanism_Base):
             # print ("stimulus: {}".format(self.input_state.value))
             # print ("control signal: {}\n".format(self.parameterStates[DRIFT_RATE].value))
 
-            # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
-            drift_rate = float((self.variable * self._parameter_states[DRIFT_RATE].value))
+            # MODIFIED 6/1/17 OLD:
+            # # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
+            # drift_rate = float((self.variable * self._parameter_states[DRIFT_RATE].value))
 
-            starting_point = float(self._parameter_states[STARTING_POINT].value)
+            # starting_point = float(self._parameter_states[STARTING_POINT].value)
+            # threshold = float(self._parameter_states[THRESHOLD].value)
+            # noise = float(self._parameter_states[NOISE].value)
+            # t0 = float(self._parameter_states[NON_DECISION_TIME].value)
+
+            # result = self.function(params={DRIFT_RATE: drift_rate,
+            #                                STARTING_POINT: starting_point,
+            #                                THRESHOLD: threshold,
+            #                                NOISE: noise,
+            #                                NON_DECISION_TIME: t0},
+            #                        context=context)
+            # MODIFIED 6/1/17 NEW:
             threshold = float(self._parameter_states[THRESHOLD].value)
-            noise = float(self._parameter_states[NOISE].value)
-            t0 = float(self._parameter_states[NON_DECISION_TIME].value)
 
-            result = self.function(params={DRIFT_RATE: drift_rate,
-                                           STARTING_POINT: starting_point,
-                                           THRESHOLD: threshold,
-                                           NOISE: noise,
-                                           NON_DECISION_TIME: t0},
+            result = self.function(params=runtime_params,
                                    context=context)
+            # MODIFIED 6/1/17 END
 
             if isinstance(self.function.__self__, BogaczEtAl):
                 return_value = np.array([[0.0], [0.0], [0.0], [0.0]])

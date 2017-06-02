@@ -49,6 +49,15 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                prefs = DDM_prefs,
                name='Decision')
 
+# TEST = Decision._parameter_states[DRIFT_RATE].execute()
+# Decision._parameter_states[DRIFT_RATE].value = 10
+# TEST = Decision._parameter_states[DRIFT_RATE]._execute(function_params={SCALE: 3}, context=None)
+# Decision.function_object.drift_rate = 20
+# TEST = Decision._parameter_states[DRIFT_RATE]._execute(function_params={SCALE: 2}, context=None)
+# Decision.function_object._drift_rate = 30
+# TEST = Decision._parameter_states[DRIFT_RATE]._execute(function_params=None, context=None)
+# TEST
+
 # Processes:
 TaskExecutionProcess = process(
     default_input_value=[0],

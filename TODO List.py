@@ -319,8 +319,9 @@
 # IMPLEMENT: all_afferents as @property = afferents + mod_afferents
 #            all_efferents as @property = efferents + mod_efferents
 #            SEARCH & REPLACE afferents + mod_afferents -> all_afferents, AND SAME FOR efferents
-
-# FIX: INTEGRATE ControlSignal.intensity WITH persistence
+# SEARCH & REPLACE: '_'+PARAM_NAME -> get_backingfield_name
+# FIX: Recheck that weights are gettin properly set in Mechanism_instantiate_function
+# FIX: Get rid of persistence
 # FIX: NAMES OF ControlProjections AND GatingProjections
 # FIX: GET RID OF ControlSignal LINE 434: self.reference_value = reference_value
 # FIX: UPDATE WITH MODULATION_MODS

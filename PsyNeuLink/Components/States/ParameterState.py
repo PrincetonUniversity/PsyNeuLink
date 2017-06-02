@@ -650,109 +650,113 @@ class ParameterState(State_Base):
     def _execute(self, function_params, context):
         """Call self.function with current parameter value as the variable
 
-        Get the value of the parameter of the owner Mechanism's function to which the ParameterState corresponds
-        Update its value in call to state's function
+        Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs. 
+        Update its value in call to state's function.
         """
 
         # Most commonly, ParameterState is for the parameter of a function
         try:
-            param_value = self.owner.function_object.params[self.name]
+            param_value = getattr(self.owner.function_object, '_'+ self.name)
+            # param_value = self.owner.function_object.params[self.name]
 
-       # Otherwise, should be for an attribute of its owner:
-        except KeyError:
-            param_value = self.owner.params[self.name]
+       # Otherwise, should be for an attribute of the ParameterState's owner:
+        except AttributeError:
+            # param_value = self.owner.params[self.name]
+            param_value = getattr(self.owner, '_'+ self.name)
 
-        return self.function(variable=param_value,
-                             params=function_params,
-                             context=context)
+        value = self.function(variable=param_value,
+                              params=function_params,
+                              context=context)
+        return value
 
-    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
-        """Parse params for parameterState params and XXX ***
+#     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
+#         """Parse params for parameterState params and XXX ***
+#
+# # DOCUMENTATION:  MORE HERE:
+#         - get ParameterStateParams
+#         - pass params to super, which aggregates inputs from projections
+#         - combine input from projections (processed in super) with base_value using paramModulationOperation
+#         - combine result with value specified at runtime in PARAMETER_STATE_PARAMS
+#         - assign result to self.value
+#
+#         :param params:
+#         :param time_scale:
+#         :param context:
+#         :return:
+#         """
+#
+#         super().update(params=params,
+#                        time_scale=time_scale,
+#                        context=context)
+#
+#         # FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
+#         #region COMBINE PROJECTIONS INPUT WITH BASE PARAM VALUE
+#         try:
+#             # Check whether Modulation for projections has been specified at runtime
+#             # Note: this is distinct from Modulation for runtime parameter (handled below)
+#             self.parameterModulationOperation = self.stateParams[PARAMETER_MODULATION_OPERATION]
+#         except (KeyError, TypeError):
+#             # If not, try to get from params (possibly passed from projection to ParameterState)
+#             try:
+#                 self.parameterModulationOperation = params[PARAMETER_MODULATION_OPERATION]
+#             except (KeyError, TypeError):
+#                 pass
+#             # If not, ignore (leave self.parameterModulationOperation assigned to previous value)
+#             pass
+#
+#         # If self.value has not been set, assign to base_value
+#         if self.value is None:
+#             if not context:
+#                 context = kwAssign + ' Base Value'
+#             else:
+#                 context = context + kwAssign + ' Base Value'
+#             self.value = self.base_value
+#
+#         # Otherwise, combine param's value with base_value using modulatonOperation
+#         else:
+#             if not context:
+#                 context = kwAssign + ' Modulated Value'
+#             else:
+#                 context = context + kwAssign + ' Modulated Value'
+#             self.value = self.parameterModulationOperation(self.base_value, self.value)
+#         #endregion
+#
+#         #region APPLY RUNTIME PARAM VALUES˚
+#         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
+#         if (not self.stateParams or self.prefs.runtimeParamModulationPref is Modulation.DISABLED):
+#             return
+#
+#         # Assign class-level pref as default operation
+#         default_operation = self.prefs.runtimeParamModulationPref
+#
+#         # If there is a runtime param specified, could be a (parameter value, Modulation) tuple
+#         try:
+#             value, operation = self.stateParams[self.name]
+#
+#         except KeyError:
+#             # No runtime param for this param state
+#             return
+#
+#         except TypeError:
+#             # If single ("exposed") value, use default_operation (class-level runtimeParamModulationPref)
+#             self.value = default_operation(self.stateParams[self.name], self.value)
+#         else:
+#             # If tuple, use param-specific Modulation as operation
+#             self.value = operation(value, self.value)
+#
+#     @property
+#     def value(self):
+#         return self._value
+#
+#     @value.setter
+#     def value(self, assignment):
+#         self._value = assignment
+#         # # MODIFIED 2/21/17 NEW:
+#         # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
+#         # if self.name in self.owner.function_params:
+#         #     setattr(self.owner.function.__self__, self.name, self.value)
 
-# DOCUMENTATION:  MORE HERE:
-        - get ParameterStateParams
-        - pass params to super, which aggregates inputs from projections
-        - combine input from projections (processed in super) with base_value using paramModulationOperation
-        - combine result with value specified at runtime in PARAMETER_STATE_PARAMS
-        - assign result to self.value
-
-        :param params:
-        :param time_scale:
-        :param context:
-        :return:
-        """
-
-        super().update(params=params,
-                       time_scale=time_scale,
-                       context=context)
-
-        # FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
-        #region COMBINE PROJECTIONS INPUT WITH BASE PARAM VALUE
-        try:
-            # Check whether Modulation for projections has been specified at runtime
-            # Note: this is distinct from Modulation for runtime parameter (handled below)
-            self.parameterModulationOperation = self.stateParams[PARAMETER_MODULATION_OPERATION]
-        except (KeyError, TypeError):
-            # If not, try to get from params (possibly passed from projection to ParameterState)
-            try:
-                self.parameterModulationOperation = params[PARAMETER_MODULATION_OPERATION]
-            except (KeyError, TypeError):
-                pass
-            # If not, ignore (leave self.parameterModulationOperation assigned to previous value)
-            pass
-
-        # If self.value has not been set, assign to base_value
-        if self.value is None:
-            if not context:
-                context = kwAssign + ' Base Value'
-            else:
-                context = context + kwAssign + ' Base Value'
-            self.value = self.base_value
-
-        # Otherwise, combine param's value with base_value using modulatonOperation
-        else:
-            if not context:
-                context = kwAssign + ' Modulated Value'
-            else:
-                context = context + kwAssign + ' Modulated Value'
-            self.value = self.parameterModulationOperation(self.base_value, self.value)
-        #endregion
-
-        #region APPLY RUNTIME PARAM VALUES˚
-        # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
-        if (not self.stateParams or self.prefs.runtimeParamModulationPref is Modulation.DISABLED):
-            return
-
-        # Assign class-level pref as default operation
-        default_operation = self.prefs.runtimeParamModulationPref
-
-        # If there is a runtime param specified, could be a (parameter value, Modulation) tuple
-        try:
-            value, operation = self.stateParams[self.name]
-
-        except KeyError:
-            # No runtime param for this param state
-            return
-
-        except TypeError:
-            # If single ("exposed") value, use default_operation (class-level runtimeParamModulationPref)
-            self.value = default_operation(self.stateParams[self.name], self.value)
-        else:
-            # If tuple, use param-specific Modulation as operation
-            self.value = operation(value, self.value)
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, assignment):
-        self._value = assignment
-        # # MODIFIED 2/21/17 NEW:
-        # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
-        # if self.name in self.owner.function_params:
-        #     setattr(self.owner.function.__self__, self.name, self.value)
-
+    # MODIFIED 6/1/17 OLD: [COMMENTED OUT]
     # # MODIFIED 5/22/17 NEW:
     # @property
     # def base_value(self):
@@ -769,6 +773,7 @@ class ParameterState(State_Base):
     #         return setattr(self.owner.function_object, self.name, value)
     #
     # # MODIFIED 5/22/17 END
+    # MODIFIED 6/1/17 END
 
     @property
     def trans_projections(self):
@@ -944,6 +949,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                   context=context)
         if state:
             owner._parameter_states[param_name] = state
+
 
 def _is_legal_param_value(owner, value):
 
