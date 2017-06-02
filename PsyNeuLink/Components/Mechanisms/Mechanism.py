@@ -1305,10 +1305,12 @@ class Mechanism_Base(Mechanism):
                        for input_state, default_weight in zip(self.input_states, default_weights)]
             self.function_object.weights = weights
 
-            # MODIFIED 5/22/17 NEW:
-            # FIX: THIS SHOULDN'T BE NECESSARY ??WHY ISN'T ParameterState base_value GETTING UPDATED WITH ASSIGNMENT:
-            self._parameter_states[WEIGHTS].base_value = weights
-            # MODIFIED 5/22/17 END
+            # MODIFIED 6/1/17 OLD: [COMMENTED OUT]
+            # # MODIFIED 5/22/17 NEW:
+            # # FIX: THIS SHOULDN'T BE NECESSARY ??WHY ISN'T ParameterState base_value GETTING UPDATED WITH ASSIGNMENT:
+            # self._parameter_states[WEIGHTS].base_value = weights
+            # # MODIFIED 5/22/17 END
+            # MODIFIED 6/1/17 END
 
         if self.input_states and any(input_state.exponent is not None for input_state in self.input_states):
 
@@ -1324,10 +1326,12 @@ class Mechanism_Base(Mechanism):
                        for input_state, default_exponent in zip(self.input_states, default_exponents)]
             self.function_object.exponents = exponents
 
-            # MODIFIED 5/22/17 NEW:
-            # FIX: THIS SHOULDN'T BE NECESSARY (??WHY ISN'T ParameterState base_value GETTING UPDATED WITH ASSIGNMENT:
-            self._parameter_states[EXPONENTS].base_value = exponents
-            # MODIFIED 5/22/17 END
+            # MODIFIED 6/1/17 OLD:  [COMMENTED OUT]
+            # # MODIFIED 5/22/17 NEW:
+            # # FIX: THIS SHOULDN'T BE NECESSARY (??WHY ISN'T ParameterState base_value GETTING UPDATED WITH ASSIGNMENT:
+            # self._parameter_states[EXPONENTS].base_value = exponents
+            # # MODIFIED 5/22/17 END
+            # MODIFIED 6/1/17 END
 
     def _instantiate_attributes_after_function(self, context=None):
 
@@ -1608,8 +1612,13 @@ class Mechanism_Base(Mechanism):
         if '_init_' in context:
             for state in self.input_states:
                 self.input_states[state].value = self.input_states[state].variable
+            # # MODIFIED 6/1/17 OLD:
+            # for state in self._parameter_states:
+            #     self._parameter_states[state].value =  self._parameter_states[state].base_value
+            # MODIFIED 6/1/17 NEW:
             for state in self._parameter_states:
-                self._parameter_states[state].value =  self._parameter_states[state].base_value
+                self._parameter_states[state].value =  getattr(self, '_'+state)
+            # MODIFIED 6/1/17 END
             for state in self.output_states:
                 # Zero outputStates in case of recurrence:
                 #    don't want any non-zero values as a residuum of initialization runs to be
@@ -1714,44 +1723,49 @@ class Mechanism_Base(Mechanism):
 
         for state in self._parameter_states:
 
-            state_name = state.name
+            # state_name = state.name
 
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
-            # If runtime_params is specified has a spec for the current param
-            #    assign parameter value there as parameterState's value
-            if runtime_params and PARAMETER_STATE_PARAMS in runtime_params and state_name in runtime_params[
-                PARAMETER_STATE_PARAMS]:
-                params = runtime_params
-            # Otherwise use paramsCurrent
-            else:
-                params = self.paramsCurrent
-
-            # Determine whether template (param to type-match) is at top level or in a function_params dictionary
-            try:
-                params[state_name]
-            except KeyError:
-                params = self.function_object.paramsCurrent
-
-            # param_spec is the existing specification for the parameter in paramsCurrent or runtime_params
-            param_spec = params[state_name]
-
-            # If param_spec is a projection (i.e., ControlProjection or LearningProjection)
-            #    then its value will be provided by the execution of the parameterState's function
-            #    (which gets and aggregates the values of its projections), so execute function
-            #    to get a sample of its output as the param_spec
-            if isclass(param_spec) and issubclass(param_spec, Projection):
-                param_spec = state.function()
-
-            # Get type of param_spec:
-            param_type = type(param_spec)
-            # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or Modulation)
-            if param_type is tuple:
-                param_type = type(param_spec[0])
-
-            # Assign version of parameterState.value matched to type of template
-            #    to runtime param or paramsCurrent (per above)
-            params[state_name] = type_match(state.value, param_type)
+            # # MODIFIED 6/1/17 OLD:
+            # #   [OBVIATED BY UPDATING OF ParameterState.value AND ITS ASSOCIATED PARAMETER DIRECTLY BY PROPERTIES
+            # #    AND MORATORIUM ON runtime_params
+            # # If runtime_params is specified has a spec for the current param
+            # #    assign parameter value there as parameterState's value
+            # if (runtime_params and
+            #             PARAMETER_STATE_PARAMS in runtime_params and
+            #             state_name in runtime_params[PARAMETER_STATE_PARAMS]):
+            #     params = runtime_params
+            # # Otherwise use paramsCurrent
+            # else:
+            #     params = self.paramsCurrent
+            #
+            # # Determine whether template (param to type-match) is at top level or in a function_params dictionary
+            # try:
+            #     params[state_name]
+            # except KeyError:
+            #     params = self.function_object.paramsCurrent
+            #
+            # # param_spec is the existing specification for the parameter in paramsCurrent or runtime_params
+            # param_spec = params[state_name]
+            #
+            # # If param_spec is a projection (i.e., ControlProjection or LearningProjection)
+            # #    then its value will be provided by the execution of the parameterState's function
+            # #    (which gets and aggregates the values of its projections), so execute function
+            # #    to get a sample of its output as the param_spec
+            # if isclass(param_spec) and issubclass(param_spec, Projection):
+            #     param_spec = state.function()
+            #
+            # # Get type of param_spec:
+            # param_type = type(param_spec)
+            # # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or Modulation)
+            # if param_type is tuple:
+            #     param_type = type(param_spec[0])
+            #
+            # # Assign version of parameterState.value matched to type of template
+            # #    to runtime param or paramsCurrent (per above)
+            # params[state_name] = type_match(state.value, param_type)
+            # MODIFIED 6/1/17 END
 
     def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
         """Execute function for each outputState and assign result of each to corresponding item of self.output_values

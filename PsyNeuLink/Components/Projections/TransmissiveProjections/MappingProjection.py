@@ -472,7 +472,11 @@ class MappingProjection(TransmissiveProjection_Base):
             matrix_parameter_state = self._parameter_states[MATRIX]
 
             # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
-            matrix_parameter_state.base_value = self.matrix
+            # # MODIFIED 6/1/17 OLD:
+            # matrix_parameter_state.base_value = self.matrix
+            # MODIFIED 6/1/17 NEW:
+            setattr(self, '_'+MATRIX, self.matrix)
+            # MODIFIED 6/1/17 END
 
             # Pass params for parameterState's function specified by instantiation in LearningProjection
             weight_change_params = matrix_parameter_state.paramsCurrent

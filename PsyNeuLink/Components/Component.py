@@ -694,7 +694,9 @@ class Component(object):
         #    (e.g., _instantiate_sender and _instantiate_receiver in Projection)
         self._instantiate_attributes_before_function(context=context)
 
-        # INSTANTIATE FUNCTION and assign output (by way of self.execute) to self.value
+        # INSTANTIATE FUNCTION
+        #    - assign initial function parameter values from ParameterStates,
+        #    - assign function's output to self.value (based on call of self.execute)
         self._instantiate_function(context=context)
 
         # INSTANTIATE ATTRIBUTES AFTER FUNCTION
@@ -2102,23 +2104,14 @@ class Component(object):
                                          self.name,
                                          self.function.__self__.name))
 
-        # Now that function has been instantiated, call self.function
-        # to assign its output (and type of output) to self.value
-        if not context:
-            context = "DIRECT CALL"
-        # MODIFIED 8/29/16:  QUESTION:
-        # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
-        # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
-        # ANSWER: MUST BE self.execute AS THE VALUE OF AN OBJECT IS THE OUTPUT OF ITS EXECUTE METHOD, NOT ITS FUNCTION
-        # self.value = self.function(context=context+kwSeparator+COMPONENT_INIT)
-        self.value = self.execute(context=context)
-        if self.value is None:
-            raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
-        self._value_template = self.value
+        # MAKE ASSIGNMENTS
+        # Now that function has been instantiated:
 
+        #  - assign to paramInstanceDefaults
         self.paramInstanceDefaults[FUNCTION] = self.function
 
-        # For all components other than a Function itself, assign function_object and function_params
+        #  - for all components other than a Function itself,
+        #    assign function_object, function_params dict, and function's parameters from any ParameterStates
         from PsyNeuLink.Components.Functions.Function import Function
         if not isinstance(self, Function):
             self.function_object = self.function.__self__
@@ -2127,11 +2120,29 @@ class Component(object):
             elif self.function_object.owner != self:
                 raise ComponentError("Function being assigned to {} ({}) belongs to another component: {}".
                                      format(self.name, self.function_object.name, self.function_object.owner.name))
-
+            # sort to maintain alphabetical order of function_params
             for param_name in sorted(list(self.function_object.user_params_for_instantiation.keys())):
+                # assign to param to function_params dict
                 self.function_params.__additem__(param_name,
                                                  self.function_object.user_params_for_instantiation[param_name])
+                # # assign values from any ParameterStates the Component may (which it should) have
+                # try:
+                #     value_type = type(getattr(self.function_object, '_'+param_name))
+                #     param_value = type_match(self._parameter_states[param_name].value, value_type)
+                # except:
+                #     pass
+                # else:
+                #     setattr(self.function_object, '_'+param_name, param_value)
             self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
+
+        #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
+        #    execute method, not its function
+        if not context:
+            context = "DIRECT CALL"
+        self.value = self.execute(context=context)
+        if self.value is None:
+            raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
+        self._value_template = self.value
 
     def _instantiate_attributes_after_function(self, context=None):
         pass
@@ -2318,9 +2329,18 @@ def make_property(name, default_value):
         # return getattr(self, backing_field)
         # MODIFIED 6/1/17 NEW:
         try:
-            return self._parameter_states[backing_field[1:]].value
+            # Most common (and therefore requires the greatest efficiency):
+            #    request for the value of a Function parameter for which the owner has a ParameterState
+            #    (e.g., slope or intercept parameter of a Linear Function)
+            return self.owner._parameter_states[backing_field[1:]].value
         except (AttributeError, TypeError):
-            return getattr(self, backing_field)
+            try:
+                # Next most common: value of a parameter of a Mechanism or Projection that has a ParameterState
+                #    (e.g., matrix parameter of a MappingProjection)
+                return self._parameter_states[backing_field[1:]].value
+            except (AttributeError, TypeError):
+                # Least common: value of a parameter of a Component for which there is no attribute
+                return getattr(self, backing_field)
         # MODIFIED 6/1/17 END
 
     def setter(self, val):
