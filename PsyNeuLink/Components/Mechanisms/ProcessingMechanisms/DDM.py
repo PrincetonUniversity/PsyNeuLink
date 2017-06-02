@@ -825,6 +825,7 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
             if self.function_params['integration_type'] == 'diffusion':
+                # FIX: SHOULDN'T THIS USE self.variable?? (RATHER THAN self.input_state.value)?
                 result = self.function(self.input_state.value, context=context)
 
                 if INITIALIZING not in context:
@@ -842,39 +843,9 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif self.timeScale == TimeScale.TRIAL:
 
-            # # Get length of self.output_values from OUTPUT_STATES
-            # # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
-            # #       is run (to evaluate self.output_values) before outputStates have been instantiated
-            # self.output_values = [None] * len(self.paramsCurrent[OUTPUT_STATES])
-
-            # # TEST PRINT:
-            # print ("\nDDM RUN")
-            # print ("stimulus: {}".format(self.input_state.value))
-            # print ("control signal: {}\n".format(self.parameterStates[DRIFT_RATE].value))
-
-            # MODIFIED 6/1/17 OLD:
-            # # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
-            # drift_rate = float((self.variable * self._parameter_states[DRIFT_RATE].value))
-
-            # starting_point = float(self._parameter_states[STARTING_POINT].value)
-            # threshold = float(self._parameter_states[THRESHOLD].value)
-            # noise = float(self._parameter_states[NOISE].value)
-            # t0 = float(self._parameter_states[NON_DECISION_TIME].value)
-
-            # result = self.function(params={DRIFT_RATE: drift_rate,
-            #                                STARTING_POINT: starting_point,
-            #                                THRESHOLD: threshold,
-            #                                NOISE: noise,
-            #                                NON_DECISION_TIME: t0},
-            #                        context=context)
-            # MODIFIED 6/1/17 NEW:
-            # self.function_object._drift_rate = float((self.variable * self._parameter_states[DRIFT_RATE].value))
-            threshold = float(self._parameter_states[THRESHOLD].value)
-
             result = self.function(variable=self.variable,
-                    params=runtime_params,
+                                   params=runtime_params,
                                    context=context)
-            # MODIFIED 6/1/17 END
 
             if isinstance(self.function.__self__, BogaczEtAl):
                 return_value = np.array([[0.0], [0.0], [0.0], [0.0]])
@@ -891,7 +862,12 @@ class DDM(ProcessingMechanism_Base):
                 return_value[self.RT_CORRECT_VARIANCE_INDEX]= result[NF_Results.MEAN_CORRECT_VARIANCE.value]
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
 
+            else:
+                raise DDMError("PROGRAM ERROR: Unrecognized analytic fuction ({}) for DDM".
+                               format(self.function.__self__))
+
             # Convert ER to decision variable:
+            threshold = float(self.function_object.threshold)
             if random.random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
@@ -900,7 +876,8 @@ class DDM(ProcessingMechanism_Base):
             return return_value
 
         else:
-            raise MechanismError("time_scale not specified for DDM")
+            raise MechanismError("PROGRAM ERROR: unrecognized or unspecified time_scale ({}) for DDM".
+                                 format(self.timeScale))
 
             # def _out_update(self, particle, drift, noise, time_step_size, decay):
             #     ''' Single update for OU (special case l=0 is DDM)'''
