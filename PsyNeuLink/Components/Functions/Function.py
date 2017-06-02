@@ -3548,7 +3548,7 @@ class BogaczEtAl(
 
         self._check_args(variable=variable, params=params, context=context)
 
-        drift_rate = float(self.drift_rate)
+        drift_rate = float(self.drift_rate) * float(self.variable)
         threshold = float(self.threshold)
         starting_point = float(self.starting_point)
         noise = float(self.noise)
