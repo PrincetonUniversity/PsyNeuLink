@@ -842,23 +842,48 @@ def _is_projection_subclass(spec, keyword):
     return False
 
 @tc.typecheck
-def _validate_projection_receiver_mech(sender_mech:Mechanism, projection:Projection, context=None):
-    """Insure that projection is to mechanism within the same system as self
+def _validate_projection_receiver(sender_mech:Mechanism,
+                                  projection:Projection,
+                                  spec_type=None,
+                                  context=None):
+    """Insure that projection is to receiver (mechanism or projection) within the same system as the sender_mech
     """
     if projection.value is DEFERRED_INITIALIZATION:
-        receiver_mech = projection.init_args['receiver'].owner
+        receiver = projection.init_args['receiver'].owner
     else:
-        receiver_mech = projection.receiver.owner
+        receiver = projection.receiver.owner
 
-    if not receiver_mech in sender_mech.system.mechanisms:
-        raise ProjectionError("Attempt to assign a {} ({}) from {} to a mechanism ({}) "
-                              "that is not in the same system ({})".
-                                          format(projection.__class__.__name__,
-                                                 projection.name,
-                                                 sender_mech.name,
-                                                 receiver_mech.name,
-                                                 sender_mech.system.name))
+    if isinstance(receiver, Mechanism):
+        receiver_mech = receiver
+    elif isinstance(receiver, Projection):
+        receiver_mech = receiver.receiver.owner
+    else:
+        raise ProjectionError("receiver of projection ({}) must be a {} or {}".
+                              format(projection.name, MECHANISM, PROJECTION))
 
+    receiver_systems = set()
+    # receiver_mech is a ControlMechanism (which has a system but no systems attribute)
+    if hasattr(receiver_mech, 'system') and receiver_mech.system:
+        receiver_systems.update({receiver_mech.system})
+    # receiver_mech is a ProcessingMechanism (which has a systems but system attribute is usually None)
+    if hasattr(receiver_mech, 'systems') and receiver_mech.systems:
+        receiver_systems.update(set(receiver_mech.systems))
+
+    sender_systems = set()
+    # sender_mech is a ControlMechanism (which has a system but no systems attribute)
+    if hasattr(sender_mech, 'system') and sender_mech.system:
+        sender_systems.update({sender_mech.system})
+    # sender_mech is a ProcessingMechanism (which has a systems but system attribute is usually None)
+    if hasattr(sender_mech, 'systems')and sender_mech.systems:
+        sender_systems.update(set(sender_mech.systems))
+
+    spec_type = " in the {} arg ".format(spec_type) or ""
+    #  Check that projection is to a (projection to a) mechanisms in the same system as sender_mech
+    if not receiver_systems & sender_systems:
+        raise ProjectionError("A {} specified {}for {} projects to a component that is not in the same system".
+                                    format(projection.__class__.__name__,
+                                           spec_type,
+                                           sender_mech.name))
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_projection_to(receiver, state, projection_spec, context=None):

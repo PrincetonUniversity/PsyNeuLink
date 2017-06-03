@@ -300,6 +300,77 @@
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
 
+# DOCUMENTATION: GENERAL PRINCIPLES:
+#                     InputState:
+#                           TransmissiveProjections -> variable
+#                           ModulatoryProjections -> state.function_param
+#                     ParameterStates:
+#                           mech.param -> variable
+#                           ModulatoryProjections -> state.function_param
+#                     OutputState:
+#                           owner's value -> variable
+#                           ModulatoryProjections -> state.function_param
+#                     Modulatory OutputStates:
+#                           they have modulation as an additional attribute,
+#                               that specifies how they influence receiver parameterState
+#                           LearningSignal:  modulation is additive
+#                           ControlSignal, GatingSignal:  modulation is
+#                     Modulatory Projections:
+#                           LearningProjections:  ParameterStates of Transmissive Projections
+#                               (usually MATRIX of MappingProjection)
+#                           ControlProjections:  ParameterStates of Mechanisms
+#                               (usually corresponding to its function)
+#                           GatingProjections:  InputStates and OutputStates of Mechanisms
+#                               (usually praimry inputState)
+#                     Types of modulation:
+#                           "state-based" (usually Control and Gating):
+#                               receiver ParameterStates use TransferFunction;
+#                               changes stored in OutputState of signal
+#                           "weight-based" (usually Learning):
+#                               receiver ParameterStates use IntegratorFunction;
+#                               changes stored in receiver ParameterState (i.e., MappingProjection)
+#
+# DOCUMENTATION:
+#   *** PUT IN InputState AND OutputState DOCUMENTATION
+#
+#   Gating can be also be specified for an `InputState` or `OutputState` when it is created
+#     in any of the following ways:
+#
+#     * in a 2-item tuple, in which the first item is a `state specification <LINK>`,
+#       and the second item is a `gating specification <>`
+#
+#     * keywords GATE (==GATE_PRIMARY) GATE_ALL, GATE_PRIMARY
+#         or an entry in the state specification dictionary with the key "GATING", and a value that is the
+#         keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOperation value, GatingProjection, or its constructor
+#
+# DOCUMENTATION: parameters always return the value of their parameterState if they have one
+#                (tested in getter for property)
+#                   in order to insure that any modulation (control/learning) has beeen applied
+#                Do this in definition of property (using backfield as "base_vale")
+# DOCUMENTATION: modulation argument/attribute in ControlSignal and GatingSignal
+# DOCUMENTATION: ModulatoryMechanism: describe how they work, i.e., that they assign the value of their
+#                  outputState to the paraemter of the state's function specified in their modulation param
+# DOCUMENTATION: State functions: must be TransferFunction or CombinationFunction, and implement meta mod params
+# DOCUMENTATION: State: persistence:  uses function specified in integration_method argument; default: Weiner
+# DOCUMENTATION: GatingSignal (per ControlSignal) -- describe modulation in both
+# DOCUMENTATION: Various forms of specification;  if Mechainsm: assume primary InputState
+# DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction
+# DOCUMENTATION: UPDATE ParameterState_Parameter_Modulation_Operation WITH REFACTORING OF modulation arg/param
+# DOCUMENTATION: UPDATE ControlSignal to describe modulation attribute (as in GatingSignal)
+# DOCUMENTATION: ADD ENTRIES FOR variable, function, vaue, params, name and prefs to GatingMechanism and ControlMechaism
+# DOCUMENTATION: GatingMechanism:  ADD TO docstring [AND DO SAME IN ControlMechanism and LearningMechanism]
+#             this means that the GatingMechanism's function must return as many items as it has GatingSignals,
+#             with each item of the function's value used by a corresponding GatingSignal.
+#             Note: multiple GatingProjections can be assigned to the same GatingSignal to achieve "divergent gating"
+#                   (that is, gating of many states with a single value -- e.g., LC)
+# DOCUMENTATION: revise LearningMechanism docstring to include output_state attribute, and describe situation with
+#                    (multiple possible) LearningSignal entries, their relatioship to learing_signal attribute, and
+#                    the ERROR_SIGNAL OutputState.
+# DOCUMENTATION: add output_states to attribute in docstring for ControlMechanism and GatingMechanism
+
+
+
+
 # IMPLEMENT: LearningProjection as full Modulatory projection:
 #               add learning_signal_params attribute to LearningProjection that conveys them to learningSignal
 #               persistence param = 1 on MappingProjection MATRIX ParameterStates
@@ -319,6 +390,24 @@
 # IMPLEMENT: all_afferents as @property = afferents + mod_afferents
 #            all_efferents as @property = efferents + mod_efferents
 #            SEARCH & REPLACE afferents + mod_afferents -> all_afferents, AND SAME FOR efferents
+
+# IMPLEMENT: abstract _parse_state_specs:
+#                 integrate _parse_gating_signal_spec (in GatingSignal) into it
+#                 use in _validate_params for ControlMechanism and LearningMechanism
+# FIX: *** SERIOUS PROBLEM: LearningMechanism.output_value MAY NEED TO BE A 3d array
+# FIX:                      (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)
+
+# FIX: LearningMechanism: learned_projection attribute -> learned_projections list
+# FIX: Make modulation an attribute of AdaptiveMechanism that enforces presence of attribute in sublasses
+# FIX: Integrate learning_rate into rate param of Integrator function of ParameterState
+# FIX: Implement same for LearningSignal and ControlSignal:
+#           GatingMechanism, LINE 290:
+#           # Create registry for GatingSignals (to manage names)
+#             from PsyNeuLink.Globals.Registry import register_category
+#             register_category(entry=GatingSignal,
+#                               base_class=State_Base,
+#                               registry=self._stateRegistry,
+#                               context=context)
 # SEARCH & REPLACE: '_'+PARAM_NAME -> get_backingfield_name
 # FIX: Recheck that weights are gettin properly set in Mechanism_instantiate_function
 # FIX: Get rid of persistence
@@ -358,44 +447,6 @@
 #                 parameter of ModulatoryFunctions
 # IMPLEMENT: modualtion_operation For ControlSignal, that assigns its value to its ControlProjection
 # IMPLEMENT: CONSTRAINT ON STATE FUNCTIONS TO BE A TransferFunction
-# DOCUMENTATION:
-#   *** PUT IN InputState AND OutputState DOCUMENTATION
-#
-#   Gating can be also be specified for an `InputState` or `OutputState` when it is created
-#     in any of the following ways:
-#
-#     * in a 2-item tuple, in which the first item is a `state specification <LINK>`,
-#       and the second item is a `gating specification <>`
-#
-#     * keywords GATE (==GATE_PRIMARY) GATE_ALL, GATE_PRIMARY
-#         or an entry in the state specification dictionary with the key "GATING", and a value that is the
-#         keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOperation value, GatingProjection, or its constructor
-#
-# DOCUMENTATION: GENERAL PRINCIPLES:
-#                     InputState:
-#                           TransmissiveProjections -> variable
-#                           ModulatoryProjections -> state.function_param
-#                     ParameterStates:
-#                           mech.param -> variable
-#                           ModulatoryProjections -> state.function_param
-#                     OutputState:
-#                           owner's value -> variable
-#                           ModulatoryProjections -> state.function_param
-# DOCUMENTATION: parameters always return the value of their parameterState if they have one
-#                (tested in getter for property)
-#                   in order to insure that any modulation (control/learning) has beeen applied
-#                Do this in definition of property (using backfield as "base_vale")?
-# DOCUMENTATION: modulation argument/attribute in ControlSignal and GatingSignal
-# DOCUMENTATION: ModulatoryMechanism: describe how they work, i.e., that they assign the value of their
-#                  outputState to the paraemter of the state's function specified in their modulation param
-# DOCUMENTATION: State functions: must be TransferFunction or CombinationFunction, and implement meta mod params
-# DOCUMENTATION: State: persistence:  uses function specified in integration_method argument; default: Weiner
-# DOCUMENTATION: GatingSignal (per ControlSignal) -- describe modulation in both
-# DOCUMENTATION: Various forms of specification;  if Mechainsm: assume primary InputState
-# DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction
-# DOCUMENTATION: UPDATE ParameterState_Parameter_Modulation_Operation WITH REFACTORING OF modulation arg/param
-# DOCUMENTATION: UPDATE ControlSignal to describe modulation attribute (as in GatingSignal)
-# DOCUMENTATION: ADD ENTRIES FOR variable, function, vaue, params, name and prefs to GatingMechanism and ControlMechaism
 # FIX: State.update(): THERE *MUST* BE A MORE EFFICIENT WAY OF DOING ALL OF THIS (INCLUDING DEALING WITH stateParams)
 # FIX:           MODIFY ParameterState and LearningProjection so that latter projects to mod_afferents (vs. afferents)
 # FIX: is_param_spec to allow tuple with projection specification in it TO PASS TYPECHECK
