@@ -567,11 +567,7 @@ class ParameterState(State_Base):
                  owner,
                  reference_value=None,
                  variable=None,
-                 # # MODIFIED 6/2/17 OLD:
-                 # function=LinearCombination(operation=PRODUCT),
-                 # MODIFIED 6/2/17 NEW:
                  function=Linear(),
-                 # MODIFIED 6/2/17 END
                  persistence:tc.optional(tc.any(FULL, is_function_type))=None,
                  parameter_modulation_operation=Modulation.MULTIPLY,
                  params=None,
@@ -579,6 +575,7 @@ class ParameterState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
+        # FIX: UPDATED TO INCLUDE LEARNING [CHANGE THIS TO INTEGRATOR FUNCTION??]
         # # Reassign default for MATRIX param of MappingProjection
         # if isinstance(owner, MappingProjection) and name is MATRIX:
         #     function = LinearCombination(operation=SUM)
@@ -632,27 +629,15 @@ class ParameterState(State_Base):
         :return:
         """
 
-        # If parameterState is for a matrix of a MappingProjection,
-        #     its parameter_modulation_operation should be SUM (rather than PRODUCT)
-        #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
-        if self.name == MATRIX:
-            # IMPLEMENT / TEST: 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING PROJECTION
-            self.params[PARAMETER_MODULATION_OPERATION] = Modulation.ADD
+        # # FIX: UPDATED FOR LEARNING [COMMENTED OUT]
+        # # If parameterState is for a matrix of a MappingProjection,
+        # #     its parameter_modulation_operation should be SUM (rather than PRODUCT)
+        # #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
+        # if self.name == MATRIX:
+        #     # IMPLEMENT / TEST: 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING PROJECTION
+        #     self.params[PARAMETER_MODULATION_OPERATION] = Modulation.ADD
 
         super()._instantiate_function(context=context)
-
-        # MODIFIED 6/2/17 OLD:
-        # Insure that function is LinearCombination for Matrix param
-        # if self.name == MATRIX:
-        #     if not isinstance(self.function.__self__, (LinearCombination)):
-        #         raise StateError("{} ({}) of {} for {} param of \'{}\' {} must be of LinearCombination type".
-        #                              format(FUNCTION,
-        #                                     self.function.__self__.componentName,
-        #                                     PARAMETER_STATE,
-        #                                     self.name,
-        #                                     self.owner.name,
-        #                                     self.owner.componentName))
-        # MODIFIED 6/2/17 END
 
         # # Insure that output of function (self.value) is compatible with relevant parameter's reference_value
         if not iscompatible(self.value, self.reference_value):
@@ -684,112 +669,6 @@ class ParameterState(State_Base):
                               params=function_params,
                               context=context)
         return value
-
-#     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
-#         """Parse params for parameterState params and XXX ***
-#
-# # DOCUMENTATION:  MORE HERE:
-#         - get ParameterStateParams
-#         - pass params to super, which aggregates inputs from projections
-#         - combine input from projections (processed in super) with base_value using paramModulationOperation
-#         - combine result with value specified at runtime in PARAMETER_STATE_PARAMS
-#         - assign result to self.value
-#
-#         :param params:
-#         :param time_scale:
-#         :param context:
-#         :return:
-#         """
-#
-#         super().update(params=params,
-#                        time_scale=time_scale,
-#                        context=context)
-#
-#         # FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
-#         #region COMBINE PROJECTIONS INPUT WITH BASE PARAM VALUE
-#         try:
-#             # Check whether Modulation for projections has been specified at runtime
-#             # Note: this is distinct from Modulation for runtime parameter (handled below)
-#             self.parameterModulationOperation = self.stateParams[PARAMETER_MODULATION_OPERATION]
-#         except (KeyError, TypeError):
-#             # If not, try to get from params (possibly passed from projection to ParameterState)
-#             try:
-#                 self.parameterModulationOperation = params[PARAMETER_MODULATION_OPERATION]
-#             except (KeyError, TypeError):
-#                 pass
-#             # If not, ignore (leave self.parameterModulationOperation assigned to previous value)
-#             pass
-#
-#         # If self.value has not been set, assign to base_value
-#         if self.value is None:
-#             if not context:
-#                 context = kwAssign + ' Base Value'
-#             else:
-#                 context = context + kwAssign + ' Base Value'
-#             self.value = self.base_value
-#
-#         # Otherwise, combine param's value with base_value using modulatonOperation
-#         else:
-#             if not context:
-#                 context = kwAssign + ' Modulated Value'
-#             else:
-#                 context = context + kwAssign + ' Modulated Value'
-#             self.value = self.parameterModulationOperation(self.base_value, self.value)
-#         #endregion
-#
-#         #region APPLY RUNTIME PARAM VALUES˚
-#         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
-#         if (not self.stateParams or self.prefs.runtimeParamModulationPref is Modulation.DISABLED):
-#             return
-#
-#         # Assign class-level pref as default operation
-#         default_operation = self.prefs.runtimeParamModulationPref
-#
-#         # If there is a runtime param specified, could be a (parameter value, Modulation) tuple
-#         try:
-#             value, operation = self.stateParams[self.name]
-#
-#         except KeyError:
-#             # No runtime param for this param state
-#             return
-#
-#         except TypeError:
-#             # If single ("exposed") value, use default_operation (class-level runtimeParamModulationPref)
-#             self.value = default_operation(self.stateParams[self.name], self.value)
-#         else:
-#             # If tuple, use param-specific Modulation as operation
-#             self.value = operation(value, self.value)
-#
-#     @property
-#     def value(self):
-#         return self._value
-#
-#     @value.setter
-#     def value(self, assignment):
-#         self._value = assignment
-#         # # MODIFIED 2/21/17 NEW:
-#         # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
-#         # if self.name in self.owner.function_params:
-#         #     setattr(self.owner.function.__self__, self.name, self.value)
-
-    # MODIFIED 6/1/17 OLD: [COMMENTED OUT]
-    # # MODIFIED 5/22/17 NEW:
-    # @property
-    # def base_value(self):
-    #     try:
-    #         return getattr(self.owner, self.name)
-    #     except AttributeError:
-    #         return getattr(self.owner.function_object, self.name)
-    #
-    # @base_value.setter
-    # def base_value(self, value):
-    #     try:
-    #         return setattr(self.owner, self.name, value)
-    #     except AttributeError:
-    #         return setattr(self.owner.function_object, self.name, value)
-    #
-    # # MODIFIED 5/22/17 END
-    # MODIFIED 6/1/17 END
 
     @property
     def trans_projections(self):
@@ -987,3 +866,28 @@ def _is_legal_param_value(owner, value):
     # Assignment of ParameterState for Component objects, function or method are not currently supported
     if isinstance(value, (function_type, method_type, Component)):
         return False
+
+
+def _get_parameter_state(sender_owner, sender_type, param_name, component):
+    """Return parameterState for named parameter of a mechanism requested by owner
+    """
+
+    # Validate that component is a Mechanism or Projection
+    if not isinstance(component, (Mechanism, Projection)):
+        raise ParameterStateError("Request for {} of a component ({}) that is not a {} or {}".
+                                  format(PARAMETER_STATE, component, MECHANISM, PROJECTION))
+
+    try:
+        return component._parameter_states[param_name]
+    except KeyError:
+        # Check that param (named by str) is an attribute of the mechanism
+        if not (hasattr(component, param_name) or hasattr(component.function_object, param_name)):
+            raise ParameterStateError("{} (in specification of {}  {}) is not an attribute "
+                                        "of {} or its function"
+                                        .format(param_name, sender_type, sender_owner.name, component))
+        # Check that the mechanism has a parameterState for the param
+        if not param_name in component._parameter_states.names:
+            raise ParameterStateError("There is no ParameterState for the parameter ({}) of {} "
+                                        "specified in {} for {}".
+                                        format(param_name, component.name, sender_type, sender_owner.name))
+
