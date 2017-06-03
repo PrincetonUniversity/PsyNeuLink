@@ -585,16 +585,18 @@ class State_Base(State):
 
         var_is_matrix = False
         # If variable is a matrix (e.g., for the MATRIX parameterState of a MappingProjection),
-        #     it needs to be embedded in a list so that it is properly handled in by LinearCombination
+        #     it needs to be embedded in a list so that it is properly handled by LinearCombination
         #     (i.e., solo matrix is returned intact, rather than treated as arrays to be combined);
         # Notes:
         #     * this is not a problem when LinearCombination is called in state.update(), since that puts
         #         projection values in a list before calling LinearCombination to combine them
         #     * it is removed from the list below, after calling _instantiate_function
         #     * no change is made to PARAMETER_MODULATION_FUNCTION here (matrices may be multiplied or added)
-        #         (that is handled by the indivudal state subclasses (e.g., ADD is enforced for MATRIX parameterState)
-        if (isinstance(self.variable, np.matrix) or
-                (isinstance(self.variable, np.ndarray) and self.variable.ndim >= 2)):
+        #         (that is handled by the individual state subclasses (e.g., ADD is enforced for MATRIX parameterState)
+        if ((inspect.isclass(self.function) and issubclass(self.function, LinearCombination) or
+                 isinstance(self.function, LinearCombination)) and
+                (isinstance(self.variable, np.matrix) or
+                (isinstance(self.variable, np.ndarray) and self.variable.ndim >= 2))):
             self.variable = [self.variable]
             var_is_matrix = True
 
@@ -604,7 +606,7 @@ class State_Base(State):
         if var_is_matrix:
             self.variable = self.variable[0]
 
-        # Insure that output of function (self.value) is compatible with (same format as) its input (self.variable)
+        # Insure that output of the function (self.value) is compatible with (same format as) its input (self.variable)
         #     (this enforces constraint that State functions should only combine values from multiple projections,
         #     but not transform them in any other way;  so the format of its value should be the same as its variable).
         if not iscompatible(self.variable, self.value):

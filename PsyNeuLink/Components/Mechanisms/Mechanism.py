@@ -1305,19 +1305,6 @@ class Mechanism_Base(Mechanism):
                        for input_state, default_weight in zip(self.input_states, default_weights)]
             self.function_object._weights = weights
 
-            TEST = self.function_object._weights
-            TEST = self.function_object.weights
-            TEST = self._parameter_states[WEIGHTS].value
-            TEST = self._parameter_states[WEIGHTS]._execute(function_params=None, context=None)
-            TEST = True
-
-            # MODIFIED 6/1/17 OLD: [COMMENTED OUT]
-            # # MODIFIED 5/22/17 NEW:
-            # # FIX: THIS SHOULDN'T BE NECESSARY ??WHY ISN'T ParameterState base_value GETTING UPDATED WITH ASSIGNMENT:
-            # self._parameter_states[WEIGHTS].base_value = weights
-            # # MODIFIED 5/22/17 END
-            # MODIFIED 6/1/17 END
-
         if self.input_states and any(input_state.exponent is not None for input_state in self.input_states):
 
             # Construct defaults:
@@ -1331,13 +1318,6 @@ class Mechanism_Base(Mechanism):
             exponents = [[input_state.exponent if input_state.exponent is not None else default_exponent]
                        for input_state, default_exponent in zip(self.input_states, default_exponents)]
             self.function_object._exponents = exponents
-
-            # MODIFIED 6/1/17 OLD:  [COMMENTED OUT]
-            # # MODIFIED 5/22/17 NEW:
-            # # FIX: THIS SHOULDN'T BE NECESSARY (??WHY ISN'T ParameterState base_value GETTING UPDATED WITH ASSIGNMENT:
-            # self._parameter_states[EXPONENTS].base_value = exponents
-            # # MODIFIED 5/22/17 END
-            # MODIFIED 6/1/17 END
 
     def _instantiate_attributes_after_function(self, context=None):
 

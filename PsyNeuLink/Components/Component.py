@@ -2166,6 +2166,9 @@ class Component(object):
     # def variable(self, value):
     #     self._variable = value
 
+    def _change_function(self, to_function):
+        pass
+
     @property
     def name(self):
         return self._name
