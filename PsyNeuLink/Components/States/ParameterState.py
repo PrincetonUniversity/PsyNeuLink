@@ -579,9 +579,9 @@ class ParameterState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        # Reassign default for MATRIX param of MappingProjection
-        if isinstance(owner, MappingProjection) and name is MATRIX:
-            function = LinearCombination(operation=SUM)
+        # # Reassign default for MATRIX param of MappingProjection
+        # if isinstance(owner, MappingProjection) and name is MATRIX:
+        #     function = LinearCombination(operation=SUM)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -632,14 +632,6 @@ class ParameterState(State_Base):
         :return:
         """
 
-        # # MODIFIED 6/2/17 NEW: [MOVED TO __init__, AS HAS TO BE DONE BEFORE ATTRIBUTES FOR OLD FUNCTION ARE CREATED]
-        # # If parameterState is for a matrix of a MappingProjection,
-        # #     change its function to LinearCombination rather than the default of Linear)
-        # #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
-        # if self.name == MATRIX:
-        #     self._change_function(to_function=LinearCombination)
-        # # MODIFIED 6/2/17 END
-
         # If parameterState is for a matrix of a MappingProjection,
         #     its parameter_modulation_operation should be SUM (rather than PRODUCT)
         #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
@@ -649,6 +641,7 @@ class ParameterState(State_Base):
 
         super()._instantiate_function(context=context)
 
+        # MODIFIED 6/2/17 OLD:
         # Insure that function is LinearCombination for Matrix param
         # if self.name == MATRIX:
         #     if not isinstance(self.function.__self__, (LinearCombination)):
@@ -659,6 +652,7 @@ class ParameterState(State_Base):
         #                                     self.name,
         #                                     self.owner.name,
         #                                     self.owner.componentName))
+        # MODIFIED 6/2/17 END
 
         # # Insure that output of function (self.value) is compatible with relevant parameter's reference_value
         if not iscompatible(self.value, self.reference_value):
