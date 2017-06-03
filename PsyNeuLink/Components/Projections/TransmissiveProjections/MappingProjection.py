@@ -362,23 +362,12 @@ class MappingProjection(TransmissiveProjection_Base):
         super()._instantiate_parameter_states(owner=self, context=context)
 
     def _instantiate_receiver(self, context=None):
-        """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
-
-        If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
-        If the Mechanism has more than one inputState, assignment to other input_states must be done explicitly
-            (i.e., by: _instantiate_receiver(State)
-
+        """Determine matrix needed to map from sender to receiver
+        
+        Assign specification to self.matrix_spec attribute
+        Assign matrix to self.matrix attribute
+        
         """
-        # MODIFIED 4/21/17 OLD: [MOVED TO PROJECTION INIT]
-        # # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
-        # if isinstance(self.receiver, Mechanism):
-        #     if (len(self.receiver.input_states) > 1 and
-        #             (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
-        #         print("{0} has more than one inputState; {1} was assigned to the first one".
-        #               format(self.receiver.owner.name, self.name))
-        #     self.receiver = self.receiver.input_state
-        # MODIFIED 4/21/17 END
-
         self.reshapedWeightMatrix = False
 
         # Get sender and receiver lengths
@@ -499,24 +488,24 @@ class MappingProjection(TransmissiveProjection_Base):
 
         return self.function(self.sender.value, params=params, context=context)
 
-    # @property
-    # def matrix(self):
-    #     return self.function.__self__.matrix
-    #
-    # @matrix.setter
-    # def matrix(self, matrix):
-    #     if not (isinstance(matrix, np.matrix) or
-    #                 (isinstance(matrix,np.ndarray) and matrix.ndim == 2) or
-    #                 (isinstance(matrix,list) and np.array(matrix).ndim == 2)):
-    #         raise MappingError("Matrix parameter for {} ({}) MappingProjection must be "
-    #                            "an np.matrix, a 2d np.array, or a correspondingly configured list".
-    #                            format(self.name, matrix))
-    #
-    #     # FIX: Hack to prevent recursion in calls to setter and assign_params
-    #     self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-    #
-    #     self.function.__self__.matrix = matrix
-    #
+    @property
+    def matrix(self):
+        return self.function.__self__.matrix
+
+    @matrix.setter
+    def matrix(self, matrix):
+        if not (isinstance(matrix, np.matrix) or
+                    (isinstance(matrix,np.ndarray) and matrix.ndim == 2) or
+                    (isinstance(matrix,list) and np.array(matrix).ndim == 2)):
+            raise MappingError("Matrix parameter for {} ({}) MappingProjection must be "
+                               "an np.matrix, a 2d np.array, or a correspondingly configured list".
+                               format(self.name, matrix))
+
+        # FIX: Hack to prevent recursion in calls to setter and assign_params
+        self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+
+        self.function.__self__.matrix = matrix
+
     @property
     def _matrix_spec(self):
         """Returns matrix specification in self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
