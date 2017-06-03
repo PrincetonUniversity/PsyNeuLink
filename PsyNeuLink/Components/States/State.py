@@ -488,14 +488,6 @@ class State_Base(State):
             if projections:
                 self._instantiate_projections_to_state(projections=projections, context=context)
 
-# # FIX LOG: EITHER GET RID OF THIS NOW THAT @property HAS BEEN IMPLEMENTED, OR AT LEAST INTEGRATE WITH IT
-#         # add state to KVO observer dict
-#         self.observers = {self.STATE: []}
-#
-# # FIX: WHY IS THIS COMMENTED OUT?  IS IT HANDLED BY SUBCLASSES??
-    # def register_category(self):
-    #     register_mechanism_state_subclass(self)
-
     def _validate_variable(self, variable, context=None):
         """Validate variable and assign validated values to self.variable
 
@@ -1447,17 +1439,6 @@ class State_Base(State):
                 (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
             self.owner.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
             # self.owner.log.entries[self.name] = LogEntry(CentralClock, context, assignment)
-
-    # # MODIFIED 6/1/17 OLD: [COMMENTED OUT]
-    # @property
-    # def base_value(self):
-    #     return self._baseValue
-    #
-    # @base_value.setter
-    # def base_value(self, value):
-    #     self._baseValue = value
-    #
-    # MODIFIED 6/1/17 END
 
     @property
     def projections(self):
