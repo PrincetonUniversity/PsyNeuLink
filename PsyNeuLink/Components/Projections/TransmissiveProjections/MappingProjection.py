@@ -499,24 +499,24 @@ class MappingProjection(TransmissiveProjection_Base):
 
         return self.function(self.sender.value, params=params, context=context)
 
-    @property
-    def matrix(self):
-        return self.function.__self__.matrix
-
-    @matrix.setter
-    def matrix(self, matrix):
-        if not (isinstance(matrix, np.matrix) or
-                    (isinstance(matrix,np.ndarray) and matrix.ndim == 2) or
-                    (isinstance(matrix,list) and np.array(matrix).ndim == 2)):
-            raise MappingError("Matrix parameter for {} ({}) MappingProjection must be "
-                               "an np.matrix, a 2d np.array, or a correspondingly configured list".
-                               format(self.name, matrix))
-
-        # FIX: Hack to prevent recursion in calls to setter and assign_params
-        self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-
-        self.function.__self__.matrix = matrix
-
+    # @property
+    # def matrix(self):
+    #     return self.function.__self__.matrix
+    #
+    # @matrix.setter
+    # def matrix(self, matrix):
+    #     if not (isinstance(matrix, np.matrix) or
+    #                 (isinstance(matrix,np.ndarray) and matrix.ndim == 2) or
+    #                 (isinstance(matrix,list) and np.array(matrix).ndim == 2)):
+    #         raise MappingError("Matrix parameter for {} ({}) MappingProjection must be "
+    #                            "an np.matrix, a 2d np.array, or a correspondingly configured list".
+    #                            format(self.name, matrix))
+    #
+    #     # FIX: Hack to prevent recursion in calls to setter and assign_params
+    #     self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    #
+    #     self.function.__self__.matrix = matrix
+    #
     @property
     def _matrix_spec(self):
         """Returns matrix specification in self.paramsCurrent[FUNCTION_PARAMS][MATRIX]

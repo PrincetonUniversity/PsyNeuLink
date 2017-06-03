@@ -131,9 +131,9 @@ def show_target():
         i = composition.input
         t = composition.targetInputStates[0].value
     print ('\nOLD WEIGHTS: \n')
-    print ('- Input Weights: \n', Input_Weights.matrix)
-    print ('- Middle Weights: \n', Middle_Weights.matrix)
-    print ('- Output Weights: \n', Output_Weights.matrix)
+    # print ('- Input Weights: \n', Input_Weights.matrix)
+    # print ('- Middle Weights: \n', Middle_Weights.matrix)
+    # print ('- Output Weights: \n', Output_Weights.matrix)
     print ('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
     print ('ACTIVITY FROM OLD WEIGHTS: \n')
     print ('- Middle 1: \n', Hidden_Layer_1.value)
