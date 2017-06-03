@@ -358,6 +358,9 @@ class MappingProjection(TransmissiveProjection_Base):
             # # for i in range (len(self.sender.value)):
             # #            - CHECK EACH MATRIX AND ASSIGN??
 
+    def _instantiate_parameter_states(self, context=None):
+        super()._instantiate_parameter_states(owner=self, context=context)
+
     def _instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 

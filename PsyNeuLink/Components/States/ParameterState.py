@@ -570,7 +570,7 @@ class ParameterState(State_Base):
                  # # MODIFIED 6/2/17 OLD:
                  # function=LinearCombination(operation=PRODUCT),
                  # MODIFIED 6/2/17 NEW:
-                 function=Linear(slope=1,intercept=0),
+                 function=Linear(),
                  # MODIFIED 6/2/17 END
                  persistence:tc.optional(tc.any(FULL, is_function_type))=None,
                  parameter_modulation_operation=Modulation.MULTIPLY,
@@ -578,6 +578,10 @@ class ParameterState(State_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
+
+        # Reassign default for MATRIX param of MappingProjection
+        if isinstance(owner, MappingProjection) and name is MATRIX:
+            function = LinearCombination(operation=SUM)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -627,6 +631,14 @@ class ParameterState(State_Base):
         :param context:
         :return:
         """
+
+        # # MODIFIED 6/2/17 NEW: [MOVED TO __init__, AS HAS TO BE DONE BEFORE ATTRIBUTES FOR OLD FUNCTION ARE CREATED]
+        # # If parameterState is for a matrix of a MappingProjection,
+        # #     change its function to LinearCombination rather than the default of Linear)
+        # #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
+        # if self.name == MATRIX:
+        #     self._change_function(to_function=LinearCombination)
+        # # MODIFIED 6/2/17 END
 
         # If parameterState is for a matrix of a MappingProjection,
         #     its parameter_modulation_operation should be SUM (rather than PRODUCT)
@@ -828,9 +840,6 @@ def _instantiate_parameter_states(owner, context=None):
 
     # Instantiate parameterState for each param in user_params (including all params in function_params dict),
     #     using its value as the state_spec
-    # MODIFIED 4/1/17 OLD:
-    # for param_name, param_value in owner.user_params.items():
-    # MODIFIED 4/1/17 NEW:
     # IMPLEMENTATION NOTE:  Use user_params_for_instantiation since user_params may have been overwritten
     #                       when defaults were assigned to paramsCurrent in Component.__init__,
     #                       (since that will assign values to the properties of each param;
@@ -844,7 +853,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
 
     Include ones in owner.user_params[FUNCTION_PARAMS] (nested iteration through that dict)
     Exclude if it is a:
-        parameterState that already exists (e.g., in case of call from Component.assign_params)
+        parameterState that already exists (e.g., in case of a call from Component.assign_params)
         non-numeric value (including None, NotImplemented, False or True)
             unless it is:
                 a tuple (could be on specifying ControlProjection, LearningProjection or Modulation)
@@ -853,6 +862,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
             (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
             i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+    # FIX: UPDATE WITH MODULATION_MODS
+    # FIX:    CHANGE TO Integrator FUnction ONCE LearningProjection MODULATES ParameterState Function:
+    If param_name is FUNCTION_PARAMS and param is a matrix (presumably for a MappingProjection) 
+        modify ParameterState's function to be LinearCombination (rather Linear which is the default)
     """
 
 
@@ -936,6 +949,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
+            # if isinstance(owner, MappingProjection) and function_param_name is MATRIX:
+            #     state_params = {FUNCTION: LinearCombination}
+            # else:
+            #     state_params = None
             # Assign parameterState for function_param to the component
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
