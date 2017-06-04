@@ -128,7 +128,7 @@ class GatingProjection(ModulatoryProjection_Base):
     Arguments
     ---------
 
-    sender : Optional[Mechanism or OutputState]
+    sender : Optional[Mechanism or GatingSignal]
         specifies the source of the input for the GatingProjection;  usually an `outputState <OutputState>` of a
         `GatingMechanism <GatingMechanism>`.  If it is not specified, an outputState of the `DefaultGatingMechanism` 
         for the system to which the receiver belongs will be assigned.

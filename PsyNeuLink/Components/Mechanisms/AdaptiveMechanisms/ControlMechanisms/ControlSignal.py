@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# ******************************************  OutputState *****************************************************
+# ******************************************  ControlSignal *****************************************************
 
 """
 Overview
@@ -76,6 +76,8 @@ primary attributes:
   ControlSignal belongs;  this the is same for all of the ControlSignals belonging to that ControlMechanism.  
   However, the `modulation <ControlSignal.modulation>` can be specified individually for a ControlSignal using a 
   specification dictionary where the ControlSignal is specified, as described `above <ControlSignal_Specification>`.    
+  The `modulation <ControlSignal.modulation>` value of a ControlSignal is used by all of the 
+  `ControlProjections <ControlProjection>` that project from that ControlSignal.
     
 .. _ControlSignal_Allocation:
 
@@ -437,12 +439,8 @@ class ControlSignal(OutputState):
                  context=None):
 
         # Note index and calculate are not used by ControlSignal, but included here for consistency with OutputState
-        if params:
-            try:
-                if params[ALLOCATION_SAMPLES] is not None:
-                    allocation_samples =  params[ALLOCATION_SAMPLES]
-            except KeyError:
-                pass
+        if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
+            allocation_samples =  params[ALLOCATION_SAMPLES]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -473,6 +471,7 @@ class ControlSignal(OutputState):
                          prefs=prefs,
                          context=self)
 
+        # FIX: PUT IN ModulatorySignal CLASS WHEN IMPLEMENTED
         # Set default value of modulation to owner's value
         self._modulation = self.modulation or owner.modulation
 

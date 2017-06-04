@@ -179,8 +179,8 @@ class LearningProjection(ModulatoryProjection_Base):
 
     Arguments
     ---------
-    sender : Optional[LearningMechanism or LEARNING_SIGNAL OutputState of one]
-        the source of the `error_signal` for the LearningProjection. If it is not specified, one will be
+    sender : Optional[LearningMechanism or LearningSignal]
+        the source of the `learning_signal` for the LearningProjection;  If it is not specified, one will be
         `automatically created <LearningProjection_Automatic_Creation>` that is appropriate for the
         LearningProjection's `errorSource <LearningProjection.errorSource>`.
 
@@ -193,7 +193,7 @@ class LearningProjection(ModulatoryProjection_Base):
         `function <LearningMechanism.function>` attribute).
 
     learning_rate : Optional[float or int]
-        if specified, it is applied mulitiplicatively to `learning_signal` received from the `LearningMechanism`
+        if specified, it is applied mulitiplicatively to `learning_signal` received from the `LearningSignal`
         from which it projects (see `learning_rate <LearningProjection.learning_rate>` for additional details).
 
     params : Optional[Dict[param keyword, param value]]

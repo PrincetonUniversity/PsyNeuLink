@@ -337,6 +337,23 @@ class ControlMechanism_Base(Mechanism_Base):
                                                            self.system.name))
                     continue
 
+                # Specification is for a ParameterState
+                elif isinstance(spec, ParameterState):
+                    param_name = spec.name
+                    mech = spec.owner
+                    #  Check that owner is in controller's system
+                    if not self.system in mech.systems:
+                        raise ControlMechanismError("The {} specified in the {} arg for {} ({}) "
+                                                    "belongs to a mechanism ({}) that is not in "
+                                                    "the system for which {} is a controller ({})".
+                                                    format(PARAMETER_STATE,
+                                                           CONTROL_SIGNALS,
+                                                           self.name,
+                                                           spec.name,
+                                                           mech.name,
+                                                           self.name,
+                                                           self.system.name))
+
                 # Specification is for a tuple (str, Mechanism):
                 elif isinstance(spec, tuple):
                     param_name = spec[0]

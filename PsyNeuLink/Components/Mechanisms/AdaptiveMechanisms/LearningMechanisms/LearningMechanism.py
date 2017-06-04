@@ -408,9 +408,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
     LearningMechanism(                             \
         variable,                                  \
         error_source                               \
+        function=BackPropagation                   \
+        learning_rate=None                         \
         learning_signals=LEARNING_SIGNAL,          \
         modulation=ModulationParam.MULTIPLICATIVE  \
-        function=BackPropagation                   \
         params=None,                               \
         name=None,                                 \
         prefs=None)
@@ -485,8 +486,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         (see `function <LearningMechanism.function>` for details).
 
     learning_rate : float
-        specifies the learning rate for this LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
-        for details).
+        specifies the learning rate for this LearningMechanism 
+        (see `learning_rate <LearningMechanism.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -685,10 +686,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
 
         # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS
-        if LEARNING_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
+        if LEARNING_SIGNALS in target_set and target_set[LEARNING_SIGNALS]:
 
             from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningSignal \
                 import LearningSignal
+            from PsyNeuLink.Components.States.ParameterState import ParameterState
 
             for spec in target_set[LEARNING_SIGNALS]:
 
@@ -698,6 +700,39 @@ class LearningMechanism(AdaptiveMechanism_Base):
                     #    are to learned projections to/from mechanisms in the same system
                     for learning_proj in spec.efferents:
                         _validate_projection_receiver(self,learning_proj, LEARNING_SIGNAL, context)
+                    continue
+
+                # Specification is for a ParameterState
+                elif isinstance(spec, ParameterState):
+                    param_name = spec.name
+                    mech = spec.owner
+                    #  Check that owner is in self.systems
+                    if not set(mech.systems) & set(self.systems):
+                        raise LearningMechanismError("The {} specified in the {} arg for {} ({}) "
+                                                     "belongs to a mechanism ({}) that is not in "
+                                                     "the system for which {} is a controller ({})".
+                                                     format(PARAMETER_STATE,
+                                                            LEARNING_SIGNALS,
+                                                            self.name,
+                                                            spec.name,
+                                                            mech.name,
+                                                            self.name,
+                                                            self.system.name))
+                    continue
+
+                # Specification is for a Projection
+                elif isinstance(spec, Projection):
+                    param_name = spec.receiver.name
+                    mech = spec.receiver.owner
+                    if not isinstance(spec, MappingProjection):
+                        raise LearningMechanismError("The {} specified in the {} arg for {} ({}) must be a {}".
+                                                     format(PROJECTION,
+                                                            LEARNING_SIGNALS,
+                                                            self.name,
+                                                            spec.name,
+                                                            MAPPING_PROJECTION))
+                    #  Check that receiver is in self.systems
+                    _validate_projection_receiver(self, spec, LEARNING_SIGNAL, context)
                     continue
 
                 # Specification is for a tuple (str, Mechanism):
@@ -830,9 +865,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         Returns LearningSignal (OutputState)
         """
 
-# FIX: THESE NEEDS TO BE DEAL WITH
+# FIX: THESE NEEDS TO BE DEALT WITH
 # FIX: learning_projection -> learning_projections
 # FIX: trained_projection -> learned_projection
+# FIX: error_signal ??OR?? error_signals??
 # FIX: LearningMechanism: learned_projection attribute -> learned_projections list
 #                         learning_signal -> learning_signals (WITH SINGULAR ONE INDEXING INTO learning_signals.values)
 #  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)
@@ -842,13 +878,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
         from PsyNeuLink.Components.States.ParameterState import ParameterState, _get_parameter_state
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 
-        # EXTEND gating_policy TO ACCOMMODATE NEW GatingSignal -------------------------------------------------
-        #        also used to determine constraint on GatingSignal value
-
-        if not hasattr(self, LEARNING_POLICY) or self.learning_policy is None:
-            self.learning_policy = np.array(defaultLearningPolicy)
-        else:
-            self.learning_policy = np.append(self.learning_policy, defaultLearningPolicy)
+        # FIX: NEED TO CHARACTERIZE error_signal FOR BELOW
+        # # EXTEND error_signals TO ACCOMMODATE NEW LearningSignal -------------------------------------------------
+        # #        also used to determine constraint on LearningSignal output value
+        #
+        # if not hasattr(self, ERROR_SIGNALS) or self.error_signals is None:
+        #     self.error_signals = np.array(defaultErrorSignal)
+        # else:
+        #     self.error_signals = np.append(self.error_signals, defaultErrorSignal)
 
         # GET index FOR GatingSignal OutputState
         try:
@@ -991,7 +1028,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             except (AttributeError, TypeError):
                 output_state_index = 0
             # - get constraint for OutputState's value
-            output_state_constraint_value = self.learning_policy[output_state_index]
+            output_state_constraint_value = self.error_signals[output_state_index]
 
             learning_signal_params.update({CONTROLLED_PARAM:param_name})
 
