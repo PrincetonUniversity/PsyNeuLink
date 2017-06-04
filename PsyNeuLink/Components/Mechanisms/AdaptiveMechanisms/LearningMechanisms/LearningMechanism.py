@@ -671,8 +671,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
                                               format(item_num_string, self.name, item_name, self.variable[i]))
 
-
-
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate error_source as an Objective mechanism or another LearningMechanism
         """
@@ -827,6 +825,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if self.learning_signals:
             for learning_signal in self.learning_signals:
                 self._instantiate_learning_signal(learning_signal=learning_signal, context=context)
+
+        else:
+            xxx
 
         # FIX: UPDATED FOR LEARNING
         # FIX: ADD OutputState for error_signal, OR JUST SPECIFY IT IN paramClassDefaults??
