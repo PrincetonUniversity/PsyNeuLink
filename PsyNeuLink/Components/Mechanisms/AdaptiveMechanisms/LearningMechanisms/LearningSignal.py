@@ -46,7 +46,9 @@ When a LearningSignal is specified in context (e.g., the **learning_signals** ar
 
   * a *ParameterState* of the Projection to which the parameter belongs;
   |
-  * a *Projection*, which must be a MappingProjection (in which case its *MATRIX* ParameterState is used);
+  * a *Projection*, which must be either a `LearningProjection`, or a `MappingProjection` to which the 
+    LearingSignal should send a `LearningProjection`.  In both cases, it is assumed that the LearningProjection 
+    projects to the *MATRIX* ParameterState of a `MappingProjection`. 
   |
   * a *tuple*, with the *name* of the parameter as its 1st item. and the *projection* to which it belongs as the 2nd;
     note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 

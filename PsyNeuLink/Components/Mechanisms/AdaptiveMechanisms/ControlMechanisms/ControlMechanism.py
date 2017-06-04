@@ -124,7 +124,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Monitored
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.Projections.Projection import _validate_projection_receiver
+from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 
 ControlMechanismRegistry = {}
 
@@ -640,7 +640,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Validate control_projection (if specified) and get receiver's name
         if control_projection:
-            _validate_projection_receiver(self, control_projection, CONTROL_SIGNAL, context=context)
+            _validate_receiver(self, control_projection, Mechanism, CONTROL_SIGNAL, context=context)
 
             from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
             if not isinstance(control_projection, ControlProjection):

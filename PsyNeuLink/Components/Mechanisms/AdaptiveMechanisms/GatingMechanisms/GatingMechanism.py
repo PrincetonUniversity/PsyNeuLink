@@ -118,7 +118,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism impor
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal \
     import GatingSignal, _parse_gating_signal_spec
 from PsyNeuLink.Components.States.State import State_Base, _instantiate_state, _parse_state_spec
-from PsyNeuLink.Components.Projections.Projection import _validate_projection_receiver
+from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 
 GatingMechanismRegistry = {}
 
@@ -412,7 +412,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                     raise GatingMechanismError("PROGRAM ERROR: Attempt to assign {}, "
                                                       "that is not a GatingProjection, to GatingSignal of {}".
                                                       format(gating_projection, self.name))
-                _validate_projection_receiver(self, gating_projection, GATING_SIGNAL, context=context)
+                _validate_receiver(self, gating_projection, Mechanism, GATING_SIGNAL, context=context)
                 state = gating_projection.receiver
                 if gating_projection.value is DEFERRED_INITIALIZATION:
                     gating_projection.init_args['sender']=gating_signal

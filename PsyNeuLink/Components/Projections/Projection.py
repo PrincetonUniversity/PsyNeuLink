@@ -841,17 +841,29 @@ def _is_projection_subclass(spec, keyword):
             return True
     return False
 
+# IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignal WHEN THAT IS IMPLEMENTED
 @tc.typecheck
-def _validate_projection_receiver(sender_mech:Mechanism,
-                                  projection:Projection,
-                                  spec_type=None,
-                                  context=None):
-    """Insure that projection is to receiver (mechanism or projection) within the same system as the sender_mech
+def _validate_receiver(sender_mech:Mechanism,
+                       projection:Projection,
+                       expected_owner_type:type,
+                       spec_type=None,
+                       context=None):
+    """Check that projection is to expected_receiver_type and in the same system as the sender_mech (if specified)
+    
+    expected_owner_type must be a Mechanism or a Projection
+    spec_type should be LEARNING_SIGNAL, CONTROL_SIGNAL or GATING_SIGNAL
+
     """
+    spec_type = " in the {} arg ".format(spec_type) or ""
+
     if projection.value is DEFERRED_INITIALIZATION:
-        receiver = projection.init_args['receiver'].owner
+        # receiver = projection.init_args['receiver'].owner
+        state = projection.init_args['receiver']
+        receiver = state.owner
     else:
-        receiver = projection.receiver.owner
+        # receiver = projection.receiver.owner
+        state = projection.receiver
+        receiver = state.owner
 
     if isinstance(receiver, Mechanism):
         receiver_mech = receiver
@@ -861,23 +873,39 @@ def _validate_projection_receiver(sender_mech:Mechanism,
         raise ProjectionError("receiver of projection ({}) must be a {} or {}".
                               format(projection.name, MECHANISM, PROJECTION))
 
+    if not isinstance(receiver, expected_owner_type):
+        raise ProjectionError("A {} specified {}for {} ({}) projects to a component other than the {} of a {}".
+                                    format(projection.__class__.__name__,
+                                           spec_type,
+                                           sender_mech.name,
+                                           receiver,
+                                           state.__class__.__name__,
+                                           expected_owner_type.__name__))
+
+    # Check if receiver_mech is in the same system as sender_mech;
+    #    if either has not been assigned a system, return
+
+    # Check whether mech is in the same system as sender_mech
     receiver_systems = set()
     # receiver_mech is a ControlMechanism (which has a system but no systems attribute)
     if hasattr(receiver_mech, 'system') and receiver_mech.system:
         receiver_systems.update({receiver_mech.system})
     # receiver_mech is a ProcessingMechanism (which has a systems but system attribute is usually None)
-    if hasattr(receiver_mech, 'systems') and receiver_mech.systems:
+    elif hasattr(receiver_mech, 'systems') and receiver_mech.systems:
         receiver_systems.update(set(receiver_mech.systems))
+    else:
+        return
 
     sender_systems = set()
     # sender_mech is a ControlMechanism (which has a system but no systems attribute)
     if hasattr(sender_mech, 'system') and sender_mech.system:
         sender_systems.update({sender_mech.system})
     # sender_mech is a ProcessingMechanism (which has a systems but system attribute is usually None)
-    if hasattr(sender_mech, 'systems')and sender_mech.systems:
+    elif hasattr(sender_mech, 'systems')and sender_mech.systems:
         sender_systems.update(set(sender_mech.systems))
+    else:
+        return
 
-    spec_type = " in the {} arg ".format(spec_type) or ""
     #  Check that projection is to a (projection to a) mechanisms in the same system as sender_mech
     if not receiver_systems & sender_systems:
         raise ProjectionError("A {} specified {}for {} projects to a component that is not in the same system".
