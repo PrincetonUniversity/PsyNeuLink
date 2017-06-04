@@ -344,7 +344,7 @@ def _parse_gating_signal_spec(owner, state_spec):
     """
     
     from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
-    from PsyNeuLink.Components.Projections.Projection import _validate_projection_receiver
+    from PsyNeuLink.Components.Projections.Projection import _validate_receiver
     from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
 
     GATING_SIGNAL_SUFFIX = '_' + GatingSignal.__name__
@@ -375,13 +375,12 @@ def _parse_gating_signal_spec(owner, state_spec):
 
     # Specification is for a GatingSignal - return as is
     if isinstance(state_spec, GatingSignal):
-        # # IMPLEMENTATION NOTE: REINSTATE WHEN ASSIGNMENT OF GatingMechanism TO SYSTEM IS RESOLVED (IN COMPOSITION??)
-        #  Check that any GatingProjections it has are to mechanisms in self.system
-        # for gating_proj in state_spec.efferents:
-        #     _validate_projection_receiver(owner, gating_proj, GATING_SIGNAL)
         gating_signal = state_spec
         gating_signal_name = gating_signal.name
-        states = [proj.receiver.owner for proj in gating_signal.efferents]
+        states = []
+        for proj in gating_signal.efferents:
+            _validate_receiver(owner, proj, Mechanism, GATING_SIGNAL)
+            states.append(proj.receiver.owner)
         if not states:
             raise GatingSignalError("Attempt to assign an existing {} to {} that has no GatingProjections".
                                        format(GATING_SIGNAL, owner.name))
@@ -395,13 +394,7 @@ def _parse_gating_signal_spec(owner, state_spec):
     # Specification is for an existing GatingProjection
     #    so check if it is to a state of a mechanism in self.system
     elif isinstance(state_spec, GatingProjection):
-        # if not state_spec.receiver.owner in owner.system.mechanisms:
-        # # IMPLEMENTATION NOTE: REINSTATE WHEN ASSIGNMENT OF GatingMechanism TO SYSTEM IS RESOLVED (IN COMPOSITION??)
-        # if not (set(state_spec.receiver.owner.systems) & set(owner.systems)):
-        #     raise GatingSignalError("The GatingSignal specified in the {} arg for {} ({}) "
-        #                                "has one more more GatingProjections to a mechanism "
-        #                                "that is not in {}".
-        #                                format(GATING_SIGNALS, owner.name, state_spec.name, owner.systems))
+        _validate_receiver(owner, state_spec, Mechanism, GATING_SIGNAL)
         state_name = state_spec.receiver.name
         gating_signal_name = state_name + GATING_SIGNAL_SUFFIX
         mech = state_spec.reciever.owner

@@ -56,6 +56,17 @@
 #              None, FULL or IntegrationFunction
 
 # TASKS:
+#  0) IMPLEMENT: Composition
+#       Assign projections for ObjectiveMechanisms, LearningMechanisms, ControlMechanisms, etc.
+#       Validate that all items are in the same Composition
+#       add_projection_to and add_projection_from methods
+#       methods in LearningAuxilliary
+#       search for "Composition" in LearningProjection, LearningMechanism and LearningAuxlliary
+#       specification of ProcessingMechanism that should be associated with TARGET ObjectiveMechanism:
+#             one that either has either no outgoing projections, or none that receive LearningProjections
+#       got rid of special cases for Objective function altogether
+#              (since comparator is just special case of derivative = 0)
+#       added attribute to Projections:  has_learning_projection
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
 #  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMILAR TO MatrixKeywords)
 #  3) IMPLEMENT gating projections
@@ -77,15 +88,6 @@
 #  LCA (Test from ScratchPad (search for: my_auto)
 #  XOR 2 PROCESS
 
-
-# COMPOSITION IMPLEMENTATION NOTE:
-#   add_projection_to and add_projection_from methods
-#   methods in LearningAuxilliary
-#   search for "Composition" in LearningProjection, LearningMechanism and LearningAuxlliary
-#   specification of ProcessingMechanism that should be associated with TARGET ObjectiveMechanism:
-#         one that either has either no outgoing projections, or none that receive LearningProjections
-#   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
-#   added attribute to Projections:  has_learning_projection
 
 # FIX / TEST: runtime_params:
 # COMMENT:
@@ -371,6 +373,8 @@
 #                   note that default (and most common case) is for a single LearningSignal
 #                   that projections to the parmaeterState for the MATRIX parameter of a MappingProjection,
 # DOCUMENTATION: upgrade LearningSignal's learning_rate description (mention how it affect ParameterState's function)
+# DOCUMENTATION: can instantiate LearningSignal w/o LearningProjections:
+#                    creates a default LearningSignal, along with ERROR output_state
 
 # IMPLEMENT: learning_rate param for LearningSignal
 # IMPLEMENT: LearningProjection as full Modulatory projection:
