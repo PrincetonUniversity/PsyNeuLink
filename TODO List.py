@@ -367,10 +367,12 @@
 #                    (multiple possible) LearningSignal entries, their relatioship to learing_signal attribute, and
 #                    the ERROR_SIGNAL OutputState.
 # DOCUMENTATION: add output_states to attribute in docstring for ControlMechanism and GatingMechanism
+# DOCUMENTATION: add section on LearningSignals to LearningMechanism docstring:
+#                   note that default (and most common case) is for a single LearningSignal
+#                   that projections to the parmaeterState for the MATRIX parameter of a MappingProjection,
+# DOCUMENTATION: upgrade LearningSignal's learning_rate description (mention how it affect ParameterState's function)
 
-
-
-
+# IMPLEMENT: learning_rate param for LearningSignal
 # IMPLEMENT: LearningProjection as full Modulatory projection:
 #               add learning_signal_params attribute to LearningProjection that conveys them to learningSignal
 #               persistence param = 1 on MappingProjection MATRIX ParameterStates

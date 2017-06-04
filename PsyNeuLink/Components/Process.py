@@ -1833,7 +1833,7 @@ class Process_Base(Process):
                     # Initialize each projection to the parameterState (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
                     for param_projection in parameter_state.afferents + parameter_state.mod_afferents:
-                        param_projection._deferred_init(context=context) # XXX
+                        param_projection._deferred_init(context=context)
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _monitoring_mechs
                             try:

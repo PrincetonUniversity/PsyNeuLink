@@ -77,7 +77,10 @@ for an explanation of how this attribute is specified and used to modulate the v
 is set to the value of the `modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the 
 GatingSignal belongs;  this the is same for all of the GatingSignals belonging to that GatingMechanism.  However, the
 `modulation <GatingSignal.modulation>` can be specified individually for a GatingSignal using a specification 
-dictionary where the GatingSignal is specified, as described `above <GatingSignal_Specification>`.
+dictionary where the GatingSignal is specified, as described `above <GatingSignal_Specification>`. The 
+`modulation <GatingSignal.modulation>` value of a GatingSignal is used by all of the 
+`GatingProjections <GatingProjection>` that project from that GatingSignal.
+
 
 .. _ControlSignal_Execution:
 
@@ -214,8 +217,8 @@ class GatingSignal(OutputState):
         for details).
 
     modulation : ModulationParam
-        specifies the way in which the output of the GatingSignal is used to modulate the value of the states
-        to which its GatingProjections project.
+        determines how the output of the GatingSignal is used to modulate the value of the state(s)
+        to which its GatingProjection(s) project(s).
 
     efferents : [List[GatingProjection]]
         a list of the `GatingProjections <GatingProjection>` assigned to the GatingSignal.
@@ -268,7 +271,6 @@ class GatingSignal(OutputState):
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
                  persistence:tc.optional(tc.any(tc.enum(FULL), is_function_type))=None,
-                 # modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  modulation:tc.optional(_is_modulation_param)=None,
                  params=None,
                  name=None,
@@ -300,6 +302,7 @@ class GatingSignal(OutputState):
                          prefs=prefs,
                          context=self)
 
+        # FIX: PUT IN ModulatorySignal CLASS WHEN IMPLEMENTED
         # Set default value of modulation to owner's value
         self._modulation = self.modulation or owner.modulation
 
