@@ -346,9 +346,13 @@ class MappingProjection(TransmissiveProjection_Base):
         # Assign LinearCombination as function of MATRIX ParameterState, and format offset accordingly
         # Note: this is so that Lear
         # Format offset and scale to support Hadamard modification of MATRIX param:
-        offset = self._parameter_states[MATRIX].value * 0
-        scale = self._parameter_states[MATRIX].value * 0
-        self._parameter_states[MATRIX].function_object = LinearCombination(offset=offset, scale=scale)
+        variable = self._parameter_states[MATRIX].value
+        default_offset = variable * 1.0
+        default_scale = variable * 0.0
+        self._parameter_states[MATRIX].function_object = LinearCombination(variable_default=variable,
+                                                                           offset=default_offset,
+                                                                           scale=default_scale)
+        # self._parameter_states[MATRIX].function_object = LinearCombination()
         self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
 
     def _instantiate_receiver(self, context=None):

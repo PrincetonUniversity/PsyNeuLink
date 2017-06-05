@@ -1297,8 +1297,8 @@ class LinearCombination(
                  # offset=0.0,
                  # scale:tc.optional(parameter_spec)=1.0,
                  # offset:tc.optional(parameter_spec)=0.0,
-                 # scale:tc.optional(parameter_spec)=None,
-                 # offset:tc.optional(parameter_spec)=None,
+                 # scale:is_numeric_or_none=None,
+                 # offset:is_numeric_or_none=None,
                  scale=None,
                  offset=None,
                  params=None,
@@ -1387,11 +1387,16 @@ class LinearCombination(
                                         format(len(target_set[EXPONENTS]), len(self.variable.shape)))
 
         if SCALE in target_set and target_set[SCALE] is not None:
-            if not isinstance(target_set[SCALE], numbers.Number):
-                target_set[SCALE] = np.array(target_set[SCALE]) 
+            scale = target_set[SCALE]
+            if isinstance(scale, numbers.Number):
+                pass
+            elif isinstance(scale, np.ndarray):
+                target_set[SCALE] = np.array(scale)
+            else:
+                raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
+                                    format(SCALE, self.name, scale))
             if EXECUTING in context:
-                scale = target_set[SCALE]
-                if (isinstance(scale, np.ndarray) and 
+                if (isinstance(scale, np.ndarray) and
                         (scale.size != self.variable.size or 
                          scale.shape != self.variable.shape)):
                     raise FunctionError("Scale is using Hadamard modulation "
@@ -1400,11 +1405,16 @@ class LinearCombination(
                                         format(scale.shape, scale.size, self.variable.shape, self.variable.size))
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
-            if not isinstance(target_set[OFFSET], numbers.Number):
-                target_set[OFFSET] = np.array(target_set[OFFSET]) 
+            offset = target_set[OFFSET]
+            if isinstance(offset, numbers.Number):
+                pass
+            elif isinstance(offset, np.ndarray):
+                target_set[OFFSET] = np.array(offset)
+            else:
+                raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
+                                    format(OFFSET, self.name, offset))
             if EXECUTING in context:
-                offset = target_set[OFFSET]
-                if (isinstance(offset, np.ndarray) and 
+                if (isinstance(offset, np.ndarray) and
                         (offset.size != self.variable.size or 
                          offset.shape != self.variable.shape)):
                     raise FunctionError("Offset is using Hadamard modulation "
@@ -1468,8 +1478,14 @@ class LinearCombination(
         #                   (DOES THE COMPILER KNOW NOT TO BOTHER WITH MULT BY 1 AND/OR ADD 0?)
         #                B) EVALUATION OF IF STATEMENTS TO DETERMINE THE ABOVE?
         # IMPLEMENTATION NOTE:  FOR NOW, ASSUME B) ABOVE, AND ASSIGN DEFAULT "NULL" VALUES TO offset AND scale
-        offset = self.offset or 0.0
-        scale = self.scale or 1.0
+        if self.offset is None:
+            offset = 0.0
+        else:
+            offset = self.offset
+        if self.scale is None:
+            scale = 1.0
+        else:
+            scale = self.scale
 
         # FIX: CHECK THAT A SINGLE WEIGHT MATRIX (FROM MappingProjection.matrix) DOESN'T GET REDUCED
         #           (I.E., THAT IT IS "WRAPPED" IN AN EXTRA DIMENSION IN ParameterState.update
