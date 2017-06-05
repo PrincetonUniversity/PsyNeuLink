@@ -2948,6 +2948,7 @@ class Integrator(
 
         self.auto_dependent = True
 
+
     def _validate_params(self, request_set, target_set=None, context=None):
 
         # Handle list or array for rate specification
@@ -3094,6 +3095,16 @@ class Integrator(
 
     def function(self, *args, **kwargs):
         raise FunctionError("Integrator is not meant to be called explicitly")
+
+    @property
+    def reset_integrator(self):
+        return self._initializer
+
+    @reset_integrator.setter
+    def reset_integrator(self, val):
+        self.initializer = val
+        self.variable = val
+        self.previous_value = val
 
 class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
