@@ -212,23 +212,22 @@ def is_function_type(x):
 ADDITIVE_PARAM = 'additive_param'
 MULTIPLICATIVE_PARAM = 'multiplicative_param'
 
+
 class AdditiveParam():
     attrib_name = ADDITIVE_PARAM
     name = 'ADDITIVE_PARAM'
     init_val = 0
-    # reduce = Reduce(operation=SUM).function
-    reduce = lambda x : np.sum(x)
+    reduce = lambda x : np.sum(np.array(x), axis=0)
+
 
 class MultiplicativeParam():
     attrib_name = MULTIPLICATIVE_PARAM
     name = 'MULTIPLICATIVE'
     init_val = 1
-    reduce = lambda x: np.product(x)
-    # reduce = Reduce(operation=PRODUCT).function
+    reduce = lambda x : np.product(np.array(x), axis=0)
+
 
 class ModulationParam():
-    # ADDITIVE = ADDITIVE_PARAM
-    # MULTIPLICATIVE = MULTIPLICATIVE_PARAM
     ADDITIVE = AdditiveParam
     MULTIPLICATIVE = MultiplicativeParam
 
@@ -1522,6 +1521,19 @@ class LinearCombination(
                                 format(self.paramsCurrent[OPERATION].self.Operation.SUM))
         # FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
+
+    @property
+    def offset(self):
+        if not hasattr(self, '_offset'):
+            return None
+        else:
+            return self._offset
+
+    @offset.setter
+    def offset(self, val):
+        self._offset = val
+
+
 
 
 # region ***********************************  TRANSFER FUNCTIONS  ***********************************************
@@ -5506,12 +5518,14 @@ class BackPropagation(LearningFunction):
 
 # region
 
+
 # FIX: IMPLEMENT AS Functions
 def max_vs_next(x):
     x_part = np.partition(x, -2)
     max_val = x_part[-1]
     next = x_part[-2]
     return max_val - next
+
 
 def max_vs_avg(x):
     x_part = np.partition(x, -2)
