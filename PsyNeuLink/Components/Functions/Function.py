@@ -1107,8 +1107,8 @@ class LinearCombination(
          weights=None,     \
          exponents=None,   \
          operation=SUM,    \
-         scale=1.0,        \
-         offset=0.0,       \
+         scale=None,       \
+         offset=None,      \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -1162,14 +1162,14 @@ class LinearCombination(
     variable : 1d or 2d np.array : default variableClassDefault
         specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
 
-    weights : 1d or 2d np.array
+    weights : 1d or 2d np.array : default None
         specifies values used to multiply the elements of each array in `variable  <LinearCombination.variable>`.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
         if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
         (see `weights <LinearCombination.weights>` for details)
 
-    exponents : 1d or 2d np.array
+    exponents : 1d or 2d np.array : default None
         specifies values used to exponentiate the elements of each array in `variable  <LinearCombination.variable>`.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
         if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
@@ -1180,11 +1180,11 @@ class LinearCombination(
         specifies whether the `function <LinearCombination.function>` takes the elementwise (Hadamarad)
         sum or product of the arrays in `variable  <LinearCombination.variable>`.
 
-    scale : float
+    scale : float or np.ndarray : default None
         specifies a value by which to multiply each element of the output of `function <LinearCombination.function>`
         (see `scale <LinearCombination.scale>` for details)
 
-    offset : float
+    offset : float or np.ndarray : default None
         specifies a value to add to each element of the output of `function <LinearCombination.function>`
         (see `offset <LinearCombination.offset>` for details)
 
@@ -1228,12 +1228,12 @@ class LinearCombination(
         determines whether the `function <LinearCombination.function>` takes the elementwise (Hadamard) sum or
         product of the arrays in `variable  <LinearCombination.variable>`.
 
-    scale : float
+    scale : float or np.ndarray
         value is applied multiplicatively to each element of the array after applying the 
         `operation <LinearCombination.operation>` (see `scale <LinearCombination.scale>` for details);  
         this done before applying the `offset <LinearCombination.offset>` (if it is specified).
 
-    offset : float
+    offset : float or np.ndarray
         value is added to each element of the array after applying the `operation <LinearCombination.operation>`
         and `scale <LinearCombination.scale>` (if it is specified).
 
@@ -1295,10 +1295,10 @@ class LinearCombination(
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  # scale=1.0,
                  # offset=0.0,
-                 scale:tc.optional(parameter_spec)=1.0,
-                 offset:tc.optional(parameter_spec)=0.0,
-                 # scale:tc.optional(parameter_spec)=None,
-                 # offset:tc.optional(parameter_spec)=None,
+                 # scale:tc.optional(parameter_spec)=1.0,
+                 # offset:tc.optional(parameter_spec)=0.0,
+                 scale:tc.optional(parameter_spec)=None,
+                 offset:tc.optional(parameter_spec)=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -1373,14 +1373,35 @@ class LinearCombination(
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
+            # IMPLEMENTATION NOTE:  only perform following validation in check_args
+            #                       since, during initialization or COMMAND_LINE assignment,
+            #                       parameter may be re-assigned before actual self.variable is known
+            if EXECUTING in context:
+                if len(target_set[WEIGHTS]) != len(self.variable):
+                    raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
+                                        format(len(target_set[WEIGHTS]), len(self.variable.shape)))
+
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
+            # IMPLEMENTATION NOTE:  only perform following validation in check_args
+            #                       since, during initialization or COMMAND_LINE assignment,
+            #                       parameter may be re-assigned before actual self.variable is known
+            if EXECUTING in context:
+                if len(target_set[EXPONENTS]) != len(self.variable):
+                    raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
+                                        format(len(target_set[EXPONENTS]), len(self.variable.shape)))
+
+        # if SCALE in target_set and target_set[WEIGHTS] is not None:
+        #     target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
+
 
             # if not operation:
             #     raise FunctionError("Operation param missing")
             # if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
             #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
             #     format(operation))
+
+        # FIX: VALIDATE scale AND offset AS SCALARS OR AN ARRAY THAT MATCHES TEMPLATE FOR VARIABLE
 
     def function(self,
                  variable=None,
@@ -1426,8 +1447,19 @@ class LinearCombination(
         exponents = self.exponents
         weights = self.weights
         operation = self.operation
-        offset = self.offset
-        scale = self.scale
+        # QUESTION:  WHICH IS LESS EFFICIENT:
+        #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
+        #                   (DOES THE COMPILER KNOW NOT TO BOTHER WITH MULT BY 1 AND/OR ADD 0?)
+        #                B) EVALUATION OF IF STATEMENTS TO DETERMINE THE ABOVE?
+        # IMPLEMENTATION NOTE:  FOR NOW, ASSUME B) ABOVE, AND ASSIGN DEFAULT "NULL" VALUES TO offset AND scale
+        offset = self.offset or 0.0
+        scale = self.scale or 1.0
+
+        # FIX: CHECK THAT A SINGLE WEIGHT MATRIX (FROM MappingProjection.matrix) DOESN'T GET REDUCED
+        #           (I.E., THAT IT IS "WRAPPED" IN AN EXTRA DIMENSION IN ParameterState.update
+        #      OR, ALTERNATIVELY, THAT OFFSET IS APPENDED TO variable IF operation = SUM
+        #                         AND  SCALE IS APPENDED TO variable IF opeation = PRODUCT
+        #      HOWEVER, WOULD STILL NEED TO DEAL WITH THE OTHER ONE
 
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS _validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
@@ -1437,10 +1469,6 @@ class LinearCombination(
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
         if exponents is not None:
-            # FIX: THIS SHOULD BE DONE IN VALIDATE PARAMS
-            if len(exponents) != len(self.variable):
-                raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
-                                    format(len(exponents), len(self.variable.shape)))
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             if INITIALIZING in context and any(not any(i) and j < 0 for i, j in zip(self.variable, exponents)):
@@ -1450,12 +1478,7 @@ class LinearCombination(
 
         # Apply weights if they were specified
         if weights is not None:
-            # FIX: THIS SHOULD BE DONE IN VALIDATE PARAMS
-            if len(weights) != len(self.variable):
-                raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
-                                    format(len(weights), len(self.variable.shape)))
-            else:
-                self.variable = self.variable * weights
+            self.variable = self.variable * weights
 
         # Calculate using relevant aggregation operation and return
         if (operation is SUM):
