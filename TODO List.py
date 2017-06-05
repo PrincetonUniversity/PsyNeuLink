@@ -404,6 +404,7 @@
 #                               registry=self._stateRegistry,
 #                               context=context)
 # SEARCH & REPLACE: '_'+PARAM_NAME -> get_backingfield_name
+# FIX: ParameterState function specification (LINE 558): Why can't Linear class (vs. Linear() constructor) be used?
 # FIX: Recheck that weights are gettin properly set in Mechanism_instantiate_function
 # FIX: NAMES OF ControlProjections AND GatingProjections
 # FIX: GET RID OF ControlSignal LINE 434: self.reference_value = reference_value
