@@ -1288,11 +1288,17 @@ class LinearCombination(
                  # MODIFIED 2/10/17 OLD: [CAUSING CRASHING FOR SOME REASON]
                  # # weights:is_numeric_or_none=None,
                  # # exponents:is_numeric_or_none=None,
-                 weights=None,
-                 exponents=None,
-                 operation: tc.enum(SUM, PRODUCT) = SUM,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 # weights=None,
+                 # exponents=None,
+                 weights:tc.optional(parameter_spec)=None,
+                 exponents:tc.optional(parameter_spec)=None,
+                 operation: tc.enum(SUM, PRODUCT)=SUM,
+                 # scale=1.0,
+                 # offset=0.0,
+                 # scale:tc.optional(parameter_spec)=1.0,
+                 # offset:tc.optional(parameter_spec)=0.0,
+                 scale:tc.optional(parameter_spec)=None,
+                 offset:tc.optional(parameter_spec)=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -1417,11 +1423,11 @@ class LinearCombination(
         # Validate variable and assign to self.variable, and validate params
         self._check_args(variable=variable, params=params, context=context)
 
-        exponents = self.paramsCurrent[EXPONENTS]
-        weights = self.paramsCurrent[WEIGHTS]
-        operation = self.paramsCurrent[OPERATION]
-        offset = self.paramsCurrent[OFFSET]
-        scale = self.paramsCurrent[SCALE]
+        exponents = self.exponents
+        weights = self.weights
+        operation = self.operation
+        offset = self.offset
+        scale = self.scale
 
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS _validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
