@@ -1511,12 +1511,52 @@ class LinearCombination(
         if weights is not None:
             self.variable = self.variable * weights
 
-        # Calculate using relevant aggregation operation and return
-        if operation is SUM and isinstance(offset, np.ndarray):
-            result = np.sum(np.array([self.variable, offset]), axis=0)
+        # FIX FOR LEARNING:
+        #         IMPLEMENT  VARIOUS PERMUTATIONS OF OFFSET AND SCALE BEING SPECIFIED
+        #         IMPLEMENT: *** RE-IMPLEMENT SCALE
 
-        elif (operation is SUM):
-            result = sum(self.variable) * scale + offset
+        # FIX: IMPLEMENT VERSIONS FOR OPERATION = PRODUCT
+
+        # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
+
+        if (operation is SUM):
+            if isinstance(scale, numbers.Number):
+                # Scalar scale and offset
+                if isinstance(offset, numbers.Number):
+                    result = np.sum(self.variable, axis=0) * scale + offset
+                # Scalar scale and Hadamard offset
+                else:
+                    result = np.sum(np.append([self.variable * scale], [offset], axis=0), axis=0)
+            else:
+                # Hadamard scale, scalar offset
+                if isinstance(offset, numbers.Number):
+                    result = np.product([np.sum([self.variable], axis=0), scale], axis=0)
+                # Hadamard scale and offset
+                else:
+                    # hadamard_product = np.product(np.append([self.variable], [scale], axis=0), axis=0)
+                    # hadamard_product = np.product([[np.sum([self.variable], axis=0)], [scale]], axis=0)
+                    hadamard_product = np.product([np.sum([self.variable], axis=0), scale], axis=0)
+                    result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
+
+        # if (operation is PRODUCT):
+        #     if isinstance(scale, numbers.Number):
+        #         # Scalar scale and offset
+        #         if isinstance(offset, numbers.Number):
+        #             result = sum(self.variable) * scale + offset
+        #         # Scalar scale and Hadamard offset
+        #         else:
+        #             result = np.sum(np.append([self.variable * scale], [offset], axis=0), axis=0)
+        #     else:
+        #         # Hadamard scale, scalar offset
+        #         if isinstance(offset, numbers.Number):
+        #             result = np.product(np.append([self.variable], [scale], axis=0), axis=0) + offset
+        #         # Hadamard scale and offset
+        #         else:
+        #             hadamard_product = np.product(np.append([self.variable], [scale], axis=0), axis=0)
+        #             result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
+
+
+
         elif operation is PRODUCT:
             result = reduce(mul, self.variable, 1)
         else:
