@@ -340,7 +340,6 @@ class OutputState(State_Base):
     function=LinearCombination(operation=SUM), \
     index=PRIMARY_OUTPUT_STATE,                \
     calculate=Linear,                          \
-    persistence=None,                          \
     params=None,                               \
     name=None,                                 \
     prefs=None)
@@ -412,12 +411,6 @@ class OutputState(State_Base):
         has the same format (number and type of elements) as the item of the mechanism's
         `value <Mechanism.Mechanism_Base.value>`.
 
-    persistence : None, FULL, or function : default None
-        species whether and how much of the current (updated) `value <State.value>` of the state to retain from each
-        round of execution to the next (see description of `State attributes <State_Structure>` above for details).
-        If it is a function, it must accept as input and return a value that is compatible with (i.e. same format
-        and number of items as) the `value <OutputState.value>` of the outputState.
-
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
         the outputState, its function, and/or a custom function and its parameters. Values specified for parameters
@@ -481,10 +474,6 @@ class OutputState(State_Base):
         by `calculate <OutputState.calculate>`;  the same value is assigned to the corresponding item of the owner
         mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
 
-    persistence : None, FULL or function
-        determines whether and how much of the current (updated) `value <State.value>` of the state is retained from
-        each round of execution to the next (see description of `State attributes <State_Structure>` above for details).
-
     efferents : Optional[List[Projection]]
         a list of the projections sent by the outputState (i.e., for which the outputState is a
         `sender <Projection.Projection.sender>`).
@@ -542,7 +531,6 @@ class OutputState(State_Base):
         params = self._assign_args_to_param_dicts(index=index,
                                                   calculate=calculate,
                                                   function=function,
-                                                  # persistence=persistence,
                                                   params=params)
 
         self.reference_value = reference_value

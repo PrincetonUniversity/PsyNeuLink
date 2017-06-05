@@ -70,16 +70,18 @@ components, a state has the three following core attributes:
       influence the `function <State.function> of a state.
       COMMENT:
           STATE FUNCTIONS MUST BE `TransferFunction` or `CombinationFunction` -- ModulationParam "meta-parameter"
-                                  relation to `persistence`
       COMMENT
     ..
     * `value <State.value>`:  for an `inputState <InputState>` this is the aggregated value of the projections it 
       receives;  for a `parameterState <ParameterState>`, this determines the value of the associated parameter;  
       for an `outputState <OutputState>`, it is the item of the  owner mechanism's :keyword:`value` to which the 
       outputState is assigned, possibly modified by its `calculate <OutputState_Calculate>` attribute.
+
+    COMMENT:
+       REPLACE THE FOLLOWING WITH DISCUSSION OF USE OF IntegratorFunction AS STATE'S FUNCTION
     ..
     * `persistence <State.persistence`: this determines the extent to which the value of the most recently updated
-      `value <State.value>` of the state persists from each round of execution to the next, or "decays" back toward 
+      `value <State.value>` of the state persists from each round of execution to the next, or "decays" back toward
       its initially assigned value.  The attribute takes one of three values:  `None`, *FULL*, or a function
       (typically an `IntegratorFunction`).   If it is `None`, the `value <State.value>` of the state returns fully to
       its initially assigned value after each round of execution;  if it is *FULL*, the `value <State.value>` fully
@@ -95,6 +97,7 @@ components, a state has the three following core attributes:
       is *FULL*, so that its updated value (e.g., due to changes in its weights from a `LearningSignal`) is
       fully retained, so that the changes to its `value <State.value>` are accumulated over rounds of execution
       (i.e., training trials).
+    COMMENT
 
 Execution
 ---------
@@ -182,7 +185,6 @@ class State_Base(State):
     """
     State_Base(        \
     owner,             \
-    persistence:=None, \
     params=None,       \
     name=None,         \
     prefs=None)
@@ -311,10 +313,6 @@ class State_Base(State):
 
     value : number, list or np.ndarray
         current value of the state (updated by `update <State.update>` method).
-
-    persistence : None, FULL or function
-        determines whether and how much of the current (updated) `value <State.value>` of the state is retained from
-        each round of execution to the next (see description of `State attributes <State_Structure>` above for details).
 
     name : str : default <State subclass>-<index>
         the name of the state.

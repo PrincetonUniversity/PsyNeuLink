@@ -201,7 +201,6 @@ class InputState(State_Base):
     reference_value=None,                      \
     function=LinearCombination(operation=SUM), \
     value=None,                                \
-    persistence=None,                          \
     params=None,                               \
     name=None,                                 \
     prefs=None)
@@ -256,12 +255,6 @@ class InputState(State_Base):
         specifies the function used to aggregate the values of the projections received by the inputState.
         It must produce a result that has the same format (number and type of elements) as its input.
 
-    persistence : None, FULL, or function : default None
-        species whether and how much of the current (updated) `value <State.value>` of the state to retain from each
-        round of execution to the next (see description of `State attributes <State_Structure>` above for details).
-        If it is a function, it must accept as input and return a value that is compatible with (i.e. same format
-        and number of items as) the `value <InputState.value>` of the inputState.
-
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
         the inputState or its function, and/or a custom function and its parameters. Values specified for parameters in
@@ -298,10 +291,6 @@ class InputState(State_Base):
 
     value : number, list or np.ndarray
         the aggregated value of the projections received by the inputState; output of `function <InputState.function>`.
-
-    persistence : None, FULL or function
-        determines whether and how much of the current (updated) `value <State.value>` of the state is retained from
-        each round of execution to the next (see description of `State attributes <State_Structure>` above for details).
 
     name : str : default <State subclass>-<index>
         the name of the inputState.
@@ -359,7 +348,6 @@ class InputState(State_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                  # persistence=persistence,
                                                   params=params)
 
         self.reference_value = reference_value

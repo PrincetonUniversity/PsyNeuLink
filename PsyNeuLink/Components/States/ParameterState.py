@@ -391,7 +391,6 @@ class ParameterState(State_Base):
     reference_value=None                                         \
     function=LinearCombination(operation=PRODUCT),               \
     variable=None,                                               \
-    persistence=None,                                            \
     parameter_modulation_operation=Modulation.MULTIPLY,          \
     params=None,                                                 \
     name=None,                                                   \
@@ -450,12 +449,6 @@ class ParameterState(State_Base):
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to aggregate the values of the projections received by the parameterState.
         It must produce a result that has the same format (number and type of elements) as its input.
-
-    persistence : None, FULL, or function : default None
-        species whether and how much of the current (updated) `value <State>` of the state to retain from each
-        round of execution to the next (see description of `State attributes <State_Structure>` above for details).
-        If it is a function, it must accept as input and return a value that is compatible with (i.e. same format
-        and number of items as) the `value <ParameterState.value>` of the parameterState.
 
     COMMENT:
         parameter_modulation_operation : Modulation : default Modulation.MULTIPLY
@@ -520,11 +513,6 @@ class ParameterState(State_Base):
         COMMENT
         .  This is the value assigned to the parameter for which the parameterState is responsible.
 
-    persistence : None, FULL or function
-        determines whether and how much of the current (updated) `value <State>` of the state is retained from each
-        round of execution to the next (see description of `State attributes <State_Structure>` above for details).
-
-
     name : str : default <State subclass>-<index>
         the name of the inputState.
         Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
@@ -581,7 +569,6 @@ class ParameterState(State_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                  # persistence=persistence,
                                                   parameter_modulation_operation=parameter_modulation_operation,
                                                   params=params)
 
