@@ -352,7 +352,6 @@ class InputState(State_Base):
                  reference_value=None,
                  variable=None,
                  function=LinearCombination(operation=SUM),
-                 persistence:tc.optional(tc.any(tc.enum(FULL), is_function_type))=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -369,7 +368,6 @@ class InputState(State_Base):
         # Note: pass name of owner (to override assignment of componentName in super.__init__)
         super(InputState, self).__init__(owner,
                                          variable=variable,
-                                         persistence=persistence,
                                          params=params,
                                          name=name,
                                          prefs=prefs,

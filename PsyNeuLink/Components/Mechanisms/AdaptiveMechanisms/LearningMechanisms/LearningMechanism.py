@@ -1002,6 +1002,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                             "parameter Projection or LearningProjection for {} of {}".
                                             format(learning_signal, self.name))
 
+
+        # INSTANTIATE LearningSignal -----------------------------------------------------------------------------------
+
         # Specification is a LearningSignal (either passed in directly, or parsed from tuple above)
         if isinstance(learning_signal_spec, LearningSignal):
             # Deferred Initialization, so assign owner, name, and initialize
@@ -1028,7 +1031,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 learning_projection = learning_projections[0]
                 parameter_state = learning_projection.receiver
 
-        # Instantiate OutputState for LearningSignal
+        # Specification is not a LearningSignal, so create OutputState for it
+        #    use the 1st item in self.value (self.learning_signal) as the value of the LearningSignal;
+        #    note: the 2nd item (self.error_signal) is assigned to *ERROR_SIGNAL* OutputState
+        #          in _instantiate_output_states
         else:
             learning_signal_name = param_name + '_' + LearningSignal.__name__
 
@@ -1039,24 +1045,18 @@ class LearningMechanism(AdaptiveMechanism_Base):
             # Get constraint for OutputState's value
             #    - get ControlMechanism's value
             self._update_value(context=context)
-            # - get OutputState's index
-            try:
-                output_state_index = len(self.output_states)
-            except (AttributeError, TypeError):
-                output_state_index = 0
-            # - get constraint for OutputState's value
-            output_state_constraint_value = self.error_signals[output_state_index]
-
+            if len(self.output_states) != 2:
+                raise LearningMechanismError("PROGRAM_ERROR: The value of {} should have 2 items, but has {}".
+                                             format(self.name, len(self.output_states)))
+            constraint_value = self.learning_signal
             learning_signal_params.update({LEARNED_PARAM:param_name})
 
-            # FIX 5/23/17: CALL super()_instantiate_output_states ??
-            # FIX:         OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
             learning_signal = _instantiate_state(owner=self,
                                                 state_type=LearningSignal,
                                                 state_name=learning_signal_name,
-                                                state_spec=defaultControlAllocation,
+                                                state_spec=constraint_value,
                                                 state_params=learning_signal_params,
-                                                constraint_value=output_state_constraint_value,
+                                                constraint_value=constraint_value,
                                                 constraint_value_name='Default control allocation',
                                                 context=context)
 
@@ -1100,11 +1100,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         except AttributeError:
             self.learning_projections = [learning_projection]
 
-        # Update learning_signal_costs to accommodate instantiated projection
-        try:
-            self.learning_signal_costs = np.append(self.learning_signal_costs, np.empty((1,1)),axis=0)
-        except AttributeError:
-            self.learning_signal_costs = np.empty((1,1))
 
         # UPDATE output_states AND learning_projections -------------------------------------------------------------
 

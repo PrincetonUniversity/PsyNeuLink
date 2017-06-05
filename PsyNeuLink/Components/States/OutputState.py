@@ -533,7 +533,6 @@ class OutputState(State_Base):
                  function=LinearCombination(operation=SUM),
                  index=PRIMARY_OUTPUT_STATE,
                  calculate:is_function_type=Linear,
-                 persistence:tc.optional(tc.any(tc.enum(FULL), is_function_type))=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -556,7 +555,6 @@ class OutputState(State_Base):
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super().__init__(owner,
                          variable=variable,
-                         persistence=persistence,
                          params=params,
                          name=name,
                          prefs=prefs,

@@ -568,7 +568,6 @@ class ParameterState(State_Base):
                  reference_value=None,
                  variable=None,
                  function=Linear(),
-                 persistence:tc.optional(tc.any(FULL, is_function_type))=None,
                  parameter_modulation_operation=Modulation.MULTIPLY,
                  params=None,
                  name=None,
@@ -592,7 +591,6 @@ class ParameterState(State_Base):
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(ParameterState, self).__init__(owner,
                                              variable=variable,
-                                             persistence=persistence,
                                              params=params,
                                              name=name,
                                              prefs=prefs,

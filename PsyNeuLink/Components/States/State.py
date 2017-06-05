@@ -360,7 +360,6 @@ class State_Base(State):
     @tc.typecheck
     def __init__(self,
                  owner:tc.any(Mechanism, Projection),
-                 persistence:tc.optional(tc.any(tc.enum(FULL), is_function_type))=None,
                  variable=None,
                  params=None,
                  name=None,
@@ -410,10 +409,6 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
-                persistence = kargs[PERSISTENCE]
-            except (KeyError, NameError):
-                pass
-            try:
                 params = kargs[STATE_PARAMS]
             except (KeyError, NameError):
                 pass
@@ -442,8 +437,7 @@ class State_Base(State):
                              format(self.__class__.__name__, STATE))
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(persistence=persistence,
-                                                  params=params)
+        params = self._assign_args_to_param_dicts(params=params)
 
         # # VALIDATE owner
         # if isinstance(owner, (Mechanism, Projection)):
@@ -559,16 +553,6 @@ class State_Base(State):
                                        self.__class__.__name__,
                                        target_set[PROJECTION_TYPE],
                                        self.owner.name))
-
-        if PERSISTENCE in target_set:
-            persistence = target_set[PERSISTENCE]
-            if persistence and not (persistence is FULL or is_function_type(persistence)):
-                raise StateError("Value of {} for {} of {} ({}) must be \'None\', \'FULL\', or a function".
-                                 format(PERSISTENCE, self.name, self.owner.name, persistence))
-            if persistence:
-                self._stateful = True
-            else:
-                self._stateful = False
 
     def _instantiate_function(self, context=None):
         """Insure that output of function (self.value) is compatible with its input (self.variable)
