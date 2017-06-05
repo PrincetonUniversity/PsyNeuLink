@@ -1295,10 +1295,10 @@ class LinearCombination(
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  # scale=1.0,
                  # offset=0.0,
-                 # scale:tc.optional(parameter_spec)=1.0,
-                 # offset:tc.optional(parameter_spec)=0.0,
-                 scale:tc.optional(parameter_spec)=None,
-                 offset:tc.optional(parameter_spec)=None,
+                 scale:tc.optional(parameter_spec)=1.0,
+                 offset:tc.optional(parameter_spec)=0.0,
+                 # scale:tc.optional(parameter_spec)=None,
+                 # offset:tc.optional(parameter_spec)=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -1437,6 +1437,7 @@ class LinearCombination(
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
         if exponents is not None:
+            # FIX: THIS SHOULD BE DONE IN VALIDATE PARAMS
             if len(exponents) != len(self.variable):
                 raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                     format(len(exponents), len(self.variable.shape)))
@@ -1449,6 +1450,7 @@ class LinearCombination(
 
         # Apply weights if they were specified
         if weights is not None:
+            # FIX: THIS SHOULD BE DONE IN VALIDATE PARAMS
             if len(weights) != len(self.variable):
                 raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                     format(len(weights), len(self.variable.shape)))
