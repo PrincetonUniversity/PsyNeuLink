@@ -1513,7 +1513,8 @@ class LinearCombination(
 
         # Calculate using relevant aggregation operation and return
         if (operation is SUM):
-            result = sum(self.variable) * scale + offset
+            # result = sum(self.variable) * scale + offset
+            result = np.sum(self.variable, axis=0) + offset
         elif operation is PRODUCT:
             result = reduce(mul, self.variable, 1)
         else:
@@ -1533,6 +1534,16 @@ class LinearCombination(
     def offset(self, val):
         self._offset = val
 
+    @property
+    def scale(self):
+        if not hasattr(self, '_scale'):
+            return None
+        else:
+            return self._scale
+
+    @scale.setter
+    def scale(self, val):
+        self._scale = val
 
 
 
