@@ -52,8 +52,7 @@
 #      ADD SUBCLASSING OF PROJECTIONS:
 #                 TRANSMISSIVE (MappingProjection):  FROM PROCESSING MECHANISM
 #                 ADAPTIVE (LearningProjection, GatingProjection, ControlProjection): FROM ADAPTIVE MECHANISM
-#  17) State:  put persistence and integration_method as args or in params (i.e., paramClassDefaults, only on State?)
-#              None, FULL or IntegrationFunction
+#  17) State:  put integration_method as args or in params (i.e., paramClassDefaults, only on State?)
 
 # TASKS:
 #  0) IMPLEMENT: Composition
@@ -353,7 +352,7 @@
 # DOCUMENTATION: ModulatoryMechanism: describe how they work, i.e., that they assign the value of their
 #                  outputState to the paraemter of the state's function specified in their modulation param
 # DOCUMENTATION: State functions: must be TransferFunction or CombinationFunction, and implement meta mod params
-# DOCUMENTATION: State: persistence:  uses function specified in integration_method argument; default: Weiner
+# DOCUMENTATION: State: use of integration function to implement persistence
 # DOCUMENTATION: GatingSignal (per ControlSignal) -- describe modulation in both
 # DOCUMENTATION: Various forms of specification;  if Mechainsm: assume primary InputState
 # DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction
@@ -379,16 +378,6 @@
 # IMPLEMENT: learning_rate param for LearningSignal
 # IMPLEMENT: LearningProjection as full Modulatory projection:
 #               add learning_signal_params attribute to LearningProjection that conveys them to learningSignal
-#               persistence param = 1 on MappingProjection MATRIX ParameterStates
-
-# IMPLEMENT: persistence param on States:
-#                specifies whether / how much of computed (modulated) value to reassign to param value
-#                     default for InputStates, OutputStates and most ParameterStates = 0 (full decay)
-#                     default for MATRIX ParameterState of MappingProjection  = 1 (weights get assigned to new vaue)
-#                make State.value an @property:
-#                     State.update assigns to backfield (for efficiency)
-#                     COMMAND_LINE assignment (to value):  issues warning that persistent value will be over-written
-#
 # IMPLEMENT: _instantiate_modulated_param that assigns actual function_param to modulated_param property
 #            State.update should use modulated_param rather than modulation
 #            modulation as @property that validates value and then calls _instantiate_modulated_param
@@ -416,7 +405,6 @@
 #                               context=context)
 # SEARCH & REPLACE: '_'+PARAM_NAME -> get_backingfield_name
 # FIX: Recheck that weights are gettin properly set in Mechanism_instantiate_function
-# FIX: Get rid of persistence
 # FIX: NAMES OF ControlProjections AND GatingProjections
 # FIX: GET RID OF ControlSignal LINE 434: self.reference_value = reference_value
 # FIX: UPDATE WITH MODULATION_MODS

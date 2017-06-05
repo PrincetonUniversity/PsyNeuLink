@@ -210,7 +210,6 @@ class ControlSignal(OutputState):
         duration_cost_function=Integrator,               \
         cost_combination_function=Reduce(operation=SUM), \
         allocation_samples=DEFAULT_ALLOCATION_SAMPLES,   \
-        persistence=None,                                \
         modulation=ModulationParam.MULTIPLICATIVE        \
         params=None,                                     \
         name=None,                                       \
@@ -272,12 +271,6 @@ class ControlSignal(OutputState):
         specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
         `allocation_policy <ControlMechanism.allocation_policy>` (see `ControlSignal_Execution`).
 
-    persistence : None, FULL, or function : default None
-        species whether and how much of the current (updated) `value <ControlSignal.value>` of the ControlSignal to
-        retain from each round of execution to the next (see description of `State attributes <State_Structure>`
-        above for details). If it is a function, it must accept as input and return a value that is compatible with (
-        i.e. same format and number of items as) the `value <OutputState.value>` of the outputState.
-
     COMMENT: [NEEDS DOCUMENTATION]
     COMMENT
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
@@ -328,13 +321,6 @@ class ControlSignal(OutputState):
 
     value : number, list or np.ndarray
         result of `function <ControlSignal.function>`; same as `intensity`.
-
-    COMMENT:  [INTEGRATE THIS WITH PERSISTENCE??]
-    persistence : None, FULL or function
-        determines whether and how much of the current (updated) `value <ControlSignal.value>` of the ControlSignal
-        is retained from each round of execution to the next (see description of `State attributes <State_Structure>`
-        for details).
-    COMMENT
 
     last_intensity : float
         the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
