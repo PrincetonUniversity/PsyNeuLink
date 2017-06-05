@@ -14,6 +14,9 @@
 #        IF objective_mechanism IS SPECIFIED AS ObjectiveMechanism, AN OBJECTIVE MECHANISM IS CREATED FOR IT
 #        IF objective_mechanism IS SPECIFIED AS A MECHANISM OR OUTPUTSTATE,
 #               a MappingProjection WITH AN IDENTITY MATRIX IS IMPLEMENTED FROM IT TO THE LearningMechanism
+#    LearningMechanism has only two values (learning_signal and error_signal);
+#        it can have more than one LearningSignal outputState, but they all use the same learning_signal value
+#        (multiple LearningSignals can be used to implemented different modulation params, learning rates, etc.)
 
 """
 .. _LearningMechanism_Overview:
@@ -827,27 +830,19 @@ class LearningMechanism(AdaptiveMechanism_Base):
                           registry=self._stateRegistry,
                           context=context)
 
-
+        # Instantiate LearningSignals if they are specified, and assign to self._output_states
+        # Note: if any LearningSignals are specifie they will replace the default LEARNING_SIGNAL OutputState
+        #          in the OUTPUT_STATES entry of paramClassDefaults;
+        #       the LearningSignals will be inserted into _output_states at the beginning of the list
+        #       leaving ERROR_SIGNAL as the last entry
         if self.learning_signals:
+            # Delete default LEARNING_SIGNAL item in output_states
+            del self._output_states[0]
             for learning_signal in self.learning_signals:
-                self._instantiate_learning_signal(learning_signal=learning_signal, context=context)
+                ls = self._instantiate_learning_signal(learning_signal=learning_signal, context=context)
+                self._output_states.insert(0, ls)
 
-        # self.learning_signals = self.learning_signals or self.output_states
-        # for learning_signal in self.learning_signals:
-        #     self._instantiate_learning_signal(learning_signal=learning_signal, context=context)
-
-        # FIX: IF NO learning_signals, CALL _instantiate_output_State to make ERROR_SIGNAL
-
-
-        # # TEMP:
-        # else:
-        #     super()._instantiate_output_states(context=context)
-
-        # FIX: UPDATED FOR LEARNING
-        # FIX: ADD OutputState for error_signal, OR JUST SPECIFY IT IN paramClassDefaults??
-
-        # IMPLEMENTATION NOTE:  Don't want to call this because it instantiates undesired default outputState
-        # super()._instantiate_output_states(context=context)
+        super()._instantiate_output_states(context=context)
 
     def _instantiate_learning_signal(self, learning_signal=None, context=None):
         """Instantiate LearningSignal OutputState and assign (if specified) or instantiate LearningProjection
@@ -1032,9 +1027,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 parameter_state = learning_projection.receiver
 
         # Specification is not a LearningSignal, so create OutputState for it
-        #    use the 1st item in self.value (self.learning_signal) as the value of the LearningSignal;
-        #    note: the 2nd item (self.error_signal) is assigned to *ERROR_SIGNAL* OutputState
-        #          in _instantiate_output_states
         else:
             learning_signal_name = param_name + '_' + LearningSignal.__name__
 
@@ -1043,11 +1035,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
             from PsyNeuLink.Components.States.State import _instantiate_state
 
             # Get constraint for OutputState's value
-            #    - get ControlMechanism's value
+            # - assume that LearningMechanism.value has only two items (learning_signal and error_signal)
+            # - use learning_signal (stored in self.learning_signal) as value for all LearningSignals
             self._update_value(context=context)
-            if len(self.output_states) != 2:
-                raise LearningMechanismError("PROGRAM_ERROR: The value of {} should have 2 items, but has {}".
-                                             format(self.name, len(self.output_states)))
             constraint_value = self.learning_signal
             learning_signal_params.update({LEARNED_PARAM:param_name})
 
@@ -1101,19 +1091,19 @@ class LearningMechanism(AdaptiveMechanism_Base):
             self.learning_projections = [learning_projection]
 
 
-        # UPDATE output_states AND learning_projections -------------------------------------------------------------
-
-        try:
-            self.output_states[learning_signal.name] = learning_signal
-        except (AttributeError, TypeError):
-            from PsyNeuLink.Components.States.State import State_Base
-            self.output_states = ContentAddressableList(component_type=State_Base, list=[learning_signal])
-
-        # Add index assignment to outputState
-        learning_signal.index = output_state_index
-
-        # (Re-)assign learning_signals attribute to output_states
-        self.learning_signals = self.output_states
+        # # UPDATE output_states AND learning_projections -------------------------------------------------------------
+        #
+        # try:
+        #     self.output_states[learning_signal.name] = learning_signal
+        # except (AttributeError, TypeError):
+        #     from PsyNeuLink.Components.States.State import State_Base
+        #     self.output_states = ContentAddressableList(component_type=State_Base, list=[learning_signal])
+        #
+        # # Add index assignment to outputState
+        # learning_signal.index = output_state_index
+        #
+        # # (Re-)assign learning_signals attribute to output_states
+        # self.learning_signals = self.output_states
 
         return learning_signal
 
