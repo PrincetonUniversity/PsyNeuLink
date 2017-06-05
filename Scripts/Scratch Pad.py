@@ -589,10 +589,13 @@ class ScratchPadError(Exception):
 
 #region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Components.Function import *
-# #
-# x = LinearCombination()
+from PsyNeuLink.Components.Functions.Function import LinearCombination
+
+x = LinearCombination()
 # print (x.execute(([1, 1],[2, 2])))
+
+print (x.execute(([[1, 1],[2, 2]],
+                  [[3, 3],[4, 4]])))
 
 #endregion
 
@@ -895,23 +898,22 @@ class ScratchPadError(Exception):
 
 #region TEST get_user_attributes @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-import inspect
-
-def get_class_attributes(cls):
-    boring = dir(type('dummy', (object,), {}))
-    return [item
-            for item in inspect.getmembers(cls)
-            if item[0] not in boring]
-
-class my_class():
-    attrib1 = 0
-    attrib2 = 1
-    # def __init__(self):
-        # self.attrib1 = 0
-        # self.attrib2 = 1
-
-print(get_class_attributes(my_class))
-
+# import inspect
+#
+# def get_class_attributes(cls):
+#     boring = dir(type('dummy', (object,), {}))
+#     return [item
+#             for item in inspect.getmembers(cls)
+#             if item[0] not in boring]
+#
+# class my_class():
+#     attrib1 = 0
+#     attrib2 = 1
+#     # def __init__(self):
+#         # self.attrib1 = 0
+#         # self.attrib2 = 1
+#
+# print(get_class_attributes(my_class))
 
 #endregion
 

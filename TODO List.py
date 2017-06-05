@@ -375,6 +375,20 @@
 # DOCUMENTATION: can instantiate LearningSignal w/o LearningProjections:
 #                    creates a default LearningSignal, along with ERROR output_state
 
+# IMPLEMENT: OVERRIDE FUNCTIONALITY FOR ModulationParam
+
+# IMPLEMENT: Hadamard modulation for LinearCombination:
+#                hadamard_offset and hadamard_scale params
+#                applied to result of standard LinearCombination function
+#                (use function recursively to perform the hadamard modulation)
+#                if hadamard params are specified, use them as template to determine shape of items in variable
+#                   (so that a single item can be passed to be modulate, as per LearningProjection)
+#                alternative: use variable arg in constructor as template to determine shape/size of each item
+
+# IMPLEMENT: Some way to specify function for parameterState for a param (e.g., MATRIX for MappingProjection)
+#                PARAMETER_STATE_FUNCTION entry in parameter specification dict?
+#                If implemented, remove _instantiate_parameter_state override in MappingProjection that assigns function
+#                      and assign function in paramClassDefaults
 # IMPLEMENT: learning_rate param for LearningSignal
 # IMPLEMENT: LearningProjection as full Modulatory projection:
 #               add learning_signal_params attribute to LearningProjection that conveys them to learningSignal
@@ -389,7 +403,10 @@
 # IMPLEMENT: abstract _parse_state_specs:
 #                 integrate _parse_gating_signal_spec (in GatingSignal) into it
 #                 use in _validate_params for ControlMechanism and LearningMechanism
-# FIX: *** SERIOUS PROBLEM: LearningMechanism.output_value MAY NEED TO BE A 3d array
+# FIX: ALLOW ModulationParam TO BE NAME OF AN ACTUAL PARAMETER OF A FUNCTION
+#        MODIFY _get_modulated_param TO LOOK FOR REAL NAME FIRST
+#       THEN ADD HADAMARD OFFSET AND HADAMARD SCALE PARAMS TO LinearCombination
+# FIX: PROBLEM: LearningMechanism.output_value MAY NEED TO BE A 3d array
 # FIX:                      (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)
 
 # FIX: LearningMechanism: learned_projection attribute -> learned_projections list

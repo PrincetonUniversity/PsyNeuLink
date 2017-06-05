@@ -1313,7 +1313,7 @@ class State_Base(State):
                 # Add projection_value to list of TransmissiveProjection values (for aggregation below)
                 self._trans_proj_values.append(projection_value)
 
-            # FIX: UPDATED FOR LEARNING
+            # FIX: UPDATE FOR LEARNING
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             elif isinstance(projection, ModulatoryProjection_Base):
                 mod_meta_param, mod_param_name, mod_param_value = self._get_modulated_param(projection)

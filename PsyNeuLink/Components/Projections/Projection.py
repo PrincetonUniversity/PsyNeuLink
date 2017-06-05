@@ -619,11 +619,14 @@ class Projection_Base(Projection):
                                                  self.paramClassDefaults[PROJECTION_SENDER]))
 
     def _instantiate_attributes_before_function(self, context=None):
-
         self._instantiate_sender(context=context)
+        self._instantiate_parameter_states(context=context)
+
+    def _instantiate_parameter_states(self, context=None):
 
         from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
         _instantiate_parameter_states(owner=self, context=context)
+
 
     def _instantiate_sender(self, context=None):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
