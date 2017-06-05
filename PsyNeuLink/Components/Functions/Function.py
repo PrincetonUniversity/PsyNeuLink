@@ -1512,9 +1512,11 @@ class LinearCombination(
             self.variable = self.variable * weights
 
         # Calculate using relevant aggregation operation and return
-        if (operation is SUM):
-            # result = sum(self.variable) * scale + offset
-            result = np.sum(self.variable, axis=0) + offset
+        if operation is SUM and isinstance(offset, np.ndarray):
+            result = np.sum(np.array([self.variable, offset]), axis=0)
+
+        elif (operation is SUM):
+            result = sum(self.variable) * scale + offset
         elif operation is PRODUCT:
             result = reduce(mul, self.variable, 1)
         else:
