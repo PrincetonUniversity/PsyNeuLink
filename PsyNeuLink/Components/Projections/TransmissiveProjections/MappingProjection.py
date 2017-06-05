@@ -347,8 +347,8 @@ class MappingProjection(TransmissiveProjection_Base):
         # Note: this is so that Lear
         # Format offset and scale to support Hadamard modification of MATRIX param:
         variable = self._parameter_states[MATRIX].value
-        default_offset = variable * 1.0
-        default_scale = variable * 0.0
+        default_offset = variable * 0.0
+        default_scale = variable * 1.0
         self._parameter_states[MATRIX].function_object = LinearCombination(variable_default=variable,
                                                                            offset=default_offset,
                                                                            scale=default_scale)
