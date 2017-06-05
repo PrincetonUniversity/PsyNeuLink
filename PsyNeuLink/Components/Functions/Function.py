@@ -1297,8 +1297,10 @@ class LinearCombination(
                  # offset=0.0,
                  # scale:tc.optional(parameter_spec)=1.0,
                  # offset:tc.optional(parameter_spec)=0.0,
-                 scale:tc.optional(parameter_spec)=None,
-                 offset:tc.optional(parameter_spec)=None,
+                 # scale:tc.optional(parameter_spec)=None,
+                 # offset:tc.optional(parameter_spec)=None,
+                 scale=None,
+                 offset=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -1354,15 +1356,14 @@ class LinearCombination(
                                         format(variable, self.__class__.__name__))
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
-
-        Args:
-            request_set:
-            target_set:
-            context:
-
-        Returns:
-
+        """Validate weghts, exponents, scale and offset parameters
+        
+        Check that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
+        Check that SCALE and OFFSET are either scalars or np.arrays of numbers with length and shape equal to variable
+        
+        Note: the checks of compatiability with variable are only performed for validation calls during execution
+              (i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
+              a parameter may be re-assigned before variable assigned during is known
         """
 
         # FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
@@ -1373,9 +1374,6 @@ class LinearCombination(
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-            # IMPLEMENTATION NOTE:  only perform following validation in check_args
-            #                       since, during initialization or COMMAND_LINE assignment,
-            #                       parameter may be re-assigned before actual self.variable is known
             if EXECUTING in context:
                 if len(target_set[WEIGHTS]) != len(self.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
@@ -1383,17 +1381,36 @@ class LinearCombination(
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
-            # IMPLEMENTATION NOTE:  only perform following validation in check_args
-            #                       since, during initialization or COMMAND_LINE assignment,
-            #                       parameter may be re-assigned before actual self.variable is known
             if EXECUTING in context:
                 if len(target_set[EXPONENTS]) != len(self.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.variable.shape)))
 
-        # if SCALE in target_set and target_set[WEIGHTS] is not None:
-        #     target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
+        if SCALE in target_set and target_set[SCALE] is not None:
+            if not isinstance(target_set[SCALE], numbers.Number):
+                target_set[SCALE] = np.array(target_set[SCALE]) 
+            if EXECUTING in context:
+                scale = target_set[SCALE]
+                if (isinstance(scale, np.ndarray) and 
+                        (scale.size != self.variable.size or 
+                         scale.shape != self.variable.shape)):
+                    raise FunctionError("Scale is using Hadamard modulation "
+                                        "but its shape and/or size (shape: {}, size:{}) "
+                                        "do not match the variable being modulated (shape: {}, size: {})".
+                                        format(scale.shape, scale.size, self.variable.shape, self.variable.size))
 
+        if OFFSET in target_set and target_set[OFFSET] is not None:
+            if not isinstance(target_set[OFFSET], numbers.Number):
+                target_set[OFFSET] = np.array(target_set[OFFSET]) 
+            if EXECUTING in context:
+                offset = target_set[OFFSET]
+                if (isinstance(offset, np.ndarray) and 
+                        (offset.size != self.variable.size or 
+                         offset.shape != self.variable.shape)):
+                    raise FunctionError("Offset is using Hadamard modulation "
+                                        "but its shape and/or size (shape: {}, size:{}) "
+                                        "do not match the variable being modulated (shape: {}, size: {})".
+                                        format(offset.shape, offset.size, self.variable.shape, self.variable.size))
 
             # if not operation:
             #     raise FunctionError("Operation param missing")
@@ -1401,7 +1418,6 @@ class LinearCombination(
             #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
             #     format(operation))
 
-        # FIX: VALIDATE scale AND offset AS SCALARS OR AN ARRAY THAT MATCHES TEMPLATE FOR VARIABLE
 
     def function(self,
                  variable=None,
