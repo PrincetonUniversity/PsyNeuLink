@@ -1071,39 +1071,24 @@ class LearningMechanism(AdaptiveMechanism_Base):
             else:
                 learning_projection.sender = learning_signal
 
-        # Instantiate LearningProjection
-        else:
-            # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-            from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-            learning_projection = LearningProjection(sender=learning_signal,
-                                           receiver=parameter_state,
-                                           name=LEARNING_PROJECTION + learning_signal_name)
+        # # Instantiate LearningProjection
+        # else:
+        #     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+        #     from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+        #     learning_projection = LearningProjection(sender=learning_signal,
+        #                                              receiver=parameter_state,
+        #                                              name=LEARNING_PROJECTION + learning_signal_name)
 
-        # Add LearningProjection to list of outputState's outgoing projections
-        # (note: if it was deferred, it just added itself, skip)
-        if not learning_projection in learning_signal.efferents:
-            learning_signal.efferents.append(learning_projection)
+            # Add LearningProjection to list of outputState's outgoing projections
+            # (note: if it was deferred, it just added itself, skip)
+            if not learning_projection in learning_signal.efferents:
+                learning_signal.efferents.append(learning_projection)
 
-        # Add LearningProjection to LearningMechanism's list of LearningProjections
-        try:
-            self.learning_projections.append(learning_projection)
-        except AttributeError:
-            self.learning_projections = [learning_projection]
-
-
-        # # UPDATE output_states AND learning_projections -------------------------------------------------------------
-        #
-        # try:
-        #     self.output_states[learning_signal.name] = learning_signal
-        # except (AttributeError, TypeError):
-        #     from PsyNeuLink.Components.States.State import State_Base
-        #     self.output_states = ContentAddressableList(component_type=State_Base, list=[learning_signal])
-        #
-        # # Add index assignment to outputState
-        # learning_signal.index = output_state_index
-        #
-        # # (Re-)assign learning_signals attribute to output_states
-        # self.learning_signals = self.output_states
+            # Add LearningProjection to LearningMechanism's list of LearningProjections
+            try:
+                self.learning_projections.append(learning_projection)
+            except AttributeError:
+                self.learning_projections = [learning_projection]
 
         return learning_signal
 

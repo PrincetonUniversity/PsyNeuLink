@@ -541,7 +541,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                      error_signal],
                                            error_source=error_source,
                                            function=learning_function,
-                                           learning_signals=[lc.activation_mech_projection],
+                                           # learning_signals=[lc.activation_mech_projection],
+                                           learning_signals=[learning_projection],
                                            name = lc.activation_mech_projection.name + " " +LEARNING_MECHANISM,
                                            context=context)
 
@@ -564,12 +565,13 @@ def _instantiate_learning_components(learning_projection, context=None):
                       name = lc.activation_mech_output.owner.name + ' to ' + ACTIVATION_OUTPUT,
                       context=context)
 
-    # Assign learning_mechanism as sender of learning_projection and return
-    # Note: learning_projection still has to be assigned to the learning_mechanism's outputState;
-    #       however, this requires that it's variable be assigned (which occurs in the rest of its
-    #       _instantiate_sender method, from which this was called) and that its value be assigned
-    #       (which occurs in its _instantiate_function method).
-    learning_projection.sender = learning_mechanism.output_state
+    # IMPLEMENTATION NOTE: [6/4/17] THIS IS NOW DONE IN LearningMechanism._instantiate_learning_signal
+    # # Assign learning_mechanism as sender of learning_projection and return
+    # # Note: learning_projection still has to be assigned to the learning_mechanism's outputState;
+    # #       however, this requires that it's variable be assigned (which occurs in the rest of its
+    # #       _instantiate_sender method, from which this was called) and that its value be assigned
+    # #       (which occurs in its _instantiate_function method).
+    # learning_projection.sender = learning_mechanism.output_state
 
 
 class LearningComponents(object):
