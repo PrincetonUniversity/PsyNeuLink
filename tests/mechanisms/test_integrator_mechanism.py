@@ -25,13 +25,17 @@ def test_integrator_simple():
         ),
         time_scale=TimeScale.TIME_STEP
     )
-    # val = float(I.execute(10)[0])
     P = process(pathway=[I])
-    val = float(P.execute(10))
+
     #  returns previous_value + rate*variable + noise
     # so in this case, returns 10.0
-    assert val == 10.0
+    val = float(P.execute(10))
 
+    # testing reset_integrator
+    I.function_object.reset_integrator = 1.0
+    val2 = float(P.execute(0))
+
+    assert [val, val2] == [10.0, 1.0]
 # ------------------------------------------------------------------------------------------------
 # TEST 2
 # integration_type = adaptive
@@ -41,6 +45,7 @@ def test_integrator_adaptive():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
         function=AdaptiveIntegrator(
+            rate=0.5
         ),
         time_scale=TimeScale.TIME_STEP
     )
@@ -49,8 +54,12 @@ def test_integrator_adaptive():
     val = float(P.execute(10))
     # returns (rate)*variable + (1-rate*previous_value) + noise
     # rate = 1, noise = 0, so in this case, returns 10.0
-    assert val == 10.0
 
+    # testing reset_integrator
+    I.function_object.reset_integrator = 1.0
+    val2 = float(P.execute(1))
+
+    assert [val, val2] == [5.0, 1.0]
 # ------------------------------------------------------------------------------------------------
 # TEST 3
 # integration_type = constant
@@ -68,8 +77,12 @@ def test_integrator_constant():
     val = float(P.execute(10))
     # returns previous_value + rate + noise
     # rate = 1.0, noise = 0, so in this case returns 1.0
-    assert val == 1.0
 
+    # testing reset_integrator
+    I.function_object.reset_integrator = 1.0
+    val2 = float(P.execute(0))
+
+    assert [val, val2] == [1.0, 2.0]
 # ------------------------------------------------------------------------------------------------
 # TEST 4
 # integration_type = diffusion
@@ -85,7 +98,12 @@ def test_integrator_diffusion():
     # val = float(I.execute(10)[0])
     P = process(pathway=[I])
     val = float(P.execute(10))
-    assert val == 10.0
+
+    # testing reset_integrator
+    I.function_object.reset_integrator = 1.0
+    val2 = float(P.execute(0))
+
+    assert [val, val2] == [10.0, 1.0]
 
 # ------------------------------------------------------------------------------------------------
 
