@@ -126,16 +126,6 @@ In addition to its `function <MappingProjection.function>`, MappingProjections u
   input, that is then provided to its `receiver <MappingProjection.receiver>`.  It can be specified using a number of
   different formats, as described `above <Mapping_Matrix_Specification>`.
 
-.. _Mapping_Parameter_Modulation_Operation:
-
-* `matrix_modulation_operation <MappingProjection.matrix_modulation_operation>`
-
-  Used to determine how the value of any projections to the `parameterState <ParameterState>` for the
-  `matrix <MappingProjection.matrix>` influence it.  For example, this is used for a `LearningProjection` to apply
-  weight changes to the `matrix <MappingProjection.matrix>` during learning. The
-  :keyword:`matrix_modulation_operation` attribute must be assigned a value of `Modulation` and the operation
-  is always applied in an element-wise (Hadamard) manner. The default operation is ADD.
-
 .. _Projection_Execution:
 
 Execution
@@ -177,7 +167,6 @@ class MappingProjection(TransmissiveProjection_Base):
         sender=None,                                        \
         receiver=None,                                      \
         matrix=DEFAULT_MATRIX,                              \
-        matrix_modulation_operation=Modulation.ADD, \
         params=None,                                        \
         name=None,                                          \
         prefs=None)
@@ -238,10 +227,6 @@ class MappingProjection(TransmissiveProjection_Base):
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
         value of the `sender <MappingProjection.sender>`.
 
-    matrix_modulation_operation : Modulation : default Modulation.ADD
-        specifies the operation used to combine the value of any projections to the matrix's parameterState with the
-        `matrix <MappingProjection.matrix>` itself.  Most commonly used with `LearningProjections <LearningProjection>`.
-
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
         the projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
@@ -268,10 +253,6 @@ class MappingProjection(TransmissiveProjection_Base):
 
     receiver: InputState
         identifies the destination of the projection.
-
-    matrix_modulation_operation : Modulation
-        determines the operation used to combine the value of any projections to the matrix's parameterState with the
-        `matrix <MappingProjection.matrix>` itself.
 
     monitoringMechanism : MonitoringMechanism
         source of error signal for that determine changes to the `matrix <MappingProjection.matrix>` when
@@ -315,7 +296,6 @@ class MappingProjection(TransmissiveProjection_Base):
                  sender=None,
                  receiver=None,
                  matrix=DEFAULT_MATRIX,
-                 matrix_modulation_operation=Modulation.ADD,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -323,7 +303,6 @@ class MappingProjection(TransmissiveProjection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
-                                                  matrix_modulation_operation=matrix_modulation_operation,
                                                   params=params)
 
         self.learning_mechanism = None
@@ -337,7 +316,6 @@ class MappingProjection(TransmissiveProjection_Base):
             self.init_args['name'] = name
             # Delete these as they have been moved to params dict (and will not be recognized by Projection.__init__)
             del self.init_args['matrix']
-            del self.init_args['matrix_modulation_operation']
 
             # Flag for deferred initialization
             self.value = DEFERRED_INITIALIZATION

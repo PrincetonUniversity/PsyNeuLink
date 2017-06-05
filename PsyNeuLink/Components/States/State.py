@@ -1310,15 +1310,14 @@ class State_Base(State):
                 continue
 
             if isinstance(projection, TransmissiveProjection_Base):
-                # Add projection_value to list TransmissiveProjection values (for aggregation below)
+                # Add projection_value to list of TransmissiveProjection values (for aggregation below)
                 self._trans_proj_values.append(projection_value)
 
             # FIX: UPDATED FOR LEARNING
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             elif isinstance(projection, ModulatoryProjection_Base):
                 mod_meta_param, mod_param_name, mod_param_value = self._get_modulated_param(projection)
-                self._mod_proj_values[mod_meta_param].append(type_match(projection_value,
-                                                                           type(mod_param_value)))
+                self._mod_proj_values[mod_meta_param].append(type_match(projection_value, type(mod_param_value)))
 
         # AGGREGATE ModulatoryProjection VALUES 
 
