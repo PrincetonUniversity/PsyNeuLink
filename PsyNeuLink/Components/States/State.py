@@ -1326,12 +1326,12 @@ class State_Base(State):
         #    and assign that to the relevant entry in the params dict for the state's function.
         for mod_param, value_list in self._mod_proj_values.items():
             if value_list:
-                agg_mod_val = mod_param.reduce(value_list)
+                aggregated_mod_val = mod_param.reduce(value_list)
                 function_param = self.function_object.params[mod_param.attrib_name]
                 if not FUNCTION_PARAMS in self.stateParams:
-                    self.stateParams[FUNCTION_PARAMS] = {function_param: agg_mod_val}
+                    self.stateParams[FUNCTION_PARAMS] = {function_param: aggregated_mod_val}
                 else:
-                    self.stateParams[FUNCTION_PARAMS].update({function_param: agg_mod_val})
+                    self.stateParams[FUNCTION_PARAMS].update({function_param: aggregated_mod_val})
 
         # CALL STATE'S function TO GET ITS VALUE
         try:
