@@ -1356,17 +1356,20 @@ class State_Base(State):
     from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
     @tc.typecheck
     def _get_modulated_param(self, mod_proj:ModulatoryProjection_Base):
-        """Return the name and value of the parameter modulated by a ModulatoryProjection
+        """Return ModulationParam object, function param name and value of param modulated by ModulatoryProjection
         """
 
-        # Get function "meta-parameter" to be modulated from projection sender's modulation attribute
-        function_mod_meta_param = mod_proj.sender.modulation
+        # Get function "meta-parameter" object specified in the projection sender's modulation attribute
+        function_mod_meta_param_obj = mod_proj.sender.modulation
 
         # Get the actual parameter of self.function_object to be modulated
-        function_param = self.function_object.params[function_mod_meta_param.attrib_name]
+        function_param_name = self.function_object.params[function_mod_meta_param_obj.attrib_name]
 
-        # Return the parameter's value
-        return ModulatedParam(function_mod_meta_param, function_param, self.function_object.params[function_param])
+        # Get the function parameter's value
+        function_param_value = self.function_object.params[function_param_name]
+
+        # Return the meta_parameter object, function_param name, and function_param_value
+        return ModulatedParam(function_mod_meta_param_obj, function_param_name, function_param_value)
 
     @property
     def owner(self):
