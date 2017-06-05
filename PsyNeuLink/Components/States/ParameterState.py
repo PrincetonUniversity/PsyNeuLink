@@ -614,7 +614,7 @@ class ParameterState(State_Base):
         :return:
         """
 
-        # # FIX: UPDATED FOR LEARNING [COMMENTED OUT]
+        # # FIX: UPDATE FOR LEARNING [COMMENTED OUT]
         # # If parameterState is for a matrix of a MappingProjection,
         # #     its parameter_modulation_operation should be SUM (rather than PRODUCT)
         # #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied

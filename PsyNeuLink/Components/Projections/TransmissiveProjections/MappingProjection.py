@@ -337,7 +337,19 @@ class MappingProjection(TransmissiveProjection_Base):
             # #            - CHECK EACH MATRIX AND ASSIGN??
 
     def _instantiate_parameter_states(self, context=None):
-        super()._instantiate_parameter_states(owner=self, context=context)
+
+        super()._instantiate_parameter_states(context=context)
+
+        # FIX: UPDATE FOR LEARNING
+        # IMPLEMENTATION NOTE:  THIS IS A PLACE HOLDER, UNTIL THE APPROPRIATE INTEGRATION FUNCTION IS IMPLEMENTED
+        #                       This is to accomodate the use of a LearningProjection to update the MATRIX param
+        # Assign LinearCombination as function of MATRIX ParameterState, and format offset accordingly
+        # Note: this is so that Lear
+        # Format offset and scale to support Hadamard modification of MATRIX param:
+        offset = self._parameter_states[MATRIX].value * 0
+        scale = self._parameter_states[MATRIX].value * 0
+        self._parameter_states[MATRIX].function_object = LinearCombination(offset=offset, scale=scale)
+        self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
 
     def _instantiate_receiver(self, context=None):
         """Determine matrix needed to map from sender to receiver
@@ -448,6 +460,8 @@ class MappingProjection(TransmissiveProjection_Base):
             setattr(self, '_'+MATRIX, self.matrix)
             # MODIFIED 6/1/17 END
 
+            # FIX: UPDATE FOR LEARNING
+            #    ??DELETE??
             # Pass params for parameterState's function specified by instantiation in LearningProjection
             weight_change_params = matrix_parameter_state.paramsCurrent
 
