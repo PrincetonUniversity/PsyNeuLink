@@ -797,8 +797,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                        spec_type=LEARNING_SIGNAL,
                                        context=context)
 
-                # Check that param_name is the name of an attribute of the MappingProjection to be learned
-                # if not hasattr(mapping_proj, param_name) and not hasattr(mapping_proj.function_object, param_name):
+                # IMPLEMENTATION NOTE: the tests below allow for the possibility that the MappingProjection
+                #                      may not yet be fully implemented (e.g., this can occur if the
+                #                      LearningMechanism being implemented here is as part of a LearningProjection
+                #                      specification for the MappingProjection's matrix param)
+                # Check that param_name is the name of a parameter of the MappingProjection to be learned
                 if not param_name in (set(mapping_proj.user_params) | set(mapping_proj.user_params[FUNCTION_PARAMS])):
                     raise LearningMechanismError("{} (in specification of {} for {}) is not an "
                                                 "attribute of {} or its function"

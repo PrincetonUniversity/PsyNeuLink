@@ -1670,7 +1670,7 @@ class System_Base(System):
 
                         # Reassign error_matrix to one for the projection to which the error_signal_mech projects
                         learning_mech.function_object.error_matrix = \
-                            error_signal_mech.output_states['learning_signal'].efferents[0].receiver
+                            error_signal_mech._output_states['matrix_LearningSignal'].efferents[0].receiver
                         # Delete error_matrix parameterState for error_matrix
                         #    (since its value, which was the IDENTITY_MATRIX, is now itself ParameterState,
                         #     and Components are not allowed  as the value of a ParameterState
