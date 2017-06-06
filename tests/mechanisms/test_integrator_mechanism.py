@@ -31,11 +31,11 @@ def test_integrator_simple():
     # so in this case, returns 10.0
     val = float(P.execute(10))
 
-    # testing reset_integrator
-    I.function_object.reset_integrator = 1.0
+    # testing initializer
+    I.function_object.initializer_reset = 5.0
     val2 = float(P.execute(0))
 
-    assert [val, val2] == [10.0, 1.0]
+    assert [val, val2] == [10.0, 5.0]
 # ------------------------------------------------------------------------------------------------
 # TEST 2
 # integration_type = adaptive
@@ -55,8 +55,8 @@ def test_integrator_adaptive():
     # returns (rate)*variable + (1-rate*previous_value) + noise
     # rate = 1, noise = 0, so in this case, returns 10.0
 
-    # testing reset_integrator
-    I.function_object.reset_integrator = 1.0
+    # testing initializer
+    I.function_object.initializer_reset = 1.0
     val2 = float(P.execute(1))
 
     assert [val, val2] == [5.0, 1.0]
@@ -74,15 +74,15 @@ def test_integrator_constant():
     )
     # val = float(I.execute(10)[0])
     P = process(pathway=[I])
-    val = float(P.execute(10))
+    val = float(P.execute())
     # returns previous_value + rate + noise
     # rate = 1.0, noise = 0, so in this case returns 1.0
 
-    # testing reset_integrator
-    I.function_object.reset_integrator = 1.0
-    val2 = float(P.execute(0))
+    # testing initializer
+    I.function_object.initializer_reset = 10.0
+    val2 = float(P.execute())
 
-    assert [val, val2] == [1.0, 2.0]
+    assert [val, val2] == [1.0, 11.0]
 # ------------------------------------------------------------------------------------------------
 # TEST 4
 # integration_type = diffusion
@@ -99,8 +99,8 @@ def test_integrator_diffusion():
     P = process(pathway=[I])
     val = float(P.execute(10))
 
-    # testing reset_integrator
-    I.function_object.reset_integrator = 1.0
+    # testing initializer
+    I.function_object.initializer_reset = 1.0
     val2 = float(P.execute(0))
 
     assert [val, val2] == [10.0, 1.0]
@@ -145,8 +145,17 @@ def test_integrator_input_float():
         )
     )
     P = process(pathway=[I])
-    val = float(P.execute(10.0))
-    assert val == 10.0
+    val2 = float(P.execute(10.0))
+
+    I2 = IntegratorMechanism(
+        name='IntegratorMechanism',
+        function=SimpleIntegrator(
+        )
+    )
+    P2 = process(pathway=[I2])
+    val = float(P2.execute(10.0))
+
+    assert [val, val2] == [10.0, 10.0]
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2

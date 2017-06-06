@@ -3113,11 +3113,11 @@ class Integrator(
         raise FunctionError("Integrator is not meant to be called explicitly")
 
     @property
-    def initializer(self):
+    def initializer_reset(self):
         return self._initializer
 
-    @initializer.setter
-    def initializer(self, val):
+    @initializer_reset.setter
+    def initializer_reset(self, val):
         self.previous_value = val
         self._initializer = val
 

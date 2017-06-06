@@ -148,7 +148,6 @@ def test_DDM_noise_int():
             time_scale=TimeScale.TIME_STEP
         )
         float(T.execute(stim)[0])
-        print(str(error_text.value))
     assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
