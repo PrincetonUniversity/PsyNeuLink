@@ -361,6 +361,7 @@ class InputState(State_Base):
                                          prefs=prefs,
                                          context=self)
 
+        TEST = True
 
 
     def _validate_params(self, request_set, target_set=None, context=None):

@@ -779,7 +779,6 @@ class ContentAddressableList(UserList):
                                              key,
                                              self.key,
                                              getattr(value, self.key)))
-            #
             key_num = self._get_key_for_item(key)
             if key_num is not None:
                 self.data[key_num] = value

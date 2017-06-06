@@ -891,7 +891,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Note: weights and exponents are assigned as parameters of outcome_function in _get_monitored_states
         self.monitoring_mechanism = ObjectiveMechanism(monitored_values=self.monitored_output_states,
-                                                       # input_states=monitoring_input_states,
+                                                       input_states=monitoring_input_states,
                                                        function=self.outcome_function,
                                                        name=self.name + ' Monitoring Mechanism')
 
