@@ -2944,7 +2944,7 @@ class Integrator(
                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
+        # self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -2993,10 +2993,10 @@ class Integrator(
                                  target_set=target_set,
                                  context=context)
 
-        # self._validate_initializer()
+        if INITIALIZER in target_set:
+            self._validate_initializer(target_set[INITIALIZER])
 
         if NOISE in target_set:
-            # FIX: SHOULDN'T THIS PASS target_set[NOISE] to _validate_noise() rather than use self.noise?
             self._validate_noise(target_set[NOISE])
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
@@ -3051,11 +3051,12 @@ class Integrator(
                 "array or list of functions.".format(noise, self.name))
 
     def _validate_initializer(self, initializer):
+        self.initializer_function = False
         # Initializer is a list or array
-        if isinstance(initializer[0], (np.ndarray, list)):
+        if isinstance(initializer, (np.ndarray, list)):
             # Variable is a list/array
             if isinstance(self.variable, (np.ndarray, list)):
-                if len(initializer[0]) != np.array(self.variable).size:
+                if len(initializer) != np.array(self.variable).size:
                     try:
                         formatted_initializer = list(map(lambda x: x.__qualname__, initializer[0]))
                     except AttributeError:
@@ -3064,12 +3065,12 @@ class Integrator(
                                         "({}) of {} must match the length ({}) of the default input ({}). "
                                         "If initializer is specified as an array or list, "
                                         "it must be of the same size as the input."
-                                        .format(len(initializer[0]),
+                                        .format(len(initializer),
                                                 formatted_initializer,
                                                 self.name, np.array(self.variable).size,
                                                 self.variable))
                 else:
-                    if callable(initializer[0][0]):
+                    if callable(initializer[0]):
                         self.initializer_function = True
                     # Initializer is a list or array of floats
 
@@ -3079,32 +3080,32 @@ class Integrator(
                                     "default input value is also a list or array.".
                                     format(self.initializer[0], self.name))
 
-        elif callable(initializer[0]):
+        elif callable(initializer):
             self.initializer_function = True
             if isinstance(self.variable, (np.ndarray, list)):
                 new_initializer = []
                 for i in self.variable:
-                    new_initializer.append(initializer[0])
+                    new_initializer.append(initializer)
                 initializer[0] = new_initializer
-        elif isinstance(initializer[0], float):
+        elif isinstance(initializer, float):
             initializer_function = False
         else:
             raise FunctionError("initializer parameter ({}) for {} must be a number, function, "
                                 "array or list of floats, or array or list of functions.".
-                                format(initializer[0], self.name))
+                                format(initializer, self.name))
 
     def function(self, *args, **kwargs):
         raise FunctionError("Integrator is not meant to be called explicitly")
 
     @property
-    def reset_integrator(self):
+    def initializer(self):
         return self._initializer
 
-    @reset_integrator.setter
-    def reset_integrator(self, val):
-        self.initializer = val
+    @initializer.setter
+    def initializer(self, val):
         self.variable = val
         self.previous_value = val
+        self._initializer = val
 
 class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
@@ -3277,7 +3278,7 @@ class SimpleIntegrator(
                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
+        # self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -3519,7 +3520,7 @@ class ConstantIntegrator(
                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
+        # self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -3763,7 +3764,7 @@ class AdaptiveIntegrator(
                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
+        # self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -4074,7 +4075,7 @@ class DriftDiffusionIntegrator(
                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
+        # self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -4082,9 +4083,8 @@ class DriftDiffusionIntegrator(
         self.noise_function = False
         if not isinstance(noise, float):
             raise FunctionError(
-                "Invalid noise parameter for {}. When integration type is DIFFUSION, noise must be a"
-                " float. Noise parameter is used to construct the standard DDM noise distribution"
-                    .format(self.name))
+                "Invalid noise parameter for {}. DriftDiffusionIntegrator requires noise parameter to be a float. Noise"
+                " parameter is used to construct the standard DDM noise distribution".format(self.name))
 
     def function(self,
                  variable=None,
@@ -4332,7 +4332,7 @@ class OrnsteinUhlenbeckIntegrator(
                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
+        # self.previous_value = self.initializer
 
         self.auto_dependent = True
 
