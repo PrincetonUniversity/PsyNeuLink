@@ -230,14 +230,9 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism i
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import standard_output_states, PRIMARY_OUTPUT_STATE
 
-OBJECT = 0
-WEIGHT = 1
-EXPONENT = 2
 ROLE = 'role'
-NAMES = 'names'
 MONITORED_VALUES = 'monitored_values'
 MONITORED_VALUE_NAME_SUFFIX = '_Monitor'
-DEFAULT_MONITORED_VALUE = [0]
 ERROR_SIGNAL = 'error_signal'
 
 # This is a convenience class that provides list of standard_output_state names in IDE
@@ -609,6 +604,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                       state_spec=input_state,
                                                       name=monitored_values[i][NAME],
                                                       value=monitored_values[i][VALUE])
+            TEST = True
 
         constraint_value = []
         for input_state in self.input_states:
@@ -624,6 +620,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         for i, state in enumerate(self._input_states):
             input_state_projection_specs.append(state.params[STATE_PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
 
+        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         _instantiate_monitoring_projections(owner=self,
                                             sender_list=[mon_val[OUTPUT_STATE] for mon_val in monitored_values],
                                             receiver_list=self.input_states,

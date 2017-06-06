@@ -2027,7 +2027,9 @@ def _parse_state_spec(owner,
                          if not param_spec in STANDARD_ARGS]:
                 params = params or {}
                 params[spec] = state_spec[spec]
+                # # MODIFIED 6/5/17 OLD: [REINSTATED, BUT CAUSING TROUBLE IN STROOP TEST SCRIPT]
                 # del state_spec[spec]
+                # # MODIFIED 6/5/17 END
             state_dict.update(state_spec)
             # state_dict = state_spec
             if params:

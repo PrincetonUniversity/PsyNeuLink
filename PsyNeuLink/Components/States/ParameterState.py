@@ -213,20 +213,6 @@ parameter for which it is responsible (as shown in the `figure <ParameterState_F
   `function <ParameterState.function>` to determine the value of the parameter for which the parameterState is
   responsible.
 
-.. ParameterState_Parameter_Modulation_Operation:
-
-* `parameterModulationOperation <ParameterState.parameterModulationOperation>`: this determines how the
-  result of the parameterState's `function <ParameterState.function>` (the aggregated values of the projections it
-  receives) is combined with its `base_value <ParameterState.base_value>` to generate the value of the parameter
-  for which it is responsible.  This must be a value of `Modulation`.  It can be specified in either
-  the **parameter_modulation_operation** argument of the parameterState's constructor, or in a 
-  PARAMETER_MODULATION_OPERATION entry of a `parameter dictionary <ParameterState_Specifying_Parameters>` in 
-  either the **params** argument of the parameterState's constructor or within a PARAMETER_STATE_PARAMS 
-  dictionary in a `runtime specification <ParameterState_Runtime_Parameters>`. The default is value is
-  `Modulation.PRODUCT`, which multiples the parameterState's `base_value <ParameterState.base_value>` by the 
-  aggregated value of the result of the parameterState's `function <ParameterState.function>` to determine the value 
-  of the parameter.
-
 All of the user-modifiable parameters of a component are listed in its `user_params <Component.user_params>` attribute, 
 which is a read-only dictionary with an entry for each parameter.  The parameters of a component can be 
 modified individually by assigning a value to the corresponding attribute, or in groups using the component's 
@@ -279,14 +265,12 @@ Execution
 ---------
 
 A parameterState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
-When this occurs, the parameterState executes any `ControlProjections` and/or `LearningProjections` it receives, and
-calls its `function <ParameterState.function>` to aggregate their values.  It then combines the result with the
-parameterState's `base_value <ParameterState.base_value>` using its
-`parameterModulationOperation <ParameterState.parameterModulationOperation>` attribute, combines the result with any 
-`runtime specification <ParameterState_Runtime_Parameters>` for the parameter using the `Modulation` 
-specified for runtime parameters, and finally assigns the result as the `value <ParameterState.value>` of the 
-parameterState.  This is used as the value of the parameter for which the parameterState is responsible.
+When this occurs, the parameterState executes any `ModulatoryProjections` it receives, the values of which
+modulate parameters of the ParameterState's `function <ParameterState.function>`.  The ParameterState then calls
+its `function <ParameterState.function>` with the parameter to which it is assigned, and the result is used as
+the value of that parameter by the function of the Component to which the ParameterState belongs.
 
+COMMENT:
 .. _ParameterState_Runtime_Parameters:
 
 Runtime Specification of Parameters
@@ -301,9 +285,9 @@ executed or run; ordinarily, this should be done using `control projections <Con
 "on-the-fly" in two ways:  by specifying runtime parameters for a mechanism as part of a tuple where it is
 specified in the `pathway <Process.Process_Base.pathway>` of a process, or in the
 `execute <Mechanism.Mechanism_Base.execute>`
-COMMENT:
+XXCOMMENT:
     or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods
-COMMENT
+XXCOMMENT
 method for a mechanism, process or system (see `Mechanism_Runtime_Parameters`).  By default, runtime assignment of
 a parameter value is *one-time*:  that is, it applies only for the round of execution in which it is specified,
 and the parameter's value returns to the default for the instance of the component to which it belongs after
@@ -311,10 +295,10 @@ execution.  The `runtimeParamsStickyAssignmentPref` can be used to specify persi
 however in general it is better to modify a parameter's value permantently by assigning the value directly its 
 corresponding attribute, or using the `assign_params` method of its component.
 
-COMMENT:
+XXCOMMENT:
     IS THE MECHANISM TUPLE SPECIFICATION ONE TIME OR EACH TIME? <- BUG IN merge_dictionary()
     IS THE RUN AND EXECUTE SPECIFICATION ONE TRIAL OR ALL TRIALS IN THAT RUN?
-COMMENT
+XXCOMMENT
 
 .. note::
    At this time, runtime specification can be used only  for the parameters of a mechanism or of its ``function``.
@@ -324,10 +308,10 @@ COMMENT
  
 .. _ParameterState_Runtime_Figure:
 
-COMMENT:
+XXCOMMENT:
    XXXXX MAKE SURE ROLE OF ParamModulationOperation FOR runtime params IS EXPLAINED THERE (OR EXPLAIN HERE)
    XXXX DOCUMENT THAT MOD OP CAN BE SPECIFIED IN A TUPLE WITH PARAM VALUE (INSTEAD OF PROJECTION) AS PER FIGURE?
-COMMENT
+XXCOMMENT
 
 The figure below shows how runtime paramter specification combines the others ways to specify a parameter's value:
 
@@ -359,10 +343,11 @@ The figure below shows how runtime paramter specification combines the others wa
          param_y is given a runtime value (violet) but no runtime Modulation;
          the parameterState's parameterModulationOperation is set to SUM (green)
 
-       COMMENT:
+       XXCOMMENT:
            NOTES: CAPS FOR PARAM SPECIFICATION IN DICTS -> KEYWORDS
                   AUGMENT FIGURE TO SHOW PARAM SPECIFICATIONS FOR BOTH THE OBJECT AND ITS FUNCTION
-       COMMENT
+       XXCOMMENT
+COMMENT
 
 .. _ParameterState_Class_Reference:
 
@@ -492,26 +477,10 @@ class ParameterState(State_Base):
         performs an element-wise (Hadamard) aggregation  of the `value <Projecction.Projection.value>` of each
         projection received by the parameterState.
 
-    COMMENT:
-        base_value : number, list or np.ndarray
-            the default value for the parameterState.  It is combined with the aggregated value of any projections it
-            receives using its `parameterModulationOperation <ParameterState.parameterModulationOperation>`
-            and then assigned to `value <ParameterState.value>`.
-    
-        parameterModulationOperation : Modulation : default Modulation.PRODUCT
-            the arithmetic operation used to combine the aggregated value of any projections is receives
-            (the result of the parameterState's `function <ParameterState.function>`) with its
-            `base_value <ParameterState.base_value>`, the result of which is assigned to `value <ParameterState.value>`.
-    COMMENT
-
     value : number, list or np.ndarray
-        the aggregated value of the projections received by the ParameterState, combined with the
-        `base_value <ParameterState.base_value>` using its
-        `parameterModulationOperation <ParameterState.parameterModulationOperation>`
-        COMMENT:
-        as well as any runtime specification
-        COMMENT
-        .  This is the value assigned to the parameter for which the parameterState is responsible.
+        the aggregated value of the projections received by the ParameterState, modulated by its
+        `function <ParameterState.function>`.  This is the value used for the parameter by the function of the
+        Component to which the ParameterState belongs.
 
     name : str : default <State subclass>-<index>
         the name of the inputState.

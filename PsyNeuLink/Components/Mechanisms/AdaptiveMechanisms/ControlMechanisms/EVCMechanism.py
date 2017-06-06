@@ -298,9 +298,9 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.O
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
 
-OBJECT = 0
-WEIGHT = 1
-EXPONENT = 2
+OBJECT_INDEX = 0
+WEIGHT_INDEX = 1
+EXPONENT_INDEX = 2
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
@@ -859,6 +859,7 @@ class EVCMechanism(ControlMechanism_Base):
             # self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].input_value
             self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].variable
 
+    # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     # FIX: MOVE THIS TO ControlMechanism??
     def _instantiate_monitoring_mechanism(self, context=None):
         """
@@ -880,11 +881,17 @@ class EVCMechanism(ControlMechanism_Base):
 
         self._get_monitored_states(context=context)
 
-        for state in self.monitored_output_states:
+        monitoring_input_states = []
+        for i, state in enumerate(self.monitored_output_states):
             self._validate_monitored_state_in_system(state)
+            monitoring_input_states.append({NAME: state.name,
+                                            WEIGHT: float(self.monitor_for_control_weights_and_exponents[i][0]),
+                                            EXPONENT: float(self.monitor_for_control_weights_and_exponents[i][1])
+                                            })
 
         # Note: weights and exponents are assigned as parameters of outcome_function in _get_monitored_states
-        self.monitoring_mechanism = ObjectiveMechanism(monitored_values=self.monitored_output_states.copy(),
+        self.monitoring_mechanism = ObjectiveMechanism(monitored_values=self.monitored_output_states,
+                                                       # input_states=monitoring_input_states,
                                                        function=self.outcome_function,
                                                        name=self.name + ' Monitoring Mechanism')
 
@@ -985,7 +992,7 @@ class EVCMechanism(ControlMechanism_Base):
             _validate_monitored_value(self, item, context=context)
             # Extract references from specification tuples
             if isinstance(item, tuple):
-                all_specs_extracted_from_tuples.append(item[OBJECT])
+                all_specs_extracted_from_tuples.append(item[OBJECT_INDEX])
             # Otherwise, add item as specified:
             else:
                 all_specs_extracted_from_tuples.append(item)
@@ -1055,7 +1062,7 @@ class EVCMechanism(ControlMechanism_Base):
                 # Extract refs from tuples and add to local_specs
                 for item in mech_specs:
                     if isinstance(item, tuple):
-                        local_specs.append(item[OBJECT])
+                        local_specs.append(item[OBJECT_INDEX])
                         continue
                     local_specs.append(item)
 
@@ -1105,7 +1112,7 @@ class EVCMechanism(ControlMechanism_Base):
                     # Extract refs from tuples and add to local_specs
                     for item in output_state_specs:
                         if isinstance(item, tuple):
-                            local_specs.append(item[OBJECT])
+                            local_specs.append(item[OBJECT_INDEX])
                             continue
                         local_specs.append(item)
 
@@ -1171,15 +1178,15 @@ class EVCMechanism(ControlMechanism_Base):
         # Get and assign specification of weights and exponents for mechanisms or outputStates specified in tuples
         for spec in all_specs:
             if isinstance(spec, tuple):
-                object_spec = spec[OBJECT]
+                object_spec = spec[OBJECT_INDEX]
                 # For each outputState in monitored_output_states
                 for item in self.monitored_output_states:
                     # If either that outputState or its owner is the object specified in the tuple
                     if item is object_spec or item.name is object_spec or item.owner is object_spec:
                         # Assign the weight and exponent specified in the tuple to that outputState
                         i = self.monitored_output_states.index(item)
-                        weights[i] = spec[WEIGHT]
-                        exponents[i] = spec[EXPONENT]
+                        weights[i] = spec[WEIGHT_INDEX]
+                        exponents[i] = spec[EXPONENT_INDEX]
 
         # Assign weights and exponents to corresponding attributes of default OUTCOME_FUNCTION
         # Note: done here (rather than in call to outcome_function in value_function) for efficiency
