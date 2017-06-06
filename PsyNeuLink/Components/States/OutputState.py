@@ -730,11 +730,11 @@ def _instantiate_output_states(owner, context=None):
                 if item is not None:
                     # assign dict to owner's output_state list
                     owner.output_states[owner.output_states.index(output_state)] = \
-                                                                owner.standard_output_states.get_dict(output_state)
+                                                            owner.standard_output_states.get_dict(output_state)
                     output_state = item
 
             # specification dict, so get its INDEX attribute if specified, and apply calculate function if specified
-            if isinstance(output_state, dict):
+            elif isinstance(output_state, dict):
                 try:
                     index = output_state[INDEX]
                 except KeyError:
@@ -743,6 +743,10 @@ def _instantiate_output_states(owner, context=None):
                     output_state_value = output_state[CALCULATE](owner_value[index])
                 else:
                     output_state_value = owner_value[index]
+
+            else:
+                raise OutputState("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}".
+                                  format(output_state, owner.name))
 
             constraint_value.append(output_state_value)
     else:
@@ -765,18 +769,21 @@ def _instantiate_output_states(owner, context=None):
 
 
 class StandardOutputStates():
-    """Assign names and indices of specification dicts in standard_output_state as properties of the owner's class 
+    """Collection of OutputState specification dictionaries for standard_output_states of a class
     
-    Provide access to dicts and lists of the values of their name and index entries.
-    
-    **indices** arg specifies how to assign the value of the INDEX entry in each dict listed in output_state_dicts;
+    data attribute contains dictionary of OutputState specification dictionaries
+    indices contains a list of the default index for each OutputState specified
+    names containes a list of the default name of each OutputState
+
+    **indices** arg of constructore specifies how to assign the INDEX entry for each dict listed in output_state_dicts;
         the arg can be:
-        * PRIMARY_OUTPUT_STATES keyword - assigns the INDEX for the owner's primary outputState to all indices;
-        * SEQUENTIAL keyword - assigns sequentially incremented int to each INDEX entry
-        * a list of ints - assigns each int to the corresponding entry in output_state_dicts
+            * PRIMARY_OUTPUT_STATES keyword - assigns the INDEX for the owner's primary outputState to all indices;
+            * SEQUENTIAL keyword - assigns sequentially incremented int to each INDEX entry
+           * a list of ints - assigns each int to the corresponding entry in output_state_dicts
         if it is not specified, assigns `None` to each INDEX entry.
-        
-    
+
+    `get_dict` method takes a name as its arg and returns a copy of the designated OutputState specification dictionary
+
     """
 
     @tc.typecheck
@@ -785,11 +792,12 @@ class StandardOutputStates():
                  output_state_dicts:list,
                  indices:tc.optional(tc.any(int, str, list))=None):
 
+        # Validate that all items in output_state_dicts are dicts
         for item in output_state_dicts:
             if not isinstance(item, dict):
-                raise OutputStateError("All items of {} for {} must be dicts ({} is not)".
+                raise OutputStateError("All items of {} for {} must be dicts (but {} is not)".
                                      format(self.__class__.__name__, owner.componentName, item))
-        self.data = output_state_dicts
+        self.data = output_state_dicts.copy()
 
         # Assign indices
 
@@ -800,7 +808,7 @@ class StandardOutputStates():
         # outputState
         if isinstance(indices, list):
             if len(indices) != len(output_state_dicts):
-                raise OutputStateError("Legnth of the list of indices provided to {} for {} ({}) "
+                raise OutputStateError("Length of the list of indices provided to {} for {} ({}) "
                                        "must equal the number of outputStates dicts provided ({})"
                                        "length".format(self.__class__.__name__,
                                                        owner.name,
@@ -840,7 +848,7 @@ class StandardOutputStates():
 
     @tc.typecheck
     def get_dict(self, name:str):
-        return self.data[self.names.index(name)]
+        return self.data[self.names.index(name)].copy()
     
     @property
     def names(self):
@@ -849,8 +857,6 @@ class StandardOutputStates():
     @property
     def indices(self):
         return [item[INDEX] for item in self.data]
-
-
 
 
 def make_readonly_property(val):
