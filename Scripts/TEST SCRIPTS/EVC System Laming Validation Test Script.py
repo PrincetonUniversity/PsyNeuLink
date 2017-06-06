@@ -81,7 +81,7 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   enable_controller=True,
                   monitor_for_control=[Reward,
                                        Decision.PROBABILITY_UPPER_THRESHOLD,
-                                       (Decision.RESPONSE_TIME, -1, 1)],
+                                       (Decision.RESPONSE_TIME, 1, -1)],
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')

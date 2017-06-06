@@ -893,6 +893,7 @@ class Component(object):
                         for param_name in sorted(list(function.user_params_for_instantiation.keys())):
                             params[FUNCTION_PARAMS].__additem__(param_name,
                                                                 function.user_params_for_instantiation[param_name])
+                                                                # function.user_params[param_name])
 
                     # It is a generic function
                     elif isfunction(function):
