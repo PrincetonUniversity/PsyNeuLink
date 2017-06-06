@@ -20,11 +20,16 @@ def test_DDM_Integrator():
     T = DDM(
         name='DDM',
         function=DriftDiffusionIntegrator(
+            initializer=20.0
         ),
         time_scale=TimeScale.TIME_STEP
     )
     val = float(T.execute(stim)[0])
-    assert val == 10
+
+    T.function_object.initializer = 30.0
+    val2 = float(T.execute(stim)[0])
+    # assert [val, val2]  == [10, 30]
+test_DDM_Integrator()
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
@@ -143,7 +148,8 @@ def test_DDM_noise_int():
             time_scale=TimeScale.TIME_STEP
         )
         float(T.execute(stim)[0])
-    assert "When integration type is DIFFUSION, noise must be a float" in str(error_text.value)
+        print(str(error_text.value))
+    assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
@@ -164,7 +170,7 @@ def test_DDM_noise_fn():
             time_scale=TimeScale.TIME_STEP
         )
         float(T.execute(stim)[0])
-    assert "When integration type is DIFFUSION, noise must be a float" in str(error_text.value)
+    assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
 
 # ======================================= INPUT TESTS ============================================
 
