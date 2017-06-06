@@ -1298,7 +1298,9 @@ class Mechanism_Base(Mechanism):
             try:
                 default_weights = self.function_object.weights
             except AttributeError:
-                default_weights = [1.0] * len(self.input_states)
+                default_weights = None
+            if default_weights is None:
+                default_weights = default_weights or [1.0] * len(self.input_states)
 
             # Assign any weights specified in input_state spec
             weights = [[input_state.weight if input_state.weight is not None else default_weight]
@@ -1312,7 +1314,9 @@ class Mechanism_Base(Mechanism):
             try:
                 default_exponents = self.function_object.exponents
             except AttributeError:
-                default_exponents = [1.0] * len(self.input_states)
+                default_exponents = None
+            if default_exponents is None:
+                default_exponents = default_exponents or [1.0] * len(self.input_states)
 
             # Assign any exponents specified in input_state spec
             exponents = [[input_state.exponent if input_state.exponent is not None else default_exponent]

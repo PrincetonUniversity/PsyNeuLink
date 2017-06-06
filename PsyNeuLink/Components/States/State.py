@@ -2027,9 +2027,9 @@ def _parse_state_spec(owner,
                          if not param_spec in STANDARD_ARGS]:
                 params = params or {}
                 params[spec] = state_spec[spec]
-                # # MODIFIED 6/5/17 OLD: [REINSTATED, BUT CAUSING TROUBLE IN STROOP TEST SCRIPT]
-                # del state_spec[spec]
-                # # MODIFIED 6/5/17 END
+                # MODIFIED 6/5/17 OLD: [REINSTATED, BUT CAUSING TROUBLE IN STROOP TEST SCRIPT]
+                del state_spec[spec]
+                # MODIFIED 6/5/17 END
             state_dict.update(state_spec)
             # state_dict = state_spec
             if params:
@@ -2120,5 +2120,10 @@ def _parse_state_spec(owner,
             owner_name = owner.__class__.__name__
         raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
                          format(state_type_name, owner.name, state_spec))
+
+
+    # If variable is none, use value:
+    if state_dict[VARIABLE] is None:
+        state_dict[VARIABLE] = state_dict[VALUE]
 
     return state_dict
