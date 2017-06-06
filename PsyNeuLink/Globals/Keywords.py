@@ -534,7 +534,6 @@ EXPONENT = 'exponent'
 # ParameterStates:
 PARAMETER_STATES = 'parameter_states'
 PARAMETER_STATE_PARAMS = 'parameter_state_params'
-PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
 
 # OutputStates:
 OUTPUT_STATES = 'output_states'
