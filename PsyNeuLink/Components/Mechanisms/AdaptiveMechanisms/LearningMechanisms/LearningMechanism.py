@@ -798,12 +798,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                        context=context)
 
                 # Check that param_name is the name of an attribute of the MappingProjection to be learned
-                if not hasattr(mapping_proj, param_name) and not hasattr(mapping_proj.function_object, param_name):
+                # if not hasattr(mapping_proj, param_name) and not hasattr(mapping_proj.function_object, param_name):
+                if not param_name in (set(mapping_proj.user_params) | set(mapping_proj.user_params[FUNCTION_PARAMS])):
                     raise LearningMechanismError("{} (in specification of {} for {}) is not an "
                                                 "attribute of {} or its function"
                                                 .format(param_name, LEARNING_SIGNAL, self.name, mapping_proj))
                 # Check that the MappingProjection to be learned has a parameterState for the param
-                if not param_name in mapping_proj._parameter_states.names:
+                if mapping_proj._parameter_states and not param_name in mapping_proj._parameter_states.names:
                     raise LearningMechanismError("There is no ParameterState for the parameter ({}) of {} "
                                                 "specified in {} for {}".
                                                 format(param_name, mapping_proj.name, LEARNING_SIGNAL, self.name))
