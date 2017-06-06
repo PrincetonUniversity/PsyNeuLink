@@ -1486,12 +1486,6 @@ class LinearCombination(
         else:
             scale = self.scale
 
-        # FIX: CHECK THAT A SINGLE WEIGHT MATRIX (FROM MappingProjection.matrix) DOESN'T GET REDUCED
-        #           (I.E., THAT IT IS "WRAPPED" IN AN EXTRA DIMENSION IN ParameterState.update
-        #      OR, ALTERNATIVELY, THAT OFFSET IS APPENDED TO variable IF operation = SUM
-        #                         AND  SCALE IS APPENDED TO variable IF opeation = PRODUCT
-        #      HOWEVER, WOULD STILL NEED TO DEAL WITH THE OTHER ONE
-
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS _validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
         if np_array_less_than_2d(self.variable):
@@ -1551,7 +1545,6 @@ class LinearCombination(
         else:
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
                                 format(self.paramsCurrent[OPERATION].self.Operation.SUM))
-        # FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
 
     @property
