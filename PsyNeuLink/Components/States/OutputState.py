@@ -734,7 +734,8 @@ def _instantiate_output_states(owner, context=None):
                     output_state = item
 
             # specification dict, so get its INDEX attribute if specified, and apply calculate function if specified
-            elif isinstance(output_state, dict):
+            if isinstance(output_state, dict):
+            # elif isinstance(output_state, dict):
                 try:
                     index = output_state[INDEX]
                 except KeyError:
@@ -744,9 +745,9 @@ def _instantiate_output_states(owner, context=None):
                 else:
                     output_state_value = owner_value[index]
 
-            else:
-                raise OutputState("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}".
-                                  format(output_state, owner.name))
+            # else:
+            #     raise OutputStateError("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}".
+            #                            format(output_state, owner.name))
 
             constraint_value.append(output_state_value)
     else:
