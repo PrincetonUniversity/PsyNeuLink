@@ -583,8 +583,6 @@ class ParameterState(State_Base):
                                              prefs=prefs,
                                              context=self)
 
-        self.parameterModulationOperation = self.paramsCurrent[PARAMETER_MODULATION_OPERATION]
-
     def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that parameterState (as identified by its name) is for a valid parameter of the owner
 
