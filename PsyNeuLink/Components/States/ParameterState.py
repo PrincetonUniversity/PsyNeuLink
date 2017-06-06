@@ -556,7 +556,6 @@ class ParameterState(State_Base):
                  reference_value=None,
                  variable=None,
                  function=Linear(),
-                 parameter_modulation_operation=Modulation.MULTIPLY,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -569,7 +568,6 @@ class ParameterState(State_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                  parameter_modulation_operation=parameter_modulation_operation,
                                                   params=params)
 
         self.reference_value = reference_value

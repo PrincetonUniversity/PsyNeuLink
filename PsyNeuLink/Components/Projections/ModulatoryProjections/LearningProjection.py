@@ -298,7 +298,6 @@ class LearningProjection(ModulatoryProjection_Base):
                                WEIGHT_CHANGE_PARAMS:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes MappingProjection.function is LinearCombination
                                        FUNCTION_PARAMS: {OPERATION: SUM},
-                                       PARAMETER_MODULATION_OPERATION: Modulation.ADD,
                                        PROJECTION_TYPE: LEARNING_PROJECTION}
                                })
 

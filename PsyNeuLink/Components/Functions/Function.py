@@ -1525,7 +1525,7 @@ class LinearCombination(
                     result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
 
         elif (operation is PRODUCT):
-            product = np.product([self.variable], axis=0)
+            product = np.product(self.variable, axis=0)
             if isinstance(scale, numbers.Number):
                 # Scalar scale and offset
                 if isinstance(offset, numbers.Number):
@@ -1541,6 +1541,9 @@ class LinearCombination(
                 else:
                     hadamard_product = np.product(np.append([product], [scale], axis=0), axis=0)
                     result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
+
+        # elif operation is PRODUCT:
+        #     result = reduce(mul, self.variable, 1)
 
         else:
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
