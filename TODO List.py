@@ -173,6 +173,14 @@
 
 # DOCUMENTATION: TABLE SOMEWHERE OF ALL SPECIFICATION DICIONARIES AND THEIR ENTRIES
 
+# DOCUMENTATION: constructor args are all stored in user_params:
+#                       properties are created for them on their classes
+#                       they are validated when assigned from the command line
+#                       validation can be avoided (caveat emptor) by assigning to the backing_field (_param)
+#                paramClassDefaults are NOT in user_params:
+#                       no properties are created for them
+#                       they are not validated when assigned
+
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
@@ -223,6 +231,8 @@
 #                 # @property
 #                 # def base_value(self):
 
+# IMPLEMENT:  FUNCTION ENTRIES OF STATE SPECIFICATION DICTIONARY
+# IMPLEMENT:  USE STATE_SPECIFATION_DICT TO OVERRIDE MODULATOIN META PARAMS (BY REASSIGNING THEM TO OTHER FCT PARAMS)
 # IMPLEMENT:  MODULATION_PROJECTION ENTRIES OF STATE SPECIFICATION DICTIONARY
 # IMPLEMENT: standard_output_states for ObjectiveMechanism, LCA, RecurrentTransfer, and Intregrator
 #              (use ones at top of OutputState)
@@ -232,11 +242,13 @@
 # IMPLEMENT: Add WEIGHTS and EXPONENTS entry (or single one with tuple value) to inputState specification dicts
 #              and use that in ObjectiveMechanism instead of args or tuple specs
 # IMPLEMENT: Add GATING entry to both input and otuput state dicts
+# IMPLEMENT: modulation_function to specification dict
 
 #  DOCUMENTATION: State Specification Dictionaries:
 #                            - general notion, schema and keys common to all states (in State)
 #                                  STATE_PROJECTIONS
 #                                  MODULATORY_PROJECTIONS
+#                                  MODULATION_FUNCTION
 #                            - specific ones for each subclass (in subclass pages)
 #                                  InputState:
 #                                      ??SOURCES [=STATE PROJECTIONS] can be string, mech, or outputState
@@ -247,8 +259,8 @@
 #                                  OutputState:
 #                                      DESTINATIONS [=STATE_PROJECTIONS] can be string, mech, or inputStae
 #                                      GATING [=MODULATORY PROJECTIONS]
-#  DOCUMENTATION: Add mention of weights and exponents specification (in state specificaditon dict or in function)
-#  DOCUMENTATION: Add mention of `standard_output_states` to Mechanism
+#  DOCUMENTATION: weights and exponents args/attributes
+#  DOCUMENTATION: Add mention of `standard_input_states` and `standard_output_states` to Mechanism
 #  DOCUMENTATION: Add mention of specification dictionary format for **control_signals** arg for ControlMechanism
 #  DOCUMENTATION: Matrix specification as 2nd item of in 2-item tuple in list for input_states arg of Mechanism
 #  FIX: `error_signal` as default primary outputState
@@ -376,7 +388,7 @@
 #                    creates a default LearningSignal, along with ERROR output_state
 
 # IMPLEMENT: OVERRIDE FUNCTIONALITY FOR ModulationParam
-
+# IMPLEMENT: FUNCTION to specification dict (state's function)
 # IMPLEMENT: Hadamard modulation for LinearCombination:
 #                hadamard_offset and hadamard_scale params
 #                applied to result of standard LinearCombination function
