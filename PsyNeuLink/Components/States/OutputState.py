@@ -708,6 +708,7 @@ def _instantiate_output_states(owner, context=None):
     # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_STATES]
     #        (that is, there is the same number of items in owner_value as there are outputStates)
     #        then increment index so as to assign each item of owner_value to each outputState
+    # IMPLEMENTATION NOTE:  SHOULD BE REFACTORED TO USE _parse_state_spec TO PARSE ouput_states arg
     if owner.output_states:
         for i, output_state in enumerate(owner.output_states):
 
