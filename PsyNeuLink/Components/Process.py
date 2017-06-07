@@ -1522,7 +1522,7 @@ class Process_Base(Process):
     def _issue_warning_about_existing_projections(self, mechanism, context=None):
 
         # Check where the projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
-        for projection in mechanism.input_state.afferents + mechanism.input_state.mod_afferents:
+        for projection in mechanism.input_state.all_afferents:
 
             # Projection to first Mechanism in Pathway comes from a Process input
             if isinstance(projection.sender, ProcessInputState):
@@ -1763,7 +1763,7 @@ class Process_Base(Process):
                 input_state._deferred_init()
                 # Restrict projections to those from mechanisms in the current process
                 projections = []
-                for projection in input_state.afferents + input_state.mod_afferents:
+                for projection in input_state.all_afferents:
                     try:
                         if self in projection.sender.owner.processes:
                             projections.append(projection)
@@ -1832,9 +1832,6 @@ class Process_Base(Process):
                 for parameter_state in projection._parameter_states:
                     # Initialize each projection to the parameterState (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
-                    # MODIFIED 6/7/17 OLD:
-                    # for param_projection in parameter_state.afferents + parameter_state.mod_afferents:
-                    # MODIFIED 6/7/17 END
                     for param_projection in parameter_state.mod_afferents:
                         param_projection._deferred_init(context=context)
                         if isinstance(param_projection, LearningProjection):

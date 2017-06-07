@@ -1191,7 +1191,7 @@ class System_Base(System):
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.input_states:
-                for projection in input_state.afferents + input_state.mod_afferents:
+                for projection in input_state.all_afferents:
                     sender = projection.sender.owner
                     system_processes = self.processes
                     if isinstance(sender, Process):
@@ -1201,7 +1201,7 @@ class System_Base(System):
                         del projection
 
             # If sender_mech has no projections left, raise exception
-            if not any(any(projection for projection in input_state.afferents + input_state.mod_afferents)
+            if not any(any(projection for projection in input_state.all_afferents)
                        for input_state in sender_mech.input_states):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
@@ -1682,7 +1682,7 @@ class System_Base(System):
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.input_states:
-                for projection in input_state.afferents + input_state.mod_afferents:
+                for projection in input_state.all_afferents:
                     sender = projection.sender.owner
                     system_processes = self.processes
                     if isinstance(sender, Process):
@@ -1929,11 +1929,7 @@ class System_Base(System):
         self.controller._execution_id = self._execution_id
         if self.enable_controller and self.controller.input_states:
             for state in self.controller.input_states:
-                # # MODIFIED 6/7/17 OLD:
-                # for projection in state.afferents:
-                # MODIFIED 6/7/17 NEW:
-                for projection in state.afferents + state.mod_afferents:
-                # MODIFIED 6/7/17 END
+                for projection in state.all_afferents:
                     projection.sender.owner._execution_id = self._execution_id
 
         self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
