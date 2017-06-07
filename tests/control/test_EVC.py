@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
@@ -377,13 +378,17 @@ def test_EVC_gratton():
     # generate stimulus environment
 
     nTrials = 3
-    targetFeatures = [1]
-    flankerFeatures = [1]  # for full simulation: flankerFeatures = [-1,1]
-    reward = 100
+    targetFeatures = [1, 1, 1]
+    flankerFeatures = [1, -1, 1]  # for full simulation: flankerFeatures = [-1,1]
+    reward = [100, 100, 100]
 
-    targetInputList = np.random.choice(targetFeatures, nTrials).tolist()
-    flankerInputList = np.random.choice(flankerFeatures, nTrials).tolist()
-    rewardList = (np.ones(nTrials) * reward).tolist()  # np.random.choice(reward, nTrials).tolist()
+    targetInputList = targetFeatures
+    flankerInputList = flankerFeatures
+    rewardList = reward
+
+    # targetInputList = np.random.choice(targetFeatures, nTrials).tolist()
+    # flankerInputList = np.random.choice(flankerFeatures, nTrials).tolist()
+    # rewardList = (np.ones(nTrials) * reward).tolist() #np.random.choice(reward, nTrials).tolist()
 
     stim_list_dict = {Target_Stim: targetInputList,
                       Flanker_Stim: flankerInputList,
@@ -393,7 +398,47 @@ def test_EVC_gratton():
 
     # mySystem.show_graph()
 
+    def evaluate_by_trial(trial, expected_output=None):
+        for i in range(len(expected_output[trial])):
+            val, expected = expected_output[i]
+            np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on trial {1} expected_output[{0}]'.format(i, trial))
+
     mySystem.run(
         num_executions=nTrials,
         inputs=stim_list_dict,
     )
+
+    expected_output = [
+        [
+            # 0 = {tuple} <class 'tuple'>: ('Target Stimulus', [array([ 0.3324]), array(0.3324), array(0.0)])
+            # 1 = {tuple} <class 'tuple'>: ('Flanker Stimulus', [array([ 0.35452218]), array(0.3545221843), array(0.0)])
+            # 2 = {tuple} <class 'tuple'>: ('Target Representation', [array([ 0.59832]), array(0.5983199999999999), array(0.0)])
+            # 3 = {tuple} <class 'tuple'>: ('Flanker Representation', [array([ 0.63813993]), array(0.6381399317399999), array(0.0)])
+            # 4 = {tuple} <class 'tuple'>: ('Automatic Component', [array([ 0.68692218]), array(0.6869221843), array(0.0)])
+            # 5 = {tuple} <class 'tuple'>: ('Decision', [array([ 0.2645]), array([ 0.28289958]), array([ 0.98320731]), array([ 0.01679269])])
+            # 6 = {tuple} <class 'tuple'>: ('Reward', [array([ 100.]), array(100.0), array(0.0)])
+            (mySystem.controller.EVC_max, np.array([90.8924436701277])),
+            (mySystem.controller.EVC_max_policy, np.array([1.2, 1.4])),
+            (mySystem.controller.EVC_max_state_values, np.array([[98.32073139]])),
+        ],
+        #         [
+        # 0 = {tuple} <class 'tuple'>: ('Target Stimulus', [array([ 0.3324]), array(0.3324), array(0.0)])
+        # 1 = {tuple} <class 'tuple'>: ('Flanker Stimulus', [array([-0.35452218]), array(-0.3545221843), array(0.0)])
+        # 2 = {tuple} <class 'tuple'>: ('Target Representation', [array([ 0.59832]), array(0.5983199999999999), array(0.0)])
+        # 3 = {tuple} <class 'tuple'>: ('Flanker Representation', [array([-0.63813993]), array(-0.6381399317399999), array(0.0)])
+        # 4 = {tuple} <class 'tuple'>: ('Automatic Component', [array([-0.02212218]), array(-0.022122184300000014), array(0.0)])
+        # 5 = {tuple} <class 'tuple'>: ('Decision', [array([-0.2645]), array([ 0.42944107]), array([ 0.46727945]), array([ 0.53272055])])
+        # 6 = {tuple} <class 'tuple'>: ('Reward', [array([ 100.]), array(100.0), array(0.0)])
+        #         ],
+        #         [
+        # 0 = {tuple} <class 'tuple'>: ('Target Stimulus', [array([ 0.3324]), array(0.3324), array(0.0)])
+        # 1 = {tuple} <class 'tuple'>: ('Flanker Stimulus', [array([ 0.35452218]), array(0.3545221843), array(0.0)])
+        # 2 = {tuple} <class 'tuple'>: ('Target Representation', [array([ 0.59832]), array(0.5983199999999999), array(0.0)])
+        # 3 = {tuple} <class 'tuple'>: ('Flanker Representation', [array([ 0.63813993]), array(0.6381399317399999), array(0.0)])
+        # 4 = {tuple} <class 'tuple'>: ('Automatic Component', [array([ 0.68692218]), array(0.6869221843), array(0.0)])
+        # 5 = {tuple} <class 'tuple'>: ('Decision', [array([ 0.2645]), array([ 0.28289958]), array([ 0.98320731]), array([ 0.01679269])])
+        # 6 = {tuple} <class 'tuple'>: ('Reward', [array([ 100.]), array(100.0), array(0.0)])
+        #         ]
+
+    ]
+
