@@ -455,8 +455,8 @@ class State_Base(State):
                           context=context)
 
         self.afferents = []
-        self.efferents = []
         self.mod_afferents = []
+        self.efferents = []
         self._stateful = False
 
         self._trans_proj_values = []
@@ -1408,6 +1408,10 @@ class State_Base(State):
     @projections.setter
     def projections(self, assignment):
         self._projections = assignment
+
+    @property
+    def all_projections(self):
+        return self.trans_projections + self.mod_projections
 
 
 def _instantiate_state_list(owner,

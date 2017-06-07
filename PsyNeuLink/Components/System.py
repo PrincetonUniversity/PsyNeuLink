@@ -1191,7 +1191,7 @@ class System_Base(System):
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.input_states:
-                for projection in input_state.afferents:
+                for projection in input_state.afferents + input_state.mod_afferents:
                     sender = projection.sender.owner
                     system_processes = self.processes
                     if isinstance(sender, Process):
@@ -1201,7 +1201,7 @@ class System_Base(System):
                         del projection
 
             # If sender_mech has no projections left, raise exception
-            if not any(any(projection for projection in input_state.afferents)
+            if not any(any(projection for projection in input_state.afferents + input_state.mod_afferents)
                        for input_state in sender_mech.input_states):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
@@ -1682,7 +1682,7 @@ class System_Base(System):
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.input_states:
-                for projection in input_state.afferents:
+                for projection in input_state.afferents + input_state.mod_afferents:
                     sender = projection.sender.owner
                     system_processes = self.processes
                     if isinstance(sender, Process):
@@ -1929,7 +1929,11 @@ class System_Base(System):
         self.controller._execution_id = self._execution_id
         if self.enable_controller and self.controller.input_states:
             for state in self.controller.input_states:
-                for projection in state.afferents:
+                # # MODIFIED 6/7/17 OLD:
+                # for projection in state.afferents:
+                # MODIFIED 6/7/17 NEW:
+                for projection in state.afferents + state.mod_afferents:
+                # MODIFIED 6/7/17 END
                     projection.sender.owner._execution_id = self._execution_id
 
         self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
@@ -2533,7 +2537,7 @@ class System_Base(System):
         for mech in list(self.mechanisms):
             for parameter_state in mech._parameter_states:
                 try:
-                    for projection in parameter_state.afferents:
+                    for projection in parameter_state.mod_afferents:
                         if isinstance(projection, ControlProjection):
                             controlled_parameters.append(parameter_state)
                 except AttributeError:
@@ -2542,7 +2546,7 @@ class System_Base(System):
                 try:
                     for projection in output_state.efferents:
                         for parameter_state in projection.paramaterStates:
-                            for sender in parameter_state.afferents:
+                            for sender in parameter_state.mod_afferents:
                                 if isinstance(sender, LearningProjection):
                                     learning_projections.append(projection)
                 except AttributeError:
@@ -2786,7 +2790,7 @@ class System_Base(System):
                         # for each sndr of rcvr
                         sndrs = learning_graph[rcvr]
                         for sndr in sndrs:
-                            edge_label = rcvr._parameter_states['matrix'].afferents[0].name
+                            edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
                             G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
                     else:
                         sndrs = learning_graph[rcvr]

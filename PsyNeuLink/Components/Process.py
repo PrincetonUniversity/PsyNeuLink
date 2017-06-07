@@ -1263,7 +1263,7 @@ class Process_Base(Process):
                             try:
                                 learning_projections = list(projection for
                                                         projection in
-                                                        preceding_item._parameter_states[MATRIX].afferents
+                                                        preceding_item._parameter_states[MATRIX].mod_afferents
                                                         if isinstance(projection, LearningProjection))
 
                             # preceding_item doesn't have a parameterStates attrib, so assign one with self.learning
@@ -1348,7 +1348,7 @@ class Process_Base(Process):
                                 # Check if projection's matrix param has a learningSignal
                                 else:
                                     if not (any(isinstance(projection, LearningProjection) for
-                                                projection in matrix_param_state.afferents)):
+                                                projection in matrix_param_state.mod_afferents)):
                                         _add_projection_to(projection,
                                                           matrix_param_state,
                                                           projection_spec=self.learning)
@@ -1522,7 +1522,7 @@ class Process_Base(Process):
     def _issue_warning_about_existing_projections(self, mechanism, context=None):
 
         # Check where the projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
-        for projection in mechanism.input_state.afferents:
+        for projection in mechanism.input_state.afferents + mechanism.input_state.mod_afferents:
 
             # Projection to first Mechanism in Pathway comes from a Process input
             if isinstance(projection.sender, ProcessInputState):
@@ -1832,7 +1832,10 @@ class Process_Base(Process):
                 for parameter_state in projection._parameter_states:
                     # Initialize each projection to the parameterState (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
-                    for param_projection in parameter_state.afferents + parameter_state.mod_afferents:
+                    # MODIFIED 6/7/17 OLD:
+                    # for param_projection in parameter_state.afferents + parameter_state.mod_afferents:
+                    # MODIFIED 6/7/17 END
+                    for param_projection in parameter_state.mod_afferents:
                         param_projection._deferred_init(context=context)
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _monitoring_mechs

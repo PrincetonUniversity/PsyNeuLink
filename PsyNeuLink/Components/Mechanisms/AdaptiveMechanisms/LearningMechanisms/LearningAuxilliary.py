@@ -233,7 +233,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     # IMPLEMENTATION NOTE:  this may be overly restrictive in the context of a system --
     #                       will need to be dealt with in Composition implementation (by examining its learning graph??)
     if any((isinstance(projection, LearningProjection) and not projection is learning_projection) for projection in
-           learning_projection.receiver.afferents):
+           learning_projection.receiver.mod_afferents):
         raise LearningAuxilliaryError("{} can't be assigned as LearningProjection to {} since that already has one.".
                                       format(learning_projection.name, learning_projection.receiver.owner.name))
 
@@ -971,7 +971,7 @@ class LearningComponents(object):
             if not self.error_matrix:
                 return None
             # search the projections to the error_matrix parameter state for a LearningProjection
-            learning_proj = next((proj for proj in self.error_matrix.afferents
+            learning_proj = next((proj for proj in self.error_matrix.mod_afferents
                                  if isinstance(proj, LearningProjection)), None)
             # if there are none, the error_matrix might be for an error_projection to an ObjectiveMechanism
             #   (i.e., the TARGET mechanism)

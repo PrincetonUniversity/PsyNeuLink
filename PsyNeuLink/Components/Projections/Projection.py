@@ -1004,7 +1004,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     # validate that projection has not already been assigned to receiver
     if receiver.verbosePref or projection_spec.sender.owner.verbosePref:
-        if projection_spec in receiver.afferents:
+        if projection_spec in receiver.afferents + receiver.mod_afferents:
             warnings.warn("Request to assign {} as projection to {} was ignored; it was already assigned".
                           format(projection_spec.name, receiver.owner.name))
 
