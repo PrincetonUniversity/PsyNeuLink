@@ -23,9 +23,7 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 
 
 # Mechanisms:
-Input = TransferMechanism(name='Input',
-
-                 )
+Input = TransferMechanism(name='Input')
 
 Reward = TransferMechanism(name='Reward',
                  # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
