@@ -3659,21 +3659,20 @@ class AdaptiveIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
     AdaptiveIntegrator(                 \
-        variable_default=None,  \
-        rate=1.0,               \
-
-        noise=0.0,\
-        scale: parameter_spec = 1.0,\
-        offset: parameter_spec = 0.0,\
-        initializer,     \
-        params=None,            \
-        owner=None,             \
-        prefs=None,             \
+        variable_default=None,          \
+        rate=1.0,                       \
+        noise=0.0,                      \
+        scale: parameter_spec = 1.0,    \
+        offset: parameter_spec = 0.0,   \
+        initializer,                    \
+        params=None,                    \
+        owner=None,                     \
+        prefs=None,                     \
         )
 
-    .. _Integrator:
+    .. _AdaptiveIntegrator:
 
-    Integrate current value of `variable <Integrator.variable>` with its prior value.
+    Integrate current value of `variable <AdaptiveIntegrator.variable>` with its prior value.
 
     Arguments
     ---------
@@ -3684,15 +3683,15 @@ class AdaptiveIntegrator(
 
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <Integrator.variable_default>` (see `rate <Integrator.rate>` for details).
+        `variable <AdaptiveIntegrator.variable_default>` (see `rate <AdaptiveIntegrator.rate>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <Integrator.function>`. (see
-        `noise <Integrator.noise>` for details).
+        specifies random value to be added in each call to `function <AdaptiveIntegrator.function>`. (see
+        `noise <AdaptiveIntegrator.noise>` for details).
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `variable_default <Integrator.variable_default>` (see `initializer <Integrator.initializer>` for details).
+        `variable_default <AdaptiveIntegrator.variable_default>` (see `initializer <AdaptiveIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -3711,35 +3710,42 @@ class AdaptiveIntegrator(
     ----------
 
     variable : number or np.array
-        current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
+        current input value some portion of which (determined by `rate <AdaptiveIntegrator.rate>`) that will be
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d np.array
-        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-        applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <Integrator.variable>`.
+        determines the rate of integration based on current and prior values.  All rate elements must be between 0 and 1
+        (0 = no change; 1 = instantaneous change).
+
+        If rate is a float, it is applied to all elements of `variable <AdaptiveAdaptiveIntegrator.variable>`;
+        if it has more than one element, each element is applied to the corresponding element of
+        `variable <AdaptiveAdaptiveIntegrator.variable>`.
 
     noise : float, function, list, or 1d np.array
-        specifies random value to be added in each call to `function <Integrator.function>`.
+        specifies random value to be added in each call to `function <AdaptiveIntegrator.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`.
+        If noise is a list or array, it must be the same length as `variable <AdaptiveIntegrator.variable_default>`.
 
-        If noise is specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
+        If noise is specified as a single float or function, while `variable <AdaptiveIntegrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
         will be executed separately for each variable element.
 
-    initializer : 1d np.array or list
+    initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
-        `previous_value <Integrator.previous_value>` is set.
+        `previous_value <AdaptiveIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
-        initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
-        array, initializer will be applied to each variable element. In the case of an initializer function, this means
-        that the function will be executed separately for each variable element.
+        If initializer is a list or array, it must be the same length as `variable <AdaptiveIntegrator.variable_default>`.
+
+        TBI:
+
+        Initializer may be a function or list/array of functions.
+
+        If initializer is specified as a single float or function, while `variable <AdaptiveIntegrator.variable>` is
+        a list or array, initializer will be applied to each variable element. In the case of an initializer function,
+        this means that the function will be executed separately for each variable element.
 
     previous_value : 1d np.array : default variableClassDefault
-        stores previous value with which `variable <Integrator.variable>` is integrated.
+        stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -3773,9 +3779,9 @@ class AdaptiveIntegrator(
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context="Integrator Init"):
+                 context="AdaptiveIntegrator Init"):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
@@ -3783,16 +3789,12 @@ class AdaptiveIntegrator(
                                                   offset=offset,
                                                   params=params)
 
-        # Assign here as default, for use in initialization of function
-        self.previous_value = self.paramClassDefaults[INITIALIZER]
-
         super().__init__(variable_default=variable_default,
                          params=params,
                          owner=owner,
                          prefs=prefs,
                          context=context)
 
-        # Reassign to kWInitializer in case default value was overridden
         self.previous_value = self.initializer
 
         self.auto_dependent = True
@@ -3807,7 +3809,7 @@ class AdaptiveIntegrator(
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign variableClassDefault accordingly
                     # Note: this situation can arise when the rate is parameterized (e.g., as an array) in the
-                    #       Integrator's constructor, where that is used as a specification for a function parameter
+                    #       AdaptiveIntegrator's constructor, where that is used as a specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                     #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
@@ -3856,11 +3858,10 @@ class AdaptiveIntegrator(
                         "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
                         "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
 
-        # self._validate_initializer()
-
         if NOISE in target_set:
-            # FIX: SHOULDN'T THIS PASS target_set[NOISE] to _validate_noise() rather than use self.noise?
             self._validate_noise(target_set[NOISE])
+        if INTIALIZER in target_set:
+            self._validate_initializer(target_set[INITIALIZER])
 
 
     def function(self,
@@ -3869,8 +3870,8 @@ class AdaptiveIntegrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: some fraction of `variable <Linear.slope>` combined with some fraction of `previous_value
-        <Integrator.previous_value>` (see `integration_type <Integrator.integration_type>`).
+        Return: some fraction of `variable <AdaptiveIntegrator.variable>` combined with some fraction of `previous_value
+        <AdaptiveIntegrator.previous_value>`.
 
         Arguments
         ---------
@@ -3892,10 +3893,6 @@ class AdaptiveIntegrator(
         updated value of integral : 2d np.array
 
         """
-
-        # FIX:  CONVERT TO NP?
-        # FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
-
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
@@ -4021,14 +4018,19 @@ class DriftDiffusionIntegrator(
         determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
         is set to DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
-    initializer : 1d np.array or list
+    initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
         `previous_value <Integrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
-        initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
-        array, initializer will be applied to each variable element. In the case of an initializer function, this means
-        that the function will be executed separately for each variable element.
+        If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`.
+
+        TBI:
+
+        Initializer may be a function or list/array of functions.
+
+        If initializer is specified as a single float or function, while `variable <Integrator.variable>` is
+        a list or array, initializer will be applied to each variable element. In the case of an initializer function,
+        this means that the function will be executed separately for each variable element.
 
     previous_value : 1d np.array : default variableClassDefault
         stores previous value with which `variable <Integrator.variable>` is integrated.
@@ -4259,14 +4261,19 @@ class OrnsteinUhlenbeckIntegrator(
         determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
         is set to DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
-    initializer : 1d np.array or list
+    initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
         `previous_value <Integrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
-        initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
-        array, initializer will be applied to each variable element. In the case of an initializer function, this means
-        that the function will be executed separately for each variable element.
+        If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`.
+
+        TBI:
+
+        Initializer may be a function or list/array of functions.
+
+        If initializer is specified as a single float or function, while `variable <Integrator.variable>` is
+        a list or array, initializer will be applied to each variable element. In the case of an initializer function,
+        this means that the function will be executed separately for each variable element.
 
     previous_value : 1d np.array : default variableClassDefault
         stores previous value with which `variable <Integrator.variable>` is integrated.
