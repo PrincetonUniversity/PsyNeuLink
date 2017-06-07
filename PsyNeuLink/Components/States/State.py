@@ -810,6 +810,7 @@ class State_Base(State):
             # Initialization of projection is deferred
             if projection_spec.value is DEFERRED_INITIALIZATION:
                 # Assign instantiated "stub" so it is found on deferred initialization pass (see Process)
+            # FIX: UPDATE FOR LEARNING
                 # FIX: UPDATE WITH MODULATION_MODS
                 # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
                 if isinstance(projection_spec, (ControlProjection, GatingProjection)):
@@ -821,6 +822,7 @@ class State_Base(State):
             # Projection was instantiated, so:
             #    - validate value
             #    - assign to State's afferents or mod_afferents list
+            # FIX: UPDATE FOR LEARNING
             # FIX: UPDATE WITH MODULATION_MODS
             # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
             # If it is a ControlProjection or GatingProjection:
