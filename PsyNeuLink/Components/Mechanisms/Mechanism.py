@@ -1852,9 +1852,15 @@ class Mechanism_Base(Mechanism):
                                format(fct_param_name,
                                       str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
 
-        output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
+        # kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        #   if you want more specific output, you can add conditional tests here
+        try:
+            output_string = re.sub('[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output]))
+        except TypeError:
+            output_string = output
 
         print("- output: {}".format(output_string))
+
 
     def plot(self,x_range = None):
         """
