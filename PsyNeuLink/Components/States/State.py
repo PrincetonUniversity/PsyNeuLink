@@ -826,7 +826,7 @@ class State_Base(State):
             #    - check that projection's value is compatible with value of the function param being modulated
             #    - assign projection to mod_afferents
             if isinstance(projection_spec, (ControlProjection, GatingProjection)):
-                function_param_value = self._get_modulated_param(projection_spec).val
+                function_param_value = self._get_modulated_param(projection_spec).function_param_val
                 # Match the projection's value with the value of the function parameter
                 mod_proj_spec_value = type_match(projection_spec.value, type(function_param_value))
                 # If the match was successful (i.e., they are compatible), assign the projection to mod_afferents
@@ -1367,7 +1367,7 @@ class State_Base(State):
         function_param_name = self.function_object.params[function_mod_meta_param_obj.attrib_name]
 
         # Get the function parameter's value
-        function_param_value = self.function_object.params[function_param_name]
+        function_param_value = self.function_object.params[function_param_name] or function_mod_meta_param_obj.init_val
 
         # Return the meta_parameter object, function_param name, and function_param_value
         return ModulatedParam(function_mod_meta_param_obj, function_param_name, function_param_value)

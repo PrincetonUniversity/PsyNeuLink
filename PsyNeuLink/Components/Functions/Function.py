@@ -238,7 +238,7 @@ def _is_modulation_param(val):
     else:
         return False
 
-ModulatedParam = namedtuple('ModulatedParam', 'meta, param, val')
+ModulatedParam = namedtuple('ModulatedParam', 'meta_param, function_param, function_param_val')
 
 # *******************************   get_param_value_for_keyword ********************************************************
 
