@@ -3025,11 +3025,9 @@ class Integrator(
                     # Noise is a list or array of functions
                     if callable(noise[0]):
                         self.noise_function = True
-                    # Noise is a list or array of floats
-                    elif isinstance(noise[0], (float, int)):
+                        # Noise is a list or array of invalid elements
+                    elif not isinstance(noise[0], (float, int)):
                         self.noise_function = False
-                    # Noise is a list or array of invalid elements
-                    else:
                         raise FunctionError(
                             "The elements of a noise list or array must be floats or functions.")
 
@@ -3039,6 +3037,7 @@ class Integrator(
                 raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
                                     "default input value is also a list or array.".format(noise, self.name))
 
+            # Elements of list/array have different types
             if not all(isinstance(x, type(noise[0])) for x in noise):
                 raise FunctionError("All elements of noise list/array ({}) for {} must be of the same type. "
                                     .format(noise, self.name))
@@ -3047,9 +3046,7 @@ class Integrator(
         elif callable(noise):
             self.noise_function = True
 
-        elif isinstance(noise, (float, int)):
-            self.noise_function = False
-        else:
+        elif not isinstance(noise, (float, int)):
             raise FunctionError(
                 "Noise parameter ({}) for {} must be a float, function, array or list of floats, or "
                 "array or list of functions.".format(noise, self.name))
@@ -3079,32 +3076,25 @@ class Integrator(
                     # Initializer is a list or array of functions
                     if callable(initializer[0]):
                         self.initializer_function = True
-                    # Initializer is a list or array of floats
-                    elif isinstance(initializer[0], (float, int)):
-                        self.initializer_function = False
                     # Initializer is a list or array of invalid elements
-                    else:
+                    elif not isinstance(initializer[0], (float, int)):
                         raise FunctionError(
                             "The elements of the initializer list/array ({}) for [] must be floats or functions."
                                 .format(initializer, self.name))
-
 
             # Variable is not a list/array
             else:
                 raise FunctionError("The initializer parameter ({}) for {} may only be a list or array if the "
                                     "default input value is also a list or array.".format(initializer, self.name))
-
+            # elements of initializer list/array are of different types
             if not all(isinstance(x, type(initializer[0])) for x in initializer):
                 raise FunctionError("All elements of initializer list/array ({}) for {} must be of the same type. "
                                     .format(initializer, self.name))
 
-
         elif callable(initializer):
             self.initializer_function = True
 
-        elif isinstance(initializer, (float, int)):
-            self.initializer_function = False
-        else:
+        elif not isinstance(initializer, (float, int)):
             raise FunctionError(
                 "Initializer parameter ({}) for {} must be a float, function, array or list of floats, or "
                 "array or list of functions.".format(initializer, self.name))
@@ -3118,8 +3108,9 @@ class Integrator(
 
     @initializer_reset.setter
     def initializer_reset(self, val):
-        self.previous_value = val
         self._initializer = val
+        self.previous_value = val
+
 
 class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
@@ -3342,6 +3333,8 @@ class SimpleIntegrator(
                 noise = self.noise()
         else:
             noise = self.noise
+
+        # TBI: execute initializer function if self.initializer_function == True
 
         # try:
         #     previous_value = self._initializer
@@ -3587,6 +3580,8 @@ class ConstantIntegrator(
                 noise = self.noise()
         else:
             noise = self.noise
+
+        # TBI: execute initializer function if self.initializer_function == True
 
         # try:
         #     previous_value = params[INITIALIZER]
@@ -3897,6 +3892,8 @@ class AdaptiveIntegrator(
         else:
             noise = self.noise
 
+        # TBI: execute initializer function if self.initializer_function == True
+
         # try:
         #     previous_value = params[INITIALIZER]
         # except (TypeError, KeyError):
@@ -4151,6 +4148,8 @@ class DriftDiffusionIntegrator(
                 noise = self.noise()
         else:
             noise = self.noise
+
+        # TBI: execute initializer function if self.initializer_function == True
 
         # try:
         #     previous_value = params[INITIALIZER]
@@ -4409,6 +4408,8 @@ class OrnsteinUhlenbeckIntegrator(
                 noise = self.noise()
         else:
             noise = self.noise
+
+        # TBI: execute initializer function if self.initializer_function == True
 
         # try:
         #     previous_value = params[INITIALIZER]
