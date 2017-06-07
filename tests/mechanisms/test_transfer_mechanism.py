@@ -5,7 +5,7 @@ from PsyNeuLink.Components.Component import ComponentError
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError
-from PsyNeuLink.Components.Functions.Function import Exponential, Integrator, Linear, Logistic, Reduce, Reinforcement, SoftMax
+from PsyNeuLink.Components.Functions.Function import Exponential, ConstantIntegrator, Linear, Logistic, Reduce, Reinforcement, SoftMax
 from PsyNeuLink.Components.Functions.Function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist
 from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.Globals.Utilities import UtilitiesError
@@ -468,7 +468,7 @@ def test_transfer_mech_integrator_fun():
         T = TransferMechanism(
             name='T',
             default_input_value=[0, 0, 0, 0],
-            function=Integrator(),
+            function=ConstantIntegrator(),
             time_constant=1.0,
             time_scale=TimeScale.TIME_STEP
         )
