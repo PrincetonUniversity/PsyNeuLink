@@ -891,19 +891,22 @@ class Component(object):
                         # Create ReadOnlyDict for FUNCTION_PARAMS and copy function's params into it
                         params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
                         for param_name in sorted(list(function.user_params_for_instantiation.keys())):
+                            # IMPLEMENTATION NOTE:  Need to get function's params from both user_params
+                            #                           (for functions passed in as an arg of the constructor, the
+                            #                            params of which are no longer in user_params_for_instantiation)
+                            #                           and from user_params_for_instantation
+                            #                           (for function that were instantiated within the constructor)
                             params[FUNCTION_PARAMS].__additem__(param_name,
                                                                 function.user_params_for_instantiation[param_name])
-                                                                # function.user_params[param_name])
 
                     # It is a generic function
                     elif isfunction(function):
                         # Assign as is (i.e., don't convert to class), since class is generic
                         # (_instantiate_function also tests for this and leaves it as is)
                         params[FUNCTION] = function
-                        # FIX: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
-                        # if self.verbosePref:
-                        #     warnings.warn("{} is not a PsyNeuLink Function, "
-                        #                   "therefore runtime_params cannot be used".format(default(arg).__name__))
+                        if self.verbosePref:
+                            warnings.warn("{} is not a PsyNeuLink Function, "
+                                          "therefore runtime_params cannot be used".format(default(arg).__name__))
                     else:
                         raise ComponentError("Unrecognized object ({}) specified as function for {}".
                                              format(function, self.name))
@@ -1454,9 +1457,12 @@ class Component(object):
 
         pref_buffer = self.prefs._param_validation_pref
         self.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-
         self.paramsCurrent.update(validated_set)
-
+        # The following is so that:
+        #    if the component is a function and it is passed as an argument to a component,
+        #    then the parameters are available in self.user_params_for_instantiation
+        #    (which is needed when the function is recreated from its class in _assign_args_to_params_dicts)
+        self.user_params_for_instantiation.update(self.user_params)
         self.paramValidationPref = pref_buffer
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:

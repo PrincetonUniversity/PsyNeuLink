@@ -753,6 +753,7 @@ def _instantiate_output_states(owner, context=None):
                                            .format(output_state, owner.name))
 
             constraint_value.append(output_state_value)
+
     else:
         constraint_value = owner_value
 
