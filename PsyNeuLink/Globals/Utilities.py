@@ -202,6 +202,7 @@ def parameter_spec(param):
                            np.ndarray,
                            list,
                            tuple,
+                           dict,
                            function_type,
                            Projection)) or
         (inspect.isclass(param) and issubclass(param, Projection)) or

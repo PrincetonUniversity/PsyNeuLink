@@ -40,6 +40,13 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                                                                      control_signal_params={
                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
                                                                      )),
+                                   # threshold={VALUE: 1.0,
+                                   #            CONTROL_PROJECTION: ControlProjection(function=Linear,
+                                   #                                                  control_signal_params={
+                                   #                                                      ALLOCATION_SAMPLES:
+                                   #                                                          np.arange(0.1, 1.01, 0.3)}
+                                   #                                                  ),
+                                   #            FUNCTION:LinearCombination()},
                                    noise=(0.5),
                                    starting_point=(0),
                                    t0=0.45),
