@@ -415,6 +415,7 @@
 # IMPLEMENT: abstract _parse_state_specs:
 #                 integrate _parse_gating_signal_spec (in GatingSignal) into it
 #                 use in _validate_params for ControlMechanism and LearningMechanism
+# FIX: NEED SOME WAY OF INCLUDING GATING MECHANISM IN SYSTEM AND ASSIGNING IT execution_id
 # FIX: ALLOW ModulationParam TO BE NAME OF AN ACTUAL PARAMETER OF A FUNCTION
 #        MODIFY _get_modulated_param TO LOOK FOR REAL NAME FIRST
 #       THEN ADD HADAMARD OFFSET AND HADAMARD SCALE PARAMS TO LinearCombination
