@@ -577,7 +577,9 @@ def type_match(value, value_type):
         return list(value)
     if value_type is None:
         return None
-    raise UtilitiesError("Type of {} not recognized".format(value))
+    if value_type is type(None):
+        raise UtilitiesError("PROGRAM ERROR: template provided to type_match for {} is \'None\'".format(value))
+    raise UtilitiesError("Type of {} not recognized".format(value_type))
 
 def get_value_from_array(array):
     """Extract numeric value from array, preserving numeric type
