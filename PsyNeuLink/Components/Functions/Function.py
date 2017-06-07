@@ -2916,147 +2916,114 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 class IntegratorFunction(Function_Base):
     componentType = INTEGRATOR_FUNCTION_TYPE
 
-
-# FIX: IF RATE HAS TO BE BETWEEN 0 AND 1, VALIDATE_VARIABLE ACCORDINGLY
-# SEARCH & REPLACE: previous_value -> previous_value
-
 # • why does integrator return a 2d array?
-# • does rate have to be between 0 and 1 (if so, validate_variable)
-# • does rate = 0 and rate = 1 have the same meaning for all integration_types?
-# • should we change "integration_type" to "type"??
 # • are rate and noise converted to 1d np.array?  If not, correct docstring
 # • can noise and initializer be an array?  If so, validated in validate_param?
-# • time_step_size?? (vs rate??)
-# • can noise be a function now?
-
 
 class Integrator(
     IntegratorFunction):  # --------------------------------------------------------------------------------
-    """
-    Integrator(                 \
-        variable_default=None,  \
-        rate=1.0,               \
-        integration_type=CONSTANT,     \
-        noise=0.0,              \
-        time_step_size=1.0,     \
-        initializer,     \
-        params=None,            \
-        owner=None,             \
-        prefs=None,             \
-        )
-
-    .. _Integrator:
-
-    Integrate current value of `variable <Integrator.variable>` with its prior value.
-
-    Arguments
-    ---------
-
-    variable_default : number, list or np.array : default variableClassDefault
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
-
-    rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <Integrator.variable_default>` (see `rate <Integrator.rate>` for details).
-
-    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
-        specifies type of integration (see `integration_type <Integrator.integration_type>` for details).
-
-    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <Integrator.function>`. (see
-        `noise <Integrator.noise>` for details).
-
-    time_step_size : float : default 0.0
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
-        is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
-
-    initializer float, list or 1d np.array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `variable_default <Integrator.variable_default>` (see `initializer <Integrator.initializer>` for details).
-
-    params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-
-
-    Attributes
-    ----------
-
-    variable : number or np.array
-        current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
-        added to the prior value;  if it is an array, each element is independently integrated.
-
-    rate : float or 1d np.array
-        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-        applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <Integrator.variable>`.
-
-    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
-        specifies type of integration:
-            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` +
-              `noise <Integrator.noise>` (ignores `variable <Integrator.variable>`);
-            * **SIMPLE**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` *
-              `variable <variable.Integrator.variable>` + `noise <Integrator.noise>`;
-            * **ADAPTIVE**: (`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
-              (1- `rate <Integrator.rate>` * `previous_value <Integrator.previous_value>`) + `noise <Integrator.noise>`
-              (`Weiner filter <https://en.wikipedia.org/wiki/Wiener_filter>`_ or
-              `Delta rule <https://en.wikipedia.org/wiki/Delta_rule>`_);
-            * **DIFFUSION**: `previous_value <Integrator.previous_value>` +
-              (`rate <Integrator.rate>` * `previous_value` * `time_step_size <Integrator.time_step_size>`) +
-              √(`time_step_size <Integrator.time_step_size>` * `noise <Integrator.noise>` * Gaussian(0,1))
-              (`Drift Diffusion Model
-              <https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model>`_).
-
-    noise : float, function, list, or 1d np.array
-        specifies random value to be added in each call to `function <Integrator.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If noise is
-        specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
-
-        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution. For all other types of integration,
-        in order to generate random noise, we recommend that you instead select a probability distribution function
-        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
-        list or array of these), then the noise will simply be an offset that remains the same across all executions.
-
-    time_step_size : float
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
-        is set to DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
-
-    initializer : 1d np.array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <Integrator.previous_value>` is set.
-
-        If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
-        initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
-        array, initializer will be applied to each variable element. In the case of an initializer function, this means
-        that the function will be executed separately for each variable element.
-
-    previous_value : 1d np.array : default variableClassDefault
-        stores previous value with which `variable <Integrator.variable>` is integrated.
-
-    owner : Mechanism
-        `component <Component>` to which the Function has been assigned.
-
-    prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-
-    """
+    # """
+    # Integrator(                 \
+    #     variable_default=None,  \
+    #     rate=1.0,               \
+    #
+    #     noise=0.0,              \
+    #     time_step_size=1.0,     \
+    #     initializer,     \
+    #     params=None,            \
+    #     owner=None,             \
+    #     prefs=None,             \
+    #     )
+    #
+    # .. _Integrator:
+    #
+    # Integrate current value of `variable <Integrator.variable>` with its prior value.
+    #
+    # Arguments
+    # ---------
+    #
+    # variable_default : number, list or np.array : default variableClassDefault
+    #     specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+    #     integrated.
+    #
+    # rate : float, list or 1d np.array : default 1.0
+    #     specifies the rate of integration.  If it is a list or array, it must be the same length as
+    #     `variable <Integrator.variable_default>` (see `rate <Integrator.rate>` for details).
+    #
+    # noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+    #     specifies random value to be added in each call to `function <Integrator.function>`. (see
+    #     `noise <Integrator.noise>` for details).
+    #
+    # time_step_size : float : default 0.0
+    #     determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
+    #     is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
+    #
+    # initializer float, list or 1d np.array : default 0.0
+    #     specifies starting value for integration.  If it is a list or array, it must be the same length as
+    #     `variable_default <Integrator.variable_default>` (see `initializer <Integrator.initializer>` for details).
+    #
+    # params : Optional[Dict[param keyword, param value]]
+    #     a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+    #     function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+    #     arguments of the constructor.
+    #
+    # owner : Component
+    #     `component <Component>` to which to assign the Function.
+    #
+    # prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+    #     the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+    #     defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+    #
+    #
+    # Attributes
+    # ----------
+    #
+    # variable : number or np.array
+    #     current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
+    #     added to the prior value;  if it is an array, each element is independently integrated.
+    #
+    # rate : float or 1d np.array
+    #     determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
+    #     all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
+    #     applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
+    #     applies to the corresponding element of `variable <Integrator.variable>`.
+    #
+    # noise : float, function, list, or 1d np.array
+    #     specifies random value to be added in each call to `function <Integrator.function>`.
+    #
+    #     If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If noise is
+    #     specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
+    #     noise will be applied to each variable element. In the case of a noise function, this means that the function
+    #     will be executed separately for each variable element.
+    #
+    #     Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
+    #     value will be used to construct the standard DDM probability distribution. For all other types of integration,
+    #     in order to generate random noise, we recommend that you instead select a probability distribution function
+    #     (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+    #     its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
+    #     list or array of these), then the noise will simply be an offset that remains the same across all executions.
+    #
+    # initializer : 1d np.array or list
+    #     determines the starting value for integration (i.e., the value to which
+    #     `previous_value <Integrator.previous_value>` is set.
+    #
+    #     If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
+    #     initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
+    #     array, initializer will be applied to each variable element. In the case of an initializer function, this means
+    #     that the function will be executed separately for each variable element.
+    #
+    # previous_value : 1d np.array : default variableClassDefault
+    #     stores previous value with which `variable <Integrator.variable>` is integrated.
+    #
+    # owner : Mechanism
+    #     `component <Component>` to which the Function has been assigned.
+    #
+    # prefs : PreferenceSet or specification dict : Projection.classPreferences
+    #     the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
+    #     if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+    #     (see :doc:`PreferenceSet <LINK>` for details).
+    #
+    # """
 
     componentName = INTEGRATOR_FUNCTION
     variableClassDefault = [[0]]
@@ -3272,18 +3239,19 @@ class SimpleIntegrator(
     SimpleIntegrator(                 \
         variable_default=None,  \
         rate=1.0,               \
-        integration_type=CONSTANT,     \
         noise=0.0,              \
-        time_step_size=1.0,     \
-        initializer,     \
+        initializer,            \
         params=None,            \
         owner=None,             \
         prefs=None,             \
         )
 
-    .. _Integrator:
+    .. _SimpleIntegrator:
 
-    Integrate current value of `variable <Integrator.variable>` with its prior value.
+    Integrate current value of `variable <SimpleIntegrator.variable>` with its prior value:
+
+    `previous_value <SimpleIntegrator.previous_value>` + `rate <SimpleIntegrator.rate>` *`variable <variable.SimpleIntegrator.variable>` +
+    `noise <SimpleIntegrator.noise>`;
 
     Arguments
     ---------
@@ -3294,22 +3262,15 @@ class SimpleIntegrator(
 
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <Integrator.variable_default>` (see `rate <Integrator.rate>` for details).
-
-    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
-        specifies type of integration (see `integration_type <Integrator.integration_type>` for details).
+        `variable <SimpleIntegrator.variable_default>` (see `rate <SimpleIntegrator.rate>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <Integrator.function>`. (see
-        `noise <Integrator.noise>` for details).
-
-    time_step_size : float : default 0.0
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
-        is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
+        specifies random value to be added in each call to `function <SimpleIntegrator.function>`. (see
+        `noise <SimpleIntegrator.noise>` for details).
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `variable_default <Integrator.variable_default>` (see `initializer <Integrator.initializer>` for details).
+        `variable_default <SimpleIntegrator.variable_default>` (see `initializer <SimpleIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -3328,61 +3289,39 @@ class SimpleIntegrator(
     ----------
 
     variable : number or np.array
-        current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
+        current input value some portion of which (determined by `rate <SimpleIntegrator.rate>`) will be
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d np.array
-        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-        applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <Integrator.variable>`.
-
-    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
-        specifies type of integration:
-            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` +
-              `noise <Integrator.noise>` (ignores `variable <Integrator.variable>`);
-            * **SIMPLE**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` *
-              `variable <variable.Integrator.variable>` + `noise <Integrator.noise>`;
-            * **ADAPTIVE**: (`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
-              (1- `rate <Integrator.rate>` * `previous_value <Integrator.previous_value>`) + `noise <Integrator.noise>`
-              (`Weiner filter <https://en.wikipedia.org/wiki/Wiener_filter>`_ or
-              `Delta rule <https://en.wikipedia.org/wiki/Delta_rule>`_);
-            * **DIFFUSION**: `previous_value <Integrator.previous_value>` +
-              (`rate <Integrator.rate>` * `previous_value` * `time_step_size <Integrator.time_step_size>`) +
-              √(`time_step_size <Integrator.time_step_size>` * `noise <Integrator.noise>` * Gaussian(0,1))
-              (`Drift Diffusion Model
-              <https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model>`_).
+        determines the rate of integration based on current and prior values. If it has a single element, it
+        applies to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
+        applies to the corresponding element of `variable <SimpleIntegrator.variable>`.
 
     noise : float, function, list, or 1d np.array
-        specifies random value to be added in each call to `function <Integrator.function>`.
+        specifies random value to be added in each call to `function <SimpleIntegrator.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If noise is
-        specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
+        If noise is a list or array, it must be the same length as `variable <SimpleIntegrator.variable_default>`.
+
+        If noise is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
         will be executed separately for each variable element.
 
-        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution. For all other types of integration,
-        in order to generate random noise, we recommend that you instead select a probability distribution function
-        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
-        list or array of these), then the noise will simply be an offset that remains the same across all executions.
-
-    time_step_size : float
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
-        is set to DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
-
     initializer : 1d np.array or list
         determines the starting value for integration (i.e., the value to which
-        `previous_value <Integrator.previous_value>` is set.
+        `previous_value <SimpleIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
-        initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
-        array, initializer will be applied to each variable element. In the case of an initializer function, this means
-        that the function will be executed separately for each variable element.
+        If initializer is a list or array, it must be the same length as `variable <SimpleIntegrator.variable_default>`.
+
+        TBI:
+
+        Initializer may be a function or list/array of functions.
+
+        If initializer is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is
+        a list or array, initializer will be applied to each variable element. In the case of an initializer function,
+        this means that the function will be executed separately for each variable element.
 
     previous_value : 1d np.array : default variableClassDefault
-        stores previous value with which `variable <Integrator.variable>` is integrated.
+        stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -3416,7 +3355,7 @@ class SimpleIntegrator(
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context="Integrator Init"):
+                 context="SimpleIntegrator Init"):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -3426,21 +3365,13 @@ class SimpleIntegrator(
                                                   offset=offset,
                                                   params=params)
 
-
-        # Assign here as default, for use in initialization of function
-
-        # KAM commented out 6/6/17; redundant?
-        # self.previous_value = self.paramClassDefaults[INITIALIZER]
-
         super().__init__(variable_default=variable_default,
                          params=params,
                          owner=owner,
                          prefs=prefs,
                          context=context)
 
-        # Reassign to kWInitializer in case default value was overridden
         self.previous_value = self.initializer
-
         self.auto_dependent = True
 
     def function(self,
@@ -3449,8 +3380,9 @@ class SimpleIntegrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: some fraction of `variable <Linear.slope>` combined with some fraction of `previous_value
-        <Integrator.previous_value>` (see `integration_type <Integrator.integration_type>`).
+        Return: `variable <Linear.slope>` combined with `previous_value <SimpleIntegrator.previous_value>`
+        according to `previous_value <SimpleIntegrator.previous_value>` + `rate <SimpleIntegrator.rate>` *`variable
+        <variable.SimpleIntegrator.variable>` + `noise <SimpleIntegrator.noise>`;
 
         Arguments
         ---------
@@ -3517,11 +3449,10 @@ class ConstantIntegrator(
     ConstantIntegrator(                 \
         variable_default=None,  \
         rate=1.0,               \
-        integration_type=CONSTANT,     \
+
         noise=0.0,\
         scale: parameter_spec = 1.0,\
         offset: parameter_spec = 0.0,\
-        time_step_size=1.0,     \
         initializer,     \
         params=None,            \
         owner=None,             \
@@ -3543,16 +3474,9 @@ class ConstantIntegrator(
         specifies the rate of integration.  If it is a list or array, it must be the same length as
         `variable <Integrator.variable_default>` (see `rate <Integrator.rate>` for details).
 
-    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
-        specifies type of integration (see `integration_type <Integrator.integration_type>` for details).
-
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <Integrator.function>`. (see
         `noise <Integrator.noise>` for details).
-
-    time_step_size : float : default 0.0
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
-        is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -3584,40 +3508,14 @@ class ConstantIntegrator(
         applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
         applies to the corresponding element of `variable <Integrator.variable>`.
 
-    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
-        specifies type of integration:
-            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` +
-              `noise <Integrator.noise>` (ignores `variable <Integrator.variable>`);
-            * **SIMPLE**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` *
-              `variable <variable.Integrator.variable>` + `noise <Integrator.noise>`;
-            * **ADAPTIVE**: (`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
-              (1- `rate <Integrator.rate>` * `previous_value <Integrator.previous_value>`) + `noise <Integrator.noise>`
-              (`Weiner filter <https://en.wikipedia.org/wiki/Wiener_filter>`_ or
-              `Delta rule <https://en.wikipedia.org/wiki/Delta_rule>`_);
-            * **DIFFUSION**: `previous_value <Integrator.previous_value>` +
-              (`rate <Integrator.rate>` * `previous_value` * `time_step_size <Integrator.time_step_size>`) +
-              √(`time_step_size <Integrator.time_step_size>` * `noise <Integrator.noise>` * Gaussian(0,1))
-              (`Drift Diffusion Model
-              <https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model>`_).
-
     noise : float, function, list, or 1d np.array
         specifies random value to be added in each call to `function <Integrator.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If noise is
-        specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
+        If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`.
+
+        If noise is specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
         will be executed separately for each variable element.
-
-        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution. For all other types of integration,
-        in order to generate random noise, we recommend that you instead select a probability distribution function
-        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
-        list or array of these), then the noise will simply be an offset that remains the same across all executions.
-
-    time_step_size : float
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
-        is set to DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
     initializer : 1d np.array or list
         determines the starting value for integration (i.e., the value to which
@@ -3763,11 +3661,10 @@ class AdaptiveIntegrator(
     AdaptiveIntegrator(                 \
         variable_default=None,  \
         rate=1.0,               \
-        integration_type=CONSTANT,     \
+
         noise=0.0,\
         scale: parameter_spec = 1.0,\
         offset: parameter_spec = 0.0,\
-        time_step_size=1.0,     \
         initializer,     \
         params=None,            \
         owner=None,             \
@@ -3789,16 +3686,9 @@ class AdaptiveIntegrator(
         specifies the rate of integration.  If it is a list or array, it must be the same length as
         `variable <Integrator.variable_default>` (see `rate <Integrator.rate>` for details).
 
-    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
-        specifies type of integration (see `integration_type <Integrator.integration_type>` for details).
-
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <Integrator.function>`. (see
         `noise <Integrator.noise>` for details).
-
-    time_step_size : float : default 0.0
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
-        is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -3830,40 +3720,14 @@ class AdaptiveIntegrator(
         applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
         applies to the corresponding element of `variable <Integrator.variable>`.
 
-    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
-        specifies type of integration:
-            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` +
-              `noise <Integrator.noise>` (ignores `variable <Integrator.variable>`);
-            * **SIMPLE**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` *
-              `variable <variable.Integrator.variable>` + `noise <Integrator.noise>`;
-            * **ADAPTIVE**: (`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
-              (1- `rate <Integrator.rate>` * `previous_value <Integrator.previous_value>`) + `noise <Integrator.noise>`
-              (`Weiner filter <https://en.wikipedia.org/wiki/Wiener_filter>`_ or
-              `Delta rule <https://en.wikipedia.org/wiki/Delta_rule>`_);
-            * **DIFFUSION**: `previous_value <Integrator.previous_value>` +
-              (`rate <Integrator.rate>` * `previous_value` * `time_step_size <Integrator.time_step_size>`) +
-              √(`time_step_size <Integrator.time_step_size>` * `noise <Integrator.noise>` * Gaussian(0,1))
-              (`Drift Diffusion Model
-              <https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model>`_).
-
     noise : float, function, list, or 1d np.array
         specifies random value to be added in each call to `function <Integrator.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If noise is
-        specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
+        If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`.
+
+        If noise is specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
         will be executed separately for each variable element.
-
-        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution. For all other types of integration,
-        in order to generate random noise, we recommend that you instead select a probability distribution function
-        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
-        list or array of these), then the noise will simply be an offset that remains the same across all executions.
-
-    time_step_size : float
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
-        is set to DIFFUSION (and used to scale the `noise <Integrator.noise>` parameter appropriately).
 
     initializer : 1d np.array or list
         determines the starting value for integration (i.e., the value to which
@@ -4074,7 +3938,7 @@ class DriftDiffusionIntegrator(
     DriftDiffusionIntegrator(                 \
         variable_default=None,  \
         rate=1.0,               \
-        integration_type=CONSTANT,     \
+
         noise=0.0,\
         scale: parameter_spec = 1.0,\
         offset: parameter_spec = 0.0,\
@@ -4099,9 +3963,6 @@ class DriftDiffusionIntegrator(
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
         `variable <Integrator.variable_default>` (see `rate <Integrator.rate>` for details).
-
-    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
-        specifies type of integration (see `integration_type <Integrator.integration_type>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <Integrator.function>`. (see
@@ -4140,22 +4001,6 @@ class DriftDiffusionIntegrator(
         all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
         applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
         applies to the corresponding element of `variable <Integrator.variable>`.
-
-    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
-        specifies type of integration:
-            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` +
-              `noise <Integrator.noise>` (ignores `variable <Integrator.variable>`);
-            * **SIMPLE**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` *
-              `variable <variable.Integrator.variable>` + `noise <Integrator.noise>`;
-            * **ADAPTIVE**: (`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
-              (1- `rate <Integrator.rate>` * `previous_value <Integrator.previous_value>`) + `noise <Integrator.noise>`
-              (`Weiner filter <https://en.wikipedia.org/wiki/Wiener_filter>`_ or
-              `Delta rule <https://en.wikipedia.org/wiki/Delta_rule>`_);
-            * **DIFFUSION**: `previous_value <Integrator.previous_value>` +
-              (`rate <Integrator.rate>` * `previous_value` * `time_step_size <Integrator.time_step_size>`) +
-              √(`time_step_size <Integrator.time_step_size>` * `noise <Integrator.noise>` * Gaussian(0,1))
-              (`Drift Diffusion Model
-              <https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model>`_).
 
     noise : float, function, list, or 1d np.array
         specifies random value to be added in each call to `function <Integrator.function>`.
@@ -4331,7 +4176,7 @@ class OrnsteinUhlenbeckIntegrator(
     OrnsteinUhlenbeckIntegrator(                 \
         variable_default=None,  \
         rate=1.0,               \
-        integration_type=CONSTANT,     \
+
         noise=0.0,\
         scale: parameter_spec = 1.0,\
         offset: parameter_spec = 0.0,\
@@ -4356,9 +4201,6 @@ class OrnsteinUhlenbeckIntegrator(
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
         `variable <Integrator.variable_default>` (see `rate <Integrator.rate>` for details).
-
-    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION : default CONSTANT
-        specifies type of integration (see `integration_type <Integrator.integration_type>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <Integrator.function>`. (see
@@ -4397,22 +4239,6 @@ class OrnsteinUhlenbeckIntegrator(
         all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
         applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
         applies to the corresponding element of `variable <Integrator.variable>`.
-
-    integration_type : CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION
-        specifies type of integration:
-            * **CONSTANT**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` +
-              `noise <Integrator.noise>` (ignores `variable <Integrator.variable>`);
-            * **SIMPLE**: `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` *
-              `variable <variable.Integrator.variable>` + `noise <Integrator.noise>`;
-            * **ADAPTIVE**: (`rate <Integrator.rate>`) * `variable <Integrator.variable>` +
-              (1- `rate <Integrator.rate>` * `previous_value <Integrator.previous_value>`) + `noise <Integrator.noise>`
-              (`Weiner filter <https://en.wikipedia.org/wiki/Wiener_filter>`_ or
-              `Delta rule <https://en.wikipedia.org/wiki/Delta_rule>`_);
-            * **DIFFUSION**: `previous_value <Integrator.previous_value>` +
-              (`rate <Integrator.rate>` * `previous_value` * `time_step_size <Integrator.time_step_size>`) +
-              √(`time_step_size <Integrator.time_step_size>` * `noise <Integrator.noise>` * Gaussian(0,1))
-              (`Drift Diffusion Model
-              <https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model>`_).
 
     noise : float, function, list, or 1d np.array
         specifies random value to be added in each call to `function <Integrator.function>`.
