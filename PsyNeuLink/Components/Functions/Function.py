@@ -240,6 +240,28 @@ def _is_modulation_param(val):
 
 ModulatedParam = namedtuple('ModulatedParam', 'meta_param, function_param, function_param_val')
 
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+@tc.typecheck
+def _get_modulated_param(owner, mod_proj:ModulatoryProjection_Base):
+    """Return ModulationParam object, function param name and value of param modulated by ModulatoryProjection
+    """
+
+    # Get function "meta-parameter" object specified in the projection sender's modulation attribute
+    function_mod_meta_param_obj = mod_proj.sender.modulation
+
+    # Get the actual parameter of owner.function_object to be modulated
+    function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
+
+    # Get the function parameter's value
+    # function_param_value = owner.function_object.params[function_param_name]
+    function_param_value = owner.function_object.params[function_param_name]
+    if function_param_value is None:
+        function_param_value = function_mod_meta_param_obj.init_val
+
+    # Return the meta_parameter object, function_param name, and function_param_value
+    return ModulatedParam(function_mod_meta_param_obj, function_param_name, function_param_value)
+
+
 # *******************************   get_param_value_for_keyword ********************************************************
 
 def get_param_value_for_keyword(owner, keyword):

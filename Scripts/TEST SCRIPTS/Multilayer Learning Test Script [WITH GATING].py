@@ -26,7 +26,7 @@ Output_Layer = TransferMechanism(name='Output Layer',
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
-Gating_Mechanism = GatingMechanism(default_gating_policy=[1.0],
+Gating_Mechanism = GatingMechanism(default_gating_policy=[0.55],
                                    gating_signals=[Hidden_Layer_2])
 
 Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
