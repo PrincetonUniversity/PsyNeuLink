@@ -1282,8 +1282,8 @@ class State_Base(State):
                                                                                      self.owner.name))
                 continue
             sender_id = sender.owner._execution_id
-            # if sender_id != self_id:
-            #     continue
+            if sender_id != self_id:
+                continue
 
             # Only accept projections from a Process to which the owner Mechanism belongs
             if isinstance(sender, ProcessInputState):
