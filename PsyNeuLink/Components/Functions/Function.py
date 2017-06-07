@@ -3878,8 +3878,8 @@ class AdaptiveIntegrator(
 
         if NOISE in target_set:
             self._validate_noise(target_set[NOISE])
-        if INTIALIZER in target_set:
-            self._validate_initializer(target_set[INITIALIZER])
+        # if INITIALIZER in target_set:
+        #     self._validate_initializer(target_set[INITIALIZER])
 
 
     def function(self,
