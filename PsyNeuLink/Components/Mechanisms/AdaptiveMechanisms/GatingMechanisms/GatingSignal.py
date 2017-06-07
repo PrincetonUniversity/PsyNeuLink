@@ -545,19 +545,19 @@ def _parse_gating_signal_spec(owner, state_spec):
 
     # Check for any duplicate states in specification for this GatingSignal or existing ones for the owner
     all_states = []
-    # Get gated states from any already instantiated GatingSignals
+    # Get gated states from any already instantiated GatingSignals in gating_signals arg
     if owner.gating_signals:
         for gating_signal in [gs for gs in owner.gating_signals if isinstance(gs, GatingSignal)]:
-            all_states.extend([proj.receiver.owner for proj in gating_signal.efferents])
+            all_states.extend([proj.receiver for proj in gating_signal.efferents])
     # Add states for current GatingSignal
     all_states.extend(states)
     # Check for duplicates
-    # if any(thelist.count(x) > 1 for x in thelist)
     if len(all_states) != len(set(all_states)):
         for test_state in all_states:
             if next((test_state == state  for state in all_states), None):
-                raise GatingSignalError("{} receives more than one GatingProjection from the {}s in {}".
-                                           format(test_state, GatingSignal.__name__, owner.name))
+                raise GatingSignalError("{} of {} receives more than one GatingProjection from the {}s in {}".
+                                        format(test_state.name, test_state.owner.name,
+                                               GatingSignal.__name__, owner.name))
         raise GatingSignalError("PROGRAM ERROR: duplicate state detected in {} specifications for {} ({})"
                                    "but could not find the offending state".
                                    format(GATING_SIGNAL, owner.name, gating_signal_name))
