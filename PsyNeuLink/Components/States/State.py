@@ -121,6 +121,7 @@ import inspect
 import copy
 import collections
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Functions.Function import _get_modulated_param
 from PsyNeuLink.Components.Projections.Projection import projection_keywords, _is_projection_spec
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
@@ -826,7 +827,7 @@ class State_Base(State):
             #    - check that projection's value is compatible with value of the function param being modulated
             #    - assign projection to mod_afferents
             if isinstance(projection_spec, (ControlProjection, GatingProjection)):
-                function_param_value = self._get_modulated_param(projection_spec).function_param_val
+                function_param_value = _get_modulated_param(self, projection_spec).function_param_val
                 # Match the projection's value with the value of the function parameter
                 mod_proj_spec_value = type_match(projection_spec.value, type(function_param_value))
                 # If the match was successful (i.e., they are compatible), assign the projection to mod_afferents
@@ -1316,7 +1317,7 @@ class State_Base(State):
             # FIX: UPDATE FOR LEARNING
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             elif isinstance(projection, ModulatoryProjection_Base):
-                mod_meta_param, mod_param_name, mod_param_value = self._get_modulated_param(projection)
+                mod_meta_param, mod_param_name, mod_param_value = _get_modulated_param(self, projection)
                 self._mod_proj_values[mod_meta_param].append(type_match(projection_value, type(mod_param_value)))
 
         # AGGREGATE ModulatoryProjection VALUES 
@@ -1353,24 +1354,6 @@ class State_Base(State):
 
     def execute(self, input=None, time_scale=None, params=None, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
-
-    from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
-    @tc.typecheck
-    def _get_modulated_param(self, mod_proj:ModulatoryProjection_Base):
-        """Return ModulationParam object, function param name and value of param modulated by ModulatoryProjection
-        """
-
-        # Get function "meta-parameter" object specified in the projection sender's modulation attribute
-        function_mod_meta_param_obj = mod_proj.sender.modulation
-
-        # Get the actual parameter of self.function_object to be modulated
-        function_param_name = self.function_object.params[function_mod_meta_param_obj.attrib_name]
-
-        # Get the function parameter's value
-        function_param_value = self.function_object.params[function_param_name] or function_mod_meta_param_obj.init_val
-
-        # Return the meta_parameter object, function_param name, and function_param_value
-        return ModulatedParam(function_mod_meta_param_obj, function_param_name, function_param_value)
 
     @property
     def owner(self):
