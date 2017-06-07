@@ -670,10 +670,11 @@ class State_Base(State):
             #     note: in that case, projection will be in self.afferents list
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.value is DEFERRED_INITIALIZATION:
+                    # FIX: UPDATE FOR LEARNING
                     # FIX: UPDATE WITH MODULATION_MODS
                     # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
-                    # if isinstance(projection_spec, ModulatoryProjection_Base):
-                    if isinstance(projection_spec, (ControlProjection, GatingProjection)):
+                    if isinstance(projection_spec, ModulatoryProjection_Base):
+                    # if isinstance(projection_spec, (ControlProjection, GatingProjection)):
                         # Assign projection to mod_afferents
                         self.mod_afferents.append(projection_spec)
                         projection_spec.init_args[RECEIVER] = self
@@ -810,10 +811,11 @@ class State_Base(State):
             # Initialization of projection is deferred
             if projection_spec.value is DEFERRED_INITIALIZATION:
                 # Assign instantiated "stub" so it is found on deferred initialization pass (see Process)
-            # FIX: UPDATE FOR LEARNING
+                # FIX: UPDATE FOR LEARNING
                 # FIX: UPDATE WITH MODULATION_MODS
                 # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
-                if isinstance(projection_spec, (ControlProjection, GatingProjection)):
+                # if isinstance(projection_spec, (ControlProjection, GatingProjection)):
+                if isinstance(projection_spec, ModulatoryProjection_Base):
                     self.mod_afferents.append(projection_spec)
                 else:
                     self.afferents.append(projection_spec)
@@ -828,7 +830,8 @@ class State_Base(State):
             # If it is a ControlProjection or GatingProjection:
             #    - check that projection's value is compatible with value of the function param being modulated
             #    - assign projection to mod_afferents
-            if isinstance(projection_spec, (ControlProjection, GatingProjection)):
+            # if isinstance(projection_spec, (ControlProjection, GatingProjection)):
+            if isinstance(projection_spec, ModulatoryProjection_Base):
                 function_param_value = _get_modulated_param(self, projection_spec).function_param_val
                 # Match the projection's value with the value of the function parameter
                 mod_proj_spec_value = type_match(projection_spec.value, type(function_param_value))
