@@ -717,7 +717,7 @@ class DDM(ProcessingMechanism_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-        functions = {BogaczEtAl, NavarroAndFuss, Integrator}
+        functions = {BogaczEtAl, NavarroAndFuss, DriftDiffusionIntegrator}
 
         if FUNCTION in target_set:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
@@ -737,14 +737,14 @@ class DDM(ProcessingMechanism_Base):
                                    "solution for the function param: BogaczEtAl or NavarroAndFuss.".
                                    format(FUNCTION, self.name))
             else:
-                if function != Integrator:
+                if function != DriftDiffusionIntegrator:
                     raise DDMError("In TIME_STEP mode, the {} param of {} "
-                                   "must be Integrator with DIFFUSION integration.".
+                                   "must be DriftDiffusionIntegrator.".
                                    format(FUNCTION, self.name))
                 else:
-                    self.get_axes_function = Integrator(integration_type=DIFFUSION, rate=self.function_params['rate'],
+                    self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
                                                         noise=self.function_params['noise'], context='plot').function
-                    self.plot_function = Integrator(integration_type=DIFFUSION, rate=self.function_params['rate'],
+                    self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
                                                     noise=self.function_params['noise'], context='plot').function
 
             if not isinstance(function, NavarroAndFuss) and OUTPUT_STATES in target_set:
@@ -824,21 +824,16 @@ class DDM(ProcessingMechanism_Base):
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
-            if self.function_params['integration_type'] == 'diffusion':
-                # FIX: SHOULDN'T THIS USE self.variable?? (RATHER THAN self.input_state.value)?
-                result = self.function(self.input_state.value, context=context)
 
-                if INITIALIZING not in context:
-                    logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
-                if abs(result) >= self.threshold:
-                    logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
-                    self.is_finished = True
+            result = self.function(self.input_state.value, context=context)
+            if INITIALIZING not in context:
+                logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
+            if abs(result) >= self.threshold:
+                logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
+                self.is_finished = True
 
-                return np.array([result, [0.0], [0.0], [0.0]])
-            else:
-                raise MechanismError(
-                    "Invalid integration_type: '{}'. For the DDM mechanism, integration_type must be set"
-                    " to 'DIFFUSION'".format(self.function_params['integration_type']))
+            return np.array([result, [0.0], [0.0], [0.0]])
+
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif self.timeScale == TimeScale.TRIAL:

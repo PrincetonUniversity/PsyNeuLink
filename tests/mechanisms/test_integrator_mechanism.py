@@ -3,7 +3,8 @@ import pytest
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Functions.Function import Integrator
+from PsyNeuLink.Components.Functions.Function import Integrator, SimpleIntegrator, ConstantIntegrator
+from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Globals.Keywords import ADAPTIVE, CONSTANT, DIFFUSION, SIMPLE
 from PsyNeuLink.Globals.TimeScale import TimeScale
@@ -20,17 +21,22 @@ from PsyNeuLink.Globals.TimeScale import TimeScale
 def test_integrator_simple():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=SIMPLE,
+        function=SimpleIntegrator(
         ),
         time_scale=TimeScale.TIME_STEP
     )
-    # val = float(I.execute(10)[0])
     P = process(pathway=[I])
-    val = float(P.execute(10))
+
     #  returns previous_value + rate*variable + noise
     # so in this case, returns 10.0
-    assert val == 10.0
+    val = float(P.execute(10))
+
+    # testing initializer
+    I.function_object.initializer_reset = 5.0
+
+    val2 = float(P.execute(0))
+
+    assert [val, val2] == [10.0, 5.0]
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
@@ -40,8 +46,8 @@ def test_integrator_simple():
 def test_integrator_adaptive():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=ADAPTIVE,
+        function=AdaptiveIntegrator(
+            rate=0.5
         ),
         time_scale=TimeScale.TIME_STEP
     )
@@ -50,8 +56,12 @@ def test_integrator_adaptive():
     val = float(P.execute(10))
     # returns (rate)*variable + (1-rate*previous_value) + noise
     # rate = 1, noise = 0, so in this case, returns 10.0
-    assert val == 10.0
 
+    # testing initializer
+    I.function_object.initializer_reset = 1.0
+    val2 = float(P.execute(1))
+
+    assert [val, val2] == [5.0, 1.0]
 # ------------------------------------------------------------------------------------------------
 # TEST 3
 # integration_type = constant
@@ -60,18 +70,21 @@ def test_integrator_adaptive():
 def test_integrator_constant():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=CONSTANT,
+        function= ConstantIntegrator(
         ),
         time_scale=TimeScale.TIME_STEP
     )
     # val = float(I.execute(10)[0])
     P = process(pathway=[I])
-    val = float(P.execute(10))
+    val = float(P.execute())
     # returns previous_value + rate + noise
     # rate = 1.0, noise = 0, so in this case returns 1.0
-    assert val == 1.0
 
+    # testing initializer
+    I.function_object.initializer_reset = 10.0
+    val2 = float(P.execute())
+
+    assert [val, val2] == [1.0, 11.0]
 # ------------------------------------------------------------------------------------------------
 # TEST 4
 # integration_type = diffusion
@@ -80,15 +93,19 @@ def test_integrator_constant():
 def test_integrator_diffusion():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function= DriftDiffusionIntegrator(
         ),
         time_scale=TimeScale.TIME_STEP
     )
     # val = float(I.execute(10)[0])
     P = process(pathway=[I])
     val = float(P.execute(10))
-    assert val == 10.0
+
+    # testing initializer
+    I.function_object.initializer_reset = 1.0
+    val2 = float(P.execute(0))
+
+    assert [val, val2] == [10.0, 1.0]
 
 # ------------------------------------------------------------------------------------------------
 
@@ -126,8 +143,7 @@ def test_integrator_diffusion():
 def test_integrator_input_float():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=SIMPLE,
+        function=SimpleIntegrator(
         )
     )
     P = process(pathway=[I])
@@ -142,8 +158,7 @@ def test_integrator_input_float():
 def test_integrator_input_list():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=SIMPLE,
+        function=SimpleIntegrator(
         )
     )
     P = process(pathway=[I])
@@ -160,8 +175,7 @@ def test_integrator_input_list_len_5():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
         default_input_value=[0, 0, 0, 0, 0],
-        function=Integrator(
-            integration_type=SIMPLE,
+        function=SimpleIntegrator(
         )
     )
     P = process(pathway=[I])
@@ -183,8 +197,7 @@ def test_integrator_input_array_len_5():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
         default_input_value=[0, 0, 0, 0, 0],
-        function=Integrator(
-            integration_type=SIMPLE,
+        function=SimpleIntegrator(
         )
     )
     P = process(pathway=[I])
@@ -245,8 +258,7 @@ def test_integrator_input_array_less_than_default():
 def test_integrator_type_simple_rate_float():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=SIMPLE,
+        function=SimpleIntegrator(
             rate=5.0
         )
     )
@@ -262,8 +274,7 @@ def test_integrator_type_simple_rate_float():
 def test_integrator_type_constant_rate_float():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=CONSTANT,
+        function= ConstantIntegrator(
             rate=5.0
         )
     )
@@ -279,8 +290,7 @@ def test_integrator_type_constant_rate_float():
 def test_integrator_type_diffusion_rate_float():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function = DriftDiffusionIntegrator(
             rate=5.0
         )
     )
@@ -297,8 +307,7 @@ def test_integrator_type_simple_rate_list():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
         default_input_value=[0, 0, 0],
-        function=Integrator(
-            integration_type=SIMPLE,
+        function=SimpleIntegrator(
             rate=[5.0, 5.0, 5.0]
         )
     )
@@ -314,8 +323,7 @@ def test_integrator_type_constant_rate_list():
     I = IntegratorMechanism(
         default_input_value=[0, 0, 0],
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=CONSTANT,
+        function= ConstantIntegrator(
             rate=[5.0, 5.0, 5.0]
         )
     )
@@ -332,8 +340,7 @@ def test_integrator_type_diffusion_rate_list():
     I = IntegratorMechanism(
         default_input_value=[0, 0, 0],
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=DIFFUSION,
+        function = DriftDiffusionIntegrator(
             rate=[5.0, 5.0, 5.0]
         )
     )
@@ -350,8 +357,7 @@ def test_integrator_type_adaptive_rate_list():
     I = IntegratorMechanism(
         default_input_value=[0, 0, 0],
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=ADAPTIVE,
+        function=AdaptiveIntegrator(
             rate=[0.5, 0.5, 0.5]
         )
     )
@@ -368,8 +374,7 @@ def test_integrator_type_adaptive_rate_float_input_list():
     I = IntegratorMechanism(
         default_input_value=[0, 0, 0],
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=ADAPTIVE,
+        function=AdaptiveIntegrator(
             rate=0.5
         )
     )
@@ -385,8 +390,7 @@ def test_integrator_type_adaptive_rate_float_input_list():
 def test_integrator_type_adaptive_rate_float():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        function=Integrator(
-            integration_type=ADAPTIVE,
+        function=AdaptiveIntegrator(
             rate=0.5
         )
     )
@@ -408,8 +412,8 @@ def test_integrator_type_simple_rate_list_input_float():
     with pytest.raises(FunctionError) as error_text:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=Integrator(
-                integration_type=SIMPLE,
+            function=SimpleIntegrator(
+
                 rate=[5.0, 5.0, 5.0]
             )
         )
@@ -430,8 +434,7 @@ def test_integrator_type_constant_rate_list_input_float():
     with pytest.raises(FunctionError) as error_text:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=Integrator(
-                integration_type=CONSTANT,
+            function=ConstantIntegrator(
                 rate=[5.0, 5.0, 5.0]
             )
         )
@@ -453,8 +456,7 @@ def test_integrator_type_diffusion_rate_list_input_float():
     with pytest.raises(FunctionError) as error_text:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=Integrator(
-                integration_type=DIFFUSION,
+            function=DriftDiffusionIntegrator(
                 rate=[5.0, 5.0, 5.0]
             )
         )
@@ -465,3 +467,118 @@ def test_integrator_type_diffusion_rate_list_input_float():
         and "must match the length" in str(error_text)
         and "of the default input" in str(error_text)
     )
+
+
+## NEW INTEGRATOR FUNCTIONS ------------------------------------
+
+
+# ------------------------------------------------------------------------------------------------
+# TEST 1
+
+def test_simple_integrator():
+    I = IntegratorMechanism(
+            function = SimpleIntegrator(
+                initializer = 10.0,
+                rate = 5.0,
+                scale = 2,
+                offset = 10,
+            )
+        )
+    P = process(pathway=[I])
+    val = P.execute(1)
+    assert val == 40
+
+
+# ------------------------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------------------------
+# TEST 2
+
+def test_constant_integrator():
+    I = IntegratorMechanism(
+            function = ConstantIntegrator(
+                initializer = 10.0,
+                rate = 5.0,
+                scale = 2,
+                offset = 10,
+            )
+        )
+    P = process(pathway=[I])
+    # constant integrator should not use an input value
+    val = P.execute(20000)
+    val2 = P.execute(70000)
+    assert (val, val2) == (40, 100)
+
+
+# ------------------------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------------------------
+# TEST 3
+
+def test_adaptive_integrator():
+    I = IntegratorMechanism(
+            function = AdaptiveIntegrator(
+                initializer = 10.0,
+                rate = 0.5,
+                scale = 2,
+                offset = 10,
+            )
+        )
+    P = process(pathway=[I])
+    # constant integrator should not use an input value
+    val = P.execute(1)
+    assert val == 21
+
+
+# ------------------------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------------------------
+# TEST 4
+
+def test_drift_diffusion_integrator():
+    I = IntegratorMechanism(
+            function = DriftDiffusionIntegrator(
+                initializer = 10.0,
+                rate = 10,
+                time_step_size = 0.5,
+                scale=2,
+                offset=10,
+            )
+        )
+    P = process(pathway=[I])
+    # constant integrator should not use an input value
+    val = P.execute(1)
+    assert val == 40
+
+
+# ------------------------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------------------------
+# TEST 5
+
+def test_ornstein_uhlenbeck_integrator():
+    I = IntegratorMechanism(
+            function = OrnsteinUhlenbeckIntegrator(
+                initializer = 10.0,
+                rate = 10,
+                time_step_size=0.5,
+                decay = 0.1,
+                scale=2,
+                offset=10,
+            )
+        )
+    P = process(pathway=[I])
+    # constant integrator should not use an input value
+    val = P.execute(1)
+    val2 = P.execute(1)
+    val3 = P.execute(1)
+    assert (val, val2, val3) == (31, 73, 157)
+
+# ------------------------------------------------------------------------------------------------
+def test_integrator_no_function():
+    I = IntegratorMechanism(time_scale=TimeScale.TIME_STEP)
+    P = process(pathway=[I])
+    val = float(P.execute(10))
+    assert val == 5

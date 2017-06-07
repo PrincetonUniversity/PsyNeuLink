@@ -7,7 +7,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism i
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic, BogaczEtAl, Integrator
+from PsyNeuLink.Components.Functions.Function import Linear, Logistic, BogaczEtAl, SimpleIntegrator
 from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
 from PsyNeuLink.Globals.Keywords import SIMPLE
@@ -100,9 +100,8 @@ class TestLinear:
         A = IntegratorMechanism(
             name='A',
             default_input_value=[0],
-            function=Integrator(
+            function=SimpleIntegrator(
                 rate=.5,
-                integration_type=SIMPLE
             )
         )
 
@@ -137,9 +136,8 @@ class TestLinear:
         A = IntegratorMechanism(
             name='A',
             default_input_value=[0],
-            function=Integrator(
-                rate=.5,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=.5
             )
         )
 
@@ -190,9 +188,8 @@ class TestLinear:
         B = IntegratorMechanism(
             name='B',
             default_input_value=[0],
-            function=Integrator(
-                rate=.5,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=.5
             )
         )
 
@@ -235,9 +232,8 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_input_value=[0],
-            function=Integrator(
-                rate=.5,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=.5
             )
         )
 
@@ -300,9 +296,8 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_input_value=[0],
-            function=Integrator(
-                rate=.5,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=.5
             )
         )
 
@@ -365,18 +360,16 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_input_value=[0],
-            function=Integrator(
-                rate=.5,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=.5
             )
         )
 
         B = IntegratorMechanism(
             name='B',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
@@ -430,18 +423,16 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_input_value=[0],
-            function=Integrator(
-                rate=.5,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=.5
             )
         )
 
         B = IntegratorMechanism(
             name='B',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
@@ -495,27 +486,24 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
         B = IntegratorMechanism(
             name='B',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
         C = IntegratorMechanism(
             name='C',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
@@ -576,18 +564,16 @@ class TestBranching:
         B = IntegratorMechanism(
             name='B',
             default_input_value=[0],
-            function=Integrator(
-                rate=.5,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=.5
             )
         )
 
         C = IntegratorMechanism(
             name='C',
             default_input_value=[0],
-            function=Integrator(
-                rate=.5,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=.5
             )
         )
 
@@ -643,36 +629,32 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
         B = IntegratorMechanism(
             name='B',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
         C = IntegratorMechanism(
             name='C',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
         D = IntegratorMechanism(
             name='D',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
@@ -755,9 +737,8 @@ class TestBranching:
         C = IntegratorMechanism(
             name='C',
             default_input_value=[0],
-            function=Integrator(
-                rate=.5,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=.5
             )
         )
 
@@ -829,54 +810,48 @@ class TestBranching:
         A = IntegratorMechanism(
             name='A',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
         B = IntegratorMechanism(
             name='B',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
         C = IntegratorMechanism(
             name='C',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
         D = IntegratorMechanism(
             name='D',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
         E = IntegratorMechanism(
             name='E',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
         F = IntegratorMechanism(
             name='F',
             default_input_value=[0],
-            function=Integrator(
-                rate=1,
-                integration_type=SIMPLE
+            function=SimpleIntegrator(
+                rate=1
             )
         )
 
