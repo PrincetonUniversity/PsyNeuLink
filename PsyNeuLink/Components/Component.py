@@ -891,11 +891,6 @@ class Component(object):
                         # Create ReadOnlyDict for FUNCTION_PARAMS and copy function's params into it
                         params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
                         for param_name in sorted(list(function.user_params_for_instantiation.keys())):
-                            # IMPLEMENTATION NOTE:  Need to get function's params from both user_params
-                            #                           (for functions passed in as an arg of the constructor, the
-                            #                            params of which are no longer in user_params_for_instantiation)
-                            #                           and from user_params_for_instantation
-                            #                           (for function that were instantiated within the constructor)
                             params[FUNCTION_PARAMS].__additem__(param_name,
                                                                 function.user_params_for_instantiation[param_name])
 
