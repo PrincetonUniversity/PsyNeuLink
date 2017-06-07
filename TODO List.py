@@ -408,9 +408,7 @@
 #            State.update should use modulated_param rather than modulation
 #            modulation as @property that validates value and then calls _instantiate_modulated_param
 
-# IMPLEMENT: all_afferents as @property = afferents + mod_afferents
-#            all_efferents as @property = efferents + mod_efferents
-#            SEARCH & REPLACE afferents + mod_afferents -> all_afferents, AND SAME FOR efferents
+# IMPLEMENT: all_efferents as @property = efferents + mod_efferents
 
 # IMPLEMENT: abstract _parse_state_specs:
 #                 integrate _parse_gating_signal_spec (in GatingSignal) into it

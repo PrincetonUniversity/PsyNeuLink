@@ -1267,7 +1267,7 @@ class State_Base(State):
                              format(self.owner.name, self.owner.__class__.__name__, self.__class__.__name__,))
 
         # Get values of all Projections
-        for projection in self.afferents + self.mod_afferents:
+        for projection in self.all_afferents:
 
             # Only update if sender has also executed in this round
             #     (i.e., has same execution_id as owner)
@@ -1410,8 +1410,8 @@ class State_Base(State):
         self._projections = assignment
 
     @property
-    def all_projections(self):
-        return self.trans_projections + self.mod_projections
+    def all_afferents(self):
+        return self.afferents + self.mod_afferents
 
 
 def _instantiate_state_list(owner,
