@@ -588,7 +588,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             monitored_value_dict[NAME] = monitored_value_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
             monitored_values.append(monitored_value_dict)
 
-        # If input_states were not specified, assign value of monitored_valued for each (to invoke default assignments)
+        # If input_states were not specified, assign value of monitored_valued for each
+        #    (to invoke a default assignment for each input_state)
         if self.input_states is None:
             self._input_states = [m[VALUE] for m in monitored_values]
 
@@ -604,7 +605,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                       state_spec=input_state,
                                                       name=monitored_values[i][NAME],
                                                       value=monitored_values[i][VALUE])
-            TEST = True
 
         constraint_value = []
         for input_state in self.input_states:

@@ -485,8 +485,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                                      VARIABLE:target_input,
                                                                      # WEIGHT:1
                                                                      }],
-                                                      name="\'{}\' {}".format(lc.activation_mech.name,
-                                                                              COMPARATOR_MECHANISM),
+                                                      name="{} {}".format(lc.activation_mech.name,
+                                                                          COMPARATOR_MECHANISM),
                                                       context=context)
 
             # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism

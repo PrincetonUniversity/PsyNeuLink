@@ -329,9 +329,7 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
-                               WEIGHT:None,
-                               EXPONENT:None})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
 
     #endregion
 
@@ -341,6 +339,8 @@ class InputState(State_Base):
                  reference_value=None,
                  variable=None,
                  function=LinearCombination(operation=SUM),
+                 weight=None,
+                 exponent=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -348,6 +348,8 @@ class InputState(State_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
+                                                  weight=weight,
+                                                  exponent=exponent,
                                                   params=params)
 
         self.reference_value = reference_value
@@ -361,6 +363,7 @@ class InputState(State_Base):
                                          prefs=prefs,
                                          context=self)
 
+        TEST = True
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
