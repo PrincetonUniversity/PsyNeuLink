@@ -2360,9 +2360,25 @@ def make_property(name, default_value):
         self.user_params.__additem__(name, val)
 
         # If component is a Function and has an owner, update function_params dict for owner
+        #    also, get parameter_state_owner if one exsits
         from PsyNeuLink.Components.Functions.Function import Function_Base
-        if isinstance(self, Function_Base) and self.owner:
-            self.owner.function_params.__additem__(name, val)
+        # # MODIFIED 6/8/17 OLD:
+        # if isinstance(self, Function_Base) and self.owner:
+        #     self.owner.function_params.__additem__(name, val)
+        # MODIFIED 6/8/17 NEW:
+        if isinstance(self, Function_Base):
+            if self.owner:
+                self.owner.function_params.__additem__(name, val)
+                param_state_owner = self.owner
+            else:
+                param_state_owner = None
+        else:
+            param_state_owner = self
+        # If the parameter is associated with a parameter state on the owner
+        if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
+            param_state_owner._parameter_states[name].value = val
+        # MODIFIED 6/8/17 END
+
 
     # Create the property
     prop = property(getter).setter(setter)
