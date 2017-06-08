@@ -335,45 +335,23 @@ def test_EVC_gratton():
     mySystem.controller.control_signals[0].intensity_cost_function = Exponential(rate=0.8046).function
     mySystem.controller.control_signals[1].intensity_cost_function = Exponential(rate=0.8046).function
 
-    # Loop over the KEYS in this dict
-    # for mech in mySystem.controller.prediction_mechanisms.keys():
-    #
-    #     # mySystem.controller.prediction_mechanisms is dictionary organized into key-value pairs where the key is a
-    #     # (transfer) mechanism, and the value is the corresponding prediction (integrator) mechanism
-    #
-    #     # For example: the key which is a transfer mechanism with the name 'Flanker Stimulus'
-    #     # acceses an integrator mechanism with the name 'Flanker Stimulus_PredictionMechanism'
-    #
-    #     if mech.name is 'Flanker Stimulus' or mech.name is 'Target Stimulus':
-    #
-    #         # when you find a key mechanism (transfer mechanism) with the correct name, print its name
-    #         print(mech.name)
-    #
-    #         # then use that key to access its *value* in the dictionary, which will be an integrator mechanism
-    #         # that integrator mechanism is the one whose rate we want to change ( I think!)
-    #         # mySystem.controller.prediction_mechanisms[mech].function_object.rate = 0.3481
-    #         # mySystem.controller.prediction_mechanisms[mech].parameter_states['rate'].base_value = 0.3481
-    #         # mech.parameter_states['rate'].base_value = 0.3481
-    #         # mySystem.controller.prediction_mechanisms[mech].function_object.rate = 1.0 # 0.3481
-    #         mySystem.controller.prediction_mechanisms[mech].parameter_states['rate'].base_value = 1 # 0.3481
-    #
-    #     if mech.name is 'Reward':
-    #         print(mech.name)
-    #         # mySystem.controller.prediction_mechanisms[mech].function_object.rate = 1.0
-    #         mySystem.controller.prediction_mechanisms[mech].parameter_states['rate'].base_value = 1.0
-    #
-
     for mech in mySystem.controller.predictionMechanisms.mechanisms:
-        if 'Reward' in mech.name:
-            mech._parameter_states['rate'].base_value = 1.0
-        if 'Flanker' in mech.name or 'Target' in mech.name:
-            mech._parameter_states['rate'].base_value = 1.0
+        if mech.name == 'Flanker Stimulus Prediction Mechanism' or mech.name == 'Target Stimulus Prediction Mechanism':
+            # when you find a key mechanism (transfer mechanism) with the correct name, print its name
+            print(mech.name)
+            mech.function_object.rate = 1.0
 
-    # print('new rate of integration mechanisms before system execution:')
+        if 'Reward' in mech.name:
+            print(mech.name)
+            mech.function_object.rate = 1.0
+            # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
+
+    print('new rate of integration mechanisms before system execution:')
     # for mech in mySystem.controller.prediction_mechanisms.keys():
-    #     print( mySystem.controller.prediction_mechanisms[mech].name)
-    #     print( mySystem.controller.prediction_mechanisms[mech].function_object.rate)
-    #     print('----')
+    for mech in mySystem.controller.predictionMechanisms.mechanisms:
+        print(mech.name)
+        print(mech.function_object.rate)
+        print('----')
 
     # generate stimulus environment
 
