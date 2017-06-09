@@ -421,9 +421,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                 transfer_function_class = transfer_function
                 transfer_function_name = transfer_function.__name__
 
-            if not transfer_function_class.componentType is TRANFER_FUNCTION_TYPE:
+            if not transfer_function_class.componentType is TRANSFER_FUNCTION_TYPE:
                 raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
-                                    format(transfer_function_name, self.name, TRANFER_FUNCTION_TYPE))
+                                    format(transfer_function_name, self.name, TRANSFER_FUNCTION_TYPE))
 
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set:
