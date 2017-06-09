@@ -2730,7 +2730,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             raise FunctionError(message)
 
     def _instantiate_attributes_before_function(self, context=None):
-        self.matrix = self.instantiate_matrix(self.matrix)
+        self._matrix = self.instantiate_matrix(self.matrix)
 
     def instantiate_matrix(self, specification, context=None):
         """Implements matrix indicated by specification
