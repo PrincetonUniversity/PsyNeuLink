@@ -3347,6 +3347,9 @@ class SimpleIntegrator(
         RATE: None
     })
 
+    multiplicative_param = RATE
+    additive_param = VARIABLE
+
     @tc.typecheck
     def __init__(self,
                  variable_default=None,
