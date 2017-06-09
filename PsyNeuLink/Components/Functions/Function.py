@@ -494,8 +494,6 @@ class Function_Base(Function):
                          prefs=prefs,
                          context=context)
 
-        TEST = True
-
     def execute(self, variable=None, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
 
@@ -2544,7 +2542,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=context)
 
-        self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
+        self._matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
     def _validate_variable(self, variable, context=None):
         """Insure that variable passed to LinearMatrix is a max 2D np.array
