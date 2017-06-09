@@ -360,12 +360,10 @@ class MappingProjection(TransmissiveProjection_Base):
         variable = self._parameter_states[MATRIX].value
         # default_offset = variable * 0.0
         # default_scale = default_offset + 1.0
-        get_matrix()
-        self._parameter_states[MATRIX].function_object = SimpleIntegrator(
-                                                              variable_default=variable,
-                                                              initializer=self.function_params[MATRIX].tolist(),
-                                                              owner=self._parameter_states[MATRIX]
-                                                              )
+        matrix = get_matrix(self.function_params[MATRIX]).tolist()
+        self._parameter_states[MATRIX].function_object = SimpleIntegrator(variable_default=variable,
+                                                                          initializer=matrix,
+                                                                          owner=self._parameter_states[MATRIX])
         # self._parameter_states[MATRIX].function_object = LinearCombination()
         self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
         # MODIFIED 6/9/17 END
