@@ -55,7 +55,6 @@ def register_category(entry,
                       name=None,
                       registry=None,
                       context='Registry'):
-# MODIFIED 9/10/16 END
 # DOCUMENT:
     """Maintains registry of subclasses for base_class, names instances incrementally (if duplicates), and sets default
 
@@ -124,10 +123,27 @@ def register_category(entry,
     # If entry is an instance (presumably of a component type of the base class):
     if isinstance(entry, base_class):
 
+        # MODIFIED 6/8/17 OLD:
+        # try:
+        #     component_type_name = entry.componentType
+        # except AttributeError:
+        #     component_type_name = entry.__class__.__name__
+        #
+        # # Component type is registered (i.e., there is an entry for component_type_name)
+        # if component_type_name in registry:
+        #     register_instance(entry=entry,
+        #                       name=name,
+        #                       base_class=base_class,
+        #                       registry=registry,
+        #                       sub_dict=component_type_name)
+        # MODIFIED 6/8/17 NEW:
         try:
-            component_type_name = entry.componentType
+            component_type_name = entry.componentName
         except AttributeError:
-            component_type_name = entry.__class__.__name__
+            try:
+                component_type_name = entry.componentType
+            except AttributeError:
+                component_type_name = entry.__class__.__name__
 
         # Component type is registered (i.e., there is an entry for component_type_name)
         if component_type_name in registry:
@@ -136,6 +152,7 @@ def register_category(entry,
                               base_class=base_class,
                               registry=registry,
                               sub_dict=component_type_name)
+        # MODIFIED 6/8/17 END
 
         # If component type is not already registered in registry, then:
         else:
