@@ -5639,11 +5639,11 @@ class Stability(ObjectiveFunction):
         from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         if isinstance(self.matrix,MappingProjection):
-            self.matrix = self.matrix._parameter_states[MATRIX]
+            self._matrix = self.matrix._parameter_states[MATRIX]
         elif isinstance(self.matrix,ParameterState):
             pass
         else:
-            self.matrix = get_matrix(self.matrix, size, size)
+            self._matrix = get_matrix(self.matrix, size, size)
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX,size, size)
 

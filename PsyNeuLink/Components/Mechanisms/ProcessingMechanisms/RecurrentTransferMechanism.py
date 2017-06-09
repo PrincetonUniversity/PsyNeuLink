@@ -421,7 +421,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         else:
             self.recurrent_projection = _instantiate_recurrent_projection(self, self.matrix, context=context)
 
-        self.matrix = self.recurrent_projection.matrix
+        self._matrix = self.recurrent_projection.matrix
 
         if ENERGY in self.output_states.names:
             energy = Stability(self.variable[0],
