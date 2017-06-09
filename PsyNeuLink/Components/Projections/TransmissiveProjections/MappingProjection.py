@@ -346,15 +346,25 @@ class MappingProjection(TransmissiveProjection_Base):
         #                       This is to accomodate the use of a LearningProjection to update the MATRIX param
         # Assign LinearCombination as function of MATRIX ParameterState, and format offset accordingly
         # Note: this is so that Lear
-        # Format offset and scale to support Hadamard modification of MATRIX param:
+        # # MODIFIED 6/9/17 OLD:
+        # # Format offset and scale to support Hadamard modification of MATRIX param:
+        # variable = self._parameter_states[MATRIX].value
+        # default_offset = variable * 0.0
+        # default_scale = default_offset + 1.0
+        # self._parameter_states[MATRIX].function_object = LinearCombination(variable_default=variable,
+        #                                                                    offset=default_offset,
+        #                                                                    scale=default_scale)
+        # # self._parameter_states[MATRIX].function_object = LinearCombination()
+        # self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
+        # MODIFIED 6/9/17 NEW:
         variable = self._parameter_states[MATRIX].value
-        default_offset = variable * 0.0
-        default_scale = default_offset + 1.0
-        self._parameter_states[MATRIX].function_object = LinearCombination(variable_default=variable,
-                                                                           offset=default_offset,
-                                                                           scale=default_scale)
+        # default_offset = variable * 0.0
+        # default_scale = default_offset + 1.0
+        self._parameter_states[MATRIX].function_object = SimpleIntegrator(variable_default=variable,
+                                                                            owner=self)
         # self._parameter_states[MATRIX].function_object = LinearCombination()
         self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
+        # MODIFIED 6/9/17 END
 
     def _instantiate_receiver(self, context=None):
         """Determine matrix needed to map from sender to receiver
