@@ -412,6 +412,8 @@
 # IMPLEMENT: abstract _parse_state_specs:
 #                 integrate _parse_gating_signal_spec (in GatingSignal) into it
 #                 use in _validate_params for ControlMechanism and LearningMechanism
+# FIX: Line 2018 of Component:
+#     why does this function_param_specs = self.paramsCurrent[FUNCTION_PARAMS].copy() have rate and noise?
 # FIX: NEED SOME WAY OF INCLUDING GATING MECHANISM IN SYSTEM AND ASSIGNING IT execution_id
 # FIX: ALLOW ModulationParam TO BE NAME OF AN ACTUAL PARAMETER OF A FUNCTION
 #        MODIFY _get_modulated_param TO LOOK FOR REAL NAME FIRST
