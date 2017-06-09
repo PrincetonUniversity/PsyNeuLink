@@ -426,7 +426,7 @@ class MappingProjection(TransmissiveProjection_Base):
                                  receiver_len,
                                  self.receiver.owner.name))
 
-                self.matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
+                self._matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
 
                 # Since matrix shape has changed, output of self.function may have changed, so update self.value
                 self._update_value()
@@ -465,8 +465,8 @@ class MappingProjection(TransmissiveProjection_Base):
             setattr(self, '_'+MATRIX, self.matrix)
             # MODIFIED 6/1/17 END
 
-            # FIX: UPDATE FOR LEARNING
-            #    ??DELETE??
+            # FIX: UPDATE FOR LEARNING BEGIN
+            #    ??DELETE ONCE INTEGRATOR FUNCTION IS IMPLEMENTED
             # Pass params for parameterState's function specified by instantiation in LearningProjection
             weight_change_params = matrix_parameter_state.paramsCurrent
 
@@ -477,6 +477,7 @@ class MappingProjection(TransmissiveProjection_Base):
             # Update MATRIX
             self.matrix = matrix_parameter_state.value
             # MODIFIED 2/21/17 END
+            # FIX: UPDATE FOR LEARNING END
 
             # # TEST PRINT
             # print("\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.matrix))
