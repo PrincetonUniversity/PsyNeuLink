@@ -1323,6 +1323,7 @@ class State_Base(State):
             elif isinstance(projection, ModulatoryProjection_Base):
                 mod_meta_param, mod_param_name, mod_param_value = _get_modulated_param(self, projection)
                 self._mod_proj_values[mod_meta_param].append(type_match(projection_value, type(mod_param_value)))
+                TEST = True
 
         # AGGREGATE ModulatoryProjection VALUES 
 
