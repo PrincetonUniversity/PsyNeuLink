@@ -494,6 +494,8 @@ class Function_Base(Function):
                          prefs=prefs,
                          context=context)
 
+        TEST = True
+
     def execute(self, variable=None, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
 
@@ -1614,7 +1616,7 @@ class TransferFunction(Function_Base):
         when the TransferFunction is used as the function of an InputState or OutputState). 
      
     """
-    componentType = TRANFER_FUNCTION_TYPE
+    componentType = TRANSFER_FUNCTION_TYPE
     
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, variable_default,

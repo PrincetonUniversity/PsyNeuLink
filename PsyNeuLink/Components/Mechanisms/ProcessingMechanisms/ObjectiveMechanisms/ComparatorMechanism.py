@@ -352,7 +352,6 @@ class ComparatorMechanism(ObjectiveMechanism):
                          name=name,
                          prefs=prefs,
                          context=self)
-        TEST = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """If sample and target values are specified, validate that they are compatible 

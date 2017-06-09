@@ -1353,8 +1353,6 @@ class State_Base(State):
             combined_values = state_value[0]
 
         self.value = state_value
-        TEST = True
-
 
     def execute(self, input=None, time_scale=None, params=None, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
