@@ -328,6 +328,7 @@ class MappingProjection(TransmissiveProjection_Base):
                                                 name=name,
                                                 prefs=prefs,
                                                 context=self)
+        TEST = True
 
     # def _instantiate_sender(self, context=None):
             # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
