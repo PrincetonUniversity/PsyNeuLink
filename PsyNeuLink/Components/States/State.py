@@ -824,10 +824,7 @@ class State_Base(State):
             # Projection was instantiated, so:
             #    - validate value
             #    - assign to State's afferents or mod_afferents list
-            # FIX: UPDATE FOR LEARNING
-            # FIX: UPDATE WITH MODULATION_MODS
-            # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
-            # If it is a ControlProjection or GatingProjection:
+            # If it is a ModualatoryProjection:
             #    - check that projection's value is compatible with value of the function param being modulated
             #    - assign projection to mod_afferents
             # if isinstance(projection_spec, (ControlProjection, GatingProjection)):
@@ -836,7 +833,7 @@ class State_Base(State):
                 # Match the projection's value with the value of the function parameter
                 mod_proj_spec_value = type_match(projection_spec.value, type(function_param_value))
                 # If the match was successful (i.e., they are compatible), assign the projection to mod_afferents
-                if iscompatible(function_param_value, mod_proj_spec_value):
+                if function_param_value is None or iscompatible(function_param_value, mod_proj_spec_value):
                     # Avoid duplicates, since instantiation of projection (e.g, by Mechanism)
                     #    may have already called this method and assigned projection to self.mod_afferents
                     if not projection_spec in self.mod_afferents:
@@ -1323,7 +1320,6 @@ class State_Base(State):
             elif isinstance(projection, ModulatoryProjection_Base):
                 mod_meta_param, mod_param_name, mod_param_value = _get_modulated_param(self, projection)
                 self._mod_proj_values[mod_meta_param].append(type_match(projection_value, type(mod_param_value)))
-                TEST = True
 
         # AGGREGATE ModulatoryProjection VALUES 
 
