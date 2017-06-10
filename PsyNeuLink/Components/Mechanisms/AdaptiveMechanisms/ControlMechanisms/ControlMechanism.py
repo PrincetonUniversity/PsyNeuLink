@@ -550,7 +550,7 @@ class ControlMechanism_Base(Mechanism_Base):
                     # IMPLEMENTATION NOTE: Mechanism was placed in list in STATE_PROJECTIONS entry by _parse_state_spec
                     if isinstance(spec, list) and isinstance(spec[0], Mechanism):
                         mech = spec[0]
-                        parameter_state = _get_parameter_state(self, param_name, mech)
+                        parameter_state = _get_parameter_state(self, CONTROL_SIGNAL, param_name, mech)
 
                     # Projection (in a list)
                     elif isinstance(spec, list):
