@@ -1061,6 +1061,7 @@ class Component(object):
         :target_set: (dict) - set to which params should be assigned (default: self.paramsCurrent)
         :return:
         """
+        # VARIABLE ------------------------------------------------------------
 
         # If function is called without any arguments, get default for variable
         if variable is None:
@@ -1080,6 +1081,8 @@ class Component(object):
         else:
             self.variable = variable
 
+        # PARAMS ------------------------------------------------------------
+
         # If target_set is not specified, use paramsCurrent
         if target_set is None:
             target_set = self.paramsCurrent
@@ -1091,6 +1094,7 @@ class Component(object):
         #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
+        # MODIFIED 6/9/17 OLD:
         # If params have been passed, treat as runtime params and assign to paramsCurrent
         #   (relabel params as runtime_params for clarity)
         runtime_params = params

@@ -255,8 +255,10 @@ def _get_modulated_param(owner, mod_proj:ModulatoryProjection_Base):
     # Get the function parameter's value
     # function_param_value = owner.function_object.params[function_param_name]
     function_param_value = owner.function_object.params[function_param_name]
-    if function_param_value is None:
-        function_param_value = function_mod_meta_param_obj.init_val
+    # MODIFIED 6/9/17 OLD:
+    # if function_param_value is None:
+    #     function_param_value = function_mod_meta_param_obj.init_val
+    # MODIFIED 6/9/17 END
 
     # Return the meta_parameter object, function_param name, and function_param_value
     return ModulatedParam(function_mod_meta_param_obj, function_param_name, function_param_value)
@@ -3072,7 +3074,7 @@ class Integrator(
         # Handle list or array for rate specification
         if RATE in request_set:
             rate = request_set[RATE]
-            if isinstance(rate, (list, np.ndarray)):
+            if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.variable):
                 if len(rate) != np.array(self.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign variableClassDefault accordingly
@@ -3227,7 +3229,9 @@ class Integrator(
     @initializer.setter
     def initializer(self, val):
         self._initializer = val
-        self.previous_value = val
+        # MODIFIED 6/9/17 OLD:
+        # self.previous_value = val
+        # MODIFIED 6/9/17 END
 
 
 class SimpleIntegrator(
@@ -3344,21 +3348,27 @@ class SimpleIntegrator(
     # paramClassDefaults.update({INITIALIZER: variableClassDefault})
     paramClassDefaults.update({
         NOISE: None,
-        RATE: None
+        RATE: None,
+        # OFFSET: None,
+        # SCALE: None
     })
 
-    multiplicative_param = RATE
-    additive_param = VARIABLE
+    multiplicative_param = SCALE
+    additive_param = OFFSET
 
     @tc.typecheck
     def __init__(self,
                  variable_default=None,
-                 rate: parameter_spec = 1.0,
+                 rate: parameter_spec=1.0,
                  noise=0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 # scale: parameter_spec = 1.0,
+                 # offset: parameter_spec = 0.0,
+                 # scale=1.0,
+                 # offset=0.0,
+                 scale=None,
+                 offset=None,
                  initializer=variableClassDefault,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(dict)=None,
                  owner=None,
                  prefs: is_pref_set = None,
                  context="SimpleIntegrator Init"):
@@ -3414,8 +3424,14 @@ class SimpleIntegrator(
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        scale = self.paramsCurrent[SCALE]
-        offset = self.paramsCurrent[OFFSET]
+        if self.scale is None:
+            scale = 1.0
+        else:
+            scale = self.scale
+        if self.offset is None:
+            offset = 0.0
+        else:
+            offset = self.offset
 
         # if noise is a function, execute it
         if self.noise_function:
@@ -3435,6 +3451,10 @@ class SimpleIntegrator(
 
         # previous_value = np.atleast_2d(previous_value)
         new_value = self.variable
+
+
+        # if params and VARIABLE in params:
+        #     new_value = params[VARIABLE]
 
         # Compute function based on integration_type param
 
@@ -3570,16 +3590,24 @@ class ConstantIntegrator(
     # paramClassDefaults.update({INITIALIZER: variableClassDefault})
     paramClassDefaults.update({
         NOISE: None,
-        RATE: None
+        RATE: None,
+        SCALE: None,
+        OFFSET: None
     })
+
+    multiplicative_param = SCALE
+    additive_param = RATE
 
     @tc.typecheck
     def __init__(self,
                  variable_default=None,
-                 rate: parameter_spec = 1.0,
+                 # rate: parameter_spec = 1.0,
+                 rate=0.0,
                  noise=0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 # scale: parameter_spec = 1.0,
+                 # offset: parameter_spec = 0.0,
+                 scale=1.0,
+                 offset=0.0,
                  initializer=variableClassDefault,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -3603,7 +3631,7 @@ class ConstantIntegrator(
                          prefs=prefs,
                          context=context)
 
-        # Reassign to kWInitializer in case default value was overridden
+        # Reassign to initializer in case default value was overridden
         self.previous_value = self.initializer
 
         self.auto_dependent = True
@@ -3636,9 +3664,9 @@ class ConstantIntegrator(
         """
         self._check_args(variable=variable, params=params, context=context)
 
-        rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        scale = self.paramsCurrent[SCALE]
-        offset = self.paramsCurrent[OFFSET]
+        rate = np.array(self.rate).astype(float)
+        scale = self.scale
+        offset = self.offset
 
         # if noise is a function, execute it
         if self.noise_function:
@@ -3666,7 +3694,7 @@ class ConstantIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.previous_value = adjusted_value
+            self.previous_value = value
 
         return adjusted_value
 
