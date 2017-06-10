@@ -361,7 +361,8 @@ class MappingProjection(TransmissiveProjection_Base):
         # default_offset = variable * 0.0
         # default_scale = default_offset + 1.0
         # matrix = get_matrix(self.function_params[MATRIX]).tolist()
-        matrix = get_matrix(self.function_params[MATRIX])
+        # matrix = get_matrix(self.function_params[MATRIX])
+        matrix = get_matrix(self._parameter_states[MATRIX].value)
         default_rate = matrix * 0.0
         self._parameter_states[MATRIX].function_object = ConstantIntegrator(owner=self._parameter_states[MATRIX],
                                                                             initializer=matrix,
