@@ -1299,10 +1299,20 @@ class State_Base(State):
             if not projection_params:
                 projection_params = None
 
-            # Update LearningSignals only if context == LEARNING;  otherwise, just get current value
+            # FIX: UPDATE FOR LEARNING
+            # MODIFIED 6/10/17 OLD:
+            # # Update LearningSignals only if context == LEARNING;  otherwise, just get current value
+            # # Note: done here rather than in its own method in order to exploit parsing of params above
+            # if isinstance(projection, LearningProjection) and not LEARNING in context:
+            #     # projection_value = projection.value
+            #     projection_value = projection.value * 0.0
+            # MODIFIED 6/10/17 NEW:
+            # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection) and not LEARNING in context:
-                    projection_value = projection.value
+                # projection_value = projection.value
+                projection_value = projection.value * 0.0
+            # MODIFIED 6/10/17 END
             else:
                 projection_value = projection.execute(params=projection_params,
                                                       time_scale=time_scale,

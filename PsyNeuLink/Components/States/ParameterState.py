@@ -705,6 +705,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     # Only allow a FUNCTION_PARAMS dict
     elif isinstance(param_value, ReadOnlyOrderedDict) and param_name is FUNCTION_PARAMS:
         pass
+    # FIX: UPDATE WITH MODULATION_MODS
+    # WHAT ABOUT GatingProjection??
     # Allow ControlProjection, LearningProjection
     elif isinstance(param_value, Projection):
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
