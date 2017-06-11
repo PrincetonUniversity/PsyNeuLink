@@ -504,7 +504,11 @@ class Function_Base(Function):
 
     @property
     def functionOutputType(self):
-        if self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]:
+        # # MODIFIED 6/11/17 OLD:
+        # if self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]:
+        # MODIFIED 6/11/17 NEW:
+        if hasattr(self, FUNCTION_OUTPUT_TYPE_CONVERSION):
+        # MODIFIED 6/11/17 END
             return self._functionOutputType
         return None
 
