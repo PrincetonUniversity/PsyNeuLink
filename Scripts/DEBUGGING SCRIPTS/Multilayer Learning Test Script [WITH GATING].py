@@ -105,6 +105,9 @@ z = process(default_input_value=[0, 0],
             prefs={VERBOSE_PREF: False,
                    REPORT_OUTPUT_PREF: True})
 
+g = process(default_input_value=[1.0],
+            pathway=[Gating_Mechanism])
+
 # Input_Weights.matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
 # Middle_Weights.matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
 # Output_Weights.matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
@@ -114,7 +117,8 @@ z = process(default_input_value=[0, 0],
 # target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 # stim_list = {Input_Layer:[[-1, 30]]}
 # stim_list = {Input_Layer:[[-1, 30]]}
-stim_list = {Input_Layer:[[-1, 30]]}
+stim_list = {Input_Layer:[[-1, 30]],
+             Gating_Mechanism:[1.0]}
 target_list = {Output_Layer:[[0, 0, 1]]}
 
 
@@ -162,7 +166,7 @@ if COMPOSITION is PROCESS:
 
 elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
-    x = system(processes=[z],
+    x = system(processes=[z, g],
                targets=[0, 0, 1],
                learning_rate=1.0)
 
@@ -171,10 +175,10 @@ elif COMPOSITION is SYSTEM:
 
     # x.show_graph(show_learning=True)
 
-    from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism \
-        import _add_gating_mechanism_to_system
-    _add_gating_mechanism_to_system(Gating_Mechanism)
-
+    # from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism \
+    #     import _add_gating_mechanism_to_system
+    # _add_gating_mechanism_to_system(Gating_Mechanism)
+    #
     results = x.run(
         num_executions=10,
         # inputs=stim_list,
