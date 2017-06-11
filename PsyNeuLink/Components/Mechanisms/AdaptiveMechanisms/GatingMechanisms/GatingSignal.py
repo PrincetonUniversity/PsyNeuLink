@@ -292,6 +292,15 @@ class GatingSignal(OutputState):
         # Set default value of modulation to owner's value
         self._modulation = self.modulation or owner.modulation
 
+    # def _instantiate_function(self, context=None):
+    #     super()._instantiate_function(context=context)
+    #     self.function_object.FunctionOutputTypeConversion = True
+    #     self.function_object.functionOutputType = FunctionOutputType.RAW_NUMBER
+    #     TEST = True
+
+    def _execute(self, function_params, context):
+        return float(super()._execute(function_params=function_params, context=context))
+
 
 def _parse_gating_signal_spec(owner, state_spec):
     """Take specifications for one or more states to be gated, and return GatingSignal specification dictionary
@@ -544,17 +553,19 @@ def _parse_gating_signal_spec(owner, state_spec):
         states = [state]
 
     # Check for any duplicate states in specification for this GatingSignal or existing ones for the owner
-    all_states = []
+    all_gated_states = []
     # Get gated states from any already instantiated GatingSignals in gating_signals arg
     if owner.gating_signals:
+        #                                   _gating_signal_arg     already instantiated GatingSignal
         for gating_signal in [gs for gs in owner.gating_signals if isinstance(gs, GatingSignal)]:
-            all_states.extend([proj.receiver for proj in gating_signal.efferents])
+            #                  gated state
+            all_gated_states.extend([proj.receiver for proj in gating_signal.efferents])
     # Add states for current GatingSignal
-    all_states.extend(states)
+    all_gated_states.extend(states)
     # Check for duplicates
-    if len(all_states) != len(set(all_states)):
-        for test_state in all_states:
-            if next((test_state == state  for state in all_states), None):
+    if len(all_gated_states) != len(set(all_gated_states)):
+        for test_state in all_gated_states:
+            if next((test_state == state  for state in all_gated_states), None):
                 raise GatingSignalError("{} of {} receives more than one GatingProjection from the {}s in {}".
                                         format(test_state.name, test_state.owner.name,
                                                GatingSignal.__name__, owner.name))

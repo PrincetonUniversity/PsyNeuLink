@@ -110,7 +110,7 @@ FunctionOutputTypeConversion, then the type of value returned by its `function <
     * FunctionOutputType.NP_1D_ARRAY: return 1d np.array
     * FunctionOutputType.NP_2D_ARRAY: return 2d np.array.
 
-To implement FunctionOutputTypeConversion, the Function's kwFunctionOutputTypeConversion parameter must set to True,
+To implement FunctionOutputTypeConversion, the Function's FUNCTION_OUTPUT_TYPE_CONVERSION parameter must set to True,
 and function type conversion must be implemented by its `function <Function_Base.function>` method
 (see `Linear` for an example).
 COMMENT
@@ -348,7 +348,7 @@ class Function_Base(Function):
                 FunctionOutputType.RAW_NUMBER, return value is "exposed" as a number
                 FunctionOutputType.NP_1D_ARRAY, return value is 1d np.array
                 FunctionOutputType.NP_2D_ARRAY, return value is 2d np.array
-            - it must be enabled for a subclass by setting params[kwFunctionOutputTypeConversion] = True
+            - it must be enabled for a subclass by setting params[FUNCTION_OUTPUT_TYPE_CONVERSION] = True
             - it must be implemented in the execute method of the subclass
             - see Linear for an example
 
@@ -366,7 +366,7 @@ class Function_Base(Function):
             + registry (dict): FunctionRegistry
             + classPreference (PreferenceSet): ComponentPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + paramClassDefaults (dict): {kwFunctionOutputTypeConversion: :keyword:`False`}
+            + paramClassDefaults (dict): {FUNCTION_OUTPUT_TYPE_CONVERSION: :keyword:`False`}
 
         Class methods:
             none
@@ -453,7 +453,10 @@ class Function_Base(Function):
     variableEncodingDim = 1
 
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({kwFunctionOutputTypeConversion: False})  # Enable/disable output type conversion
+    paramClassDefaults.update({
+        FUNCTION_OUTPUT_TYPE_CONVERSION: False,  # Enable/disable output type conversion
+        FUNCTION_OUTPUT_TYPE:None                # Default is to not convert
+    })
 
     def __init__(self,
                  variable_default,
@@ -501,19 +504,28 @@ class Function_Base(Function):
 
     @property
     def functionOutputType(self):
-        if self.paramsCurrent[kwFunctionOutputTypeConversion]:
+        if self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]:
             return self._functionOutputType
         return None
 
     @functionOutputType.setter
     def functionOutputType(self, value):
 
-        if not value and not self.paramsCurrent[kwFunctionOutputTypeConversion]:
+        # Initialize backing field if it has not yet been set
+        #    ??or if FunctionOutputTypeConversion is False?? <- FIX: WHY?? [IS THAT A SIDE EFFECT OR PREVIOUSLY USING
+        #                                                       FIX: self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]
+        #                                                       FIX: TO DECIDE IF ATTRIBUTE EXISTS?
+        # # MODIFIED 6/11/17 OLD:
+        # if not value and not self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]:
+        # MODIFIED 6/11/17 NEW:
+        if value is None and (not hasattr(self, FUNCTION_OUTPUT_TYPE_CONVERSION)
+                              or not self.FunctionOutputTypeConversion):
+        # MODIFIED 6/11/17 END
             self._functionOutputType = value
             return
 
         # Attempt to set outputType but conversion not enabled
-        if value and not self.paramsCurrent[kwFunctionOutputTypeConversion]:
+        if value and not self.paramsCurrent[FUNCTION_OUTPUT_TYPE_CONVERSION]:
             raise FunctionError("output conversion is not enabled for {0}".format(self.__class__.__name__))
 
         # Bad outputType specification
@@ -624,7 +636,7 @@ class ArgumentTherapy(Function_Base):
     #  in the initialization call or later (using either _instantiate_defaults or during a function call)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwFunctionOutputTypeConversion: True,
+    paramClassDefaults.update({FUNCTION_OUTPUT_TYPE_CONVERSION: True,
                                PARAMETER_STATE_PARAMS: None
                                # PROPENSITY: Manner.CONTRARIAN,
                                # PERTINACITY:  10
@@ -856,7 +868,7 @@ class UserDefinedFunction(Function_Base):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwFunctionOutputTypeConversion: False,
+        FUNCTION_OUTPUT_TYPE_CONVERSION: False,
         PARAMETER_STATE_PARAMS: None
     })
 
@@ -1745,7 +1757,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwFunctionOutputTypeConversion: True,
+        FUNCTION_OUTPUT_TYPE_CONVERSION: True,
         PARAMETER_STATE_PARAMS: None
     })
 
@@ -2625,7 +2637,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 continue
 
             # Not currently used here
-            if param_name is kwFunctionOutputTypeConversion:
+            if param_name is FUNCTION_OUTPUT_TYPE_CONVERSION:
                 continue
 
             if param_name is AUTO_DEPENDENT:
