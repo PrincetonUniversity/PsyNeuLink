@@ -502,22 +502,32 @@ class GatingMechanism(AdaptiveMechanism_Base):
                         gating_signal_specs.update({GATING_SIGNAL_SPECS: [projection]})
                         self._instantiate_gating_signal(gating_signal_specs, context=context)
 
-    # IMPLEMENTATION NOTE: Not necessary, since (for now) all it does is convey self.variable to self.value
-    # def _execute(self,
-    #                 variable=None,
-    #                 runtime_params=None,
-    #                 clock=CentralClock,
-    #                 time_scale=TimeScale.TRIAL,
-    #                 context=None):
-    #     """Updates GatingSignals based on inputs
-    #     """
-    #     gating_policy = self.function(controller=self,
-    #                                   variable=variable,
-    #                                   runtime_params=runtime_params,
-    #                                   time_scale=time_scale,
-    #                                   context=context)
-    #     return gating_policy
-    #
+    # IMPLEMENTATION NOTE: This is needed if GatingMechanism is added to a system but does not have any afferents
+    #                      (including from ProcessInputState or SystemInputState)
+    #                      and therefore variable = None
+    def _execute(self,
+                    variable=None,
+                    runtime_params=None,
+                    clock=CentralClock,
+                    time_scale=TimeScale.TRIAL,
+                    context=None):
+        """Updates GatingSignals based on inputs
+        """
+
+        if variable is None or variable[0] is None:
+            variable = self.variableClassDefault
+
+        return super()._execute(variable=variable,
+                                runtime_params=runtime_params,
+                                clock=clock,
+                                time_scale=time_scale,
+                                context=context)
+        # gating_policy = self.function(variable=variable,
+        #                               function_params=function_params,
+        #                               time_scale=time_scale,
+        #                               context=context)
+        # return gating_policy
+
 
     def show(self):
 
@@ -540,5 +550,12 @@ def _add_gating_mechanism_to_system(owner:GatingMechanism):
         for gating_signal in owner.gating_signals:
             for mech in [proj.receiver.owner for proj in gating_signal.efferents]:
                 for system in mech.systems:
-                    #FIX: AVOID DUPLICATES HERE
-                    system.executionList.append(owner)
+                    if owner not in system.executionList:
+                        system.executionList.append(owner)
+                        system.executionGraph[owner] = set()
+                        # FIX: NEED TO ALSO ADD SystemInputState (AND ??ProcessInputState) PROJECTIONS
+                        # # Add self to system's list of OriginMechanisms if it doesn't have any afferents
+                        # if not any(state.afferents for state in owner.input_states):
+                        #     system.originMechanisms.mechs.append(owner)
+
+
