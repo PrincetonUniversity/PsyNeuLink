@@ -26,7 +26,7 @@ Output_Layer = TransferMechanism(name='Output Layer',
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
-Gating_Mechanism = GatingMechanism(default_gating_policy=1.0,
+Gating_Mechanism = GatingMechanism(default_gating_policy=0.0,
                                    gating_signals=[
                                        Hidden_Layer_1,
                                        Hidden_Layer_2,
@@ -171,7 +171,9 @@ elif COMPOSITION is SYSTEM:
 
     # x.show_graph(show_learning=True)
 
-    Gating_Mechanism.execute()
+    from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism \
+        import _add_gating_mechanism_to_system
+    _add_gating_mechanism_to_system(Gating_Mechanism)
 
     results = x.run(
         num_executions=10,

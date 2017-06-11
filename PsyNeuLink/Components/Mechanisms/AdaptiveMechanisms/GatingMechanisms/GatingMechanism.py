@@ -531,3 +531,14 @@ class GatingMechanism(AdaptiveMechanism_Base):
             for projection in self.output_states[state_name].efferents:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
         print ("\n---------------------------------------------------------")
+
+
+# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+def _add_gating_mechanism_to_system(owner:GatingMechanism):
+
+    if owner.gating_signals:
+        for gating_signal in owner.gating_signals:
+            for mech in [proj.receiver.owner for proj in gating_signal.efferents]:
+                for system in mech.systems:
+                    #FIX: AVOID DUPLICATES HERE
+                    system.executionList.append(owner)
