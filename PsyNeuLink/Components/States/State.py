@@ -1351,9 +1351,11 @@ class State_Base(State):
 
         # ASSIGN VALUE
 
-        # If self.value is a number, convert combined_values back to number
-        if value_is_number and state_value:
-            combined_values = state_value[0]
+        # MODIFIED 6/11/17 OLD:
+        # # If self.value is a number, convert combined_values back to number
+        # if value_is_number and state_value:
+        #     combined_values = state_value[0]
+        # MODIFIED 6/11/17 END
 
         self.value = state_value
 
