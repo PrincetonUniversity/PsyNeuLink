@@ -273,7 +273,7 @@ PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect f
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 
 FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
-kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Function Components to set output type
+FUNCTION_OUTPUT_TYPE_CONVERSION = "FunctionOutputTypeConversion" # Used in Function Components to set output type
 
 #endregion
 
@@ -571,6 +571,8 @@ MONITOR_FOR_LEARNING = 'monitor_for_learning'
 
 #region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
+
+FUNCTION_OUTPUT_TYPE = 'functionOutputType'
 
 SUM = 'sum'
 DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS

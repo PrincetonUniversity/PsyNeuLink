@@ -47,7 +47,7 @@ class EVCAuxiliaryFunction(Function_Base):
     variableClassDefault = None
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-                               kwFunctionOutputTypeConversion: False,
+                               FUNCTION_OUTPUT_TYPE_CONVERSION: False,
                                PARAMETER_STATE_PARAMS: None})
 
     # MODIFIED 11/29/16 NEW:

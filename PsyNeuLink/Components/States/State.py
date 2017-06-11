@@ -1278,9 +1278,12 @@ class State_Base(State):
                                                                                      self.__class__.__name__,
                                                                                      self.owner.name))
                 continue
+
+            # MODIFIED 6/10/17 OLD: [COMMENTED OUT TO TEST Gating]
             sender_id = sender.owner._execution_id
             if sender_id != self_id:
                 continue
+            # MODIFIED 6/10/17 END
 
             # Only accept projections from a Process to which the owner Mechanism belongs
             if isinstance(sender, ProcessInputState):
@@ -1300,13 +1303,6 @@ class State_Base(State):
                 projection_params = None
 
             # FIX: UPDATE FOR LEARNING
-            # MODIFIED 6/10/17 OLD:
-            # # Update LearningSignals only if context == LEARNING;  otherwise, just get current value
-            # # Note: done here rather than in its own method in order to exploit parsing of params above
-            # if isinstance(projection, LearningProjection) and not LEARNING in context:
-            #     # projection_value = projection.value
-            #     projection_value = projection.value * 0.0
-            # MODIFIED 6/10/17 NEW:
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection) and not LEARNING in context:

@@ -295,9 +295,12 @@ class GatingMechanism(AdaptiveMechanism_Base):
                           registry=self._stateRegistry,
                           context=context)
 
-        if self.gating_signals:
-            for gating_signal in self.gating_signals:
+        self.gating_signal_specs = self.gating_signals
+
+        if self.gating_signal_specs:
+            for gating_signal in self.gating_signal_specs:
                 self._instantiate_gating_signal(gating_signal=gating_signal, context=context)
+                TEST = True
 
         # IMPLEMENTATION NOTE:  Don't want to call this because it instantiates undesired default outputState
         # super()._instantiate_output_states(context=context)
@@ -344,7 +347,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # GET index FOR GatingSignal OutputState
         try:
-            output_state_index = len(self.output_states)
+            # If there are as many outputStates as items in self.value, assume that each
+            if len(self.gating_signals) == len(self.value):
+                output_state_index = len(self.gating_signals) - 1
+            else:
+                output_state_index = 0
         except (AttributeError, TypeError):
             output_state_index = 0
 
@@ -431,7 +438,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                      receiver=state,
                                                      name=GATING_PROJECTION + gating_signal_name)
                 # Add gating_projection to GatingSignal.efferents
-                gating_signal.efferents.append(gating_projection)
+                # gating_signal.efferents.append(gating_projection)
                 gating_projections.append(gating_projection)
 
         # Add GatingProjections to GatingMechanism's list of GatingProjections
