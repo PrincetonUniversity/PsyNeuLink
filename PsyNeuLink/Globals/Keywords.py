@@ -352,14 +352,14 @@ EXPONENTIAL_FUNCTION = "Exponential Function"
 LOGISTIC_FUNCTION = "Logistic Function"
 SOFTMAX_FUNCTION = 'SoftMax Function'
 INTEGRATOR_FUNCTION = "Integrator Function"
-SIMPLE_INTEGRATOR_FUNCTION = "Simple Integrator Function"
-CONSTANT_INTEGRATOR_FUNCTION = "Constant Integrator Function"
-ADAPTIVE_INTEGRATOR_FUNCTION = "Adaptive Integrator Function"
-DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "Drift Diffusion Integrator Function"
+SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
+CONSTANT_INTEGRATOR_FUNCTION = "ConstantIntegrator Function"
+ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
+DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
-LINEAR_MATRIX_FUNCTION = "Linear Matrix Function"
+LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
-RL_FUNCTION = 'Reinforcement Learning Function'
+RL_FUNCTION = 'ReinforcementLearning Function'
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
 
 # Distribution functions

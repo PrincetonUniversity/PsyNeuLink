@@ -167,6 +167,7 @@ EPSILON = np.finfo(float).eps
 
 FunctionRegistry = {}
 
+function_keywords = {FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION}
 
 class FunctionError(Exception):
     def __init__(self, error_value):
@@ -1786,7 +1787,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                          prefs=prefs,
                          context=context)
 
-        self.functionOutputType = None
+        # self.functionOutputType = None
 
     def function(self,
                  variable=None,
@@ -2641,7 +2642,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 continue
 
             # Not currently used here
-            if param_name is FUNCTION_OUTPUT_TYPE_CONVERSION:
+            if param_name in function_keywords:
                 continue
 
             if param_name is AUTO_DEPENDENT:
@@ -2740,7 +2741,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                MATRIX_KEYWORD_NAMES))
             else:
                 message += "Unrecognized param ({}) specified for the {} function of {}".format(param_name,
-                                                                                                self.name,
+                                                                                                self.componentName,
                                                                                                 self.owner.name)
                 continue
 

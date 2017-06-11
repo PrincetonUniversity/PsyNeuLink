@@ -26,7 +26,7 @@ Output_Layer = TransferMechanism(name='Output Layer',
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
-Gating_Mechanism = GatingMechanism(default_gating_policy=0.55,
+Gating_Mechanism = GatingMechanism(default_gating_policy=1.0,
                                    gating_signals=[
                                        Hidden_Layer_1,
                                        Hidden_Layer_2,
