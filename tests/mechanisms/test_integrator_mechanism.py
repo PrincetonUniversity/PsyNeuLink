@@ -32,7 +32,7 @@ def test_integrator_simple():
     val = float(P.execute(10))
 
     # testing initializer
-    I.function_object.initializer = 5.0
+    I.function_object.reset_initializer = 5.0
 
     val2 = float(P.execute(0))
 
@@ -58,7 +58,7 @@ def test_integrator_adaptive():
     # rate = 1, noise = 0, so in this case, returns 10.0
 
     # testing initializer
-    I.function_object.initializer = 1.0
+    I.function_object.reset_initializer = 1.0
     val2 = float(P.execute(1))
 
     assert [val, val2] == [5.0, 1.0]
@@ -71,6 +71,7 @@ def test_integrator_constant():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
         function= ConstantIntegrator(
+            rate = 1.0
         ),
         time_scale=TimeScale.TIME_STEP
     )
@@ -81,7 +82,7 @@ def test_integrator_constant():
     # rate = 1.0, noise = 0, so in this case returns 1.0
 
     # testing initializer
-    I.function_object.initializer = 10.0
+    I.function_object.reset_initializer = 10.0
     val2 = float(P.execute())
 
     assert [val, val2] == [1.0, 11.0]
@@ -102,7 +103,7 @@ def test_integrator_diffusion():
     val = float(P.execute(10))
 
     # testing initializer
-    I.function_object.initializer = 1.0
+    I.function_object.reset_initializer = 1.0
     val2 = float(P.execute(0))
 
     assert [val, val2] == [10.0, 1.0]
@@ -505,10 +506,22 @@ def test_constant_integrator():
             )
         )
     P = process(pathway=[I])
-    # constant integrator should not use an input value
+    # constant integrator does not use input value (self.variable)
+
+    # step 1:
     val = P.execute(20000)
+    # value = 10 + 5
+    # adjusted_value = 15*2 + 10
+    # previous_value = 15
+    # RETURN 40
+
+    # step 2:
     val2 = P.execute(70000)
-    assert (val, val2) == (40, 100)
+    # value = 15 + 5
+    # adjusted_value = 20*2 + 10
+    # previous_value = 20
+    # RETURN 50
+    assert (val, val2) == (40, 50)
 
 
 # ------------------------------------------------------------------------------------------------
@@ -526,7 +539,6 @@ def test_adaptive_integrator():
             )
         )
     P = process(pathway=[I])
-    # constant integrator should not use an input value
     val = P.execute(1)
     assert val == 21
 
@@ -548,7 +560,6 @@ def test_drift_diffusion_integrator():
             )
         )
     P = process(pathway=[I])
-    # constant integrator should not use an input value
     val = P.execute(1)
     assert val == 40
 
@@ -570,11 +581,30 @@ def test_ornstein_uhlenbeck_integrator():
             )
         )
     P = process(pathway=[I])
-    # constant integrator should not use an input value
+    # value = previous_value + decay * rate * new_value * time_step_size + np.sqrt(
+            #time_step_size * noise) * np.random.normal()
+    # step 1:
     val = P.execute(1)
+    # value = 10 + 0.1*10*1*0.5 + 0
+    # adjusted_value = 10.5*2 + 10
+    # previous_value = 10.5
+    # RETURN 31
+
+    # step 2:
     val2 = P.execute(1)
+    # value = 10.5 + 0.1*10*1*0.5 + 0
+    # adjusted_value = 11*2 + 10
+    # previous_value = 11
+    # RETURN 32
+
+    # step 3:
     val3 = P.execute(1)
-    assert (val, val2, val3) == (31, 73, 157)
+    # value = 11 + 0.1*10*1*0.5 + 0
+    # adjusted_value = 11.5*2 + 10
+    # previous_value = 11.5
+    # RETURN 33
+
+    assert (val, val2, val3) == (31, 32, 33)
 
 # ------------------------------------------------------------------------------------------------
 def test_integrator_no_function():
