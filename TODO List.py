@@ -68,18 +68,17 @@
 #       added attribute to Projections:  has_learning_projection
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
 #  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMILAR TO MatrixKeywords)
-#  3) IMPLEMENT gating projections
 #  4) IMPLEMENT ABC
 # 4a) IMPLEMENT Swap execute (on Mechanism) and _execute (on its subclasses)
 #  5) IMPLEMENT Compilation / paralleliztion of execution
 #  6) IMPLEMENT Recurrent layer / KWTA??
+# 13) IMPLEMENT MSPRT / KWTA
 #  7) IMPLEMENT TD learning
 #  8) IMPLEMENT CLS / NMPH
 #  9) IMPLEMENT Conflict (stability / distance)
 # 10) IMPLEMENT TensorFLow wrapper
 # 11) IMPLEMENT Production System model (using scheduler??)
 # 12) IMPLEMENT LEABRA
-# 13) IMPLEMENT MSPRT / KWTA
 # 14) IMPLEMENT Model fitting
 
 # VALIDATE: (then add to META TEST)
