@@ -271,7 +271,6 @@ PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect f
                                                    #    in general, this includes params specifed as arg in a
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
-
 FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
 FUNCTION_OUTPUT_TYPE_CONVERSION = "FunctionOutputTypeConversion" # Used in Function Components to set output type
 
