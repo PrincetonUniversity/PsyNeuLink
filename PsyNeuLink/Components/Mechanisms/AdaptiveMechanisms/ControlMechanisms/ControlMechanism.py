@@ -688,7 +688,9 @@ class ControlMechanism_Base(Mechanism_Base):
             self.output_states[control_signal.name] = control_signal
         except (AttributeError, TypeError):
             from PsyNeuLink.Components.States.State import State_Base
-            self.output_states = ContentAddressableList(component_type=State_Base, list=[control_signal])
+            self.output_states = ContentAddressableList(component_type=State_Base,
+                                                        list=[control_signal],
+                                                        name = self.name+'.output_states')
 
         # Add index assignment to outputState
         control_signal.index = output_state_index

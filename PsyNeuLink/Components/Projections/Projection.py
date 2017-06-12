@@ -1022,7 +1022,9 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     # No inputState(s) yet, so create them
     else:
-        receiver.input_states = ContentAddressableList(component_type=State_Base, list=[input_state])
+        receiver.input_states = ContentAddressableList(component_type=State_Base,
+                                                       list=[input_state],
+                                                       name=receiver.name+'.input_states')
 
     input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
 
@@ -1125,6 +1127,8 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     # No outputState(s) yet, so create them
     except AttributeError:
         from PsyNeuLink.Components.States.State import State_Base
-        sender.output_states = ContentAddressableList(component_type=State_Base, list=[output_state])
+        sender.output_states = ContentAddressableList(component_type=State_Base,
+                                                      list=[output_state],
+                                                      name=sender.name+'.output_states')
 
     output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
