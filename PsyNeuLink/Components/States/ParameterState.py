@@ -642,7 +642,7 @@ def _instantiate_parameter_states(owner, context=None):
 
     """
 
-    # TBI / IMPLEMENT: use specs to implement paramterStates below
+    # TBI / IMPLEMENT: use specs to implement parameterStates below
 
     owner._parameter_states = ContentAddressableList(ParameterState, name=owner.name+'.parameter_states')
 
@@ -774,17 +774,20 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
-            # if isinstance(owner, MappingProjection) and function_param_name is MATRIX:
-            #     state_params = {FUNCTION: LinearCombination}
-            # else:
-            #     state_params = None
+            # Use function_param_value as constraint
+            # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
+            #                       for constraints before state_spec, which moves items to subdictionaries,
+            #                       which would make them inaccessible to the subsequent parse of state_spec
+            from copy import deepcopy
+            constraint_value = deepcopy(function_param_value)
+
             # Assign parameterState for function_param to the component
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
                                       state_name=function_param_name,
                                       state_spec=function_param_value,
                                       state_params=None,
-                                      constraint_value=function_param_value,
+                                      constraint_value=constraint_value,
                                       constraint_value_name=function_param_name,
                                       context=context)
             if state:
@@ -807,8 +810,11 @@ def _is_legal_param_value(owner, value):
 
     # LEGAL PARAMETER VALUES:
 
-    # lists, arrays numeric values
+    # lists, arrays numeric values or tuple
     if is_value_spec(value) or isinstance(value, tuple):
+        return True
+
+    if isinstance(value, dict) and VALUE in value:
         return True
 
     # keyword that resolves to one of the above
