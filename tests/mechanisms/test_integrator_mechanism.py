@@ -32,7 +32,7 @@ def test_integrator_simple():
     val = float(P.execute(10))
 
     # testing initializer
-    I.function_object.initializer = 5.0
+    I.function_object.reset_initializer = 5.0
 
     val2 = float(P.execute(0))
 
@@ -58,7 +58,7 @@ def test_integrator_adaptive():
     # rate = 1, noise = 0, so in this case, returns 10.0
 
     # testing initializer
-    I.function_object.initializer = 1.0
+    I.function_object.reset_initializer = 1.0
     val2 = float(P.execute(1))
 
     assert [val, val2] == [5.0, 1.0]
@@ -81,7 +81,7 @@ def test_integrator_constant():
     # rate = 1.0, noise = 0, so in this case returns 1.0
 
     # testing initializer
-    I.function_object.initializer = 10.0
+    I.function_object.reset_initializer = 10.0
     val2 = float(P.execute())
 
     assert [val, val2] == [1.0, 11.0]
@@ -102,7 +102,7 @@ def test_integrator_diffusion():
     val = float(P.execute(10))
 
     # testing initializer
-    I.function_object.initializer = 1.0
+    I.function_object.reset_initializer = 1.0
     val2 = float(P.execute(0))
 
     assert [val, val2] == [10.0, 1.0]
