@@ -2796,13 +2796,7 @@ class System_Base(System):
                         projs = sndr.input_state.afferents
 
                         for proj in projs:
-                            print("SNDR")
-                            print(sndr.name)
-                            print("PROJ")
-                            print(proj.name)
-                            print("RCVR NAME")
-                            print(proj.receiver.owner.name)
-                        edge_name=proj.name
+                            edge_name=proj.name
                         G.node(rcvr.name, color=learning_color)
                         G.node(sndr.name, color=learning_color)
                         G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
