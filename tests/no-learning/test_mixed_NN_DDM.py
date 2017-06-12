@@ -1,12 +1,13 @@
 import numpy as np
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, get_matrix
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Functions.Function import Linear, Logistic, BogaczEtAl
 from PsyNeuLink.Globals.Keywords import RANDOM_CONNECTIVITY_MATRIX, FULL_CONNECTIVITY_MATRIX
 
+random_matrix = get_matrix(RANDOM_CONNECTIVITY_MATRIX, 2, 5)
 
 def test_mixed_NN_DDM():
     input_layer = TransferMechanism(
@@ -35,7 +36,7 @@ def test_mixed_NN_DDM():
         default_input_value=[0, 0],
         pathway=[
             input_layer,
-            RANDOM_CONNECTIVITY_MATRIX,
+            random_matrix,
             hidden_layer,
             FULL_CONNECTIVITY_MATRIX,
             ddm,
