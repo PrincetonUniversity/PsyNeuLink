@@ -65,12 +65,12 @@ Middle_Weights = MappingProjection(name='Middle Weights',
                          # matrix=(FULL_CONNECTIVITY_MATRIX, LearningProjection())
                          # matrix=FULL_CONNECTIVITY_MATRIX
                          # matrix=RANDOM_CONNECTIVITY_MATRIX
-                        # MODIFIED 6/11/17 OLD:
-                         matrix=Middle_Weights_matrix
-                        # # MODIFIED 6/11/17 NEW:
-                        # matrix={VALUE:Middle_Weights_matrix,
-                        #         FUNCTION:Linear,
-                        #         MODULATION:ADDITIVE_PARAM}
+                        # # MODIFIED 6/11/17 OLD:
+                        #  matrix=Middle_Weights_matrix
+                        # MODIFIED 6/11/17 NEW:
+                        matrix={VALUE:Middle_Weights_matrix,
+                                FUNCTION:Linear,
+                                MODULATION:ADDITIVE_PARAM}
                         # MODIFIED 6/11/17 END:
                          )
 
