@@ -71,6 +71,7 @@ def test_integrator_constant():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
         function= ConstantIntegrator(
+            rate = 1.0
         ),
         time_scale=TimeScale.TIME_STEP
     )
@@ -506,6 +507,12 @@ def test_constant_integrator():
         )
     P = process(pathway=[I])
     # constant integrator should not use an input value
+    # step 1:
+    # = (10.0 + 5.0)*2 + 10
+    # = 40
+    # step 2:
+    # = (40.0 + 5.0) *2 + 10
+    # = 100
     val = P.execute(20000)
     val2 = P.execute(70000)
     assert (val, val2) == (40, 100)
