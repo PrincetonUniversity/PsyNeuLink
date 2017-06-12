@@ -54,7 +54,13 @@ Input_Weights = MappingProjection(name='Input Weights',
                         # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningProjection()),
                         # matrix=RANDOM_CONNECTIVITY_MATRIX
                         # matrix=FULL_CONNECTIVITY_MATRIX,
+                        # # MODIFIED 6/11/17 OLD:
                         matrix=Input_Weights_matrix
+                        # MODIFIED 6/11/17 NEW:
+                        # matrix={VALUE:Input_Weights_matrix,
+                        #         FUNCTION:Linear,
+                        #         MODULATION:ADDITIVE_PARAM}
+                        # MODIFIED 6/11/17 END:
                         )
 
 # This projection will be used by the process below by assigning its sender and receiver args

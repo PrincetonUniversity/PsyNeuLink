@@ -453,7 +453,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
         try:
             self.output_states[gating_signal.name] = gating_signal
         except (AttributeError, TypeError):
-            self.output_states = ContentAddressableList(component_type=State_Base, list=[gating_signal])
+            self.output_states = ContentAddressableList(component_type=State_Base,
+                                                        list=[gating_signal],
+                                                        name=self.name + '.output_states')
         # Add index assignment to outputState
         gating_signal.index = output_state_index
         # (Re-)assign control_signals attribute to output_states
