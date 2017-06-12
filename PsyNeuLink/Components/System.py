@@ -2739,29 +2739,31 @@ class System_Base(System):
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
-            rcvr_name = rcvr[0].name
-            rcvr_shape = rcvr[0].variable.shape[1]
+            # rcvr_name = rcvr[0].name
+            # rcvr_shape = rcvr[0].variable.shape[1]
+            rcvr_name = rcvr.name
+            rcvr_shape = rcvr.variable.shape[1]
             rcvr_label = rcvr_name
 
 
             # loop through senders
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
-                sndr_name = sndr[0].name
-                sndr_shape = sndr[0].variable.shape[1]
+                sndr_name = sndr.name
+                sndr_shape = sndr.variable.shape[1]
                 sndr_label = sndr_name
 
                 # find edge name
-                projs = sndr[0].output_state.efferents
+                projs = sndr.output_state.efferents
                 for proj in projs:
-                    if proj.receiver.owner == rcvr[0]:
+                    if proj.receiver.owner == rcvr:
                         edge_name = proj.name
                         edge_shape = proj.matrix.shape
                         has_learning = proj.has_learning_projection
                 edge_label = edge_name
                 #### CHANGE MADE HERE ###
                 # if rcvr is learning mechanism, draw arrow with learning color
-                if isinstance(rcvr[0], LearningMechanism) or isinstance(rcvr[0], ObjectiveMechanism):
+                if isinstance(rcvr, LearningMechanism) or isinstance(rcvr, ObjectiveMechanism):
                     break
                 else:
                     arrow_color="black"
@@ -2789,12 +2791,10 @@ class System_Base(System):
                             edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
                             G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
                     else:
-                        sndrs = learning_graph[rcvr]
+                        sndrs = list(learning_graph[rcvr])
                         for sndr in sndrs:
-                            projs = sndr.output_state.efferents
-                            for proj in projs:
-                                if proj.receiver.owner == rcvr:
-                                    edge_name = proj.name
+                            proj = sndr.output_state.efferents[0]
+                            edge_name=proj.name
                             G.node(rcvr.name, color=learning_color)
                             G.node(sndr.name, color=learning_color)
                             G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)

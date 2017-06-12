@@ -164,7 +164,7 @@ elif COMPOSITION is SYSTEM:
     x.reportOutputPref = True
     composition = x
 
-    # x.show_graph(show_learning=True)
+    x.show_graph(show_learning=True)
     results = x.run(
         num_executions=10,
         # inputs=stim_list,

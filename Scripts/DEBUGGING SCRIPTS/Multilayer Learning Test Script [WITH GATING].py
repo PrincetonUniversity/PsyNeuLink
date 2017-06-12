@@ -70,7 +70,8 @@ Middle_Weights = MappingProjection(name='Middle Weights',
                         # MODIFIED 6/11/17 NEW:
                         matrix={VALUE:Middle_Weights_matrix,
                                 FUNCTION:Linear,
-                                MODULATION:ADDITIVE_PARAM}
+                                # MODULATION:ADDITIVE_PARAM
+                                }
                         # MODIFIED 6/11/17 END:
                          )
 
