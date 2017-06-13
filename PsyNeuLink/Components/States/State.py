@@ -569,6 +569,7 @@ class State_Base(State):
         #     * this is not a problem when LinearCombination is called in state.update(), since that puts
         #         projection values in a list before calling LinearCombination to combine them
         #     * it is removed from the list below, after calling _instantiate_function
+        # FIX: UPDATE WITH MODULATION_MODS REMOVE THE FOLLOWING COMMENT:
         #     * no change is made to PARAMETER_MODULATION_FUNCTION here (matrices may be multiplied or added)
         #         (that is handled by the individual state subclasses (e.g., ADD is enforced for MATRIX parameterState)
         if ((inspect.isclass(self.function) and issubclass(self.function, LinearCombination) or
