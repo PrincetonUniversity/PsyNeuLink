@@ -35,6 +35,7 @@ TYPE CHECKING VALUE COMPARISON
 * `iscompatible`
 * `is_value_spec`
 * `is_unit_interval`
+* `is_same_function_spec`
 
 ENUM
 ~~~~
@@ -656,6 +657,8 @@ class ReadOnlyOrderedDict(UserDict):
         self.data[key] = value
         if not key in self._ordered_keys:
             self._ordered_keys.append(key)
+    def __deleteitem__(self, key):
+        del self.data[key]
     def keys(self):
         return self._ordered_keys
     def copy(self):
@@ -897,6 +900,31 @@ def is_value_spec(spec):
 
 def is_unit_interval(spec):
     if isinstance(spec, (int, float)) and 0 <= spec <= 1:
+        return True
+    else:
+        return False
+
+
+def is_same_function_spec(fct_spec_1, fct_spec_2):
+    """Compare two function specs and return True if both are for the same class of Function
+
+    Arguments can be either a class or instance of a PsyNeuLink Function, or any other callable method or function
+    Return True only if both are instances or classes of a PsyNeuLink Function;  otherwise, return False
+    """
+    from PsyNeuLink.Components.Functions.Function import Function
+
+    def _convert_to_type(fct):
+        if isinstance(fct, Function):
+            return type(fct)
+        elif inspect.isclass(fct) and issubclass(fct, Function):
+            return fct
+        else:
+            return None
+
+    fct_1 = _convert_to_type(fct_spec_1)
+    fct_2 = _convert_to_type(fct_spec_2)
+
+    if fct_1 and fct_2 and fct_1 == fct_2:
         return True
     else:
         return False
