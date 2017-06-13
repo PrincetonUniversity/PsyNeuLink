@@ -2065,9 +2065,10 @@ class Component(object):
                                           format(FUNCTION_PARAMS, self.name, function_param_specs))
                     # parse entries of FUNCTION_PARAMS dict
                     else:
-                        # Get param value from any params specified as (param, projection) tuple
+                        # Get param value from any params specified in a tuple or a dict
                         from PsyNeuLink.Components.Projections.Projection import Projection
                         for param_name, param_spec in function_param_specs.items():
+                            # Get param value from (param, projection) tuple
                             if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
                                     (param_spec[1] in {MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION} or
                                          isinstance(param_spec[1], Projection) or
@@ -2075,6 +2076,9 @@ class Component(object):
                                 ):
                                 from PsyNeuLink.Components.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec[0]
+                            # Get param value from VALUE entry of a parameter specification dictionary
+                            elif isinstance(param_spec, dict) and VALUE in param_spec:
+                                function_param_specs[param_name] =  param_spec[VALUE]
 
                 # Instantiate function from class specification
                 function_instance = function(variable_default=self.variable,

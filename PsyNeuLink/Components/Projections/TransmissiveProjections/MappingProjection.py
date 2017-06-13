@@ -301,9 +301,19 @@ class MappingProjection(TransmissiveProjection_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
+        # if matrix is DEFAULT_MATRIX:
+        #     initializer = get_matrix(matrix)
+        #     initial_rate = initializer * 0.0
+        #     matrix={VALUE:DEFAULT_MATRIX,
+        #             FUNCTION:ConstantIntegrator(owner=self._parameter_states[MATRIX],
+        #                                         initializer=get_matrix(DEFAULT_MATRIX),
+        #                                         rate=initial_rate)}
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
-                                                  params=params)
+        # Assign matrix to function_params for use as matrix param of MappingProjection.function
+        params = self._assign_args_to_param_dicts(
+                function_params={MATRIX: matrix},
+                params=params)
 
         self.learning_mechanism = None
         self.has_learning_projection = False
@@ -328,7 +338,6 @@ class MappingProjection(TransmissiveProjection_Base):
                                                 name=name,
                                                 prefs=prefs,
                                                 context=self)
-        TEST = True
 
     # def _instantiate_sender(self, context=None):
             # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
@@ -342,12 +351,14 @@ class MappingProjection(TransmissiveProjection_Base):
         super()._instantiate_parameter_states(context=context)
 
         # FIX: UPDATE FOR LEARNING
+        # FIX: UPDATE WITH MODULATION_MODS
+        # FIX: MOVE THIS TO MappingProjection.__init__;
+        # FIX: AS IT IS, OVER-WRITES USER ASSIGNMENT OF FUNCTION IN params dict FOR MappingProjection
         matrix = get_matrix(self._parameter_states[MATRIX].value)
-        default_rate = matrix * 0.0
+        initial_rate = matrix * 0.0
         self._parameter_states[MATRIX].function_object = ConstantIntegrator(owner=self._parameter_states[MATRIX],
                                                                             initializer=matrix,
-                                                                            rate=default_rate)
-        # self._parameter_states[MATRIX].function_object = LinearCombination()
+                                                                            rate=initial_rate)
         self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
 
     def _instantiate_receiver(self, context=None):
