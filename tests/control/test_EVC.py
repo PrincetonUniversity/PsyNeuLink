@@ -578,11 +578,11 @@ def test_laming_validation_specify_control_signals():
         #   ControlSignal Values
         #       drift rate
         # ALT: float(Decision._parameter_states[DRIFT_RATE].value
-        (mySystem.controller.control_signals[0].value, np.array(1.0)),
-        #       threshold
-
-        # ALT: float(Decision._parameter_states[THRESHOLD].value
-        (mySystem.controller.control_signals[1].value, np.array(1.0)),
+        # (mySystem.controller.control_signals[0].value, np.array(1.0)),
+        # #       threshold
+        #
+        # # ALT: float(Decision._parameter_states[THRESHOLD].value
+        # (mySystem.controller.control_signals[1].value, np.array(1.0)),
 
         #    Output State Values
         #       decision variable
