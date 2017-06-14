@@ -353,6 +353,7 @@ SOFTMAX_FUNCTION = 'SoftMax Function'
 INTEGRATOR_FUNCTION = "Integrator Function"
 SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
 CONSTANT_INTEGRATOR_FUNCTION = "ConstantIntegrator Function"
+ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumualtorIntegrator Function"
 ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
@@ -592,6 +593,7 @@ NOISE = 'noise'
 
 AUTO_DEPENDENT='auto_dependent'
 DRIFT_RATE = 'drift_rate'
+INCREMENT = 'increment'
 INTEGRATOR_FUNCTION = 'integrator_function'
 INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
