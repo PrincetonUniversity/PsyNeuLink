@@ -4590,7 +4590,8 @@ class AccumulatorIntegrator(
                                                   increment = increment,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(
+            # variable_default=variable_default,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -4626,7 +4627,7 @@ class AccumulatorIntegrator(
         updated value of integral : 2d np.array
 
         """
-        self._check_args(variable=variable, params=params, context=context)
+        # self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.rate).astype(float)
         increment = self.increment
@@ -4645,10 +4646,11 @@ class AccumulatorIntegrator(
         # try:
         #     previous_value = params[INITIALIZER]
         # except (TypeError, KeyError):
-        previous_value = self.previous_value
 
         previous_value = np.atleast_2d(self.variable)
 
+        if not context or not INITIALIZING in context:
+            print("BEFORE: variable =", self.variable)
         value = previous_value*rate + noise + increment
 
         # If this NOT an initialization run, update the old value
@@ -4656,7 +4658,7 @@ class AccumulatorIntegrator(
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
             self.variable = value
-
+            print("variable = ", self.variable)
         return value
 
 

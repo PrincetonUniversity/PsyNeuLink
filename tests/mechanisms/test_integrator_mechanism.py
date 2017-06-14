@@ -632,7 +632,7 @@ def test_accumulator_integrator():
     # RETURN 51
 
     # step 2:
-    val2 = P.execute()
+    val2 = P.execute(2000)
     # value = 51*5 + 0 + 1.0
-    # RETURN 103
-    assert (val, val2) == (51, 103)
+    # RETURN 256
+    assert (val, val2) == (51, 256)
