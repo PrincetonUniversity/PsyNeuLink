@@ -150,13 +150,6 @@ def test_EVC():
         (RewardPrediction.output_states[0].value, np.array(15.0)),
 
         # --- Decision Mechanism ---
-
-        #   ControlSignal Values
-        #       drift rate
-        (mySystem.controller.control_signals[0].value, np.array(1.0)),
-        #       threshold
-        (mySystem.controller.control_signals[1].value, np.array(1.0)),
-
         #    Output State Values
         #       decision variable
         (Decision.output_states[DECISION_VARIABLE].value, np.array([1.0])),
@@ -630,3 +623,12 @@ def test_laming_validation_specify_control_signals():
     for i in range(len(expected_output)):
         val, expected = expected_output[i]
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+
+    np.testing.assert_almost_equal(
+        Decision._parameter_states[DRIFT_RATE].value,
+        Decision._parameter_states[DRIFT_RATE].mod_afferents[0].value * Decision._parameter_states[DRIFT_RATE].function_object.value
+    )
+    np.testing.assert_almost_equal(
+        Decision._parameter_states[THRESHOLD].value,
+        Decision._parameter_states[THRESHOLD].mod_afferents[0].value * Decision._parameter_states[THRESHOLD].function_object.value
+    )
