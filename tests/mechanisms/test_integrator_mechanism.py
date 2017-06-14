@@ -615,24 +615,24 @@ def test_integrator_no_function():
 # Test 7
 # ------------------------------------------------------------------------------------------------
 #
-# def test_accumulator_integrator():
-#     I = IntegratorMechanism(
-#             function = AccumulatorIntegrator(
-#                 initializer = 10.0,
-#                 rate = 5.0,
-#                 increment= 1.0
-#             )
-#         )
-#     P = process(pathway=[I])
-# 
-#     # value = previous_value * rate + noise + increment
-#     # step 1:
-#     val = P.execute(20000)
-#     # value = 10.0 * 5.0 + 0 + 1.0
-#     # RETURN 51
-# 
-#     # step 2:
-#     val2 = P.execute(70000)
-#     # value = 51*5 + 0 + 1.0
-#     # RETURN 103
-#     assert (val, val2) == (51, 103)
+def test_accumulator_integrator():
+    I = IntegratorMechanism(
+            function = AccumulatorIntegrator(
+                initializer = 10.0,
+                rate = 5.0,
+                increment= 1.0
+            )
+        )
+    P = process(pathway=[I])
+
+    # value = previous_value * rate + noise + increment
+    # step 1:
+    val = P.execute()
+    # value = 10.0 * 5.0 + 0 + 1.0
+    # RETURN 51
+
+    # step 2:
+    val2 = P.execute()
+    # value = 51*5 + 0 + 1.0
+    # RETURN 103
+    assert (val, val2) == (51, 103)
