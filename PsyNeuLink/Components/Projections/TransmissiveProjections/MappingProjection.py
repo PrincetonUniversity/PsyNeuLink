@@ -493,7 +493,8 @@ class MappingProjection(TransmissiveProjection_Base):
 
     @property
     def matrix(self):
-        return self.function.__self__.matrix
+        # return self.function.__self__.matrix
+        return self.function_object.matrix
 
     @matrix.setter
     def matrix(self, matrix):
@@ -507,7 +508,8 @@ class MappingProjection(TransmissiveProjection_Base):
         # FIX: Hack to prevent recursion in calls to setter and assign_params
         self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
-        self.function.__self__.matrix = matrix
+        # self.function.__self__.matrix = matrix
+        self.function_object.matrix = matrix
 
     @property
     def _matrix_spec(self):
