@@ -3467,7 +3467,7 @@ class SimpleIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.previous_value = value
+            self.previous_value = adjusted_value
 
         return adjusted_value
 
@@ -3694,7 +3694,7 @@ class ConstantIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.previous_value = value
+            self.previous_value = adjusted_value
 
         return adjusted_value
 
@@ -3974,7 +3974,7 @@ class AdaptiveIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.previous_value = value
+            self.previous_value = adjusted_value
 
         return adjusted_value
 
@@ -4203,7 +4203,7 @@ class DriftDiffusionIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.previous_value = value
+            self.previous_value = adjusted_value
 
         return adjusted_value
 
@@ -4438,7 +4438,7 @@ class OrnsteinUhlenbeckIntegrator(
         adjusted_value = value + offset
 
         if not context or not INITIALIZING in context:
-            self.previous_value = value
+            self.previous_value = adjusted_value
 
         return adjusted_value
 
@@ -4564,6 +4564,7 @@ class AccumulatorIntegrator(
     paramClassDefaults.update({
         NOISE: None,
         RATE: None,
+        INCREMENT: None, 
     })
 
     # multiplicative param does not make sense in this case
@@ -4574,14 +4575,14 @@ class AccumulatorIntegrator(
     def __init__(self,
                  variable_default=None,
                  # rate: parameter_spec = 1.0,
-                 rate=0.0,
+                 rate=None,
                  noise=0.0,
-                 increment = 0.0,
+                 increment = None,
                  initializer=variableClassDefault,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context="ConstantIntegrator Init"):
+                 context="AccumulatorIntegrator Init"):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -4713,9 +4714,16 @@ class AccumulatorIntegrator(
         """
         self._accumulator_check_args(params=params, context=context)
 
-        rate = np.array(self.rate).astype(float)
-        increment = self.increment
-
+        # rate = np.array(self.rate).astype(float)
+        # increment = self.increment
+        if self.rate is None:
+            rate = 0.0
+        else:
+            rate = self.rate
+        if self.increment is None:
+            increment = 0.0
+        else:
+            increment = self.increment
         # if noise is a function, execute it
         if self.noise_function:
             if isinstance(self.noise, (np.ndarray, list)):
