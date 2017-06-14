@@ -3056,8 +3056,6 @@ class Integrator(
                  variable_default=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
                  initializer=variableClassDefault,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -3368,7 +3366,7 @@ class SimpleIntegrator(
         # SCALE: None
     })
 
-    multiplicative_param = SCALE
+    multiplicative_param = RATE
     additive_param = OFFSET
 
     @tc.typecheck
@@ -3376,11 +3374,6 @@ class SimpleIntegrator(
                  variable_default=None,
                  rate: parameter_spec=1.0,
                  noise=0.0,
-                 # scale: parameter_spec = 1.0,
-                 # offset: parameter_spec = 0.0,
-                 # scale=1.0,
-                 # offset=0.0,
-                 scale=None,
                  offset=None,
                  initializer=variableClassDefault,
                  params: tc.optional(dict)=None,
@@ -3392,7 +3385,6 @@ class SimpleIntegrator(
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
-                                                  scale=scale,
                                                   offset=offset,
                                                   params=params)
 
@@ -3439,10 +3431,7 @@ class SimpleIntegrator(
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        if self.scale is None:
-            scale = 1.0
-        else:
-            scale = self.scale
+
         if self.offset is None:
             offset = 0.0
         else:
@@ -3475,7 +3464,7 @@ class SimpleIntegrator(
 
         value = previous_value + (new_value * rate) + noise
 
-        adjusted_value = value * scale + offset
+        adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
@@ -3609,9 +3598,10 @@ class ConstantIntegrator(
         SCALE: None,
         OFFSET: None
     })
-
-    multiplicative_param = SCALE
-    additive_param = RATE
+    
+    # multiplicative param does not make sense in this case 
+    multiplicative_param = RATE
+    additive_param = OFFSET
 
     @tc.typecheck
     def __init__(self,
@@ -3619,9 +3609,6 @@ class ConstantIntegrator(
                  # rate: parameter_spec = 1.0,
                  rate=0.0,
                  noise=0.0,
-                 # scale: parameter_spec = 1.0,
-                 # offset: parameter_spec = 0.0,
-                 scale=1.0,
                  offset=0.0,
                  initializer=variableClassDefault,
                  params: tc.optional(dict) = None,
@@ -3633,7 +3620,6 @@ class ConstantIntegrator(
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
-                                                  scale=scale,
                                                   offset=offset,
                                                   params=params)
 
@@ -3680,7 +3666,6 @@ class ConstantIntegrator(
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.rate).astype(float)
-        scale = self.scale
         offset = self.offset
 
         # if noise is a function, execute it
@@ -3704,7 +3689,7 @@ class ConstantIntegrator(
         value = previous_value + rate + noise
 
 
-        adjusted_value = value * scale + offset
+        adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
@@ -3837,8 +3822,7 @@ class AdaptiveIntegrator(
                  variable_default=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 offset= 0.0,
                  initializer=variableClassDefault,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -3849,7 +3833,6 @@ class AdaptiveIntegrator(
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
-                                                  scale=scale,
                                                   offset=offset,
                                                   params=params)
 
@@ -3960,7 +3943,6 @@ class AdaptiveIntegrator(
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        scale = self.paramsCurrent[SCALE]
         offset = self.paramsCurrent[OFFSET]
         # if noise is a function, execute it
         if self.noise_function:
@@ -3984,7 +3966,7 @@ class AdaptiveIntegrator(
         value = (1 - rate) * previous_value + rate * new_value + noise
 
 
-        adjusted_value = value * scale + offset
+        adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
@@ -4115,7 +4097,6 @@ class DriftDiffusionIntegrator(
                  variable_default=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
-                 scale: parameter_spec = 1.0,
                  offset: parameter_spec = 0.0,
                  time_step_size=1.0,
                  initializer=variableClassDefault,
@@ -4129,7 +4110,6 @@ class DriftDiffusionIntegrator(
                                                   time_step_size=time_step_size,
                                                   initializer=initializer,
                                                   noise=noise,
-                                                  scale=scale,
                                                   offset=offset,
                                                   params=params)
 
@@ -4186,7 +4166,6 @@ class DriftDiffusionIntegrator(
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        scale = self.paramsCurrent[SCALE]
         offset = self.paramsCurrent[OFFSET]
 
         time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
@@ -4213,7 +4192,7 @@ class DriftDiffusionIntegrator(
         value = previous_value + rate * new_value * time_step_size + np.sqrt(
             time_step_size * noise) * np.random.normal()
 
-        adjusted_value = value * scale + offset
+        adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
@@ -4346,7 +4325,6 @@ class OrnsteinUhlenbeckIntegrator(
                  variable_default=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
-                 scale: parameter_spec = 1.0,
                  offset: parameter_spec = 0.0,
                  time_step_size=1.0,
                  decay = 1.0,
@@ -4362,7 +4340,6 @@ class OrnsteinUhlenbeckIntegrator(
                                                   decay = decay,
                                                   initializer=initializer,
                                                   noise=noise,
-                                                  scale=scale,
                                                   offset=offset,
                                                   params=params)
 
@@ -4419,7 +4396,6 @@ class OrnsteinUhlenbeckIntegrator(
         self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        scale = self.paramsCurrent[SCALE]
         offset = self.paramsCurrent[OFFSET]
 
         time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
@@ -4450,7 +4426,7 @@ class OrnsteinUhlenbeckIntegrator(
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        adjusted_value = value * scale + offset
+        adjusted_value = value + offset
 
         if not context or not INITIALIZING in context:
             self.previous_value = value
