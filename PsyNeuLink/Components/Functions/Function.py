@@ -3240,15 +3240,13 @@ class Integrator(
         raise FunctionError("Integrator is not meant to be called explicitly")
 
     @property
-    def initializer(self):
+    def reset_initializer(self):
         return self._initializer
 
-    @initializer.setter
-    def initializer(self, val):
+    @reset_initializer.setter
+    def reset_initializer(self, val):
         self._initializer = val
-        # MODIFIED 6/9/17 OLD:
-        # self.previous_value = val
-        # MODIFIED 6/9/17 END
+        self.previous_value = val
 
 
 class SimpleIntegrator(
@@ -3482,7 +3480,7 @@ class SimpleIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.previous_value = adjusted_value
+            self.previous_value = value
 
         return adjusted_value
 
@@ -3991,7 +3989,7 @@ class AdaptiveIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.previous_value = adjusted_value
+            self.previous_value = value
 
         return adjusted_value
 
@@ -4220,7 +4218,7 @@ class DriftDiffusionIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.previous_value = adjusted_value
+            self.previous_value = value
 
         return adjusted_value
 
@@ -4455,7 +4453,7 @@ class OrnsteinUhlenbeckIntegrator(
         adjusted_value = value * scale + offset
 
         if not context or not INITIALIZING in context:
-            self.previous_value = adjusted_value
+            self.previous_value = value
 
         return adjusted_value
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
