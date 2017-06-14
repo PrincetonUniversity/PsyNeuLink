@@ -467,52 +467,71 @@ def test_EVC_gratton():
         verbose=True,
     )
 
+
 def test_laming_validation_specify_control_signals():
     # Mechanisms:
-    Input = TransferMechanism(name='Input'
-                              )
-    Reward = TransferMechanism(name='Reward',
-                                output_states=[RESULT, MEAN, VARIANCE]
-                               )
-    Decision = DDM(function=BogaczEtAl(drift_rate=1.0,
-                                       threshold=1.0,
-                                       noise=0.5,
-                                       starting_point=0,
-                                       t0=0.45),
-                   output_states=[DECISION_VARIABLE,
-                                  RESPONSE_TIME,
-                                  PROBABILITY_UPPER_THRESHOLD],
-                   name='Decision')
+    Input = TransferMechanism(
+        name='Input'
+    )
+    Reward = TransferMechanism(
+        name='Reward',
+        output_states=[RESULT, MEAN, VARIANCE]
+    )
+    Decision = DDM(
+        function=BogaczEtAl(
+            drift_rate=1.0,
+            threshold=1.0,
+            noise=0.5,
+            starting_point=0,
+            t0=0.45
+        ),
+        output_states=[
+            DECISION_VARIABLE,
+            RESPONSE_TIME,
+            PROBABILITY_UPPER_THRESHOLD
+        ],
+        name='Decision'
+    )
 
     # Processes:
     TaskExecutionProcess = process(
         default_input_value=[0],
         pathway=[Input, IDENTITY_MATRIX, Decision],
-        name='TaskExecutionProcess')
+        name='TaskExecutionProcess'
+    )
 
     RewardProcess = process(
         default_input_value=[0],
         pathway=[Reward],
-        name='RewardProcess')
+        name='RewardProcess'
+    )
 
     # System:
-    mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
-                      controller=EVCMechanism,
-                      enable_controller=True,
-                      monitor_for_control=[Reward,
-                                           Decision.PROBABILITY_UPPER_THRESHOLD,
-                                           (Decision.RESPONSE_TIME, -1, 1)],
-                      control_signals=[(DRIFT_RATE, Decision),
-                                       (THRESHOLD, Decision)],
-                      name='EVC Test System')
+    mySystem = system(
+        processes=[TaskExecutionProcess, RewardProcess],
+        controller=EVCMechanism,
+        enable_controller=True,
+        monitor_for_control=[
+            Reward,
+            Decision.PROBABILITY_UPPER_THRESHOLD,
+            (Decision.RESPONSE_TIME, -1, 1)
+        ],
+        control_signals=[
+            (DRIFT_RATE, Decision),
+            (THRESHOLD, Decision)
+        ],
+        name='EVC Test System'
+    )
     # Stimulus
-    stim_list_dict = {Input: [0.5, 0.123],
-                      Reward: [20, 20]}
+    stim_list_dict = {
+        Input: [0.5, 0.123],
+        Reward: [20, 20]
+    }
 
     # Run system:
-
     mySystem.run(
-        inputs=stim_list_dict)
+        inputs=stim_list_dict
+    )
 
     RewardPrediction = mySystem.executionList[3]
     InputPrediction = mySystem.executionList[4]
