@@ -613,7 +613,7 @@ class ParameterState(State_Base):
         # TEST PRINT
         if MATRIX == self.name:
             print("\n{}\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".
-                  format(self.__class__.__name__.upper(), self.name, CentralClock.trial, value))
+                  format(self.__class__.__name__.upper(), self.owner.name, CentralClock.trial, value))
 
         return value
 
