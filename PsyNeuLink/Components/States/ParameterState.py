@@ -578,15 +578,6 @@ class ParameterState(State_Base):
         :param context:
         :return:
         """
-
-        # # FIX: UPDATE FOR LEARNING [COMMENTED OUT]
-        # # If parameterState is for a matrix of a MappingProjection,
-        # #     its parameter_modulation_operation should be SUM (rather than PRODUCT)
-        # #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
-        # if self.name == MATRIX:
-        #     # IMPLEMENT / TEST: 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING PROJECTION
-        #     self.params[PARAMETER_MODULATION_OPERATION] = Modulation.ADD
-
         super()._instantiate_function(context=context)
 
         # # Insure that output of function (self.value) is compatible with relevant parameter's reference_value
@@ -618,6 +609,12 @@ class ParameterState(State_Base):
         value = self.function(variable=param_value,
                               params=function_params,
                               context=context)
+
+        # TEST PRINT
+        if MATRIX == self.name:
+            print("\n{}\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".
+                  format(self.__class__.__name__.upper(), self.owner.name, CentralClock.trial, value))
+
         return value
 
     @property
