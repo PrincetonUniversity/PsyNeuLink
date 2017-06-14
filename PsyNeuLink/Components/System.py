@@ -2724,6 +2724,7 @@ class System_Base(System):
         from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
         import graphviz as gv
+        import numpy as np
 
         system_graph = self.graph
         learning_graph=self.learningGraph
@@ -2781,23 +2782,25 @@ class System_Base(System):
         # add learning graph if show_learning
         if show_learning:
             rcvrs = list(learning_graph.keys())
-
             for rcvr in rcvrs:
-                    # if rcvr is projection
-                    if isinstance(rcvr, MappingProjection):
-                        # for each sndr of rcvr
-                        sndrs = learning_graph[rcvr]
-                        for sndr in sndrs:
-                            edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
-                            G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
-                    else:
-                        sndrs = list(learning_graph[rcvr])
-                        for sndr in sndrs:
-                            proj = sndr.output_state.efferents[0]
+                # if rcvr is projection
+                if isinstance(rcvr, MappingProjection):
+                    # for each sndr of rcvr
+                    sndrs = learning_graph[rcvr]
+                    for sndr in sndrs:
+                        edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
+                        G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
+                else:
+                    sndrs = list(learning_graph[rcvr])
+                    for sndr in sndrs:
+                        projs = sndr.input_state.afferents
+
+                        for proj in projs:
                             edge_name=proj.name
-                            G.node(rcvr.name, color=learning_color)
-                            G.node(sndr.name, color=learning_color)
-                            G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
+                        G.node(rcvr.name, color=learning_color)
+                        G.node(sndr.name, color=learning_color)
+                        G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
+
 
         # add control graph if show_control
         if show_control:
