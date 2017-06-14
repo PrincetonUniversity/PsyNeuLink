@@ -3599,7 +3599,7 @@ class ConstantIntegrator(
         OFFSET: None
     })
     
-    # multiplicative param does not make sense in this case 
+    # multiplicative param does not make sense in this case
     multiplicative_param = RATE
     additive_param = OFFSET
 
@@ -3809,6 +3809,9 @@ class AdaptiveIntegrator(
     componentName = ADAPTIVE_INTEGRATOR_FUNCTION
 
     variableClassDefault = [[0]]
+
+    multiplicative_param = RATE
+    additive_param = OFFSET
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: variableClassDefault})
@@ -4085,6 +4088,9 @@ class DriftDiffusionIntegrator(
 
     variableClassDefault = [[0]]
 
+    multiplicative_param = RATE
+    additive_param = OFFSET
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: variableClassDefault})
     paramClassDefaults.update({
@@ -4313,6 +4319,9 @@ class OrnsteinUhlenbeckIntegrator(
 
     variableClassDefault = [[0]]
 
+    multiplicative_param = RATE
+    additive_param = OFFSET
+    
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: variableClassDefault})
     paramClassDefaults.update({
