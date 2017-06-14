@@ -207,6 +207,21 @@ def is_function_type(x):
         return False
 
 
+# Modulatory Parameters ************************************************************************************************
+
+ADDITIVE_PARAM = 'additive_param'
+MULTIPLICATIVE_PARAM = 'multiplicative_param'
+
+class ModulationParam():
+    ADDITIVE = ADDITIVE_PARAM
+    MULTIPLICATIVE = MULTIPLICATIVE_PARAM
+
+def _is_modulation_param(val):
+    if val in ModulationParam.__dict__.values():
+        return True
+    else:
+        return False
+
 # *******************************   get_param_value_for_keyword ********************************************************
 
 def get_param_value_for_keyword(owner, keyword):
@@ -835,7 +850,52 @@ class UserDefinedFunction(Function_Base):
 
 
 class CombinationFunction(Function_Base):
+    """Function that combines multiple items, yielding a result with the same shape as its operands
+
+    All CombinationFunctions must have two attributes - multiplicative_param and additive_param - 
+        each of which is assigned the name of one of the function's parameters;  
+        this is for use by ModulatoryProjections (and, in particular, GatingProjections, 
+        when the CombinationFunction is used as the function of an InputState or OutputState). 
+     
+    """
     componentType = COMBINATION_FUNCTION_TYPE
+
+    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
+    def __init__(self, variable_default,
+                         params,
+                         owner,
+                         prefs,
+                         context):
+
+        if not hasattr(self, MULTIPLICATIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
+                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
+
+        if not hasattr(self, ADDITIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
+                                format(self.__class__.__name__, ADDITIVE_PARAM))
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    @property
+    def multiplicative(self):
+        return getattr(self, self.multiplicative_param)
+
+    @multiplicative.setter
+    def multiplicative(self, val):
+        setattr(self, self.multiplicative_param, val)
+
+    @property
+    def additive(self):
+        return getattr(self, self.additive_param)
+
+    @additive.setter
+    def additive(self, val):
+        setattr(self, self.additive_param, val)
 
 
 class Reduce(CombinationFunction):  # ------------------------------------------------------------------------
@@ -846,6 +906,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     Reduce(                                     \
          variable_default=variableClassDefault, \
          operation=SUM,                         \
+         scale=1.0,                             \
+         offset=0.0,                            \
          params=None,                           \
          owner=None,                            \
          prefs=None,                            \
@@ -854,6 +916,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     .. _Reduce:
 
     Combine values in each of one or more arrays into a single value for each array.
+    Use optional SCALE and OFFSET parameters to linearly transform the resulting value for each array.
+    Returns a scalar value for each array of the input. 
 
     COMMENT:
         IMPLEMENTATION NOTE: EXTEND TO MULTIDIMENSIONAL ARRAY ALONG ARBITRARY AXIS
@@ -868,6 +932,14 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     operation : SUM or PRODUCT : default SUM
         specifies whether to sum or multiply the elements in `variable <Reduce.function.variable>` of
         `function <Reduce.function>`.
+
+    scale : float
+        specifies a value by which to multiply each element of the output of `function <Reduce.function>`
+        (see `scale <Reduce.scale>` for details)
+
+    offset : float
+        specifies a value to add to each element of the output of `function <Reduce.function>`
+        (see `offset <Reduce.offset>` for details)
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -892,6 +964,15 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         determines whether elements of each array in `variable <Reduce.function.variable>` of
         `function <Reduce.function>` are summmed or multiplied.
 
+    scale : float
+        value is applied multiplicatively to each element of the array after applying the `operation <Reduce.operation>`
+        (see `scale <Reduce.scale>` for details);  this done before applying the `offset <Reduce.offset>` 
+        (if it is specified).
+
+    offset : float
+        value is added to each element of the array after applying the `operation <Reduce.operation>`
+        and `scale <Reduce.scale>` (if it is specified).
+
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
@@ -903,6 +984,9 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     """
     componentName = REDUCE_FUNCTION
 
+    multiplicative_param = SCALE
+    additive_param = OFFSET
+
     variableClassDefault = [0, 0]
     # variableClassDefault_locked = True
 
@@ -912,6 +996,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  operation: tc.enum(SUM, PRODUCT) = SUM,
+                 scale: parameter_spec = 1.0,
+                 offset: parameter_spec = 0.0,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -919,6 +1005,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(operation=operation,
+                                                  scale=scale,
+                                                  offset=offset,
                                                   params=params)
 
         super().__init__(variable_default=variable_default,
@@ -945,8 +1033,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Returns a scalar value for each array in `variable <Reduce.variable>` that is either the sum or
-        product of the elements in that array.
+        Calculate sum or product of the elements for each array in `variable <Reduce.variable>`, 
+        apply `scale <Reduce.scale>` and/or `offset <Reduce.offset>`, and return array of resulting values.        
 
         Arguments
         ---------
@@ -975,12 +1063,14 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         self._check_args(variable=variable, params=params, context=context)
 
         operation = self.paramsCurrent[OPERATION]
+        scale = self.paramsCurrent[SCALE]
+        offset = self.paramsCurrent[OFFSET]
 
         # Calculate using relevant aggregation operation and return
         if (operation is SUM):
-            result = np.sum(self.variable)
+            result = np.sum(self.variable) * scale + offset
         elif operation is PRODUCT:
-            result = np.product(self.variable)
+            result = np.product(self.variable) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
                                 format(self.paramsCurrent[OPERATION].self.Operation.SUM))
@@ -997,9 +1087,9 @@ class LinearCombination(
          variable_default, \
          weights=None,     \
          exponents=None,   \
+         operation=SUM,    \
          scale=1.0,        \
          offset=0.0,       \
-         operation=SUM,    \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -1067,6 +1157,10 @@ class LinearCombination(
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
         (see `exponents <LinearCombination.exponents>` for details)
 
+    operation : SUM or PRODUCT
+        specifies whether the `function <LinearCombination.function>` takes the elementwise (Hadamarad)
+        sum or product of the arrays in `variable  <LinearCombination.variable>`.
+
     scale : float
         specifies a value by which to multiply each element of the output of `function <LinearCombination.function>`
         (see `scale <LinearCombination.scale>` for details)
@@ -1074,10 +1168,6 @@ class LinearCombination(
     offset : float
         specifies a value to add to each element of the output of `function <LinearCombination.function>`
         (see `offset <LinearCombination.offset>` for details)
-
-    operation : SUM or PRODUCT
-        specifies whether the `function <LinearCombination.function>` takes the elementwise (Hadamarad)
-        sum or product of the arrays in `variable  <LinearCombination.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -1115,18 +1205,18 @@ class LinearCombination(
         In either case, exponentiating is applied after application of the `weights <LinearCombination.weights>`
         (if any are specified).
 
+    operation : SUM or PRODUCT
+        determines whether the `function <LinearCombination.function>` takes the elementwise (Hadamard) sum or
+        product of the arrays in `variable  <LinearCombination.variable>`.
+
     scale : float
-        value is multiplied by each element of the array after applying the `operation <LinearCombination.operation>`
-        (see `scale <LinearCombination.scale>` for details);  this done before applying the
-        `offset <LinearCombination.offset>` (if it is specified).
+        value is applied multiplicatively to each element of the array after applying the 
+        `operation <LinearCombination.operation>` (see `scale <LinearCombination.scale>` for details);  
+        this done before applying the `offset <LinearCombination.offset>` (if it is specified).
 
     offset : float
         value is added to each element of the array after applying the `operation <LinearCombination.operation>`
         and `scale <LinearCombination.scale>` (if it is specified).
-
-    operation : SUM or PRODUCT
-        determines whether the `function <LinearCombination.function>` takes the elementwise (Hadamard) sum or
-        product of the arrays in `variable  <LinearCombination.variable>`.
 
     COMMENT:
     function : function
@@ -1162,6 +1252,9 @@ class LinearCombination(
         kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
+    multiplicative_param = SCALE
+    additive_param = OFFSET
+
     variableClassDefault = [2, 2]
     # variableClassDefault_locked = True
 
@@ -1176,24 +1269,22 @@ class LinearCombination(
                  # MODIFIED 2/10/17 OLD: [CAUSING CRASHING FOR SOME REASON]
                  # # weights:is_numeric_or_none=None,
                  # # exponents:is_numeric_or_none=None,
-                 # MODIFIED 2/10/17 NEW:
                  weights=None,
                  exponents=None,
+                 operation: tc.enum(SUM, PRODUCT) = SUM,
                  scale: parameter_spec = 1.0,
                  offset: parameter_spec = 0.0,
-                 # MODIFIED 2/10/17 END
-                 operation: tc.enum(SUM, PRODUCT) = SUM,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
                  context=componentName + INITIALIZING):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(scale=scale,
-                                                  offset=offset,
-                                                  weights=weights,
+        params = self._assign_args_to_param_dicts(weights=weights,
                                                   exponents=exponents,
                                                   operation=operation,
+                                                  scale=scale,
+                                                  offset=offset,
                                                   params=params)
 
         super().__init__(variable_default=variable_default,
@@ -1354,18 +1445,66 @@ class LinearCombination(
 # region ***********************************  TRANSFER FUNCTIONS  ***********************************************
 # endregion
 
+BOUNDS = 'bounds'
+
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape
 
     All TransferFunctions must have the attribute `bounds` that specifies the lower and upper limits of the result;
         if there are none, the attribute is set to `None`;  if it has at least one bound, the attribute is set to a
         tuple specifying the lower and upper bounds, respectively, with `None` as the entry for no bound.
+        
+    All TransferFunctions must also have two attributes - multiplicative_param and additive_param - 
+        each of which is assigned the name of one of the function's parameters;  
+        this is for use by ModulatoryProjections (and, in particular, GatingProjections, 
+        when the TransferFunction is used as the function of an InputState or OutputState). 
+     
     """
     componentType = TRANFER_FUNCTION_TYPE
+    
+    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
+    def __init__(self, variable_default,
+                         params,
+                         owner,
+                         prefs,
+                         context):
+
+        if not hasattr(self, BOUNDS):
+            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
+                                format(self.__class__.__name__, BOUNDS))
+
+        if not hasattr(self, MULTIPLICATIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
+                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
+
+        if not hasattr(self, ADDITIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
+                                format(self.__class__.__name__, ADDITIVE_PARAM))
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    @property
+    def multiplicative(self):
+        return getattr(self, self.multiplicative_param)
+    
+    @multiplicative.setter
+    def multiplicative(self, val):
+        setattr(self, self.multiplicative_param, val)
+        
+    @property
+    def additive(self):
+        return getattr(self, self.additive_param)
+
+    @additive.setter
+    def additive(self, val):
+        setattr(self, self.additive_param, val)
 
 
-class Linear(
-    TransferFunction):  # --------------------------------------------------------------------------------------
+class Linear(TransferFunction):  # -------------------------------------------------------------------------------------
     """
     Linear(                \
          variable_default, \
@@ -1435,7 +1574,10 @@ class Linear(
     """
 
     componentName = LINEAR_FUNCTION
+
     bounds = None
+    multiplicative_param = SLOPE
+    additive_param = INTERCEPT
 
     classPreferences = {
         kwPreferenceSetName: 'LinearClassPreferences',
@@ -1574,8 +1716,7 @@ class Linear(
         return self.slope
 
 
-class Exponential(
-    TransferFunction):  # ---------------------------------------------------------------------------------
+class Exponential(TransferFunction):  # --------------------------------------------------------------------------------
     """
     Exponential(           \
          variable_default, \
@@ -1641,7 +1782,10 @@ class Exponential(
     """
 
     componentName = EXPONENTIAL_FUNCTION
+
     bounds = (0, None)
+    multiplicative_param = RATE
+    additive_param = SCALE
 
 
     variableClassDefault = 0
@@ -1794,6 +1938,8 @@ class Logistic(
     parameter_keywords.update({GAIN, BIAS})
 
     bounds = (0,1)
+    multiplicative_param = GAIN
+    additive_param = BIAS
 
     variableClassDefault = 0
 
@@ -1948,6 +2094,10 @@ class SoftMax(
 
     componentName = SOFTMAX_FUNCTION
 
+    bounds = (0,1)
+    multiplicative_param = GAIN
+    additive_param = None
+
     variableClassDefault = 0
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -1966,6 +2116,8 @@ class SoftMax(
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   output=output,
                                                   params=params)
+        if output is MAX_VAL:
+            bounds = None
 
         super().__init__(variable_default=variable_default,
                          params=params,
@@ -2196,6 +2348,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     componentName = LINEAR_MATRIX_FUNCTION
 
     bounds = None
+    multiplicative_param = None
+    additive_param = None
 
     DEFAULT_FILLER_VALUE = 0
 

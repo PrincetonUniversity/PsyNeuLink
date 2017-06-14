@@ -18,9 +18,15 @@ It's function takes a value (usually the output of an `ObjectiveMechanism`) and 
 to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is assigned as
 the value of a corresponding `ControlSignal` (a subclass of `OutputState` used by ControlMechanisms), and conveyed by
 the associated `ControlProjection` to the `parameterState <ParameterState>` of the relevant ProcessingMechanism.
-A ControlMechanism can regulate only the parameters of mechanism in the system for which it is the
+A ControlMechanism can regulate only the parameters of mechanisms in the system for which it is the
 `controller <System_Execution_Control>`.  The control components of a system can be displayed using the system's 
-`show_graph` method with its **show_control** argument assigned :keyword:``True`.  The control components of a 
+`show_graph` method with its **show_control** argument assigned :keyword:``True`.  
+COMMENT: TBI
+The control components of a system can be displayed using the system's 
+`show_graph` method with its **show_control** argument assigned as :keyword:``True`.  
+COMMENT
+
+The control components of a 
 system are executed after all ProcessingMechanisms and `learning components <LearningMechanism>` in that system have 
 been executed.
 
@@ -46,26 +52,14 @@ Specifying Parameters to Control
 
 ControlMechanisms are used to control the parameter values of mechanisms and/or their functions.  A parameter can be 
 specified for control by assigning it a `ControlProjection` (along with the parameter's value) when creating the 
-mechanism or function to which the parameter belongs (see `Mechanism_Parameters`), or by specifying the parameter in 
-the **control_signals**  argument of the constructor for the ControlMechanism.  The **control_signals** argument must 
-be a list, each item of which must refer to a parameter to be controlled specified in any of the following forms:
+mechanism or function to which the parameter belongs (see `Mechanism_Parameters`).  The parameters to be controlled by
+a ControlMechanism can also be specified in the **control_signals**  argument of the constructor for a ControlMechanism.  
+The **control_signals** argument must be a list, each item of which can use any of the forms used for 
+`specifying a ControlSignal <ControlSignal_Specification>`.
 
-  * *ParameterState* (of a Mechanism) for the parameter;
-  |
-  * *tuple*, with the *name* of the parameter as its 1st item. and the *mechanism* to which it belongs as the 2nd;
-    note that this is a convenience notation, which is simpler to use than a specification dictionary (see below), 
-    but precludes the specification of any of the `ControlSignal's parameters <ControlSignal_Structure>`.
-  |
-  * *specification dictionary*, that must contain the following two entries:
-    * *NAME*:str, where the string is the name of the parameter to be controlled;
-    * *MECHANISM*:Mechanism, where Mechanism is the Mechanism to which the parameter belongs 
-      (note: the Mechanism itself should be specified even if the parameter belongs to its function).
-    It can also contain entries for any other ControlSignal parameters to be speicified
-    (e.g., *ALLOCATION_SAMPLES*:list to specify `allocation_samples <ControlSignal.allocation_samples>`).
-
-A `ControlSignal` is created for each item listed in **control_signals**, and all of a ControlMechanism's ControlSignals 
-are listed in ControlMechanism's `control_signals <ControlMechanism.control_signals>` attribute.  Each ControlSignal is 
-assigned a `ControlProjection` to the parameterState of the mechanisms associated with the specified parameter of the
+A `ControlSignal` is created for each item listed in **control_signals**, and all of the ControlSignals for a 
+ControlMechanism are listed in its `control_signals <ControlMechanism.control_signals>` attribute.  Each ControlSignal
+is assigned a `ControlProjection` to the parameterState of the mechanisms associated with the specified parameter of the
 mechanism or its function, that is used to control the parameter's value. ControlSignals are a type of `OutputState`, 
 and so they are also listed in the ControlMechanism's `output_states <ControlMechanism.outut_states>` attribute.
 
@@ -129,6 +123,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Monitored
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.Projections.Projection import _validate_projection_receiver_mech
 
 ControlMechanismRegistry = {}
 
@@ -155,12 +150,6 @@ class ControlMechanism_Base(Mechanism_Base):
 
     COMMENT:
         Description:
-            # DOCUMENTATION NEEDED:
-              ._instantiate_control_signal INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE
-             INSTANCE
-            .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
-            WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
-
             Protocol for instantiating unassigned ControlProjections (i.e., w/o a sender specified):
                If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple) 
                    it is flagged for deferred_init() in its __init__ method
@@ -189,38 +178,35 @@ class ControlMechanism_Base(Mechanism_Base):
                 + MONITOR_FOR_CONTROL: List[]
     COMMENT
 
-    COMMENT:
-        Arguments
-        ---------
+    Arguments
+    ---------
 
-        monitor_for_control : List[OutputState specification] : default None
-            specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
-            specification options).
+    monitor_for_control : List[OutputState specification] : default None
+        specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
+        specification options).
 
-        control_signals : List[parameter of Mechanism or its function, ParameterState, tuple[str, Mechanism] or dict]
-            specifies the parameters to be controlled by the ControlMechanism 
-            (see `control_signals <ControMechanism.control_signals>` for details).
+    control_signals : List[parameter of Mechanism or its function, ParameterState, tuple[str, Mechanism] or dict]
+        specifies the parameters to be controlled by the ControlMechanism 
+        (see `control_signals <ControlMechanism.control_signals>` for details).
 
-        function : TransferFunction : default Linear(slope=1, intercept=0)
-            specifies function used to combine values of monitored output states.
-            
-        params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
-            for the mechanism, parameters for its function, and/or a custom function and its parameters. Values
-            specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-            constructor.
+    function : TransferFunction : default Linear(slope=1, intercept=0)
+        specifies function used to combine values of monitored output states.
+        
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
+        for the mechanism, parameters for its function, and/or a custom function and its parameters. Values
+        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor.
 
-        name : str : default ControlMechanism-<index>
-            a string used for the name of the mechanism.
-            If not is specified, a default is assigned by `MechanismRegistry`
-            (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default ControlMechanism-<index>
+        a string used for the name of the mechanism.
+        If not is specified, a default is assigned by `MechanismRegistry`
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-        prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-            the `PreferenceSet` for the mechanism.
-            If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-            (see :doc:`PreferenceSet <LINK>` for details).
-    COMMENT
-
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+        the `PreferenceSet` for the mechanism.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
@@ -233,19 +219,15 @@ class ControlMechanism_Base(Mechanism_Base):
     control_signals : List[ControlSignal]
         list of `ControlSignals <ControlSignals>` for the ControlMechanism, each of which sends a `ControlProjection`
         to the `parameterState <ParameterState>` for the parameter it controls (same as ControlMechanism's 
-        `output_states <ControlMechanism.output_states>` attribute).
+        `output_states <Mechanism.output_states>` attribute).
 
-
-    COMMENT:  [REPLACE THIS WITH control_signals]    
     control_projections : List[ControlProjection]
-        list of `ControlProjections <ControlProjection>` managed by the ControlMechanism.
-        There is one for each ouputState in the `outputStates` dictionary.
-    COMMENT
+        list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
 
     allocation_policy : 2d np.array
-        array of values assigned to each ControlSignal listed in the 
-        `control_signals <ControlMechanism.control_signals>` attribute
-        (same as the ControlMechanism's `value <ControlMechanism.value>` attribute).
+        each item is the value assigned to the corresponding ControlSignal in `control_signals`
+        (same as the ControlMechanism's `value <Mechanism.value>` attribute).
+        
     """
 
     componentType = "ControlMechanism"
@@ -259,7 +241,6 @@ class ControlMechanism_Base(Mechanism_Base):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # variableClassDefault = defaultControlAllocation
     # This must be a list, as there may be more than one (e.g., one per control_signal)
     variableClassDefault = defaultControlAllocation
 
@@ -331,43 +312,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
             for spec in target_set[CONTROL_SIGNALS]:
 
-                # Specification is for a tuple (str, Mechanism):
-                #    string must be the name of an attribute of the Mechanism,
-                #    the Mechanism must have a ParameterState with the name of that attribute,
-                #    and the Mechanism must be in the current system.
-                if isinstance(spec, tuple):
-                    param_name = spec[0]
-                    mech = spec[1]
-
-                    # Check that 1st item is a str (presumably the name of mechanism attribute for the param)
-                    if not isinstance(param_name, str):
-                        raise ControlMechanismError("1st item of tuple in specification of {} for {} ({}) "
-                                                    "must be a string".format(CONTROL_SIGNAL, owner.name, param_name))
-                    # Check that 2nd item is a mechanism
-                    if not isinstance(mech, Mechanism):
-                        raise ControlMechanismError("2nd item of tuple in specification of {} for {} ({}) "
-                                                    "must be a Mechanism".format(CONTROL_SIGNAL, owner.name, mech))
-                    # Check that param (named by str) is an attribute of the mechanism
-                    if not hasattr(mech, param_name) and not hasattr(mech.function_object, param_name):
-                        raise ControlMechanismError("{} (in specification of {}  {}) is not an attribute of {} or its function"
-                                                    .format(param_name, CONTROL_SIGNAL, owner.name, mech))
-                    # Check that the mechanism has a parameterState for the param
-                    if not param_name in mech._parameter_states.names:
-                        raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
-                                                    "specified in {} for {}".
-                                                    format(param_name, mech.name, CONTROL_SIGNAL, owner.name))
-                    # Check that the mechanism to which the parameter belongs is in the controller's system
-                    if not mech in self.system.mechanisms:
-                        raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
-                                                    "must be for a Mechanism in {}".
-                                                    format(param_name,
-                                                           CONTROL_SIGNALS,
-                                                           self.name,
-                                                           mech.name,
-                                                           self.system.name))
-
                 # Specification is for a ControlSignal
-                elif isinstance(spec, ControlSignal):
+                if isinstance(spec, ControlSignal):
                     #  Check that any ControlProjections it has are to mechanisms in the controller's system
                     if not all(control_proj.receiver.owner in self.system.mechanisms
                                for control_proj in spec.efferents):
@@ -375,6 +321,21 @@ class ControlMechanism_Base(Mechanism_Base):
                                                     "has one more more ControlProjections to a mechanism "
                                                     "that is not in {}".
                                                     format(CONTROL_SIGNALS, self.name, spec.name, self.system.name))
+                    continue
+
+                # Specification is for a tuple (str, Mechanism):
+                elif isinstance(spec, tuple):
+                    param_name = spec[0]
+                    mech = spec[1]
+                    # Check that 1st item is a str (presumably the name of the mechanism's attribute for the param)
+                    if not isinstance(param_name, str):
+                        raise ControlMechanismError("1st item of tuple in specification of {} for {} ({}) "
+                                                    "must be a string".format(CONTROL_SIGNAL, self.name, param_name))
+                    # Check that 2nd item is a mechanism
+                    if not isinstance(mech, Mechanism):
+                        raise ControlMechanismError("2nd item of tuple in specification of {} for {} ({}) "
+                                                    "must be a Mechanism".format(CONTROL_SIGNAL, self.name, mech))
+
 
                 # ControlSignal specification dictionary, must have the following entries:
                 #    NAME:str - must be the name of an attribute of MECHANISM
@@ -384,9 +345,20 @@ class ControlMechanism_Base(Mechanism_Base):
                     if not NAME in spec:
                         raise ControlMechanismError("Specification dict for {} of {} must have a NAME entry".
                                                     format(CONTROL_SIGNAL, self.name))
+                    param_name = spec[NAME]
                     if not MECHANISM in spec:
                         raise ControlMechanismError("Specification dict for {} of {} must have a MECHANISM entry".
                                                     format(CONTROL_SIGNAL, self.name))
+                    mech = spec[MECHANISM]
+                    # Check that all of the other entries in the specifcation dictionary are valid ControlSignal params
+                    for param in spec:
+                        if param in {NAME, MECHANISM}:
+                            continue
+                        if not hasattr(mech, param):
+                            raise ControlMechanismError("Entry in specification dictionary for {} arg of {} ({}) "
+                                                       "is not a valid {} parameter".
+                                                       format(CONTROL_SIGNAL, self.name, param,
+                                                              ControlSignal.__class__.__name__))
                 else:
                     # raise ControlMechanismError("PROGRAM ERROR: unrecognized ControlSignal specification for {} ({})".
                     #                             format(self.name, spec))
@@ -395,6 +367,26 @@ class ControlMechanism_Base(Mechanism_Base):
                                                 "ParameterState, a tuple specifying a parameter and mechanism, a "
                                                 "ControlSignal specification dictionary, or an existing ControlSignal".
                                                 format(CONTROL_SIGNAL, self.name, spec))
+
+                # Check that param_name is the name of an attribute of the mechanism
+                if not hasattr(mech, param_name) and not hasattr(mech.function_object, param_name):
+                    raise ControlMechanismError("{} (in specification of {} for {}) is not an "
+                                                "attribute of {} or its function"
+                                                .format(param_name, CONTROL_SIGNAL, self.name, mech))
+                # Check that the mechanism has a parameterState for the param
+                if not param_name in mech._parameter_states.names:
+                    raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
+                                                "specified in {} for {}".
+                                                format(param_name, mech.name, CONTROL_SIGNAL, self.name))
+                # Check that the mechanism to which the parameter belongs is in the controller's system
+                if not mech in self.system.mechanisms:
+                    raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
+                                                "must be for a Mechanism in {}".
+                                                format(CONTROL_SIGNALS,
+                                                       self.name,
+                                                       param_name,
+                                                       mech.name,
+                                                       self.system.name))
 
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self
@@ -466,6 +458,9 @@ class ControlMechanism_Base(Mechanism_Base):
                         # FIX:         IS REPLACED WITH (param, ControlSignal) tuple
                         # Add projection itself to any params specified in the ControlProjection for the ControlSignal
                         #    (cached in the ControlProjection's control_signal attrib)
+                        # FIX: UPDATE WITH MODULATION_MODS
+                        # FIX:  control_signal_specs -> modulatory_signal_specs
+                        # FIX:  control_signal -> modulatory_signal_params
                         control_signal_specs = projection.control_signal or {}
                         control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
                         self._instantiate_control_signal(control_signal_specs, context=context)
@@ -508,8 +503,8 @@ class ControlMechanism_Base(Mechanism_Base):
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 
 
-        # EXTEND allocation_policy TO ACCOMODATE NEW ControlSignal -------------------------------------------------
-        #        also used to determine contraint on ControlSignal value
+        # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
+        #        also used to determine constraint on ControlSignal value
 
         if self.allocation_policy is None:
             self.allocation_policy = np.array(defaultControlAllocation)
@@ -531,7 +526,7 @@ class ControlMechanism_Base(Mechanism_Base):
                 if not (hasattr(mech, param_name) or hasattr(mech.function_object, param_name)):
                     raise ControlMechanismError("{} (in specification of {}  {}) is not an attribute "
                                                 "of {} or its function"
-                                                .format(param_name, CONTROL_SIGNAL, owner.name, mech))
+                                                .format(param_name, CONTROL_SIGNAL, self.name, mech))
                 # Check that the mechanism has a parameterState for the param
                 if not param_name in mech._parameter_states.names:
                     raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
@@ -540,7 +535,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Specification is a ParameterState
         if isinstance(control_signal_spec, ParameterState):
-            mech = control_signal_spec.owner
+            mech = control_signal_spec.ownerf
             param_name = control_signal_spec.name
             parameter_state = _get_parameter_state(param_name, mech)
 
@@ -552,6 +547,8 @@ class ControlMechanism_Base(Mechanism_Base):
             # control_signal was a specification dict, with MECHANISM as an entry (and parameter as NAME)
             if control_signal_params and MECHANISM in control_signal_params:
                 mech = control_signal_params[MECHANISM]
+                # Delete MECHANISM entry as it is not a parameter of ControlSignal
+                #     (which will balk at it in ControlSignal._validate_params)
                 del control_signal_params[MECHANISM]
                 parameter_state = _get_parameter_state(param_name, mech)
 
@@ -563,10 +560,12 @@ class ControlMechanism_Base(Mechanism_Base):
             #        so parse:
             # FIX 5/23/17: NEED TO GET THE KEYWORDS STRAIGHT FOR PASSING ControlSignal SPECIFICATIONS
             # IMPLEMENTATION NOTE:
-            #     CONTROL_SIGNAL_SPECS is used by _take_over_as_default_controller,
-            #                          to pass specification from a parameter specification tuple
-            #     STATE_PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
-            #                       here, the tuple comes from a (param, mechanism) specification in control_signal arg
+            #    CONTROL_SIGNAL_SPECS is used by _take_over_as_default_controller,
+            #                         to pass specification from a parameter specification tuple
+            #    STATE_PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
+            #                      here, the tuple comes from a (param, mechanism) specification in control_signal arg
+            #    Delete whichever one it was, as neither is a recognized ControlSignal param
+            #        (which will balk at it in ControlSignal._validate_params)
             elif (control_signal_params and
                     any(kw in control_signal_spec[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, STATE_PROJECTIONS})):
                 if CONTROL_SIGNAL_SPECS in control_signal_spec[PARAMS]:
@@ -595,7 +594,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                         "must contain a single ControlProjection".
                                                         format(CONTROL_SIGNAL_SPECS, CONTROL_SIGNAL, self.name))
                         if len(spec)>1:
-                            raise ControlMechanismError("PROGRAM ERROR: list of ControlProjections is not "
+                            raise ControlMechanismError("PROGRAM ERROR: Multiple ControlProjections is not "
                                                         "currently supported in specification of a ControlSignal")
                         # Get receiver mech
                         if control_projection.value is DEFERRED_INITIALIZATION:
@@ -629,7 +628,7 @@ class ControlMechanism_Base(Mechanism_Base):
             control_projections = control_signal_spec.efferents
 
             # IMPLEMENTATION NOTE:
-            #    THIS IS TO HANDLE FUTURE POSSIBILITY OF MULTIPLE ControlProjections FROM A SIGN ControlSignal;
+            #    THIS IS TO HANDLE FUTURE POSSIBILITY OF MULTIPLE ControlProjections FROM A SINGLE ControlSignal;
             #    FOR NOW, HOWEVER, ONLY A SINGLE ONE IS SUPPORTED
             # parameter_states = [proj.recvr for proj in control_projections]
             if len(control_projections) > 1:
@@ -658,6 +657,8 @@ class ControlMechanism_Base(Mechanism_Base):
             # - get constraint for OutputState's value
             output_state_constraint_value = self.allocation_policy[output_state_index]
 
+            control_signal_params.update({CONTROLLED_PARAM:param_name})
+
             # FIX 5/23/17: CALL super()_instantiate_output_states ??
             # FIX:         OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
             control_signal = _instantiate_state(owner=self,
@@ -673,12 +674,12 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Validate control_projection (if specified) and get receiver's name
         if control_projection:
-            self._validate_projection(control_projection)
+            _validate_projection_receiver_mech(self, control_projection, context=context)
 
             from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
             if not isinstance(control_projection, ControlProjection):
-                raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
-                                                  "that is not a ControlProjection, to outputState of {1}".
+                raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {}, "
+                                                  "that is not a ControlProjection, to ControlSignal of {}".
                                                   format(control_projection, self.name))
             if control_projection.value is DEFERRED_INITIALIZATION:
                 control_projection.init_args['sender']=control_signal
@@ -737,7 +738,7 @@ class ControlMechanism_Base(Mechanism_Base):
                     clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
-        """Updates ControlProjections based on inputs
+        """Updates ControlSignals based on inputs
 
         Must be overriden by subclass
         """

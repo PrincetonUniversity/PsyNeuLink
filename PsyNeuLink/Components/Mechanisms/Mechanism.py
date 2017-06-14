@@ -357,11 +357,11 @@ Role in Processes and Systems
 Mechanisms that are part of one or more processes are assigned designations that indicate the
 `role <Process_Mechanisms>` they play in those processes, and similarly for `role <System_Mechanisms>` they play in
 any systems to which they belong. These designations are listed in the mechanism's `processes` and `systems`
-attributes, respectively.  Any mechanism designated as `ORIGIN` receives a projection to its primary inputState from
-the process(es) to which it belongs.  Accordingly, when the process (or system of which the process is a part) is
-executed, those mechainsms receive the input provided to the process (or system).  The `output_values
-<Mechanism_Base.output_values>` of any mechanism designated as the `TERMINAL` mechanism for a process is assigned as
-the `output` of that process, and similarly for systems to which it belongs.
+attributes, respectively.  Any mechanism designated as `ORIGIN` receives a projection to its 
+`primary inputState <Mechanism_InputStates>` from the process(es) to which it belongs.  Accordingly, when the process 
+(or system of which the process is a part) is executed, those mechainsms receive the input provided to the process 
+(or system).  The `output_values <Mechanism_Base.output_values>` of any mechanism designated as the `TERMINAL` 
+mechanism for a process is assigned as the `output` of that process, and similarly for systems to which it belongs.
 
 .. note:: A mechanism can be the `ORIGIN` or `TERMINAL` of a process but not of a system to which that
           process belongs;  see :ref:`Chain Example <LINK>` for further explanation.
@@ -657,8 +657,8 @@ class Mechanism_Base(Mechanism):
 
     input_states : OrderedDict[str, InputState]
         a dictionary of the mechanism's `input_states <Mechanism_InputStates>`.
-        The key of each entry is the name of an inputState, and its value is the inputState.
-        There is always at least one entry, which identifies the mechanism's primary inputState
+        The key of each entry is the name of an inputState, and its value is the inputState.  There is always
+        at least one entry, which identifies the mechanism's `primary inputState <Mechanism_InputStates>`
         (i.e., the one in the its `inputState <Mechanism_Base.input_state>` attribute).
 
     input_value : List[List or 1d np.array] : default variableInstanceDefault
@@ -1738,7 +1738,7 @@ class Mechanism_Base(Mechanism):
 
             # Get type of param_spec:
             param_type = type(param_spec)
-            # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or ModulationOperation)
+            # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or Modulation)
             if param_type is tuple:
                 param_type = type(param_spec[0])
 
@@ -1841,9 +1841,15 @@ class Mechanism_Base(Mechanism):
                                format(fct_param_name,
                                       str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
 
-        output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
+        # kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        #   if you want more specific output, you can add conditional tests here
+        try:
+            output_string = re.sub('[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output]))
+        except TypeError:
+            output_string = output
 
         print("- output: {}".format(output_string))
+
 
     def plot(self,x_range = None):
         """

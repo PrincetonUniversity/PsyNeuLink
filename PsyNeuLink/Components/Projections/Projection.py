@@ -752,7 +752,7 @@ class Projection_Base(Projection):
 
             # Get its type
             param_type = type(param_template[state_name])
-            # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or ModulationOperation)
+            # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or Modulation)
             if param_type is tuple:
                 param_type = type(param_template[state_name][0])
 
@@ -806,7 +806,6 @@ def _is_projection_spec(spec, include_matrix_keywords=True):
                 return True
     return False
 
-
 def _is_projection_subclass(spec, keyword):
     """Evaluate whether spec is a valid specification of type
 
@@ -842,30 +841,50 @@ def _is_projection_subclass(spec, keyword):
             return True
     return False
 
+@tc.typecheck
+def _validate_projection_receiver_mech(sender_mech:Mechanism, projection:Projection, context=None):
+    """Insure that projection is to mechanism within the same system as self
+    """
+    if projection.value is DEFERRED_INITIALIZATION:
+        receiver_mech = projection.init_args['receiver'].owner
+    else:
+        receiver_mech = projection.receiver.owner
+
+    if not receiver_mech in sender_mech.system.mechanisms:
+        raise ProjectionError("Attempt to assign a {} ({}) from {} to a mechanism ({}) "
+                              "that is not in the same system ({})".
+                                          format(projection.__class__.__name__,
+                                                 projection.name,
+                                                 sender_mech.name,
+                                                 receiver_mech.name,
+                                                 sender_mech.system.name))
+
+
+# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_projection_to(receiver, state, projection_spec, context=None):
-    """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
+    """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Component object
 
     Verify that projection has not already been assigned to receiver;
         if it has, issue a warning and ignore the assignment request.
 
     Requirements:
-       * receiver must be an appropriate Function object (currently, a Mechanism or a Projection);
+       * receiver must be an appropriate Component object (currently, a Mechanism or a Projection);
        * state must be a specification of an InputState or ParameterState;
        * specification of InputState can be any of the following:
                 - INPUT_STATE - assigns projection_spec to (primary) inputState;
                 - InputState object;
-                - index for Mechanism.input_states OrderedDict;
-                - name of inputState (i.e., key for Mechanism.input_states OrderedDict));
+                - index for Mechanism.input_states;
+                - name of an existing inputState (i.e., key for Mechanism.input_states);
                 - the keyword kwAddInputState or the name for an inputState to be added;
        * specification of ParameterState must be a ParameterState object
        * projection_spec can be any valid specification of a projection_spec
            (see `State._instantiate_projections_to_state`).
 
     Args:
-        receiver (Mechanism or Projection):
+        receiver (Mechanism or Projection)
+        state (State subclass)
         projection_spec: (Projection, dict, or str)
-        state (State subclass):
-        context:
+        context
 
     """
     # IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
@@ -951,6 +970,8 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
 
+
+# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_projection_from(sender, state, projection_spec, receiver, context=None):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 

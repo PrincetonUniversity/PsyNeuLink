@@ -10,7 +10,7 @@
 #
 #
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
-from PsyNeuLink.Globals.Utilities import ModulationOperation
+from PsyNeuLink.Globals.Utilities import Modulation
 from PsyNeuLink.Globals.Preferences import *
 
 # MODIFIED 11/29/16 OLD:
@@ -19,9 +19,9 @@ from PsyNeuLink.Globals.Preferences import *
 # MODIFIED 11/29/16 END
 
 # Default PreferenceSets:
-runtimeParamModulationPrefInstanceDefault = PreferenceEntry(ModulationOperation.OVERRIDE, PreferenceLevel.INSTANCE)
-runtimeParamModulationPrefTypeDefault = PreferenceEntry(ModulationOperation.ADD, PreferenceLevel.TYPE)
-# runtimeParamModulationPrefCategoryDefault = PreferenceEntry(ModulationOperation.MULTIPLY, PreferenceLevel.CATEGORY)
+runtimeParamModulationPrefInstanceDefault = PreferenceEntry(Modulation.OVERRIDE, PreferenceLevel.INSTANCE)
+runtimeParamModulationPrefTypeDefault = PreferenceEntry(Modulation.ADD, PreferenceLevel.TYPE)
+# runtimeParamModulationPrefCategoryDefault = PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.CATEGORY)
 runtimeParamModulationPrefCategoryDefault = PreferenceEntry(False, PreferenceLevel.CATEGORY)
 
 runtimeParamStickyAssignmentPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -156,7 +156,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
             print("setting of runtimeParamModulation preference ({0}) must be a {1} or a function;"
                   " it will remain unchanged ({2})".
                   format(setting,
-                         ModulationOperation.__class__.__name__,
+                         Modulation.__class__.__name__,
                          self._runtime_param_modulation_pref.setting))
             return
 
@@ -232,7 +232,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
             print("setting of runtimeParamStickyAssignment preference ({0}) must be a {1} or a function;"
                   " it will remain unchanged ({2})".
                   format(setting,
-                         ModulationOperation.__class__.__name__,
+                         Modulation.__class__.__name__,
                          self._runtime_param_sticky_assignment_pref.setting))
             return
 
