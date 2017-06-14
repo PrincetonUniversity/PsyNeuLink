@@ -487,8 +487,9 @@ class MappingProjection(TransmissiveProjection_Base):
             # # TEST PRINT
             # print("\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.matrix))
             # # print("\n@@@ WEIGHTS CHANGED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
-            print("\n{}\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".
-                  format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.matrix))
+            # TEST DEBUG MULTILAYER
+            # print("\n{}\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".
+            #       format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.matrix))
 
 
         return self.function(self.sender.value, params=params, context=context)

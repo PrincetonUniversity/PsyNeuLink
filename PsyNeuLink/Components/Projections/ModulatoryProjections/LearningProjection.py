@@ -499,8 +499,9 @@ class LearningProjection(ModulatoryProjection_Base):
         # TEST PRINT
         # print("\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))
         # print("\n@@@ WEIGHT CHANGES CALCULATED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
-        print("\n{}\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".
-              format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.value))
+        # TEST DEBUG MULTILAYER
+        # print("\n{}\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".
+        #       format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.value))
 
         return self.value
 

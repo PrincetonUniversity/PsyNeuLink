@@ -611,9 +611,10 @@ class ParameterState(State_Base):
                               context=context)
 
         # TEST PRINT
-        if MATRIX == self.name:
-            print("\n{}\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".
-                  format(self.__class__.__name__.upper(), self.owner.name, CentralClock.trial, value))
+        # TEST DEBUG MULTILAYER
+        # if MATRIX == self.name:
+        #     print("\n{}\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".
+        #           format(self.__class__.__name__.upper(), self.owner.name, CentralClock.trial, value))
 
         return value
 

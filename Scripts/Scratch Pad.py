@@ -625,8 +625,8 @@ print (x.execute(([[1, 1],[2, 2]],
 #
 #endregion
 
-#region TEST RecurrentTransferMechanism / LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
+# region TEST RecurrentTransferMechanism / LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
 # # print("TEST RecurrentTransferMechanism / LCA")
 # # my_auto = LCA(
 # #         size=3,
