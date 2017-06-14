@@ -335,10 +335,11 @@ class OutputState(State_Base):
     """
     OutputState(                               \
     owner,                                     \
-    value=None,                                \
+    reference_value,                           \
+    variable=None,                             \
+    function=LinearCombination(operation=SUM), \
     index=PRIMARY_OUTPUT_STATE,                \
     calculate=Linear,                          \
-    function=LinearCombination(operation=SUM), \
     params=None,                               \
     name=None,                                 \
     prefs=None)
@@ -386,8 +387,17 @@ class OutputState(State_Base):
         **variable** argument.  It is used to insure the compatibility of the source of the
         input for the outputState with its `variable <OutputState.variable>`.
 
-    value : number, list or np.ndarray
-        specifies the template for the outputState's `value <OutputState.value>`.
+    variable : number, list or np.ndarray
+        specifies the template for the outputState's `variable <OutputState.variable>`.
+
+    function : Function, function, or method : default LinearCombination(operation=SUM)
+        function used to aggregate the values of the projections received by the outputState.
+        It must produce a result that has the same format (number and type of elements) as the item of the mechanism's
+        `value <Mechanism.Mechanism_Base.value>` to which the outputState is assigned (specified by its
+        **index** argument).
+
+        .. note::
+             This is not used a present (see `note <OutputState_Function_Note_2>` for additonal details).
 
     index : int : default PRIMARY_OUTPUT_STATE
         specifies the item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` used as input for the
@@ -400,15 +410,6 @@ class OutputState(State_Base):
         before it is assigned as the outputState's `value <OutputState.value>`.  The function must accept a value that
         has the same format (number and type of elements) as the item of the mechanism's
         `value <Mechanism.Mechanism_Base.value>`.
-
-    function : Function, function, or method : default LinearCombination(operation=SUM)
-        function used to aggregate the values of the projections received by the outputState.
-        It must produce a result that has the same format (number and type of elements) as the item of the mechanism's
-        `value <Mechanism.Mechanism_Base.value>` to which the outputState is assigned (specified by its
-        **index** argument).
-
-        .. note::
-             This is not used a present (see `note <OutputState_Function_Note_2>` for additonal details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -431,10 +432,6 @@ class OutputState(State_Base):
 
     owner : Mechanism
         the mechanism to which the outputState belongs.
-
-    efferents : Optional[List[Projection]]
-        a list of the projections sent by the outputState (i.e., for which the outputState is a
-        `sender <Projection.Projection.sender>`).
 
     variable : number, list or np.ndarray
         assigned the item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` specified by the
@@ -477,6 +474,10 @@ class OutputState(State_Base):
         by `calculate <OutputState.calculate>`;  the same value is assigned to the corresponding item of the owner
         mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
 
+    efferents : Optional[List[Projection]]
+        a list of the projections sent by the outputState (i.e., for which the outputState is a
+        `sender <Projection.Projection.sender>`).
+
     name : str : default <State subclass>-<index>
         name of the outputState.
         Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
@@ -518,9 +519,9 @@ class OutputState(State_Base):
                  owner,
                  reference_value,
                  variable=None,
+                 function=LinearCombination(operation=SUM),
                  index=PRIMARY_OUTPUT_STATE,
                  calculate:is_function_type=Linear,
-                 function=LinearCombination(operation=SUM),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -622,19 +623,17 @@ class OutputState(State_Base):
         if isinstance(self.calculate, type):
             self.calculate = self.calculate().function
 
+    def _execute(self, function_params, context):
+        """Call self.function with owner's value as variable
+        """
 
-    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
+        # IMPLEMENTATION NOTE: OutputStates don't current receive TransmissiveProjections,
+        #                      so there is no need to use their value (as do InputStates)
+        value = self.function(variable=self.owner.value[self.index],
+                                params=function_params,
+                                context=context)
 
-        super().update(params=params, time_scale=time_scale, context=context)
-
-        # FIX: FOR NOW, self.value IS ALWAYS None (SINCE OUTPUTSTATES DON'T GET PROJECTIONS, AND
-        # FIX:     AND State.update RETURNS None IF THERE ARE NO PROJECTIONS, SO IT ALWAYS USES CALCULATE (BELOW).
-        # FIX:     HOWEVER, NEED TO INTEGRATE self.value and self.function WITH calculate:
-        # IMPLEMENT: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE:
-        #            TO COMBINE self.value ASSIGNED IN CALL TO SUPER (FROM PROJECTIONS)
-        #            WITH calculate(self.owner.value[index]) PER BELOW
-
-        self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
+        return type_match(self.calculate(self.owner.value[self.index]), type(value))
 
     @property
     def trans_projections(self):
@@ -709,6 +708,7 @@ def _instantiate_output_states(owner, context=None):
     # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_STATES]
     #        (that is, there is the same number of items in owner_value as there are outputStates)
     #        then increment index so as to assign each item of owner_value to each outputState
+    # IMPLEMENTATION NOTE:  SHOULD BE REFACTORED TO USE _parse_state_spec TO PARSE ouput_states arg
     if owner.output_states:
         for i, output_state in enumerate(owner.output_states):
 
@@ -730,11 +730,12 @@ def _instantiate_output_states(owner, context=None):
                 if item is not None:
                     # assign dict to owner's output_state list
                     owner.output_states[owner.output_states.index(output_state)] = \
-                                                                owner.standard_output_states.get_dict(output_state)
+                                                            owner.standard_output_states.get_dict(output_state)
                     output_state = item
 
             # specification dict, so get its INDEX attribute if specified, and apply calculate function if specified
-            if isinstance(output_state, dict):
+            # if isinstance(output_state, dict):
+            elif isinstance(output_state, dict):
                 try:
                     index = output_state[INDEX]
                 except KeyError:
@@ -744,7 +745,15 @@ def _instantiate_output_states(owner, context=None):
                 else:
                     output_state_value = owner_value[index]
 
+            # If output_state is none of the above, it should be a string
+            #    (being used as the name of a default OutputState)
+            else:
+                if not isinstance(output_state, str):
+                    raise OutputStateError("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}"
+                                           .format(output_state, owner.name))
+
             constraint_value.append(output_state_value)
+
     else:
         constraint_value = owner_value
 
@@ -765,18 +774,21 @@ def _instantiate_output_states(owner, context=None):
 
 
 class StandardOutputStates():
-    """Assign names and indices of specification dicts in standard_output_state as properties of the owner's class 
+    """Collection of OutputState specification dictionaries for standard_output_states of a class
     
-    Provide access to dicts and lists of the values of their name and index entries.
-    
-    **indices** arg specifies how to assign the value of the INDEX entry in each dict listed in output_state_dicts;
+    data attribute contains dictionary of OutputState specification dictionaries
+    indices contains a list of the default index for each OutputState specified
+    names containes a list of the default name of each OutputState
+
+    **indices** arg of constructore specifies how to assign the INDEX entry for each dict listed in output_state_dicts;
         the arg can be:
-        * PRIMARY_OUTPUT_STATES keyword - assigns the INDEX for the owner's primary outputState to all indices;
-        * SEQUENTIAL keyword - assigns sequentially incremented int to each INDEX entry
-        * a list of ints - assigns each int to the corresponding entry in output_state_dicts
+            * PRIMARY_OUTPUT_STATES keyword - assigns the INDEX for the owner's primary outputState to all indices;
+            * SEQUENTIAL keyword - assigns sequentially incremented int to each INDEX entry
+           * a list of ints - assigns each int to the corresponding entry in output_state_dicts
         if it is not specified, assigns `None` to each INDEX entry.
-        
-    
+
+    `get_dict` method takes a name as its arg and returns a copy of the designated OutputState specification dictionary
+
     """
 
     @tc.typecheck
@@ -785,11 +797,12 @@ class StandardOutputStates():
                  output_state_dicts:list,
                  indices:tc.optional(tc.any(int, str, list))=None):
 
+        # Validate that all items in output_state_dicts are dicts
         for item in output_state_dicts:
             if not isinstance(item, dict):
-                raise OutputStateError("All items of {} for {} must be dicts ({} is not)".
+                raise OutputStateError("All items of {} for {} must be dicts (but {} is not)".
                                      format(self.__class__.__name__, owner.componentName, item))
-        self.data = output_state_dicts
+        self.data = output_state_dicts.copy()
 
         # Assign indices
 
@@ -800,7 +813,7 @@ class StandardOutputStates():
         # outputState
         if isinstance(indices, list):
             if len(indices) != len(output_state_dicts):
-                raise OutputStateError("Legnth of the list of indices provided to {} for {} ({}) "
+                raise OutputStateError("Length of the list of indices provided to {} for {} ({}) "
                                        "must equal the number of outputStates dicts provided ({})"
                                        "length".format(self.__class__.__name__,
                                                        owner.name,
@@ -840,7 +853,7 @@ class StandardOutputStates():
 
     @tc.typecheck
     def get_dict(self, name:str):
-        return self.data[self.names.index(name)]
+        return self.data[self.names.index(name)].copy()
     
     @property
     def names(self):
@@ -849,8 +862,6 @@ class StandardOutputStates():
     @property
     def indices(self):
         return [item[INDEX] for item in self.data]
-
-
 
 
 def make_readonly_property(val):

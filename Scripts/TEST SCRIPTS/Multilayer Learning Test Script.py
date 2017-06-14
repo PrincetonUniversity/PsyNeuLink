@@ -134,6 +134,9 @@ def show_target():
     print ('- Input Weights: \n', Input_Weights.matrix)
     print ('- Middle Weights: \n', Middle_Weights.matrix)
     print ('- Output Weights: \n', Output_Weights.matrix)
+    # print ('- Input Weights: \n', Input_Weights._parameter_states[MATRIX].function_object.previous_value)
+    # print ('- Middle Weights: \n', Input_Weights._parameter_states[MATRIX].function_object.previous_value)
+    # print ('- Output Weights: \n', Input_Weights._parameter_states[MATRIX].function_object.previous_value)
     print ('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
     print ('ACTIVITY FROM OLD WEIGHTS: \n')
     print ('- Middle 1: \n', Hidden_Layer_1.value)
@@ -165,6 +168,7 @@ elif COMPOSITION is SYSTEM:
     composition = x
 
     # x.show_graph(show_learning=True)
+    # x.show_graph()
     results = x.run(
         num_executions=10,
         # inputs=stim_list,

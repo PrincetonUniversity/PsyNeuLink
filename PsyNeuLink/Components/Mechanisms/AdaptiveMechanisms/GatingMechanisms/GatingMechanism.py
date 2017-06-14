@@ -118,7 +118,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism impor
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal \
     import GatingSignal, _parse_gating_signal_spec
 from PsyNeuLink.Components.States.State import State_Base, _instantiate_state, _parse_state_spec
-from PsyNeuLink.Components.Projections.Projection import _validate_projection_receiver_mech
+from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 
 GatingMechanismRegistry = {}
 
@@ -130,14 +130,14 @@ class GatingMechanismError(Exception):
 
 class GatingMechanism(AdaptiveMechanism_Base):
     """
-    GatingMechanism_Base(                                    \
-    default_input_value=None,                                \
-    gating_signals=None                                      \
-    modulation=ModulationParam.MULTIPLICATIVE                \
-    function=Linear,                                         \
-    params=None,                                             \
-    name=None,                                               \
-    prefs=None)
+    GatingMechanism_Base(                           \
+        default_input_value=None,                   \
+        gating_signals=None                         \
+        modulation=ModulationParam.MULTIPLICATIVE   \
+        function=Linear,                            \
+        params=None,                                \
+        name=None,                                  \
+        prefs=None)
 
     Abstract class for GatingMechanism.
 
@@ -171,9 +171,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
         the default value for each of the GatingMechanism's GatingSignals;
         its length must equal the number of items specified in the **gating_signals** arg.
 
-    gating_signals : List[InputState or OutputState, tuple[str, Mechanism], or dict]
+    gating_signals : List[InputState or OutputState, Mechanism, tuple[str, Mechanism], or dict]
         specifies the inputStates and/or outputStates to be gated by the GatingMechanism;
-        the number of items must equal the length of the **default_gating_policy** arg 
+        the number of items must equal the length of the **default_gating_policy** arg;
+        if a Mechanism is specified, its `primary inputState <Mechanism_InputStates>` will be used
         (see `gating_signals <GatingMechanism.gating_signals>` for details).
         
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
@@ -294,56 +295,18 @@ class GatingMechanism(AdaptiveMechanism_Base):
                           registry=self._stateRegistry,
                           context=context)
 
-        if self.gating_signals:
-            for gating_signal in self.gating_signals:
+        self.gating_signal_specs = self.gating_signals
+
+        if self.gating_signal_specs:
+            for gating_signal in self.gating_signal_specs:
                 self._instantiate_gating_signal(gating_signal=gating_signal, context=context)
+                TEST = True
 
         # IMPLEMENTATION NOTE:  Don't want to call this because it instantiates undesired default outputState
         # super()._instantiate_output_states(context=context)
 
-    def _instantiate_attributes_after_function(self, context=None):
-        """Take over as default GatingMechanism (if specified) and implement any specified GatingProjections
-        """
-
-        super()._instantiate_attributes_after_function(context=context)
-
-        if MAKE_DEFAULT_GATING_MECHANISM in self.paramsCurrent:
-            if self.paramsCurrent[MAKE_DEFAULT_GATING_MECHANISM]:
-                self._take_over_as_default_gating_mechanism(context=context)
-
-        # FIX: 5/23/17 CONSOLIDATE/SIMPLIFY THIS RE: gating_signal ARG??  USE OF STATE_PROJECTIONS, ETC.
-        # FIX:         ?? WHERE WOULD GATING_PROJECTIONS HAVE BEEN SPECIFIED IN paramsCURRENT??
-        # FIX:         DOCUMENT THAT VALUE OF GATING ENTRY CAN BE A PROJECTION
-        # FIX:         RE-WRITE parse_state_spec TO TAKE TUPLE THAT SPECIFIES (PARAM VALUE, GATING SIGNAL)
-        #                       RATHER THAN (PARAM VALUE, GATING PROJECTION)
-        # FIX: NOT CLEAR THIS IS GETTING USED AT ALL; ALSO, ??REDUNDANT WITH CALL IN _instantiate_output_states
-        # If GatingProjections were specified, implement them
-        if GATING_PROJECTIONS in self.paramsCurrent:
-            if self.paramsCurrent[GATING_PROJECTIONS]:
-                for key, projection in self.paramsCurrent[GATING_PROJECTIONS].items():
-                    self._instantiate_gating_projection(projection, context=self.name)
-
-    def _take_over_as_default_gating_mechanism(self, context=None):
-
-        # FIX 5/23/17: INTEGRATE THIS WITH ASSIGNMENT OF gating_signals
-        # FIX:         (E.G., CHECK IF SPECIFIED GatingSignal ALREADY EXISTS)
-        # Check the input_states and output_states of the system's mechanisms
-        #    for any GatingProjections with deferred_init()
-        for mech in self.system.mechanisms:
-            for state in mech._input_states + mech._output_states:
-                for projection in state.mod_afferents:
-                    # If projection was deferred for init, initialize it now and instantiate for self
-                    if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
-                        # FIX 5/23/17: MODIFY THIS WHEN (param, GatingProjection) tuple
-                        # FIX:         IS REPLACED WITH (param, GatingSignal) tuple
-                        # Add projection itself to any params specified in the GatingProjection for the GatingSignal
-                        #    (cached in the GatingProjection's gating_signal attrib)
-                        gating_signal_specs = projection.gating_signal or {}
-                        gating_signal_specs.update({GATING_SIGNAL_SPECS: [projection]})
-                        self._instantiate_gating_signal(gating_signal_specs, context=context)
-
     def _instantiate_gating_signal(self, gating_signal=None, context=None):
-        """Instantiate OutputState for GatingSignal and assign (if specified) or instantiate GatingProjection
+        """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
 
         # Extends gating_policy and to accommodate instantiated projection
 
@@ -362,8 +325,12 @@ class GatingMechanism(AdaptiveMechanism_Base):
         * State._parse_state_spec() is used to parse gating_signal arg
         * params are expected to be for (i.e., to be passed to) GatingSignal;
         * wait to instantiate deferred_init() projections until after GatingSignal is instantiated,
-             so that correct outputState can be assigned as its sender;
+            so that correct outputState can be assigned as its sender;
         * index of outputState is incremented based on number of GatingSignals already instantiated;
+            this means that the GatingMechanism's function must return as many items as it has GatingSignals,
+            with each item of the function's value used by a corresponding GatingSignal.
+            Note: multiple GatingProjections can be assigned to the same GatingSignal to achieve "divergent gating"
+                  (that is, gating of many states with a single value -- e.g., LC)
 
         Returns GatingSignal (OutputState)
         """
@@ -380,7 +347,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # GET index FOR GatingSignal OutputState
         try:
-            output_state_index = len(self.output_states)
+            # If there are as many outputStates as items in self.value, assume that each
+            if len(self.gating_signals) == len(self.value):
+                output_state_index = len(self.gating_signals) - 1
+            else:
+                output_state_index = 0
         except (AttributeError, TypeError):
             output_state_index = 0
 
@@ -448,7 +419,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                     raise GatingMechanismError("PROGRAM ERROR: Attempt to assign {}, "
                                                       "that is not a GatingProjection, to GatingSignal of {}".
                                                       format(gating_projection, self.name))
-                _validate_projection_receiver_mech(self, gating_projection, context=context)
+                _validate_receiver(self, gating_projection, Mechanism, GATING_SIGNAL, context=context)
                 state = gating_projection.receiver
                 if gating_projection.value is DEFERRED_INITIALIZATION:
                     gating_projection.init_args['sender']=gating_signal
@@ -467,7 +438,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                      receiver=state,
                                                      name=GATING_PROJECTION + gating_signal_name)
                 # Add gating_projection to GatingSignal.efferents
-                gating_signal.efferents.append(gating_projection)
+                # gating_signal.efferents.append(gating_projection)
                 gating_projections.append(gating_projection)
 
         # Add GatingProjections to GatingMechanism's list of GatingProjections
@@ -482,7 +453,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
         try:
             self.output_states[gating_signal.name] = gating_signal
         except (AttributeError, TypeError):
-            self.output_states = ContentAddressableList(component_type=State_Base, list=[gating_signal])
+            self.output_states = ContentAddressableList(component_type=State_Base,
+                                                        list=[gating_signal],
+                                                        name=self.name + '.output_states')
         # Add index assignment to outputState
         gating_signal.index = output_state_index
         # (Re-)assign control_signals attribute to output_states
@@ -490,22 +463,73 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         return gating_signal
 
-    # IMPLEMENTATION NOTE: Not necessary, since (for now) all it does is convey self.variable to self.value
-    # def _execute(self,
-    #                 variable=None,
-    #                 runtime_params=None,
-    #                 clock=CentralClock,
-    #                 time_scale=TimeScale.TRIAL,
-    #                 context=None):
-    #     """Updates GatingSignals based on inputs
-    #     """
-    #     gating_policy = self.function(controller=self,
-    #                                   variable=variable,
-    #                                   runtime_params=runtime_params,
-    #                                   time_scale=time_scale,
-    #                                   context=context)
-    #     return gating_policy
-    #
+    def _instantiate_attributes_after_function(self, context=None):
+        """Take over as default GatingMechanism (if specified) and implement any specified GatingProjections
+        """
+
+        super()._instantiate_attributes_after_function(context=context)
+
+        if MAKE_DEFAULT_GATING_MECHANISM in self.paramsCurrent:
+            if self.paramsCurrent[MAKE_DEFAULT_GATING_MECHANISM]:
+                self._take_over_as_default_gating_mechanism(context=context)
+
+        # FIX: 5/23/17 CONSOLIDATE/SIMPLIFY THIS RE: gating_signal ARG??  USE OF STATE_PROJECTIONS, ETC.
+        # FIX:         ?? WHERE WOULD GATING_PROJECTIONS HAVE BEEN SPECIFIED IN paramsCURRENT??
+        # FIX:         DOCUMENT THAT VALUE OF GATING ENTRY CAN BE A PROJECTION
+        # FIX:         RE-WRITE parse_state_spec TO TAKE TUPLE THAT SPECIFIES (PARAM VALUE, GATING SIGNAL)
+        #                       RATHER THAN (PARAM VALUE, GATING PROJECTION)
+        # FIX: NOT CLEAR THIS IS GETTING USED AT ALL; ALSO, ??REDUNDANT WITH CALL IN _instantiate_output_states
+        # If GatingProjections were specified, implement them
+        if GATING_PROJECTIONS in self.paramsCurrent:
+            if self.paramsCurrent[GATING_PROJECTIONS]:
+                for key, projection in self.paramsCurrent[GATING_PROJECTIONS].items():
+                    self._instantiate_gating_projection(projection, context=self.name)
+
+    def _take_over_as_default_gating_mechanism(self, context=None):
+
+        # FIX 5/23/17: INTEGRATE THIS WITH ASSIGNMENT OF gating_signals
+        # FIX:         (E.G., CHECK IF SPECIFIED GatingSignal ALREADY EXISTS)
+        # Check the input_states and output_states of the system's mechanisms
+        #    for any GatingProjections with deferred_init()
+        for mech in self.system.mechanisms:
+            for state in mech._input_states + mech._output_states:
+                for projection in state.mod_afferents:
+                    # If projection was deferred for init, initialize it now and instantiate for self
+                    if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
+                        # FIX 5/23/17: MODIFY THIS WHEN (param, GatingProjection) tuple
+                        # FIX:         IS REPLACED WITH (param, GatingSignal) tuple
+                        # Add projection itself to any params specified in the GatingProjection for the GatingSignal
+                        #    (cached in the GatingProjection's gating_signal attrib)
+                        gating_signal_specs = projection.gating_signal or {}
+                        gating_signal_specs.update({GATING_SIGNAL_SPECS: [projection]})
+                        self._instantiate_gating_signal(gating_signal_specs, context=context)
+
+    # IMPLEMENTATION NOTE: This is needed if GatingMechanism is added to a system but does not have any afferents
+    #                      (including from ProcessInputState or SystemInputState)
+    #                      and therefore variable = None
+    def _execute(self,
+                    variable=None,
+                    runtime_params=None,
+                    clock=CentralClock,
+                    time_scale=TimeScale.TRIAL,
+                    context=None):
+        """Updates GatingSignals based on inputs
+        """
+
+        if variable is None or variable[0] is None:
+            variable = self.variableClassDefault
+
+        return super()._execute(variable=variable,
+                                runtime_params=runtime_params,
+                                clock=clock,
+                                time_scale=time_scale,
+                                context=context)
+        # gating_policy = self.function(variable=variable,
+        #                               function_params=function_params,
+        #                               time_scale=time_scale,
+        #                               context=context)
+        # return gating_policy
+
 
     def show(self):
 
@@ -519,3 +543,21 @@ class GatingMechanism(AdaptiveMechanism_Base):
             for projection in self.output_states[state_name].efferents:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
         print ("\n---------------------------------------------------------")
+
+
+# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+def _add_gating_mechanism_to_system(owner:GatingMechanism):
+
+    if owner.gating_signals:
+        for gating_signal in owner.gating_signals:
+            for mech in [proj.receiver.owner for proj in gating_signal.efferents]:
+                for system in mech.systems:
+                    if owner not in system.executionList:
+                        system.executionList.append(owner)
+                        system.executionGraph[owner] = set()
+                        # FIX: NEED TO ALSO ADD SystemInputState (AND ??ProcessInputState) PROJECTIONS
+                        # # Add self to system's list of OriginMechanisms if it doesn't have any afferents
+                        # if not any(state.afferents for state in owner.input_states):
+                        #     system.originMechanisms.mechs.append(owner)
+
+

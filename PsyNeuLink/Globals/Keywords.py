@@ -271,9 +271,8 @@ PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect f
                                                    #    in general, this includes params specifed as arg in a
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
-
 FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
-kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Function Components to set output type
+FUNCTION_OUTPUT_TYPE_CONVERSION = "FunctionOutputTypeConversion" # Used in Function Components to set output type
 
 #endregion
 
@@ -318,7 +317,7 @@ USER_DEFINED_FUNCTION_TYPE = "USER DEFINED FUNCTION TYPE"
 COMBINATION_FUNCTION_TYPE = "COMBINATION FUNCTION TYPE"
 DIST_FUNCTION_TYPE = "DIST FUNCTION TYPE"
 INTEGRATOR_FUNCTION_TYPE = "INTEGRATOR FUNCTION TYPE"
-TRANFER_FUNCTION_TYPE = "TRANSFER FUNCTION TYPE"
+TRANSFER_FUNCTION_TYPE = "TRANSFER FUNCTION TYPE"
 DISTRIBUTION_FUNCTION_TYPE = "DISTRIBUTION FUNCTION TYPE"
 OBJECTIVE_FUNCTION_TYPE = "OBJECTIVE FUNCTION TYPE"
 LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
@@ -339,36 +338,41 @@ MONITORING_MECHANISM = "MonitoringMechanism"
 TRANSFER_MECHANISM = "TransferMechanism"
 RECURRENT_TRANSFER_MECHANISM = "RecurrentTransferMechanism"
 LCA = "LCA"
-INTEGRATOR_MECHANISM = "IntegratorMechanmism"
+INTEGRATOR_MECHANISM = "IntegratorMechanism"
 DDM_MECHANISM = "DDM"
 
-# Function:
-ARGUMENT_THERAPY_FUNCTION = "Contradiction"
+# Functions:
+ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
-REDUCE_FUNCTION = "Reduce"
-LINEAR_COMBINATION_FUNCTION = "LinearCombination"
-WEIGHTED_ERROR_FUNCTION = "WeighedErrorFunction"
-LINEAR_FUNCTION = "Linear"
-EXPONENTIAL_FUNCTION = "Exponential"
-LOGISTIC_FUNCTION = "Logistic"
-SOFTMAX_FUNCTION = 'SoftMax'
-INTEGRATOR_FUNCTION = "Integrator"
-LINEAR_MATRIX_FUNCTION = "Linear Matrix"
-BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
-RL_FUNCTION = 'Reinforcement Learning Algorithm'
-ERROR_DERIVATIVE_FUNCTION = 'Error Derivative'
+REDUCE_FUNCTION = "Reduce Function"
+LINEAR_COMBINATION_FUNCTION = "LinearCombination Function"
+LINEAR_FUNCTION = "Linear Function"
+EXPONENTIAL_FUNCTION = "Exponential Function"
+LOGISTIC_FUNCTION = "Logistic Function"
+SOFTMAX_FUNCTION = 'SoftMax Function'
+INTEGRATOR_FUNCTION = "Integrator Function"
+SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
+CONSTANT_INTEGRATOR_FUNCTION = "ConstantIntegrator Function"
+ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumualtorIntegrator Function"
+ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
+DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
+ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
+LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
+BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
+RL_FUNCTION = 'ReinforcementLearning Function'
+ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
 
 # Distribution functions
 
-NORMAL_DIST_FUNCTION = "Normal Distribution"
-UNIFORM_DIST_FUNCTION = "Uniform Distribution"
-EXPONENTIAL_DIST_FUNCTION = "Exponential Distribution"
-GAMMA_DIST_FUNCTION = "Gamma Distribution"
-WALD_DIST_FUNCTION = "Wald Distribution"
+NORMAL_DIST_FUNCTION = "Normal Distribution Function"
+UNIFORM_DIST_FUNCTION = "Uniform Distribution Function"
+EXPONENTIAL_DIST_FUNCTION = "Exponential Distribution Function"
+GAMMA_DIST_FUNCTION = "Gamma Distribution Function"
+WALD_DIST_FUNCTION = "Wald Distribution Function"
 
 # Objective functions
-STABILITY_FUNCTION = 'Stability'
-DISTANCE_FUNCTION = 'Distance'
+STABILITY_FUNCTION = 'Stability Function'
+DISTANCE_FUNCTION = 'Distance Function'
 
 ENERGY = 'energy'
 ENTROPY = 'entropy'
@@ -482,6 +486,10 @@ PREDICTION_MECHANISM = "Prediction Mechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
+LEARNING_SIGNAL = 'learning_signal'
+LEARNING_SIGNALS = 'learning_signals'
+LEARNING_SIGNAL_SPECS = 'LEARNING_SIGNAL_SPECS'
+LEARNED_PARAM = 'learned_param'
 CONTROL_SIGNAL = 'control_signal'
 CONTROL_SIGNALS = 'control_signals'
 CONTROL_SIGNAL_SPECS = 'CONTROL_SIGNAL_SPECS'
@@ -518,6 +526,7 @@ kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
+FULL = 'FULL'
 
 # InputStates:
 PRIMARY = 'Primary'
@@ -529,7 +538,6 @@ EXPONENT = 'exponent'
 # ParameterStates:
 PARAMETER_STATES = 'parameter_states'
 PARAMETER_STATE_PARAMS = 'parameter_state_params'
-PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
 
 # OutputStates:
 OUTPUT_STATES = 'output_states'
@@ -547,8 +555,9 @@ PROJECTION = "Projection"
 PROJECTION_TYPE = "ProjectionType"
 PROJECTION_PARAMS = "ProjectionParams"
 MAPPING_PROJECTION_PARAMS = "MappingProjectionParams"
-CONTROL_PROJECTION_PARAMS = "ControlProjectionParams"
 LEARNING_PROJECTION_PARAMS = 'LearningProjectionParams'
+CONTROL_PROJECTION_PARAMS = "ControlProjectionParams"
+GATING_PROJECTION_PARAMS = 'GatingProjectionParams'
 PROJECTION_SENDER = 'projection_sender'
 SENDER = 'sender'
 PROJECTION_SENDER_VALUE =  "projection_sender_value"
@@ -562,6 +571,8 @@ MONITOR_FOR_LEARNING = 'monitor_for_learning'
 
 #region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
+
+FUNCTION_OUTPUT_TYPE = 'functionOutputType'
 
 SUM = 'sum'
 DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS
@@ -582,9 +593,11 @@ NOISE = 'noise'
 
 AUTO_DEPENDENT='auto_dependent'
 DRIFT_RATE = 'drift_rate'
+INCREMENT = 'increment'
 INTEGRATOR_FUNCTION = 'integrator_function'
 INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
+DECAY = 'decay'
 
 LOW = 'low'
 HIGH = 'high'

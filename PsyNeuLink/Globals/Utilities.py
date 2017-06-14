@@ -34,6 +34,8 @@ TYPE CHECKING VALUE COMPARISON
 * `is_numeric_or_none`
 * `iscompatible`
 * `is_value_spec`
+* `is_unit_interval`
+* `is_same_function_spec`
 
 ENUM
 ~~~~
@@ -64,6 +66,7 @@ OTHER
 * `ReadOnlyOrderedDict`
 * `ContentAddressableList`
 * `make_readonly_property`
+* `get_class_attributes`
 
 """
 
@@ -200,6 +203,7 @@ def parameter_spec(param):
                            np.ndarray,
                            list,
                            tuple,
+                           dict,
                            function_type,
                            Projection)) or
         (inspect.isclass(param) and issubclass(param, Projection)) or
@@ -575,7 +579,13 @@ def type_match(value, value_type):
         return list(value)
     if value_type is None:
         return None
-    raise UtilitiesError("Type of {} not recognized".format(value))
+    if value_type is type(None):
+        # # MODIFIED 6/9/17 OLD:
+        # raise UtilitiesError("PROGRAM ERROR: template provided to type_match for {} is \'None\'".format(value))
+        # MODIFIED 6/9/17 NEW:
+        return value
+        # MODIFIED 6/9/17 END
+    raise UtilitiesError("Type of {} not recognized".format(value_type))
 
 def get_value_from_array(array):
     """Extract numeric value from array, preserving numeric type
@@ -647,6 +657,8 @@ class ReadOnlyOrderedDict(UserDict):
         self.data[key] = value
         if not key in self._ordered_keys:
             self._ordered_keys.append(key)
+    def __deleteitem__(self, key):
+        del self.data[key]
     def keys(self):
         return self._ordered_keys
     def copy(self):
@@ -690,6 +702,9 @@ class ContentAddressableList(UserList):
     component_type : Class
         specifies the class of the items in the list.
 
+    name : str : 'ContentAddressableList'
+        name to use for ContentAddressableList
+
     key : str : default `name`
         specifies the attribute of **component_type** used to key items in the list by content;
         **component_type** must have this attribute or, if it is not provided, an attribute with the name 'name'.
@@ -703,6 +718,9 @@ class ContentAddressableList(UserList):
 
     component_type : Class
         the class of the items in the list.
+
+    name: str
+        name if provided as arg, else name of of ContentAddressableList class
 
     key : str
         the attribute of `component_type <ContentAddressableList.component_type>` used to key items in the list by content;
@@ -721,25 +739,26 @@ class ContentAddressableList(UserList):
 
     """
 
-    def __init__(self, component_type, key=None, list=None, **kwargs):
+    def __init__(self, component_type, key=None, list=None, name=None, **kwargs):
         self.component_type = component_type
         self.key = key or 'name'
+        self.name = name or component_type.__name__
         if not isinstance(component_type, type):
             raise UtilitiesError("component_type arg for {} ({}) must be a class"
-                                 .format(self.__class__.__name__, component_type))
+                                 .format(self.name, component_type))
         if not isinstance(self.key, str):
             raise UtilitiesError("key arg for {} ({}) must be a string".
-                                 format(self.__class__.__name__, self.key))
+                                 format(self.name, self.key))
         if not hasattr(component_type, self.key):
             raise UtilitiesError("key arg for {} (\'{}\') must be an attribute of {}".
-                                 format(self.__class__.__name__,
+                                 format(self.name,
                                         self.key,
                                         component_type.__name__))
         if list is not None:
             if not all(isinstance(obj, self.component_type) for obj in list):
                 raise UtilitiesError("All of the items in the list arg for {} "
                                      "must be of the type specified in the component_type arg ({})"
-                                     .format(self.__class__.__name__, self.component_type.__name__))
+                                     .format(self.name, self.component_type.__name__))
         UserList.__init__(self, list, **kwargs)
 
     def __repr__(self):
@@ -747,12 +766,18 @@ class ContentAddressableList(UserList):
 
     def __getitem__(self, key):
         if key is None:
-            raise KeyError("None is not a legal key for {}".format(self.__class__.__name__))
+            raise KeyError("None is not a legal key for {}".format(self.name))
         try:
             return self.data[key]
         except TypeError:
             key_num = self._get_key_for_item(key)
+            if key_num is None:
+                # raise TypeError("\'{}\' is not a key in the {} being addressed".
+                                # format(key, self.__class__.__name__))
+                raise TypeError("\'{}\' is not a key in {}".
+                                format(key, self.name))
             return self.data[key_num]
+
 
     def __setitem__(self, key, value):
         # For efficiency, first assume the key is numeric (duck typing in action!)
@@ -763,17 +788,16 @@ class ContentAddressableList(UserList):
             # It must be a string
             if not isinstance(key, str):
                 raise UtilitiesError("Non-numer key used for {} ({})must be a string)".
-                                      format(self.__class__.__name__, key))
+                                      format(self.name, key))
             # The specified string must also match the value of the attribute of the class used for addressing
             if not key == value.name:
                 raise UtilitiesError("The key of the entry for {} {} ({}) "
                                      "must match the value of its {} attribute ({})".
-                                      format(self.__class__.__name__,
+                                      format(self.name,
                                              value.__class__.__name__,
                                              key,
                                              self.key,
                                              getattr(value, self.key)))
-            #
             key_num = self._get_key_for_item(key)
             if key_num is not None:
                 self.data[key_num] = value
@@ -801,7 +825,7 @@ class ContentAddressableList(UserList):
 
     def __delitem__(self, key):
         if key is None:
-            raise KeyError("None is not a legal key for {}".format(self.__class__.__name__))
+            raise KeyError("None is not a legal key for {}".format(self.name))
         try:
             del self.data[key]
         except TypeError:
@@ -867,10 +891,40 @@ class ContentAddressableList(UserList):
         return [np.ndarray.tolist(getattr(item, VALUE)) for item in self.data]
 
 
-
-
 def is_value_spec(spec):
     if isinstance(spec, (int, float, list, np.ndarray)):
+        return True
+    else:
+        return False
+
+
+def is_unit_interval(spec):
+    if isinstance(spec, (int, float)) and 0 <= spec <= 1:
+        return True
+    else:
+        return False
+
+
+def is_same_function_spec(fct_spec_1, fct_spec_2):
+    """Compare two function specs and return True if both are for the same class of Function
+
+    Arguments can be either a class or instance of a PsyNeuLink Function, or any other callable method or function
+    Return True only if both are instances or classes of a PsyNeuLink Function;  otherwise, return False
+    """
+    from PsyNeuLink.Components.Functions.Function import Function
+
+    def _convert_to_type(fct):
+        if isinstance(fct, Function):
+            return type(fct)
+        elif inspect.isclass(fct) and issubclass(fct, Function):
+            return fct
+        else:
+            return None
+
+    fct_1 = _convert_to_type(fct_spec_1)
+    fct_2 = _convert_to_type(fct_spec_2)
+
+    if fct_1 and fct_2 and fct_1 == fct_2:
         return True
     else:
         return False
@@ -889,3 +943,10 @@ def make_readonly_property(val):
     # Create the property
     prop = property(getter).setter(setter)
     return prop
+
+
+def get_class_attributes(cls):
+    boring = dir(type('dummy', (object,), {}))
+    return [item
+            for item in inspect.getmembers(cls)
+            if item[0] not in boring]
