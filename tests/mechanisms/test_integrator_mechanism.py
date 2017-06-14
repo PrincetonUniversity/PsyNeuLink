@@ -3,7 +3,7 @@ import pytest
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Functions.Function import Integrator, SimpleIntegrator, ConstantIntegrator
+from PsyNeuLink.Components.Functions.Function import Integrator, SimpleIntegrator, ConstantIntegrator, AccumulatorIntegrator
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Globals.Keywords import ADAPTIVE, CONSTANT, DIFFUSION, SIMPLE
@@ -481,13 +481,12 @@ def test_simple_integrator():
             function = SimpleIntegrator(
                 initializer = 10.0,
                 rate = 5.0,
-                scale = 2,
                 offset = 10,
             )
         )
     P = process(pathway=[I])
     val = P.execute(1)
-    assert val == 40
+    assert val == 25
 
 
 # ------------------------------------------------------------------------------------------------
@@ -501,8 +500,7 @@ def test_constant_integrator():
             function = ConstantIntegrator(
                 initializer = 10.0,
                 rate = 5.0,
-                scale = 2,
-                offset = 10,
+                offset = 10
             )
         )
     P = process(pathway=[I])
@@ -511,17 +509,17 @@ def test_constant_integrator():
     # step 1:
     val = P.execute(20000)
     # value = 10 + 5
-    # adjusted_value = 15*2 + 10
+    # adjusted_value = 15 + 10
     # previous_value = 15
-    # RETURN 40
+    # RETURN 25
 
     # step 2:
     val2 = P.execute(70000)
     # value = 15 + 5
-    # adjusted_value = 20*2 + 10
+    # adjusted_value = 20 + 10
     # previous_value = 20
-    # RETURN 50
-    assert (val, val2) == (40, 50)
+    # RETURN 30
+    assert (val, val2) == (25, 30)
 
 
 # ------------------------------------------------------------------------------------------------
@@ -534,13 +532,13 @@ def test_adaptive_integrator():
             function = AdaptiveIntegrator(
                 initializer = 10.0,
                 rate = 0.5,
-                scale = 2,
                 offset = 10,
             )
         )
     P = process(pathway=[I])
+    # 10*0.5 + 1*0.5 + 10
     val = P.execute(1)
-    assert val == 21
+    assert val == 15.5
 
 
 # ------------------------------------------------------------------------------------------------
@@ -555,13 +553,13 @@ def test_drift_diffusion_integrator():
                 initializer = 10.0,
                 rate = 10,
                 time_step_size = 0.5,
-                scale=2,
                 offset=10,
             )
         )
     P = process(pathway=[I])
+    # 10 + 10*0.5 + 0 + 10 = 25
     val = P.execute(1)
-    assert val == 40
+    assert val == 25
 
 
 # ------------------------------------------------------------------------------------------------
@@ -576,7 +574,6 @@ def test_ornstein_uhlenbeck_integrator():
                 rate = 10,
                 time_step_size=0.5,
                 decay = 0.1,
-                scale=2,
                 offset=10,
             )
         )
@@ -586,29 +583,56 @@ def test_ornstein_uhlenbeck_integrator():
     # step 1:
     val = P.execute(1)
     # value = 10 + 0.1*10*1*0.5 + 0
-    # adjusted_value = 10.5*2 + 10
+    # adjusted_value = 10.5 + 10
     # previous_value = 10.5
-    # RETURN 31
+    # RETURN 20.5
 
     # step 2:
     val2 = P.execute(1)
     # value = 10.5 + 0.1*10*1*0.5 + 0
-    # adjusted_value = 11*2 + 10
+    # adjusted_value = 11 + 10
     # previous_value = 11
-    # RETURN 32
+    # RETURN 21
 
     # step 3:
     val3 = P.execute(1)
     # value = 11 + 0.1*10*1*0.5 + 0
-    # adjusted_value = 11.5*2 + 10
+    # adjusted_value = 11.5 + 10
     # previous_value = 11.5
-    # RETURN 33
+    # RETURN 21.5
 
-    assert (val, val2, val3) == (31, 32, 33)
-
+    assert (val, val2, val3) == (20.5, 21, 21.5)
+# ------------------------------------------------------------------------------------------------
+# Test 6
 # ------------------------------------------------------------------------------------------------
 def test_integrator_no_function():
     I = IntegratorMechanism(time_scale=TimeScale.TIME_STEP)
     P = process(pathway=[I])
     val = float(P.execute(10))
     assert val == 5
+
+# ------------------------------------------------------------------------------------------------
+# Test 7
+# ------------------------------------------------------------------------------------------------
+#
+# def test_accumulator_integrator():
+#     I = IntegratorMechanism(
+#             function = AccumulatorIntegrator(
+#                 initializer = 10.0,
+#                 rate = 5.0,
+#                 increment= 1.0
+#             )
+#         )
+#     P = process(pathway=[I])
+# 
+#     # value = previous_value * rate + noise + increment
+#     # step 1:
+#     val = P.execute(20000)
+#     # value = 10.0 * 5.0 + 0 + 1.0
+#     # RETURN 51
+# 
+#     # step 2:
+#     val2 = P.execute(70000)
+#     # value = 51*5 + 0 + 1.0
+#     # RETURN 103
+#     assert (val, val2) == (51, 103)
