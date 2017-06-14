@@ -26,8 +26,13 @@ Output_Layer = TransferMechanism(name='Output Layer',
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
-Gating_Mechanism = GatingMechanism(default_gating_policy=[1.0],
-                                   gating_signals=[Hidden_Layer_2])
+Gating_Mechanism = GatingMechanism(default_gating_policy=0.0,
+                                   gating_signals=[
+                                       Hidden_Layer_1,
+                                       Hidden_Layer_2,
+                                       Output_Layer
+                                   ])
+
 
 Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
 Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
@@ -55,13 +60,25 @@ Input_Weights = MappingProjection(name='Input Weights',
 # This projection will be used by the process below by assigning its sender and receiver args
 #    to mechanismss in the pathway
 Middle_Weights = MappingProjection(name='Middle Weights',
-                         sender=Hidden_Layer_1,
-                         receiver=Hidden_Layer_2,
-                         # matrix=(FULL_CONNECTIVITY_MATRIX, LearningProjection())
-                         # matrix=FULL_CONNECTIVITY_MATRIX
-                         # matrix=RANDOM_CONNECTIVITY_MATRIX
-                         matrix=Middle_Weights_matrix
-                         )
+                                   sender=Hidden_Layer_1,
+                                   receiver=Hidden_Layer_2,
+                                   # matrix=(FULL_CONNECTIVITY_MATRIX, LearningProjection())
+                                   # matrix=FULL_CONNECTIVITY_MATRIX
+                                   # matrix=RANDOM_CONNECTIVITY_MATRIX
+                                   # # MODIFIED 6/11/17 OLD:
+                                   #  matrix=Middle_Weights_matrix
+                                   # MODIFIED 6/11/17 NEW:
+                                   matrix={VALUE:Middle_Weights_matrix,
+                                           # FUNCTION:Linear,
+                                           FUNCTION:ConstantIntegrator,
+                                           FUNCTION_PARAMS:{
+                                               INITIALIZER:Middle_Weights_matrix,
+                                               RATE:Middle_Weights_matrix},
+                                           # FUNCTION:ConstantIntegrator(rate=Middle_Weights_matrix)
+                                           # MODULATION:ADDITIVE_PARAM
+                                           }
+                                   # MODIFIED 6/11/17 END:
+                                   )
 
 # Commented lines in this projection illustrate variety of ways in which matrix and learning signals can be specified
 Output_Weights = MappingProjection(name='Output Weights',
@@ -100,6 +117,9 @@ z = process(default_input_value=[0, 0],
             prefs={VERBOSE_PREF: False,
                    REPORT_OUTPUT_PREF: True})
 
+g = process(default_input_value=[1.0],
+            pathway=[Gating_Mechanism])
+
 # Input_Weights.matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
 # Middle_Weights.matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
 # Output_Weights.matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
@@ -109,7 +129,8 @@ z = process(default_input_value=[0, 0],
 # target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 # stim_list = {Input_Layer:[[-1, 30]]}
 # stim_list = {Input_Layer:[[-1, 30]]}
-stim_list = {Input_Layer:[[-1, 30]]}
+stim_list = {Input_Layer:[[-1, 30]],
+             Gating_Mechanism:[1.0]}
 target_list = {Output_Layer:[[0, 0, 1]]}
 
 
@@ -157,7 +178,7 @@ if COMPOSITION is PROCESS:
 
 elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
-    x = system(processes=[z],
+    x = system(processes=[z, g],
                targets=[0, 0, 1],
                learning_rate=1.0)
 
@@ -166,8 +187,10 @@ elif COMPOSITION is SYSTEM:
 
     # x.show_graph(show_learning=True)
 
-    Gating_Mechanism.execute()
-
+    # from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism \
+    #     import _add_gating_mechanism_to_system
+    # _add_gating_mechanism_to_system(Gating_Mechanism)
+    #
     results = x.run(
         num_executions=10,
         # inputs=stim_list,

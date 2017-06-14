@@ -199,8 +199,8 @@ class InputState(State_Base):
     InputState(                                \
     owner,                                     \
     reference_value=None,                      \
-    value=None,                                \
     function=LinearCombination(operation=SUM), \
+    value=None,                                \
     params=None,                               \
     name=None,                                 \
     prefs=None)
@@ -248,10 +248,8 @@ class InputState(State_Base):
         the value of the item of the owner mechanism's `variable <Mechanism.Mechanism_Base.variable>` attribute to which
         the inputState is assigned; used as the template for the inputState's `value <InputState.value>` attribute.
 
-    value : number, list or np.ndarray
-        specifies the template for the inputState's `variable <InputState.variable>` attribute (since an inputState's
-        `variable <InputState.variable>` and `value <InputState.value>` attributes must have the same format
-        (number and type of elements).
+    variable : number, list or np.ndarray
+        specifies the template for the inputState's `variable <InputState.variable>` attribute.
 
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to aggregate the values of the projections received by the inputState.
@@ -331,9 +329,7 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
-                               WEIGHT:None,
-                               EXPONENT:None})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
 
     #endregion
 
@@ -343,26 +339,29 @@ class InputState(State_Base):
                  reference_value=None,
                  variable=None,
                  function=LinearCombination(operation=SUM),
+                 weight=None,
+                 exponent=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function, params=params)
+        params = self._assign_args_to_param_dicts(function=function,
+                                                  weight=weight,
+                                                  exponent=exponent,
+                                                  params=params)
 
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of owner (to override assignment of componentName in super.__init__)
         super(InputState, self).__init__(owner,
-                                                  variable=variable,
-                                                  params=params,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=self)
-
-
+                                         variable=variable,
+                                         params=params,
+                                         name=name,
+                                         prefs=prefs,
+                                         context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate weights and exponents
@@ -422,6 +421,26 @@ class InputState(State_Base):
                                                   self.owner.name,
                                                   self.reference_value))
                                                   # self.owner.variable))
+
+    def _execute(self, function_params, context):
+        """Call self.function with self.variable
+
+        If there were no Transmissive projections, ignore and return None
+        """
+
+        # If there were any Transmissive projections:
+        if self._trans_proj_values:
+            # Combine projection values
+            combined_values = self.function(variable=self._trans_proj_values,
+                                            params=function_params,
+                                            context=context)
+            return combined_values
+
+        # There were no projections
+        else:
+            # mark combined_values as none, so that (after being assigned to self.value)
+            #    it is ignored in execute method (i.e., not combined with base_value)
+            return None
 
     @property
     def trans_projections(self):

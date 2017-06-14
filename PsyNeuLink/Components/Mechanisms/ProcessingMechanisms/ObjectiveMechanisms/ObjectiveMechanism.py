@@ -230,14 +230,9 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism i
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import standard_output_states, PRIMARY_OUTPUT_STATE
 
-OBJECT = 0
-WEIGHT = 1
-EXPONENT = 2
 ROLE = 'role'
-NAMES = 'names'
 MONITORED_VALUES = 'monitored_values'
 MONITORED_VALUE_NAME_SUFFIX = '_Monitor'
-DEFAULT_MONITORED_VALUE = [0]
 ERROR_SIGNAL = 'error_signal'
 
 # This is a convenience class that provides list of standard_output_state names in IDE
@@ -593,7 +588,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             monitored_value_dict[NAME] = monitored_value_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
             monitored_values.append(monitored_value_dict)
 
-        # If input_states were not specified, assign value of monitored_valued for each (to invoke default assignments)
+        # If input_states were not specified, assign value of monitored_valued for each
+        #    (to invoke a default assignment for each input_state)
         if self.input_states is None:
             self._input_states = [m[VALUE] for m in monitored_values]
 
@@ -624,6 +620,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         for i, state in enumerate(self._input_states):
             input_state_projection_specs.append(state.params[STATE_PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
 
+        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         _instantiate_monitoring_projections(owner=self,
                                             sender_list=[mon_val[OUTPUT_STATE] for mon_val in monitored_values],
                                             receiver_list=self.input_states,

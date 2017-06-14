@@ -3,7 +3,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMe
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
 import numpy as np
@@ -38,15 +38,13 @@ Flanker_Stim = TransferMechanism(name='Flanker Stimulus', function=Linear(slope 
 Target_Rep = TransferMechanism(name='Target Representation',
                                function=Linear(slope=(1.0,
                                                      ControlProjection(function=Linear,
-                                                                       control_signal_params={
-                                                                           ALLOCATION_SAMPLES:signalSearchRange}
+                                                                       control_signal={ALLOCATION_SAMPLES:signalSearchRange}
                                                                        ))),
                                prefs=mechanism_prefs)
 Flanker_Rep = TransferMechanism(name='Flanker Representation',
                                function=Linear(slope=(1.0,
                                                      ControlProjection(function=Linear,
-                                                                       control_signal_params={
-                                                                           ALLOCATION_SAMPLES:signalSearchRange}
+                                                                       control_signal={ALLOCATION_SAMPLES:signalSearchRange}
                                                                        ))),
                                prefs=mechanism_prefs)
 
@@ -56,14 +54,11 @@ Automatic_Component = TransferMechanism(name='Automatic Component',
                                prefs=mechanism_prefs)
 
 # Decision Mechanisms
-Decision = DDM(function=BogaczEtAl(drift_rate=1.0,
-                                   threshold=0.2645,
-                                   noise=0.5,
-                                   starting_point=0,
+Decision = DDM(function=BogaczEtAl(drift_rate=(1.0),
+                                   threshold=(0.2645),
+                                   noise=(0.5),
+                                   starting_point=(0),
                                    t0=0.15),
-               output_states=[DECISION_VARIABLE,
-                              RESPONSE_TIME,
-                              PROBABILITY_UPPER_THRESHOLD],
                prefs = mechanism_prefs,
                name='Decision')
 
@@ -99,7 +94,7 @@ FlankerAutomaticProcess = process(
 
 RewardProcess = process(
     default_input_value=[0],
-    pathway=[Reward],
+    pathway=[(Reward, 1)],
     prefs = process_prefs,
     name = 'RewardProcess')
 
@@ -109,7 +104,7 @@ mySystem = system(processes=[TargetControlProcess, FlankerControlProcess,
                              RewardProcess],
                   controller=EVCMechanism,
                   enable_controller=True,
-                  monitor_for_control=[Reward, Decision.PROBABILITY_UPPER_THRESHOLD],
+                  monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD],
                   # monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
                   name='EVC Gratton System')
 
@@ -119,69 +114,65 @@ mySystem.show()
 mySystem.controller.show()
 
 # configure EVC components
-mySystem.controller.control_signals[0].intensity_cost_function = Exponential(rate =  0.8046).function
-mySystem.controller.control_signals[1].intensity_cost_function = Exponential(rate =  0.8046).function
+mySystem.controller.controlSignals[0].intensity_cost_function = Exponential(rate =  0.8046).function
+mySystem.controller.controlSignals[1].intensity_cost_function = Exponential(rate =  0.8046).function
 
 
 # Loop over the KEYS in this dict
 # for mech in mySystem.controller.prediction_mechanisms.keys():
+#
+#     # mySystem.controller.prediction_mechanisms is dictionary organized into key-value pairs where the key is a
+#     # (transfer) mechanism, and the value is the corresponding prediction (integrator) mechanism
+#
+#     # For example: the key which is a transfer mechanism with the name 'Flanker Stimulus'
+#     # acceses an integrator mechanism with the name 'Flanker Stimulus_PredictionMechanism'
+#
+#     if mech.name is 'Flanker Stimulus' or mech.name is 'Target Stimulus':
+#
+#         # when you find a key mechanism (transfer mechanism) with the correct name, print its name
+#         print(mech.name)
+#
+#         # then use that key to access its *value* in the dictionary, which will be an integrator mechanism
+#         # that integrator mechanism is the one whose rate we want to change ( I think!)
+#         # mySystem.controller.prediction_mechanisms[mech].function_object.rate = 0.3481
+#         # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].baseValue = 0.3481
+#         # mech.parameterStates['rate'].baseValue = 0.3481
+#         # mySystem.controller.prediction_mechanisms[mech].function_object.rate = 1.0 # 0.3481
+#         mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].baseValue = 1 # 0.3481
+#
+#     if mech.name is 'Reward':
+#         print(mech.name)
+#         # mySystem.controller.prediction_mechanisms[mech].function_object.rate = 1.0
+#         mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].baseValue = 1.0
+#
+
 for mech in mySystem.controller.predictionMechanisms.mechanisms:
-
-    # mySystem.controller.prediction_mechanisms is dictionary organized into key-value pairs where the key is a
-    # (transfer) mechanism, and the value is the corresponding prediction (integrator) mechanism
-
-    # For example: the key which is a transfer mechanism with the name 'Flanker Stimulus'
-    # acceses an integrator mechanism with the name 'Flanker Stimulus_PredictionMechanism'
-
-    if mech.name == 'Flanker Stimulus Prediction Mechanism' or mech.name == 'Target Stimulus Prediction Mechanism':
-
-        # when you find a key mechanism (transfer mechanism) with the correct name, print its name
-        print(mech.name)
-
-        # then use that key to access its *value* in the dictionary, which will be an integrator mechanism
-        # that integrator mechanism is the one whose rate we want to change ( I think!)
-        # mySystem.controller.prediction_mechanisms[mech].function_object.rate = 0.3481
-        # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 0.3481
-        # mech.parameterStates['rate'].base_value = 0.3481
-        # mySystem.controller.prediction_mechanisms[mech].function_object.rate = 0.3481
-        mech.function_object.rate = 1.0
-        x = mech.function_object.rate
-
-    if 'Reward' in mech.name :
-        print(mech.name)
-        mech.function_object.rate = 1.0
-        # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
+    if 'Reward' in mech.name:
+        mech.parameterStates['rate'].baseValue = 1.0
+    if 'Flanker' in mech.name or 'Target' in mech.name:
+        mech.parameterStates['rate'].baseValue = 1.0
 
 
-
-
-print('new rate of integration mechanisms before system execution:')
+# print('new rate of integration mechanisms before system execution:')
 # for mech in mySystem.controller.prediction_mechanisms.keys():
-for mech in mySystem.controller.predictionMechanisms.mechanisms:
-    print(mech.name)
-    print(mech.function_object.rate)
-    print('----')
+#     print( mySystem.controller.prediction_mechanisms[mech].name)
+#     print( mySystem.controller.prediction_mechanisms[mech].function_object.rate)
+#     print('----')
 
 # generate stimulus environment
 
-# nTrials = 20
-# targetFeatures = [1]
-# flankerFeatures = [-1] # for full simulation: flankerFeatures = [-1,1]
-# reward = 100
-
 nTrials = 3
-targetFeatures = [1 , 1, 1]
+targetFeatures = [1, 1, 1]
 flankerFeatures = [1, -1, 1] # for full simulation: flankerFeatures = [-1,1]
-reward = 100
+reward = [100, 100, 100]
 
+targetInputList = targetFeatures
+flankerInputList = flankerFeatures
+rewardList = reward
 
 # targetInputList = np.random.choice(targetFeatures, nTrials).tolist()
 # flankerInputList = np.random.choice(flankerFeatures, nTrials).tolist()
 # rewardList = (np.ones(nTrials) * reward).tolist() #np.random.choice(reward, nTrials).tolist()
-
-targetInputList = [1, 1, 1]
-flankerInputList = [1, -1, 1]
-rewardList = [100, 100, 100]
 
 stim_list_dict = {Target_Stim:targetInputList,
                   Flanker_Stim:flankerInputList,
@@ -189,6 +180,8 @@ stim_list_dict = {Target_Stim:targetInputList,
 
 
 mySystem.controller.reportOutputPref = True
+
+# mySystem.show_graph()
 
 mySystem.run(num_executions=nTrials,
              inputs=stim_list_dict,

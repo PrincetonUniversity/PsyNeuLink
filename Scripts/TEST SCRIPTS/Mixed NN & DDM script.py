@@ -8,7 +8,7 @@ from PsyNeuLink.Globals.Run import run
 # random.seed(0)
 # np.random.seed(0)
 
-# random_matrix = get_matrix(RANDOM_CONNECTIVITY_MATRIX, 2, 5)
+random_matrix = get_matrix(RANDOM_CONNECTIVITY_MATRIX, 2, 5)
 
 myInputLayer = TransferMechanism(name='Input Layer',
                         function=Linear(),
@@ -26,8 +26,8 @@ myDDM = DDM(name='My_DDM',
 myProcess = process(name='Neural Network DDM Process',
                     default_input_value=[0, 0],
                     pathway=[myInputLayer,
-                             # random_matrix,
-                             RANDOM_CONNECTIVITY_MATRIX,
+                             random_matrix,
+                             # RANDOM_CONNECTIVITY_MATRIX,
                              # FULL_CONNECTIVITY_MATRIX,
                              myHiddenLayer,
                              FULL_CONNECTIVITY_MATRIX,

@@ -213,20 +213,6 @@ parameter for which it is responsible (as shown in the `figure <ParameterState_F
   `function <ParameterState.function>` to determine the value of the parameter for which the parameterState is
   responsible.
 
-.. ParameterState_Parameter_Modulation_Operation:
-
-* `parameterModulationOperation <ParameterState.parameterModulationOperation>`: this determines how the
-  result of the parameterState's `function <ParameterState.function>` (the aggregated values of the projections it
-  receives) is combined with its `base_value <ParameterState.base_value>` to generate the value of the parameter
-  for which it is responsible.  This must be a value of `Modulation`.  It can be specified in either
-  the **parameter_modulation_operation** argument of the parameterState's constructor, or in a 
-  PARAMETER_MODULATION_OPERATION entry of a `parameter dictionary <ParameterState_Specifying_Parameters>` in 
-  either the **params** argument of the parameterState's constructor or within a PARAMETER_STATE_PARAMS 
-  dictionary in a `runtime specification <ParameterState_Runtime_Parameters>`. The default is value is
-  `Modulation.PRODUCT`, which multiples the parameterState's `base_value <ParameterState.base_value>` by the 
-  aggregated value of the result of the parameterState's `function <ParameterState.function>` to determine the value 
-  of the parameter.
-
 All of the user-modifiable parameters of a component are listed in its `user_params <Component.user_params>` attribute, 
 which is a read-only dictionary with an entry for each parameter.  The parameters of a component can be 
 modified individually by assigning a value to the corresponding attribute, or in groups using the component's 
@@ -279,14 +265,12 @@ Execution
 ---------
 
 A parameterState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
-When this occurs, the parameterState executes any `ControlProjections` and/or `LearningProjections` it receives, and
-calls its `function <ParameterState.function>` to aggregate their values.  It then combines the result with the
-parameterState's `base_value <ParameterState.base_value>` using its
-`parameterModulationOperation <ParameterState.parameterModulationOperation>` attribute, combines the result with any 
-`runtime specification <ParameterState_Runtime_Parameters>` for the parameter using the `Modulation` 
-specified for runtime parameters, and finally assigns the result as the `value <ParameterState.value>` of the 
-parameterState.  This is used as the value of the parameter for which the parameterState is responsible.
+When this occurs, the parameterState executes any `ModulatoryProjections` it receives, the values of which
+modulate parameters of the ParameterState's `function <ParameterState.function>`.  The ParameterState then calls
+its `function <ParameterState.function>` with the parameter to which it is assigned, and the result is used as
+the value of that parameter by the function of the Component to which the ParameterState belongs.
 
+COMMENT:
 .. _ParameterState_Runtime_Parameters:
 
 Runtime Specification of Parameters
@@ -301,9 +285,9 @@ executed or run; ordinarily, this should be done using `control projections <Con
 "on-the-fly" in two ways:  by specifying runtime parameters for a mechanism as part of a tuple where it is
 specified in the `pathway <Process.Process_Base.pathway>` of a process, or in the
 `execute <Mechanism.Mechanism_Base.execute>`
-COMMENT:
+XXCOMMENT:
     or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods
-COMMENT
+XXCOMMENT
 method for a mechanism, process or system (see `Mechanism_Runtime_Parameters`).  By default, runtime assignment of
 a parameter value is *one-time*:  that is, it applies only for the round of execution in which it is specified,
 and the parameter's value returns to the default for the instance of the component to which it belongs after
@@ -311,10 +295,10 @@ execution.  The `runtimeParamsStickyAssignmentPref` can be used to specify persi
 however in general it is better to modify a parameter's value permantently by assigning the value directly its 
 corresponding attribute, or using the `assign_params` method of its component.
 
-COMMENT:
+XXCOMMENT:
     IS THE MECHANISM TUPLE SPECIFICATION ONE TIME OR EACH TIME? <- BUG IN merge_dictionary()
     IS THE RUN AND EXECUTE SPECIFICATION ONE TRIAL OR ALL TRIALS IN THAT RUN?
-COMMENT
+XXCOMMENT
 
 .. note::
    At this time, runtime specification can be used only  for the parameters of a mechanism or of its ``function``.
@@ -324,10 +308,10 @@ COMMENT
  
 .. _ParameterState_Runtime_Figure:
 
-COMMENT:
+XXCOMMENT:
    XXXXX MAKE SURE ROLE OF ParamModulationOperation FOR runtime params IS EXPLAINED THERE (OR EXPLAIN HERE)
    XXXX DOCUMENT THAT MOD OP CAN BE SPECIFIED IN A TUPLE WITH PARAM VALUE (INSTEAD OF PROJECTION) AS PER FIGURE?
-COMMENT
+XXCOMMENT
 
 The figure below shows how runtime paramter specification combines the others ways to specify a parameter's value:
 
@@ -359,10 +343,11 @@ The figure below shows how runtime paramter specification combines the others wa
          param_y is given a runtime value (violet) but no runtime Modulation;
          the parameterState's parameterModulationOperation is set to SUM (green)
 
-       COMMENT:
+       XXCOMMENT:
            NOTES: CAPS FOR PARAM SPECIFICATION IN DICTS -> KEYWORDS
                   AUGMENT FIGURE TO SHOW PARAM SPECIFICATIONS FOR BOTH THE OBJECT AND ITS FUNCTION
-       COMMENT
+       XXCOMMENT
+COMMENT
 
 .. _ParameterState_Class_Reference:
 
@@ -389,9 +374,9 @@ class ParameterState(State_Base):
     ParameterState(                                              \
     owner,                                                       \
     reference_value=None                                         \
-    value=None,                                                  \
     function=LinearCombination(operation=PRODUCT),               \
-    parameter_modulation_operation=Modulation.MULTIPLY, \
+    variable=None,                                               \
+    parameter_modulation_operation=Modulation.MULTIPLY,          \
     params=None,                                                 \
     name=None,                                                   \
     prefs=None)
@@ -443,19 +428,19 @@ class ParameterState(State_Base):
     reference_value : number, list or np.ndarray
         specifies the default value of the parameter for which the parameterState is responsible.
 
-    value : number, list or np.ndarray
-        specifies the template for the parametersState's `variable <ParameterState.variable>` (since a parameterState's
-        `variable <ParameterState.variable>` and `value <ParameterState.value>` attributes must have the same format
-        (number and type of elements).
+    variable : number, list or np.ndarray
+        specifies the template for the parametersState's `variable <ParameterState.variable>`.
 
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to aggregate the values of the projections received by the parameterState.
         It must produce a result that has the same format (number and type of elements) as its input.
 
-    parameter_modulation_operation : Modulation : default Modulation.MULTIPLY
-        specifies the operation by which the values of the projections received by the parameterState are used
-        to modify its `base_value <ParameterState.base_value>` before assigning it as the value of the parameter for
-        which the parameterState is responsible.
+    COMMENT:
+        parameter_modulation_operation : Modulation : default Modulation.MULTIPLY
+            specifies the operation by which the values of the projections received by the parameterState are used
+            to modify its `base_value <ParameterState.base_value>` before assigning it as the value of the parameter for
+            which the parameterState is responsible.
+    COMMENT
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -492,24 +477,10 @@ class ParameterState(State_Base):
         performs an element-wise (Hadamard) aggregation  of the `value <Projecction.Projection.value>` of each
         projection received by the parameterState.
 
-    base_value : number, list or np.ndarray
-        the default value for the parameterState.  It is combined with the aggregated value of any projections it
-        receives using its `parameterModulationOperation <ParameterState.parameterModulationOperation>`
-        and then assigned to `value <ParameterState.value>`.
-
-    parameterModulationOperation : Modulation : default Modulation.PRODUCT
-        the arithmetic operation used to combine the aggregated value of any projections is receives
-        (the result of the parameterState's `function <ParameterState.function>`) with its
-        `base_value <ParameterState.base_value>`, the result of which is assigned to `value <ParameterState.value>`.
-
     value : number, list or np.ndarray
-        the aggregated value of the projections received by the ParameterState, combined with the
-        `base_value <ParameterState.base_value>` using its
-        `parameterModulationOperation <ParameterState.parameterModulationOperation>`
-        COMMENT:
-        as well as any runtime specification
-        COMMENT
-        .  This is the value assigned to the parameter for which the parameterState is responsible.
+        the aggregated value of the projections received by the ParameterState, modulated by its
+        `function <ParameterState.function>`.  This is the value used for the parameter by the function of the
+        Component to which the ParameterState belongs.
 
     name : str : default <State subclass>-<index>
         the name of the inputState.
@@ -553,17 +524,20 @@ class ParameterState(State_Base):
                  owner,
                  reference_value=None,
                  variable=None,
-                 function=LinearCombination(operation=PRODUCT),
-                 parameter_modulation_operation=Modulation.MULTIPLY,
+                 function=Linear(),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
+        # FIX: UPDATED TO INCLUDE LEARNING [CHANGE THIS TO INTEGRATOR FUNCTION??]
+        # # Reassign default for MATRIX param of MappingProjection
+        # if isinstance(owner, MappingProjection) and name is MATRIX:
+        #     function = LinearCombination(operation=SUM)
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                 parameter_modulation_operation=parameter_modulation_operation,
-                                                 params=params)
+                                                  params=params)
 
         self.reference_value = reference_value
 
@@ -575,8 +549,6 @@ class ParameterState(State_Base):
                                              name=name,
                                              prefs=prefs,
                                              context=self)
-
-        self.parameterModulationOperation = self.paramsCurrent[PARAMETER_MODULATION_OPERATION]
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that parameterState (as identified by its name) is for a valid parameter of the owner
@@ -606,20 +578,7 @@ class ParameterState(State_Base):
         :param context:
         :return:
         """
-
-        # If parameterState is for a matrix of a MappingProjection,
-        #     its parameter_modulation_operation should be SUM (rather than PRODUCT)
-        #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
-        if self.name == MATRIX:
-            # IMPLEMENT / TEST: 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING PROJECTION
-            self.params[PARAMETER_MODULATION_OPERATION] = Modulation.ADD
-
         super()._instantiate_function(context=context)
-
-        # Insure that function is LinearCombination
-        if not isinstance(self.function.__self__, (LinearCombination)):
-            raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
-                                 format(self.function.__self__.componentName, FUNCTION, self.name))
 
         # # Insure that output of function (self.value) is compatible with relevant parameter's reference_value
         if not iscompatible(self.value, self.reference_value):
@@ -630,112 +589,34 @@ class ParameterState(State_Base):
                                                   self.owner.name,
                                                   self.reference_value))
 
+    def _execute(self, function_params, context):
+        """Call self.function with current parameter value as the variable
 
-    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
-        """Parse params for parameterState params and XXX ***
-
-# DOCUMENTATION:  MORE HERE:
-        - get ParameterStateParams
-        - pass params to super, which aggregates inputs from projections
-        - combine input from projections (processed in super) with base_value using paramModulationOperation
-        - combine result with value specified at runtime in PARAMETER_STATE_PARAMS
-        - assign result to self.value
-
-        :param params:
-        :param time_scale:
-        :param context:
-        :return:
+        Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs. 
+        Update its value in call to state's function.
         """
 
-        super().update(params=params,
-                       time_scale=time_scale,
-                       context=context)
-
-        # FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
-        #region COMBINE PROJECTIONS INPUT WITH BASE PARAM VALUE
+        # Most commonly, ParameterState is for the parameter of a function
         try:
-            # Check whether Modulation for projections has been specified at runtime
-            # Note: this is distinct from Modulation for runtime parameter (handled below)
-            self.parameterModulationOperation = self.stateParams[PARAMETER_MODULATION_OPERATION]
-        except (KeyError, TypeError):
-            # If not, try to get from params (possibly passed from projection to ParameterState)
-            try:
-                self.parameterModulationOperation = params[PARAMETER_MODULATION_OPERATION]
-            except (KeyError, TypeError):
-                pass
-            # If not, ignore (leave self.parameterModulationOperation assigned to previous value)
-            pass
+            param_value = getattr(self.owner.function_object, '_'+ self.name)
+            # param_value = self.owner.function_object.params[self.name]
 
-        # If self.value has not been set, assign to base_value
-        if self.value is None:
-            if not context:
-                context = kwAssign + ' Base Value'
-            else:
-                context = context + kwAssign + ' Base Value'
-            self.value = self.base_value
+       # Otherwise, should be for an attribute of the ParameterState's owner:
+        except AttributeError:
+            # param_value = self.owner.params[self.name]
+            param_value = getattr(self.owner, '_'+ self.name)
 
-        # Otherwise, combine param's value with base_value using modulatonOperation
-        else:
-            if not context:
-                context = kwAssign + ' Modulated Value'
-            else:
-                context = context + kwAssign + ' Modulated Value'
-            self.value = self.parameterModulationOperation(self.base_value, self.value)
-        #endregion
+        value = self.function(variable=param_value,
+                              params=function_params,
+                              context=context)
 
-        #region APPLY RUNTIME PARAM VALUES
-        # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
-        if (not self.stateParams or self.prefs.runtimeParamModulationPref is Modulation.DISABLED):
-            return
+        # TEST PRINT
+        # TEST DEBUG MULTILAYER
+        # if MATRIX == self.name:
+        #     print("\n{}\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".
+        #           format(self.__class__.__name__.upper(), self.owner.name, CentralClock.trial, value))
 
-        # Assign class-level pref as default operation
-        default_operation = self.prefs.runtimeParamModulationPref
-
-        # If there is a runtime param specified, could be a (parameter value, Modulation) tuple
-        try:
-            value, operation = self.stateParams[self.name]
-
-        except KeyError:
-            # No runtime param for this param state
-            return
-
-        except TypeError:
-            # If single ("exposed") value, use default_operation (class-level runtimeParamModulationPref)
-            self.value = default_operation(self.stateParams[self.name], self.value)
-        else:
-            # If tuple, use param-specific Modulation as operation
-            self.value = operation(value, self.value)
-
-        #endregion
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, assignment):
-        self._value = assignment
-        # # MODIFIED 2/21/17 NEW:
-        # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
-        # if self.name in self.owner.function_params:
-        #     setattr(self.owner.function.__self__, self.name, self.value)
-
-    # # MODIFIED 5/22/17 NEW:
-    # @property
-    # def base_value(self):
-    #     try:
-    #         return getattr(self.owner, self.name)
-    #     except AttributeError:
-    #         return getattr(self.owner.function_object, self.name)
-    #
-    # @base_value.setter
-    # def base_value(self, value):
-    #     try:
-    #         return setattr(self.owner, self.name, value)
-    #     except AttributeError:
-    #         return setattr(self.owner.function_object, self.name, value)
-    #
-    # # MODIFIED 5/22/17 END
+        return value
 
     @property
     def trans_projections(self):
@@ -759,9 +640,9 @@ def _instantiate_parameter_states(owner, context=None):
 
     """
 
-    # TBI / IMPLEMENT: use specs to implement paramterStates below
+    # TBI / IMPLEMENT: use specs to implement parameterStates below
 
-    owner._parameter_states = ContentAddressableList(ParameterState)
+    owner._parameter_states = ContentAddressableList(ParameterState, name=owner.name+'.parameter_states')
 
     # Check that parameterStates for owner have not been explicitly suppressed (by assigning to None)
     try:
@@ -780,9 +661,6 @@ def _instantiate_parameter_states(owner, context=None):
 
     # Instantiate parameterState for each param in user_params (including all params in function_params dict),
     #     using its value as the state_spec
-    # MODIFIED 4/1/17 OLD:
-    # for param_name, param_value in owner.user_params.items():
-    # MODIFIED 4/1/17 NEW:
     # IMPLEMENTATION NOTE:  Use user_params_for_instantiation since user_params may have been overwritten
     #                       when defaults were assigned to paramsCurrent in Component.__init__,
     #                       (since that will assign values to the properties of each param;
@@ -796,7 +674,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
 
     Include ones in owner.user_params[FUNCTION_PARAMS] (nested iteration through that dict)
     Exclude if it is a:
-        parameterState that already exists (e.g., in case of call from Component.assign_params)
+        parameterState that already exists (e.g., in case of a call from Component.assign_params)
         non-numeric value (including None, NotImplemented, False or True)
             unless it is:
                 a tuple (could be on specifying ControlProjection, LearningProjection or Modulation)
@@ -805,6 +683,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
             (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
             i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+    # FIX: UPDATE WITH MODULATION_MODS
+    # FIX:    CHANGE TO Integrator FUnction ONCE LearningProjection MODULATES ParameterState Function:
+    If param_name is FUNCTION_PARAMS and param is a matrix (presumably for a MappingProjection) 
+        modify ParameterState's function to be LinearCombination (rather Linear which is the default)
     """
 
 
@@ -821,6 +703,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     # Only allow a FUNCTION_PARAMS dict
     elif isinstance(param_value, ReadOnlyOrderedDict) and param_name is FUNCTION_PARAMS:
         pass
+    # FIX: UPDATE WITH MODULATION_MODS
+    # WHAT ABOUT GatingProjection??
     # Allow ControlProjection, LearningProjection
     elif isinstance(param_value, Projection):
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
@@ -888,13 +772,20 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                           "with the same name as a parameter of the component itself".
                                           format(function_name, owner.name, function_param_name))
 
+            # Use function_param_value as constraint
+            # IMPLEMENTATION NOTE:  need to copy, since _instantiate_state() calls _parse_state_value()
+            #                       for constraints before state_spec, which moves items to subdictionaries,
+            #                       which would make them inaccessible to the subsequent parse of state_spec
+            from copy import deepcopy
+            constraint_value = deepcopy(function_param_value)
+
             # Assign parameterState for function_param to the component
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
                                       state_name=function_param_name,
                                       state_spec=function_param_value,
                                       state_params=None,
-                                      constraint_value=function_param_value,
+                                      constraint_value=constraint_value,
                                       constraint_value_name=function_param_name,
                                       context=context)
             if state:
@@ -912,12 +803,16 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         if state:
             owner._parameter_states[param_name] = state
 
+
 def _is_legal_param_value(owner, value):
 
     # LEGAL PARAMETER VALUES:
 
-    # lists, arrays numeric values
+    # lists, arrays numeric values or tuple
     if is_value_spec(value) or isinstance(value, tuple):
+        return True
+
+    if isinstance(value, dict) and VALUE in value:
         return True
 
     # keyword that resolves to one of the above
@@ -927,3 +822,28 @@ def _is_legal_param_value(owner, value):
     # Assignment of ParameterState for Component objects, function or method are not currently supported
     if isinstance(value, (function_type, method_type, Component)):
         return False
+
+
+def _get_parameter_state(sender_owner, sender_type, param_name, component):
+    """Return parameterState for named parameter of a mechanism requested by owner
+    """
+
+    # Validate that component is a Mechanism or Projection
+    if not isinstance(component, (Mechanism, Projection)):
+        raise ParameterStateError("Request for {} of a component ({}) that is not a {} or {}".
+                                  format(PARAMETER_STATE, component, MECHANISM, PROJECTION))
+
+    try:
+        return component._parameter_states[param_name]
+    except KeyError:
+        # Check that param (named by str) is an attribute of the mechanism
+        if not (hasattr(component, param_name) or hasattr(component.function_object, param_name)):
+            raise ParameterStateError("{} (in specification of {}  {}) is not an attribute "
+                                        "of {} or its function"
+                                        .format(param_name, sender_type, sender_owner.name, component))
+        # Check that the mechanism has a parameterState for the param
+        if not param_name in component._parameter_states.names:
+            raise ParameterStateError("There is no ParameterState for the parameter ({}) of {} "
+                                        "specified in {} for {}".
+                                        format(param_name, component.name, sender_type, sender_owner.name))
+

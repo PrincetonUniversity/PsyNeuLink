@@ -619,11 +619,14 @@ class Projection_Base(Projection):
                                                  self.paramClassDefaults[PROJECTION_SENDER]))
 
     def _instantiate_attributes_before_function(self, context=None):
-
         self._instantiate_sender(context=context)
+        self._instantiate_parameter_states(context=context)
+
+    def _instantiate_parameter_states(self, context=None):
 
         from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
         _instantiate_parameter_states(owner=self, context=context)
+
 
     def _instantiate_sender(self, context=None):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
@@ -841,24 +844,77 @@ def _is_projection_subclass(spec, keyword):
             return True
     return False
 
+# IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignal WHEN THAT IS IMPLEMENTED
 @tc.typecheck
-def _validate_projection_receiver_mech(sender_mech:Mechanism, projection:Projection, context=None):
-    """Insure that projection is to mechanism within the same system as self
+def _validate_receiver(sender_mech:Mechanism,
+                       projection:Projection,
+                       expected_owner_type:type,
+                       spec_type=None,
+                       context=None):
+    """Check that projection is to expected_receiver_type and in the same system as the sender_mech (if specified)
+    
+    expected_owner_type must be a Mechanism or a Projection
+    spec_type should be LEARNING_SIGNAL, CONTROL_SIGNAL or GATING_SIGNAL
+
     """
+    spec_type = " in the {} arg ".format(spec_type) or ""
+
     if projection.value is DEFERRED_INITIALIZATION:
-        receiver_mech = projection.init_args['receiver'].owner
+        # receiver = projection.init_args['receiver'].owner
+        state = projection.init_args['receiver']
+        receiver = state.owner
     else:
-        receiver_mech = projection.receiver.owner
+        # receiver = projection.receiver.owner
+        state = projection.receiver
+        receiver = state.owner
 
-    if not receiver_mech in sender_mech.system.mechanisms:
-        raise ProjectionError("Attempt to assign a {} ({}) from {} to a mechanism ({}) "
-                              "that is not in the same system ({})".
-                                          format(projection.__class__.__name__,
-                                                 projection.name,
-                                                 sender_mech.name,
-                                                 receiver_mech.name,
-                                                 sender_mech.system.name))
+    if isinstance(receiver, Mechanism):
+        receiver_mech = receiver
+    elif isinstance(receiver, Projection):
+        receiver_mech = receiver.receiver.owner
+    else:
+        raise ProjectionError("receiver of projection ({}) must be a {} or {}".
+                              format(projection.name, MECHANISM, PROJECTION))
 
+    if not isinstance(receiver, expected_owner_type):
+        raise ProjectionError("A {} specified {}for {} ({}) projects to a component other than the {} of a {}".
+                                    format(projection.__class__.__name__,
+                                           spec_type,
+                                           sender_mech.name,
+                                           receiver,
+                                           state.__class__.__name__,
+                                           expected_owner_type.__name__))
+
+    # Check if receiver_mech is in the same system as sender_mech;
+    #    if either has not been assigned a system, return
+
+    # Check whether mech is in the same system as sender_mech
+    receiver_systems = set()
+    # receiver_mech is a ControlMechanism (which has a system but no systems attribute)
+    if hasattr(receiver_mech, 'system') and receiver_mech.system:
+        receiver_systems.update({receiver_mech.system})
+    # receiver_mech is a ProcessingMechanism (which has a systems but system attribute is usually None)
+    elif hasattr(receiver_mech, 'systems') and receiver_mech.systems:
+        receiver_systems.update(set(receiver_mech.systems))
+    else:
+        return
+
+    sender_systems = set()
+    # sender_mech is a ControlMechanism (which has a system but no systems attribute)
+    if hasattr(sender_mech, 'system') and sender_mech.system:
+        sender_systems.update({sender_mech.system})
+    # sender_mech is a ProcessingMechanism (which has a systems but system attribute is usually None)
+    elif hasattr(sender_mech, 'systems')and sender_mech.systems:
+        sender_systems.update(set(sender_mech.systems))
+    else:
+        return
+
+    #  Check that projection is to a (projection to a) mechanisms in the same system as sender_mech
+    if not receiver_systems & sender_systems:
+        raise ProjectionError("A {} specified {}for {} projects to a component that is not in the same system".
+                                    format(projection.__class__.__name__,
+                                           spec_type,
+                                           sender_mech.name))
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_projection_to(receiver, state, projection_spec, context=None):
@@ -948,7 +1004,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     # validate that projection has not already been assigned to receiver
     if receiver.verbosePref or projection_spec.sender.owner.verbosePref:
-        if projection_spec in receiver.afferents:
+        if projection_spec in receiver.all_afferents:
             warnings.warn("Request to assign {} as projection to {} was ignored; it was already assigned".
                           format(projection_spec.name, receiver.owner.name))
 
@@ -966,7 +1022,9 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     # No inputState(s) yet, so create them
     else:
-        receiver.input_states = ContentAddressableList(component_type=State_Base, list=[input_state])
+        receiver.input_states = ContentAddressableList(component_type=State_Base,
+                                                       list=[input_state],
+                                                       name=receiver.name+'.input_states')
 
     input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
 
@@ -1069,6 +1127,8 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     # No outputState(s) yet, so create them
     except AttributeError:
         from PsyNeuLink.Components.States.State import State_Base
-        sender.output_states = ContentAddressableList(component_type=State_Base, list=[output_state])
+        sender.output_states = ContentAddressableList(component_type=State_Base,
+                                                      list=[output_state],
+                                                      name=sender.name+'.output_states')
 
     output_state._instantiate_projections_to_state(projections=projection_spec, context=context)

@@ -334,6 +334,11 @@ class ComparatorMechanism(ObjectiveMechanism):
                                          name=TARGET,
                                          value=None)
 
+        # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
+        #                     (in this case, to [ERROR_SIGNAL, {NAME= MSE}]), but fails to expose default in IDE
+        # output_states = output_states or [ERROR_SIGNAL, MSE]
+
+        # Create a StandardOutputStates object from the list of stand_output_states specified for the class
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
@@ -342,7 +347,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         super().__init__(monitored_values=[sample, target],
                          input_states = [sample_input, target_input],
                          function=function,
-                         output_states=output_states,
+                         output_states=output_states.copy(), # prevent default from getting overwritten by later assign
                          params=params,
                          name=name,
                          prefs=prefs,

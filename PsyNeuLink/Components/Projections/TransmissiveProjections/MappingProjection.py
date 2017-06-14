@@ -126,16 +126,6 @@ In addition to its `function <MappingProjection.function>`, MappingProjections u
   input, that is then provided to its `receiver <MappingProjection.receiver>`.  It can be specified using a number of
   different formats, as described `above <Mapping_Matrix_Specification>`.
 
-.. _Mapping_Parameter_Modulation_Operation:
-
-* `matrix_modulation_operation <MappingProjection.matrix_modulation_operation>`
-
-  Used to determine how the value of any projections to the `parameterState <ParameterState>` for the
-  `matrix <MappingProjection.matrix>` influence it.  For example, this is used for a `LearningProjection` to apply
-  weight changes to the `matrix <MappingProjection.matrix>` during learning. The
-  :keyword:`matrix_modulation_operation` attribute must be assigned a value of `Modulation` and the operation
-  is always applied in an element-wise (Hadamard) manner. The default operation is ADD.
-
 .. _Projection_Execution:
 
 Execution
@@ -177,7 +167,6 @@ class MappingProjection(TransmissiveProjection_Base):
         sender=None,                                        \
         receiver=None,                                      \
         matrix=DEFAULT_MATRIX,                              \
-        matrix_modulation_operation=Modulation.ADD, \
         params=None,                                        \
         name=None,                                          \
         prefs=None)
@@ -238,10 +227,6 @@ class MappingProjection(TransmissiveProjection_Base):
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
         value of the `sender <MappingProjection.sender>`.
 
-    matrix_modulation_operation : Modulation : default Modulation.ADD
-        specifies the operation used to combine the value of any projections to the matrix's parameterState with the
-        `matrix <MappingProjection.matrix>` itself.  Most commonly used with `LearningProjections <LearningProjection>`.
-
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
         the projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
@@ -268,10 +253,6 @@ class MappingProjection(TransmissiveProjection_Base):
 
     receiver: InputState
         identifies the destination of the projection.
-
-    matrix_modulation_operation : Modulation
-        determines the operation used to combine the value of any projections to the matrix's parameterState with the
-        `matrix <MappingProjection.matrix>` itself.
 
     monitoringMechanism : MonitoringMechanism
         source of error signal for that determine changes to the `matrix <MappingProjection.matrix>` when
@@ -315,16 +296,24 @@ class MappingProjection(TransmissiveProjection_Base):
                  sender=None,
                  receiver=None,
                  matrix=DEFAULT_MATRIX,
-                 matrix_modulation_operation=Modulation.ADD,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
+        # if matrix is DEFAULT_MATRIX:
+        #     initializer = get_matrix(matrix)
+        #     initial_rate = initializer * 0.0
+        #     matrix={VALUE:DEFAULT_MATRIX,
+        #             FUNCTION:ConstantIntegrator(owner=self._parameter_states[MATRIX],
+        #                                         initializer=get_matrix(DEFAULT_MATRIX),
+        #                                         rate=initial_rate)}
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
-                                                  matrix_modulation_operation=matrix_modulation_operation,
-                                                  params=params)
+        # Assign matrix to function_params for use as matrix param of MappingProjection.function
+        params = self._assign_args_to_param_dicts(
+                function_params={MATRIX: matrix},
+                params=params)
 
         self.learning_mechanism = None
         self.has_learning_projection = False
@@ -337,7 +326,6 @@ class MappingProjection(TransmissiveProjection_Base):
             self.init_args['name'] = name
             # Delete these as they have been moved to params dict (and will not be recognized by Projection.__init__)
             del self.init_args['matrix']
-            del self.init_args['matrix_modulation_operation']
 
             # Flag for deferred initialization
             self.value = DEFERRED_INITIALIZATION
@@ -345,11 +333,11 @@ class MappingProjection(TransmissiveProjection_Base):
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super(MappingProjection, self).__init__(sender=sender,
-                                      receiver=receiver,
-                                      params=params,
-                                      name=name,
-                                      prefs=prefs,
-                                      context=self)
+                                                receiver=receiver,
+                                                params=params,
+                                                name=name,
+                                                prefs=prefs,
+                                                context=self)
 
     # def _instantiate_sender(self, context=None):
             # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
@@ -358,24 +346,28 @@ class MappingProjection(TransmissiveProjection_Base):
             # # for i in range (len(self.sender.value)):
             # #            - CHECK EACH MATRIX AND ASSIGN??
 
+    def _instantiate_parameter_states(self, context=None):
+
+        super()._instantiate_parameter_states(context=context)
+
+        # FIX: UPDATE FOR LEARNING
+        # FIX: UPDATE WITH MODULATION_MODS
+        # FIX: MOVE THIS TO MappingProjection.__init__;
+        # FIX: AS IT IS, OVER-WRITES USER ASSIGNMENT OF FUNCTION IN params dict FOR MappingProjection
+        matrix = get_matrix(self._parameter_states[MATRIX].value)
+        initial_rate = matrix * 0.0
+        self._parameter_states[MATRIX].function_object = ConstantIntegrator(owner=self._parameter_states[MATRIX],
+                                                                            initializer=matrix,
+                                                                            rate=initial_rate)
+        self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
+
     def _instantiate_receiver(self, context=None):
-        """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
-
-        If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
-        If the Mechanism has more than one inputState, assignment to other input_states must be done explicitly
-            (i.e., by: _instantiate_receiver(State)
-
+        """Determine matrix needed to map from sender to receiver
+        
+        Assign specification to self.matrix_spec attribute
+        Assign matrix to self.matrix attribute
+        
         """
-        # MODIFIED 4/21/17 OLD: [MOVED TO PROJECTION INIT]
-        # # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
-        # if isinstance(self.receiver, Mechanism):
-        #     if (len(self.receiver.input_states) > 1 and
-        #             (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
-        #         print("{0} has more than one inputState; {1} was assigned to the first one".
-        #               format(self.receiver.owner.name, self.name))
-        #     self.receiver = self.receiver.input_state
-        # MODIFIED 4/21/17 END
-
         self.reshapedWeightMatrix = False
 
         # Get sender and receiver lengths
@@ -439,7 +431,7 @@ class MappingProjection(TransmissiveProjection_Base):
                                  receiver_len,
                                  self.receiver.owner.name))
 
-                self.matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
+                self._matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
 
                 # Since matrix shape has changed, output of self.function may have changed, so update self.value
                 self._update_value()
@@ -472,8 +464,14 @@ class MappingProjection(TransmissiveProjection_Base):
             matrix_parameter_state = self._parameter_states[MATRIX]
 
             # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
-            matrix_parameter_state.base_value = self.matrix
+            # # MODIFIED 6/1/17 OLD:
+            # matrix_parameter_state.base_value = self.matrix
+            # MODIFIED 6/1/17 NEW:
+            setattr(self, '_'+MATRIX, self.matrix)
+            # MODIFIED 6/1/17 END
 
+            # FIX: UPDATE FOR LEARNING BEGIN
+            #    ??DELETE ONCE INTEGRATOR FUNCTION IS IMPLEMENTED
             # Pass params for parameterState's function specified by instantiation in LearningProjection
             weight_change_params = matrix_parameter_state.paramsCurrent
 
@@ -484,17 +482,22 @@ class MappingProjection(TransmissiveProjection_Base):
             # Update MATRIX
             self.matrix = matrix_parameter_state.value
             # MODIFIED 2/21/17 END
+            # FIX: UPDATE FOR LEARNING END
 
             # # TEST PRINT
             # print("\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.matrix))
             # # print("\n@@@ WEIGHTS CHANGED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
+            # TEST DEBUG MULTILAYER
+            # print("\n{}\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".
+            #       format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.matrix))
 
 
         return self.function(self.sender.value, params=params, context=context)
 
     @property
     def matrix(self):
-        return self.function.__self__.matrix
+        # return self.function.__self__.matrix
+        return self.function_object.matrix
 
     @matrix.setter
     def matrix(self, matrix):
@@ -508,7 +511,8 @@ class MappingProjection(TransmissiveProjection_Base):
         # FIX: Hack to prevent recursion in calls to setter and assign_params
         self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
-        self.function.__self__.matrix = matrix
+        # self.function.__self__.matrix = matrix
+        self.function_object.matrix = matrix
 
     @property
     def _matrix_spec(self):

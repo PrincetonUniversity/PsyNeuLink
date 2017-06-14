@@ -645,7 +645,7 @@ class Component(object):
                    type(PsyNeuLink.Components.Functions.Function.Function_Base)
 
             if required_param not in self.paramClassDefaults.keys():
-                raise ComponentError("Param {} must be in paramClassDefaults for {}".
+                raise ComponentError("Param \'{}\' must be in paramClassDefaults for {}".
                                     format(required_param, self.name))
 
             # If the param does not match any of the types specified for it in type_requirements
@@ -694,7 +694,9 @@ class Component(object):
         #    (e.g., _instantiate_sender and _instantiate_receiver in Projection)
         self._instantiate_attributes_before_function(context=context)
 
-        # INSTANTIATE FUNCTION and assign output (by way of self.execute) to self.value
+        # INSTANTIATE FUNCTION
+        #    - assign initial function parameter values from ParameterStates,
+        #    - assign function's output to self.value (based on call of self.execute)
         self._instantiate_function(context=context)
 
         # INSTANTIATE ATTRIBUTES AFTER FUNCTION
@@ -768,6 +770,34 @@ class Component(object):
                 name = arg
             return name
 
+        def _convert_function_to_class(function, source):
+            from PsyNeuLink.Components.Functions.Function import Function
+            from inspect import isfunction
+            fct_cls = None
+            fct_params = None
+            # It is a PsyNeuLink Function class
+            if inspect.isclass(function) and issubclass(function, Function):
+                fct_cls = function
+            # It is an instantiateed PsyNeuLink Function class
+            elif isinstance(function, Function):
+                # Set it to the class (for compatibility with current implementation of _instantiate_function()
+                # and put its params in FUNCTION_PARAMS
+                fct_cls = function.__class__
+                fct_params = function.user_params.copy()
+            # It is a generic function
+            elif isfunction(function):
+                # Assign to paramClassDefaults as is (i.e., don't convert to class), since class is generic
+                # (_instantiate_function also tests for this and leaves it as is)
+                fct_cls = function
+            else:
+                if hasattr(self, 'name'):
+                    name = self.name
+                else:
+                    name = self.__class__.__name__
+                raise ComponentError("Unrecognized object ({}) specified in {} for {}".
+                                     format(function, source, name))
+            return (fct_cls, fct_params)
+
         # ASSIGN DEFAULTS TO paramClassDefaults
         # Check if defaults have been assigned to paramClassDefaults, and if not do so
         for arg in kwargs:
@@ -775,8 +805,8 @@ class Component(object):
             arg_name = parse_arg(arg)
 
 
-            # The params arg (nor anything in it) is never a default
-            if arg_name is kwParams:
+            # The params arg is never a default (nor is anything in it)
+            if arg_name is PARAMS:
                 continue
 
             # Check if param exists in paramClassDefaults
@@ -787,28 +817,11 @@ class Component(object):
             except:
                 # If arg is FUNCTION and it's default is an instance (i.e., not a class)
                 if arg_name is FUNCTION and not inspect.isclass(default(arg)):
-
                     # FIX: REFACTOR Component._instantiate_function TO USE COPY OF INSTANTIATED function
-
-                    function = default(arg)
-                    from PsyNeuLink.Components.Functions.Function import Function
-                    from inspect import isfunction
-
-                    # It is a PsyNeuLink Function
-                    if isinstance(function, Function):
-                        # Set it to the class (for compatibility with current implementation of _instantiate_function()
-                        # and put its params in FUNCTION_PARAMS
-                        self.paramClassDefaults[arg] = default(arg).__class__
-                        self.paramClassDefaults[FUNCTION_PARAMS] = default(arg).user_params.copy()
-
-                    # It is a generic function
-                    elif isfunction(function):
-                        # Assign to paramClassDefaults as is (i.e., don't convert to class), since class is generic
-                        # (_instantiate_function also tests for this and leaves it as is)
-                        self.paramClassDefaults[arg] = function
-                    else:
-                        raise ComponentError("Unrecognized object ({}) specified as function for {}".
-                                             format(function, self.name))
+                    fct_cls, fct_params = _convert_function_to_class(default(arg), 'function arg')
+                    self.paramClassDefaults[arg] = fct_cls
+                    if fct_params:
+                        self.paramClassDefaults[FUNCTION_PARAMS] = fct_params
 
                 # Get defaults values for args listed in FUNCTION_PARAMS
                 # Note:  is not an arg, but rather used to package args that belong to a non-instantiated function
@@ -840,7 +853,7 @@ class Component(object):
         for arg in sorted(list(kwargs.keys())):
 
             # Put any values (presumably in a dict) passed in the "params" arg in params_arg
-            if arg is kwParams:
+            if arg is PARAMS:
                 params_arg = kwargs[arg]
                 continue
 
@@ -897,10 +910,9 @@ class Component(object):
                         # Assign as is (i.e., don't convert to class), since class is generic
                         # (_instantiate_function also tests for this and leaves it as is)
                         params[FUNCTION] = function
-                        # FIX: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
-                        # if self.verbosePref:
-                        #     warnings.warn("{} is not a PsyNeuLink Function, "
-                        #                   "therefore runtime_params cannot be used".format(default(arg).__name__))
+                        if self.verbosePref:
+                            warnings.warn("{} is not a PsyNeuLink Function, "
+                                          "therefore runtime_params cannot be used".format(default(arg).__name__))
                     else:
                         raise ComponentError("Unrecognized object ({}) specified as function for {}".
                                              format(function, self.name))
@@ -925,11 +937,36 @@ class Component(object):
             else:
                 params[arg] = kwargs[arg]
 
-        # Add or override arg values with any specified in params dict (including FUNCTION_PARAMS)
+        # Add or override arg values with any specified in params dict (including FUNCTION and FUNCTION_PARAMS)
         if params_arg:
 
+            # If function was specified in the function arg of the constructor
+            #    and also in the FUNCTION entry of a params dict in params arg of constructor:
+            if params and FUNCTION in params and FUNCTION in params_arg:
+                # Check if it is the same as the default or the one assigned in the function arg of the constructor
+                if not is_same_function_spec(params[FUNCTION], params_arg[FUNCTION]):
+                    fct_cls, fct_params = _convert_function_to_class(params_arg[FUNCTION],
+                                                                     '{} entry of params dict'.format(FUNCTION))
+                    params_arg[FUNCTION] = fct_cls
+                    if fct_params:
+                        params_arg[FUNCTION_PARAMS] = fct_params
+                    # If it is not the same, delete any function params that have already been assigned
+                    #    in params[] for the function specified in the function arg of the constructor
+                    if FUNCTION_PARAMS in params:
+                        for param in list(params[FUNCTION_PARAMS].keys()):
+                            params[FUNCTION_PARAMS].__deleteitem__(param)
             try:
-                # Update params[FUNCTION_PARAMS] with any from param_arg[FUNCTION_PARAMS] (specified in the constructor)
+                # Replace any parameters for function specified in function arg of constructor
+                #    with those specified either in FUNCTION_PARAMS entry of params dict
+                #    or for an instantiated function specified in FUNCTION entry of params dict
+
+                # First, if the function is instantiated, get the parameters from its user_params dict
+                from PsyNeuLink.Components.Functions.Function import Function
+                if FUNCTION in params_arg and isinstance(params_arg[FUNCTION], Function):
+                    for param_name in params_arg[FUNCTION].user_params:
+                        params[FUNCTION_PARAMS].__additem__(param_name, params_arg[FUNCTION].user_params[param_name])
+                # Then get any specified in FUNCTION_PARAMS entry of the params dict
+                #    (these will override any specified in the constructor for the function)
                 for param_name in params_arg[FUNCTION_PARAMS].keys():
                     params[FUNCTION_PARAMS].__additem__(param_name, params_arg[FUNCTION_PARAMS][param_name])
                 # Convert params_arg[FUNCTION_PARAMS] to ReadOnlyOrderedDict and update it with params[FUNCTION_PARAMS];
@@ -976,7 +1013,7 @@ class Component(object):
                     for k, v in param_value.items():
                         self.user_params_for_instantiation[param_name][k] = v
                 elif isinstance(param_value, (ReadOnlyOrderedDict, ContentAddressableList)):
-                    for k in sorted(list(param_value.keys())):
+                    for k in sorted(list(param_value)):
                         self.user_params_for_instantiation[param_name].__additem__(k,param_value[k])
                 # SET
                 elif isinstance(param_value, set):
@@ -989,12 +1026,15 @@ class Component(object):
             else:
                 self.user_params_for_instantiation[param_name] = param_value
 
+        # FIX: 6/1/17 - MAKE SURE FUNCTIONS DON'T GET ASSIGNED AS PROPERTIES, SINCE THEY DON'T HAVE ParameterStates
+        #                AND SO CAN'T RETURN A ParameterState.value AS THEIR VALUE
+
         # Provide opportunity for subclasses to filter final set of params in class-specific way
         # Note:  this is done here to preserve identity of user-specified params assigned to user_params above
         self._filter_params(params)
 
         # Create property on self for each parameter in user_params:
-        #    these will be validated whenever they are assigned a new value
+        #    these WILL be validated whenever they are assigned a new value
         self._create_attributes_for_params(make_as_properties=True, **self.user_params)
 
         # Create attribute on self for each parameter in paramClassDefaults not in user_params:
@@ -1028,7 +1068,6 @@ class Component(object):
         Create backing field for attribute with "_" prefixed to attribute name,
             and assign value provided in kwargs as its default value.
         """
-
         if make_as_properties:
             for arg_name, arg_value in kwargs.items():
                 if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
@@ -1058,6 +1097,7 @@ class Component(object):
         :target_set: (dict) - set to which params should be assigned (default: self.paramsCurrent)
         :return:
         """
+        # VARIABLE ------------------------------------------------------------
 
         # If function is called without any arguments, get default for variable
         if variable is None:
@@ -1076,6 +1116,8 @@ class Component(object):
             self._validate_variable(variable, context=context)
         else:
             self.variable = variable
+
+        # PARAMS ------------------------------------------------------------
 
         # If target_set is not specified, use paramsCurrent
         if target_set is None:
@@ -1449,9 +1491,12 @@ class Component(object):
 
         pref_buffer = self.prefs._param_validation_pref
         self.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-
         self.paramsCurrent.update(validated_set)
-
+        # The following is so that:
+        #    if the component is a function and it is passed as an argument to a component,
+        #    then the parameters are available in self.user_params_for_instantiation
+        #    (which is needed when the function is recreated from its class in _assign_args_to_params_dicts)
+        self.user_params_for_instantiation.update(self.user_params)
         self.paramValidationPref = pref_buffer
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
@@ -1970,15 +2015,11 @@ class Component(object):
         :return:
         """
         try:
-
-            function = self.paramsCurrent[FUNCTION]
-
-        # params[FUNCTION] is NOT implemented
+            function = self.function
+        # self.function is NOT implemented
         except KeyError:
-
             function = None
-
-        # params[FUNCTION] IS implemented
+        # self.function IS implemented
         else:
             # If FUNCTION is an already instantiated method:
             if isinstance(function, method_type):
@@ -1991,7 +2032,7 @@ class Component(object):
                     if self.prefs.verbosePref:
                         warnings.warn("{0} ({1}) is not a subclass of Function".
                                       format(FUNCTION,
-                                             self.paramsCurrent[FUNCTION].__class__.__name__,
+                                             self.function.__class__.__name__,
                                              self.name))
 
                     function = None
@@ -2009,7 +2050,7 @@ class Component(object):
             elif inspect.isclass(function) and issubclass(function, COMPONENT_BASE_CLASS):
                 #  Check if params[FUNCTION_PARAMS] is specified
                 try:
-                    function_param_specs = self.paramsCurrent[FUNCTION_PARAMS].copy()
+                    function_param_specs = self.function_params.copy()
                 except (KeyError, AttributeError):
                     # FUNCTION_PARAMS not specified, so nullify
                     function_param_specs = {}
@@ -2024,9 +2065,10 @@ class Component(object):
                                           format(FUNCTION_PARAMS, self.name, function_param_specs))
                     # parse entries of FUNCTION_PARAMS dict
                     else:
-                        # Get param value from any params specified as (param, projection) tuple
+                        # Get param value from any params specified in a tuple or a dict
                         from PsyNeuLink.Components.Projections.Projection import Projection
                         for param_name, param_spec in function_param_specs.items():
+                            # Get param value from (param, projection) tuple
                             if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
                                     (param_spec[1] in {MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION} or
                                          isinstance(param_spec[1], Projection) or
@@ -2034,6 +2076,9 @@ class Component(object):
                                 ):
                                 from PsyNeuLink.Components.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec[0]
+                            # Get param value from VALUE entry of a parameter specification dictionary
+                            elif isinstance(param_spec, dict) and VALUE in param_spec:
+                                function_param_specs[param_name] =  param_spec[VALUE]
 
                 # Instantiate function from class specification
                 function_instance = function(variable_default=self.variable,
@@ -2044,7 +2089,7 @@ class Component(object):
                                              #    and would require every function to have the owner arg in its __init__
                                              owner=self,
                                              context=context)
-                self.paramsCurrent[FUNCTION] = function_instance.function
+                self.function = function_instance.function
 
                 # If in VERBOSE mode, report assignment
                 if self.prefs.verbosePref:
@@ -2056,7 +2101,7 @@ class Component(object):
                     except AttributeError:
                         pass
                     warnings.warn("{0} assigned as function for {1}".
-                                  format(self.paramsCurrent[FUNCTION].__self__.componentName,
+                                  format(self.function.__self__.componentName,
                                          object_name))
 
             # FUNCTION is a generic function (presumably user-defined), so "wrap" it in UserDefinedFunction:
@@ -2065,7 +2110,7 @@ class Component(object):
 
 
                 from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
-                self.paramsCurrent[FUNCTION] = UserDefinedFunction(function=function, context=context).function
+                self.function = UserDefinedFunction(function=function, context=context).function
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
@@ -2074,7 +2119,7 @@ class Component(object):
                 if self.prefs.verbosePref:
                     warnings.warn("{0} ({1}) is not a subclass of Function".
                                   format(FUNCTION,
-                                         self.paramsCurrent[FUNCTION].__class__.__name__,
+                                         self.function.__class__.__name__,
                                          self.name))
                 function = None
 
@@ -2082,13 +2127,13 @@ class Component(object):
         if not function:
             # Try to assign to self.function
             try:
-                self.paramsCurrent[FUNCTION] = self.function
+                self.function = self.function
             # If self.function is also not implemented, raise exception
             # Note: this is a "sanity check," as this should have been checked in _validate_function (above)
             except AttributeError:
                 raise ComponentError("{0} ({1}) is not a Function object or class, "
                                     "and {2}.function is not implemented".
-                                    format(FUNCTION, self.paramsCurrent[FUNCTION],
+                                    format(FUNCTION, self.function,
                                            self.__class__.__name__))
             # If self.function is implemented, warn if in VERBOSE mode
             else:
@@ -2096,27 +2141,18 @@ class Component(object):
                     warnings.warn("{0} ({1}) is not a Function object or a specification for one; "
                                   "{1}.function ({}) will be used instead".
                                   format(FUNCTION,
-                                         self.paramsCurrent[FUNCTION].__self__.componentName,
+                                         self.function.__self__.componentName,
                                          self.name,
                                          self.function.__self__.name))
 
-        # Now that function has been instantiated, call self.function
-        # to assign its output (and type of output) to self.value
-        if not context:
-            context = "DIRECT CALL"
-        # MODIFIED 8/29/16:  QUESTION:
-        # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
-        # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
-        # ANSWER: MUST BE self.execute AS THE VALUE OF AN OBJECT IS THE OUTPUT OF ITS EXECUTE METHOD, NOT ITS FUNCTION
-        # self.value = self.function(context=context+kwSeparator+COMPONENT_INIT)
-        self.value = self.execute(context=context)
-        if self.value is None:
-            raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
-        self._value_template = self.value
+        # MAKE ASSIGNMENTS
+        # Now that function has been instantiated:
 
+        #  - assign to paramInstanceDefaults
         self.paramInstanceDefaults[FUNCTION] = self.function
 
-        # For all components other than a Function itself, assign function_object and function_params
+        #  - for all components other than a Function itself,
+        #    assign function_object, function_params dict, and function's parameters from any ParameterStates
         from PsyNeuLink.Components.Functions.Function import Function
         if not isinstance(self, Function):
             self.function_object = self.function.__self__
@@ -2125,11 +2161,29 @@ class Component(object):
             elif self.function_object.owner != self:
                 raise ComponentError("Function being assigned to {} ({}) belongs to another component: {}".
                                      format(self.name, self.function_object.name, self.function_object.owner.name))
-
+            # sort to maintain alphabetical order of function_params
             for param_name in sorted(list(self.function_object.user_params_for_instantiation.keys())):
+                # assign to param to function_params dict
                 self.function_params.__additem__(param_name,
                                                  self.function_object.user_params_for_instantiation[param_name])
+                # # assign values from any ParameterStates the Component may (which it should) have
+                # try:
+                #     value_type = type(getattr(self.function_object, '_'+param_name))
+                #     param_value = type_match(self._parameter_states[param_name].value, value_type)
+                # except:
+                #     pass
+                # else:
+                #     setattr(self.function_object, '_'+param_name, param_value)
             self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
+
+        #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
+        #    execute method, not its function
+        if not context:
+            context = "DIRECT CALL"
+        self.value = self.execute(context=context)
+        if self.value is None:
+            raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
+        self._value_template = self.value
 
     def _instantiate_attributes_after_function(self, context=None):
         pass
@@ -2152,6 +2206,9 @@ class Component(object):
     # @variable.setter
     # def variable(self, value):
     #     self._variable = value
+
+    def _change_function(self, to_function):
+        pass
 
     @property
     def name(self):
@@ -2302,65 +2359,65 @@ class Component(object):
 COMPONENT_BASE_CLASS = Component
 
 
-# Autoprop
-# per Bryn Keller
-
-docs = {'foo': 'Foo controls the fooness, as modulated by the the bar',
-        'bar': 'Bar none, the most important property'}
-
 def make_property(name, default_value):
     backing_field = '_' + name
 
     def getter(self):
-        return getattr(self, backing_field)
+        try:
+            # Get value of function param from ParameterState.value of owner
+            #    case: request is for the value of a Function parameter for which the owner has a ParameterState
+            #    example: slope or intercept parameter of a Linear Function)
+            #    rationale: most common and therefore requires the greatest efficiency
+            #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
+            return self.owner._parameter_states[backing_field[1:]].value
+        except (AttributeError, TypeError):
+            try:
+                # Get value of param from component's own ParameterState.value
+                #    case: request is for the value of a parameter of a Mechanism or Project that has a ParameterState
+                #    example: matrix parameter of a MappingProjection)
+                #    rationale: next most common case
+                #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
+                return self._parameter_states[backing_field[1:]].value
+            except (AttributeError, TypeError):
+                # Get value of param from component's attribute
+                #    case: request is for the value of an attribute for which the component has no ParameterState
+                #    rationale: least common case
+                #    example: parameter of a Function belonging to a state (which don't themselves have ParameterStates)
+                #    note: use backing_field since referencing property rather than item in _parameter_states)
+                return getattr(self, backing_field)
 
     def setter(self, val):
 
-        # # MODIFIED 5/5/17 OLD:
-        # # if self.paramValidationPref and hasattr(self, backing_field):
-        # if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-        #     self._assign_params(request_set={backing_field[1:]:val}, context=SET_ATTRIBUTE)
-
-        # MODIFIED 5/5/17 NEW:
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
             val_str = val.__class__.__name__
             curr_context = SET_ATTRIBUTE + ': ' + val_str + ' for ' + backing_field[1:] + ' of ' + self.name
             self._assign_params(request_set={backing_field[1:]:val}, context=curr_context)
-
-        # MODIFIED 5/5/17 END
-
         else:
             setattr(self, backing_field, val)
-
-        # setattr(self, backing_field, val)
 
         # Update user_params dict with new value
         self.user_params.__additem__(name, val)
 
-        # # MODIFIED 4/20/17 NEW:
-        # # Update parameterState.base_value if there is one
-        # try:
-        #     if name in self.parameterStates:
-        #         self.parameterStates[name].base_value = val
-        #         # self.parameterStates[name].value = val
-        # except AttributeError:
-        #     pass
-        # # MODIFIED 4/20/17 END
-
         # If component is a Function and has an owner, update function_params dict for owner
+        #    also, get parameter_state_owner if one exsits
         from PsyNeuLink.Components.Functions.Function import Function_Base
+        # MODIFIED 6/8/17 OLD:
         if isinstance(self, Function_Base) and self.owner:
             self.owner.function_params.__additem__(name, val)
+        # # MODIFIED 6/8/17 NEW:
+        # if isinstance(self, Function_Base):
+        #     if self.owner:
+        #         self.owner.function_params.__additem__(name, val)
+        #         param_state_owner = self.owner
+        #     else:
+        #         param_state_owner = None
+        # else:
+        #     param_state_owner = self
+        # # If the parameter is associated with a parameter state on the owner
+        # if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
+        #     param_state_owner._parameter_states[name].value = val
+        # MODIFIED 6/8/17 END
 
-            # # MODIFIED 4/20/17 NEW:
-            # # Update base_value of owner's parameterState if there is one
-            # try:
-            #     if name in self.owner.parameterStates:
-            #         self.owner.parameterStates[name].base_value = val
-            #         # self.owner.parameterStates[name].value = val
-            # except AttributeError:
-            #     pass
-            # # MODIFIED 4/20/17 END
 
     # Create the property
     prop = property(getter).setter(setter)
