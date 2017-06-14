@@ -3361,9 +3361,7 @@ class SimpleIntegrator(
     # paramClassDefaults.update({INITIALIZER: variableClassDefault})
     paramClassDefaults.update({
         NOISE: None,
-        RATE: None,
-        # OFFSET: None,
-        # SCALE: None
+        RATE: None
     })
 
     multiplicative_param = RATE
@@ -3595,7 +3593,6 @@ class ConstantIntegrator(
     paramClassDefaults.update({
         NOISE: None,
         RATE: None,
-        SCALE: None,
         OFFSET: None
     })
     
@@ -4321,7 +4318,7 @@ class OrnsteinUhlenbeckIntegrator(
 
     multiplicative_param = RATE
     additive_param = OFFSET
-    
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: variableClassDefault})
     paramClassDefaults.update({
@@ -4441,6 +4438,225 @@ class OrnsteinUhlenbeckIntegrator(
             self.previous_value = value
 
         return adjusted_value
+
+class AccumulatorIntegrator(
+    Integrator):  # --------------------------------------------------------------------------------
+    """
+    ConstantIntegrator(                 \
+        variable_default=None,          \
+        rate=1.0,                       \
+        noise=0.0,                      \
+        scale: parameter_spec = 1.0,    \
+        offset: parameter_spec = 0.0,   \
+        initializer,                    \
+        params=None,                    \
+        owner=None,                     \
+        prefs=None,                     \
+        )
+
+    .. _ConstantIntegrator:
+
+    Integrates prior value by adding `rate <Integrator.rate>` and `noise <Integrator.noise>`. Ignores
+    `variable <Integrator.variable>`).
+
+    `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` +`noise <Integrator.noise>`
+
+    Arguments
+    ---------
+
+    variable_default : number, list or np.array : default variableClassDefault
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float, list or 1d np.array : default 1.0
+        specifies the rate of integration.  If it is a list or array, it must be the same length as
+        `variable <ConstantIntegrator.variable_default>` (see `rate <ConstantIntegrator.rate>` for details).
+
+    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+        specifies random value to be added in each call to `function <ConstantIntegrator.function>`. (see
+        `noise <ConstantIntegrator.noise>` for details).
+
+    initializer float, list or 1d np.array : default 0.0
+        specifies starting value for integration.  If it is a list or array, it must be the same length as
+        `variable_default <ConstantIntegrator.variable_default>` (see `initializer <ConstantIntegrator.initializer>` for details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        **Ignored** by the ConstantIntegrator function. Refer to SimpleIntegrator or AdaptiveIntegrator for integrator
+         functions that depend on both a prior value and a new value (variable).
+
+    rate : float or 1d np.array
+        determines the rate of integration.
+
+        If it has a single element, that element is added to each element of
+        `previous_value <ConstantIntegrator.previous_value>`.
+
+        If it has more than one element, each element is added to the corresponding element of
+        `previous_value <ConstantIntegrator.previous_value>`.
+
+    noise : float, function, list, or 1d np.array
+        specifies random value to be added in each call to `function <ConstantIntegrator.function>`.
+
+        If noise is a list or array, it must be the same length as `variable <ConstantIntegrator.variable_default>`.
+
+        If noise is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is a list or array,
+        noise will be applied to each variable element. In the case of a noise function, this means that the function
+        will be executed separately for each variable element.
+
+        **Note:**
+        In order to generate random noise, we recommend selecting a probability distribution function
+        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+        its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
+        the noise will simply be an offset that remains the same across all executions.
+
+    initializer : float, 1d np.array or list
+        determines the starting value for integration (i.e., the value to which
+        `previous_value <ConstantIntegrator.previous_value>` is set.
+
+        If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.variable_default>`.
+
+        TBI:
+
+        Initializer may be a function or list/array of functions.
+
+        If initializer is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is
+        a list or array, initializer will be applied to each variable element. In the case of an initializer function,
+        this means that the function will be executed separately for each variable element.
+
+    previous_value : 1d np.array : default variableClassDefault
+        stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
+        added.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    """
+
+    componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
+
+    variableClassDefault = [[0]]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    # paramClassDefaults.update({INITIALIZER: variableClassDefault})
+    paramClassDefaults.update({
+        NOISE: None,
+        RATE: None,
+    })
+
+    # multiplicative param does not make sense in this case
+    multiplicative_param = RATE
+    additive_param = INCREMENT
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=None,
+                 # rate: parameter_spec = 1.0,
+                 rate=0.0,
+                 noise=0.0,
+                 increment = 0.0,
+                 initializer=variableClassDefault,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context="ConstantIntegrator Init"):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  initializer=initializer,
+                                                  noise=noise,
+                                                  increment = increment,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.variable = self.initializer
+
+        self.auto_dependent = True
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """
+        Return: `previous_value <ConstantIntegrator.previous_value>` combined with `rate <ConstantIntegrator.rate>` and
+        `noise <ConstantIntegrator.noise>`.
+
+        Arguments
+        ---------
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        updated value of integral : 2d np.array
+
+        """
+        self._check_args(variable=variable, params=params, context=context)
+
+        rate = np.array(self.rate).astype(float)
+        increment = self.increment
+
+        # if noise is a function, execute it
+        if self.noise_function:
+            if isinstance(self.noise, (np.ndarray, list)):
+                noise = list(map(lambda x: x(), self.noise))
+            else:
+                noise = self.noise()
+        else:
+            noise = self.noise
+
+        # TBI: execute initializer function if self.initializer_function == True
+
+        # try:
+        #     previous_value = params[INITIALIZER]
+        # except (TypeError, KeyError):
+        previous_value = self.previous_value
+
+        previous_value = np.atleast_2d(self.variable)
+
+        value = previous_value*rate + noise + increment
+
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if not context or not INITIALIZING in context:
+            self.variable = value
+
+        return value
+
+
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
