@@ -10,7 +10,7 @@ from PsyNeuLink.Globals.Keywords import *
 #                 owner=DDM,
 #                 verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
 #                 reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
-#                 functionRuntimeParams_pref=PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY),
+#                 functionRuntimeParams_pref=PreferenceEntry(Modulation.OVERRIDE,PreferenceLevel.CATEGORY),
 #                 name='Reassigned'
 
 DDM_prefs = ComponentPreferenceSet(
@@ -19,7 +19,7 @@ DDM_prefs = ComponentPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(False,PreferenceLevel.SYSTEM),
-                    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
+                    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.OVERRIDE,PreferenceLevel.CATEGORY)})
 
 
 DDM_prefs.verbosePref = PreferenceEntry(True,PreferenceLevel.INSTANCE)
@@ -36,7 +36,7 @@ DDM_prefs2 = ComponentPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.SYSTEM),
-                    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.INSTANCE)})
+                    kpRuntimeParamModulationPref: PreferenceEntry(Modulation.OVERRIDE,PreferenceLevel.INSTANCE)})
 
 my_DDM = DDM(name='my_DDM')
 my_DDM.prefs = DDM_prefs
@@ -111,9 +111,9 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_PROJECTION),
 #                                            {
 #                                                # INPUT_STATE_PARAMS:{},
 #                                                PARAMETER_STATE_PARAMS:
-#                                                    {PARAMETER_MODULATION_OPERATION: ModulationOperation.MULTIPLY, # B
+#                                                    {PARAMETER_MODULATION_OPERATION: Modulation.MULTIPLY, # B
 #                                                     DRIFT_RATE:(30.0,
-#                                                                      ModulationOperation.MULTIPLY), # C
+#                                                                      Modulation.MULTIPLY), # C
 #                                                     THRESHOLD:20.0,
 #                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.OFFSET: 100}, # A
@@ -125,9 +125,9 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_PROJECTION),
 #                                            {
 #                                                # INPUT_STATE_PARAMS:{},
 #                                                PARAMETER_STATE_PARAMS:
-#                                                    {PARAMETER_MODULATION_OPERATION: ModulationOperation.MULTIPLY, # B
+#                                                    {PARAMETER_MODULATION_OPERATION: Modulation.MULTIPLY, # B
 #                                                     DRIFT_RATE:(30.0,
-#                                                                      ModulationOperation.MULTIPLY), # C
+#                                                                      Modulation.MULTIPLY), # C
 #                                                     THRESHOLD:20.0,
 #                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.OFFSET: 100}, # A

@@ -124,7 +124,7 @@ COMMENT:
     - No parameterState is created for parameters that are:
        assigned a non-numeric value (including None, NotImplemented, False or True)
           unless it is:
-              a tuple (could be one specifying ControlProjection, LearningProjection or ModulationOperation)
+              a tuple (could be one specifying ControlProjection, LearningProjection or Modulation)
               a dict with an entry with the key FUNCTION_PARAMS and a value that is a dict (otherwise exclude)
        a function
            IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
@@ -218,12 +218,12 @@ parameter for which it is responsible (as shown in the `figure <ParameterState_F
 * `parameterModulationOperation <ParameterState.parameterModulationOperation>`: this determines how the
   result of the parameterState's `function <ParameterState.function>` (the aggregated values of the projections it
   receives) is combined with its `base_value <ParameterState.base_value>` to generate the value of the parameter
-  for which it is responsible.  This must be a value of `ModulationOperation`.  It can be specified in either
+  for which it is responsible.  This must be a value of `Modulation`.  It can be specified in either
   the **parameter_modulation_operation** argument of the parameterState's constructor, or in a 
   PARAMETER_MODULATION_OPERATION entry of a `parameter dictionary <ParameterState_Specifying_Parameters>` in 
   either the **params** argument of the parameterState's constructor or within a PARAMETER_STATE_PARAMS 
   dictionary in a `runtime specification <ParameterState_Runtime_Parameters>`. The default is value is
-  `ModulationOperation.PRODUCT`, which multiples the parameterState's `base_value <ParameterState.base_value>` by the 
+  `Modulation.PRODUCT`, which multiples the parameterState's `base_value <ParameterState.base_value>` by the 
   aggregated value of the result of the parameterState's `function <ParameterState.function>` to determine the value 
   of the parameter.
 
@@ -266,7 +266,7 @@ parameter's value.
        will also be determined by the value of the ControlProjection to its parameterState;  that will be combined
        with its `base_value <ParameterState.base_value>` using the
        `parameterModulationOperation <ParameterState.parameterModulationOperation>`
-       specified for the mechanism (``ModulationOperation.SUM``, shown in green, and labeled "C" in the figure). If
+       specified for the mechanism (``Modulation.SUM``, shown in green, and labeled "C" in the figure). If
        there had been more than one ControlProjection specified, their values would have been combined using the
        parameterState's `function <ParameterState.function>` (lableled "B" in the figure), before combining the result
        with the
@@ -283,7 +283,7 @@ When this occurs, the parameterState executes any `ControlProjections` and/or `L
 calls its `function <ParameterState.function>` to aggregate their values.  It then combines the result with the
 parameterState's `base_value <ParameterState.base_value>` using its
 `parameterModulationOperation <ParameterState.parameterModulationOperation>` attribute, combines the result with any 
-`runtime specification <ParameterState_Runtime_Parameters>` for the parameter using the `ModulationOperation` 
+`runtime specification <ParameterState_Runtime_Parameters>` for the parameter using the `Modulation` 
 specified for runtime parameters, and finally assigns the result as the `value <ParameterState.value>` of the 
 parameterState.  This is used as the value of the parameter for which the parameterState is responsible.
 
@@ -351,12 +351,12 @@ The figure below shows how runtime paramter specification combines the others wa
        | E (red)      | combined projection values modulate ``base_value``                  |
        +--------------+--------------------------------------------------------------------+
        
-       * 1st example:  param_x is given a runtime value (violet) but no runtime ModulationOperation;
-         param_y is given a runtime value (violet) and also a runtime ModulationOperation (red);
+       * 1st example:  param_x is given a runtime value (violet) but no runtime Modulation;
+         param_y is given a runtime value (violet) and also a runtime Modulation (red);
         the parameterState's parameterModulationOperation is set to MULTIPLY (green).
        ..
-       * 2nd example:  param_x is given a runtime value (violet) and also a runtime ModulationOperation (red);
-         param_y is given a runtime value (violet) but no runtime ModulationOperation;
+       * 2nd example:  param_x is given a runtime value (violet) and also a runtime Modulation (red);
+         param_y is given a runtime value (violet) but no runtime Modulation;
          the parameterState's parameterModulationOperation is set to SUM (green)
 
        COMMENT:
@@ -391,7 +391,7 @@ class ParameterState(State_Base):
     reference_value=None                                         \
     value=None,                                                  \
     function=LinearCombination(operation=PRODUCT),               \
-    parameter_modulation_operation=ModulationOperation.MULTIPLY, \
+    parameter_modulation_operation=Modulation.MULTIPLY, \
     params=None,                                                 \
     name=None,                                                   \
     prefs=None)
@@ -415,7 +415,7 @@ class ParameterState(State_Base):
                 + FUNCTION (LinearCombination)
                 + FUNCTION_PARAMS  (Operation.PRODUCT)
                 + PROJECTION_TYPE (CONTROL_PROJECTION)
-                + PARAMETER_MODULATION_OPERATION   (ModulationOperation.MULTIPLY)
+                + PARAMETER_MODULATION_OPERATION   (Modulation.MULTIPLY)
             + paramNames (dict)
 
         Class methods
@@ -452,7 +452,7 @@ class ParameterState(State_Base):
         specifies the function used to aggregate the values of the projections received by the parameterState.
         It must produce a result that has the same format (number and type of elements) as its input.
 
-    parameter_modulation_operation : ModulationOperation : default ModulationOperation.MULTIPLY
+    parameter_modulation_operation : Modulation : default Modulation.MULTIPLY
         specifies the operation by which the values of the projections received by the parameterState are used
         to modify its `base_value <ParameterState.base_value>` before assigning it as the value of the parameter for
         which the parameterState is responsible.
@@ -497,7 +497,7 @@ class ParameterState(State_Base):
         receives using its `parameterModulationOperation <ParameterState.parameterModulationOperation>`
         and then assigned to `value <ParameterState.value>`.
 
-    parameterModulationOperation : ModulationOperation : default ModulationOperation.PRODUCT
+    parameterModulationOperation : Modulation : default Modulation.PRODUCT
         the arithmetic operation used to combine the aggregated value of any projections is receives
         (the result of the parameterState's `function <ParameterState.function>`) with its
         `base_value <ParameterState.base_value>`, the result of which is assigned to `value <ParameterState.value>`.
@@ -554,7 +554,7 @@ class ParameterState(State_Base):
                  reference_value=None,
                  variable=None,
                  function=LinearCombination(operation=PRODUCT),
-                 parameter_modulation_operation=ModulationOperation.MULTIPLY,
+                 parameter_modulation_operation=Modulation.MULTIPLY,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -612,7 +612,7 @@ class ParameterState(State_Base):
         #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
         if self.name == MATRIX:
             # IMPLEMENT / TEST: 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING PROJECTION
-            self.params[PARAMETER_MODULATION_OPERATION] = ModulationOperation.ADD
+            self.params[PARAMETER_MODULATION_OPERATION] = Modulation.ADD
 
         super()._instantiate_function(context=context)
 
@@ -654,8 +654,8 @@ class ParameterState(State_Base):
         # FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
         #region COMBINE PROJECTIONS INPUT WITH BASE PARAM VALUE
         try:
-            # Check whether ModulationOperation for projections has been specified at runtime
-            # Note: this is distinct from ModulationOperation for runtime parameter (handled below)
+            # Check whether Modulation for projections has been specified at runtime
+            # Note: this is distinct from Modulation for runtime parameter (handled below)
             self.parameterModulationOperation = self.stateParams[PARAMETER_MODULATION_OPERATION]
         except (KeyError, TypeError):
             # If not, try to get from params (possibly passed from projection to ParameterState)
@@ -685,13 +685,13 @@ class ParameterState(State_Base):
 
         #region APPLY RUNTIME PARAM VALUES
         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
-        if (not self.stateParams or self.prefs.runtimeParamModulationPref is ModulationOperation.DISABLED):
+        if (not self.stateParams or self.prefs.runtimeParamModulationPref is Modulation.DISABLED):
             return
 
         # Assign class-level pref as default operation
         default_operation = self.prefs.runtimeParamModulationPref
 
-        # If there is a runtime param specified, could be a (parameter value, ModulationOperation) tuple
+        # If there is a runtime param specified, could be a (parameter value, Modulation) tuple
         try:
             value, operation = self.stateParams[self.name]
 
@@ -703,7 +703,7 @@ class ParameterState(State_Base):
             # If single ("exposed") value, use default_operation (class-level runtimeParamModulationPref)
             self.value = default_operation(self.stateParams[self.name], self.value)
         else:
-            # If tuple, use param-specific ModulationOperation as operation
+            # If tuple, use param-specific Modulation as operation
             self.value = operation(value, self.value)
 
         #endregion
@@ -799,7 +799,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         parameterState that already exists (e.g., in case of call from Component.assign_params)
         non-numeric value (including None, NotImplemented, False or True)
             unless it is:
-                a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
+                a tuple (could be on specifying ControlProjection, LearningProjection or Modulation)
                 a dict with the name FUNCTION_PARAMS (otherwise exclude)
         function or method
             IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
@@ -837,7 +837,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             pass
         else:
             return
-    # Allow tuples (could be spec that includes a projection or ModulationOperation)
+    # Allow tuples (could be spec that includes a projection or Modulation)
     elif isinstance(param_value, tuple):
         # # MODIFIED 4/18/17 NEW:
         # # FIX: EXTRACT VALUE HERE (AS IN Component.__init__?? [4/18/17]

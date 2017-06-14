@@ -180,7 +180,7 @@
 
 # SEARCH & REPLACE: allocation_policy -> control_policy (AND ALL VARIANTS THEREOF)
 # SEARCH & REPLACE: base_value -> base_value
-# SEARCH & REPLACE: ModulationOperation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
+# SEARCH & REPLACE: Modulation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
 # SEARCH & REPLACE: monitored_values -> monitor_values
 
 # FIX State:
@@ -197,8 +197,13 @@
 
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
 #
+# IMPLEMENT: Override input_states and output_states properties with assignments to:
+#                monitored_values (for input_states of ObjectiveMechanism)
+#                control_signals (for output_states of ControlMechanism)
+#                gating_signals (for output_states of GatingMechanism)
 # IMPLEMENT:  **gating** arg for GatingMechanism (comparable to **control** arg for ControlMechanism)
 # IMPLEMENT:  **train** arg for LearningMechanism (comparable to **control** arg for ControlMechanism)
+# FIX: check for duplicate names (using state Registry) and/or states (as at end of _parse_gating_signal_spec)
 # FIX: base_value assignment problem: ??WHY IS ASSIGNMENT TO <component>.function_object.<param>
 # FIX:      NOT UPDATING <component>._parameter_states[PARAM].base_value?
 #             Mechanism._instantiate_function (~LINE 1355):
@@ -285,17 +290,59 @@
 # ------------------------------------------------------------------------------------------------------------------
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
+# FIX: MODIFY ControlProjections and LearningProjections TO FUNCTION LIKE GatingProjections:
+# FIX:        - CHANGE control_signal -> modulatory_signal_params (AS for GatingProjection)
+# FIX:                    (AND WHERE REFERENCED (??AS control_signal_specs??) IN ControlSignal AND ControlMechanism)
+# FIX:                    DO THE SAME FOR LearningProjection
+# FIX:        - ControlMechanism AND LearningMechanism SHOULD IMPLEMENT modulation PARAM,
+# FIX:                    THAT TAKES VALUE OF ModulationParam AS VALUE
+# FIX:        - State._instantiate_projections_to_state:
+# FIX:                    Assign ControlProjections and LearningProjections to mod_afferents (like GatingProjections)
+# FIX:        - State.update:
+# FIX:                    ControlProjection LearningProjection values SHOULD MODIFY PARAMETER OF STATE'S FUNCTION
+# FIX:                          BASED ON THEIR modulation PARAMETER
+# FIX: Specification of modulation for GatingSignal:
+#             - modualtion_operation -> modulation
+#             - add attribute to GatingMechanism, used as default for all GatingSignals unless individually specified
+#             - DOCUMENT that to specify for individual GatingSignals, need to use specification dictionary format,
+#                  and specify it in a MODULATION entry of the PARAMS dict
+# FIX: ADD "GATING" KEYWORD and GatingSignal CLASS TO INPUT_STATE TUPLE SPECIFICATION,
+#     WHICH SHOULD INSTANTIATE A DEFERRED_INIT GatingProjection (JUST LIKE A ControlProjection)
+# FIX: MAKE ControlSignal stateful (since its last_allocation attribute pertains to a prior state)
+# FIX: DEAL WITH DEPENDENCY OF costFunctionNames: referenced in ControlSignal but defined in EVCMechanism
+# IMPLEMENT: Support for multiple GatingProjections from a single GatingSignal
 # IMPLEMENT: Abstract modulatory projection in AdaptiveMechanism
 #                - using _instantiate_output_states and _instantiate_projections
 #                - should parallel implementation of input_states and monitored_values in ObjectiveMechanism
 # SEARCH & REPLACE: monitored_values -> monitor_values
-# IMPLEMENT: modulation_operation FOR ModulatoryProjections
-#            function_type or method_type SPECIFICATION IN ADDITION TO ModulationOperation FOR modulation_operation
+# IMPLEMENT: modulation FOR ModulatoryProjections
+#            function_type or method_type SPECIFICATION IN ADDITION TO Modulation FOR modulation
 #                 parameter of ModulatoryFunctions
-# IMPLEMENT: additive and multiplicative ATTRIBUTES FOR TransferFunctions (REQIURE THESE, AND DOCUMENT FOR TransferFct)
+# IMPLEMENT: modualtion_operation For ControlSignal, that assigns its value to its ControlProjection
 # IMPLEMENT: CONSTRAINT ON STATE FUNCTIONS TO BE A TransferFunction
+# DOCUMENTATION:
+#   *** PUT IN InputState AND OutputState DOCUMENTATION
+#
+#   Gating can be also be specified for an `InputState` or `OutputState` when it is created
+#     in any of the following ways:
+#
+#     * in a 2-item tuple, in which the first item is a `state specification <LINK>`,
+#       and the second item is a `gating specification <>`
+#
+#     * keywords GATE (==GATE_PRIMARY) GATE_ALL, GATE_PRIMARY
+#         or an entry in the state specification dictionary with the key "GATING", and a value that is the
+#         keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOperation value, GatingProjection, or its constructor
+#
+# DOCUMENTATION: ModulatoryMechanism: describe how they work, i.e., that they assign the value of their
+#                  outputState to the paraemter of the state's function specified in their modulation param
+# DOCUMENTATION: GatingSignal (per ControlSignal) -- describe modulation in both
+# DOCUMENTATION: Various forms of specification;  if Mechainsm: assume primary InputState
 # DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction
-# DOCUMENTATION: UPDATE ParameterState_Parameter_Modulation_Operation WITH REFACTORING OF modulation_operation arg/param
+# DOCUMENTATION: UPDATE ParameterState_Parameter_Modulation_Operation WITH REFACTORING OF modulation arg/param
+# DOCUMENTATION: UPDATE ControlSignal to describe modulation attribute (as in GatingSignal)
+# DOCUMENTATION: ADD ENTRIES FOR variable, function, vaue, params, name and prefs to GatingMechanism and ControlMechaism
+# FIX: State.update(): THERE *MUST* BE A MORE EFFICIENT WAY OF DOING ALL OF THIS (INCLUDING DEALING WITH stateParams)
+# FIX:           MODIFY ParameterState and LearningProjection so that latter projects to mod_afferents (vs. afferents)
 # FIX: is_param_spec to allow tuple with projection specification in it TO PASS TYPECHECK
 # FIX: PARSING OF input_state AND output_state ARGS IN Mechanism CONSTRUCTORS:
 # FIX:    * input_states arg crashes
@@ -308,7 +355,7 @@
 #               (??and change reference to it in DOCS from "primary" to "results" outputState
 #         * create sets of input_states and outputStates either at top of module or in class (below paramClassDefaults)
 #         * parse input_state and output_state specs for duplicate names or entries, and update dicts accordingly
-#              (so that default versions can be modified, not just added to -- seee Mechanism._filter_params
+#              (so that default versions can be modified, not just added to -- see Mechanism._filter_params
 #         * implement GatingProjection spec:  can be only value for input_state or output_state arg,
 #              with keywords GATE (==GATE_PRIMARY) GATE_ALL, GATE_PRIMARY
 #              or an entry in the state specification dictionary with the key "GATING", and a value that is the
@@ -330,6 +377,9 @@
 #             instantiate_output_state (context = None or SET_ATTRIBUTE)
 #             setter (context => SET_ATTRIBUTE)…
 #             assign_params (context = SET_ATTRIBUTE)
+
+# IMPLEMENT: Consolidate State._parse_state_spec and GatingSignal._parse_gating_signal_spec;
+#              include arg that specifies keywords to look for in dicts
 
 # FIX: REPLACE: kwConstants must == arg names
 # IMPLEMENT: NAME FOR FUNCTIONS (INCLUDING REGISTRY?)
@@ -677,7 +727,7 @@
 #     - exclude if it is:
 #        assigned a non-numeric value (including None, NotImplemented, False or True)
 #           unless it is:
-#               a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
+#               a tuple (could be on specifying ControlProjection, LearningProjection or Modulation)
 #               a dict with the name FUNCTION_PARAMS (otherwise exclude)
 #        a function
 #            IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
@@ -1547,8 +1597,8 @@
 # DOCUMENT: change comment in DDM re: FUNCTION_RUN_TIME_PARAM
 # DOCUMENT: Change to InputState, OutputState re: owner vs. ownerValue
 # DOCUMENT: use of runtime params, including:
-#                  - specification of value (exposed or as tuple with ModulationOperation
-#                  - role of  RuntimeParamModulationPref / ModulationOperation
+#                  - specification of value (exposed or as tuple with Modulation
+#                  - role of  RuntimeParamModulationPref / Modulation
 # DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlProjection CREATES A NEW outputState FOR DefaultController
 #                                AND A NEW inputState TO GO WITH IT
 #                                UPDATES VARIABLE OF owner TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
@@ -1607,7 +1657,7 @@
 #                     prefs = {
 #                         kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
 #                         kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
-#                         kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
+#                         kpRuntimeParamModulationPref: PreferenceEntry(Modulation.OVERRIDE,PreferenceLevel.CATEGORY)})
 #
 # FIX: SOLUTION TO ALL OF THE ABOVE:  CHANGE LOG PREF TO LIST OF KW ENTRIES RATHER THAN BOOL COMBOS (SEE LOG)
 # FIX: Problems validating LogEntry / Enums:

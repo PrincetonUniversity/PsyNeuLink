@@ -4,7 +4,7 @@ import pytest
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Functions.Function import Integrator
-# from PsyNeuLink.Components.Functions.Function import FunctionError
+from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Globals.Keywords import ADAPTIVE, CONSTANT, DIFFUSION, SIMPLE
 from PsyNeuLink.Globals.TimeScale import TimeScale
 
@@ -289,75 +289,75 @@ def test_integrator_type_diffusion_rate_float():
     assert val == 50.0
 
 # ------------------------------------------------------------------------------------------------
-# # TEST 4
-# # rate = list, integration_type = simple
+# TEST 4
+# rate = list, integration_type = simple
 
 
-# def test_integrator_type_simple_rate_list():
-#     I = IntegratorMechanism(
-#         name='IntegratorMechanism',
-#         default_input_value=[0, 0, 0],
-#         function=Integrator(
-#             integration_type=SIMPLE,
-#             rate=[5.0, 5.0, 5.0]
-#         )
-#     )
-#     P = process(pathway=[I])
-#     val = list(P.execute([10.0, 10.0, 10.0]))
-#     assert val == [50.0, 50.0, 50.0]
-# # ------------------------------------------------------------------------------------------------
-# # TEST 5
-# # rate = list, integration_type = constant
+def test_integrator_type_simple_rate_list():
+    I = IntegratorMechanism(
+        name='IntegratorMechanism',
+        default_input_value=[0, 0, 0],
+        function=Integrator(
+            integration_type=SIMPLE,
+            rate=[5.0, 5.0, 5.0]
+        )
+    )
+    P = process(pathway=[I])
+    val = list(P.execute([10.0, 10.0, 10.0]))
+    assert val == [50.0, 50.0, 50.0]
+# ------------------------------------------------------------------------------------------------
+# TEST 5
+# rate = list, integration_type = constant
 
 
-# def test_integrator_type_constant_rate_list():
-#     I = IntegratorMechanism(
-#         default_input_value=[0, 0, 0],
-#         name='IntegratorMechanism',
-#         function=Integrator(
-#             integration_type=CONSTANT,
-#             rate=[5.0, 5.0, 5.0]
-#         )
-#     )
-#     P = process(pathway=[I])
-#     val = list(P.execute([10.0, 10.0, 10.0]))
-#     assert val == [5.0, 5.0, 5.0]
+def test_integrator_type_constant_rate_list():
+    I = IntegratorMechanism(
+        default_input_value=[0, 0, 0],
+        name='IntegratorMechanism',
+        function=Integrator(
+            integration_type=CONSTANT,
+            rate=[5.0, 5.0, 5.0]
+        )
+    )
+    P = process(pathway=[I])
+    val = list(P.execute([10.0, 10.0, 10.0]))
+    assert val == [5.0, 5.0, 5.0]
 
-# # ------------------------------------------------------------------------------------------------
-# # TEST 6
-# # rate = list, integration_type = diffusion
-
-
-# def test_integrator_type_diffusion_rate_list():
-#     I = IntegratorMechanism(
-#         default_input_value=[0, 0, 0],
-#         name='IntegratorMechanism',
-#         function=Integrator(
-#             integration_type=DIFFUSION,
-#             rate=[5.0, 5.0, 5.0]
-#         )
-#     )
-#     P = process(pathway=[I])
-#     val = list(P.execute([10.0, 10.0, 10.0]))
-#     assert val == [50.0, 50.0, 50.0]
-
-# # ------------------------------------------------------------------------------------------------
-# # TEST 7
-# # rate = list, integration_type = diffusion
+# ------------------------------------------------------------------------------------------------
+# TEST 6
+# rate = list, integration_type = diffusion
 
 
-# def test_integrator_type_adaptive_rate_list():
-#     I = IntegratorMechanism(
-#         default_input_value=[0, 0, 0],
-#         name='IntegratorMechanism',
-#         function=Integrator(
-#             integration_type=ADAPTIVE,
-#             rate=[0.5, 0.5, 0.5]
-#         )
-#     )
-#     P = process(pathway=[I])
-#     val = list(P.execute([10.0, 10.0, 10.0]))
-#     assert val == [5.0, 5.0, 5.0]
+def test_integrator_type_diffusion_rate_list():
+    I = IntegratorMechanism(
+        default_input_value=[0, 0, 0],
+        name='IntegratorMechanism',
+        function=Integrator(
+            integration_type=DIFFUSION,
+            rate=[5.0, 5.0, 5.0]
+        )
+    )
+    P = process(pathway=[I])
+    val = list(P.execute([10.0, 10.0, 10.0]))
+    assert val == [50.0, 50.0, 50.0]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 7
+# rate = list, integration_type = diffusion
+
+
+def test_integrator_type_adaptive_rate_list():
+    I = IntegratorMechanism(
+        default_input_value=[0, 0, 0],
+        name='IntegratorMechanism',
+        function=Integrator(
+            integration_type=ADAPTIVE,
+            rate=[0.5, 0.5, 0.5]
+        )
+    )
+    P = process(pathway=[I])
+    val = list(P.execute([10.0, 10.0, 10.0]))
+    assert val == [5.0, 5.0, 5.0]
 
 # ------------------------------------------------------------------------------------------------
 # TEST 8
@@ -404,64 +404,64 @@ def test_integrator_type_adaptive_rate_float():
 # integration_type = SIMPLE
 
 
-# def test_integrator_type_simple_rate_list_input_float():
-#     with pytest.raises(FunctionError) as error_text:
-#         I = IntegratorMechanism(
-#             name='IntegratorMechanism',
-#             function=Integrator(
-#                 integration_type=SIMPLE,
-#                 rate=[5.0, 5.0, 5.0]
-#             )
-#         )
-#         P = process(pathway=[I])
-#         float(P.execute(10.0))
-#     assert (
-#         "array specified for the rate parameter" in str(error_text)
-#         and "must match the length" in str(error_text)
-#         and "of the default input" in str(error_text)
-#     )
-# # ------------------------------------------------------------------------------------------------
-# # TEST 2
-# # rate = list of length > default length
-# # integration_type = CONSTANT
+def test_integrator_type_simple_rate_list_input_float():
+    with pytest.raises(FunctionError) as error_text:
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=Integrator(
+                integration_type=SIMPLE,
+                rate=[5.0, 5.0, 5.0]
+            )
+        )
+        P = process(pathway=[I])
+        float(P.execute(10.0))
+    assert (
+        "array specified for the rate parameter" in str(error_text)
+        and "must match the length" in str(error_text)
+        and "of the default input" in str(error_text)
+    )
+# ------------------------------------------------------------------------------------------------
+# TEST 2
+# rate = list of length > default length
+# integration_type = CONSTANT
 
 
-# def test_integrator_type_constant_rate_list_input_float():
-#     with pytest.raises(FunctionError) as error_text:
-#         I = IntegratorMechanism(
-#             name='IntegratorMechanism',
-#             function=Integrator(
-#                 integration_type=CONSTANT,
-#                 rate=[5.0, 5.0, 5.0]
-#             )
-#         )
-#         P = process(pathway=[I])
-#         float(P.execute(10.0))
-#     assert (
-#         "array specified for the rate parameter" in str(error_text)
-#         and "must match the length" in str(error_text)
-#         and "of the default input" in str(error_text)
-#     )
+def test_integrator_type_constant_rate_list_input_float():
+    with pytest.raises(FunctionError) as error_text:
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=Integrator(
+                integration_type=CONSTANT,
+                rate=[5.0, 5.0, 5.0]
+            )
+        )
+        P = process(pathway=[I])
+        float(P.execute(10.0))
+    assert (
+        "array specified for the rate parameter" in str(error_text)
+        and "must match the length" in str(error_text)
+        and "of the default input" in str(error_text)
+    )
 
-# # ------------------------------------------------------------------------------------------------
-# # TEST 3
-# # rate = list of length > default length
-# # integration_type = DIFFUSION
+# ------------------------------------------------------------------------------------------------
+# TEST 3
+# rate = list of length > default length
+# integration_type = DIFFUSION
 
 
-# def test_integrator_type_diffusion_rate_list_input_float():
-#     with pytest.raises(FunctionError) as error_text:
-#         I = IntegratorMechanism(
-#             name='IntegratorMechanism',
-#             function=Integrator(
-#                 integration_type=DIFFUSION,
-#                 rate=[5.0, 5.0, 5.0]
-#             )
-#         )
-#         P = process(pathway=[I])
-#         float(P.execute(10.0))
-#     assert (
-#         "array specified for the rate parameter" in str(error_text)
-#         and "must match the length" in str(error_text)
-#         and "of the default input" in str(error_text)
-#     )
+def test_integrator_type_diffusion_rate_list_input_float():
+    with pytest.raises(FunctionError) as error_text:
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=Integrator(
+                integration_type=DIFFUSION,
+                rate=[5.0, 5.0, 5.0]
+            )
+        )
+        P = process(pathway=[I])
+        float(P.execute(10.0))
+    assert (
+        "array specified for the rate parameter" in str(error_text)
+        and "must match the length" in str(error_text)
+        and "of the default input" in str(error_text)
+    )
