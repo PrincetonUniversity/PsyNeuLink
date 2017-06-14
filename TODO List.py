@@ -229,9 +229,11 @@
 #                 # @property
 #                 # def base_value(self):
 
-# IMPLEMENT:  FUNCTION ENTRIES OF STATE SPECIFICATION DICTIONARY
-# IMPLEMENT:  USE STATE_SPECIFATION_DICT TO OVERRIDE MODULATOIN META PARAMS (BY REASSIGNING THEM TO OTHER FCT PARAMS)
-# IMPLEMENT:  MODULATION_PROJECTION ENTRIES OF STATE SPECIFICATION DICTIONARY
+# IMPLEMENT:  FUNCTION ENTRIES OF STATE SPECIFICATION DICTIONARY - SHOULD NOW BE FUNCTIONAL (6/13/17)
+#             TEST BY ASSIGNING INTEGRATION FUNCTION TO InputState and/or OutputState
+# IMPLEMENT:  USE STATE_SPECIFICATION_DICT TO OVERRIDE MODULATION META PARAMS (BY REASSIGNING THEM TO OTHER FCT PARAMS)
+# IMPLEMENT:  MODULATION_PROJECTION ENTRIES OF STATE SPECIFICATION DICTIONARY -
+#                TO ASSIGN MULTIPLE PRJOJECTIONS TO A SINGLE OutputState (e.g, MULTIPLE PROJECTIONS FOR A GatingSignal)
 # IMPLEMENT: standard_output_states for ObjectiveMechanism, LCA, RecurrentTransfer, and Intregrator
 #              (use ones at top of OutputState)
 # IMPLEMENT: Move RecurrentTransfer and LCA calculate functions to standard_output_states
@@ -385,8 +387,11 @@
 # DOCUMENTATION: can instantiate LearningSignal w/o LearningProjections:
 #                    creates a default LearningSignal, along with ERROR output_state
 
+# IMPLEMENT / FIX:  CHANGE LearningProjection BACK TO TRANSMISSIVE PROJECTION (OR A NEW CATEGORY?)
+#                   - Reassign class specification
+#                   - Check for anyplace it is assigned to mod_afferents and move to trans_afferents 
 # IMPLEMENT: OVERRIDE FUNCTIONALITY FOR ModulationParam
-# IMPLEMENT: FUNCTION to specification dict (state's function)
+# IMPLEMENT / TEST: FUNCTION to specification dict (state's function)
 # IMPLEMENT: Hadamard modulation for LinearCombination:
 #                hadamard_offset and hadamard_scale params
 #                applied to result of standard LinearCombination function
