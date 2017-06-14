@@ -3593,12 +3593,12 @@ class ConstantIntegrator(
     paramClassDefaults.update({
         NOISE: None,
         RATE: None,
-        OFFSET: None
+        OFFSET: None,
+        SCALE: None,
     })
-    
-    # multiplicative param does not make sense in this case
-    multiplicative_param = RATE
-    additive_param = OFFSET
+
+    multiplicative_param = SCALE
+    additive_param = RATE
 
     @tc.typecheck
     def __init__(self,
@@ -3607,6 +3607,7 @@ class ConstantIntegrator(
                  rate=0.0,
                  noise=0.0,
                  offset=0.0,
+                 scale = 1.0,
                  initializer=variableClassDefault,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -3617,6 +3618,7 @@ class ConstantIntegrator(
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
+                                                  scale = scale,
                                                   offset=offset,
                                                   params=params)
 
@@ -3664,6 +3666,7 @@ class ConstantIntegrator(
 
         rate = np.array(self.rate).astype(float)
         offset = self.offset
+        scale = self.scale
 
         # if noise is a function, execute it
         if self.noise_function:
@@ -3686,7 +3689,7 @@ class ConstantIntegrator(
         value = previous_value + rate + noise
 
 
-        adjusted_value = value + offset
+        adjusted_value = value*scale + offset
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
