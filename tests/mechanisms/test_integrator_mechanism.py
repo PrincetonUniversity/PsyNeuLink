@@ -610,3 +610,31 @@ def test_integrator_no_function():
     P = process(pathway=[I])
     val = float(P.execute(10))
     assert val == 5
+
+
+# # ------------------------------------------------------------------------------------------------
+# # Test 7
+# # ------------------------------------------------------------------------------------------------
+# #
+# def test_accumulator_integrator():
+#     I = IntegratorMechanism(
+#             function = AccumulatorIntegrator(
+#                 initializer = 10.0,
+#                 rate = 5.0,
+#                 increment= 1.0
+#             )
+#         )
+#     P = process(pathway=[I])
+
+#     # value = previous_value * rate + noise + increment
+#     # step 1:
+#     val = P.execute()
+#     # value = 10.0 * 5.0 + 0 + 1.0
+#     # RETURN 51
+
+#     # step 2:
+#     val2 = P.execute(2000)
+#     # value = 51*5 + 0 + 1.0
+#     # RETURN 256
+#     assert (val, val2) == (51, 256)
+
