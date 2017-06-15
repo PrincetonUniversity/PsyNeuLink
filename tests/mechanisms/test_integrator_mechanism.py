@@ -510,16 +510,16 @@ def test_constant_integrator():
     val = P.execute(20000)
     # value = 10 + 5
     # adjusted_value = 15 + 10
-    # previous_value = 15
+    # previous_value = 25
     # RETURN 25
 
     # step 2:
     val2 = P.execute(70000)
-    # value = 15 + 5
-    # adjusted_value = 20 + 10
-    # previous_value = 20
-    # RETURN 30
-    assert (val, val2) == (25, 30)
+    # value = 25 + 5
+    # adjusted_value = 30 + 10
+    # previous_value = 30
+    # RETURN 40
+    assert (val, val2) == (25, 40)
 
 
 # ------------------------------------------------------------------------------------------------
@@ -584,24 +584,24 @@ def test_ornstein_uhlenbeck_integrator():
     val = P.execute(1)
     # value = 10 + 0.1*10*1*0.5 + 0
     # adjusted_value = 10.5 + 10
-    # previous_value = 10.5
+    # previous_value = 20.5
     # RETURN 20.5
 
     # step 2:
     val2 = P.execute(1)
-    # value = 10.5 + 0.1*10*1*0.5 + 0
-    # adjusted_value = 11 + 10
-    # previous_value = 11
-    # RETURN 21
+    # value = 20.5 + 0.1*10*1*0.5 + 0
+    # adjusted_value = 21 + 10
+    # previous_value = 31
+    # RETURN 31
 
     # step 3:
     val3 = P.execute(1)
-    # value = 11 + 0.1*10*1*0.5 + 0
-    # adjusted_value = 11.5 + 10
-    # previous_value = 11.5
-    # RETURN 21.5
+    # value = 31 + 0.1*10*1*0.5 + 0
+    # adjusted_value = 31.5 + 10
+    # previous_value = 41.5
+    # RETURN 41.5
 
-    assert (val, val2, val3) == (20.5, 21, 21.5)
+    assert (val, val2, val3) == (20.5, 31, 41.5)
 # ------------------------------------------------------------------------------------------------
 # Test 6
 # ------------------------------------------------------------------------------------------------
@@ -610,3 +610,31 @@ def test_integrator_no_function():
     P = process(pathway=[I])
     val = float(P.execute(10))
     assert val == 5
+
+
+# # ------------------------------------------------------------------------------------------------
+# # Test 7
+# # ------------------------------------------------------------------------------------------------
+# #
+# def test_accumulator_integrator():
+#     I = IntegratorMechanism(
+#             function = AccumulatorIntegrator(
+#                 initializer = 10.0,
+#                 rate = 5.0,
+#                 increment= 1.0
+#             )
+#         )
+#     P = process(pathway=[I])
+
+#     # value = previous_value * rate + noise + increment
+#     # step 1:
+#     val = P.execute()
+#     # value = 10.0 * 5.0 + 0 + 1.0
+#     # RETURN 51
+
+#     # step 2:
+#     val2 = P.execute(2000)
+#     # value = 51*5 + 0 + 1.0
+#     # RETURN 256
+#     assert (val, val2) == (51, 256)
+
