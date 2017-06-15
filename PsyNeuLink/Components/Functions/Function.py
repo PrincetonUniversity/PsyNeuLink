@@ -4717,7 +4717,7 @@ class AccumulatorIntegrator(
         # rate = np.array(self.rate).astype(float)
         # increment = self.increment
         if self.rate is None:
-            rate = 0.0
+            rate = 1.0
         else:
             rate = self.rate
         if self.increment is None:
