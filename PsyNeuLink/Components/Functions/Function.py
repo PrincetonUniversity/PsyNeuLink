@@ -3467,7 +3467,7 @@ class SimpleIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.previous_value = value
+            self.previous_value = adjusted_value
 
         return adjusted_value
 
@@ -3694,7 +3694,7 @@ class ConstantIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.previous_value = value
+            self.previous_value = adjusted_value
 
         return adjusted_value
 
@@ -3974,7 +3974,7 @@ class AdaptiveIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.previous_value = value
+            self.previous_value = adjusted_value
 
         return adjusted_value
 
@@ -4203,7 +4203,7 @@ class DriftDiffusionIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.previous_value = value
+            self.previous_value = adjusted_value
 
         return adjusted_value
 
@@ -4438,7 +4438,7 @@ class OrnsteinUhlenbeckIntegrator(
         adjusted_value = value + offset
 
         if not context or not INITIALIZING in context:
-            self.previous_value = value
+            self.previous_value = adjusted_value
 
         return adjusted_value
 
@@ -4564,6 +4564,7 @@ class AccumulatorIntegrator(
     paramClassDefaults.update({
         NOISE: None,
         RATE: None,
+        INCREMENT: None, 
     })
 
     # multiplicative param does not make sense in this case
@@ -4574,14 +4575,14 @@ class AccumulatorIntegrator(
     def __init__(self,
                  variable_default=None,
                  # rate: parameter_spec = 1.0,
-                 rate=0.0,
+                 rate=None,
                  noise=0.0,
-                 increment = 0.0,
+                 increment = None,
                  initializer=variableClassDefault,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context="ConstantIntegrator Init"):
+                 context="AccumulatorIntegrator Init"):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -4590,7 +4591,8 @@ class AccumulatorIntegrator(
                                                   increment = increment,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(
+            # variable_default=variable_default,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -4599,6 +4601,90 @@ class AccumulatorIntegrator(
         self.variable = self.initializer
 
         self.auto_dependent = True
+
+    def _accumulator_check_args(self, params=None, target_set=None, context=None):
+        """validate params and assign any runtime params.
+
+        Called by AccumulatorIntegrator to validate params
+        Validation can be suppressed by turning parameter_validation attribute off
+        target_set is a params dictionary to which params should be assigned;
+           otherwise, they are assigned to paramsCurrent;
+
+        Does the following:
+        - assign runtime params to paramsCurrent
+        - validate params if PARAM_VALIDATION is set
+
+        :param params: (dict) - params to validate
+        :target_set: (dict) - set to which params should be assigned (default: self.paramsCurrent)
+        :return:
+        """
+
+        # PARAMS ------------------------------------------------------------
+
+        # If target_set is not specified, use paramsCurrent
+        if target_set is None:
+            target_set = self.paramsCurrent
+
+        # # MODIFIED 11/27/16 OLD:
+        # # If parameter_validation is set, the function was called with params,
+        # #   and they have changed, then validate requested values and assign to target_set
+        # if self.prefs.paramValidationPref and params and not params is None and not params is target_set:
+        #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
+        #     self._validate_params(request_set=params, target_set=target_set, context=context)
+
+        # If params have been passed, treat as runtime params and assign to paramsCurrent
+        #   (relabel params as runtime_params for clarity)
+        runtime_params = params
+        if runtime_params and runtime_params is not None:
+            for param_name in self.user_params:
+                # Ignore input_states and output_states -- they should not be modified during run
+                # IMPLEMENTATION NOTE:
+                #    FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED:
+                #        At present, assignment of ``function`` as runtime param is not supported
+                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+                if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
+                    continue
+                # If param is specified in runtime_params, then assign it
+                if param_name in runtime_params:
+                    self.paramsCurrent[param_name] = runtime_params[param_name]
+                # Otherwise, (re-)assign to paramInstanceDefaults
+                #    this insures that any params that were assigned as runtime on last execution are reset here
+                #    (unless they have been assigned another runtime value)
+                elif not self.runtimeParamStickyAssignmentPref:
+                    if param_name is FUNCTION_PARAMS:
+                        for function_param in self.function_object.user_params:
+                            self.function_object.paramsCurrent[function_param] = \
+                                self.function_object.paramInstanceDefaults[function_param]
+                        continue
+                    self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
+            self.runtime_params_in_use = True
+
+        # Otherwise, reset paramsCurrent to paramInstanceDefaults
+        elif self.runtime_params_in_use and not self.runtimeParamStickyAssignmentPref:
+            # Can't do the following since function could still be a class ref rather than abound method (see below)
+            # self.paramsCurrent = self.paramInstanceDefaults
+            for param_name in self.user_params:
+                # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+                #    At present, assignment of ``function`` as runtime param is not supported
+                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+                if param_name is FUNCTION:
+                    continue
+                if param_name is FUNCTION_PARAMS:
+                    for function_param in self.function_object.user_params:
+                        self.function_object.paramsCurrent[function_param] = \
+                            self.function_object.paramInstanceDefaults[function_param]
+                    continue
+                self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
+
+            self.runtime_params_in_use = False
+
+        # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
+        if self.prefs.paramValidationPref and params and not params is target_set:
+            self._validate_params(request_set=params, target_set=target_set, context=context)
+
+
 
     def function(self,
                  variable=None,
@@ -4626,11 +4712,18 @@ class AccumulatorIntegrator(
         updated value of integral : 2d np.array
 
         """
-        self._check_args(variable=variable, params=params, context=context)
+        self._accumulator_check_args(params=params, context=context)
 
-        rate = np.array(self.rate).astype(float)
-        increment = self.increment
-
+        # rate = np.array(self.rate).astype(float)
+        # increment = self.increment
+        if self.rate is None:
+            rate = 1.0
+        else:
+            rate = self.rate
+        if self.increment is None:
+            increment = 0.0
+        else:
+            increment = self.increment
         # if noise is a function, execute it
         if self.noise_function:
             if isinstance(self.noise, (np.ndarray, list)):
@@ -4645,7 +4738,6 @@ class AccumulatorIntegrator(
         # try:
         #     previous_value = params[INITIALIZER]
         # except (TypeError, KeyError):
-        previous_value = self.previous_value
 
         previous_value = np.atleast_2d(self.variable)
 
@@ -4656,7 +4748,6 @@ class AccumulatorIntegrator(
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
             self.variable = value
-
         return value
 
 
