@@ -26,7 +26,7 @@ Output_Layer = TransferMechanism(name='Output Layer',
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
-Gating_Mechanism = GatingMechanism(default_gating_policy=0.0,
+Gating_Mechanism = GatingMechanism(default_gating_policy=1.0,
                                    gating_signals=[
                                        Hidden_Layer_1,
                                        Hidden_Layer_2,
@@ -66,17 +66,17 @@ Middle_Weights = MappingProjection(name='Middle Weights',
                                    # matrix=FULL_CONNECTIVITY_MATRIX
                                    # matrix=RANDOM_CONNECTIVITY_MATRIX
                                    # # MODIFIED 6/11/17 OLD:
-                                   #  matrix=Middle_Weights_matrix
-                                   # MODIFIED 6/11/17 NEW:
-                                   matrix={VALUE:Middle_Weights_matrix,
-                                           # FUNCTION:Linear,
-                                           FUNCTION:ConstantIntegrator,
-                                           FUNCTION_PARAMS:{
-                                               INITIALIZER:Middle_Weights_matrix,
-                                               RATE:Middle_Weights_matrix},
-                                           # FUNCTION:ConstantIntegrator(rate=Middle_Weights_matrix)
-                                           # MODULATION:ADDITIVE_PARAM
-                                           }
+                                    matrix=Middle_Weights_matrix
+                                   # # MODIFIED 6/11/17 NEW:
+                                   # matrix={VALUE:Middle_Weights_matrix,
+                                   #         # FUNCTION:Linear,
+                                   #         FUNCTION:ConstantIntegrator,
+                                   #         FUNCTION_PARAMS:{
+                                   #             INITIALIZER:Middle_Weights_matrix,
+                                   #             RATE:Middle_Weights_matrix},
+                                   #         # FUNCTION:ConstantIntegrator(rate=Middle_Weights_matrix)
+                                   #         # MODULATION:ADDITIVE_PARAM
+                                   #         }
                                    # MODIFIED 6/11/17 END:
                                    )
 
@@ -130,7 +130,7 @@ g = process(default_input_value=[1.0],
 # stim_list = {Input_Layer:[[-1, 30]]}
 # stim_list = {Input_Layer:[[-1, 30]]}
 stim_list = {Input_Layer:[[-1, 30]],
-             Gating_Mechanism:[1.0]}
+             Gating_Mechanism:[0.0]}
 target_list = {Output_Layer:[[0, 0, 1]]}
 
 
@@ -185,6 +185,7 @@ elif COMPOSITION is SYSTEM:
     x.reportOutputPref = True
     composition = x
 
+    # x.show_graph()
     # x.show_graph(show_learning=True)
 
     # from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism \
