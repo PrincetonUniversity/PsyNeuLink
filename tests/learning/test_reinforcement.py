@@ -96,9 +96,9 @@ def test_reinforcement():
             np.array([0.        , 0.33079135, 0.        ])
         ]))),
         (reward_prediction_weights.matrix, np.array([
-            [1.        , 0.        , 0.            ],
-            [0.        , 3.38417298, 0.            ],
-            [0.        , 0.        , 2.283625      ]
+            [ 1.,          0.,          0.,        ],
+            [ 0.,          3.71496434,  0.,        ],
+            [ 0.,          0.,          2.283625,  ],
         ])),
         (results, [
             [np.array([0., 1., 0.])],

@@ -150,13 +150,6 @@ def test_EVC():
         (RewardPrediction.output_states[0].value, np.array(15.0)),
 
         # --- Decision Mechanism ---
-
-        #   ControlSignal Values
-        #       drift rate
-        (mySystem.controller.control_signals[0].value, np.array(1.0)),
-        #       threshold
-        (mySystem.controller.control_signals[1].value, np.array(1.0)),
-
         #    Output State Values
         #       decision variable
         (Decision.output_states[DECISION_VARIABLE].value, np.array([1.0])),
@@ -467,52 +460,71 @@ def test_EVC_gratton():
         verbose=True,
     )
 
+
 def test_laming_validation_specify_control_signals():
     # Mechanisms:
-    Input = TransferMechanism(name='Input'
-                              )
-    Reward = TransferMechanism(name='Reward',
-                                output_states=[RESULT, MEAN, VARIANCE]
-                               )
-    Decision = DDM(function=BogaczEtAl(drift_rate=1.0,
-                                       threshold=1.0,
-                                       noise=0.5,
-                                       starting_point=0,
-                                       t0=0.45),
-                   output_states=[DECISION_VARIABLE,
-                                  RESPONSE_TIME,
-                                  PROBABILITY_UPPER_THRESHOLD],
-                   name='Decision')
+    Input = TransferMechanism(
+        name='Input'
+    )
+    Reward = TransferMechanism(
+        name='Reward',
+        output_states=[RESULT, MEAN, VARIANCE]
+    )
+    Decision = DDM(
+        function=BogaczEtAl(
+            drift_rate=1.0,
+            threshold=1.0,
+            noise=0.5,
+            starting_point=0,
+            t0=0.45
+        ),
+        output_states=[
+            DECISION_VARIABLE,
+            RESPONSE_TIME,
+            PROBABILITY_UPPER_THRESHOLD
+        ],
+        name='Decision'
+    )
 
     # Processes:
     TaskExecutionProcess = process(
         default_input_value=[0],
         pathway=[Input, IDENTITY_MATRIX, Decision],
-        name='TaskExecutionProcess')
+        name='TaskExecutionProcess'
+    )
 
     RewardProcess = process(
         default_input_value=[0],
         pathway=[Reward],
-        name='RewardProcess')
+        name='RewardProcess'
+    )
 
     # System:
-    mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
-                      controller=EVCMechanism,
-                      enable_controller=True,
-                      monitor_for_control=[Reward,
-                                           Decision.PROBABILITY_UPPER_THRESHOLD,
-                                           (Decision.RESPONSE_TIME, -1, 1)],
-                      control_signals=[(DRIFT_RATE, Decision),
-                                       (THRESHOLD, Decision)],
-                      name='EVC Test System')
+    mySystem = system(
+        processes=[TaskExecutionProcess, RewardProcess],
+        controller=EVCMechanism,
+        enable_controller=True,
+        monitor_for_control=[
+            Reward,
+            Decision.PROBABILITY_UPPER_THRESHOLD,
+            (Decision.RESPONSE_TIME, -1, 1)
+        ],
+        control_signals=[
+            (DRIFT_RATE, Decision),
+            (THRESHOLD, Decision)
+        ],
+        name='EVC Test System'
+    )
     # Stimulus
-    stim_list_dict = {Input: [0.5, 0.123],
-                      Reward: [20, 20]}
+    stim_list_dict = {
+        Input: [0.5, 0.123],
+        Reward: [20, 20]
+    }
 
     # Run system:
-
     mySystem.run(
-        inputs=stim_list_dict)
+        inputs=stim_list_dict
+    )
 
     RewardPrediction = mySystem.executionList[3]
     InputPrediction = mySystem.executionList[4]
@@ -611,3 +623,12 @@ def test_laming_validation_specify_control_signals():
     for i in range(len(expected_output)):
         val, expected = expected_output[i]
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+
+    np.testing.assert_almost_equal(
+        Decision._parameter_states[DRIFT_RATE].value,
+        Decision._parameter_states[DRIFT_RATE].mod_afferents[0].value * Decision._parameter_states[DRIFT_RATE].function_object.value
+    )
+    np.testing.assert_almost_equal(
+        Decision._parameter_states[THRESHOLD].value,
+        Decision._parameter_states[THRESHOLD].mod_afferents[0].value * Decision._parameter_states[THRESHOLD].function_object.value
+    )
