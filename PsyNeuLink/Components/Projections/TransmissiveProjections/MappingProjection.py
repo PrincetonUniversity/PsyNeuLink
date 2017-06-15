@@ -356,9 +356,12 @@ class MappingProjection(TransmissiveProjection_Base):
         # FIX: AS IT IS, OVER-WRITES USER ASSIGNMENT OF FUNCTION IN params dict FOR MappingProjection
         matrix = get_matrix(self._parameter_states[MATRIX].value)
         initial_rate = matrix * 0.0
-        self._parameter_states[MATRIX].function_object = ConstantIntegrator(owner=self._parameter_states[MATRIX],
+
+        self._parameter_states[MATRIX].function_object = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
                                                                             initializer=matrix,
-                                                                            rate=initial_rate)
+                                                                            # rate=initial_rate
+                                                                               )
+
         self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
 
     def _instantiate_receiver(self, context=None):
