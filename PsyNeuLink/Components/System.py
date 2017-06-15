@@ -2759,8 +2759,11 @@ class System_Base(System):
                 for proj in projs:
                     if proj.receiver.owner == rcvr:
                         edge_name = proj.name
-                        edge_shape = proj.matrix.shape
-                        has_learning = proj.has_learning_projection
+                        # edge_shape = proj.matrix.shape
+                        try:
+                            has_learning = proj.has_learning_projection
+                        except AttributeError:
+                            has_learning = None
                 edge_label = edge_name
                 #### CHANGE MADE HERE ###
                 # if rcvr is learning mechanism, draw arrow with learning color
