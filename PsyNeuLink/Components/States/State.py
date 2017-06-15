@@ -1209,8 +1209,9 @@ class State_Base(State):
 
     """
 
-        # GET STATE-SPECIFIC PARAM_SPECS
+        # SET UP -------------------------------------------------------------------------------------------------------
 
+        # Get state-specific param_specs
         try:
             # Get State params
             self.stateParams = params[self.paramsType]
@@ -1220,8 +1221,7 @@ class State_Base(State):
             raise StateError("PROGRAM ERROR: paramsType not specified for {}".format(self.name))
         #endregion
 
-        # FLAG FORMAT OF INPUT
-
+        # Flag format of input
         if isinstance(self.value, numbers.Number):
             # Treat as single real value
             value_is_number = True
@@ -1229,7 +1229,7 @@ class State_Base(State):
             # Treat as vector (list or np.array)
             value_is_number = False
 
-        # AGGREGATE INPUT FROM PROJECTIONS
+        # AGGREGATE INPUT FROM PROJECTIONS -----------------------------------------------------------------------------
 
         # Get type-specific params from PROJECTION_PARAMS
         mapping_params = merge_param_dicts(self.stateParams, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
@@ -1280,11 +1280,9 @@ class State_Base(State):
                                                                                      self.owner.name))
                 continue
 
-            # MODIFIED 6/10/17 OLD: [COMMENTED OUT TO TEST Gating]
             sender_id = sender.owner._execution_id
             if sender_id != self_id:
                 continue
-            # MODIFIED 6/10/17 END
 
             # Only accept projections from a Process to which the owner Mechanism belongs
             if isinstance(sender, ProcessInputState):
@@ -1328,7 +1326,7 @@ class State_Base(State):
                 mod_meta_param, mod_param_name, mod_param_value = _get_modulated_param(self, projection)
                 self._mod_proj_values[mod_meta_param].append(type_match(projection_value, type(mod_param_value)))
 
-        # AGGREGATE ModulatoryProjection VALUES 
+        # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
 
         # For each modulated parameter of the state's function, 
         #    combine any values received from the relevant projections into a single modulation value
@@ -1342,7 +1340,7 @@ class State_Base(State):
                 else:
                     self.stateParams[FUNCTION_PARAMS].update({function_param: aggregated_mod_val})
 
-        # CALL STATE'S function TO GET ITS VALUE
+        # CALL STATE'S function TO GET ITS VALUE  ----------------------------------------------------------------------
         try:
             # pass only function params (which implement the effects of any modulatory projections)
             function_params = self.stateParams[FUNCTION_PARAMS]
@@ -1350,7 +1348,7 @@ class State_Base(State):
             function_params = None
         state_value = self._execute(function_params=function_params, context=context)
 
-        # ASSIGN VALUE
+        # ASSIGN VALUE  ------------------------------------------------------------------------------------------------
 
         # MODIFIED 6/11/17 OLD:
         # # If self.value is a number, convert combined_values back to number
