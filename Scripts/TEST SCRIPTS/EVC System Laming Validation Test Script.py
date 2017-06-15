@@ -23,9 +23,7 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 
 
 # Mechanisms:
-Input = TransferMechanism(name='Input',
-
-                 )
+Input = TransferMechanism(name='Input')
 
 Reward = TransferMechanism(name='Reward',
                  # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
@@ -33,13 +31,20 @@ Reward = TransferMechanism(name='Reward',
                   )
 
 Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear,
-                                                                      control_signal={
+                                                                      control_signal_params={
                                                                           ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)},
                                                                       )),
                                    threshold=(1.0, ControlProjection(function=Linear,
-                                                                     control_signal={
+                                                                     control_signal_params={
                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
                                                                      )),
+                                   # threshold={VALUE: 1.0,
+                                   #            CONTROL_PROJECTION: ControlProjection(function=Linear,
+                                   #                                                  control_signal_params={
+                                   #                                                      ALLOCATION_SAMPLES:
+                                   #                                                          np.arange(0.1, 1.01, 0.3)}
+                                   #                                                  ),
+                                   #            FUNCTION:LinearCombination()},
                                    noise=(0.5),
                                    starting_point=(0),
                                    t0=0.45),
@@ -48,6 +53,15 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                               PROBABILITY_UPPER_THRESHOLD],
                prefs = DDM_prefs,
                name='Decision')
+
+# TEST = Decision._parameter_states[DRIFT_RATE].execute()
+# Decision._parameter_states[DRIFT_RATE].value = 10
+# TEST = Decision._parameter_states[DRIFT_RATE]._execute(function_params={SCALE: 3}, context=None)
+# Decision.function_object.drift_rate = 20
+# TEST = Decision._parameter_states[DRIFT_RATE]._execute(function_params={SCALE: 2}, context=None)
+# Decision.function_object._drift_rate = 30
+# TEST = Decision._parameter_states[DRIFT_RATE]._execute(function_params=None, context=None)
+# TEST
 
 # Processes:
 TaskExecutionProcess = process(
@@ -72,7 +86,7 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   enable_controller=True,
                   monitor_for_control=[Reward,
                                        Decision.PROBABILITY_UPPER_THRESHOLD,
-                                       (Decision.RESPONSE_TIME, -1, 1)],
+                                       (Decision.RESPONSE_TIME, 1, -1)],
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')
@@ -113,13 +127,15 @@ def show_results():
 
     print("\tDecision:")
     print('\t\tControlSignal values:')
-    print ('\t\t\tDrift rate control signal (from EVC): {}'.
+    print ('\t\t\tDrift rate control signal (from EVC): {} / parameter value: {}'.
            # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
-           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision._parameter_states[DRIFT_RATE].value))))))
-    print ('\t\t\tThreshold control signal (from EVC): {}'.
-           format(re.sub('[\[,\],\n]','',str(float(Decision._parameter_states[THRESHOLD].value))),
-                  mySystem.controller.output_states['threshold_ControlSignal'].value,
-                  Decision._parameter_states[THRESHOLD].afferents[0].value
+           format(
+            mySystem.controller.output_states['drift_rate_ControlSignal'].value,
+            re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision._parameter_states[DRIFT_RATE].value))))))
+    print ('\t\t\tThreshold control signal (from EVC): {} / parameter value: {}'.
+           format(mySystem.controller.output_states['threshold_ControlSignal'].value,
+                  re.sub('[\[,\],\n]','',str(float(Decision._parameter_states[THRESHOLD].value)))
+                  # Decision._parameter_states[THRESHOLD].mod_afferents[0].value
                   ))
     print('\t\tOutput:')
     for result in results_for_decision:

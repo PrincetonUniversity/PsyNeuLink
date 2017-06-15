@@ -233,7 +233,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     # IMPLEMENTATION NOTE:  this may be overly restrictive in the context of a system --
     #                       will need to be dealt with in Composition implementation (by examining its learning graph??)
     if any((isinstance(projection, LearningProjection) and not projection is learning_projection) for projection in
-           learning_projection.receiver.afferents):
+           learning_projection.receiver.mod_afferents):
         raise LearningAuxilliaryError("{} can't be assigned as LearningProjection to {} since that already has one.".
                                       format(learning_projection.name, learning_projection.receiver.owner.name))
 
@@ -485,8 +485,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                                      VARIABLE:target_input,
                                                                      # WEIGHT:1
                                                                      }],
-                                                      name="\'{}\' {}".format(lc.activation_mech.name,
-                                                                              COMPARATOR_MECHANISM),
+                                                      name="{} {}".format(lc.activation_mech.name,
+                                                                          COMPARATOR_MECHANISM),
                                                       context=context)
 
             # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism
@@ -541,6 +541,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                      error_signal],
                                            error_source=error_source,
                                            function=learning_function,
+                                           # learning_signals=[lc.activation_mech_projection],
+                                           learning_signals=[learning_projection],
                                            name = lc.activation_mech_projection.name + " " +LEARNING_MECHANISM,
                                            context=context)
 
@@ -563,12 +565,13 @@ def _instantiate_learning_components(learning_projection, context=None):
                       name = lc.activation_mech_output.owner.name + ' to ' + ACTIVATION_OUTPUT,
                       context=context)
 
-    # Assign learning_mechanism as sender of learning_projection and return
-    # Note: learning_projection still has to be assigned to the learning_mechanism's outputState;
-    #       however, this requires that it's variable be assigned (which occurs in the rest of its
-    #       _instantiate_sender method, from which this was called) and that its value be assigned
-    #       (which occurs in its _instantiate_function method).
-    learning_projection.sender = learning_mechanism.output_state
+    # IMPLEMENTATION NOTE: [6/4/17] THIS IS NOW DONE IN LearningMechanism._instantiate_learning_signal
+    # # Assign learning_mechanism as sender of learning_projection and return
+    # # Note: learning_projection still has to be assigned to the learning_mechanism's outputState;
+    # #       however, this requires that it's variable be assigned (which occurs in the rest of its
+    # #       _instantiate_sender method, from which this was called) and that its value be assigned
+    # #       (which occurs in its _instantiate_function method).
+    # learning_projection.sender = learning_mechanism.output_state
 
 
 class LearningComponents(object):
@@ -968,7 +971,7 @@ class LearningComponents(object):
             if not self.error_matrix:
                 return None
             # search the projections to the error_matrix parameter state for a LearningProjection
-            learning_proj = next((proj for proj in self.error_matrix.afferents
+            learning_proj = next((proj for proj in self.error_matrix.mod_afferents
                                  if isinstance(proj, LearningProjection)), None)
             # if there are none, the error_matrix might be for an error_projection to an ObjectiveMechanism
             #   (i.e., the TARGET mechanism)

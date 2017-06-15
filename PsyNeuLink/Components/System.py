@@ -1191,7 +1191,7 @@ class System_Base(System):
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.input_states:
-                for projection in input_state.afferents:
+                for projection in input_state.all_afferents:
                     sender = projection.sender.owner
                     system_processes = self.processes
                     if isinstance(sender, Process):
@@ -1201,7 +1201,7 @@ class System_Base(System):
                         del projection
 
             # If sender_mech has no projections left, raise exception
-            if not any(any(projection for projection in input_state.afferents)
+            if not any(any(projection for projection in input_state.all_afferents)
                        for input_state in sender_mech.input_states):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
@@ -1670,7 +1670,7 @@ class System_Base(System):
 
                         # Reassign error_matrix to one for the projection to which the error_signal_mech projects
                         learning_mech.function_object.error_matrix = \
-                            error_signal_mech.output_states['learning_signal'].efferents[0].receiver
+                            error_signal_mech._output_states['matrix_LearningSignal'].efferents[0].receiver
                         # Delete error_matrix parameterState for error_matrix
                         #    (since its value, which was the IDENTITY_MATRIX, is now itself ParameterState,
                         #     and Components are not allowed  as the value of a ParameterState
@@ -1682,7 +1682,7 @@ class System_Base(System):
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.input_states:
-                for projection in input_state.afferents:
+                for projection in input_state.all_afferents:
                     sender = projection.sender.owner
                     system_processes = self.processes
                     if isinstance(sender, Process):
@@ -1929,7 +1929,7 @@ class System_Base(System):
         self.controller._execution_id = self._execution_id
         if self.enable_controller and self.controller.input_states:
             for state in self.controller.input_states:
-                for projection in state.afferents:
+                for projection in state.all_afferents:
                     projection.sender.owner._execution_id = self._execution_id
 
         self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
@@ -2533,7 +2533,7 @@ class System_Base(System):
         for mech in list(self.mechanisms):
             for parameter_state in mech._parameter_states:
                 try:
-                    for projection in parameter_state.afferents:
+                    for projection in parameter_state.mod_afferents:
                         if isinstance(projection, ControlProjection):
                             controlled_parameters.append(parameter_state)
                 except AttributeError:
@@ -2542,7 +2542,7 @@ class System_Base(System):
                 try:
                     for projection in output_state.efferents:
                         for parameter_state in projection.paramaterStates:
-                            for sender in parameter_state.afferents:
+                            for sender in parameter_state.mod_afferents:
                                 if isinstance(sender, LearningProjection):
                                     learning_projections.append(projection)
                 except AttributeError:
@@ -2724,6 +2724,7 @@ class System_Base(System):
         from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
         import graphviz as gv
+        import numpy as np
 
         system_graph = self.graph
         learning_graph=self.learningGraph
@@ -2739,29 +2740,31 @@ class System_Base(System):
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
-            rcvr_name = rcvr[0].name
-            rcvr_shape = rcvr[0].variable.shape[1]
+            # rcvr_name = rcvr[0].name
+            # rcvr_shape = rcvr[0].variable.shape[1]
+            rcvr_name = rcvr.name
+            rcvr_shape = rcvr.variable.shape[1]
             rcvr_label = rcvr_name
 
 
             # loop through senders
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
-                sndr_name = sndr[0].name
-                sndr_shape = sndr[0].variable.shape[1]
+                sndr_name = sndr.name
+                sndr_shape = sndr.variable.shape[1]
                 sndr_label = sndr_name
 
                 # find edge name
-                projs = sndr[0].output_state.efferents
+                projs = sndr.output_state.efferents
                 for proj in projs:
-                    if proj.receiver.owner == rcvr[0]:
+                    if proj.receiver.owner == rcvr:
                         edge_name = proj.name
                         edge_shape = proj.matrix.shape
                         has_learning = proj.has_learning_projection
                 edge_label = edge_name
                 #### CHANGE MADE HERE ###
                 # if rcvr is learning mechanism, draw arrow with learning color
-                if isinstance(rcvr[0], LearningMechanism) or isinstance(rcvr[0], ObjectiveMechanism):
+                if isinstance(rcvr, LearningMechanism) or isinstance(rcvr, ObjectiveMechanism):
                     break
                 else:
                     arrow_color="black"
@@ -2779,25 +2782,25 @@ class System_Base(System):
         # add learning graph if show_learning
         if show_learning:
             rcvrs = list(learning_graph.keys())
-
             for rcvr in rcvrs:
-                    # if rcvr is projection
-                    if isinstance(rcvr, MappingProjection):
-                        # for each sndr of rcvr
-                        sndrs = learning_graph[rcvr]
-                        for sndr in sndrs:
-                            edge_label = rcvr._parameter_states['matrix'].afferents[0].name
-                            G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
-                    else:
-                        sndrs = learning_graph[rcvr]
-                        for sndr in sndrs:
-                            projs = sndr.output_state.efferents
-                            for proj in projs:
-                                if proj.receiver.owner == rcvr:
-                                    edge_name = proj.name
-                            G.node(rcvr.name, color=learning_color)
-                            G.node(sndr.name, color=learning_color)
-                            G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
+                # if rcvr is projection
+                if isinstance(rcvr, MappingProjection):
+                    # for each sndr of rcvr
+                    sndrs = learning_graph[rcvr]
+                    for sndr in sndrs:
+                        edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
+                        G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
+                else:
+                    sndrs = list(learning_graph[rcvr])
+                    for sndr in sndrs:
+                        projs = sndr.input_state.afferents
+
+                        for proj in projs:
+                            edge_name=proj.name
+                        G.node(rcvr.name, color=learning_color)
+                        G.node(sndr.name, color=learning_color)
+                        G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
+
 
         # add control graph if show_control
         if show_control:

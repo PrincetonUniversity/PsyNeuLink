@@ -179,8 +179,8 @@ class LearningProjection(ModulatoryProjection_Base):
 
     Arguments
     ---------
-    sender : Optional[LearningMechanism or LEARNING_SIGNAL OutputState of one]
-        the source of the `error_signal` for the LearningProjection. If it is not specified, one will be
+    sender : Optional[LearningMechanism or LearningSignal]
+        the source of the `learning_signal` for the LearningProjection;  If it is not specified, one will be
         `automatically created <LearningProjection_Automatic_Creation>` that is appropriate for the
         LearningProjection's `errorSource <LearningProjection.errorSource>`.
 
@@ -193,7 +193,7 @@ class LearningProjection(ModulatoryProjection_Base):
         `function <LearningMechanism.function>` attribute).
 
     learning_rate : Optional[float or int]
-        if specified, it is applied mulitiplicatively to `learning_signal` received from the `LearningMechanism`
+        if specified, it is applied mulitiplicatively to `learning_signal` received from the `LearningSignal`
         from which it projects (see `learning_rate <LearningProjection.learning_rate>` for additional details).
 
     params : Optional[Dict[param keyword, param value]]
@@ -298,7 +298,6 @@ class LearningProjection(ModulatoryProjection_Base):
                                WEIGHT_CHANGE_PARAMS:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes MappingProjection.function is LinearCombination
                                        FUNCTION_PARAMS: {OPERATION: SUM},
-                                       PARAMETER_MODULATION_OPERATION: Modulation.ADD,
                                        PROJECTION_TYPE: LEARNING_PROJECTION}
                                })
 
@@ -497,9 +496,12 @@ class LearningProjection(ModulatoryProjection_Base):
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.weight_change_matrix))
 
-        # # TEST PRINT
+        # TEST PRINT
         # print("\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))
-        # # print("\n@@@ WEIGHT CHANGES CALCULATED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
+        # print("\n@@@ WEIGHT CHANGES CALCULATED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
+        # TEST DEBUG MULTILAYER
+        # print("\n{}\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".
+        #       format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.value))
 
         return self.value
 
