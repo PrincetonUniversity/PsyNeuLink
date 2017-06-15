@@ -52,37 +52,40 @@
 #      ADD SUBCLASSING OF PROJECTIONS:
 #                 TRANSMISSIVE (MappingProjection):  FROM PROCESSING MECHANISM
 #                 ADAPTIVE (LearningProjection, GatingProjection, ControlProjection): FROM ADAPTIVE MECHANISM
+#  17) State:  put integration_method as args or in params (i.e., paramClassDefaults, only on State?)
 
 # TASKS:
+#  0) IMPLEMENT: Composition
+#       Assign projections for ObjectiveMechanisms, LearningMechanisms, ControlMechanisms, etc.
+#       Validate that all items are in the same Composition
+#       add_projection_to and add_projection_from methods
+#       methods in LearningAuxilliary
+#       search for "Composition" in LearningProjection, LearningMechanism and LearningAuxlliary
+#       specification of ProcessingMechanism that should be associated with TARGET ObjectiveMechanism:
+#             one that either has either no outgoing projections, or none that receive LearningProjections
+#       got rid of special cases for Objective function altogether
+#              (since comparator is just special case of derivative = 0)
+#       added attribute to Projections:  has_learning_projection
 #  1) BREAK UP FUNCTION INTO SEPARATE MODULES
 #  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMILAR TO MatrixKeywords)
-#  3) IMPLEMENT gating projections
 #  4) IMPLEMENT ABC
 # 4a) IMPLEMENT Swap execute (on Mechanism) and _execute (on its subclasses)
 #  5) IMPLEMENT Compilation / paralleliztion of execution
 #  6) IMPLEMENT Recurrent layer / KWTA??
+# 13) IMPLEMENT MSPRT / KWTA
 #  7) IMPLEMENT TD learning
 #  8) IMPLEMENT CLS / NMPH
 #  9) IMPLEMENT Conflict (stability / distance)
 # 10) IMPLEMENT TensorFLow wrapper
 # 11) IMPLEMENT Production System model (using scheduler??)
 # 12) IMPLEMENT LEABRA
-# 13) IMPLEMENT Model fitting
+# 14) IMPLEMENT Model fitting
 
 # VALIDATE: (then add to META TEST)
 #  RecurrentTransferMechanism
 #  LCA (Test from ScratchPad (search for: my_auto)
 #  XOR 2 PROCESS
 
-
-# COMPOSITION IMPLEMENTATION NOTE:
-#   add_projection_to and add_projection_from methods
-#   methods in LearningAuxilliary
-#   search for "Composition" in LearningProjection, LearningMechanism and LearningAuxlliary
-#   specification of ProcessingMechanism that should be associated with TARGET ObjectiveMechanism:
-#         one that either has either no outgoing projections, or none that receive LearningProjections
-#   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
-#   added attribute to Projections:  has_learning_projection
 
 # FIX / TEST: runtime_params:
 # COMMENT:
@@ -109,8 +112,14 @@
 #             + MAPPING_PROJECTION_PARAMS:<dict>:
 #                  entry will be passed to all of the State's MappingProjections,
 #                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+#             + LEARNING_PROJECTION_PARAMS:<dict>:
+#                  entry will be passed to all of the State's LearningProjections,
+#                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
 #             + CONTROL_PROJECTION_PARAMS:<dict>:
 #                  entry will be passed to all of the State's ControlProjections,
+#                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
+#             + GATING_PROJECTION_PARAMS:<dict>:
+#                  entry will be passed to all of the State's GatingProjections,
 #                  along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
 #             + <projectionName>:<dict>:
 #                  entry will be passed to the State's projection with the key's name,
@@ -163,6 +172,14 @@
 
 # DOCUMENTATION: TABLE SOMEWHERE OF ALL SPECIFICATION DICIONARIES AND THEIR ENTRIES
 
+# DOCUMENTATION: constructor args are all stored in user_params:
+#                       properties are created for them on their classes
+#                       they are validated when assigned from the command line
+#                       validation can be avoided (caveat emptor) by assigning to the backing_field (_param)
+#                paramClassDefaults are NOT in user_params:
+#                       no properties are created for them
+#                       they are not validated when assigned
+
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
@@ -173,7 +190,6 @@
 #           Use that to generalize creation of input_states for PredictionMechanism by EVCMechanism
 #
 # IMPLEMENT: ADD TO Run THE ABILITY TO CONVERT CHARACTERS OR HASHES OF WORDS TO NUMERIC VALUES
-
 
 # IMPLEMENT: LCA (Leaky Competitive Accumulator):  SET DEFAULT PARAMS THAT ~ DDM
 
@@ -213,7 +229,11 @@
 #                 # @property
 #                 # def base_value(self):
 
-# IMPLEMENT:  MODULATION_PROJECTION ENTRIES OF STATE SPECIFICATION DICTIONARY
+# IMPLEMENT:  FUNCTION ENTRIES OF STATE SPECIFICATION DICTIONARY - SHOULD NOW BE FUNCTIONAL (6/13/17)
+#             TEST BY ASSIGNING INTEGRATION FUNCTION TO InputState and/or OutputState
+# IMPLEMENT:  USE STATE_SPECIFICATION_DICT TO OVERRIDE MODULATION META PARAMS (BY REASSIGNING THEM TO OTHER FCT PARAMS)
+# IMPLEMENT:  MODULATION_PROJECTION ENTRIES OF STATE SPECIFICATION DICTIONARY -
+#                TO ASSIGN MULTIPLE PRJOJECTIONS TO A SINGLE OutputState (e.g, MULTIPLE PROJECTIONS FOR A GatingSignal)
 # IMPLEMENT: standard_output_states for ObjectiveMechanism, LCA, RecurrentTransfer, and Intregrator
 #              (use ones at top of OutputState)
 # IMPLEMENT: Move RecurrentTransfer and LCA calculate functions to standard_output_states
@@ -222,11 +242,13 @@
 # IMPLEMENT: Add WEIGHTS and EXPONENTS entry (or single one with tuple value) to inputState specification dicts
 #              and use that in ObjectiveMechanism instead of args or tuple specs
 # IMPLEMENT: Add GATING entry to both input and otuput state dicts
+# IMPLEMENT: modulation_function to specification dict
 
 #  DOCUMENTATION: State Specification Dictionaries:
 #                            - general notion, schema and keys common to all states (in State)
 #                                  STATE_PROJECTIONS
 #                                  MODULATORY_PROJECTIONS
+#                                  MODULATION_FUNCTION
 #                            - specific ones for each subclass (in subclass pages)
 #                                  InputState:
 #                                      ??SOURCES [=STATE PROJECTIONS] can be string, mech, or outputState
@@ -237,8 +259,8 @@
 #                                  OutputState:
 #                                      DESTINATIONS [=STATE_PROJECTIONS] can be string, mech, or inputStae
 #                                      GATING [=MODULATORY PROJECTIONS]
-#  DOCUMENTATION: Add mention of weights and exponents specification (in state specificaditon dict or in function)
-#  DOCUMENTATION: Add mention of `standard_output_states` to Mechanism
+#  DOCUMENTATION: weights and exponents args/attributes
+#  DOCUMENTATION: Add mention of `standard_input_states` and `standard_output_states` to Mechanism
 #  DOCUMENTATION: Add mention of specification dictionary format for **control_signals** arg for ControlMechanism
 #  DOCUMENTATION: Matrix specification as 2nd item of in 2-item tuple in list for input_states arg of Mechanism
 #  FIX: `error_signal` as default primary outputState
@@ -290,36 +312,37 @@
 # ------------------------------------------------------------------------------------------------------------------
 
 # MODULATORY COMPONENTS ----------------------------------------------------------
-# FIX: MODIFY ControlProjections and LearningProjections TO FUNCTION LIKE GatingProjections:
-# FIX:        - CHANGE control_signal -> modulatory_signal_params (AS for GatingProjection)
-# FIX:                    (AND WHERE REFERENCED (??AS control_signal_specs??) IN ControlSignal AND ControlMechanism)
-# FIX:                    DO THE SAME FOR LearningProjection
-# FIX:        - ControlMechanism AND LearningMechanism SHOULD IMPLEMENT modulation PARAM,
-# FIX:                    THAT TAKES VALUE OF ModulationParam AS VALUE
-# FIX:        - State._instantiate_projections_to_state:
-# FIX:                    Assign ControlProjections and LearningProjections to mod_afferents (like GatingProjections)
-# FIX:        - State.update:
-# FIX:                    ControlProjection LearningProjection values SHOULD MODIFY PARAMETER OF STATE'S FUNCTION
-# FIX:                          BASED ON THEIR modulation PARAMETER
-# FIX: Specification of modulation for GatingSignal:
-#             - modualtion_operation -> modulation
-#             - add attribute to GatingMechanism, used as default for all GatingSignals unless individually specified
-#             - DOCUMENT that to specify for individual GatingSignals, need to use specification dictionary format,
-#                  and specify it in a MODULATION entry of the PARAMS dict
-# FIX: ADD "GATING" KEYWORD and GatingSignal CLASS TO INPUT_STATE TUPLE SPECIFICATION,
-#     WHICH SHOULD INSTANTIATE A DEFERRED_INIT GatingProjection (JUST LIKE A ControlProjection)
-# FIX: MAKE ControlSignal stateful (since its last_allocation attribute pertains to a prior state)
-# FIX: DEAL WITH DEPENDENCY OF costFunctionNames: referenced in ControlSignal but defined in EVCMechanism
-# IMPLEMENT: Support for multiple GatingProjections from a single GatingSignal
-# IMPLEMENT: Abstract modulatory projection in AdaptiveMechanism
-#                - using _instantiate_output_states and _instantiate_projections
-#                - should parallel implementation of input_states and monitored_values in ObjectiveMechanism
-# SEARCH & REPLACE: monitored_values -> monitor_values
-# IMPLEMENT: modulation FOR ModulatoryProjections
-#            function_type or method_type SPECIFICATION IN ADDITION TO Modulation FOR modulation
-#                 parameter of ModulatoryFunctions
-# IMPLEMENT: modualtion_operation For ControlSignal, that assigns its value to its ControlProjection
-# IMPLEMENT: CONSTRAINT ON STATE FUNCTIONS TO BE A TransferFunction
+
+# DOCUMENTATION: GENERAL PRINCIPLES:
+#                     InputState:
+#                           TransmissiveProjections -> variable
+#                           ModulatoryProjections -> state.function_param
+#                     ParameterStates:
+#                           mech.param -> variable
+#                           ModulatoryProjections -> state.function_param
+#                     OutputState:
+#                           owner's value -> variable
+#                           ModulatoryProjections -> state.function_param
+#                     Modulatory OutputStates:
+#                           they have modulation as an additional attribute,
+#                               that specifies how they influence receiver parameterState
+#                           LearningSignal:  modulation is additive
+#                           ControlSignal, GatingSignal:  modulation is
+#                     Modulatory Projections:
+#                           LearningProjections:  ParameterStates of Transmissive Projections
+#                               (usually MATRIX of MappingProjection)
+#                           ControlProjections:  ParameterStates of Mechanisms
+#                               (usually corresponding to its function)
+#                           GatingProjections:  InputStates and OutputStates of Mechanisms
+#                               (usually praimry inputState)
+#                     Types of modulation:
+#                           "state-based" (usually Control and Gating):
+#                               receiver ParameterStates use TransferFunction;
+#                               changes stored in OutputState of signal
+#                           "weight-based" (usually Learning):
+#                               receiver ParameterStates use IntegratorFunction;
+#                               changes stored in receiver ParameterState (i.e., MappingProjection)
+#
 # DOCUMENTATION:
 #   *** PUT IN InputState AND OutputState DOCUMENTATION
 #
@@ -333,14 +356,129 @@
 #         or an entry in the state specification dictionary with the key "GATING", and a value that is the
 #         keyword TRUE/FALSE, ON/OFF, GATE, a ModulationOperation value, GatingProjection, or its constructor
 #
+# DOCUMENTATION: parameters always return the value of their parameterState if they have one
+#                (tested in getter for property)
+#                   in order to insure that any modulation (control/learning) has beeen applied
+#                Do this in definition of property (using backfield as "base_vale")
+# DOCUMENTATION: modulation argument/attribute in ControlSignal and GatingSignal
 # DOCUMENTATION: ModulatoryMechanism: describe how they work, i.e., that they assign the value of their
 #                  outputState to the paraemter of the state's function specified in their modulation param
+# DOCUMENTATION: State functions: must be TransferFunction or CombinationFunction, and implement meta mod params
+# DOCUMENTATION: State: use of integration function to implement persistence
 # DOCUMENTATION: GatingSignal (per ControlSignal) -- describe modulation in both
 # DOCUMENTATION: Various forms of specification;  if Mechainsm: assume primary InputState
 # DOCUMENTATION: STATE FUNCTIONS MUST ALWAYS BE A TransferFunction
 # DOCUMENTATION: UPDATE ParameterState_Parameter_Modulation_Operation WITH REFACTORING OF modulation arg/param
 # DOCUMENTATION: UPDATE ControlSignal to describe modulation attribute (as in GatingSignal)
 # DOCUMENTATION: ADD ENTRIES FOR variable, function, vaue, params, name and prefs to GatingMechanism and ControlMechaism
+# DOCUMENTATION: GatingMechanism:  ADD TO docstring [AND DO SAME IN ControlMechanism and LearningMechanism]
+#             this means that the GatingMechanism's function must return as many items as it has GatingSignals,
+#             with each item of the function's value used by a corresponding GatingSignal.
+#             Note: multiple GatingProjections can be assigned to the same GatingSignal to achieve "divergent gating"
+#                   (that is, gating of many states with a single value -- e.g., LC)
+# DOCUMENTATION: revise LearningMechanism docstring to include output_state attribute, and describe situation with
+#                    (multiple possible) LearningSignal entries, their relatioship to learing_signal attribute, and
+#                    the ERROR_SIGNAL OutputState.
+# DOCUMENTATION: add output_states to attribute in docstring for ControlMechanism and GatingMechanism
+# DOCUMENTATION: add section on LearningSignals to LearningMechanism docstring:
+#                   note that default (and most common case) is for a single LearningSignal
+#                   that projections to the parmaeterState for the MATRIX parameter of a MappingProjection,
+# DOCUMENTATION: upgrade LearningSignal's learning_rate description (mention how it affect ParameterState's function)
+# DOCUMENTATION: can instantiate LearningSignal w/o LearningProjections:
+#                    creates a default LearningSignal, along with ERROR output_state
+
+# IMPLEMENT / FIX:  CHANGE LearningProjection BACK TO TRANSMISSIVE PROJECTION (OR A NEW CATEGORY?)
+#                   - Reassign class specification
+#                   - Check for anyplace it is assigned to mod_afferents and move to trans_afferents 
+# IMPLEMENT: OVERRIDE FUNCTIONALITY FOR ModulationParam
+# IMPLEMENT / TEST: FUNCTION to specification dict (state's function)
+# IMPLEMENT: Hadamard modulation for LinearCombination:
+#                hadamard_offset and hadamard_scale params
+#                applied to result of standard LinearCombination function
+#                (use function recursively to perform the hadamard modulation)
+#                if hadamard params are specified, use them as template to determine shape of items in variable
+#                   (so that a single item can be passed to be modulate, as per LearningProjection)
+#                alternative: use variable arg in constructor as template to determine shape/size of each item
+
+# IMPLEMENT: Some way to specify function for parameterState for a param (e.g., MATRIX for MappingProjection)
+#                PARAMETER_STATE_FUNCTION entry in parameter specification dict?
+#                If implemented, remove _instantiate_parameter_state override in MappingProjection that assigns function
+#                      and assign function in paramClassDefaults
+# IMPLEMENT: learning_rate param for LearningSignal
+# IMPLEMENT: LearningProjection as full Modulatory projection:
+#               add learning_signal_params attribute to LearningProjection that conveys them to learningSignal
+# IMPLEMENT: _instantiate_modulated_param that assigns actual function_param to modulated_param property
+#            State.update should use modulated_param rather than modulation
+#            modulation as @property that validates value and then calls _instantiate_modulated_param
+
+# IMPLEMENT: all_efferents as @property = efferents + mod_efferents
+
+# IMPLEMENT: abstract _parse_state_specs:
+#                 integrate _parse_gating_signal_spec (in GatingSignal) into it
+#                 use in _validate_params for ControlMechanism and LearningMechanism
+
+# FIX: UPDATE WITH MODULATION_MODS
+           # ParameterState LINE 708:
+           #  WHAT ABOUT GatingProjection??
+# FIX: Line 2018 of Component:
+#     why does this function_param_specs = self.paramsCurrent[FUNCTION_PARAMS].copy() have rate and noise?
+# FIX: NEED SOME WAY OF INCLUDING GATING MECHANISM IN SYSTEM AND ASSIGNING IT execution_id
+# FIX: ALLOW ModulationParam TO BE NAME OF AN ACTUAL PARAMETER OF A FUNCTION
+#        MODIFY _get_modulated_param TO LOOK FOR REAL NAME FIRST
+#       THEN ADD HADAMARD OFFSET AND HADAMARD SCALE PARAMS TO LinearCombination
+# FIX: PROBLEM: LearningMechanism.output_value MAY NEED TO BE A 3d array
+# FIX:                      (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)
+
+# FIX: LearningMechanism: learned_projection attribute -> learned_projections list
+# FIX: Make modulation an attribute of AdaptiveMechanism that enforces presence of attribute in sublasses
+# FIX: Integrate learning_rate into rate param of Integrator function of ParameterState
+# FIX: Implement same for LearningSignal and ControlSignal:
+#           GatingMechanism, LINE 290:
+#           # Create registry for GatingSignals (to manage names)
+#             from PsyNeuLink.Globals.Registry import register_category
+#             register_category(entry=GatingSignal,
+#                               base_class=State_Base,
+#                               registry=self._stateRegistry,
+#                               context=context)
+# SEARCH & REPLACE: '_'+PARAM_NAME -> get_backingfield_name
+# FIX: ParameterState function specification (LINE 558): Why can't Linear class (vs. Linear() constructor) be used?
+# FIX: Recheck that weights are gettin properly set in Mechanism_instantiate_function
+# FIX: NAMES OF ControlProjections AND GatingProjections
+# FIX: GET RID OF ControlSignal LINE 434: self.reference_value = reference_value
+# FIX: UPDATE WITH MODULATION_MODS
+# FIX: MODIFY ControlProjections and LearningProjections TO FUNCTION LIKE GatingProjections:
+# FIX:        - CHANGE control_signal -> modulatory_signal_params (AS for GatingProjection)
+# FIX:                    (AND WHERE REFERENCED (??AS control_signal_specs??) IN ControlSignal AND ControlMechanism)
+# FIX:                    DO THE SAME FOR LearningProjection
+# FIX:        - ControlMechanism AND LearningMechanism SHOULD IMPLEMENT modulation PARAM,
+# FIX:                    THAT TAKES VALUE OF ModulationParam AS VALUE
+# FIX:        - State._instantiate_projections_to_state:
+# FIX:                    Assign ControlProjections and LearningProjections to mod_afferents (like GatingProjections)
+# FIX:        - State.update:
+# FIX:                    ControlProjection LearningProjection values SHOULD MODIFY PARAMETER OF STATE'S FUNCTION
+# FIX:                          BASED ON THEIR modulation PARAMETER
+# FIX: CHANGE modulatory_signal_params FOR GatingSignal back to gating_signal_params
+#                  (in GatingProjection and GatingMechanism)
+# FIX: Specification of modulation for GatingSignal:
+#             - modualtion_operation -> modulation
+#             - add attribute to GatingMechanism, used as default for all GatingSignals unless individually specified
+#             - DOCUMENT that to specify for individual GatingSignals, need to use specification dictionary format,
+#                  and specify it in a MODULATION entry of the PARAMS dict
+# FIX: ADD "GATING" KEYWORD and GatingSignal CLASS TO INPUT_STATE TUPLE SPECIFICATION,
+#     WHICH SHOULD INSTANTIATE A DEFERRED_INIT GatingProjection (JUST LIKE A ControlProjection)
+# FIX: MAKE ControlSignal stateful (since its last_allocation attribute pertains to a prior state)
+# FIX: DEAL WITH DEPENDENCY OF costFunctionNames: referenced in ControlSignal but defined in EVCMechanism
+#
+# IMPLEMENT: Support for multiple GatingProjections from a single GatingSignal
+# IMPLEMENT: Abstract modulatory projection in AdaptiveMechanism
+#                - using _instantiate_output_states and _instantiate_projections
+#                - should parallel implementation of input_states and monitored_values in ObjectiveMechanism
+# SEARCH & REPLACE: monitored_values -> monitor_values
+# IMPLEMENT: modulation FOR ModulatoryProjections
+#            function_type or method_type SPECIFICATION IN ADDITION TO Modulation FOR modulation
+#                 parameter of ModulatoryFunctions
+# IMPLEMENT: modualtion_operation For ControlSignal, that assigns its value to its ControlProjection
+# IMPLEMENT: CONSTRAINT ON STATE FUNCTIONS TO BE A TransferFunction
 # FIX: State.update(): THERE *MUST* BE A MORE EFFICIENT WAY OF DOING ALL OF THIS (INCLUDING DEALING WITH stateParams)
 # FIX:           MODIFY ParameterState and LearningProjection so that latter projects to mod_afferents (vs. afferents)
 # FIX: is_param_spec to allow tuple with projection specification in it TO PASS TYPECHECK
@@ -1621,7 +1759,9 @@
 #              OUTPUT_STATE_PARAMS
 #              PROJECTION_PARAMS
 #              MAPPING_PROJECTION_PARAMS
+#              LEARNING_PROJECTION_PARAMS
 #              CONTROL_PROJECTION_PARAMS
+#              GATING_PROJECTION_PARAMS
 #              <projection name-specific> params
     # SORT OUT RUNTIME PARAMS PASSED IN BY MECHANISM:
     #    A - ONES FOR EXECUTE METHOD (AGGREGATION FUNCTION) OF inputState
@@ -2789,7 +2929,7 @@
 #             - assign LearningProjection to all MappingProjections
 # IMPLEMENT: learning argument and attribute for System (that assigns learning to all of its processes and,
 #            and raises and exception if they can't handle it
-# IMPLEMENT: LEARNING_PROJECTION_PARAMS to parallel CONTROL_PROJECTION_PARAMS
+# IMPLEMENT: LEARNING_PROJECTION_PARAMS and GATING_PROJECTION_PARAMS to parallel CONTROL_PROJECTION_PARAMS
 # IMPLEMENT: *** IF LEARNING IS SPECIFIED FOR PROCESS, REMOVE THE NEED TO SPECIFY TARGET:
 #                  AUTOMATICALLY ASSIGN IT TO BE SAME FORMAT AS OUTPUT OF TERMINAL MECHANISM:
 #                IN Process: WARN BUT SET TARGET TO self.terminal.outputState

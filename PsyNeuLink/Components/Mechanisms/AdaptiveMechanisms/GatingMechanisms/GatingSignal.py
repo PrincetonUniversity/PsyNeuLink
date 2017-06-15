@@ -77,7 +77,10 @@ for an explanation of how this attribute is specified and used to modulate the v
 is set to the value of the `modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the 
 GatingSignal belongs;  this the is same for all of the GatingSignals belonging to that GatingMechanism.  However, the
 `modulation <GatingSignal.modulation>` can be specified individually for a GatingSignal using a specification 
-dictionary where the GatingSignal is specified, as described `above <GatingSignal_Specification>`.
+dictionary where the GatingSignal is specified, as described `above <GatingSignal_Specification>`. The 
+`modulation <GatingSignal.modulation>` value of a GatingSignal is used by all of the 
+`GatingProjections <GatingProjection>` that project from that GatingSignal.
+
 
 .. _ControlSignal_Execution:
 
@@ -101,7 +104,7 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
+from PsyNeuLink.Components.Functions.Function import _is_modulation_param
 from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
@@ -119,12 +122,12 @@ gating_signal_keywords.update(component_keywords)
 
 class GatingSignal(OutputState):
     """
-    GatingSignal(                                                \
-        owner,                                                   \
-        function=LinearCombination(operation=SUM),               \
-        modulation=ModulationParam.MULTIPLICATIVE                \
-        params=None,                                             \
-        name=None,                                               \
+    GatingSignal(                                   \
+        owner,                                      \
+        function=LinearCombination(operation=SUM),  \
+        modulation=ModulationParam.MULTIPLICATIVE   \
+        params=None,                                \
+        name=None,                                  \
         prefs=None)
 
     A subclass of OutputState that represents the value of a GatingSignal provided to a `GatingProjection`.
@@ -164,7 +167,9 @@ class GatingSignal(OutputState):
     function : Function or method : default Linear
         specifies the function used to determine the value of the GatingSignal from the value of its 
         `owner <GatingMechanism.owner>`.
-    
+
+    COMMENT: [NEEDS DOCUMENTATION]
+    COMMENT
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE 
 
     params : Optional[Dict[param keyword, param value]]
@@ -200,8 +205,8 @@ class GatingSignal(OutputState):
         result of `function <GatingSignal.function>`.
     
     modulation : ModulationParam
-        specifies the way in which the output of the GatingSignal is used to modulate the value of the states
-        to which its GatingProjections project.
+        determines how the output of the GatingSignal is used to modulate the value of the state(s)
+        to which its GatingProjection(s) project(s).
 
     efferents : [List[GatingProjection]]
         a list of the `GatingProjections <GatingProjection>` assigned to the GatingSignal.
@@ -253,7 +258,6 @@ class GatingSignal(OutputState):
                  index=PRIMARY_OUTPUT_STATE,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
-                 # modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  modulation:tc.optional(_is_modulation_param)=None,
                  params=None,
                  name=None,
@@ -284,8 +288,18 @@ class GatingSignal(OutputState):
                          prefs=prefs,
                          context=self)
 
+        # FIX: PUT IN ModulatorySignal CLASS WHEN IMPLEMENTED
         # Set default value of modulation to owner's value
         self._modulation = self.modulation or owner.modulation
+
+    # def _instantiate_function(self, context=None):
+    #     super()._instantiate_function(context=context)
+    #     self.function_object.FunctionOutputTypeConversion = True
+    #     self.function_object.functionOutputType = FunctionOutputType.RAW_NUMBER
+    #     TEST = True
+
+    def _execute(self, function_params, context):
+        return float(super()._execute(function_params=function_params, context=context))
 
 
 def _parse_gating_signal_spec(owner, state_spec):
@@ -325,6 +339,7 @@ def _parse_gating_signal_spec(owner, state_spec):
     """
     
     from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
+    from PsyNeuLink.Components.Projections.Projection import _validate_receiver
     from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
 
     GATING_SIGNAL_SUFFIX = '_' + GatingSignal.__name__
@@ -355,19 +370,12 @@ def _parse_gating_signal_spec(owner, state_spec):
 
     # Specification is for a GatingSignal - return as is
     if isinstance(state_spec, GatingSignal):
-        # # IMPLEMENTATION NOTE: REINSTATE WHEN ASSIGNMENT OF GatingMechanism TO SYSTEM IS RESOLVED (IN COMPOSITION??)
-        # #  Check that any GatingProjections it has are to mechanisms in self.system
-        # # if not all(gating_proj.receiver.owner in owner.system.mechanisms
-        # if not all(set(gating_proj.receiver.owner.systems) & set(owner.systems)
-        #            for gating_proj in state_spec.efferents):
-        #     raise GatingSignalError("The GatingSignal specified in the {} arg for {} ({}) "
-        #                                 "has one more more GatingProjections to a mechanism "
-        #                                 "that is not in {}".
-        #                                 format(GATING_SIGNALS, owner.name, state_spec.name, owner.systems))
-        return state_spec
         gating_signal = state_spec
         gating_signal_name = gating_signal.name
-        states = [proj.receiver.owner for proj in gating_signal.efferents]
+        states = []
+        for proj in gating_signal.efferents:
+            _validate_receiver(owner, proj, Mechanism, GATING_SIGNAL)
+            states.append(proj.receiver.owner)
         if not states:
             raise GatingSignalError("Attempt to assign an existing {} to {} that has no GatingProjections".
                                        format(GATING_SIGNAL, owner.name))
@@ -381,13 +389,7 @@ def _parse_gating_signal_spec(owner, state_spec):
     # Specification is for an existing GatingProjection
     #    so check if it is to a state of a mechanism in self.system
     elif isinstance(state_spec, GatingProjection):
-        # if not state_spec.receiver.owner in owner.system.mechanisms:
-        # # IMPLEMENTATION NOTE: REINSTATE WHEN ASSIGNMENT OF GatingMechanism TO SYSTEM IS RESOLVED (IN COMPOSITION??)
-        # if not (set(state_spec.receiver.owner.systems) & set(owner.systems)):
-        #     raise GatingSignalError("The GatingSignal specified in the {} arg for {} ({}) "
-        #                                "has one more more GatingProjections to a mechanism "
-        #                                "that is not in {}".
-        #                                format(GATING_SIGNALS, owner.name, state_spec.name, owner.systems))
+        _validate_receiver(owner, state_spec, Mechanism, GATING_SIGNAL)
         state_name = state_spec.receiver.name
         gating_signal_name = state_name + GATING_SIGNAL_SUFFIX
         mech = state_spec.reciever.owner
@@ -551,20 +553,22 @@ def _parse_gating_signal_spec(owner, state_spec):
         states = [state]
 
     # Check for any duplicate states in specification for this GatingSignal or existing ones for the owner
-    all_states = []
-    # Get gated states from any already instantiated GatingSignals
+    all_gated_states = []
+    # Get gated states from any already instantiated GatingSignals in gating_signals arg
     if owner.gating_signals:
+        #                                   _gating_signal_arg     already instantiated GatingSignal
         for gating_signal in [gs for gs in owner.gating_signals if isinstance(gs, GatingSignal)]:
-            all_states.extend([proj.receiver.owner for proj in gating_signal.efferents])
+            #                  gated state
+            all_gated_states.extend([proj.receiver for proj in gating_signal.efferents])
     # Add states for current GatingSignal
-    all_states.extend(states)
+    all_gated_states.extend(states)
     # Check for duplicates
-    # if any(thelist.count(x) > 1 for x in thelist)
-    if len(all_states) != len(set(all_states)):
-        for test_state in all_states:
-            if next((test_state == state  for state in all_states), None):
-                raise GatingSignalError("{} receives more than one GatingProjection from the {}s in {}".
-                                           format(test_state, GatingSignal.__name__, owner.name))
+    if len(all_gated_states) != len(set(all_gated_states)):
+        for test_state in all_gated_states:
+            if next((test_state == state  for state in all_gated_states), None):
+                raise GatingSignalError("{} of {} receives more than one GatingProjection from the {}s in {}".
+                                        format(test_state.name, test_state.owner.name,
+                                               GatingSignal.__name__, owner.name))
         raise GatingSignalError("PROGRAM ERROR: duplicate state detected in {} specifications for {} ({})"
                                    "but could not find the offending state".
                                    format(GATING_SIGNAL, owner.name, gating_signal_name))

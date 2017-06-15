@@ -128,7 +128,7 @@ class GatingProjection(ModulatoryProjection_Base):
     Arguments
     ---------
 
-    sender : Optional[Mechanism or OutputState]
+    sender : Optional[Mechanism or GatingSignal]
         specifies the source of the input for the GatingProjection;  usually an `outputState <OutputState>` of a
         `GatingMechanism <GatingMechanism>`.  If it is not specified, an outputState of the `DefaultGatingMechanism` 
         for the system to which the receiver belongs will be assigned.
@@ -210,7 +210,8 @@ class GatingProjection(ModulatoryProjection_Base):
     def __init__(self,
                  sender=None,
                  receiver=None,
-                 function=Linear,
+                 function=Linear(params={FUNCTION_OUTPUT_TYPE:FunctionOutputType.RAW_NUMBER}),
+                 # function=Linear,
                  gating_signal_params:tc.optional(dict)=None,
                  params=None,
                  name=None,
@@ -243,6 +244,7 @@ class GatingProjection(ModulatoryProjection_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
+        TEST = True
 
     def _instantiate_sender(self, params=None, context=None):
         """Check that sender is not a process and that, if specified as a Mechanism, it is a GatingMechanism 

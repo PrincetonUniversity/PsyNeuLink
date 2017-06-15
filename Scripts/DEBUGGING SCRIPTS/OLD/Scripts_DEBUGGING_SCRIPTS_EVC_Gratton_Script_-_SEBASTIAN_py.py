@@ -28,7 +28,7 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
 # Control Parameters
-signalSearchRange = np.arange(1.0, 2.0, 0.2)
+signalSearchRange = np.arange(0, 10, 2)
 
 # Stimulus Mechanisms
 Target_Stim = TransferMechanism(name='Target Stimulus', function=Linear(slope = 0.3324))
@@ -56,16 +56,22 @@ Automatic_Component = TransferMechanism(name='Automatic Component',
                                prefs=mechanism_prefs)
 
 # Decision Mechanisms
-Decision = DDM(function=BogaczEtAl(drift_rate=1.0,
-                                   threshold=0.2645,
-                                   noise=0.5,
-                                   starting_point=0,
-                                   t0=0.15),
-               output_states=[DECISION_VARIABLE,
-                              RESPONSE_TIME,
-                              PROBABILITY_UPPER_THRESHOLD],
-               prefs = mechanism_prefs,
-               name='Decision')
+Decision = DDM(
+    function=BogaczEtAl(
+        drift_rate=(1.0),
+        threshold=(0.2645),
+        noise=(0.5),
+        starting_point=(0),
+        t0=0.15
+    ),
+    prefs = mechanism_prefs,
+    name='Decision',
+    output_states=[
+        DECISION_VARIABLE,
+        RESPONSE_TIME,
+        PROBABILITY_UPPER_THRESHOLD
+    ],
+)
 
 # Outcome Mechanisms:
 Reward = TransferMechanism(name='Reward')
@@ -109,7 +115,7 @@ mySystem = system(processes=[TargetControlProcess, FlankerControlProcess,
                              RewardProcess],
                   controller=EVCMechanism,
                   enable_controller=True,
-                  monitor_for_control=[Reward, Decision.PROBABILITY_UPPER_THRESHOLD],
+                  monitor_for_control=[Reward, PROBABILITY_UPPER_THRESHOLD],
                   # monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
                   name='EVC Gratton System')
 
@@ -124,64 +130,50 @@ mySystem.controller.control_signals[1].intensity_cost_function = Exponential(rat
 
 
 # Loop over the KEYS in this dict
-# for mech in mySystem.controller.prediction_mechanisms.keys():
-for mech in mySystem.controller.predictionMechanisms.mechanisms:
+for mech in mySystem.controller.prediction_mechs:
 
-    # mySystem.controller.prediction_mechanisms is dictionary organized into key-value pairs where the key is a
+    # mySystem.controller.prediction_mechs is dictionary organized into key-value pairs where the key is a
     # (transfer) mechanism, and the value is the corresponding prediction (integrator) mechanism
 
     # For example: the key which is a transfer mechanism with the name 'Flanker Stimulus'
     # acceses an integrator mechanism with the name 'Flanker Stimulus_PredictionMechanism'
 
-    if mech.name == 'Flanker Stimulus Prediction Mechanism' or mech.name == 'Target Stimulus Prediction Mechanism':
+    if mech.name is 'Flanker Stimulus' or mech.name is 'Target Stimulus':
 
         # when you find a key mechanism (transfer mechanism) with the correct name, print its name
         print(mech.name)
 
         # then use that key to access its *value* in the dictionary, which will be an integrator mechanism
         # that integrator mechanism is the one whose rate we want to change ( I think!)
-        # mySystem.controller.prediction_mechanisms[mech].function_object.rate = 0.3481
-        # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 0.3481
+        # mech.function_object.rate = 0.3481
         # mech.parameterStates['rate'].base_value = 0.3481
-        # mySystem.controller.prediction_mechanisms[mech].function_object.rate = 0.3481
-        mech.function_object.rate = 1.0
-        x = mech.function_object.rate
+        # mech.parameterStates['rate'].base_value = 0.3481
+        mech.function_object.rate = 0.3481
 
-    if 'Reward' in mech.name :
+    if mech.name is 'Reward':
         print(mech.name)
         mech.function_object.rate = 1.0
-        # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
+        # mech.parameterStates['rate'].base_value = 1.0
 
 
 
 
 print('new rate of integration mechanisms before system execution:')
-# for mech in mySystem.controller.prediction_mechanisms.keys():
-for mech in mySystem.controller.predictionMechanisms.mechanisms:
-    print(mech.name)
-    print(mech.function_object.rate)
+for mech in mySystem.controller.prediction_mechs:
+    print( mech.name)
+    print( mech.function_object.rate)
     print('----')
 
 # generate stimulus environment
 
-# nTrials = 20
-# targetFeatures = [1]
-# flankerFeatures = [-1] # for full simulation: flankerFeatures = [-1,1]
-# reward = 100
-
-nTrials = 3
-targetFeatures = [1 , 1, 1]
-flankerFeatures = [1, -1, 1] # for full simulation: flankerFeatures = [-1,1]
+nTrials = 20
+targetFeatures = [1]
+flankerFeatures = [-1] # for full simulation: flankerFeatures = [-1,1]
 reward = 100
 
-
-# targetInputList = np.random.choice(targetFeatures, nTrials).tolist()
-# flankerInputList = np.random.choice(flankerFeatures, nTrials).tolist()
-# rewardList = (np.ones(nTrials) * reward).tolist() #np.random.choice(reward, nTrials).tolist()
-
-targetInputList = [1, 1, 1]
-flankerInputList = [1, -1, 1]
-rewardList = [100, 100, 100]
+targetInputList = np.random.choice(targetFeatures, nTrials).tolist()
+flankerInputList = np.random.choice(flankerFeatures, nTrials).tolist()
+rewardList = (np.ones(nTrials) * reward).tolist() #np.random.choice(reward, nTrials).tolist()
 
 stim_list_dict = {Target_Stim:targetInputList,
                   Flanker_Stim:flankerInputList,

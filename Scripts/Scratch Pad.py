@@ -589,10 +589,16 @@ class ScratchPadError(Exception):
 
 #region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Components.Function import *
-# #
-# x = LinearCombination()
+from PsyNeuLink.Components.Functions.Function import LinearCombination
+
+x = LinearCombination()
 # print (x.execute(([1, 1],[2, 2])))
+
+print (x.execute(([[1, 1],[2, 2]],
+                  [[3, 3],[4, 4]])))
+
+# print (x.execute(([[[[1, 1],[2, 2]]]])))
+
 
 #endregion
 
@@ -619,8 +625,8 @@ class ScratchPadError(Exception):
 #
 #endregion
 
-#region TEST RecurrentTransferMechanism / LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
+# region TEST RecurrentTransferMechanism / LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
 # # print("TEST RecurrentTransferMechanism / LCA")
 # # my_auto = LCA(
 # #         size=3,
@@ -893,6 +899,26 @@ class ScratchPadError(Exception):
 
 #endregion
 
+#region TEST get_user_attributes @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# import inspect
+#
+# def get_class_attributes(cls):
+#     boring = dir(type('dummy', (object,), {}))
+#     return [item
+#             for item in inspect.getmembers(cls)
+#             if item[0] not in boring]
+#
+# class my_class():
+#     attrib1 = 0
+#     attrib2 = 1
+#     # def __init__(self):
+#         # self.attrib1 = 0
+#         # self.attrib2 = 1
+#
+# print(get_class_attributes(my_class))
+
+#endregion
 
 #region TEST Function definition in class: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -2213,52 +2239,52 @@ class ScratchPadError(Exception):
 
 #region TEST parse_state_spec @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-print("TEST parse_gated_state_spec")
-
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import _parse_gating_signal_spec
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Functions.Function import ModulationParam
-from PsyNeuLink.Components.States.OutputState import OutputState
-
-gating_mech = GatingMechanism()
-mech_1 = DDM()
-mech_2 = DDM()
-
-single_dict = {NAME:'DECISION_VARIABLE', MECHANISM:mech_1}
-a = _parse_gating_signal_spec(owner=gating_mech, state_spec=single_dict)
-print('\nsingle_dict:', a)
-
-# THESE ARE A HACK TO ASSIGN A PRE-EXISTING GATING SIGNAL TO gating_mech WITHOUTH HAVING TO CONSTRUCT ONE
-x = DDM()
-x.name ='Default_input_state_GatingSignal'
-x.efferents = []
-gating_mech._gating_signals = [x]
-# --------------------------------------------------------------
-
-single_tuple = ('DECISION_VARIABLE', mech_1)
-b = _parse_gating_signal_spec(gating_mech, state_spec=single_tuple)
-print('\nsingle_tuple:', b)
-
-multi_states_dicts = {'MY_SIGNAL':[{NAME:'DECISION_VARIABLE',
-                                   MECHANISM:mech_1},
-                                   {NAME:'RESPONSE_TIME',
-                                   MECHANISM:mech_1}],
-                      MODULATION: ModulationParam.ADDITIVE}
-c = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_dicts)
-print('\nmulti_states_dicts:', c)
-
-multi_states_tuples = {'MY_SIGNAL':[('Default_input_state',mech_1),
-                                   ('Default_input_state',mech_2)]}
-d = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_tuples)
-print('\nmulti_states_tuples:', d)
-
-multi_states_combo = {'MY_SIGNAL':[{NAME:'Default_input_state',
-                                   MECHANISM:mech_1},
-                                   ('Default_input_state',mech_2)]}
-e = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_combo)
-print('\nmulti_states_combo:', e)
+# print("TEST parse_gated_state_spec")
+#
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import _parse_gating_signal_spec
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+# from PsyNeuLink.Components.Functions.Function import ModulationParam
+# from PsyNeuLink.Components.States.OutputState import OutputState
+#
+# gating_mech = GatingMechanism()
+# mech_1 = DDM()
+# mech_2 = DDM()
+#
+# single_dict = {NAME:'DECISION_VARIABLE', MECHANISM:mech_1}
+# a = _parse_gating_signal_spec(owner=gating_mech, state_spec=single_dict)
+# print('\nsingle_dict:', a)
+#
+# # THESE ARE A HACK TO ASSIGN A PRE-EXISTING GATING SIGNAL TO gating_mech WITHOUTH HAVING TO CONSTRUCT ONE
+# x = DDM()
+# x.name ='Default_input_state_GatingSignal'
+# x.efferents = []
+# gating_mech._gating_signals = [x]
+# # --------------------------------------------------------------
+#
+# single_tuple = ('DECISION_VARIABLE', mech_1)
+# b = _parse_gating_signal_spec(gating_mech, state_spec=single_tuple)
+# print('\nsingle_tuple:', b)
+#
+# multi_states_dicts = {'MY_SIGNAL':[{NAME:'DECISION_VARIABLE',
+#                                    MECHANISM:mech_1},
+#                                    {NAME:'RESPONSE_TIME',
+#                                    MECHANISM:mech_1}],
+#                       MODULATION: ModulationParam.ADDITIVE}
+# c = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_dicts)
+# print('\nmulti_states_dicts:', c)
+#
+# multi_states_tuples = {'MY_SIGNAL':[('Default_input_state',mech_1),
+#                                    ('Default_input_state',mech_2)]}
+# d = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_tuples)
+# print('\nmulti_states_tuples:', d)
+#
+# multi_states_combo = {'MY_SIGNAL':[{NAME:'Default_input_state',
+#                                    MECHANISM:mech_1},
+#                                    ('Default_input_state',mech_2)]}
+# e = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_combo)
+# print('\nmulti_states_combo:', e)
 
 #endregion
 

@@ -83,7 +83,8 @@ class DefaultControlMechanism(ControlMechanism_Base):
     paramClassDefaults.update({# MAKE_DEFAULT_CONTROLLER:True  <- No need, it is the default by default
                                FUNCTION:Linear,
                                FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
-                               MONITOR_FOR_CONTROL:None
+                               MONITOR_FOR_CONTROL:None,
+                               MODULATION:None,
                                })
 
     from PsyNeuLink.Components.Functions.Function import Linear
@@ -217,7 +218,9 @@ class DefaultControlMechanism(ControlMechanism_Base):
             self._input_states[input_state.name] = input_state
         else:
             from PsyNeuLink.Components.States.State import State_Base
-            self._input_states = ContentAddressableList(component_type=State_Base, list=[input_state])
+            self._input_states = ContentAddressableList(component_type=State_Base,
+                                                        list=[input_state],
+                                                        name=self.name+'.input_states')
 
         # self.input_value = [state.value for state in self.input_states]
 

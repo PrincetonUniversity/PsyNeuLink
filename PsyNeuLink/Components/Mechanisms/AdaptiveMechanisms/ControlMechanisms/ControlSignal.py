@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# ******************************************  OutputState *****************************************************
+# ******************************************  ControlSignal *****************************************************
 
 """
 Overview
@@ -70,9 +70,15 @@ primary attributes:
 .. _ControlSignal_Modulation:
 
 * `modulation <ControlSignal.modulation>` : determines how the ControlProjection is used by the ParameterState to 
-which it projects to modify its value (see `Modulatory Projections <ModulatoryProjection.modulation>` for an 
-explanation of how the modulation is specified and used to modulate a function).  
-
+  which it projects to modify its value (see `Modulatory Projections <ModulatoryProjection.modulation>` for an 
+  explanation of how the modulation is specified and used to modulate the value of a parameter). The default value 
+  is set to the value of the `modulation <ControlMechanism.modulation>` attribute of the ControlMechanism to which the 
+  ControlSignal belongs;  this the is same for all of the ControlSignals belonging to that ControlMechanism.  
+  However, the `modulation <ControlSignal.modulation>` can be specified individually for a ControlSignal using a 
+  specification dictionary where the ControlSignal is specified, as described `above <ControlSignal_Specification>`.    
+  The `modulation <ControlSignal.modulation>` value of a ControlSignal is used by all of the 
+  `ControlProjections <ControlProjection>` that project from that ControlSignal.
+    
 .. _ControlSignal_Allocation:
 
 * `allocation`: assigned to the ControlSignal by the ControlMechanism to which it belongs, and converted to its
@@ -155,6 +161,7 @@ Class Reference
 # import Components
 # FIX: EVCMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
+from PsyNeuLink.Components.Functions.Function import _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import *
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
 from PsyNeuLink.Components.States.State import *
@@ -203,6 +210,7 @@ class ControlSignal(OutputState):
         duration_cost_function=Integrator,               \
         cost_combination_function=Reduce(operation=SUM), \
         allocation_samples=DEFAULT_ALLOCATION_SAMPLES,   \
+        modulation=ModulationParam.MULTIPLICATIVE        \
         params=None,                                     \
         name=None,                                       \
         prefs=None)
@@ -262,6 +270,10 @@ class ControlSignal(OutputState):
     allocation_samples : list : default range(0.1, 1, 0.1)
         specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
         `allocation_policy <ControlMechanism.allocation_policy>` (see `ControlSignal_Execution`).
+
+    COMMENT: [NEEDS DOCUMENTATION]
+    COMMENT
+    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -344,6 +356,10 @@ class ControlSignal(OutputState):
     cost : float
         combined result of all cost functions that are enabled.
 
+    modulation : ModulationParam
+        specifies the way in which the output of the ControlSignal is used to modulate the value of the parameter
+        it's `ControlProjection` controls.
+
     efferents : [List[ControlProjection]]
         a list with one item -- the `ControlProjection` assigned to the ControlSignal.
 
@@ -398,21 +414,18 @@ class ControlSignal(OutputState):
                  function=LinearCombination(operation=SUM),
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
-                 duration_cost_function:tc.optional(is_function_type)=Integrator,
+                 duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
                  cost_combination_function:tc.optional(is_function_type)=Reduce(operation=SUM),
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
+                 modulation:tc.optional(_is_modulation_param)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
         # Note index and calculate are not used by ControlSignal, but included here for consistency with OutputState
-        if params:
-            try:
-                if params[ALLOCATION_SAMPLES] is not None:
-                    allocation_samples =  params[ALLOCATION_SAMPLES]
-            except KeyError:
-                pass
+        if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
+            allocation_samples =  params[ALLOCATION_SAMPLES]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -421,6 +434,7 @@ class ControlSignal(OutputState):
                                                   duration_cost_function=duration_cost_function,
                                                   cost_combination_function=cost_combination_function,
                                                   allocation_samples=allocation_samples,
+                                                  modulation=modulation,
                                                   params=params)
 
         self.reference_value = reference_value
@@ -440,6 +454,10 @@ class ControlSignal(OutputState):
                          name=name,
                          prefs=prefs,
                          context=self)
+
+        # FIX: PUT IN ModulatorySignal CLASS WHEN IMPLEMENTED
+        # Set default value of modulation to owner's value
+        self._modulation = self.modulation or owner.modulation
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions
