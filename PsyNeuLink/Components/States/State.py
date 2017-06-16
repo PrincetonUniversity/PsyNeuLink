@@ -123,7 +123,7 @@ import collections
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Functions.Function import _get_modulated_param
 from PsyNeuLink.Components.Projections.Projection import projection_keywords, _is_projection_spec
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
 state_keywords = component_keywords.copy()
 state_keywords.update({STATE_VALUE,
@@ -624,8 +624,8 @@ class State_Base(State):
         """
 
         from PsyNeuLink.Components.Projections.Projection import Projection_Base
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
-            import TransmissiveProjection_Base
+        from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection \
+            import PathwayProjection_Base
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
             import ModulatoryProjection_Base
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
@@ -794,7 +794,7 @@ class State_Base(State):
                 # If the projection was specified with a keyword or attribute value
                 #     then move it to the relevant entry of the params dict for the projection
                 # If projection_spec was in the form of a matrix keyword, move it to a matrix entry in the params dict
-                if issubclass(projection_type, TransmissiveProjection_Base) and projection_spec in MATRIX_KEYWORD_SET:
+                if issubclass(projection_type, PathwayProjection_Base) and projection_spec in MATRIX_KEYWORD_SET:
                     kwargs.update({MATRIX:projection_spec})
                 # If projection_spec was in the form of a ModulationParam value,
                 #    move it to a MODULATION entry in the params dict
@@ -1244,11 +1244,11 @@ class State_Base(State):
             self._mod_proj_values[value] = []
 
         from PsyNeuLink.Components.Process import ProcessInputState
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection \
-            import TransmissiveProjection_Base
+        from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection \
+            import PathwayProjection_Base
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
             import ModulatoryProjection_Base
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
@@ -1317,7 +1317,7 @@ class State_Base(State):
             if INITIALIZING in context and projection_value is DEFERRED_INITIALIZATION:
                 continue
 
-            if isinstance(projection, TransmissiveProjection_Base):
+            if isinstance(projection, PathwayProjection_Base):
                 # Add projection_value to list of TransmissiveProjection values (for aggregation below)
                 self._trans_proj_values.append(projection_value)
 

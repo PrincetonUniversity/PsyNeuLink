@@ -1514,7 +1514,7 @@ class System_Base(System):
             self.inputs.append(stimulus_input_state.value)
 
             # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
-            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
             MappingProjection(sender=stimulus_input_state,
                     receiver=origin_mech,
                     name=self.name+' Input Projection to '+origin_mech.name)
@@ -1531,7 +1531,7 @@ class System_Base(System):
 
             # MappingProjections are legal recipients of learning projections (hence the call)
             #  but do not send any projections, so no need to consider further
-            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
             if isinstance(sender_mech, MappingProjection):
                 return
 
@@ -1771,7 +1771,7 @@ class System_Base(System):
         self._monitoring_mechs = []
         self._target_mechs = []
 
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
         for item in self.learningExecutionList:
             if isinstance(item, MappingProjection):
                 continue
@@ -1835,7 +1835,7 @@ class System_Base(System):
             self.targetInputStates.append(system_target_input_state)
 
             # Add MappingProjection from system_target_input_state to TARGET mechainsm's target inputState
-            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
             MappingProjection(sender=system_target_input_state,
                     receiver=target_mech_TARGET_input_state,
                     name=self.name+' Input Projection to '+target_mech_TARGET_input_state.name)
@@ -2125,7 +2125,7 @@ class System_Base(System):
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
-                from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+                from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
                 if isinstance(component, MappingProjection):
                     continue
 
@@ -2721,7 +2721,7 @@ class System_Base(System):
 
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
         import graphviz as gv
         import numpy as np

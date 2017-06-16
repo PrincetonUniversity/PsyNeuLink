@@ -665,7 +665,7 @@ def _instantiate_monitoring_projections(owner,
                                         context=None):
 
     from PsyNeuLink.Components.States.OutputState import OutputState
-    from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+    from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
     receiver_projection_specs = receiver_projection_specs or [DEFAULT_MATRIX] * len(sender_list)
 

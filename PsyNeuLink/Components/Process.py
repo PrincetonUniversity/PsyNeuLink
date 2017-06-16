@@ -336,7 +336,7 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection 
     _is_learning_spec
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, \
     _add_projection_to
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
@@ -1645,7 +1645,7 @@ class Process_Base(Process):
                                                     prefs=self.prefs)
             self.processInputStates.append(process_input_state)
 
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
         # If there is the same number of Process input values and mechanism.input_states, assign one to each
         if num_process_inputs == num_mechanism_input_states:
@@ -1970,7 +1970,7 @@ class Process_Base(Process):
         self.targetInputStates.append(target_input_state)
 
         # Add MappingProjection from target_input_state to MonitoringMechanism's target inputState
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
         MappingProjection(sender=target_input_state,
                 receiver=target_mech_target,
                 name=self.name+'_Input Projection to '+target_mech_target.name)
