@@ -29,11 +29,12 @@ random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver,
 Gating_Mechanism = GatingMechanism(default_gating_policy=1.0,
                                    gating_signals=[
                                        # THIS GENERATES ONE GATING SIGNAL WITH THREE PROJECTIONS:
-                                       {NAME: 'Hidden Layers',
-                                        STATE: [Hidden_Layer_1,
-                                                Hidden_Layer_2,
-                                                Output_Layer]
-                                        },
+                                       {
+                                       # NAME: 'GATING SIGNAL EXPLICIT NAME',
+                                        'GATE_ALL': [Hidden_Layer_1,
+                                                     Hidden_Layer_2,
+                                                     Output_Layer]
+},
                                        # THIS GENERATES THREE GATING SIGNALS EACH WITH ONE PROJECTION:
                                        # Hidden_Layer_1,
                                        # Hidden_Layer_2,
