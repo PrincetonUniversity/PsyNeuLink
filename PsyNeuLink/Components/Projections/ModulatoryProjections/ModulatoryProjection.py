@@ -99,7 +99,6 @@ and uses that to adjust the parameter of the state's function (determined by its
 Class Reference
 ---------------
 
-
 """
 
 from PsyNeuLink.Components.Projections.Projection import Projection_Base
