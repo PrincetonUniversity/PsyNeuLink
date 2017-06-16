@@ -28,9 +28,17 @@ random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver,
 
 Gating_Mechanism = GatingMechanism(default_gating_policy=1.0,
                                    gating_signals=[
-                                       Hidden_Layer_1,
-                                       Hidden_Layer_2,
-                                       Output_Layer
+                                       # THIS GENERATES ONE GATING SIGNAL WITH THREE PROJECTIONS:
+                                       {
+                                       # NAME: 'GATING SIGNAL EXPLICIT NAME',
+                                        'GATE_ALL': [Hidden_Layer_1,
+                                                     Hidden_Layer_2,
+                                                     Output_Layer]
+},
+                                       # THIS GENERATES THREE GATING SIGNALS EACH WITH ONE PROJECTION:
+                                       # Hidden_Layer_1,
+                                       # Hidden_Layer_2,
+                                       # Output_Layer
                                    ])
 
 
@@ -66,17 +74,17 @@ Middle_Weights = MappingProjection(name='Middle Weights',
                                    # matrix=FULL_CONNECTIVITY_MATRIX
                                    # matrix=RANDOM_CONNECTIVITY_MATRIX
                                    # # MODIFIED 6/11/17 OLD:
-                                    matrix=Middle_Weights_matrix
+                                   #  matrix=Middle_Weights_matrix
                                    # # MODIFIED 6/11/17 NEW:
-                                   # matrix={VALUE:Middle_Weights_matrix,
-                                   #         # FUNCTION:Linear,
-                                   #         FUNCTION:ConstantIntegrator,
-                                   #         FUNCTION_PARAMS:{
-                                   #             INITIALIZER:Middle_Weights_matrix,
-                                   #             RATE:Middle_Weights_matrix},
-                                   #         # FUNCTION:ConstantIntegrator(rate=Middle_Weights_matrix)
-                                   #         # MODULATION:ADDITIVE_PARAM
-                                   #         }
+                                   matrix={VALUE:Middle_Weights_matrix,
+                                           FUNCTION:Linear,
+                                           # FUNCTION:ConstantIntegrator,
+                                           # FUNCTION_PARAMS:{
+                                           #     INITIALIZER:Middle_Weights_matrix,
+                                           #     RATE:Middle_Weights_matrix},
+                                           # FUNCTION:ConstantIntegrator(rate=Middle_Weights_matrix)
+                                           # MODULATION:ADDITIVE_PARAM
+                                           }
                                    # MODIFIED 6/11/17 END:
                                    )
 

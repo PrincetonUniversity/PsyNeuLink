@@ -455,6 +455,7 @@ def _parse_gating_signal_spec(owner, state_spec):
     # Specification is a dict that could be for a single state state_spec or a list of ones
     elif isinstance(state_spec, dict):
 
+        # FIX: IS THIS NECESSARY? (GIVEN THE FUNCTIONALITY UNDER 'ELSE':  USE KEY AS NAME AND VALUE AS LIST OF STATES)
         # If it has a STATES entry, it must be for a list
         if STATES in state_spec:
             # Validate that the STATES entry has a list
@@ -481,10 +482,15 @@ def _parse_gating_signal_spec(owner, state_spec):
             # If there is a non-keyword key, treat as the name to be used for the GatingSignal,
             #    and the value a state spec or list of ones
             state_name = next((key for key in state_spec if not key in gating_signal_keywords), None)
+            key_as_name = explicit_name = None
             if state_name:
-                gating_signal_name = state_name
-                spec_dict = _parse_gating_signal_spec(owner, state_spec[gating_signal_name])
+                key_as_name = state_name
+                spec_dict = _parse_gating_signal_spec(owner, state_spec[key_as_name])
                 states = spec_dict[STATES]
+                # If there *IS* a NAME entry, then use that (i.e., override key as the name)
+                if NAME in state_spec:
+                    explicit_name = state_spec[NAME]
+                gating_signal_name = explicit_name or key_as_name
             # Otherwise, it must be for a single state state_spec,
             #    which means it must have a NAME and a MECHANISM entry:
             else:
@@ -503,9 +509,9 @@ def _parse_gating_signal_spec(owner, state_spec):
                 mech = state_spec[MECHANISM]
 
         # Check that all of the other entries in the dict are for valid GatingSignal params
-        #    - skip any entries specifying gating signal
+        #    - skip any entries specifying gating signal (i.e., non-keyword keys being used as the GatingSignal name
         #    - place others in params
-        for param_entry in [entry for entry in state_spec if not entry in {gating_signal_name, MECHANISM}]:
+        for param_entry in [entry for entry in state_spec if not entry in {gating_signal_name, key_as_name, MECHANISM}]:
             if not param_entry in gating_signal_keywords:
                 raise GatingSignalError("Entry in specification dictionary for {} arg of {} ({}) "
                                            "is not a valid {} parameter".
