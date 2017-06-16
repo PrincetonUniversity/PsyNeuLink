@@ -161,6 +161,7 @@ logger = logging.getLogger(__name__)
 
 
 class SchedulerError(Exception):
+
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -169,19 +170,11 @@ class SchedulerError(Exception):
 
 
 class Scheduler(object):
-    """
-        An object that can be used to generate an order in which components are to be run, using a set of
-        arbitrary `Condition`<Condition>s (`ConditionSet`<ConditionSet>).
 
-        Attributes:
-            condition_set (ConditionSet): the set of Conditions this scheduler will use when running
-            execution_list (list): the full history of time steps this scheduler has produced
-            consideration_queue (list): a list form of the scheduler's toposort ordering of its nodes
-            termination_conds (dict): a mapping from :keyword:`TimeScale`s to :keyword:`Condition`s that when met terminate the execution of the specified :keyword:`TimeScale`
-    """
-    def __init__(self, system=None, condition_set=None, nodes=None, toposort_ordering=None):
+    def __init__(self, composition=None, condition_set=None, nodes=None, toposort_ordering=None):
         '''
         :param self:
+        :param composition: (Composition) - the Composition this scheduler is scheduling for
         :param condition_set: (ConditionSet) - a :keyword:`ConditionSet` to be scheduled
         '''
         self.condition_set = condition_set if condition_set is not None else ConditionSet(scheduler=self)
@@ -190,29 +183,29 @@ class Scheduler(object):
         self.consideration_queue = []
         self.termination_conds = None
 
-        if system is not None:
-            self.nodes = [m for m in system.executionList]
-            self._init_consideration_queue_from_system(system)
+        if composition is not None:
+            self.nodes = [vert.mechanism for vert in composition.graph.vertices]
+            self._init_consideration_queue_from_composition(composition)
         elif nodes is not None:
             self.nodes = nodes
             if toposort_ordering is None:
                 raise SchedulerError('Instantiating Scheduler by list of nodes requires a toposort ordering (kwarg toposort_ordering)')
             self.consideration_queue = list(toposort_ordering)
         else:
-            raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system), or a list of Mechanisms (kwarg nodes) and and a toposort ordering over them (kwarg toposort_ordering)')
+            raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition), or a list of Mechanisms (kwarg nodes) and and a toposort ordering over them (kwarg toposort_ordering)')
 
         self._init_counts()
 
     # the consideration queue is the ordered list of sets of nodes in the composition graph, by the
     # order in which they should be checked to ensure that all parents have a chance to run before their children
-    def _init_consideration_queue_from_system(self, system):
-        dependencies = []
-        for dependency_set in list(toposort(system.executionGraph)):
-            new_set = set()
-            for d in dependency_set:
-                new_set.add(d)
-            dependencies.append(new_set)
-        self.consideration_queue = dependencies
+    def _init_consideration_queue_from_composition(self, composition):
+        dependencies = {}
+        for vert in composition.graph.vertices:
+            dependencies[vert.mechanism] = set()
+            for parent in composition.graph.get_parents(vert.mechanism):
+                dependencies[vert.mechanism].add(parent)
+
+        self.consideration_queue = list(toposort(dependencies))
         logger.debug('Consideration queue: {0}'.format(self.consideration_queue))
 
     def _init_counts(self):
@@ -293,7 +286,6 @@ class Scheduler(object):
                 if self.termination_conds[tc].scheduler is None:
                     logger.debug('Setting scheduler of {0} to self ({1})'.format(self.termination_conds[tc], self))
                     self.termination_conds[tc].scheduler = self
-
     ################################################################################
     # Run methods
     ################################################################################
@@ -306,8 +298,6 @@ class Scheduler(object):
         self.termination_conds = termination_conds
         self._validate_run_state()
 
-        logger.info('termination_conds: {0}, self.termination_conds: {1}'.format(termination_conds, self.termination_conds))
-
         def has_reached_termination(self, time_scale=None):
             term = True
             if time_scale is None:
@@ -318,89 +308,101 @@ class Scheduler(object):
 
             return term
 
-        self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
-        self._reset_count(self.counts_total, TimeScale.TRIAL)
-        self._reset_time(TimeScale.TRIAL)
+        logger.debug('runterm: {0}'.format(self.termination_conds[TimeScale.RUN]))
+        self._reset_count(self.counts_total, TimeScale.RUN)
+        self._reset_time(TimeScale.RUN)
 
-        while not self.termination_conds[TimeScale.TRIAL].is_satisfied():
-            self._reset_count(self.counts_total, TimeScale.PASS)
-            self._reset_time(TimeScale.PASS)
+        while not self.termination_conds[TimeScale.RUN].is_satisfied():
+            logger.debug('run, num trials in run: {0}'.format(self.times[TimeScale.RUN][TimeScale.TRIAL]))
+            self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
+            self._reset_count(self.counts_total, TimeScale.TRIAL)
+            self._reset_time(TimeScale.TRIAL)
 
-            execution_list_has_changed = False
-            cur_index_consideration_queue = 0
+            while not self.termination_conds[TimeScale.TRIAL].is_satisfied() and not self.termination_conds[TimeScale.RUN].is_satisfied():
+                self._reset_count(self.counts_total, TimeScale.PASS)
+                self._reset_time(TimeScale.PASS)
 
-            while (
-                cur_index_consideration_queue < len(self.consideration_queue)
-                and not self.termination_conds[TimeScale.TRIAL].is_satisfied()
-            ):
-                # all nodes to be added during this time step
-                cur_time_step_exec = set()
-                # the current "layer/group" of nodes that MIGHT be added during this time step
-                cur_consideration_set = self.consideration_queue[cur_index_consideration_queue]
-                try:
-                    iter(cur_consideration_set)
-                except TypeError as e:
-                    raise SchedulerError('cur_consideration_set is not iterable, did you ensure that this Scheduler was instantiated with an actual toposort output for param toposort_ordering? err: {0}'.format(e))
-                logger.debug('trial, num passes in trial {0}, consideration_queue {1}'.format(self.times[TimeScale.TRIAL][TimeScale.PASS], ' '.join([str(x) for x in cur_consideration_set])))
+                execution_list_has_changed = False
+                cur_index_consideration_queue = 0
 
-                # do-while, on cur_consideration_set_has_changed
-                # we check whether each node in the current consideration set is allowed to run,
-                # and nodes can cause cascading adds within this set
-                while True:
-                    cur_consideration_set_has_changed = False
-                    for current_node in cur_consideration_set:
-                        logger.debug('cur time_step exec: {0}'.format(cur_time_step_exec))
-                        for n in self.counts_useable:
-                            logger.debug('Counts of {0} useable by'.format(n))
-                            for n2 in self.counts_useable[n]:
-                                logger.debug('\t{0}: {1}'.format(n2, self.counts_useable[n][n2]))
+                while (
+                        cur_index_consideration_queue < len(self.consideration_queue)
+                        and not self.termination_conds[TimeScale.TRIAL].is_satisfied()
+                        and not self.termination_conds[TimeScale.RUN].is_satisfied()
+                ):
+                    # all nodes to be added during this time step
+                    cur_time_step_exec = set()
+                    # the current "layer/group" of nodes that MIGHT be added during this time step
+                    cur_consideration_set = self.consideration_queue[cur_index_consideration_queue]
+                    try:
+                        iter(cur_consideration_set)
+                    except TypeError as e:
+                        raise SchedulerError('cur_consideration_set is not iterable, did you ensure that this Scheduler was instantiated with an actual toposort output for param toposort_ordering? err: {0}'.format(e))
+                    logger.debug('trial, num passes in trial {0}, consideration_queue {1}'.format(self.times[TimeScale.TRIAL][TimeScale.PASS], ' '.join([str(x) for x in cur_consideration_set])))
 
-                        # only add each node once during a single time step, this also serves
-                        # to prevent infinitely cascading adds
-                        if current_node not in cur_time_step_exec:
-                            if self.condition_set.conditions[current_node].is_satisfied():
-                                logger.debug('adding {0} to execution list'.format(current_node))
-                                logger.debug('cur time_step exec pre add: {0}'.format(cur_time_step_exec))
-                                cur_time_step_exec.add(current_node)
-                                logger.debug('cur time_step exec post add: {0}'.format(cur_time_step_exec))
-                                execution_list_has_changed = True
-                                cur_consideration_set_has_changed = True
+                    # do-while, on cur_consideration_set_has_changed
+                    # we check whether each node in the current consideration set is allowed to run,
+                    # and nodes can cause cascading adds within this set
+                    while True:
+                        cur_consideration_set_has_changed = False
+                        for current_node in cur_consideration_set:
+                            logger.debug('cur time_step exec: {0}'.format(cur_time_step_exec))
+                            for n in self.counts_useable:
+                                logger.debug('Counts of {0} useable by'.format(n))
+                                for n2 in self.counts_useable[n]:
+                                    logger.debug('\t{0}: {1}'.format(n2, self.counts_useable[n][n2]))
 
-                                for ts in TimeScale:
-                                    self.counts_total[ts][current_node] += 1
-                                # current_node's node is added to the execution queue, so we now need to
-                                # reset all of the counts useable by current_node's node to 0
-                                for n in self.counts_useable:
-                                    self.counts_useable[n][current_node] = 0
-                                # and increment all of the counts of current_node's node useable by other
-                                # nodes by 1
-                                for n in self.counts_useable:
-                                    self.counts_useable[current_node][n] += 1
-                    # do-while condition
-                    if not cur_consideration_set_has_changed:
-                        break
+                            # only add each node once during a single time step, this also serves
+                            # to prevent infinitely cascading adds
+                            if current_node not in cur_time_step_exec:
+                                if self.condition_set.conditions[current_node].is_satisfied():
+                                    logger.debug('adding {0} to execution list'.format(current_node))
+                                    logger.debug('cur time_step exec pre add: {0}'.format(cur_time_step_exec))
+                                    cur_time_step_exec.add(current_node)
+                                    logger.debug('cur time_step exec post add: {0}'.format(cur_time_step_exec))
+                                    execution_list_has_changed = True
+                                    cur_consideration_set_has_changed = True
 
-                # add a new time step at each step in a pass, if the time step would not be empty
-                if len(cur_time_step_exec) >= 1:
-                    self.execution_list.append(cur_time_step_exec)
+                                    for ts in TimeScale:
+                                        self.counts_total[ts][current_node] += 1
+                                    # current_node's node is added to the execution queue, so we now need to
+                                    # reset all of the counts useable by current_node's node to 0
+                                    for n in self.counts_useable:
+                                        self.counts_useable[n][current_node] = 0
+                                    # and increment all of the counts of current_node's node useable by other
+                                    # nodes by 1
+                                    for n in self.counts_useable:
+                                        self.counts_useable[current_node][n] += 1
+                        # do-while condition
+                        if not cur_consideration_set_has_changed:
+                            break
+
+                    # add a new time step at each step in a pass, if the time step would not be empty
+                    if len(cur_time_step_exec) >= 1:
+                        if len(cur_time_step_exec) > 1:
+                            self.execution_list.append(cur_time_step_exec)
+                        else:
+                            self.execution_list.append(cur_time_step_exec.pop())
+                        yield self.execution_list[-1]
+
+                        self._increment_time(TimeScale.TIME_STEP)
+
+                    cur_index_consideration_queue += 1
+
+                # if an entire pass occurs with nothing running, add an empty time step
+                if not execution_list_has_changed:
+                    self.execution_list.append(set())
                     yield self.execution_list[-1]
 
                     self._increment_time(TimeScale.TIME_STEP)
 
-                cur_index_consideration_queue += 1
+                # can execute the execution_list here
+                logger.info(self.execution_list)
+                logger.debug('Execution list: [{0}]'.format(' '.join([str(x) for x in self.execution_list])))
+                self._increment_time(TimeScale.PASS)
 
-            # if an entire pass occurs with nothing running, add an empty time step
-            if not execution_list_has_changed:
-                self.execution_list.append(set())
-                yield self.execution_list[-1]
+            self._increment_time(TimeScale.TRIAL)
 
-                self._increment_time(TimeScale.TIME_STEP)
-
-            # can execute the execution_list here
-            logger.info(self.execution_list)
-            logger.debug('Execution list: [{0}]'.format(' '.join([str(x) for x in self.execution_list])))
-            self._increment_time(TimeScale.PASS)
-
-        self._increment_time(TimeScale.TRIAL)
+        self._increment_time(TimeScale.RUN)
 
         return self.execution_list
