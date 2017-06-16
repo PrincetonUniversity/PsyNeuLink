@@ -619,14 +619,14 @@ class ParameterState(State_Base):
         return value
 
     @property
-    def trans_projections(self):
-        raise ParameterStateError("PROGRAM ERROR: Attempt to access trans_projection for {};"
+    def pathway_projections(self):
+        raise ParameterStateError("PROGRAM ERROR: Attempt to access path_projection for {};"
                                   "it is a {} which does not have {}s".
                                   format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
 
-    @trans_projections.setter
-    def trans_projections(self, value):
-        raise ParameterStateError("PROGRAM ERROR: Attempt to assign trans_projection to {};"
+    @pathway_projections.setter
+    def pathway_projections(self, value):
+        raise ParameterStateError("PROGRAM ERROR: Attempt to assign path_projection to {};"
                                   "it is a {} which cannot accept {}s".
                                   format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
 

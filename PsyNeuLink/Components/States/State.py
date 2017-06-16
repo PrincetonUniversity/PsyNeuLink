@@ -459,7 +459,7 @@ class State_Base(State):
         self.efferents = []
         self._stateful = False
 
-        self._trans_proj_values = []
+        self._path_proj_values = []
         # Create dict with entries for each ModualationParam and initialize - used in update() to coo
         self._mod_proj_values = {}
         for attrib, value in get_class_attributes(ModulationParam):
@@ -1239,7 +1239,7 @@ class State_Base(State):
         #endregion
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
-        self._trans_proj_values = []
+        self._path_proj_values = []
         for value in self._mod_proj_values:
             self._mod_proj_values[value] = []
 
@@ -1319,7 +1319,7 @@ class State_Base(State):
 
             if isinstance(projection, PathwayProjection_Base):
                 # Add projection_value to list of TransmissiveProjection values (for aggregation below)
-                self._trans_proj_values.append(projection_value)
+                self._path_proj_values.append(projection_value)
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             elif isinstance(projection, ModulatoryProjection_Base):
@@ -1912,7 +1912,7 @@ def _parse_state_spec(owner,
     #     return dict(**{NAME:state.name,
     #                   VARIABLE:state.variable,
     #                   VALUE:state.value,
-    #                   # PARAMS:{STATE_PROJECTIONS:state.trans_projections}})
+    #                   # PARAMS:{STATE_PROJECTIONS:state.pathway_projections}})
     #                   PARAMS:state.params})
 
     # Validate that state_type is a State class

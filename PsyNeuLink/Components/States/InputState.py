@@ -429,9 +429,9 @@ class InputState(State_Base):
         """
 
         # If there were any Transmissive projections:
-        if self._trans_proj_values:
+        if self._path_proj_values:
             # Combine projection values
-            combined_values = self.function(variable=self._trans_proj_values,
+            combined_values = self.function(variable=self._path_proj_values,
                                             params=function_params,
                                             context=context)
             return combined_values
@@ -443,11 +443,11 @@ class InputState(State_Base):
             return None
 
     @property
-    def trans_projections(self):
+    def pathway_projections(self):
         return self.afferents
 
-    @trans_projections.setter
-    def trans_projections(self, assignment):
+    @pathway_projections.setter
+    def pathway_projections(self, assignment):
         self.afferents = assignment
 
 
