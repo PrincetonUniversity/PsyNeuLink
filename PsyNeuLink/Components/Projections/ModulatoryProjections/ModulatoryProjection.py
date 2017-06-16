@@ -51,32 +51,30 @@ Structure
 ---------
 
 A ModulatoryProjection has the same basic structure as a `Projection`, augmented by type-specific attributes
-and methods described under each type of projection.  In addition, all ModulatoryProjections have a 
+and methods described under each type of modulatory projection.  In addition, all ModulatoryProjections have a
 `modulation <ModulatoryProjection.modulation>` attribute that determines how the projection 
-modifies the value of the state to which it projects.  The modulation is specified using a value of 
-`Modulation`, which designates either a parameter of the state's function to modulate, or one of two other 
+modifies the function of the state to which it projects.  The modulation is specified using a value of
+`Modulation`, which designates one of the following standard actions to take
+either a parameter of the state's function to modulate, or one of two other
 actions to take, as follows:
 
-    * `ModulatonOperation.ADDITIVE` - this specifies use of the parameter designated by the  
-      `TransferFunction's <TransferFunction_ModulationOperation>` :keyword:`additive` attribute
-      (for example, it is the `intercept <Linear.slope>` parameter of the `Linear` Function;    
-      
-    * `ModulatonOperation.MULTIPLICATIVE` - this specifies use of the parameter designated by the  
-      `TransferFunction's <TransferFunction_ModulationOperation>` :keyword:`multiplicative` attribute
-      (for example, it is the `slope <Linear.slope>` parameter of the `Linear` Function;    
+    * `Modulation.MULTIPLY` - modulate the parameter designated by the <state's function <State.function>` as its
+      `multiplicative_param <ModulationParam.MULTIPLICATIVE>`
+      (for example, it is the `slope <Linear.slope>` parameter of the `Linear` Function);
     
-    * `ModulatonOperation.OVERRIDE` - this specifies direct use of the ModulatoryProjection's value, bypassing
-      the state's `function <State.function>` or its `base_value <State.base_value>`. 
+    * `Modulation.ADD` - use the parameter designated by the <state's function <State.function>` as its
+      `additive_param <ModulationParam.ADDITIVE>`
+      (for example, it is the `slope <Linear.slope>` parameter of the `Linear` Function);
+
+    * `Modulation.OVERRIDE` - use the ModulatoryProjection's value, bypassing the state's `function <State.function>`.
   
-    * `ModulatonOperation.DISABLED` - this speifies disabling of any modulation of the state's value, and use only
-      of its `base_value <State.base_value>`.
+    * `Modulation.DISABLE` - use the parameter's value without any modulation.
 
-These values can be assigned when a state is created, or at `runtime <>` 
-
-The `modulation <ModulatoryProjection>` parameter can also be specified using a custom function or method, 
-so long as it receives and returns values that are compatible with the `value <State.value>` of the state. 
-If the `modulation <ModulatoryProjection>` parameter is not specified for a ModulatoryProjection,
-a default specified by the state itself is used.
+In addition to the parameters specifed by a state's function as its :keyword:`multiplicative` :keyword:`additive`
+parameters, some functions may also designate other parameters that can be used for modulation.  The modulation
+value for a state can be assigned in a `State specification dictionary <LINK>` assigned in the **params** arg of a
+state's constructor, or in the **modulation** arg of the constructor for an `AdaptiveMechanism`.  If a `modulation`
+value is not specified for a state, its default modulation value is used.
 
 .. _ModulatoryProjection_Execution:
 
@@ -124,14 +122,14 @@ class ModulatoryProjection_Base(Projection_Base):
     Arguments
     ---------
     sender : Optional[OutputState or Mechanism]
-        specifies the component from which the ModulatoryProjection projects. 
+        specifies the component from which the ModulatoryProjection projects.
 
     receiver : Optional[State or Mechanism]
-        specifies the state to which the ModulatoryProjection projects, and the value of which is modulated by it.
+        specifies the state to which the ModulatoryProjection projects.
 
-    modulation : Optional[Modulation, function or method] : default determined by State
-        specifies the manner by which the ModulatoryProjection modulates the `value <State.value>` of the 
-        `state <State>` to which it projects.    
+    modulation : Optional[Modulation] : default determined by State
+        specifies the manner by which the ModulatoryProjection modulates the `function <State.function>`
+        (and thereby `value <State.value>` of the `State` to which it projects.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -154,24 +152,26 @@ class ModulatoryProjection_Base(Projection_Base):
     ----------
 
     sender : LEARNING_SIGNAL OutputState of a LearningMechanism
-        the component from which the ModulatoryProjection projects. 
+        the component from which the ModulatoryProjection projects (usually the outputState of an
+        `AdaptiveMechanism`).
 
     receiver : MATRIX ParameterState of a MappingProjection
-        the state to which the ModulatoryProjection projects, and the value of which is modulated by it.
+        the state to which the ModulatoryProjection projects, the `function <State.function>`
+        of which is modulated by it.
 
     variable : 2d np.array
-        same as `learning_signal <LearningProjection.learning_signal>`.
+        value received from the `sender <ModulatoryProjection.sender`.
 
     modulation : Optional[Function parameter name]
-        the manner by which the ModulataoryProjection modulates the `value <State.value>` of the state to which it
-        projects - see `ModulatoryProjection_Structure` for a description of specifications.
+        the manner by which the ModulataoryProjection modulates the `function <State.function>` of the state to which
+        it projects - see `ModulatoryProjection_Structure` for a description of specifications.
 
     function : Function : default Linear
         assigns the value received from the ModualatoryProjection's `sender <ModualatoryProjection.sender>` to
         its `value <ModulatoryProjection.value>`.
 
     value : 2d np.array
-        value used to modulate the value of the `receiver <ModulatoryProjection.receiver>`. 
+        value used to modulate the function of the `receiver <ModulatoryProjection.receiver>`.
 
     name : str : default LearningProjection-<index>
         the name of the LearningProjection.
