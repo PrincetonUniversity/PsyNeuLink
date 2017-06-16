@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="• Scratch Pad" type="PythonConfigurationType" factoryName="Python" singleton="true">
+  <configuration default="false" name="Profile EVC System Test" type="PythonConfigurationType" factoryName="Python" folderName="OTHER CONFIGS" singleton="true">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
@@ -11,8 +11,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="PsyNeuLink" />
-    <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/Scratch Pad.py" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/MISCELLANEOUS SCRIPTS/Profile EVC System Test Script.py" />
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
