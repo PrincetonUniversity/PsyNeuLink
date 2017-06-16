@@ -68,10 +68,10 @@ class Graph(object):
         return self.comp_to_vertex[component].outgoing
 
     def get_child_vertices_from_component(self, component):
-        return [edge.receiver for edge in self.mech_to_vertex[mechanism].outgoing]
+        return [edge.receiver for edge in self.comp_to_vertex[component].outgoing]
 
     def get_parent_vertices_from_component(self, component):
-        return [edge.sender for edge in self.mech_to_vertex[mechanism].incoming]
+        return [edge.sender for edge in self.comp_to_vertex[component].incoming]
 
 
 class Composition(object):
