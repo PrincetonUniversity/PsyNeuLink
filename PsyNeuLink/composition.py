@@ -5,14 +5,13 @@ from PsyNeuLink.scheduling.Scheduler import Scheduler
 class Edge(object):
     ########
     # Helper class for Compositions.
-    # Contains a sender, projection, and receiver.
+    # Contains a sender and receiver.
     # Performs no operations outside getting and setting these attributes.
     ########
 
-    def __init__(self, sender, projection, receiver):
-        self.sender = sender  # Mechanism that feeds into edge
-        self.projection = projection  # Projection that constitutes edge
-        self.receiver = receiver  # Mechanism that projection ends at
+    def __init__(self, sender, receiver):
+        self.sender = sender  # Vertex that feeds into edge
+        self.receiver = receiver  # Vertex that edge feeds to
 
 
 class Vertex(object):
@@ -22,8 +21,8 @@ class Vertex(object):
     # Contains lists of incoming edges and outgoing edges.
     ########
 
-    def __init__(self, mechanism, incoming=None, outgoing=None):
-        self.mechanism = mechanism
+    def __init__(self, component, incoming=None, outgoing=None):
+        self.component = component
         if incoming is not None:
             self.incoming = incoming
         else:
@@ -42,35 +41,36 @@ class Graph(object):
     ########
 
     def __init__(self):
-        self.mech_to_vertex = OrderedDict()  # Translate from mechanisms to related vertex
+        self.comp_to_vertex = OrderedDict()  # Translate from mechanisms to related vertex
         self.vertices = []  # List of vertices within graph
-        self.mechanisms = []  # List of mechanisms associated with graph vertices
+        self.edges = [] # List of edges within graph
 
-    def add_vertex(self, mechanism):
-        if mechanism not in self.mechanisms:
-            vertex = Vertex(mechanism)
-            self.mech_to_vertex[mechanism] = vertex
+    def add_vertex(self, component):
+        if component not in [vertex.component for vertex in self.vertices]:
+            vertex = Vertex(component)
+            self.comp_to_vertex[component] = vertex
             self.vertices.append(vertex)
-            self.mechanisms.append(mechanism)
 
-    def add_edge(self, sender, projection, receiver):
-        sender_vertex = self.mech_to_vertex[sender]
-        if projection not in sender_vertex.outgoing:
-            sender_vertex.outgoing.append(Edge(sender, projection, receiver))
-        receiver_vertex = self.mech_to_vertex[receiver]
-        if projection not in receiver_vertex.incoming:
-            receiver_vertex.incoming.append(Edge(sender, projection, receiver))
+    def add_edge(self, sender, receiver):
+        sender_vertex = self.comp_to_vertex[sender]
+        receiver_vertex = self.comp_to_vertex[receiver]
+        if any([(edge.sender, edge.receiver) is (sender_vertex, receiver_vertex) for edge in self.edges]):
+            return
+        new_edge = Edge(sender_vertex, receiver_vertex)
+        sender_vertex.outgoing.append(new_edge)
+        receiver_vertex.incoming.append(new_edge)
+        self.edges.append(new_edge)
 
-    def get_incoming(self, mechanism):
-        return self.mech_to_vertex[mechanism].incoming
+    def get_incoming_from_component(self, component):
+        return self.comp_to_vertex[component].incoming
 
-    def get_outgoing(self, mechanism):
-        return self.mech_to_vertex[mechanism].outgoing
+    def get_outgoing_from_component(self, component):
+        return self.comp_to_vertex[component].outgoing
 
-    def get_children(self, mechanism):
+    def get_child_vertices_from_component(self, component):
         return [edge.receiver for edge in self.mech_to_vertex[mechanism].outgoing]
 
-    def get_parents(self, mechanism):
+    def get_parent_vertices_from_component(self, component):
         return [edge.sender for edge in self.mech_to_vertex[mechanism].incoming]
 
 
@@ -116,7 +116,7 @@ class Composition(object):
         # Adds a new Mechanism to the Composition.
         # If the mechanism has already been added, passes.
         ########
-        if mech not in self.graph.mechanisms:  # Only add if it doesn't already exist in graph
+        if mech not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
             self.graph.add_vertex(mech)  # Set incoming edge list of mech to empty
             self.graph_analyzed = False  # Added mech so must re-analyze graph
 
@@ -125,11 +125,12 @@ class Composition(object):
         # Adds a new Projection to the Composition.
         # If the projection has already been added, passes.
         ########
-        # Ensures that the projection does not already exist in the graph at this place
-        if any([edge.projection is projection for edge in self.graph.get_incoming(receiver)]):
-            return
-        # Add edge to graph
-        self.graph.add_edge(sender, projection, receiver)
+        if projection not in [vertex.component for vertex in self.graph.vertices]:
+            self.graph.add_vertex(projection)
+
+        # Add edges connecting sender and receiver components to projection
+        self.graph.add_edge(sender, projection)
+        self.graph.add_edge(projection, receiver)
         self.graph_analyzed = False  # Added projection so must re-analyze graph
 
     def analyze_graph(self):

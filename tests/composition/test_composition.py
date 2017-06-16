@@ -132,7 +132,6 @@ comp.add_mechanism(B)
         print()
         logger.info('completed {0} addition{2} of a projection to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
 
-
 class TestAnalyzeGraph:
 
     def test_empty_call(self):
@@ -210,7 +209,6 @@ class TestAnalyzeGraph:
         assert D in comp.origin_mechanisms
         assert B in comp.cycle_mechanisms
         assert C in comp.recurrent_init_mechanisms
-
 
 class TestValidateFeedDict:
 
