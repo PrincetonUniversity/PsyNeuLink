@@ -39,11 +39,10 @@ modulate different types of components and their states:
 Creating a ModulatoryProjection
 -------------------------------
 
-The types of ModulatoryProjections listed above are base classes, and cannot be instantiated directly.  A  
-ModulatoryProjection can be created directly by calling the constructor for the desired type of projection.  More
-commonly, however, projections are either specified `in context <Projection_In_Context_Specification>`, or
-are `created automatically <Projection_Automatic_Creation>`, the details of which are described in the documentation
-for each type.
+A ModulatoryProjection is a base class, and cannot be instantiated directly.  A ModulatoryProjection can be created
+directly by calling the constructor for one of the types listed above.  More commonly, however, ModulatoryProjections
+are either specified `in context <Projection_In_Context_Specification>`, or are `created automatically
+<Projection_Automatic_Creation>`, the details of which are described in the documentation for each type.
 
 .. _ModulatoryProjection_Structure:
 
@@ -51,8 +50,11 @@ Structure
 ---------
 
 A ModulatoryProjection has the same basic structure as a `Projection`, augmented by type-specific attributes
-and methods described under each type of modulatory projection.  In addition, all ModulatoryProjections have a
-`modulation <ModulatoryProjection.modulation>` attribute that determines how the projection 
+and methods described under each type of ModulatoryProjection.
+
+COMMENT: THIS BELONGS SOMEWHERE ELSE, AS ModulatoryProjections DON'T HAVE A modulation PARAMETER
+  In addition, all ModulatoryProjections have a
+`modulation <ModulatoryProjection.modulation>` attribute that determines how the projection
 modifies the function of the state to which it projects.  The modulation is specified using a value of
 `Modulation`, which designates one of the following standard actions to take
 either a parameter of the state's function to modulate, or one of two other
@@ -61,13 +63,13 @@ actions to take, as follows:
     * `Modulation.MULTIPLY` - modulate the parameter designated by the <state's function <State.function>` as its
       `multiplicative_param <ModulationParam.MULTIPLICATIVE>`
       (for example, it is the `slope <Linear.slope>` parameter of the `Linear` Function);
-    
+
     * `Modulation.ADD` - use the parameter designated by the <state's function <State.function>` as its
       `additive_param <ModulationParam.ADDITIVE>`
       (for example, it is the `slope <Linear.slope>` parameter of the `Linear` Function);
 
     * `Modulation.OVERRIDE` - use the ModulatoryProjection's value, bypassing the state's `function <State.function>`.
-  
+
     * `Modulation.DISABLE` - use the parameter's value without any modulation.
 
 In addition to the parameters specifed by a state's function as its :keyword:`multiplicative` :keyword:`additive`
@@ -75,6 +77,7 @@ parameters, some functions may also designate other parameters that can be used 
 value for a state can be assigned in a `State specification dictionary <LINK>` assigned in the **params** arg of a
 state's constructor, or in the **modulation** arg of the constructor for an `AdaptiveMechanism`.  If a `modulation`
 value is not specified for a state, its default modulation value is used.
+COMMENT
 
 .. _ModulatoryProjection_Execution:
 
@@ -85,9 +88,10 @@ Execution
 
 A ModulatoryProjection, like any projection, cannot be executed directly.  It is executed when the `state <State>` to 
 which it projects — its `receiver <Projection.receiver>` — is updated;  that occurs when the state's owner mechanism 
-is executed.  When a ModulatoryProjection executes, it gets the value of its `sender <Projection.sender>`, 
-and uses that to adjust the parameter of the state's function (determined by its 
-`modulation <ModulatoryProjection.modulate_operation>` attribute. 
+is executed.  When a ModulatoryProjection executes, it conveys both the value of its `sender <Projection.sender>`
+and the value of its sender's :keyword:`modulation` attribute to the state that receives the ModulatoryProjection.  The
+state assigns the value to the parameter of the state's function specified by the modulation attribute,
+and then calls the function to determine the `value <State.value>` of the state.
 
 .. note::
    The change made to the parameter of the state's function in response to the execution of a ModulatoryProjection
@@ -190,7 +194,6 @@ class ModulatoryProjection_Base(Projection_Base):
     def __init__(self,
                  receiver,
                  sender=None,
-                 modulate=None,  # <- this is not used; here just to force inclusion of attribute in docstring below
                  params=None,
                  name=None,
                  prefs=None,
