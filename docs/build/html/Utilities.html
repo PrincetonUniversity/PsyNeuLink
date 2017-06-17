@@ -169,13 +169,16 @@ are not constrained to be used by PsyNeuLink objects</dd>
 <li><code class="xref any docutils literal"><span class="pre">is_numeric</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">is_numeric_or_none</span></code></li>
 <li><a class="reference internal" href="#Utilities.iscompatible" title="Utilities.iscompatible"><code class="xref any py py-func docutils literal"><span class="pre">iscompatible</span></code></a></li>
+<li><code class="xref any docutils literal"><span class="pre">is_value_spec</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">is_unit_interval</span></code></li>
+<li><a class="reference internal" href="#Utilities.is_same_function_spec" title="Utilities.is_same_function_spec"><code class="xref any py py-func docutils literal"><span class="pre">is_same_function_spec</span></code></a></li>
 </ul>
 </div>
 <div class="section" id="enum">
 <h3>ENUM<a class="headerlink" href="#enum" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><code class="xref any docutils literal"><span class="pre">Autonumber</span></code></li>
-<li><a class="reference internal" href="#Utilities.ModulationOperation" title="Utilities.ModulationOperation"><code class="xref any py py-class docutils literal"><span class="pre">ModulationOperation</span></code></a></li>
+<li><a class="reference internal" href="#Utilities.Modulation" title="Utilities.Modulation"><code class="xref any py py-class docutils literal"><span class="pre">Modulation</span></code></a></li>
 <li><code class="xref any docutils literal"><span class="pre">get_modulationOperation_name</span></code></li>
 </ul>
 </div>
@@ -202,10 +205,13 @@ are not constrained to be used by PsyNeuLink objects</dd>
 <li><code class="xref any docutils literal"><span class="pre">underscore_to_camelCase</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">append_type_to_name</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">ReadOnlyOrderedDict</span></code></li>
+<li><a class="reference internal" href="#Utilities.ContentAddressableList" title="Utilities.ContentAddressableList"><code class="xref any py py-class docutils literal"><span class="pre">ContentAddressableList</span></code></a></li>
+<li><a class="reference internal" href="#Utilities.make_readonly_property" title="Utilities.make_readonly_property"><code class="xref any py py-func docutils literal"><span class="pre">make_readonly_property</span></code></a></li>
+<li><code class="xref any docutils literal"><span class="pre">get_class_attributes</span></code></li>
 </ul>
 <dl class="class">
-<dt id="Utilities.ModulationOperation">
-<em class="property">class </em><code class="descclassname">Utilities.</code><code class="descname">ModulationOperation</code><a class="headerlink" href="#Utilities.ModulationOperation" title="Permalink to this definition">¶</a></dt>
+<dt id="Utilities.Modulation">
+<em class="property">class </em><code class="descclassname">Utilities.</code><code class="descname">Modulation</code><a class="headerlink" href="#Utilities.Modulation" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
 </dd></dl>
 
@@ -464,6 +470,176 @@ it, an exception is raised when a missing attribute is encountered.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="class">
+<dt id="Utilities.ContentAddressableList">
+<em class="property">class </em><code class="descclassname">Utilities.</code><code class="descname">ContentAddressableList</code><span class="sig-paren">(</span><em>component_type</em>, <em>key=None</em>, <em>list=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Utilities.ContentAddressableList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements dict-like list, that can be keyed by the names of the <a class="reference internal" href="Component.html"><span class="doc">compoments</span></a> in its entries.</p>
+<dl class="docutils">
+<dt>Supports:</dt>
+<dd><ul class="first last">
+<li><p class="first">getting and setting entries in the list using keys (string), in addition to numeric indices.
+the key to use is specified by the <strong>key</strong> arg of the constructor, and must be a string attribute;
+* for getting an entry:</p>
+<blockquote>
+<div><p>the key must match the keyed attribute of a component in the list; otherwise an exception is raised;</p>
+</div></blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt>for setting an entry:</dt>
+<dd><ul class="first last simple">
+<li>the key must match the key of the component being assigned;</li>
+<li>if there is already a component in the list the keyed vaue of which matches the key, it is replaced;</li>
+<li>if there is no component in the list the keyed attribute of which matches the key,
+the component is appended to the list;</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>for getting lists of the names, values of the keyed attributes, and values of the <code class="xref any docutils literal"><span class="pre">value</span></code></dt>
+<dd><p class="first last">attributes of components in the list.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt>IMPLEMENTATION NOTE:</dt>
+<dd><p class="first">This class allows components to be maintained in lists, while providing ordered storage
+and the convenience access and assignment by name (e.g., akin to a dict).
+Lists are used (instead of a dict or OrderedDict) since:</p>
+<blockquote class="last">
+<div><ul>
+<li><dl class="first docutils">
+<dt>ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from</dt>
+<dd><p class="first last">collections of states to other variables, such as lists of their values);</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>they are most commonly accessed either exhaustively (e.g., in looping through them during execution),</dt>
+<dd><p class="first last">or by key (e.g., to get the first, &#8220;primary&#8221; one), which makes the efficiencies of a dict for
+accessing by key/name less critical;</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>the number of states in a collection for a given mechanism is likely to be small so that, even when</dt>
+<dd><p class="first last">accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>component_type</strong> (<em>Class</em>) &#8211; specifies the class of the items in the list.</li>
+<li><strong>name</strong> (<em>str : 'ContentAddressableList'</em>) &#8211; name to use for ContentAddressableList</li>
+<li><strong>key</strong> (str : default <a class="reference internal" href="#Utilities.ContentAddressableList.name" title="Utilities.ContentAddressableList.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) &#8211; specifies the attribute of <strong>component_type</strong> used to key items in the list by content;
+<strong>component_type</strong> must have this attribute or, if it is not provided, an attribute with the name &#8216;name&#8217;.</li>
+<li><strong>list</strong> (<em>List : default None</em>) &#8211; specifies a list used to initialize the list;
+all of the items must be of type <strong>component_type</strong> and have the <strong>key</strong> attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Utilities.ContentAddressableList.component_type">
+<code class="descname">component_type</code><a class="headerlink" href="#Utilities.ContentAddressableList.component_type" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Class</em> &#8211; the class of the items in the list.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Utilities.ContentAddressableList.name">
+<code class="descname">name</code><a class="headerlink" href="#Utilities.ContentAddressableList.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; name if provided as arg, else name of of ContentAddressableList class</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Utilities.ContentAddressableList.key">
+<code class="descname">key</code><a class="headerlink" href="#Utilities.ContentAddressableList.key" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; the attribute of <a class="reference internal" href="#Utilities.ContentAddressableList.component_type" title="Utilities.ContentAddressableList.component_type"><code class="xref any py py-attr docutils literal"><span class="pre">component_type</span></code></a> used to key items in the list by content;</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Utilities.ContentAddressableList.data">
+<code class="descname">data</code><a class="headerlink" href="#Utilities.ContentAddressableList.data" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List (property)</em> &#8211; the actual list of items.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Utilities.ContentAddressableList.names">
+<code class="descname">names</code><a class="headerlink" href="#Utilities.ContentAddressableList.names" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List (property)</em> &#8211; values of the <a class="reference internal" href="Component.html"><span class="doc">name</span></a> attribute of components in the list.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Utilities.ContentAddressableList.key_values">
+<code class="descname">key_values</code><a class="headerlink" href="#Utilities.ContentAddressableList.key_values" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List (property)</em> &#8211; values of the keyed attribute of each component in the list.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Utilities.ContentAddressableList.values">
+<code class="descname">values</code><a class="headerlink" href="#Utilities.ContentAddressableList.values" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List (property)</em> &#8211; values of the <a class="reference internal" href="Component.html"><span class="doc">value</span></a> attribute of components in the list.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">names</code></dt>
+<dd><p>Return list of <code class="xref any docutils literal"><span class="pre">values</span></code> of the name attribute of components in the list.
+:returns: <strong>names</strong> &#8211; list of the values of the <code class="xref any docutils literal"><span class="pre">name</span></code> attributes of components in the list.
+:rtype: list</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">key_values</code></dt>
+<dd><p>Return list of <code class="xref any docutils literal"><span class="pre">values</span></code> of the keyed attribute of components in the list.
+:returns: <strong>key_values</strong> &#8211; list of the values of the <code class="xref any docutils literal"><span class="pre">keyed</span></code> attributes of components in the list.
+:rtype: list</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">values</code></dt>
+<dd><p>Return list of values of components in the list.
+:returns: <strong>values</strong> &#8211; list of the values of the <code class="xref any docutils literal"><span class="pre">value</span></code> attributes of components in the list.
+:rtype: list</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Utilities.ContentAddressableList.values_as_lists">
+<code class="descname">values_as_lists</code><a class="headerlink" href="#Utilities.ContentAddressableList.values_as_lists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of values of components in the list, each converted to a list.
+:returns: <strong>values</strong> &#8211; list of list values of the <code class="xref any docutils literal"><span class="pre">value</span></code> attributes of components in the list,
+:rtype: list</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="Utilities.is_same_function_spec">
+<code class="descclassname">Utilities.</code><code class="descname">is_same_function_spec</code><span class="sig-paren">(</span><em>fct_spec_1</em>, <em>fct_spec_2</em><span class="sig-paren">)</span><a class="headerlink" href="#Utilities.is_same_function_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare two function specs and return True if both are for the same class of Function</p>
+<p>Arguments can be either a class or instance of a PsyNeuLink Function, or any other callable method or function
+Return True only if both are instances or classes of a PsyNeuLink Function;  otherwise, return False</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Utilities.make_readonly_property">
+<code class="descclassname">Utilities.</code><code class="descname">make_readonly_property</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#Utilities.make_readonly_property" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return property that provides read-only access to its value</p>
 </dd></dl>
 
 </div>

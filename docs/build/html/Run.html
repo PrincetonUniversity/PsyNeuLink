@@ -240,15 +240,15 @@ requires that it be appropriately updated.</p>
 </div>
 <div class="section" id="inputs">
 <span id="run-inputs"></span><h3>Inputs<a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function presents the inputs for each round of execution to the inputStates of the relevant
+<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function presents the inputs for each round of execution to the input_states of the relevant
 mechanisms. These are specified in the <strong>inputs</strong> argument of the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.
-For a mechanism, they comprise the input value for each of the mechanism&#8217;s <a class="reference internal" href="InputState.html"><span class="doc">inputStates</span></a>.  For a process
+For a mechanism, they comprise the input value for each of the mechanism&#8217;s <a class="reference internal" href="InputState.html"><span class="doc">input_states</span></a>.  For a process
 or system, they comprise the input values for the inputState(s) of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism(s).  Input values can be
 specified in one of two ways: <a class="reference internal" href="#run-inputs-sequence-format"><span class="std std-ref">sequence format</span></a> and <code class="xref any docutils literal"><span class="pre">mechanism</span> <span class="pre">format</span></code>.
 Sequence format is more complex, but does not require the specification of mechanisms by name, and thus may better
 suited for automated means of generating inputs.  Mechanism format requires that inputs be assigned to mechanisms by
 name, but is easier to use (as the order in which the mechanisms are specified does not matter).  Both formats require
-that inputs be specified as nested lists or ndarrays, that define the number of executions, mechanisms, inputStates
+that inputs be specified as nested lists or ndarrays, that define the number of executions, mechanisms, input_states
 and elements of each input value.  These factors determine the levels of nesting required for a list, or
 the dimensionality (number of axes) for an ndarray.  They are described below, followed by a description of the two
 formats.</p>
@@ -268,10 +268,10 @@ has only one <a class="reference internal" href="Keywords.html#Keywords.Keywords
 since that separates the inputs for each mechanism into separate entries of a dictionary.</li>
 </ul>
 <ul class="simple">
-<li><strong>Number of inputStates.</strong> In general, mechanisms have a single (&#8220;primary&#8221;) inputState; however, some types of
+<li><strong>Number of input_states.</strong> In general, mechanisms have a single (&#8220;primary&#8221;) inputState; however, some types of
 mechanisms can have more than one (see <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">InputStates</span></a>).  If any <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism in a process or
 system has more than one inputState, then the next level of nesting of a list, or next higher axis of an ndarray,
-is used for the set of inputStates for each mechanism.</li>
+is used for the set of input_states for each mechanism.</li>
 </ul>
 <ul class="simple">
 <li><strong>Number of elements for the value of an inputState.</strong> The input for an inputState can be a single element (e.g.,
@@ -300,7 +300,7 @@ above.  The <a class="reference internal" href="#run-sequence-format-fig"><span 
 <div><p><em>Lists:</em> if there is more than one round, then the outermost level of the list is used for the sequence of
 executions.  If there is only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism and it has only one inputState (the most common
 case), then a single sublist is used for the input of each round.  If the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism has more
-than one inputState, then the entry for each round is a sublist of the inputStates, each entry of which is a
+than one inputState, then the entry for each round is a sublist of the input_states, each entry of which is a
 sublist containing the input for that inputState.  If there is more than one mechanism, but none have more than
 one inputState, then a sublist is used for each mechanism in each round, within which a sublist is used for the
 input for that mechanism.  If there is more than one mechanism, and any have more than one inputState,
@@ -311,10 +311,10 @@ item, axis 1 is used for the next factor for which there is only one item, and s
 more than one round, only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and that has only one inputState (the most common case),
 then axis 0 is used for round, and axis 1 for inputs per round.  In the extreme, if there are multiple rounds,
 more than one <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and more than one inputState for one or more of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms,
-then axis 0 is used for rounds, axis 1 for mechanisms within round, axis 2 for inputStates of each mechanism, and
+then axis 0 is used for rounds, axis 1 for mechanisms within round, axis 2 for input_states of each mechanism, and
 axis 3 for the input to each inputState of a mechanism.  Note that if <em>any</em> mechanism being run (directly, or as
 one of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms of a process or system) has more than one inputState, then an axis must be
-committed to inputStates, and the input to every inputState of every mechanism must be specified in that axis
+committed to input_states, and the input to every inputState of every mechanism must be specified in that axis
 (i.e., even for those mechanisms that have a single inputState).</p>
 <div class="figure align-center" id="id5">
 <span id="run-sequence-format-fig"></span><a class="reference internal image-reference" href="_images/Sequence_format_input_specs_fig.png"><img alt="Example input specifications in sequence format" src="_images/Sequence_format_input_specs_fig.png" style="width: 1553.25px; height: 1622.25px;" /></a>
@@ -332,9 +332,9 @@ sequence of inputs for an <a class="reference internal" href="Keywords.html#Keyw
 process or system being run.  The key for each entry is the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and the value contains either a list
 or ndarray specifying the sequence of inputs for that mechanism, one for each round of execution.  If a list is used,
 and the mechanism has more than one inputState, then a sublist is used in each item of the list to specify the inputs
-for each of the mechanism&#8217;s inputStates for that round.  If an ndarray is used, axis 0 is used for the sequence of
+for each of the mechanism&#8217;s input_states for that round.  If an ndarray is used, axis 0 is used for the sequence of
 rounds. If the mechanism has a single inputState, then axis 1 is used for the input for each round.  If the mechanism
-has multiple inputStates, then axis 1 is used for the inputStates, and axis 2 is used for the input to each
+has multiple input_states, then axis 1 is used for the input_states, and axis 2 is used for the input to each
 inputState for each round.</p>
 <blockquote>
 <div><div class="figure align-center" id="id6">
@@ -352,7 +352,7 @@ to such mechanisms, that will be used to initialize the process or system when i
 specified in the <code class="xref std std-keyword docutils literal"><span class="pre">initial_values</span></code> argument of <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, as a dictionary. The key for each entry must
 be a mechanism designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>, and its value an input for the mechanism to be used as its initial
 value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an np.ndarray),
-must equal the number of inputStates of the mechanism, and the size of each value must match (in number and type of
+must equal the number of input_states of the mechanism, and the size of each value must match (in number and type of
 elements) that of the <a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the corresponding inputState.</p>
 </div>
 <div class="section" id="targets">
@@ -363,7 +363,7 @@ are specified in the <code class="xref std std-keyword docutils literal"><span c
 any of three formats.  The two formats used for <code class="xref std std-keyword docutils literal"><span class="pre">inputs</span></code> (<a class="reference internal" href="#run-inputs-sequence-format"><span class="std std-ref">sequence</span></a> and
 <a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">mechanism</span></a> format) can also be used for targets.  However, the format of the lists or
 ndarrays is simpler, since each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism is assigned only a single target value, so there is never the need
-for the extra level of nesting (or dimension of ndarray) used for inputStates in the specification of <code class="xref std std-keyword docutils literal"><span class="pre">inputs</span></code>.
+for the extra level of nesting (or dimension of ndarray) used for input_states in the specification of <code class="xref std std-keyword docutils literal"><span class="pre">inputs</span></code>.
 Details concerning the use of the <a class="reference internal" href="#run-targets-sequence-format"><span class="std std-ref">sequence</span></a>  and
 <a class="reference internal" href="#run-targets-mechanism-format"><span class="std std-ref">mechanism</span></a> formats for targets is described below. Targets can also be specified
 as a <a class="reference internal" href="#run-targets-function-format"><span class="std std-ref">function</span></a> (for example, to allow the target to depend on the outcome of processing).</p>

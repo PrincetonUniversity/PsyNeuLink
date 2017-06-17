@@ -87,7 +87,7 @@ the parameter(s) to be learned.  A LearningSignal has the following primary attr
 
 * `learning_rate <LearningSignal.learning_rate>`:
    COMMENT:
-      FROM LearningMechanism DOCSTRING:  ADD DESCRIPTION OF HOW IT AFFECTS ParameterState's funtion
+      FROM LearningMechanism DOCSTRING:  ADD DESCRIPTION OF HOW IT AFFECTS ParameterState's function
    COMMENT
    the learning rate for the LearningMechanism (used to specify the :keyword:`learning_rate` parameter for its
    `function <LearningMechanism.function>`.  Specifiying this (or the learning_rate parameter of the
