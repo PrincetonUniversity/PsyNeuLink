@@ -111,14 +111,14 @@ Class Reference
 # IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
 #                      ADD IN GENERIC CONTROL STUFF FROM DefaultGatingMechanism
 
-from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal \
-    import GatingSignal, _parse_gating_signal_spec
-from PsyNeuLink.Components.States.State import State_Base, _instantiate_state, _parse_state_spec
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
+from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.States.ModulatoryOutputState.GatingSignal \
+    import GatingSignal, _parse_gating_signal_spec
+from PsyNeuLink.Components.States.State import State_Base, _instantiate_state
 
 GatingMechanismRegistry = {}
 

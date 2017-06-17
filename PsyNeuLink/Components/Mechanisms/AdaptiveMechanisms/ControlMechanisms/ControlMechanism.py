@@ -118,13 +118,13 @@ Class Reference
 """
 
 
-from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from PsyNeuLink.Components.Projections.Projection import _validate_receiver
+from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _parse_state_spec
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 
 ControlMechanismRegistry = {}
 
@@ -317,7 +317,7 @@ class ControlMechanism_Base(Mechanism_Base):
         # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
 
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
+            from PsyNeuLink.Components.States.ModulatoryOutputState.ControlSignal \
                 import ControlSignal
 
             for spec in target_set[CONTROL_SIGNALS]:
@@ -428,7 +428,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Create registry for GatingSignals (to manage names)
         from PsyNeuLink.Globals.Registry import register_category
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.States.ModulatoryOutputState.ControlSignal import ControlSignal
         from PsyNeuLink.Components.States.State import State_Base
         register_category(entry=ControlSignal,
                           base_class=State_Base,
@@ -480,7 +480,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         Returns ControlSignal (OutputState)
         """
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.States.ModulatoryOutputState.ControlSignal import ControlSignal
         from PsyNeuLink.Components.States.ParameterState import _get_parameter_state
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 
@@ -608,7 +608,7 @@ class ControlMechanism_Base(Mechanism_Base):
         else:
             control_signal_name = param_name + '_' + ControlSignal.__name__
 
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
+            from PsyNeuLink.Components.States.ModulatoryOutputState.ControlSignal \
                 import ControlSignal
             from PsyNeuLink.Components.States.State import _instantiate_state
 

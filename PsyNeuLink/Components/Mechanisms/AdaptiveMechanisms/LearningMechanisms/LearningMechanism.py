@@ -355,6 +355,7 @@ processes converge on that mechanism), only one ObjectiveMechanism will be creat
        and designated as a `MONITORING` mechanism.
 
 .. _LearningMechanism_Execution:
+
 Execution
 ---------
 
@@ -368,8 +369,8 @@ in turn, to modify the value of the `MATRIX` ParameterState of each of the Mappi
 (listed in the LearningMechanism's `learned_projections` attribute).  Each ParameterState uses the value it receives
 from the `LearningProjection` to modify the parameter of its function in a manner specified by the
 `modulation <LearningSignal.modulation>` attribute of the `LearningSignal` from which it receives the
-LearningProjection (see `modulation <ModulatoryProjection_Structure` for a description of function parameter
-modulation).  By default, the `modulation <LearningSignal.modulation>` attribute of a LearningSignal is Modulation.ADD,
+LearningProjection (see `modulation <ModulatoryOutputState_Modulation` for a description of state value modulation).
+By default, the `modulation <LearningSignal.modulation>` attribute of a LearningSignal is Modulation.ADD,
 the `function <ParameterState.function>` of a `MATRIX` ParameterState for a MappingProjection is
 `Accumulator`, and the parameter it uses for `additive modulation` is its `increment <Accumulator.increment>`.  These
 assignments cause the value of a LearningProjection to be added to the previous value of the `MATRIX` ParameterState,
@@ -387,14 +388,14 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
+from PsyNeuLink.Components.Functions.Function import BackPropagation
+from PsyNeuLink.Components.Functions.Function import _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
     import ObjectiveMechanism, ERROR_SIGNAL
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _validate_receiver
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Functions.Function import BackPropagation
 
 # Params:
 
@@ -734,7 +735,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS
         if LEARNING_SIGNALS in target_set and target_set[LEARNING_SIGNALS]:
 
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningSignal \
+            from PsyNeuLink.Components.States.ModulatoryOutputState.LearningSignal \
                 import LearningSignal
             from PsyNeuLink.Components.States.ParameterState import ParameterState
             from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
@@ -867,7 +868,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Create registry for LearningSignals (to manage names)
         from PsyNeuLink.Globals.Registry import register_category
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningSignal import LearningSignal
+        from PsyNeuLink.Components.States.ModulatoryOutputState.LearningSignal import LearningSignal
         from PsyNeuLink.Components.States.State import State_Base
         register_category(entry=LearningSignal,
                           base_class=State_Base,
@@ -931,7 +932,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 #                         learning_signal -> learning_signals (WITH SINGULAR ONE INDEXING INTO learning_signals.values)
 #  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)
 
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningSignal import LearningSignal
+        from PsyNeuLink.Components.States.ModulatoryOutputState.LearningSignal import LearningSignal
         from PsyNeuLink.Components.States.State import _parse_state_spec
         from PsyNeuLink.Components.States.ParameterState import ParameterState, _get_parameter_state
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
@@ -1078,7 +1079,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         else:
             learning_signal_name = param_name + '_' + LearningSignal.__name__
 
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningSignal \
+            from PsyNeuLink.Components.States.ModulatoryOutputState.LearningSignal \
                 import LearningSignal
             from PsyNeuLink.Components.States.State import _instantiate_state
 

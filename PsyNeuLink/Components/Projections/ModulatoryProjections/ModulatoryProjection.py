@@ -52,33 +52,6 @@ Structure
 A ModulatoryProjection has the same basic structure as a `Projection`, augmented by type-specific attributes
 and methods described under each type of ModulatoryProjection.
 
-COMMENT: THIS BELONGS SOMEWHERE ELSE, AS ModulatoryProjections DON'T HAVE A modulation PARAMETER
-  In addition, all ModulatoryProjections have a
-`modulation <ModulatoryProjection.modulation>` attribute that determines how the projection
-modifies the function of the state to which it projects.  The modulation is specified using a value of
-`Modulation`, which designates one of the following standard actions to take
-either a parameter of the state's function to modulate, or one of two other
-actions to take, as follows:
-
-    * `Modulation.MULTIPLY` - modulate the parameter designated by the <state's function <State.function>` as its
-      `multiplicative_param <ModulationParam.MULTIPLICATIVE>`
-      (for example, it is the `slope <Linear.slope>` parameter of the `Linear` Function);
-
-    * `Modulation.ADD` - use the parameter designated by the <state's function <State.function>` as its
-      `additive_param <ModulationParam.ADDITIVE>`
-      (for example, it is the `slope <Linear.slope>` parameter of the `Linear` Function);
-
-    * `Modulation.OVERRIDE` - use the ModulatoryProjection's value, bypassing the state's `function <State.function>`.
-
-    * `Modulation.DISABLE` - use the parameter's value without any modulation.
-
-In addition to the parameters specifed by a state's function as its :keyword:`multiplicative` :keyword:`additive`
-parameters, some functions may also designate other parameters that can be used for modulation.  The modulation
-value for a state can be assigned in a `State specification dictionary <LINK>` assigned in the **params** arg of a
-state's constructor, or in the **modulation** arg of the constructor for an `AdaptiveMechanism`.  If a `modulation`
-value is not specified for a state, its default modulation value is used.
-COMMENT
-
 .. _ModulatoryProjection_Execution:
 
 Execution
