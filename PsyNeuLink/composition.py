@@ -1,5 +1,27 @@
-from collections import OrderedDict, Iterable
+from collections import Iterable, OrderedDict
+from enum import Enum
+
 from PsyNeuLink.scheduling.Scheduler import Scheduler
+
+
+class MechanismRole(Enum):
+    ORIGIN = 0
+    INTERNAL = 1
+    CYCLE = 2
+    INITIALIZE_CYCLE = 3
+    TERMINAL = 4
+    SINGLETON = 5
+    MONITORING = 6
+    TARGET = 7
+
+
+class CompositionError(Exception):
+
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
 
 
 class Edge(object):
@@ -43,7 +65,7 @@ class Graph(object):
     def __init__(self):
         self.comp_to_vertex = OrderedDict()  # Translate from mechanisms to related vertex
         self.vertices = []  # List of vertices within graph
-        self.edges = [] # List of edges within graph
+        self.edges = []  # List of edges within graph
 
     def add_vertex(self, component):
         if component not in [vertex.component for vertex in self.vertices]:
@@ -91,9 +113,17 @@ class Composition(object):
         # - self.*_mechanisms is a list of Mechanisms that are of a certain
         #   class within the composition graph.
         ########
+
+        # core attributes
         self.graph = Graph()  # Graph of the Composition
+        self.mechanisms = []
+
+        # status attributes
         # Needs to be created still| self.scheduler = Scheduler()
         self.graph_analyzed = False  # Tracks if the Composition is ready to run
+
+        # helper attributes
+        self.mechanisms_to_roles = OrderedDict()
 
         # Create lists to track identity of certain mechanism classes within the
         # composition.
@@ -119,6 +149,7 @@ class Composition(object):
         if mech not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
             self.graph.add_vertex(mech)  # Set incoming edge list of mech to empty
             self.graph_analyzed = False  # Added mech so must re-analyze graph
+            self.mechanisms.append(mech)
 
     def add_projection(self, sender, projection, receiver):
         ########
@@ -214,6 +245,15 @@ class Composition(object):
                         elif child not in visited:
                             next_visit_stack.append(child)
         return
+
+    def get_mechanisms_by_role(self, role):
+        if role not in MechanismRole:
+            raise CompositionError('Invalid MechanismRole: {0}'.format(role))
+
+        try:
+            return set([mech for mech in self.mechanisms if self.mechanisms_to_roles[mech] == role])
+        except KeyError as e:
+            raise CompositionError('Mechanism not assigned to role in mechanisms_to_roles: {0}'.format(e))
 
     def set_origin(self, mech):
         if mech not in self.origin_mechanisms:  # If mechanism isn't in Origin list already
