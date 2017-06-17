@@ -6206,6 +6206,7 @@ class Distance(ObjectiveFunction):
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************
 
+ReturnVal = namedtuple('ReturnVal', 'learning_signal, error_signal')
 
 class LearningFunction(Function_Base):
     """Abstract class of `Function` used for learning.
@@ -6226,13 +6227,20 @@ class LearningFunction(Function_Base):
 
     componentType = LEARNING_FUNCTION_TYPE
 
+    # def __init__(self, variable_default, params, owner, prefs, context):
+    #     super().__init__(variable_default=variable_default,
+    #                      params=params,
+    #                      owner=owner,
+    #                      prefs=prefs,
+    #                      context=context)
+    #     self.return_val = return_val(None, None)
+
 
 LEARNING_ACTIVATION_FUNCTION = 'activation_function'
 LEARNING_ACTIVATION_INPUT = 0  # a(j)
 # MATRIX = 1             # w
 LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
 LEARNING_ERROR_OUTPUT = 2
-
 
 class Reinforcement(
     LearningFunction):  # -------------------------------------------------------------------------------
@@ -6370,6 +6378,8 @@ class Reinforcement(
                                                   learning_rate=learning_rate,
                                                   params=params)
 
+        # self.return_val = ReturnVal(None, None)
+
         super().__init__(variable_default=variable_default,
                          params=params,
                          owner=owner,
@@ -6440,13 +6450,12 @@ class Reinforcement(
 
         Returns
         -------
+        error signal : 1d np.array
+            same as value received in `error_signal <Reinforcement.error_signal>` argument.
 
         diagonal weight change matrix : 2d np.array
             has a single non-zero entry in the same row and column as the one in
             `activation_output <Reinforcement.activation_output>` and `error_signal <Reinforcement.error_signal>`.
-
-        error signal : 1d np.array
-            same as value received in `error_signal <Reinforcement.error_signal>` argument.
         """
 
         self._check_args(variable=variable, params=params, context=context)
@@ -6474,9 +6483,13 @@ class Reinforcement(
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        # return:
-        # - weight_change_matrix and error_array
-        return [weight_change_matrix, error_array]
+        # self.return_val.error_signal = error_array
+        # self.return_val.learning_signal = weight_change_matrix
+        #
+        # # return:
+        # # - weight_change_matrix and error_array
+        # return list(self.return_val)
+        return [error_array, weight_change_matrix]
 
 
 # Argument names:
@@ -6630,6 +6643,8 @@ class BackPropagation(LearningFunction):
                                                   learning_rate=learning_rate,
                                                   params=params)
 
+        # self.return_val = ReturnVal(None, None)
+
         super().__init__(variable_default=variable_default,
                          params=params,
                          owner=owner,
@@ -6764,14 +6779,13 @@ class BackPropagation(LearningFunction):
         Returns
         -------
 
-        weight change matrix : 2d np.array
-            the modifications to make to the matrix.
-
         weighted error signal : 1d np.array
             `error_signal <BackPropagation.error_signal>`, weighted by the contribution made by each element of
             `activation_output <BackPropagation.activation_output>` as a function of
             `error_matrix <BackPropagation.error_matrix>`.
 
+        weight change matrix : 2d np.array
+            the modifications to make to the matrix.
         """
 
         self._check_args(variable=variable, params=params, context=context)
@@ -6816,6 +6830,11 @@ class BackPropagation(LearningFunction):
         #           "-derivative (dA_dW): {}\n    "
         #           "-error_derivative (dE_dW): {}\n".
         #           format(self.owner.name, self.activation_input, dE_dA, dA_dW ,dE_dW))
+
+        # self.return_val.error_signal = dE_dW
+        # self.return_val.learning_signal = weight_change_matrix
+        #
+        # return list(self.return_val)
 
         return [weight_change_matrix, dE_dW]
 

@@ -636,9 +636,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         CONTROL_PROJECTIONS: None,
         INPUT_STATES:input_state_names,
         OUTPUT_STATES:[{NAME:ERROR_SIGNAL,
-                        INDEX:0},
+                        INDEX:1},
                        {NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
-                        INDEX:1}
+                        INDEX:0}
                        ]})
 
     @tc.typecheck

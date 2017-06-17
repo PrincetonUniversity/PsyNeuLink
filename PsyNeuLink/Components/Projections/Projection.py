@@ -1058,7 +1058,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
         projection = projection_spec
         if ((isinstance(sender, OutputState) and projection.sender is sender) or
                 (isinstance(sender, Mechanism) and projection.sender is sender.output_state)):
-            if self.verbosePref:
+            if sender.verbosePref:
                 warnings.warn("Request to assign {} as sender of {}, but it has already been assigned".
                               format(sender.name, projection.name))
                 return
