@@ -55,24 +55,28 @@ forms:
       corresponding type will be created, using a default value for the state that is determined by the context
       in which it is specified.
     ..
-    * a **value**.  This creates a default inputState using the specified value as inputState's ``variable``.
-      This must be compatible with the item of the owner mechanism's ``variable`` to which the inputState is assigned.
+    * a **value**.  This creates a default State using the specified value as its default `value <State.value>`.
     ..
-    * a **state specification dictionary**.  This can contain the following entries:
+    * a **state specification dictionary**; every state specification can contain the following *KEY*:<value>
+      entries, in addition to those specific to a particular state subtype (see subtype documentation):
       ..
-      * *NAME*:<str> - used as the name of the state
+      * *NAME*:<str> - the string is used as the name of the state;
       ..
-      * *VALUE*:<value> - used as the default value of the state
+      * *VALUE*:<value> - the value is used as the default value of the state;
+      COMMENT:
+          ..
+          * *PROJECTIONS*:<List> - the list must contain specifications for one or more
+            `projections <Projection_In_Context_Specification> to or from the state,
+            depending the type of state and the context in which it is specified;
+      COMMENT
       ..
-      * *PROJECTIONS*:<List> - the list must contain specifications for one or more projections to or from the state,
-        depending the type of state and the context in which it is specified.
-      ..
-      * *str*:<List> - the key is used as the name of the state, and the list must contain projection specifications
-        for projections to or from the state, depending on the type of state and the context in which it is specified.
+      * *str*:<List> - the key is used as the name of the state, and the list must contain specifications for
+        one or more `projections <Projection_In_Context_Specification>` to or from the state,
+        depending on the type of state and the context in which it is specified;
         ..
-    * a **2-item tuple** - the first must be a value, used as the default value for the state, and the second must
-        be a projection specification for a projection to or from the state, depending on the type of state and the
-        context in which it is specified.
+    * a **2-item tuple** - the first item must be a value, used as the default value for the state,
+      and the second item must be a specification for a `projection <Projection_In_Context_Specification>`
+      to or from the state, depending on the type of state and the context in which it is specified;
 
 *** EXAMPLES HERE
 

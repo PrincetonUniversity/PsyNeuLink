@@ -82,10 +82,8 @@ Any of the following can be used to specify a projection in context:
       |
       * CONTROL_PROJECTION -- a `ControlProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
       |
-      COMMENT:
-      * GATING_PROJECTION -- a `GatingProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
+      * GATING_PROJECTION -- a `GatingProjection` with the `DefaultGatingMechanism` as its :keyword:`sender`.
       |
-      COMMENT
       * LEARNING_PROJECTION -- a `LearningProjection`.  At present, this can only be used together with the
         specification of a MappingProjection (see `tuple <Mapping_Matrix_Specification>` format).  If the
         :keyword:`receiver` of the MappingProjection projects to a `MonitoringMechanism <MonitoringMechanism>`,
