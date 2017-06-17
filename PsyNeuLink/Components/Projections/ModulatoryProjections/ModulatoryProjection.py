@@ -14,25 +14,25 @@
 Overview
 --------
 
-A ModulatoryProjection is a subclass of `Projection` that takes the output of an `AdaptiveMechanism`, and uses that
-to modulate the function of a `state <State>`.  There are three types of ModulatoryProjections, that
-modulate different types of components and their states: 
+A ModulatoryProjection is a subclass of `Projection` that takes the value of a `ModulatoryOutputState` of an
+`AdaptiveMechanism`, and uses that to modulate the function of a `state <State>`.  There are three types of
+ModulatoryProjections, that modulate different types of components and their states:
 
 * `LearningProjection`
-    This takes a `learning_signal <LearningMechanism.learning_signal>` (the output of a `LearningMechanism`), 
-    and uses it to modulate the value of the `matrix <MappingProjection.MappingProjection.matrix>`
-    parameter of a MappingProjection.
+    This takes the `value <LearningSignal.value>` of a `LearningSignal` belonging to a LearningMechanism,
+    and conveys it to the *MATRIX* `ParameterState` of a `MappingProjection`, for use by its
+    `function <ParameterState.function>` in modulating the value of the MappingProjection's
+    `matrix <MappingProjection.matrix>` parameter.
 ..
 * `GatingProjection`
-    This takes a `gating_signal <GatingMechanism.gating_signal>` (usually the output of a `GatingMechanism`), 
-    and uses it to modulate the value of an `inputState <InputState>` or `outputState <OutputState>` of a 
-    ProcessingMechanism.
+    This takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to a GatingMechanism,
+    and conveys it to the `inputState <InputState>` or `outputState <OutputState>` of a `ProcessingMechanism`.
+    for use by the state's :keyword:`funtion` in modulating its :keyword:`value`.
 ..
 * `ControlProjection`
-    This takes a `control_signal <ControlProjection.ControlProjection.allocation>` (usually the ouptput
-    of a `ControlMechanism <ControlMechanism>`) and uses it to modulate the value of a parameter of a 
-    ProcessingMechanism or its function.
-..
+    This takes the `value of a <ControlSignal.value> of a `ControlSignal` belonging to a ControlMechanism,
+    and conveys it to the `ParameterState` for the parameter of a `Mechanism` or its
+    `function <Mechanism.function>`, for use in modulating the value of the parameter.
 
 .. _Projection_Creation:
 
