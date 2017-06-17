@@ -929,7 +929,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # else:
         #     self.error_signals = np.append(self.error_signals, defaultErrorSignal)
 
-        # GET index FOR GatingSignal OutputState
+        # GET index FOR LearningSignal OutputState
         try:
             output_state_index = len(self.output_states)
         except (AttributeError, TypeError):
