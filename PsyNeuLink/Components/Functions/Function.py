@@ -6489,7 +6489,7 @@ class Reinforcement(
         # # return:
         # # - weight_change_matrix and error_array
         # return list(self.return_val)
-        return [error_array, weight_change_matrix]
+        return [weight_change_matrix, error_array]
 
 
 # Argument names:
