@@ -858,16 +858,20 @@ class LearningMechanism(AdaptiveMechanism_Base):
                           context=context)
 
         # Instantiate LearningSignals if they are specified, and assign to self._output_states
-        # Note: if any LearningSignals are specifie they will replace the default LEARNING_SIGNAL OutputState
+        # Note: if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputState
         #          in the OUTPUT_STATES entry of paramClassDefaults;
         #       the LearningSignals will be inserted into _output_states at the beginning of the list
         #       leaving ERROR_SIGNAL as the last entry
         if self.learning_signals:
             # Delete default LEARNING_SIGNAL item in output_states
             del self._output_states[0]
-            for learning_signal in self.learning_signals:
+            for i, learning_signal in enumerate(self.learning_signals):
                 ls = self._instantiate_learning_signal(learning_signal=learning_signal, context=context)
                 self._output_states.insert(0, ls)
+                self.learning_signals[i] = ls
+            if len(self.learning_signals) == 1:
+                TEST = True
+
 
         super()._instantiate_output_states(context=context)
 
@@ -1170,8 +1174,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     @property
     def learned_projections(self):
-        learned_projections = []
-        return [learned_projections.append(learning_signal.efferents) for learning_signal in self.learning_signals]
+        # learned_projections = []
+        # return [learned_projections.append(learning_signal.efferents) for learning_signal in self.learning_signals]
+        return [lp.receiver.owner for lp in self.learning_projections]
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
