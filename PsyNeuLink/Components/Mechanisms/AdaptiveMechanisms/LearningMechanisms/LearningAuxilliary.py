@@ -342,7 +342,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                 # If the ObjectiveMechanism projects to a LearningMechanism that is the sender for the
                 #     learning_projection, raise exception as this function should not have been called
                 elif (isinstance(learning_projection.sender, LearningMechanism) and
-                          any(learning_projection.sender.owner is project.receiver.owner
+                          any(learning_projection.sender.owner is projection.receiver.owner
                               for projection in receiver_mech.output_state.efferents)):
                     raise LearningAuxilliaryError("PROGRAM ERROR:  {} already has an "
                                                   "ObjectiveMechanism ({}) and a "

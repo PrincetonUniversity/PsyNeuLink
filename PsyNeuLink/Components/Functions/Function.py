@@ -6729,7 +6729,7 @@ class BackPropagation(LearningFunction):
             if cols != error_signal_len:
                 raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
                                     "must match the length of the error signal ({}) it receives".
-                                    format(cols, MATRIX, error_matrix.shape, self.name, cols))
+                                    format(cols, MATRIX, error_matrix.shape, self.name, error_signal_len))
 
             # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
             if rows != activity_output_len:

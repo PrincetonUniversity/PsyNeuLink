@@ -347,7 +347,10 @@ class LearningProjection(ModulatoryProjection_Base):
             # VALIDATE SENDER
             sender = self.sender
             if isinstance(sender, LearningMechanism):
-                sender = self.sender = sender.output_state
+                if len(sender.learning_signals) > 1:
+                    raise LearningProjectionError("PROGRAM ERROR: {} has more than one LearningSignal "
+                                                  "which is not currently supported".format(sender.name))
+                sender = self.sender = sender.learning_signals[0]
 
             if any(s in {OutputState, LearningMechanism} for s in {sender, type(sender)}):
                 # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array

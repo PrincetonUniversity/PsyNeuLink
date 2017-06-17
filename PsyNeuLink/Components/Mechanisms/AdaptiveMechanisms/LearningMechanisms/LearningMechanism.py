@@ -409,7 +409,7 @@ ACTIVATION_INPUT = 'activation_input'     # inputState
 ACTIVATION_OUTPUT = 'activation_output'   # inputState
 
 input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
-output_state_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
+output_state_names = [ERROR_SIGNAL, LEARNING_SIGNAL]
 
 ERROR_SOURCE = 'error_source'
 
@@ -635,10 +635,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
         INPUT_STATES:input_state_names,
-        OUTPUT_STATES:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
+        OUTPUT_STATES:[{NAME:ERROR_SIGNAL,
                         INDEX:0},
-                       {NAME:ERROR_SIGNAL,
-                        INDEX:1}]})
+                       {NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
+                        INDEX:1}
+                       ]})
 
     @tc.typecheck
     def __init__(self,
@@ -864,13 +865,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
         #       leaving ERROR_SIGNAL as the last entry
         if self.learning_signals:
             # Delete default LEARNING_SIGNAL item in output_states
-            del self._output_states[0]
+            del self._output_states[1]
             for i, learning_signal in enumerate(self.learning_signals):
                 ls = self._instantiate_learning_signal(learning_signal=learning_signal, context=context)
-                self._output_states.insert(0, ls)
+                self._output_states.insert(1, ls)
                 self.learning_signals[i] = ls
-            if len(self.learning_signals) == 1:
-                TEST = True
+            # if len(self.learning_signals) == 1:
+            #     TEST = True
 
 
         super()._instantiate_output_states(context=context)
@@ -1192,7 +1193,7 @@ def _instantiate_error_signal_projection(sender, receiver):
     """
 
     if isinstance(sender, ObjectiveMechanism):
-        sender = sender.output_state
+        sender = sender.output_states[ERROR_SIGNAL]
     elif isinstance(sender, LearningMechanism):
         sender = sender.output_states[ERROR_SIGNAL]
     else:
