@@ -42,9 +42,40 @@ Creating a State
 ----------------
 
 States can be created using the constructor for one of the subclasses.  However, in general, they are created
-automatically by the objects to which they belong, and/or through specification in context (e.g., when
-`specifying the parameters <ParameterState_Specifying_Parameters>` of a mechanism or its function to be controlled,
-or of a `MappingProjections to be learned <MappingProjection_Tuple_Specification>).
+automatically by the objects to which they belong, or through their specification in the constructor for those
+objects.  For example, `InputStates <InputState>` and `OutputStates <OutputStates>` can be specified, respectively,
+in the **input_states** and **output_states** arguments of the constructor for a `Mechanism`;  and
+a `ParameterState` can be specified in the argument of the constructor for a function of a Mechanism or
+Projection, where its parameters are specified.  A state can be specified in these ways using any of the following
+forms:
+
+    * an existing **State** object;
+    ..
+    * the name of a **state subclass** (`InputState`, `ParmeterState`, or `OutputState` - a default state of the
+      corresponding type will be created, using a default value for the state that is determined by the context
+      in which it is specified.
+    ..
+    * a **value**.  This creates a default inputState using the specified value as inputState's ``variable``.
+      This must be compatible with the item of the owner mechanism's ``variable`` to which the inputState is assigned.
+    ..
+    * a **state specification dictionary**.  This can contain the following entries:
+      ..
+      * *NAME*:<str> - used as the name of the state
+      ..
+      * *VALUE*:<value> - used as the default value of the state
+      ..
+      * *PROJECTIONS*:<List> - the list must contain specifications for one or more projections to or from the state,
+        depending the type of state and the context in which it is specified.
+      ..
+      * *str*:<List> - the key is used as the name of the state, and the list must contain projection specifications
+        for projections to or from the state, depending on the type of state and the context in which it is specified.
+        ..
+    * a **2-item tuple** - the first must be a value, used as the default value for the state, and the second must
+        be a projection specification for a projection to or from the state, depending on the type of state and the
+        context in which it is specified.
+
+*** EXAMPLES HERE
+
 
 .. _State_Structure:
 
@@ -66,38 +97,13 @@ components, a state has the three following core attributes:
       parameter, under the potential influence of a `ControlProjection` (for a `Mechanism`) or a `LearningProjection`
       (for a `MappingProjection`);  for an outputState, it conveys the result  of the mechanism's function to its
       output_values, under the potential influence of a `GatingProjection`.  
-      See `ModulatoryProjections <ModulatoryProjection_Structure>` for a description of how these can be used to 
-      influence the `function <State.function> of a state.
-      COMMENT:
-          STATE FUNCTIONS MUST BE `TransferFunction` or `CombinationFunction` -- ModulationParam "meta-parameter"
-      COMMENT
+      See  `ModulatoryProjections <ModulatoryProjection_Structure>` and the `AdaptiveMechanisms` associated with each
+      type for a description of how they can be used to modulate the `function <State.function> of a state.
     ..
     * `value <State.value>`:  for an `inputState <InputState>` this is the aggregated value of the projections it 
       receives;  for a `parameterState <ParameterState>`, this determines the value of the associated parameter;  
       for an `outputState <OutputState>`, it is the item of the  owner mechanism's :keyword:`value` to which the 
       outputState is assigned, possibly modified by its `calculate <OutputState_Calculate>` attribute.
-
-    COMMENT:
-       REPLACE THE FOLLOWING WITH DISCUSSION OF USE OF IntegratorFunction AS STATE'S FUNCTION
-    ..
-    * `persistence <State.persistence`: this determines the extent to which the value of the most recently updated
-      `value <State.value>` of the state persists from each round of execution to the next, or "decays" back toward
-      its initially assigned value.  The attribute takes one of three values:  `None`, *FULL*, or a function
-      (typically an `IntegratorFunction`).   If it is `None`, the `value <State.value>` of the state returns fully to
-      its initially assigned value after each round of execution;  if it is *FULL*, the `value <State.value>` fully
-      retains its updated value for the next round of execution.  If it is a function, then the `value <State.value>`
-      of the state retains a portion of its updated value as determined by the function (e.g., by the `rate` parameter
-      of an `Integrator` function).  By default, the `persistence <State.persistence>` of `InputState <InputStates>`
-      and `OutputStates <OutputStates>` is `None`;  since they also typically have an initial value of 0, their
-      `value <State.value>` in each round of execution is determined entirely by their inputs in that round, with no
-      accumulation from round to round.  The default `persistence <State.persistence>` of
-      `ParameterStates <ParameterState>` is also `None`, so that they retain their intially assigned value from round
-      to round, and any influence of a `ControlSignal` is only for that round of execution.  However, for the *MATRIX*
-      parameterState of a `MappingProjection <MappingProjection.matrix>`, the default `persistence <State.persistence>`
-      is *FULL*, so that its updated value (e.g., due to changes in its weights from a `LearningSignal`) is
-      fully retained, so that the changes to its `value <State.value>` are accumulated over rounds of execution
-      (i.e., training trials).
-    COMMENT
 
 Execution
 ---------
@@ -105,8 +111,10 @@ Execution
 State cannot be executed.  They are updated when the component to which they belong is executed.  InputStates and 
 parameterStates belonging to a mechanism are updated before the mechanism's function is called.  OutputStates
 are updated after the mechanism's function is called.  When a state is updated, it executes any projections that 
-project to it (listed in its `afferents <State.afferents>` attribute), uses the values 
-it receives from them as the variable for its `function <State.function>`, and calls that to determine its own 
+project to it (listed in its `afferents <State.afferents>` attribute.  It uses the values it receives from any
+`PathWayProjections` (listed in its `pathway_afferents` attribute) as the variable for its `function <State.function>`,
+and the values it receives from any `ModulatoryProjections` (listed in its `mod_afferents` attribute) to determine
+the parameters of its `function <State.function>`.  It then calls its `function <State.function>` to determine its
 `value <State.value>`. This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for a more 
 detailed discussion).
 
