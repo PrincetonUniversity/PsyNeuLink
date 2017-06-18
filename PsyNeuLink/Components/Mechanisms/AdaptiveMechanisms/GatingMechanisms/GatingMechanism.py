@@ -256,11 +256,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gating_signals=gating_signals,
-                                                  modulation=modulation,
                                                   function=function,
                                                   params=params)
 
         super().__init__(variable=default_gating_policy,
+                         modulation=modulation,
                          params=params,
                          name=name,
                          prefs=prefs,

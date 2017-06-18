@@ -48,29 +48,20 @@ documentation for each type of ModulatorySignal).
 Structure
 ---------
 
-Each ModulatorySignal has a `modulation <ModulatorySignal.modulation>` attribute that determines how the GatingProjection
-is used by the state to which it projects to modify its value (see `modulation <ModulatoryProjection.modulation>`
-for an explanation of how this attribute is specified and used to modulate the value of a state).  The default value
-is set to the value of the `modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the
-ModulatorySignal belongs;  this the is same for all of the ModulatorySignal belonging to that GatingMechanism.  However, the
-`modulation <ModulatorySignal.modulation>` can be specified individually for a ModulatorySignal using a specification
-dictionary where the ModulatorySignal is specified, as described `above <ModulatorySignal_Specification>`. The
-`modulation <ModulatorySignal.modulation>` value of a ModulatorySignal is used by all of the
-`GatingProjections <GatingProjection>` that project from that ModulatorySignal.
+A ModulatorySignal is associated with one or more `ModulatoryProjections <ModulatoryProjection>` of the
+corresponding type, that project to the State(s), the value(s) of which it modulates.  THe ModulatoryProjections
+received by a `State` are listed in its `mod_afferents` attribute. The method by which a ModulatorySignal
+modulates a State's `value <State.value>` is determined by the ModulatorySignal's
+`modulation <ModulatorySignal.modulation>` attribute.
 
-COMMMENT: [SEARCH FOR REFERENCES FOR THIS AND REPLACE WITH ABOVE??
 .. _ModulatorySignal_Modulation:
+
 Modulation
 ~~~~~~~~~~
 
-***EXPLAIN HOW MODULATION WORKS
-***EXPLAIN ABOUT mod_afferents
-
-COMMENT: THIS BELONGS SOMEWHERE ELSE, AS ModulatoryProjections DON'T HAVE A modulation PARAMETER
-  In addition, all ModulatoryProjections have a
-`modulation <ModulatoryProjection.modulation>` attribute that determines how the projection
-modifies the function of the state to which it projects.  The modulation is specified using a value of
-`Modulation`, which designates one of the following standard actions to take
+The value of ModulatorySignal's `modulation <ModulatorySignal.modulation>` attribute can be specified in the
+**modulation** argument of its constructor, and must be a value of `Modulation`, which designates one of the
+following standard actions to take
 either a parameter of the state's function to modulate, or one of two other
 actions to take, as follows:
 
@@ -86,12 +77,40 @@ actions to take, as follows:
 
     * `Modulation.DISABLE` - use the parameter's value without any modulation.
 
+If a `modulation ` value is not specified for a ModulatorySignal when it is created, it is assigned the
+value of the `modulation <AdpativeMechanism.modulation>`
+value
+of
 In addition to the parameters specifed by a state's function as its :keyword:`multiplicative` :keyword:`additive`
 parameters, some functions may also designate other parameters that can be used for modulation.  The modulation
 value for a state can be assigned in a `State specification dictionary <LINK>` assigned in the **params** arg of a
 state's constructor, or in the **modulation** arg of the constructor for an `AdaptiveMechanism`.  If a `modulation`
 value is not specified for a state, its default modulation value is used.
 COMMENT
+
+
+
+
+
+has a `modulation <ModulatorySignal.modulation>` attribute that determines how it
+modulates the `value <State.value` of the State(s) to which it projects.
+
+ModulatorySignal is used by the state to which it projects to modify its value (see `modulation
+<ModulatoryProjection.modulation>`
+for an explanation of how this attribute is specified and used to modulate the value of a state).  The default value
+is set to the value of the `modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the
+ModulatorySignal belongs;  this the is same for all of the ModulatorySignal belonging to that GatingMechanism.  However, the
+`modulation <ModulatorySignal.modulation>` can be specified individually for a ModulatorySignal using a specification
+dictionary where the ModulatorySignal is specified, as described `above <ModulatorySignal_Specification>`. The
+`modulation <ModulatorySignal.modulation>` value of a ModulatorySignal is used by all of the
+`GatingProjections <GatingProjection>` that project from that ModulatorySignal.
+
+
+COMMENT: THIS BELONGS SOMEWHERE ELSE, AS ModulatoryProjections DON'T HAVE A modulation PARAMETER
+  In addition, all ModulatoryProjections have a
+`modulation <ModulatoryProjection.modulation>` attribute that determines how the projection
+modifies the function of the state to which it projects.
+
 
 
 .. _ModulatorySignal_Execution:
@@ -236,8 +255,8 @@ class ModulatorySignal(OutputState):
 
     """
 
-    componentType = OUTPUT_STATES
-    paramsType = OUTPUT_STATE_PARAMS
+    componentType = MODULATORY_SIGNAL
+    # paramsType = OUTPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -261,7 +280,8 @@ class ModulatorySignal(OutputState):
                  context):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(modulation=modulation)
+        params = self._assign_args_to_param_dicts(params=params,
+                                                  modulation=modulation)
 
         super().__init__(owner,
                          reference_value,

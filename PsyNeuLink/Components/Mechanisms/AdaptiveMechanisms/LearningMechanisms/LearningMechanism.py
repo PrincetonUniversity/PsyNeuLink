@@ -675,7 +675,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         params = self._assign_args_to_param_dicts(error_source=error_source,
                                                   function=function,
                                                   learning_signals=learning_signals,
-                                                  modulation=modulation,
                                                   params=params)
 
         # # USE FOR IMPLEMENTATION OF deferred_init()
@@ -691,6 +690,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         self._learning_rate = learning_rate
 
         super().__init__(variable=variable,
+                         modulation=modulation,
                          params=params,
                          name=name,
                          prefs=prefs,

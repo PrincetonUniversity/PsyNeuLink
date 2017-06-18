@@ -117,9 +117,9 @@ Class Reference
 
 """
 
-
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.States.OutputState import OutputState
@@ -134,6 +134,7 @@ class ControlMechanismError(Exception):
 
 
 class ControlMechanism_Base(Mechanism_Base):
+# class ControlMechanism_Base(AdaptiveMechanism_Base):
     """
     ControlMechanism_Base(                         \
         monitor_for_control=None,                  \
