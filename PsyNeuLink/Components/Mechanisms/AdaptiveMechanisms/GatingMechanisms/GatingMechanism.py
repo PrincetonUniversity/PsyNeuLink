@@ -116,8 +116,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism impor
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Components.States.ModulatoryOutputState.GatingSignal \
-    import GatingSignal, _parse_gating_signal_spec
+from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal, _parse_gating_signal_spec
 from PsyNeuLink.Components.States.State import State_Base, _instantiate_state
 
 GatingMechanismRegistry = {}

@@ -842,7 +842,7 @@ def _is_projection_subclass(spec, keyword):
             return True
     return False
 
-# IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignal WHEN THAT IS IMPLEMENTED
+# IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignals WHEN THAT IS IMPLEMENTED
 @tc.typecheck
 def _validate_receiver(sender_mech:Mechanism,
                        projection:Projection,
