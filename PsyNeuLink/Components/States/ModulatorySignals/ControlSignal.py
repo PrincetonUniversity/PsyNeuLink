@@ -434,7 +434,7 @@ class ControlSignal(ModulatorySignal):
                                                   duration_cost_function=duration_cost_function,
                                                   cost_combination_function=cost_combination_function,
                                                   allocation_samples=allocation_samples,
-                                                  modulation=modulation,
+                                                  # modulation=modulation,
                                                   params=params)
 
         # FIX: 5/26/16
@@ -446,6 +446,7 @@ class ControlSignal(ModulatorySignal):
         super().__init__(owner,
                          reference_value,
                          variable=variable,
+                         modulation=modulation,
                          index=index,
                          calculate=calculate,
                          params=params,

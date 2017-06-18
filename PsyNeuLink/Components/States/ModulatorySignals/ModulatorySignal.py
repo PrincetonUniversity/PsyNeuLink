@@ -236,8 +236,6 @@ class ModulatorySignal(OutputState):
 
     """
 
-    #region CLASS ATTRIBUTES
-
     componentType = OUTPUT_STATES
     paramsType = OUTPUT_STATE_PARAMS
 
@@ -249,22 +247,21 @@ class ModulatorySignal(OutputState):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({
-    #     PROJECTION_TYPE: GATING_PROJECTION,
-    #     GATED_STATE:None,
-    # })
-    #endregion
 
     def __init__(self,
                  owner,
                  reference_value,
                  variable,
+                 modulation,
                  index,
                  calculate,
                  params,
                  name,
                  prefs,
                  context):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(modulation=modulation)
 
         super().__init__(owner,
                          reference_value,

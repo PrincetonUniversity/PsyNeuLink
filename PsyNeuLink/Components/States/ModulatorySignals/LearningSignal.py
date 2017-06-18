@@ -310,7 +310,7 @@ class LearningSignal(ModulatorySignal):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   learning_rate=learning_rate,
-                                                  modulation=modulation,
+                                                  # modulation=modulation,
                                                   params=params)
 
         # FIX: 5/26/16
@@ -322,6 +322,7 @@ class LearningSignal(ModulatorySignal):
         super().__init__(owner,
                          reference_value,
                          variable=variable,
+                         modulation=modulation,
                          index=index,
                          calculate=calculate,
                          params=params,
