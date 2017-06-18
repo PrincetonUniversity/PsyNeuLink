@@ -272,3 +272,5 @@ class ModulatorySignal(OutputState):
                          name=name,
                          prefs=prefs,
                          context=context)
+
+        self._modulation = self.modulation or owner.modulation

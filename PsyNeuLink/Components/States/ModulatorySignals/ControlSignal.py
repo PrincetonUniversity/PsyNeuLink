@@ -434,7 +434,6 @@ class ControlSignal(ModulatorySignal):
                                                   duration_cost_function=duration_cost_function,
                                                   cost_combination_function=cost_combination_function,
                                                   allocation_samples=allocation_samples,
-                                                  # modulation=modulation,
                                                   params=params)
 
         # FIX: 5/26/16
@@ -453,10 +452,6 @@ class ControlSignal(ModulatorySignal):
                          name=name,
                          prefs=prefs,
                          context=self)
-
-        # FIX: PUT IN ModulatorySignals CLASS WHEN IMPLEMENTED
-        # Set default value of modulation to owner's value
-        self._modulation = self.modulation or owner.modulation
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions

@@ -310,7 +310,6 @@ class LearningSignal(ModulatorySignal):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   learning_rate=learning_rate,
-                                                  # modulation=modulation,
                                                   params=params)
 
         # FIX: 5/26/16
@@ -330,9 +329,4 @@ class LearningSignal(ModulatorySignal):
                          prefs=prefs,
                          context=self)
 
-        # FIX: PUT IN ModulatorySignals CLASS WHEN IMPLEMENTED
-        # Set default value of modulation to owner's value
-        self._modulation = self.modulation or owner.modulation
-
-        # Note index and calculate are not used by LearningSignal, but included here for consistency with OutputState
         self.learning_rate = self.learning_rate or owner.learning_rate

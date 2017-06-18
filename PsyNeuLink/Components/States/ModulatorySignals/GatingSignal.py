@@ -300,10 +300,6 @@ class GatingSignal(ModulatorySignal):
                          prefs=prefs,
                          context=self)
 
-        # FIX: PUT IN ModulatorySignals CLASS WHEN IMPLEMENTED
-        # Set default value of modulation to owner's value
-        self._modulation = self.modulation or owner.modulation
-
     # def _instantiate_function(self, context=None):
     #     super()._instantiate_function(context=context)
     #     self.function_object.FunctionOutputTypeConversion = True
