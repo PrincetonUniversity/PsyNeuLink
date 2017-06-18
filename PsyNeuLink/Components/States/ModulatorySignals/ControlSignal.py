@@ -437,8 +437,6 @@ class ControlSignal(ModulatorySignal):
                                                   modulation=modulation,
                                                   params=params)
 
-        self.reference_value = reference_value
-
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
