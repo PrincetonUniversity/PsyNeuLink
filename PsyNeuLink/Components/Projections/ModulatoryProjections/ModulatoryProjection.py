@@ -14,9 +14,10 @@
 Overview
 --------
 
-A ModulatoryProjection is a subclass of `Projection` that takes the value of a `ModulatorySignals` of an
-`AdaptiveMechanism`, and uses that to modulate the function of a `state <State>`.  There are three types of
-ModulatoryProjections, that modulate different types of components and their states:
+A ModulatoryProjection is a subclass of `Projection <Projection>` that takes the value of a
+`ModulatorySignal <ModulatorySignal>` belonging to an `AdaptiveMechanism <AdaptiveMechanism>`, and uses that to
+modulate the function of the `state <State>` to which it projects.  There are three types of ModulatoryProjections,
+that modulate different types of components and their states:
 
 * `LearningProjection`
     This takes the `value <LearningSignal.value>` of a `LearningSignal` belonging to a LearningMechanism,
@@ -39,10 +40,11 @@ ModulatoryProjections, that modulate different types of components and their sta
 Creating a ModulatoryProjection
 -------------------------------
 
-A ModulatoryProjection is a base class, and cannot be instantiated directly.  A ModulatoryProjection can be created
-directly by calling the constructor for one of the types listed above.  More commonly, however, ModulatoryProjections
-are either specified `in context <Projection_In_Context_Specification>`, or are `created automatically
-<Projection_Automatic_Creation>`, the details of which are described in the documentation for each type.
+A ModulatoryProjection is a base class, and cannot be instantiated directly.  However, the three types of
+ModulatoryProjections listed above can be created directly, by calling the constructor for the desired type.
+More commonly, however, ModulatoryProjections are either specified `in context <Projection_In_Context_Specification>`,
+or are `created automatically <Projection_Automatic_Creation>`, the details of which are described in the documentation
+for each type.
 
 .. _ModulatoryProjection_Structure:
 

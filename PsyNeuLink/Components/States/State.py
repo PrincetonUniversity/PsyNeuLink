@@ -42,12 +42,11 @@ Creating a State
 ----------------
 
 States can be created using the constructor for one of the subclasses.  However, in general, they are created
-automatically by the objects to which they belong, or through their specification in the constructor for those
-objects.  For example, `InputStates <InputState>` and `OutputStates <OutputStates>` can be specified, respectively,
-in the **input_states** and **output_states** arguments of the constructor for a `Mechanism`;  and
-a `ParameterState` can be specified in the argument of the constructor for a function of a Mechanism or
-Projection, where its parameters are specified.  A state can be specified in these ways using any of the following
-forms:
+automatically by the objects to which they belong, or by specifying the state in the constructor for the object
+to which it belongs.  For example, `InputStates <InputState>` and `OutputStates <OutputStates>` can be specified,
+in the **input_states** and **output_states** arguments, respectively, of the constructor for a `Mechanism`;
+and a `ParameterState` can be specified in the argument of the constructor for a function of a Mechanism or Projection,
+where its parameters are specified.  A state can be specified in those cases in any of the following forms:
 
     * an existing **State** object;
     ..

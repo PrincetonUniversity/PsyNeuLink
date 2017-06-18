@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>States &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>State &mdash; PsyNeuLink 0.1 documentation</title>
   
 
   
@@ -88,10 +88,11 @@
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">States</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">State</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
 <li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-state">Creating a State</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
@@ -133,7 +134,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>States</li>
+    <li>State</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -147,13 +148,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="states">
-<h1>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="state">
+<h1>State<a class="headerlink" href="#state" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="InputState.html">InputState</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
 <li class="toctree-l1"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
@@ -161,14 +163,14 @@
 <span class="target" id="module-State"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A State provides an interface to one or more <a class="reference internal" href="Projection.html"><span class="doc">projections</span></a>, and receives the <a class="reference internal" href="Projection.html"><span class="doc">value(s)</span></a>
-provide by them.  The value of a state can be modulated by a <code class="xref any docutils literal"><span class="pre">ModulatoryProjection</span></code>. There are three types of states,
+provide by them.  The value of a state can be modulated by a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>. There are three types of states,
 all of which are used by <a class="reference internal" href="Mechanism.html"><span class="doc">mechanisms</span></a>, one of which is used by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
 and all of which are subject to modulation by particular types of ModulatoryProjections, as summarized below:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><strong>InputState</strong>:</dt>
 <dd><p class="first last">used by a mechanism to receive input from <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>;  its value can be modulated
-by a <code class="xref any docutils literal"><span class="pre">GatingProjection</span></code>.</p>
+by a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.</p>
 </dd>
 </dl>
 </li>
@@ -189,9 +191,9 @@ parameter, possibly modulated by a <a class="reference internal" href="LearningP
 <li>used by a mechanism to send its to any outgoing projection(s):
 * <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>;
 * <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> for a <code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code>.
-* <code class="xref any docutils literal"><span class="pre">GatingProjection</span></code> for a <code class="xref any docutils literal"><span class="pre">GatingMechanism</span></code>;
+* <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> for a <code class="xref any docutils literal"><span class="pre">GatingMechanism</span></code>;
 * <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.
-Its value can be modulated by a <code class="xref any docutils literal"><span class="pre">GatingProjection</span></code>.</li>
+Its value can be modulated by a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.</li>
 </ul>
 </dd>
 </dl>
@@ -260,8 +262,8 @@ that the state receives (the default is <a class="reference internal" href="Func
 of a <code class="xref any docutils literal"><span class="pre">Gating</span></code> projection;  for a <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a>, it determines the value of the associated
 parameter, under the potential influence of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> (for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>) or a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>
 (for a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>);  for an outputState, it conveys the result  of the mechanism&#8217;s function to its
-output_values, under the potential influence of a <code class="xref any docutils literal"><span class="pre">GatingProjection</span></code>.
-See  <code class="xref any docutils literal"><span class="pre">ModulatoryProjections</span></code> and the <code class="xref any docutils literal"><span class="pre">AdaptiveMechanisms</span></code> associated with each
+output_values, under the potential influence of a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.
+See  <a class="reference internal" href="ModulatoryProjection.html#modulatoryprojection-structure"><span class="std std-ref">ModulatoryProjections</span></a> and the <code class="xref any docutils literal"><span class="pre">AdaptiveMechanisms</span></code> associated with each
 type for a description of how they can be used to modulate the <a href="#id3"><span class="problematic" id="id4">`</span></a>function &lt;State.function&gt; of a state.</li>
 </ul>
 <ul class="simple">
@@ -331,7 +333,7 @@ or using other methods for specifying a state (see <a class="reference internal"
 <code class="descname">function</code><a class="headerlink" href="#State.State_Base.function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>TransferFunction : default determined by type</em> &#8211; used to determine the state&#8217;s own value from the value of the projection(s) it receives;  the parameters that
 the TrasnferFunction identifies as ADDITIVE and MULTIPLICATIVE are subject to modulation by a
-<code class="xref any docutils literal"><span class="pre">ModualtoryProjection</span></code>.</p>
+<a class="reference internal" href="ModulatoryProjection.html#modulatoryprojection-structure"><span class="std std-ref">ModualtoryProjection</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">

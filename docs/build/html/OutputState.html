@@ -34,8 +34,8 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="up" title="States" href="State.html"/>
-        <link rel="next" title="Projection" href="Projection.html"/>
+        <link rel="up" title="State" href="State.html"/>
+        <link rel="next" title="ModulatorySignal" href="ModulatorySignal.html"/>
         <link rel="prev" title="ParameterState" href="ParameterState.html"/> 
 
   
@@ -89,7 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="State.html">States</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="State.html">State</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">OutputState</a><ul>
@@ -108,6 +108,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="State.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
 <li class="toctree-l2"><a class="reference internal" href="State.html#structure">Structure</a></li>
@@ -149,7 +150,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="State.html">States</a> &raquo;</li>
+          <li><a href="State.html">State</a> &raquo;</li>
       
     <li>OutputState</li>
       <li class="wy-breadcrumbs-aside">
@@ -388,7 +389,7 @@ which the outputState is the <code class="xref any docutils literal"><span class
 <dl class="class">
 <dt id="OutputState.OutputState">
 <em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">OutputState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value</em>, <em>variable=None</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>index=PRIMARY_OUTPUT_STATE</em>, <em>calculate=Linear</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.OutputState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements a subclass of <a class="reference internal" href="State.html"><span class="doc">States</span></a> that represents an output of a mechanism.</p>
+<dd><p>Implements a subclass of <a class="reference internal" href="State.html"><span class="doc">State</span></a> that represents an output of a mechanism.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -523,7 +524,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
 
 <dl class="class">
 <dt id="OutputState.StandardOutputStates">
-<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10e02fac8&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10de3e898&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputState specification dictionaries for standard_output_states of a class</p>
 <p>data attribute contains dictionary of OutputState specification dictionaries
 indices contains a list of the default index for each OutputState specified
@@ -565,7 +566,7 @@ names containes a list of the default name of each OutputState</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Projection.html" class="btn btn-neutral float-right" title="Projection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ModulatorySignal.html" class="btn btn-neutral float-right" title="ModulatorySignal" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="ParameterState.html" class="btn btn-neutral" title="ParameterState" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

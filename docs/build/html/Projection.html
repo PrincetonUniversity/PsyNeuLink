@@ -34,8 +34,8 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="next" title="MappingProjection" href="MappingProjection.html"/>
-        <link rel="prev" title="OutputState" href="OutputState.html"/> 
+        <link rel="next" title="PathwayProjection" href="PathwayProjection.html"/>
+        <link rel="prev" title="GatingSignal" href="GatingSignal.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -88,11 +88,10 @@
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Projection</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LearningProjection.html">LearningProjection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ControlProjection.html">ControlProjection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PathwayProjection.html">PathwayProjection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-projection">Creating a Projection</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#in-context-specification">In Context Specification</a></li>
@@ -158,10 +157,11 @@
 <h1>Projection<a class="headerlink" href="#projection" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="LearningProjection.html">LearningProjection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ControlProjection.html">ControlProjection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="PathwayProjection.html">PathwayProjection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjection</a></li>
 </ul>
+</div>
+<div class="toctree-wrapper compound">
 </div>
 <span class="target" id="module-Projection"></span><div class="section" id="overview">
 <span id="projection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
@@ -183,7 +183,7 @@ input to another ProcessingMechanism.  Typically, MappingProjections are used to
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd><p class="first last">These take an <code class="xref any docutils literal"><span class="pre">allocation</span></code> specification, usually the ouptput
+<dd><p class="first last">These take an <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> specification, usually the ouptput
 of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, and transmit this to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of
 a ProcessingMechanism which uses this to modulate a parameter of the mechanism or its function.
 ControlProjections are typically used in the context of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
@@ -238,7 +238,7 @@ Any of the following can be used to specify a projection in context:</p>
 <div class="line"><br /></div>
 </div>
 <ul class="simple">
-<li>GATING_PROJECTION &#8211; a <code class="xref any docutils literal"><span class="pre">GatingProjection</span></code> with the <code class="xref any docutils literal"><span class="pre">DefaultGatingMechanism</span></code> as its <code class="xref std std-keyword docutils literal"><span class="pre">sender</span></code>.</li>
+<li>GATING_PROJECTION &#8211; a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> with the <code class="xref any docutils literal"><span class="pre">DefaultGatingMechanism</span></code> as its <code class="xref std std-keyword docutils literal"><span class="pre">sender</span></code>.</li>
 </ul>
 <div class="line-block">
 <div class="line"><br /></div>
@@ -367,18 +367,7 @@ projection executes, it gets the value of its <code class="xref any docutils lit
 of its <code class="xref any docutils literal"><span class="pre">function</span></code>, calls the function, and provides the result as to its
 <code class="xref any docutils literal"><span class="pre">receiver</span></code>.  The <code class="xref any docutils literal"><span class="pre">function</span></code> of a projection converts the value received
 from its <code class="xref any docutils literal"><span class="pre">sender</span></code> to a form suitable as input for its <code class="xref any docutils literal"><span class="pre">receiver</span></code>.</p>
-<table class="docutils field-list" frame="void" id="projection-class-reference" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">members:</th><td class="field-body"></td>
-</tr>
-<tr class="field-even field"><th class="field-name" colspan="2">exclude-members:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body">Projection_Base, _is_projection_spec, random</td>
-</tr>
-</tbody>
-</table>
-</div>
+<span class="target" id="projection-class-reference"></span></div>
 </div>
 
 
@@ -388,10 +377,10 @@ from its <code class="xref any docutils literal"><span class="pre">sender</span>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="MappingProjection.html" class="btn btn-neutral float-right" title="MappingProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="PathwayProjection.html" class="btn btn-neutral float-right" title="PathwayProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="OutputState.html" class="btn btn-neutral" title="OutputState" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="GatingSignal.html" class="btn btn-neutral" title="GatingSignal" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

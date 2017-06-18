@@ -8,44 +8,63 @@
 
 # ********************************************  ModulatorySignal *******************************************************
 
+# ***ADD mod_afferents TO STATE doscstring (IF NOT ALREADY THERE)
+# ***REFERENCE THIS DOCSTRING IN AdaptiveMechanism DOSCTRING, AND ITS SUBCLASSSES
+
 """
 Overview
 --------
+A ModulatorySignal is a subclass of `OutputState` that belongs to an `AdaptiveMechanism`, and is used to `modulate
+<ModulatorySignal_Modulation>` the `value <State.value>` of another `State` by way of one or more
+`ModulatoryProjections <ModulatoryProjection>`.  There are three types of ModulatySignals, each of which is
+associated with a particular type of `AdaptiveMechanism` and `ModulatoryProjection`, as described below:
 
-***EXPLAIN HOW MODULATION WORKS
-***EXPLAIN ABOUT mod_afferents
-***ADD mod_afferents TO STATE doscstring (IF NOT ALREADY THERE)
-***REFERENCE THIS DOCSTRING IN AdaptiveMechanism DOSCTRING, AND ITS SUBCLASSSES
+* `LearningSignal`
+    This takes the `value <LearningSignal.value>` assigned to it by the `LearningMechanism` to which it belongs,
+    and uses it to modulate the parameter of a `PathwayProjection` -- usually the `matrix <MappingProjection.matrix>`
+    parameter of a `MappingProjection`.
+..
+* `ControlSignal`
+    This takes the `value <ControlSignal.value>` assigned to it by the `ControlMechanism` to which it belongs,
+    and uses it to modulate the parameter of a `Mechanism` or its `function <Mechanism.function>`.
+..
+* `GatingSignal`
+    This takes the `value <GatingSignal.value>` assigned to it by the `GatingMechanism` to which it belongs,
+    and uses it to modulate the value of the `InputState` or `OutputState` of a `Mechanism`.
 
 .. _ModulatorySignal_Creation:
 
 Creating a ModulatorySignal
---------------------------------
+---------------------------
 
-.. _ModulatorySignal_Specification:
-
-Specifying ModulatorySignal
-~~~~~~~~~~~~~~~~~~~~~~~~
+A ModulatorySignal is a base class, and cannot be instantiated directly.  However, the three types of ModulatorySignals
+listed above can be created directly, by calling the constructor for the desired type.  More commonly, however,
+ModulatorySignals are created automatically by the `AdaptiveMechanism` to which they belong, or by specifying them
+in the constructor for the `AdaptiveMechanism` to which it belongs (the details of which are described in the
+documentation for each type of ModulatorySignal).
 
 .. _ModulatorySignal_Structure:
 
 Structure
 ---------
 
-.. _ModulatorySignal_Modulation:
-
-Modulation
-~~~~~~~~~~
-
 Each ModulatorySignal has a `modulation <ModulatorySignal.modulation>` attribute that determines how the GatingProjection
-is used by the state to which it projects to modify its value (see `modulation <ModulatoryProjection.modulation>` 
-for an explanation of how this attribute is specified and used to modulate the value of a state).  The default value 
-is set to the value of the `modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the 
+is used by the state to which it projects to modify its value (see `modulation <ModulatoryProjection.modulation>`
+for an explanation of how this attribute is specified and used to modulate the value of a state).  The default value
+is set to the value of the `modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the
 ModulatorySignal belongs;  this the is same for all of the ModulatorySignal belonging to that GatingMechanism.  However, the
 `modulation <ModulatorySignal.modulation>` can be specified individually for a ModulatorySignal using a specification
 dictionary where the ModulatorySignal is specified, as described `above <ModulatorySignal_Specification>`. The
 `modulation <ModulatorySignal.modulation>` value of a ModulatorySignal is used by all of the
 `GatingProjections <GatingProjection>` that project from that ModulatorySignal.
+
+COMMMENT: [SEARCH FOR REFERENCES FOR THIS AND REPLACE WITH ABOVE??
+.. _ModulatorySignal_Modulation:
+Modulation
+~~~~~~~~~~
+
+***EXPLAIN HOW MODULATION WORKS
+***EXPLAIN ABOUT mod_afferents
 
 COMMENT: THIS BELONGS SOMEWHERE ELSE, AS ModulatoryProjections DON'T HAVE A modulation PARAMETER
   In addition, all ModulatoryProjections have a
@@ -75,15 +94,16 @@ value is not specified for a state, its default modulation value is used.
 COMMENT
 
 
-.. _ControlSignal_Execution:
+.. _ModulatorySignal_Execution:
 
 Execution
 ---------
 
+
+
 .. note::
-   The change in the value of InputStates and OutputStates in response to the execution of a GatingMechanism are not 
-   applied until the mechanism(s) to which those states belong are next executed; see :ref:`Lazy Evaluation <LINK>` 
-   for an explanation of "lazy" updating).
+   The change in the value of a `State` in response to a ModulatorySignal is not applied until the mechanism(s) to
+   which the state belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 Class Reference
 ---------------
