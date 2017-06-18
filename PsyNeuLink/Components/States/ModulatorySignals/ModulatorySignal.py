@@ -111,6 +111,7 @@ Class Reference
 """
 
 from PsyNeuLink.Components.States.State import *
+from PsyNeuLink.Components.States.OutputState import OutputState
 
 
 class ModulatorySignalError(Exception):
@@ -120,8 +121,8 @@ class ModulatorySignalError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-gating_signal_keywords = {MECHANISM, MODULATION, GATED_STATE}
-gating_signal_keywords.update(component_keywords)
+modulatory_signal_keywords = {MECHANISM, MODULATION}
+modulatory_signal_keywords.update(component_keywords)
 
 
 class ModulatorySignal(OutputState):
@@ -254,19 +255,16 @@ class ModulatorySignal(OutputState):
     # })
     #endregion
 
-    def __init__(owner,
+    def __init__(self,
+                 owner,
                  reference_value,
                  variable,
                  index,
                  calculate,
-                 modulation,
                  params,
                  name,
                  prefs,
                  context):
-
-        # Note: index and calculate are not used by ModulatorySignal;
-        #       they are included here for consistency with OutputState and possible use by subclasses.
 
         super().__init__(owner,
                          reference_value,
@@ -276,4 +274,4 @@ class ModulatorySignal(OutputState):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=context)

@@ -136,7 +136,7 @@ Class Reference
 from PsyNeuLink.Components.Functions.Function import _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import *
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.State import *
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
 
 
 class LearningSignalError(Exception):
@@ -148,7 +148,7 @@ class LearningSignalError(Exception):
         return repr(self.error_value)
 
 
-class LearningSignal(OutputState):
+class LearningSignal(ModulatorySignal):
     """
     LearningSignal(                                      \
         owner,                                           \

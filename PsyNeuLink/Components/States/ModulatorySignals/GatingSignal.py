@@ -118,7 +118,7 @@ Class Reference
 from PsyNeuLink.Components.Functions.Function import _is_modulation_param
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.State import *
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
 
 
 class GatingSignalError(Exception):
@@ -128,11 +128,11 @@ class GatingSignalError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-gating_signal_keywords = {MECHANISM, MODULATION, GATED_STATE}
-gating_signal_keywords.update(component_keywords)
+gating_signal_keywords = {GATED_STATE}
+gating_signal_keywords.update(modulatory_signal_keywords)
 
 
-class GatingSignal(OutputState):
+class GatingSignal(ModulatorySignal):
     """
     GatingSignal(                                   \
         owner,                                      \

@@ -164,7 +164,7 @@ Class Reference
 from PsyNeuLink.Components.Functions.Function import _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import *
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.State import *
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
 
 
 # class OutputStateLog(IntEnum):
@@ -200,7 +200,7 @@ class ControlSignalError(Exception):
         return repr(self.error_value)
 
 
-class ControlSignal(OutputState):
+class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                       \
         owner,                                           \
