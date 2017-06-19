@@ -86,8 +86,9 @@ where its parameters are specified.  A state can be specified in those cases in 
       and the second item must be a specification for a `projection <Projection_In_Context_Specification>`
       to or from the state, depending on the type of state and the context in which it is specified;
 
+COMMENT:
 *** EXAMPLES HERE
-
+COMMENT
 
 .. _State_Structure:
 
@@ -116,33 +117,51 @@ components, a State has the three following core attributes:
       receives;  for a `ParameterState`, this determines the value of the associated parameter;
       for an `OutputState`, it is the item of the  owner Mechanism's `value <Mechanisms.value>` to which the
       OutputState is assigned, possibly modified by its `calculate <OutputState_Calculate>` attribute and/or a
-      `GatingSignal`.
+      `GatingSignal`, and used as the `value <Projection.value>` of any the projections listed in its
+      `efferents <OutputState.path_efferents>` attribute.
 
-
+.. _State_Modulation:
 
 Modulation
 ~~~~~~~~~~
-     path_afferents and mod_afferents in State docstring -- PUT THIS IN
 
-     modulation:
-         can have several modulatory afferents,
-         how they are combined
-         can't have more than one OVERRIDE
-         refer to `ModulatorySignal_Modulation` for details of how modulation operates
-XXXX
+Every type of State has a `mod_afferents <State.mod_afferents>` attribute, that lists the
+`ModulatoryProjections <ModulatoryProjection>` it receives.  Each ModulatoryProjection comes from a `ModulatorySignal`
+that specifies how it should modulate the State's `value <State.value>` when the State is
+`updated <State_Execution> (see `ModulatorySignal_Modulation`).  In most cases a ModulatorySignal uses the State's
+`function <State.function>` to modulate its `value <State.value>`.  The function of every State assigns one of its
+parameters as its *MULTIPLICATIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The
+`modulation <ModulatorySigal.modulation>` attribute of a ModulatorySignal determines which of these to modify
+when the State uses it `fucntion <State.function>` to calculate its `value  <State.value>`.  However, the
+ModulatorySignal can also be configured to override the State's `value <State.value>` (i.e., assign it directly),
+or to disable modulation, using one of the values of 'ModulationParm` for its `modulation <ModulatorySignal.modulation>`
+attribute (see `ModulatorySignal_Modulation` and `ModulatorySignal_Examples`).
+
+When a State is `updated <State_Execution>`, it executes all of the ModulatoryProjections it receives.  Different
+ModulatorySignals may call for different forms of modulation.  Accordingly, it seprately sums the values specified
+by any ModulatorySignals for the *MULTIPLICATIVE_PARAM* of its `function <State.function>`, and similarly for the
+*ADDITIVE_PARAM*.  It then applies the summed value for each to the corresponding parameter of its
+`function <State.function>`.  If any of the ModulatorySignals specifies *OVERRIDE*, then the value of that
+ModulatorySignal is used as the State's `value <State.value>`.
+
+.. note::
+   'OVERRIDE <ModulatorySignal_Modulation>' can be specified for **only one** ModulatoryProjection to a State;
+   specifying it for more than one causes an error.
+
+.. _State_Execution:
 
 Execution
 ---------
 
-State cannot be executed.  They are updated when the component to which they belong is executed.  InputStates and 
-parameterStates belonging to a mechanism are updated before the mechanism's function is called.  OutputStates
-are updated after the mechanism's function is called.  When a state is updated, it executes any projections that 
-project to it (listed in its `afferents <State.path_afferents>` attribute.  It uses the values it receives from any
+States cannot be executed.  They are updated when the component to which they belong is executed.  InputStates and
+ParameterStates belonging to a Mechanism are updated before the Mechanism's function is called.  OutputStates
+are updated after the Mechanism's function is called.  When a State is updated, it executes any Projections that
+project to it (listed in its `all_afferents <State.all_afferents>` attribute.  It uses the values it receives from any
 `PathWayProjections` (listed in its `path_afferents` attribute) as the variable for its `function <State.function>`,
 and the values it receives from any `ModulatoryProjections` (listed in its `mod_afferents` attribute) to determine
-the parameters of its `function <State.function>`.  It then calls its `function <State.function>` to determine its
-`value <State.value>`. This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for a more 
-detailed discussion).
+the parameters of its `function <State.function>` (as described `above <State_Modulation>`).  It then calls its
+`function <State.function>` to determine its `value <State.value>`. This conforms to a "lazy evaluation" protocol
+(see :ref:`Lazy Evaluation <LINK>` for a more detailed discussion).
 
 .. _State_Class_Reference:
 
@@ -332,14 +351,19 @@ class State_Base(State):
     base_value : number, list or np.ndarray
         value with which the state was initialized.
     
-    afferents : Optional[List[Projection]]
-        list of projections for which the state is a :keyword:`receiver`.
+    all_afferents : Optional[List[Projection]]
+        list of all Projections received by the State (i.e., for which it is a `receiver <Projection.receiver>`.
+
+    path_afferents : Optional[List[Projection]]
+        list all `PathwayProjections <PathwayProjection>` received by the State.
+        (note:  only `InputStates <InputState> have path_efferents;  the list is empty for other types of States).
+
+    mod_afferents : Optional[List[GatingProjection]]
+        list of all `ModulatoryProjections <ModulatoryProjection>` received by the State.
 
     efferents : Optional[List[Projection]]
-        list of projections for which the state is a :keyword:`sender`.
-        
-    mod_afferents : Optional[List[GatingProjection]]
-        list of GatingProjections for which the state is a :keyword:`receiver`.
+        list of outoging Projections from the State (i.e., for which is a `sender <Projection.sender>`
+        (note:  only `OutputStates <OutputState> have efferents;  the list is empty for other types of States).
 
     function : TransferFunction : default determined by type
         used to determine the state's own value from the value of the projection(s) it receives;  the parameters that 
