@@ -52,43 +52,46 @@ A ModulatorySignal is associated with one or more `ModulatoryProjections <Modula
 corresponding type, that project to the State(s), the value(s) of which it modulates.  THe ModulatoryProjections
 received by a `State` are listed in its `mod_afferents` attribute. The method by which a ModulatorySignal
 modulates a State's `value <State.value>` is determined by the ModulatorySignal's
-`modulation <ModulatorySignal.modulation>` attribute.
+`modulation <ModulatorySignal.modulation>` attribute, as described below.
 
 .. _ModulatorySignal_Modulation:
 
 Modulation
 ~~~~~~~~~~
 
-The value of ModulatorySignal's `modulation <ModulatorySignal.modulation>` attribute can be specified in the
-**modulation** argument of its constructor, and must be a value of `Modulation`, which designates one of the
-following standard actions to take
-either a parameter of the state's function to modulate, or one of two other
-actions to take, as follows:
+A ModulatorySignal modulates the value of a `State` by modifying a parameter of the state's `function <State.function>`,
+which determines the state's `value <State.value>`.  The `function <State.function>` of every state assigns one of its
+parameters as its *MULTIPLICATIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*.  The
+`modulation <ModulatorySigal.modulation>` attribute of a ModulatorySignal identifies one of these to use in modulating
+the state's `value <State.value>`, or one of two other actions that can be taken, by specifying a value of the
+`Modulation` type (also see `examples <ModulatorySignal_Examples>` below:
 
     * `Modulation.MULTIPLY` - modulate the parameter designated by the <state's function <State.function>` as its
       `multiplicative_param <ModulationParam.MULTIPLICATIVE>`
-      (for example, it is the `slope <Linear.slope>` parameter of the `Linear` Function);
-
+
     * `Modulation.ADD` - use the parameter designated by the <state's function <State.function>` as its
       `additive_param <ModulationParam.ADDITIVE>`
-      (for example, it is the `slope <Linear.slope>` parameter of the `Linear` Function);
 
     * `Modulation.OVERRIDE` - use the ModulatoryProjection's value, bypassing the state's `function <State.function>`.
 
     * `Modulation.DISABLE` - use the parameter's value without any modulation.
 
-If a `modulation ` value is not specified for a ModulatorySignal when it is created, it is assigned the
-value of the `modulation <AdpativeMechanism.modulation>`
-value
-of
-In addition to the parameters specifed by a state's function as its :keyword:`multiplicative` :keyword:`additive`
-parameters, some functions may also designate other parameters that can be used for modulation.  The modulation
-value for a state can be assigned in a `State specification dictionary <LINK>` assigned in the **params** arg of a
-state's constructor, or in the **modulation** arg of the constructor for an `AdaptiveMechanism`.  If a `modulation`
-value is not specified for a state, its default modulation value is used.
-COMMENT
+In addition to the parameters specifed by a state's function as its *MULTIPLICATIVE* and *ADDITIVE* parameters
+some functions may also designate other parameters that can be used for modulation.  The modulation
+value for a ModulatorySignal can be specified in the **modulation** arg of its constructor, or in a MODULATION
+entry of `state specification dictionary <LINK>` used to create the state elsewhere. If the value of the
+`modulation <ModulatorySignal.modulation>` attribute is not specified when the ModulatorySignal is
+created, it is assigned the value of the `modulation <AdpativeMechanism.modulation>` attribute for the
+`AdaptiveMechanism` to which it belongs.
 
+.. _ModulatorySignal_Examples:
 
+Examples
+~~~~~~~~
+
+EXMAMPLES HERE
+      (for example, it is the `slope <Linear.slope>` parameter of the `Linear` Function);
+      (for example, it is the `bias <Logistic.bias>` parameter of the `Logistic` Function);
 
 
 
@@ -99,7 +102,8 @@ ModulatorySignal is used by the state to which it projects to modify its value (
 <ModulatoryProjection.modulation>`
 for an explanation of how this attribute is specified and used to modulate the value of a state).  The default value
 is set to the value of the `modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the
-ModulatorySignal belongs;  this the is same for all of the ModulatorySignal belonging to that GatingMechanism.  However, the
+ModulatorySignal belongs;  this the is same for all of the ModulatorySignal belonging to that GatingMechanism.  However,
+the
 `modulation <ModulatorySignal.modulation>` can be specified individually for a ModulatorySignal using a specification
 dictionary where the ModulatorySignal is specified, as described `above <ModulatorySignal_Specification>`. The
 `modulation <ModulatorySignal.modulation>` value of a ModulatorySignal is used by all of the

@@ -76,7 +76,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
         the value of the state(s) their ModulatoryProjections <ModulatoryProjection>` projects.
    """
 
-    componentType = "AdaptiveMechanism"
+    componentType = ADAPTIVE_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
