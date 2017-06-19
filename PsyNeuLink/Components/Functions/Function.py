@@ -212,6 +212,8 @@ def is_function_type(x):
 
 ADDITIVE_PARAM = 'additive_param'
 MULTIPLICATIVE_PARAM = 'multiplicative_param'
+OVERRIDE = 'OVERRIDE'
+DISABLE = 'DISABLE'
 
 
 class AdditiveParam():
@@ -231,6 +233,8 @@ class MultiplicativeParam():
 class ModulationParam():
     ADDITIVE = AdditiveParam
     MULTIPLICATIVE = MultiplicativeParam
+    OVERRIDE = OVERRIDE
+    DISABLE = DISABLE
 
 
 def _is_modulation_param(val):

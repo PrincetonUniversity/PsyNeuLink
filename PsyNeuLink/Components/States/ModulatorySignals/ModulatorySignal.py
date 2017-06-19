@@ -67,18 +67,18 @@ by the ModulatorySignal, or one of two other actions that can be taken in determ
 The `modulation <ModulatorySigal.modulation>` attribute is specified using one of the following 'Modulation` values
 (also see `examples <ModulatorySignal_Examples>`:
 
-    * `Modulation.MULTIPLY` - modify the *MULTIPLICATIVE* parameter of the state's `function <State.function>`;
+  * `ModulationParam.MULTIPLICATIVE` - modify the *MULTIPLICATIVE* parameter of the state's `function <State.function>`;
 
-    * `Modulation.ADD` - modify the *ADDITIVE* parameter of the state's `function <State.function>`;
+  * `ModulationParam.ADDITIVE` - modify the *ADDITIVE* parameter of the state's `function <State.function>`;
 
-    * `Modulation.OVERRIDE` - assign the ModulatorySignal's value as the state's `value <State.value>`;
+  * `ModulationParam.OVERRIDE` - assign the ModulatorySignal's value as the state's `value <State.value>`;
 
-    * `Modulation.DISABLE` - assign the State's `value <State.value>` without any influence of the ModulatorySignal.
+  * `ModulationParam.DISABLE` - assign the State's `value <State.value>` ignoring the ModulatorySignal.
 
-The value of the `modulation <ModulatorySignal.modulation>` can be specified in the **modulation** arg of the
-ModulatorySignal's constructor, or in the *MODULATION* entry of a `state specification dictionary <LINK>` used to
+The value of the `modulation <ModulatorySignal.modulation>` attribute can be specified in the **modulation** arg of the
+ModulatorySignal's constructor, or in a *MODULATION* entry of a `state specification dictionary <LINK>` used to
 create the ModulatorySignal. If the value of the `modulation <ModulatorySignal.modulation>` attribute is not specified
-when a ModulatorySignal is created, it is assigned the value of the `modulation <AdpativeMechanism.modulation>`
+when a ModulatorySignal is created, it is assigned the value of the `modulation <AdaptiveMechanism.modulation>`
 attribute for the `AdaptiveMechanism` to which it belongs.
 
 .. _ModulatorySignal_Examples:
@@ -86,40 +86,35 @@ attribute for the `AdaptiveMechanism` to which it belongs.
 Examples
 ~~~~~~~~
 
+Example 1:  Modulation by a GatingMechanism (default is gain of logistic)
+
+Example 2: Modulation by a ControlSignal specified in a parameter tuple
+
+Example 2: Modulation by a ControlSignal specified in a parameter tuple using OVERRIDE
+
+
 EXMAMPLES HERE
       (for example, it is the `slope <Linear.slope>` parameter of the `Linear` Function);
       (for example, it is the `bias <Logistic.bias>` parameter of the `Logistic` Function);
 
-
-
-has a `modulation <ModulatorySignal.modulation>` attribute that determines how it
-modulates the `value <State.value` of the State(s) to which it projects.
-
-ModulatorySignal is used by the state to which it projects to modify its value (see `modulation
-<ModulatoryProjection.modulation>`
-for an explanation of how this attribute is specified and used to modulate the value of a state).  The default value
-is set to the value of the `modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the
-ModulatorySignal belongs;  this the is same for all of the ModulatorySignal belonging to that GatingMechanism.  However,
-the
-`modulation <ModulatorySignal.modulation>` can be specified individually for a ModulatorySignal using a specification
-dictionary where the ModulatorySignal is specified, as described `above <ModulatorySignal_Specification>`. The
-`modulation <ModulatorySignal.modulation>` value of a ModulatorySignal is used by all of the
-`GatingProjections <GatingProjection>` that project from that ModulatorySignal.
-
-
-COMMENT: THIS BELONGS SOMEWHERE ELSE, AS ModulatoryProjections DON'T HAVE A modulation PARAMETER
-  In addition, all ModulatoryProjections have a
-`modulation <ModulatoryProjection.modulation>` attribute that determines how the projection
-modifies the function of the state to which it projects.
-
-
-
 .. _ModulatorySignal_Execution:
+
+
 
 Execution
 ---------
 
-
+XXXXXX FROM STATE:
+State cannot be executed.  They are updated when the component to which they belong is executed.  InputStates and
+parameterStates belonging to a mechanism are updated before the mechanism's function is called.  OutputStates
+are updated after the mechanism's function is called.  When a state is updated, it executes any projections that
+project to it (listed in its `afferents <State.afferents>` attribute.  It uses the values it receives from any
+`PathWayProjections` (listed in its `path_afferents` attribute) as the variable for its `function <State.function>`,
+and the values it receives from any `ModulatoryProjections` (listed in its `mod_afferents` attribute) to determine
+the parameters of its `function <State.function>`.  It then calls its `function <State.function>` to determine its
+`value <State.value>`. This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for a more
+detailed discussion).
+XXXXXXX
 
 .. note::
    The change in the value of a `State` in response to a ModulatorySignal is not applied until the mechanism(s) to

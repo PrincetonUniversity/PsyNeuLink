@@ -14,27 +14,36 @@ Overview
 --------
 
 A State provides an interface to one or more `projections <Projection>`, and receives the `value(s) <Projection>`
-provide by them.  The value of a state can be modulated by a `ModulatoryProjection`. There are three types of states, 
-all of which are used by `mechanisms <Mechanism>`, one of which is used by `MappingProjections <MappingProjection>`, 
-and all of which are subject to modulation by particular types of ModulatoryProjections, as summarized below:
+provide by them.  The value of a state can be modulated by a `ModulatoryProjection`. There are three primary types of
+states, all of which are used by `Mechanisms <Mechanism>`, one of which is used by
+`MappingProjections <MappingProjection>`, and all of which are subject to modulation by
+`ModulatorySignals <ModulatorySignal>`, as summarized below:
 
-* **InputState**:
-     used by a mechanism to receive input from `MappingProjections <MappingProjection>`;  its value can be modulated 
-     by a `GatingProjection`.
+* `InputState`:
+    used by a mechanism to receive input from `MappingProjections <MappingProjection>`;
+    its value can be modulated by a `GatingSignal`.
 
-* **ParameterState**:
-    * used by a mechanism to represent the value of one of its parameters, or a parameter of its :keyword:`function`,
-      possibly modulated by a `ControlProjection`;
+* `ParameterState`:
+    * used by a mechanism to represent the value of one of its parameters, or a parameter of its
+      `function <Mechanism.function>`, that can be modulated by a `ControlSignal`;
     * used by a `MappingProjection` to represent the value of its `matrix <MappingProjection.MappingProjection.matrix>`
-      parameter, possibly modulated by a `LearningProjection`.
+      parameter, that can be modulated by a `LearningSignal`.
 
-* **OutputState**:
-    * used by a mechanism to send its to any outgoing projection(s):
-      * `MappingProjection` for a `ProcessingMechanism <ProcessingMechanism>`;
-      * `LearningProjection` for a `MonitoringMechanism <MonitoringMechanism>`.
-      * `GatingProjection` for a `GatingMechanism <GatingMechanism>`;
-      * `ControlProjection` for a `ControlMechanism <ControlMechanism>`.
-      Its value can be modulated by a `GatingProjection`. 
+* `OutputState`:
+    used by a mechanism to send its value to any efferent projections.  For
+    `ProcessingMechanisms <ProcessingMechanism>` these are `PathwayProjections <PathwayProjection>`, most commonly
+    `MappingProjection <MappingProjection>`.  For `ModulatoryMechanisms <ModulatoryMechanism>`, these
+    `ModulatoryProjectios <ModulatoryProjection>` as described below. The `value <OutputState.value> of an
+    OutputState can be modulated by a `GatingSignal`.
+
+* `ModulatorySignal`:
+    used by an `AdaptiveMechanism` to modulate the value of the primary types of states listed above.
+    There are three types of ModulatorySignals:
+    * `LearningSignal`, used by a `LearningMechanism` to modulate the *MATRIX* ParameterState of a `MappingProjection`;
+    * `ControlSignal`, used by a `ControlMechanism` to modulate the `ParameterState` of a `Mechanism`;
+    * `GatingSignal`, used by a `GatingMechanism` to modulate the `InputState` or `OutputState` of a `Mechanism`.
+    Modulation is discussed further `below <State_Modulation>`, and described in detail under
+    `ModulatorySignals <ModulatorySignal_Modulation>`.
 
 .. _State_Creation:
 
@@ -85,28 +94,42 @@ where its parameters are specified.  A state can be specified in those cases in 
 Structure
 ---------
 
-Every state is owned by either a `mechanism <Mechanism>` or a `projection <Projection>`. Like all PsyNeuLink
-components, a state has the three following core attributes:
+Every State is owned by either a `Mechanism <Mechanism>` or a `Projection <Projection>`. Like all PsyNeuLink
+components, a State has the three following core attributes:
 
-    * `variable <State.variable>`:  for an `inputState <InputState>` and `parameterState <ParameterState>`,
+    * `variable <State.variable>`:  for an `InputState` and `ParameterState`,
       the value of this is determined by the  value(s) of the projection(s) that it receives (and that are listed in
-      its `afferents <State.afferents>` attribute).  For an `outputState <OutputState>`,
-      it is the item of the owner mechanism's :keyword:`value` to which the outputState is assigned (specified by the
-      outputStates `index <OutputState_Index>` attribute.
+      its `path_afferents <State.afferents>` attribute).  For an `OutputState`, it is the item of the owner
+      mechanism's `value <Mechanism.value>` to which the OutputState is assigned (specified by the OutputState's
+      `index <OutputState_Index>` attribute.
     ..
-    * `function <State.function>`:  for an `inputState <InputState>` this aggregates the values of the projections 
-      that the state receives (the default is `LinearCombination` that sums the values), under the potential influence
-      of a `Gating` projection;  for a `parameterState <ParameterState>`, it determines the value of the associated 
-      parameter, under the potential influence of a `ControlProjection` (for a `Mechanism`) or a `LearningProjection`
-      (for a `MappingProjection`);  for an outputState, it conveys the result  of the mechanism's function to its
-      output_values, under the potential influence of a `GatingProjection`.  
-      See  `ModulatoryProjections <ModulatoryProjection_Structure>` and the `AdaptiveMechanisms` associated with each
-      type for a description of how they can be used to modulate the `function <State.function> of a state.
+    * `function <State.function>`:  for an `InputState` this aggregates the values of the projections that the state
+      receives (the default is `LinearCombination` that sums the values), under the potential influence of a
+      `GatingSignal`;  for a `ParameterState`, it determines the value of the associated parameter, under the
+      potential influence of a `ControlSignal` (for a `Mechanism`) or a `LearningSignal` (for a `MappingProjection`);
+      for an OutputState, it conveys the result  of the Mechanism's function to its
+      `output_values <Mechanism.output_values> attribute, under the potential influence of a `GatingSignal`.
+      See  `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated
+      with each type for a description of how they can be used to modulate the `function <State.function> of a State.
     ..
-    * `value <State.value>`:  for an `inputState <InputState>` this is the aggregated value of the projections it 
-      receives;  for a `parameterState <ParameterState>`, this determines the value of the associated parameter;  
-      for an `outputState <OutputState>`, it is the item of the  owner mechanism's :keyword:`value` to which the 
-      outputState is assigned, possibly modified by its `calculate <OutputState_Calculate>` attribute.
+    * `value <State.value>`:  for an `InputState` this is the aggregated value of the `PathWayProjections` it
+      receives;  for a `ParameterState`, this determines the value of the associated parameter;
+      for an `OutputState`, it is the item of the  owner Mechanism's `value <Mechanisms.value>` to which the
+      OutputState is assigned, possibly modified by its `calculate <OutputState_Calculate>` attribute and/or a
+      `GatingSignal`.
+
+
+
+Modulation
+~~~~~~~~~~
+     path_afferents and mod_afferents in State docstring -- PUT THIS IN
+
+     modulation:
+         can have several modulatory afferents,
+         how they are combined
+         can't have more than one OVERRIDE
+         refer to `ModulatorySignal_Modulation` for details of how modulation operates
+XXXX
 
 Execution
 ---------
@@ -115,7 +138,7 @@ State cannot be executed.  They are updated when the component to which they bel
 parameterStates belonging to a mechanism are updated before the mechanism's function is called.  OutputStates
 are updated after the mechanism's function is called.  When a state is updated, it executes any projections that 
 project to it (listed in its `afferents <State.afferents>` attribute.  It uses the values it receives from any
-`PathWayProjections` (listed in its `pathway_afferents` attribute) as the variable for its `function <State.function>`,
+`PathWayProjections` (listed in its `path_afferents` attribute) as the variable for its `function <State.function>`,
 and the values it receives from any `ModulatoryProjections` (listed in its `mod_afferents` attribute) to determine
 the parameters of its `function <State.function>`.  It then calls its `function <State.function>` to determine its
 `value <State.value>`. This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for a more 
