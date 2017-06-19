@@ -1275,6 +1275,9 @@ class State_Base(State):
                              "Mechanisms and MappingProjections".
                              format(self.owner.name, self.owner.__class__.__name__, self.__class__.__name__,))
 
+
+        modulatory_override = False
+
         # Get values of all Projections
         for projection in self.all_afferents:
 
@@ -1318,7 +1321,6 @@ class State_Base(State):
             if isinstance(projection, LearningProjection) and not LEARNING in context:
                 # projection_value = projection.value
                 projection_value = projection.value * 0.0
-            # MODIFIED 6/10/17 END
             else:
                 projection_value = projection.execute(params=projection_params,
                                                       time_scale=time_scale,
@@ -1334,8 +1336,35 @@ class State_Base(State):
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             elif isinstance(projection, ModulatoryProjection_Base):
+                # Get the meta_param to be modulated from modulation attribute of the  projection's ModulatorySignal
+                #    and get the function parameter to be modulated to type_match the projection value below
                 mod_meta_param, mod_param_name, mod_param_value = _get_modulated_param(self, projection)
-                self._mod_proj_values[mod_meta_param].append(type_match(projection_value, type(mod_param_value)))
+                # If meta_param is DISABLE, ignore the ModulatoryProjection
+                if mod_meta_param is Modulation.DISABLE:
+                    continue
+                if mod_meta_param is Modulation.OVERRIDE:
+                    # If paramValidationPref is set, allow all projections to be processed
+                    #    to be sure there are no other conflicting OVERRIDES assigned
+                    if self.owner.paramValidationPref:
+                        if modulatory_override:
+                            raise StateError("Illegal assignment of {} to more than one {} ({} and {})".
+                                             format(MODULATION_OVERRIDE, MODULATORY_SIGNAL,
+                                                    projection.name, modulatory_override[2]))
+                        modulatory_override = (MODULATION_OVERRIDE, projection_value, projection)
+                        continue
+                    # Otherwise, for efficiency, assign OVERRIDE value to State here and return
+                    else:
+                        self.value = type_match(projection_value, type(self.value))
+                        return
+                else:
+                    mod_value = type_match(projection_value, type(mod_param_value))
+                self._mod_proj_values[mod_meta_param].append(mod_value)
+
+        # Handle ModulatoryProjection OVERRIDE
+        #    if there is one and it wasn't been handled above (i.e., if paramValidation is set)
+        if modulatory_override:
+            self.value = type_match(modulatory_override[1], type(self.value))
+            return
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
 
@@ -1353,21 +1382,11 @@ class State_Base(State):
 
         # CALL STATE'S function TO GET ITS VALUE  ----------------------------------------------------------------------
         try:
-            # pass only function params (which implement the effects of any modulatory projections)
+            # pass only function params (which implement the effects of any ModulatoryProjections)
             function_params = self.stateParams[FUNCTION_PARAMS]
         except (KeyError, TypeError):
             function_params = None
-        state_value = self._execute(function_params=function_params, context=context)
-
-        # ASSIGN VALUE  ------------------------------------------------------------------------------------------------
-
-        # MODIFIED 6/11/17 OLD:
-        # # If self.value is a number, convert combined_values back to number
-        # if value_is_number and state_value:
-        #     combined_values = state_value[0]
-        # MODIFIED 6/11/17 END
-
-        self.value = state_value
+        self.value = self._execute(function_params=function_params, context=context)
 
     def execute(self, input=None, time_scale=None, params=None, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)

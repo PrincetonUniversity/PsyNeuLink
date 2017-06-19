@@ -99,7 +99,6 @@ class AdaptiveMechanism_Base(Mechanism_Base):
         """Abstract class for AdaptiveMechanism
         """
 
-        # self.system = None
         if not hasattr(self, 'system'):
             self.system = None
 

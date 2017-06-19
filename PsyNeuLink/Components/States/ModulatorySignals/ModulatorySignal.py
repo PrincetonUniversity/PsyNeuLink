@@ -62,27 +62,24 @@ Modulation
 A ModulatorySignal modulates the value of a `State` by modifying a parameter of the state's `function <State.function>`,
 which determines the state's `value <State.value>`.  The `function <State.function>` of every state assigns one of its
 parameters as its *MULTIPLICATIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*.  The
-`modulation <ModulatorySigal.modulation>` attribute of a ModulatorySignal identifies one of these to use in modulating
-the state's `value <State.value>`, or one of two other actions that can be taken, by specifying a value of the
-`Modulation` type (also see `examples <ModulatorySignal_Examples>` below:
+`modulation <ModulatorySigal.modulation>` attribute of a ModulatorySignal determines which of these should be modified
+by the ModulatorySignal, or one of two other actions that can be taken in determining the State's `value <State.value>`.
+The `modulation <ModulatorySigal.modulation>` attribute is specified using one of the following 'Modulation` values
+(also see `examples <ModulatorySignal_Examples>`:
 
-    * `Modulation.MULTIPLY` - modulate the parameter designated by the <state's function <State.function>` as its
-      `multiplicative_param <ModulationParam.MULTIPLICATIVE>`
+    * `Modulation.MULTIPLY` - modify the *MULTIPLICATIVE* parameter of the state's `function <State.function>`;
 
-    * `Modulation.ADD` - use the parameter designated by the <state's function <State.function>` as its
-      `additive_param <ModulationParam.ADDITIVE>`
+    * `Modulation.ADD` - modify the *ADDITIVE* parameter of the state's `function <State.function>`;
 
-    * `Modulation.OVERRIDE` - use the ModulatoryProjection's value, bypassing the state's `function <State.function>`.
+    * `Modulation.OVERRIDE` - assign the ModulatorySignal's value as the state's `value <State.value>`;
 
-    * `Modulation.DISABLE` - use the parameter's value without any modulation.
+    * `Modulation.DISABLE` - assign the State's `value <State.value>` without any influence of the ModulatorySignal.
 
-In addition to the parameters specifed by a state's function as its *MULTIPLICATIVE* and *ADDITIVE* parameters
-some functions may also designate other parameters that can be used for modulation.  The modulation
-value for a ModulatorySignal can be specified in the **modulation** arg of its constructor, or in a MODULATION
-entry of `state specification dictionary <LINK>` used to create the state elsewhere. If the value of the
-`modulation <ModulatorySignal.modulation>` attribute is not specified when the ModulatorySignal is
-created, it is assigned the value of the `modulation <AdpativeMechanism.modulation>` attribute for the
-`AdaptiveMechanism` to which it belongs.
+The value of the `modulation <ModulatorySignal.modulation>` can be specified in the **modulation** arg of the
+ModulatorySignal's constructor, or in the *MODULATION* entry of a `state specification dictionary <LINK>` used to
+create the ModulatorySignal. If the value of the `modulation <ModulatorySignal.modulation>` attribute is not specified
+when a ModulatorySignal is created, it is assigned the value of the `modulation <AdpativeMechanism.modulation>`
+attribute for the `AdaptiveMechanism` to which it belongs.
 
 .. _ModulatorySignal_Examples:
 

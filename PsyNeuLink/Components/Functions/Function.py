@@ -254,7 +254,6 @@ def _get_modulated_param(owner, mod_proj:ModulatoryProjection_Base):
     function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
 
     # Get the function parameter's value
-    # function_param_value = owner.function_object.params[function_param_name]
     function_param_value = owner.function_object.params[function_param_name]
     # MODIFIED 6/9/17 OLD:
     # if function_param_value is None:
