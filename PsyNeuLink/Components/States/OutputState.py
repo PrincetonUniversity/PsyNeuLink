@@ -636,11 +636,11 @@ class OutputState(State_Base):
         return type_match(self.calculate(self.owner.value[self.index]), type(value))
 
     @property
-    def trans_projections(self):
+    def pathway_projections(self):
         return self.efferents
 
-    @trans_projections.setter
-    def trans_projections(self, assignment):
+    @pathway_projections.setter
+    def pathway_projections(self, assignment):
         self.efferents = assignment
 
 

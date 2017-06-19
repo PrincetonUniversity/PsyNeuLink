@@ -298,8 +298,9 @@ GATING_MECHANISM = 'GatingMechanism'
 
 # States:
 INPUT_STATE = "InputState"
-OUTPUT_STATE = "OutputState"
 PARAMETER_STATE = "ParameterState"
+OUTPUT_STATE = "OutputState"
+MODULATORY_SIGNAL = 'ModulatorySignal'
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
@@ -546,6 +547,7 @@ OUTPUT_STATE_PARAMS = 'output_states_params'
 STANDARD_OUTPUT_STATES = 'standard_output_states'
 INDEX = 'index'
 CALCULATE = 'calculate'
+
 
 #endregion
 

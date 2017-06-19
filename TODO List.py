@@ -2243,11 +2243,11 @@
 #    "SEQUENTIAL"/"ANALYTIC" MODE:
 #    1) Call every Process on each cycle
 #        a) Each Process calls the Mechanisms in its Pathway list in the sequence in which they appear;
-#            the next one is called when Mechanism.afferents.frequency modulo CurrentTime() = 0
+#            the next one is called when Mechanism.path_afferents.frequency modulo CurrentTime() = 0
 #
 # VS:
 #        a) Each Process polls all the Mechanisms in its Pathway list on each cycle
-#            each one is called when Mechanism.afferents.frequency modulo CurrentTime() = 0
+#            each one is called when Mechanism.path_afferents.frequency modulo CurrentTime() = 0
 #
 # SEQUENTIAL MODE:
 #     COMPUTE LCD (??GCF??)
@@ -2992,7 +2992,7 @@
 #                            preceding processing mechanism's output projection (pop)
 #                                pop = ppm.outputState.projections[0]
 #                            preceding processing mechanism's output projection learning signal (popls):
-#                                popls = pop.parameterState.afferents[0]
+#                                popls = pop.parameterState.path_afferents[0]
 #                            preceding ErrorMonitoringMechanism (pem):
 #                                pem = popls.sender.owner
 #                            assign MappingProjection from pem.outputState to self.input_state

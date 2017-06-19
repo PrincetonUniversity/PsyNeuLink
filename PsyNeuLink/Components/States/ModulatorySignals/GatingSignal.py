@@ -17,12 +17,23 @@ InputState(s) and/or OutputState(s) of one or more Mechanisms that have been spe
 associated with one or more `GatingProjections <GatingProjection>`, each of which projects to an InputStates and/or 
 OutputState to be gated, and that is used to modulate that state's `value <State.value>`. 
 
+
+A GatingSignal is a type of `ModulatorySignal`.  A ModulatorySignal is a type of `OutputState` that belongs to an
+`AdaptiveMechanism`, and is used to `modulate <ModulatorySignal_Modulation>` the `value <State.value>` of another
+`State`.  A GatingSignal is specialized for use with a `GatingMechanism` and a `GatingProjection`, to modify the
+`value <State.value> of the InputState(s) and/or OutputState(s) of one or more `Mechanisms <Mechanism>`.
+A GatingSignal receives a value specified by the the `function <ControlMechanism.function>` of the
+GatingMechanism to which it belongs, and assigns that to one or more `GatingProjections <GatingProjection>`,
+each of which projects to an InputStates and/or OutputState to be gated, and is used to modulate that state's
+`value <State.value>`.
+
+
 .. _GatingSignal_Creation:
 
 Creating a GatingSignal
 -----------------------
 
-A GatingSignal is created automatically whenever an InputState or OutputState of a mechanism 
+A GatingSignal is created automatically whenever an `InputState` or `OutputState` of a `Mechanism` are
 `specified for gating <GatingMechanism_Gating_Signals>`.  GatingSignals can also be specified in the 
 **gating_signals** argument of the constructor for a `GatingMechanism`, using any of the formats described 
 `below <GatingSignal_Specification>`.  Although a GatingSignal can be created directly using its constructor 
@@ -105,9 +116,10 @@ Class Reference
 """
 
 from PsyNeuLink.Components.Functions.Function import _is_modulation_param
-from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
+
 
 class GatingSignalError(Exception):
     def __init__(self, error_value):
@@ -116,11 +128,11 @@ class GatingSignalError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-gating_signal_keywords = {MECHANISM, MODULATION, GATED_STATE}
-gating_signal_keywords.update(component_keywords)
+gating_signal_keywords = {GATED_STATE}
+gating_signal_keywords.update(modulatory_signal_keywords)
 
 
-class GatingSignal(OutputState):
+class GatingSignal(ModulatorySignal):
     """
     GatingSignal(                                   \
         owner,                                      \
@@ -269,7 +281,6 @@ class GatingSignal(OutputState):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                  modulation=modulation,
                                                   params=params)
 
         # FIX: 5/26/16
@@ -281,16 +292,13 @@ class GatingSignal(OutputState):
         super().__init__(owner,
                          reference_value,
                          variable=variable,
+                         modulation=modulation,
                          index=index,
                          calculate=calculate,
                          params=params,
                          name=name,
                          prefs=prefs,
                          context=self)
-
-        # FIX: PUT IN ModulatorySignal CLASS WHEN IMPLEMENTED
-        # Set default value of modulation to owner's value
-        self._modulation = self.modulation or owner.modulation
 
     # def _instantiate_function(self, context=None):
     #     super()._instantiate_function(context=context)
@@ -338,7 +346,7 @@ def _parse_gating_signal_spec(owner, state_spec):
         PARAMS:dict - params dict if any were included in the state_spec
     """
     
-    from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
+    from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
     from PsyNeuLink.Components.Projections.Projection import _validate_receiver
     from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
 

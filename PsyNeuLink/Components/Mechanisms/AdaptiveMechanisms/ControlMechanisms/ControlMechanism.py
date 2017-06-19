@@ -117,14 +117,14 @@ Class Reference
 
 """
 
-
-from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+from PsyNeuLink.Components.Projections.Projection import _validate_receiver
+from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _parse_state_spec
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 
 ControlMechanismRegistry = {}
 
@@ -133,7 +133,8 @@ class ControlMechanismError(Exception):
         self.error_value = error_value
 
 
-class ControlMechanism_Base(Mechanism_Base):
+# class ControlMechanism_Base(Mechanism_Base):
+class ControlMechanism_Base(AdaptiveMechanism_Base):
     """
     ControlMechanism_Base(                         \
         monitor_for_control=None,                  \
@@ -272,10 +273,11 @@ class ControlMechanism_Base(Mechanism_Base):
         params = self._assign_args_to_param_dicts(monitor_for_control=monitor_for_control,
                                                   function=function,
                                                   control_signals=control_signals,
-                                                  modulation=modulation,
+                                                  # modulation=modulation,
                                                   params=params)
 
         super(ControlMechanism_Base, self).__init__(variable=default_input_value,
+                                                    modulation=modulation,
                                                     params=params,
                                                     name=name,
                                                     prefs=prefs,
@@ -317,8 +319,7 @@ class ControlMechanism_Base(Mechanism_Base):
         # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
 
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
-                import ControlSignal
+            from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
 
             for spec in target_set[CONTROL_SIGNALS]:
 
@@ -428,7 +429,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Create registry for GatingSignals (to manage names)
         from PsyNeuLink.Globals.Registry import register_category
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
         from PsyNeuLink.Components.States.State import State_Base
         register_category(entry=ControlSignal,
                           base_class=State_Base,
@@ -480,7 +481,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         Returns ControlSignal (OutputState)
         """
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
         from PsyNeuLink.Components.States.ParameterState import _get_parameter_state
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 
@@ -608,7 +609,7 @@ class ControlMechanism_Base(Mechanism_Base):
         else:
             control_signal_name = param_name + '_' + ControlSignal.__name__
 
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlSignal \
+            from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal \
                 import ControlSignal
             from PsyNeuLink.Components.States.State import _instantiate_state
 
@@ -770,7 +771,7 @@ class ControlMechanism_Base(Mechanism_Base):
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following mechanism outputStates:")
         for state in self.monitoring_mechanism.input_states:
-            for projection in state.afferents:
+            for projection in state.path_afferents:
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitored_output_states.index(monitored_state)

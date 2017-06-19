@@ -12,16 +12,15 @@
 Overview
 --------
 
-A LearningSignal is an `OutputState` specialized for use with a `LearningMechanism`. It is used to modify the
-parameter of a projection or of its :keyword:`function` that has been
-`specified for learning <LearningMechanism_Learning_Signals>`.  By default (and most commonly), this is the 
-'matrix <MappingProjection.matrix>` parameter of a `MappingProjection` (that determines the corresponding parameter
-of its `LinearMatrix` function. A LearningSignal is associated with a `LearningProjection` to the 
-`parameterState <ParameterState>` for the parameter to be learned.  It receives an `error_signal` value specified by 
-the ControlMechanism's `function <LearningMechanism.function>`, and uses that to compute an `learning_signal` that is 
-assigned as the `value <LearningProjection.ControlProjection.value>` of its LearningProjection. The parameterState 
-that receives the LearningProjection uses that value to modify the :keyword:`value` of the projection's (or function's) 
-parameter for which it is responsible.
+A LearningSignal is a type of `ModulatorySignal`.  A ModulatorySignal is a type of `OutputState` that belongs to an
+`AdaptiveMechanism`, and is used to `modulate <ModulatorySignal_Modulation>` the `value <State.value>` of another
+`State`.  A LearningSignal is specialized for use with a `LearningMechanism` and a `LearningProjection`, to modify the
+parameter of a `Projection`.  A LearningSignal receives an error signal from the `LearningMechanism` to which it belongs,
+and uses that to compute a `learning_signal` that is assigned as the `value <LearningProjection.value>` of its
+`LearningProjection`. The LearningProjection conveys its value to a `ParameterState` of the projection being learned,
+which in turns uses that to modify the corresponding parameter. By default, the projection is a `MappingProjection`,
+the parameter is its 'matrix <MappingProjection.matrix>` parameter, and the `learning_signal` is a matrix of weight
+changes that are added to MappingProjection's `matrix <MappingProjection.matrix>`.
 
 .. _LearningSignal_Creation:
 
@@ -32,7 +31,7 @@ A LearningSignal is created automatically whenever a `MappingProjection` is
 `specified for learning <LearningMechanism_Creation>` and the projection belongs to the same system as the 
 `LearningMechanism`.  LearningSignals can also be specified in the **learning_signals**
 argument of the constructor for a `LearningMechanism`.  Although a LearningSignal can be created directly using its 
-constructor (or any of the other ways for `creating an outputState <OutputStates_Creation>`), this is neither 
+constructor (or any of the other ways for `creating an `OutputState <OutputStates_Creation>`), this is neither
 necessary nor advisable, as a LearningSignal has dedicated components and requirements for configuration that must be 
 met for it to function properly.
 
@@ -87,7 +86,7 @@ the parameter(s) to be learned.  A LearningSignal has the following primary attr
 
 * `learning_rate <LearningSignal.learning_rate>`:
    COMMENT:
-      FROM LearningMechanism DOCSTRING:  ADD DESCRIPTION OF HOW IT AFFECTS ParameterState's funtion
+      FROM LearningMechanism DOCSTRING:  ADD DESCRIPTION OF HOW IT AFFECTS ParameterState's function
    COMMENT
    the learning rate for the LearningMechanism (used to specify the :keyword:`learning_rate` parameter for its
    `function <LearningMechanism.function>`.  Specifiying this (or the learning_rate parameter of the
@@ -137,7 +136,7 @@ Class Reference
 from PsyNeuLink.Components.Functions.Function import _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import *
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.State import *
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
 
 
 class LearningSignalError(Exception):
@@ -149,7 +148,7 @@ class LearningSignalError(Exception):
         return repr(self.error_value)
 
 
-class LearningSignal(OutputState):
+class LearningSignal(ModulatorySignal):
     """
     LearningSignal(                                      \
         owner,                                           \
@@ -311,10 +310,7 @@ class LearningSignal(OutputState):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   learning_rate=learning_rate,
-                                                  modulation=modulation,
                                                   params=params)
-
-        # self.reference_value = reference_value
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
@@ -325,6 +321,7 @@ class LearningSignal(OutputState):
         super().__init__(owner,
                          reference_value,
                          variable=variable,
+                         modulation=modulation,
                          index=index,
                          calculate=calculate,
                          params=params,
@@ -332,9 +329,4 @@ class LearningSignal(OutputState):
                          prefs=prefs,
                          context=self)
 
-        # FIX: PUT IN ModulatorySignal CLASS WHEN IMPLEMENTED
-        # Set default value of modulation to owner's value
-        self._modulation = self.modulation or owner.modulation
-
-        # Note index and calculate are not used by LearningSignal, but included here for consistency with OutputState
         self.learning_rate = self.learning_rate or owner.learning_rate
