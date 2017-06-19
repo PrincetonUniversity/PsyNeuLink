@@ -294,8 +294,8 @@ class LearningSignal(ModulatorySignal):
 
     @tc.typecheck
     def __init__(self,
-                 owner,
-                 reference_value,
+                 owner=None,
+                 reference_value=None,
                  variable=None,
                  index=PRIMARY_OUTPUT_STATE,
                  calculate=Linear,
@@ -310,7 +310,7 @@ class LearningSignal(ModulatorySignal):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   learning_rate=learning_rate,
-                                                  params=params)
+                                                  params=params)
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
@@ -318,8 +318,8 @@ class LearningSignal(ModulatorySignal):
         #  (test for it, and create if necessary, as per outputStates in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        super().__init__(owner,
-                         reference_value,
+        super().__init__(owner=owner,
+                         reference_value=reference_value,
                          variable=variable,
                          modulation=modulation,
                          index=index,

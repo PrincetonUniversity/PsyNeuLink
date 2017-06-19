@@ -144,12 +144,17 @@ of a State's `function <State.function>`  which, for an InputState, is the `slop
 *Gate InputStates differentially*.  In the example above, all of the InputStates were gated using a single
 GatingSignal.
 
-    My_Gating_Mechanism = GatingMechanism(gating_signals=[
-                                            {NAME:'GATING_SIGNAL_A':
-                                             GATE:My_Input_Layer
-                                             MODULATION:ModulationParam.ADDITIVE},
-                                            {NAME:'GATING_SIGNAL_B':
-                                             GATE:My_Hidden_Layer, My_Output_Layer}])
+    My_Gating_Mechanism = GatingMechanism(gating_signals=[{NAME:'GATING_SIGNAL_A':
+                                                           GATE:My_Input_Layer
+                                                           MODULATION:ModulationParam.ADDITIVE},
+                                                           {NAME:'GATING_SIGNAL_B':
+                                                           GATE:My_Hidden_Layer, My_Output_Layer}])
+
+Here, two GatingSignals are specified as `state specification dictionaries <LINK>`, each of which contains
+an entry for the name of the GatingSignal, and a *GATE* entry that specifies the Mechanisms with the InputStates to
+be gated.  The first one also containes a *MODULATION* entry that specifies the value of the `modulation
+<GatingSignal.modulation>` attribute for the GatingSignal.  The second one does not, so the default will be used
+(which, for a GatingSignal, is ModulationParam.MULTIPLICATIVE).
 
 .. _ModulatorySignal_Execution:
 
@@ -332,6 +337,19 @@ class ModulatorySignal(OutputState):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(params=params,
                                                   modulation=modulation)
+
+        # If owner or reference_value has not been assigned, defer init to State.instantiate_projection_to_state()
+        if owner is None or reference_value is None:
+            # Store args for deferred initialization
+            self.init_args = locals().copy()
+            self.init_args['context'] = self
+            self.init_args['name'] = name
+            # Delete these as they have been moved to params dict (and will not be recognized by OutputState.__init__)
+            del self.init_args['modulation']
+
+            # Flag for deferred initialization
+            self.value = DEFERRED_INITIALIZATION
+            return
 
         super().__init__(owner,
                          reference_value,

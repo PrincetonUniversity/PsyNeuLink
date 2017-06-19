@@ -406,8 +406,8 @@ class ControlSignal(ModulatorySignal):
 
     @tc.typecheck
     def __init__(self,
-                 owner,
-                 reference_value,
+                 owner=None,
+                 reference_value=None,
                  variable=None,
                  index=PRIMARY_OUTPUT_STATE,
                  calculate=Linear,
@@ -442,8 +442,8 @@ class ControlSignal(ModulatorySignal):
         #  (test for it, and create if necessary, as per outputStates in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        super().__init__(owner,
-                         reference_value,
+        super().__init__(owner=owner,
+                         reference_value=reference_value,
                          variable=variable,
                          modulation=modulation,
                          index=index,
