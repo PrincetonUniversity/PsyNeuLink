@@ -771,7 +771,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following mechanism outputStates:")
         for state in self.monitoring_mechanism.input_states:
-            for projection in state.afferents:
+            for projection in state.path_afferents:
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitored_output_states.index(monitored_state)

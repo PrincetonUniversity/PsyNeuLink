@@ -1349,7 +1349,7 @@ class System_Base(System):
                                 for proc in projection.sender.owner.processes
                                 if isinstance(projection.sender.owner,Mechanism))
                         # For all the projections to each inputState
-                        for projection in input_state.afferents)
+                        for projection in input_state.path_afferents)
                     # For all input_states for the first_mech
                     for input_state in first_mech.input_states):
                 # Assign its set value as empty, marking it as a "leaf" in the graph
@@ -1493,7 +1493,7 @@ class System_Base(System):
 
             # Skip if ORIGIN mechanism already has a projection from a SystemInputState in current system
             # (this avoids duplication from multiple passes through _instantiate_graph)
-            if any(self is projection.sender.owner for projection in origin_mech.input_state.afferents):
+            if any(self is projection.sender.owner for projection in origin_mech.input_state.path_afferents):
                 continue
 
             # Check, for each ORIGIN mechanism, that the length of the corresponding item of self.variable matches the
@@ -1584,10 +1584,10 @@ class System_Base(System):
                                                       mech.output_state.efferents])
                         # senders to sender_mech
                         for mech in [proj.sender.owner
-                                     for proj in sender_mech.input_states[SAMPLE].afferents]):
+                                     for proj in sender_mech.input_states[SAMPLE].path_afferents]):
 
                     # Get the ProcessingMechanism that projected to sender_mech
-                    error_source_mech = sender_mech.input_states[SAMPLE].afferents[0].sender.owner
+                    error_source_mech = sender_mech.input_states[SAMPLE].path_afferents[0].sender.owner
 
                     # Get the other ObjectiveMechanism to which the error_source projects (in addition to sender_mech)
                     other_obj_mech = next((projection.receiver.owner for projection in
@@ -1599,7 +1599,7 @@ class System_Base(System):
                 # None of the mechanisms that project to it are a TERMINAL mechanism
                 elif not all(all(projection.sender.owner.processes[proc] is TERMINAL
                                  for proc in projection.sender.owner.processes)
-                             for projection in sender_mech.input_states[SAMPLE].afferents):
+                             for projection in sender_mech.input_states[SAMPLE].path_afferents):
 
                     # Get the LearningMechanism to which the sender_mech projected
                     try:
@@ -1614,7 +1614,7 @@ class System_Base(System):
                         import ACTIVATION_INPUT, ERROR_SIGNAL
 
                     # Get the ProcessingMechanism that projected to sender_mech
-                    error_source_mech = sender_mech.input_states[SAMPLE].afferents[0].sender.owner
+                    error_source_mech = sender_mech.input_states[SAMPLE].path_afferents[0].sender.owner
 
                     # Get the other LearningMechanism to which the error_source projects (in addition to sender_mech)
                     error_signal_mech = next((projection.receiver.owner for projection in
@@ -1626,7 +1626,7 @@ class System_Base(System):
                     #    from any other ObjectiveMechanism or LearningMechanism in the system;
                     # If it does, get the first one found
                     error_signal_projection = next ((projection for projection
-                                                     in learning_mech.input_states[ERROR_SIGNAL].afferents
+                                                     in learning_mech.input_states[ERROR_SIGNAL].path_afferents
                                                      if (isinstance(projection.sender.owner,(ObjectiveMechanism,
                                                                                             LearningMechanism)) and
                                                      not projection.sender.owner is sender_mech and
@@ -1692,7 +1692,7 @@ class System_Base(System):
                         del projection
 
             # If sender_mech has no projections left, raise exception
-            if not any(any(projection for projection in input_state.afferents)
+            if not any(any(projection for projection in input_state.path_afferents)
                        for input_state in sender_mech.input_states):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
@@ -1971,7 +1971,7 @@ class System_Base(System):
                 for j in range(len(origin_mech.input_states)):
                    # Get the input from each projection to that inputState (from the corresponding SystemInputState)
                     system_input_state = next(projection.sender
-                                              for projection in origin_mech.input_states[j].afferents
+                                              for projection in origin_mech.input_states[j].path_afferents
                                               if isinstance(projection.sender, SystemInputState))
                     if system_input_state:
                         system_input_state.value = input[i][j]
@@ -2796,7 +2796,7 @@ class System_Base(System):
                 else:
                     sndrs = list(learning_graph[rcvr])
                     for sndr in sndrs:
-                        projs = sndr.input_state.afferents
+                        projs = sndr.input_state.path_afferents
 
                         for proj in projs:
                             edge_name=proj.name
@@ -2809,7 +2809,7 @@ class System_Base(System):
         if show_control:
             controller = self.controller
 
-            connector = controller.input_state.afferents[0]
+            connector = controller.input_state.path_afferents[0]
             objmech = connector.sender.owner
 
             # main edge
@@ -2826,7 +2826,7 @@ class System_Base(System):
 
             # incoming edges
             for istate in objmech.input_states:
-                for proj in istate.afferents:
+                for proj in istate.path_afferents:
                     sndr_name = proj.sender.owner.name
                     G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
 

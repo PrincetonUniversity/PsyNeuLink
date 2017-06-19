@@ -17,7 +17,7 @@ An inputState receives the input to a mechanism provided by the projections to t
 or system.  If the inputState belongs to an `ORIGIN` mechanism (see
 `role of mechanisms in processes and systems <Mechanism_Role_In_Processes_And_Systems>`), then it receives the input
 specified when that process or system is `run <Run>`.  The projections received by an inputState are
-listed in its `afferents <InputState.afferents>` attribute. Its
+listed in its `afferents <InputState.path_afferents>` attribute. Its
 `function <InputState.function>` combines the values of these inputs, and the result is assigned to an item
 corresponding to the inputState in the owner mechanism's :keyword:`variable <Mechanism.Mechanism_Base.variable>` and
 `input_value <Mechanism.Mechanism_Base.input_value>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
@@ -132,7 +132,7 @@ Structure
 Every inputState is owned by a `mechanism <Mechanism>`. It can receive one or more
 `MappingProjections <MappingProjection>` from other mechanisms, as well as from the process or system to which its
 owner belongs (if it is the `ORIGIN` mechanism for that process or system).  The projections received by an
-inputState are listed in its `afferents <InputState.afferents>` attribute.
+inputState are listed in its `afferents <InputState.path_afferents>` attribute.
 
 Like all PsyNeuLink components, an inputState has the three following core attributes:
 
@@ -444,11 +444,11 @@ class InputState(State_Base):
 
     @property
     def pathway_projections(self):
-        return self.afferents
+        return self.path_afferents
 
     @pathway_projections.setter
     def pathway_projections(self, assignment):
-        self.afferents = assignment
+        self.path_afferents = assignment
 
 
 def _instantiate_input_states(owner, context=None):

@@ -89,7 +89,7 @@ def show_results():
     print ('\tThreshold control signal (from EVC): {}'.
            format(re.sub('[\[,\],\n]','',str(float(Decision._parameter_states[THRESHOLD].value))),
                   mySystem.controller.output_states['threshold_ControlSignal'].value,
-                  Decision._parameter_states[THRESHOLD].afferents[0].value
+                  Decision._parameter_states[THRESHOLD].path_afferents[0].value
                   ))
     for result in results:
         print("\t{}: {}".format(result[0],

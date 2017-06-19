@@ -108,7 +108,7 @@ XXXXXX FROM STATE:
 State cannot be executed.  They are updated when the component to which they belong is executed.  InputStates and
 parameterStates belonging to a mechanism are updated before the mechanism's function is called.  OutputStates
 are updated after the mechanism's function is called.  When a state is updated, it executes any projections that
-project to it (listed in its `afferents <State.afferents>` attribute.  It uses the values it receives from any
+project to it (listed in its `afferents <State.path_afferents>` attribute.  It uses the values it receives from any
 `PathWayProjections` (listed in its `path_afferents` attribute) as the variable for its `function <State.function>`,
 and the values it receives from any `ModulatoryProjections` (listed in its `mod_afferents` attribute) to determine
 the parameters of its `function <State.function>`.  It then calls its `function <State.function>` to determine its

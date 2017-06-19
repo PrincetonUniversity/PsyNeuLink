@@ -317,7 +317,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                 #         so issue warning, assign it as the sender, and return
                 if (receiver_state.name is ACTIVATION_OUTPUT and
                         any(projection.sender.owner is lc.activation_mech_input.owner
-                            for projection in receiver_mech.input_states[ACTIVATION_INPUT].afferents)):
+                            for projection in receiver_mech.input_states[ACTIVATION_INPUT].path_afferents)):
                         warnings.warn("An existing LearningMechanism ({}) was found for and is being assigned to {}".
                                       format(receiver_mech.name, learning_projection.name))
                         learning_projection.sender = receiver_mech
@@ -507,7 +507,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             objective_mechanism._learning_role = TARGET
 
         try:
-            lc.error_projection = objective_mechanism.input_state.afferents[0]
+            lc.error_projection = objective_mechanism.input_state.path_afferents[0]
             # FIX: THIS IS TO FORCE ASSIGNMENT (SINCE IT DOESN'T SEEM TO BE ASSIGNED BY TEST BELOW)
         except AttributeError:
             raise LearningAuxilliaryError("PROGRAM ERROR: problem finding projection to TARGET ObjectiveMechanism "
@@ -1078,7 +1078,7 @@ class LearningComponents(object):
     #     def _get_obj_mech():
     #         if not self.error_matrix:
     #             return None
-    #         learning_proj = next((proj for proj in self.error_matrix.afferents
+    #         learning_proj = next((proj for proj in self.error_matrix.path_afferents
     #                              if isinstance(proj, LearningProjection)),None)
     #         if not learning_proj:
     #             # error_matrix is for a MappingProjection that projects to the TARGET ObjectiveMechanism, so return that
@@ -1099,7 +1099,7 @@ class LearningComponents(object):
     #                                           "LearningMechanism")
     #         try:
     #             error_obj_mech = next((proj.sender.owner
-    #                                    for proj in learning_mech.input_states[ERROR_SIGNAL].afferents
+    #                                    for proj in learning_mech.input_states[ERROR_SIGNAL].path_afferents
     #                                    if isinstance(proj.sender.owner, ObjectiveMechanism)),None)
     #         except AttributeError:
     #             # return None

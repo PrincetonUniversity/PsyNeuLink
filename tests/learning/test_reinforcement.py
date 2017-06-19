@@ -32,7 +32,7 @@ def test_reinforcement():
         target=0,
     )
 
-    # print ('reward prediction weights: \n', action_selection.input_states[0].afferents[0].matrix)
+    # print ('reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].matrix)
     # print ('targetMechanism weights: \n', action_selection.output_states.sendsToProjections[0].matrix)
 
     reward_values = [10, 10, 10]
@@ -46,7 +46,7 @@ def test_reinforcement():
         print("\n\n**** TRIAL: ", CentralClock.trial)
 
     def show_weights():
-        print('Reward prediction weights: \n', action_selection.input_states[0].afferents[0].matrix)
+        print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].matrix)
         print('\nAction selected:  {}; predicted reward: {}'.format(
             np.nonzero(action_selection.output_states.value)[0][0],
             action_selection.output_states.value[np.nonzero(action_selection.output_states.value)[0][0]],
@@ -81,7 +81,7 @@ def test_reinforcement():
     mech_objective_action = s.mechanisms[2]
     mech_learning_input_to_action = s.mechanisms[3]
 
-    reward_prediction_weights = action_selection.input_states[0].afferents[0]
+    reward_prediction_weights = action_selection.input_states[0].path_afferents[0]
 
     expected_output = [
         (input_layer.output_states.values, [np.array([1., 1., 1.])]),

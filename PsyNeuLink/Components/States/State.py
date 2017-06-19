@@ -99,7 +99,7 @@ components, a State has the three following core attributes:
 
     * `variable <State.variable>`:  for an `InputState` and `ParameterState`,
       the value of this is determined by the  value(s) of the projection(s) that it receives (and that are listed in
-      its `path_afferents <State.afferents>` attribute).  For an `OutputState`, it is the item of the owner
+      its `path_afferents <State.path_afferents>` attribute).  For an `OutputState`, it is the item of the owner
       mechanism's `value <Mechanism.value>` to which the OutputState is assigned (specified by the OutputState's
       `index <OutputState_Index>` attribute.
     ..
@@ -137,7 +137,7 @@ Execution
 State cannot be executed.  They are updated when the component to which they belong is executed.  InputStates and 
 parameterStates belonging to a mechanism are updated before the mechanism's function is called.  OutputStates
 are updated after the mechanism's function is called.  When a state is updated, it executes any projections that 
-project to it (listed in its `afferents <State.afferents>` attribute.  It uses the values it receives from any
+project to it (listed in its `afferents <State.path_afferents>` attribute.  It uses the values it receives from any
 `PathWayProjections` (listed in its `path_afferents` attribute) as the variable for its `function <State.function>`,
 and the values it receives from any `ModulatoryProjections` (listed in its `mod_afferents` attribute) to determine
 the parameters of its `function <State.function>`.  It then calls its `function <State.function>` to determine its
@@ -235,7 +235,7 @@ class State_Base(State):
         Description
         -----------
             Represents and updates the state of an input, output or parameter of a mechanism
-                - receives inputs from projections (self.afferents, STATE_PROJECTIONS)
+                - receives inputs from projections (self.path_afferents, STATE_PROJECTIONS)
                 - input_states and parameterStates: combines inputs from all projections (mapping, control or learning)
                     and uses this as variable of function to update the value attribute
                 - outputStates: represent values of output of function
@@ -488,7 +488,7 @@ class State_Base(State):
                           # sub_group_attr='owner',
                           context=context)
 
-        self.afferents = []
+        self.path_afferents = []
         self.mod_afferents = []
         self.efferents = []
         self._stateful = False
@@ -635,7 +635,7 @@ class State_Base(State):
                                              self.variable))
 
     def _instantiate_projections_to_state(self, projections, context=None):
-        """Instantiate projections to a state and assign them to self.afferents
+        """Instantiate projections to a state and assign them to self.path_afferents
 
         For each spec in projections arg, check that it is one or a list of any of the following:
         + Projection class (or keyword string constant for one):
@@ -652,7 +652,7 @@ class State_Base(State):
         If any of the conditions above fail:
             a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]
         For each projection:
-            if it is a MappingProjection or ControlProjection, it is added to self.afferents
+            if it is a MappingProjection or ControlProjection, it is added to self.path_afferents
             if it is a GatingProjection, it is added to self.mod_afferents 
         If kwMStateProjections is absent or empty, no projections are created
         """
@@ -681,7 +681,7 @@ class State_Base(State):
         default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
 
         # Instantiate each projection specification in the projection_list, and
-        # - insure it is in self.afferents
+        # - insure it is in self.path_afferents
         # - insure the output of its function is compatible with self.value
         for projection_spec in projection_list:
 
@@ -702,7 +702,7 @@ class State_Base(State):
             # - call _check_projection_receiver() to check that receiver is self; if not, it:
             #     returns object with receiver reassigned to self if chosen by user
             #     else, returns new (default) PROJECTION_TYPE object with self as receiver
-            #     note: in that case, projection will be in self.afferents list
+            #     note: in that case, projection will be in self.path_afferents list
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.value is DEFERRED_INITIALIZATION:
                     # FIX: UPDATE FOR LEARNING
@@ -746,7 +746,7 @@ class State_Base(State):
             # - get projection_type
             # - get projection_params
             # Note: this gets projection_type but does NOT not instantiate projection; so,
-            #       projection is NOT yet in self.afferents list
+            #       projection is NOT yet in self.path_afferents list
             elif isinstance(projection_spec, dict):
                 # Get projection type from specification dict
                 try:
@@ -788,7 +788,7 @@ class State_Base(State):
 
             # Check if projection_spec is class ref or keyword string constant for one
             # Note: this gets projection_type but does NOT instantiate the projection (that happens below),
-            #       so projection is NOT yet in self.afferents list
+            #       so projection is NOT yet in self.path_afferents list
             else:
                 projection_type, err_str = self._parse_projection_ref(projection_spec=projection_spec,context=self)
                 if err_str and self.verbosePref:
@@ -802,7 +802,7 @@ class State_Base(State):
 
             # If neither projection_object nor projection_type have been assigned, assign default type
             # Note: this gets projection_type but does NOT instantiate projection; so,
-            #       projection is NOT yet in self.afferents list
+            #       projection is NOT yet in self.path_afferents list
             if not projection_object and not projection_type:
                     projection_type = default_projection_type
                     default_string = kwDefault
@@ -815,10 +815,10 @@ class State_Base(State):
                                      default_projection_type.__class__.__name__))
 
             # If projection_object has not been assigned, instantiate projection_type
-            # Note: this automatically assigns projection to self.afferents and
+            # Note: this automatically assigns projection to self.path_afferents and
             #       to it's sender's efferents list:
             #           when a projection is instantiated, it assigns itself to:
-            #               its receiver's .afferents attribute (in Projection._instantiate_receiver)
+            #               its receiver's .path_afferents attribute (in Projection._instantiate_receiver)
             #               its sender's .efferents attribute (in Projection._instantiate_sender)
             if not projection_object:
                 kwargs = {RECEIVER:self,
@@ -853,7 +853,7 @@ class State_Base(State):
                 if isinstance(projection_spec, ModulatoryProjection_Base):
                     self.mod_afferents.append(projection_spec)
                 else:
-                    self.afferents.append(projection_spec)
+                    self.path_afferents.append(projection_spec)
                 continue
 
             # Projection was instantiated, so:
@@ -880,9 +880,9 @@ class State_Base(State):
             else:
                 if iscompatible(self.variable, projection_spec.value):
                     # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlProjection)
-                    #    may have already called this method and assigned projection to self.afferents list
-                    if not projection_spec in self.afferents:
-                        self.afferents.append(projection_spec)
+                    #    may have already called this method and assigned projection to self.path_afferents list
+                    if not projection_spec in self.path_afferents:
+                        self.path_afferents.append(projection_spec)
                     continue
 
             # Projection specification is not valid
@@ -1027,7 +1027,7 @@ class State_Base(State):
 
         # If neither projection_object nor projection_type have been assigned, assign default type
         # Note: this gets projection_type but does NOT not instantiate projection; so,
-        #       projection is NOT yet in self.afferents list
+        #       projection is NOT yet in self.path_afferents list
         if not projection_object and not projection_type:
                 projection_type = default_projection_type
                 default_string = kwDefault
@@ -1043,7 +1043,7 @@ class State_Base(State):
         # Note: this automatically assigns projection to self.efferents and
         #       to it's receiver's afferents list:
         #           when a projection is instantiated, it assigns itself to:
-        #               its receiver's .afferents attribute (in Projection._instantiate_receiver)
+        #               its receiver's .path_afferents attribute (in Projection._instantiate_receiver)
         #               its sender's .efferents list attribute (in Projection._instantiate_sender)
         if not projection_object:
             projection_spec = projection_type(sender=self,
@@ -1113,7 +1113,7 @@ class State_Base(State):
             if reassign == 'r':
                 projection_spec.receiver = self
                 # IMPLEMENTATION NOTE: allow the following, since it is being carried out by State itself
-                self.afferents.append(projection_spec)
+                self.path_afferents.append(projection_spec)
                 if self.prefs.verbosePref:
                     print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
                 return (projection_spec, None)
@@ -1230,7 +1230,7 @@ class State_Base(State):
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         """Update each projection, combine them, and assign return result
 
-        Call update for each projection in self.afferents (passing specified params)
+        Call update for each projection in self.path_afferents (passing specified params)
         Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
         Returns combined values of
@@ -1465,7 +1465,7 @@ class State_Base(State):
 
     @property
     def all_afferents(self):
-        return self.afferents + self.mod_afferents
+        return self.path_afferents + self.mod_afferents
 
 
 def _instantiate_state_list(owner,
