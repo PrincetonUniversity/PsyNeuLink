@@ -128,10 +128,10 @@ class Composition(object):
         if projection not in [vertex.component for vertex in self.graph.vertices]:
             self.graph.add_vertex(projection)
 
-        # Add edges connecting sender and receiver components to projection
-        self.graph.add_edge(sender, projection)
-        self.graph.add_edge(projection, receiver)
-        self.graph_analyzed = False  # Added projection so must re-analyze graph
+            # Add edges connecting sender and receiver components to projection
+            self.graph.add_edge(sender, projection)
+            self.graph.add_edge(projection, receiver)
+            self.graph_analyzed = False  # Added projection so must re-analyze graph
 
     def analyze_graph(self):
         ########
