@@ -1369,6 +1369,7 @@ class Mechanism_Base(Mechanism):
                 runtime_params=None,
                 clock=CentralClock,
                 time_scale=TimeScale.TRIAL,
+                ignore_execution_id = False,
                 context=None):
         """Carry out a single execution of the mechanism.
 
@@ -1428,7 +1429,7 @@ class Mechanism_Base(Mechanism):
             either one time_step or a trial.
 
         """
-
+        self.ignore_execution_id = ignore_execution_id
         context = context or NO_CONTEXT
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
