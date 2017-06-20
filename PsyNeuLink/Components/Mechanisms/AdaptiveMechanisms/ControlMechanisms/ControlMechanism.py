@@ -329,20 +329,21 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             for spec in target_set[CONTROL_SIGNALS]:
 
                 # Specification is for a ControlSignal
-                if isinstance(spec, ControlSignal) and self.system:
+                if isinstance(spec, ControlSignal):
                     # If controller has been assigned to a System,
                     #    check that any ControlProjections the ControlSignal has
                     #    are to mechanisms in the controller's system
-                    if not all(control_proj.receiver.owner in self.system.mechanisms
-                               for control_proj in spec.efferents):
-                        raise ControlMechanismError("The {} specified in the {} arg for {} ({}) "
-                                                    "has one or more ControlProjections to a mechanism "
-                                                    "that is not in {}".
-                                                    format(CONTROL_SIGNAL,
-                                                           CONTROL_SIGNALS,
-                                                           self.name,
-                                                           spec.name,
-                                                           self.system.name))
+                    if self.system:
+                        if not all(control_proj.receiver.owner in self.system.mechanisms
+                                   for control_proj in spec.efferents):
+                            raise ControlMechanismError("The {} specified in the {} arg for {} ({}) "
+                                                        "has one or more ControlProjections to a mechanism "
+                                                        "that is not in {}".
+                                                        format(CONTROL_SIGNAL,
+                                                               CONTROL_SIGNALS,
+                                                               self.name,
+                                                               spec.name,
+                                                               self.system.name))
                     continue
 
                 # Specification is for a ParameterState

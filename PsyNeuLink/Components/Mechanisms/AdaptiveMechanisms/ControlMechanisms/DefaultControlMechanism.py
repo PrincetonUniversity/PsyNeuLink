@@ -134,8 +134,11 @@ class DefaultControlMechanism(ControlMechanism_Base):
         """
 
         if isinstance(control_signal, dict):
-            projection = control_signal[CONTROL][0]
-            input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
+            if CONTROL in control_signal:
+                projection = control_signal[CONTROL][0]
+                input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
+            elif NAME in control_signal:
+                input_name = 'DefaultControlAllocation for ' + control_signal[NAME] + '_ControlSignal'
 
         elif isinstance(control_signal, tuple):
             input_name = 'DefaultControlAllocation for ' + control_signal[0] + '_ControlSignal'
