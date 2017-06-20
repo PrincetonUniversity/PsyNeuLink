@@ -172,7 +172,30 @@ for the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter)
 itself -- that is, the value of the ControlSignal is added to the *gain parameter* of the Logistic function,
 *not* its `variable <Logistic.variable>`).
 
+*Modulate the parameters of several Mechanisms*
+
+    My_Transfer_Mech = TransferMechanism(
+                               function=Logistic(
+                                            gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+    My_EVC_Mechanisms = EVCMechanism(
+                               monitor_for_control=[],
+                               control_signals=[]
+                               )
+
 *Modulate the parameters of several Mechanisms in a System*
+
+    My_System = system(processes=[Process_A, Process_B],
+                      controller=EVCMechanism,
+                      enable_controller=True,
+                      monitor_for_control=[Reward,
+                                           Decision.PROBABILITY_UPPER_THRESHOLD,
+                                           (Decision.RESPONSE_TIME, -1, 1)],
+                      control_signals=[(DRIFT_RATE, My_Decision),
+                                        {NAME: THRESHOLD,
+                                         MECHANISM: Decision,
+                                         ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}],
+                      name='My Test System')
+
 
 Class Reference
 ---------------
