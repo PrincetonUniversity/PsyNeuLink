@@ -1696,6 +1696,7 @@ class Mechanism_Base(Mechanism):
                                             len(input_state.variable),
                                             input_state.name,
                                             append_type_to_name(self)))
+        self.variable = np.array(self.input_values)
 
     def _update_input_states(self, runtime_params=None, time_scale=None, context=None):
         """ Update value for each inputState in self.input_states:
