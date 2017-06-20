@@ -1,9 +1,6 @@
 ControlProjection
 =================
 
-.. toctree::
-   :maxdepth: 3
-
-.. automodule:: ControlProjection
+.. automodule:: ModulatoryProjections.ControlProjection
    :members:
    :exclude-members: random, execute

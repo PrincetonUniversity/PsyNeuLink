@@ -336,7 +336,7 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection 
     _is_learning_spec
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, \
     _add_projection_to
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
@@ -1237,7 +1237,7 @@ class Process_Base(Process):
                     mech = item
 
                     # Check if first Mechanism already has any projections and, if so, issue appropriate warning
-                    if mech.input_state.afferents:
+                    if mech.input_state.path_afferents:
                         self._issue_warning_about_existing_projections(mech, context)
 
                     # Assign input projection from Process
@@ -1307,7 +1307,7 @@ class Process_Base(Process):
     # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
 
                     # PRECEDING ITEM IS A MECHANISM
-                    projection_list = item.input_state.afferents
+                    projection_list = item.input_state.path_afferents
                     projection_found = False
                     for projection in projection_list:
                         # Current mechanism DOES receive a projection from the preceding item
@@ -1645,7 +1645,7 @@ class Process_Base(Process):
                                                     prefs=self.prefs)
             self.processInputStates.append(process_input_state)
 
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
         # If there is the same number of Process input values and mechanism.input_states, assign one to each
         if num_process_inputs == num_mechanism_input_states:
@@ -1775,7 +1775,7 @@ class Process_Base(Process):
             for parameter_state in mech._parameter_states:
                 parameter_state._deferred_init() # XXX
                 # MODIFIED 5/2/17 OLD:
-                # self._instantiate__deferred_init_projections(parameter_state.afferents)
+                # self._instantiate__deferred_init_projections(parameter_state.path_afferents)
                 # MODIFIED 5/2/17 NEW:
                 # Defer instantiation of ControlProjections to System
                 #   and there should not be any other type of projection to the ParameterState of a Mechanism
@@ -1797,7 +1797,7 @@ class Process_Base(Process):
                 # then designate mech as a TARGET
                 if (isinstance(mech, ObjectiveMechanism) and
                         # any(projection.sender.owner.processes[self] == TERMINAL
-                        #     for projection in mech.input_states[SAMPLE].afferents) and
+                        #     for projection in mech.input_states[SAMPLE].path_afferents) and
                         mech._learning_role is TARGET and
                         self.learning
                             ):
@@ -1885,7 +1885,7 @@ class Process_Base(Process):
                    return None if no TARGET ObjectiveMechanism is found.
             """
             for input_state in mech.input_states.values():
-                for projection in input_state.afferents:
+                for projection in input_state.path_afferents:
                     sender = projection.sender.owner
                     # If projection is not from another ObjectiveMechanism, ignore
                     if not isinstance(sender, (ObjectiveMechanism)):
@@ -1970,7 +1970,7 @@ class Process_Base(Process):
         self.targetInputStates.append(target_input_state)
 
         # Add MappingProjection from target_input_state to MonitoringMechanism's target inputState
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
         MappingProjection(sender=target_input_state,
                 receiver=target_mech_target,
                 name=self.name+'_Input Projection to '+target_mech_target.name)
@@ -2174,7 +2174,7 @@ class Process_Base(Process):
             # For each inputState of the mechanism
             for input_state in mech.input_states:
                 # For each projection in the list
-                for projection in input_state.afferents:
+                for projection in input_state.path_afferents:
 
                     # Skip learning if projection is an input from the Process or a system
                     # or comes from a mechanism that belongs to another process
@@ -2455,7 +2455,7 @@ class ProcessInputState(OutputState):
         # MODIFIED 2/17/17 NEW:
         # self.owner.input = self.value
         # MODIFIED 2/17/17 END
-        # self.afferents = []
+        # self.path_afferents = []
         # from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
         # from PsyNeuLink.Components.Functions.Function import Linear
         # self.index = PRIMARY_OUTPUT_STATE
