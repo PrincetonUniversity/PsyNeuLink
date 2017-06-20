@@ -12,16 +12,15 @@
 Overview
 --------
 
-A ControlSignal is a type of `ModulatorySignal`.  A ModulatorySignal is a type of `OutputState` that belongs to an
-`AdaptiveMechanism`, and is used to `modulate <ModulatorySignal_Modulation>` the `value <State.value>` of another
-`State`.  A ControlSignal is specialized for use with a `ControlMechanism` and a `ControlProjection`, to modify the
-parameter of a `Mechanism` or its `function <Mechanism.function>`, that in turn controls the `value <Mechanisms.value>`
-of that Mechanism. A ControlSignal receives an `allocation` value from the ControlMechanism to which it belongs,
-and uses that to compute an `intensity` that is assigned as the `value <ControlProjection.ControlProjection.value>` of
-its ControlProjection.  The ControlProjection conveys its value to the `ParameterState` for the parameter of a
-`Mechanism` or its `function <Mechanism.function>`, which uses that value to `control <ModulatorySignal_Modulation>`
-the `value <ParameterState.value>` of the parameter.  A ControlSignal also calculates a `cost`, based on its
-`intensity` and/or its time course, that is used by the ControlMechanism to adapt its `allocation` in the future.
+A ControlSignal is a type of `ModulatorySignal`, specialized for use with a `ControlMechanism` and a
+`ControlProjection`, to modify the parameter of a `Mechanism` or its `function <Mechanism.function>`, that in turn
+controls the `value <Mechanisms.value>` of that Mechanism. A ControlSignal receives an `allocation` value from the
+ControlMechanism to which it belongs, and uses that to compute an `intensity` that is assigned as the `value
+<ControlProjection.ControlProjection.value>` of its ControlProjection.  The ControlProjection conveys its value to
+the `ParameterState` for the parameter of a `Mechanism` or its `function <Mechanism.function>`, which uses that value
+to `control <ModulatorySignal_Modulation>` the `value <ParameterState.value>` of the parameter.  A ControlSignal also
+calculates a `cost`, based on its `intensity` and/or its time course, that is used by the ControlMechanism to adapt
+its `allocation` in the future.
 
 .. _ControlSignal_Creation:
 

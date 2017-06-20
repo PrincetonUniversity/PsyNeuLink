@@ -12,20 +12,12 @@
 Overview
 --------
 
-A GatingSignal is an `OutputState` specialized for use with an `GatingMechanism`. It is used to modify the value of 
-InputState(s) and/or OutputState(s) of one or more Mechanisms that have been specified for gating. A GatingSignal is 
-associated with one or more `GatingProjections <GatingProjection>`, each of which projects to an InputStates and/or 
-OutputState to be gated, and that is used to modulate that state's `value <State.value>`. 
-
-
-A GatingSignal is a type of `ModulatorySignal`.  A ModulatorySignal is a type of `OutputState` that belongs to an
-`AdaptiveMechanism`, and is used to `modulate <ModulatorySignal_Modulation>` the `value <State.value>` of another
-`State`.  A GatingSignal is specialized for use with a `GatingMechanism` and a `GatingProjection`, to modify the
-`value <State.value> of the InputState(s) and/or OutputState(s) of one or more `Mechanisms <Mechanism>`.
-A GatingSignal receives a value specified by the the `function <ControlMechanism.function>` of the
-GatingMechanism to which it belongs, and assigns that to one or more `GatingProjections <GatingProjection>`,
-each of which projects to an InputStates and/or OutputState to be gated, and is used to modulate that state's
-`value <State.value>`.
+A GatingSignal is a type of `ModulatorySignal` that is specialized for use with a `GatingMechanism` and a
+`GatingProjection`, to modify the `value <State.value> of the InputState(s) and/or OutputState(s) of one or more
+`Mechanisms <Mechanism>`. A GatingSignal receives a value specified by the the `function <GatingMechanism.function>`
+of the GatingMechanism to which it belongs, and assigns that to one or more `GatingProjections <GatingProjection>`,
+each of which projects to one or more InputState(s) and/or OutputState(s) to be gated, and is used to modulate the
+`value <State.value>` of those states.
 
 
 .. _GatingSignal_Creation:

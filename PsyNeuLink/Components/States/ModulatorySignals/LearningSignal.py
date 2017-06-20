@@ -12,15 +12,14 @@
 Overview
 --------
 
-A LearningSignal is a type of `ModulatorySignal`.  A ModulatorySignal is a type of `OutputState` that belongs to an
-`AdaptiveMechanism`, and is used to `modulate <ModulatorySignal_Modulation>` the `value <State.value>` of another
-`State`.  A LearningSignal is specialized for use with a `LearningMechanism` and a `LearningProjection`, to modify the
-parameter of a `Projection`.  A LearningSignal receives an error signal from the `LearningMechanism` to which it belongs,
-and uses that to compute a `learning_signal` that is assigned as the `value <LearningProjection.value>` of its
-`LearningProjection`. The LearningProjection conveys its value to a `ParameterState` of the projection being learned,
-which in turns uses that to modify the corresponding parameter. By default, the projection is a `MappingProjection`,
-the parameter is its 'matrix <MappingProjection.matrix>` parameter, and the `learning_signal` is a matrix of weight
-changes that are added to MappingProjection's `matrix <MappingProjection.matrix>`.
+A LearningSignal is a type of `ModulatorySignal`, that is specialized for use with a `LearningMechanism` and a
+`LearningProjection`, to modify the parameter of a `Projection`.  A LearningSignal receives an error signal from the
+`LearningMechanism` to which it belongs, and uses that to compute a `learning_signal` that is assigned as the
+`value <LearningProjection.value>` of its `LearningProjection`. The LearningProjection conveys its value to a
+`ParameterState` of the projection being learned, which in turns uses that to modify the corresponding parameter.
+By default, the projection is a `MappingProjection`, the parameter is its 'matrix <MappingProjection.matrix>`
+parameter, and the `learning_signal` is a matrix of weight changes that are added to MappingProjection's
+`matrix <MappingProjection.matrix>`.
 
 .. _LearningSignal_Creation:
 
