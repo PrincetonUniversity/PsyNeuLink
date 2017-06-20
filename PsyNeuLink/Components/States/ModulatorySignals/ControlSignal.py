@@ -153,6 +153,27 @@ ControlSignal's `allocation` for the next round of execution.
    with the parameter being controlled is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
    "lazy" updating).
 
+.. _ControlSignal_Examples:
+
+Examples
+~~~~~~~~
+
+*Modulate the parameter of a Mechanism's <function <Mechanism.function>*. Ordinarily, ControlSignals modify the
+*MULTIPLICATIVE_PARAM* of a ParameterState's `function <ParameterState.function>` to modulate the parameter's value.
+In the example below, this is changed by specifying a `ControlSignal` for the `Logistic` Function of a
+`TransferMechanism` that adds to, rather than multiplies, the value of its `gain <Logistic.gain>` parameter::
+
+    My_Transfer_Mech = TransferMechanism(
+                               function=Logistic(
+                                            gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+
+Note that the `ModulationParam` specified for the `ControlSignal` pertains to the function of a *ParameterState*
+for the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and *not* the Logistic function
+itself -- that is, the value of the ControlSignal is added to the *gain parameter* of the Logistic function,
+*not* its `variable <Logistic.variable>`).
+
+*Modulate the parameters of several Mechanisms in a System*
+
 Class Reference
 ---------------
 

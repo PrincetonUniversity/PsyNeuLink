@@ -65,99 +65,26 @@ The `function <State.function>` of every state assigns one of its parameters as 
 another asits *MULTIPLICATIVE_PARAM*.  The `modulation <ModulatorySigal.modulation>` attribute of a ModulatorySignal
 determines which of these two parameters to modify, or which of two other actions to take when the State updates its
 `value <State.value>`.  The `modulation <ModulatorySigal.modulation>` attribute is specified using one of the
-following 'Modulation` values (also see `examples <ModulatorySignal_Examples>`:
+following 'Modulation` values (see individual ModulatorySignals for examples):
 
   * `ModulationParam.MULTIPLICATIVE` - modify the *MULTIPLICATIVE* parameter of the state's `function <State.function>`;
-
+  ..
   * `ModulationParam.ADDITIVE` - modify the *ADDITIVE* parameter of the state's `function <State.function>`;
-
+  ..
   * `ModulationParam.OVERRIDE` - assign the ModulatorySignal's value as the state's `value <State.value>`;
-
+  ..
   * `ModulationParam.DISABLE` - assign the State's `value <State.value>` ignoring the ModulatorySignal.
 
-The default for all forms of modulation is `ModulationParam.MULTIPLICATIVE`, except for a `LearningSignal` which
-uses `ModulationParam.ADDITIVE` by default (so that the weight changes it calculates are added to the
-`matrix <MappingProjection.matrix>` parameter of the `MappingProjection` being learned. The value of the
-`modulation <ModulatorySignal.modulation>` attribute can be specified in the **modulation** arg of the
-ModulatorySignal's constructor, or in a *MODULATION* entry of a `state specification dictionary <LINK>` used to
+The default for all forms of modulation is `ModulationParam.MULTIPLICATIVE`, except for
+`LearningSignals <LearningSignal>` which use `ModulationParam.ADDITIVE` by default (so that weight changes are *added*
+to (rather than multiply) the weight `matrix <MappingProjection.matrix>` of the `MappingProjection` being learned.
+The value of the `modulation <ModulatorySignal.modulation>` attribute can be specified in the **modulation** arg of
+the ModulatorySignal's constructor, or in a *MODULATION* entry of a `state specification dictionary <LINK>` used to
 create the ModulatorySignal. If the value of the `modulation <ModulatorySignal.modulation>` attribute is not specified
 when a ModulatorySignal is created, it is assigned the value of the `modulation <AdaptiveMechanism.modulation>`
 attribute for the `AdaptiveMechanism` to which it belongs.
 
-.. _ModulatorySignal_Examples:
-
-Examples
-~~~~~~~~
-
-COMMENT:
-  MOVE EXAMPLES TO ControlSignal AND GatingSignal, RESPECTIVELY,
-   AND ADD EXAMPLE OF SIMPLE GATING MECHANISM SPEC BEFORE ELABORATING EXAMPLES 2 & 3 BELOW
-COMMENT
-
-*Modulate the parameter of a Mechanism's <function <Mechanism.function>*. Ordinarily, ControlSignals modify the
-*MULTIPLICATIVE_PARAM* of a ParameterState's `function <ParameterState.function>` to modulate the parameter's value.
-In the example below, this is changed by specifying a `ControlSignal` for the `Logistic` Function of a
-`TransferMechanism` that adds to, rather than multiplies, the value of its `gain <Logistic.gain>` parameter::
-
-    COMMENT:
-        REVISE USING ControlSignal SPECIFICATION WHEN DEFERRED_INIT IS WORKING FOR ControlSignals
-    COMMENT
-
-    My_Transfer_Mech = TransferMechanism(
-                           function=Logistic(gain=(1.0, ControlProjection(control_signal_params=
-                                                                             {MODULATION:ModulationParam.ADDITIVE})))
-
-Note that the `ModulationParam` specified for the `ControlSignal` pertains to the function of a *ParameterState*
-for the Logistic Function (in this case, for its `gain <Logistic.gain>` parameter), and *not* the Logistic
-function itself -- that is, the value of the ControlSignal is added to the *gain parameter* of the Logistic
-function, *not* its `variable <Logistic.variable>`).
-
-*Gate the InputStates of several Mechanisms*.  The following example creates a `GatingMechanism` that modulates the
-`InputState` of all the layers in a 3-layered feedforward neural network.  Ordinarily, gating modulates the
-*MULTIPLICATIVE_PARAM* of an InputState's `function <InputState.function>`.  In the example, this is changed so that
-it adds the `value <GatingSignal.value>` of the `GatingSignal` to the `value <InputState.value>` of each InputState::
-
-    My_Input_Layer = TransferMechanism(size=3)
-
-    My_Hidden_Layer = TransferMechanism(size=5)
-
-    My_Output_Layer = TransferMechanism(size=2)
-
-    My_Gating_Mechanism = GatingMechanism(gating_signals=[
-                                            {'GATE_ALL': [My_Input_Layer, My_Hidden_Layer, My_Output_Layer]},
-                                          modulation=ModulationParam.ADDITIVE)
-
-Note that the gating_signals are specified simply as a list of Mechanisms, which is all that is necessary since the
-default for a `GatingSignal` is to modulate the `primary InputState <Mechanism_InputStates>` of a Mechanism.
-Since they are all listed in a single entry of a `state specification dictionary`, they will all be gated by a
-single GatingSignal named *GATE_ALL*, that will send `GatingProjections <GatingProjection>` to the InputState of
-each of the Mechanisms listed (the example below shows how InputStates can be differentially gated by a
-`GatingMechanism`). Finally, note that the `ModulationParam` specified for the `GatingMechanism` (and therefore the
-default for its `GatingSignals <GatingSignal>) pertains to the `function <InputState.function>` of each `InputState`.
-By default that is a `Linear` function, and its *ADDITIVE_PARAM* is its `intercept <Linear.intercept>` parameter.
-Therefore, in the example above, each time the InputStates are updated, the value of the GatingSignal will be added
-to the `intercept` of each InputState's `function <InputState.function>`, thus adding that amount to the
-`value <InputStat.value>` of the InputState itself.  Ordinarily, GatingSignals modulate the *MULTIPLICATIVE_PARAM*
-of a State's `function <State.function>`  which, for an InputState, is the `slope <Linear.slope>` parameter of a
-`Linear` Function, thus multiplying the InputState's `value <InputState>`.
-
-*Gate InputStates differentially*.  In the example above, all of the InputStates were gated using a single
-GatingSignal.
-
-    My_Gating_Mechanism = GatingMechanism(gating_signals=[{NAME:'GATING_SIGNAL_A':
-                                                           GATE:My_Input_Layer
-                                                           MODULATION:ModulationParam.ADDITIVE},
-                                                           {NAME:'GATING_SIGNAL_B':
-                                                           GATE:My_Hidden_Layer, My_Output_Layer}])
-
-Here, two GatingSignals are specified as `state specification dictionaries <LINK>`, each of which contains
-an entry for the name of the GatingSignal, and a *GATE* entry that specifies the Mechanisms with the InputStates to
-be gated.  The first one also containes a *MODULATION* entry that specifies the value of the `modulation
-<GatingSignal.modulation>` attribute for the GatingSignal.  The second one does not, so the default will be used
-(which, for a GatingSignal, is ModulationParam.MULTIPLICATIVE).
-
 .. _ModulatorySignal_Execution:
-
 
 Execution
 ---------
