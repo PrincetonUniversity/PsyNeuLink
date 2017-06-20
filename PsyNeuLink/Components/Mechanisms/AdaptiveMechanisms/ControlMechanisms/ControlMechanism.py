@@ -157,7 +157,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple) 
                    it is flagged for deferred_init() in its __init__ method
                When the next ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
-                   its _take_over_as_default_controller method is called in _instantiate_attributes_after_function;
+                   its _assign_as_controller method is called in _instantiate_attributes_after_function;
                    it then iterates through all of the parameterStates of all of the mechanisms in its system, 
                    identifies ones without a sender specified, calls its deferred_init() method,
                    instantiates a ControlSignal for it, and assigns it as the ControlProjection's sender.
@@ -462,7 +462,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             - ControlSignal object;
             - ControlProjection;
             - ParameterState;
-            - params dict, from _take_over_as_default_controller(), containing a ControlProjection;
+            - params dict, from _assign_as_controller(), containing a ControlProjection;
             - tuple (param_name, Mechanism), from control_signals arg of constructor;
                     [NOTE: this is a convenience format;
                            it precludes specification of ControlSignal params (e.g., ALLOCATION_SAMPLES)]
@@ -527,7 +527,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             #        so parse:
             # FIX 5/23/17: NEED TO GET THE KEYWORDS STRAIGHT FOR PASSING ControlSignal SPECIFICATIONS
             # IMPLEMENTATION NOTE:
-            #    CONTROL_SIGNAL_SPECS is used by _take_over_as_default_controller,
+            #    CONTROL_SIGNAL_SPECS is used by _assign_as_controller,
             #                         to pass specification from a parameter specification tuple
             #    STATE_PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
             #                      here, the tuple comes from a (param, mechanism) specification in control_signal arg
@@ -722,7 +722,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
             that insures that any ControlSignals specified in control_signals arg are instantiated first
-        Then calls _take_over_as_default_controller to instantiate any ControlProjections/ControlSignals specified 
+        Then calls _assign_as_controller to instantiate any ControlProjections/ControlSignals specified
             along with parameter specification(s) (i.e., as part of a (<param value>, ControlProjection) tuple
         """
 
@@ -730,7 +730,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         if MAKE_DEFAULT_CONTROLLER in self.paramsCurrent:
             if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
-                self._take_over_as_default_controller(context=context)
+                self._assign_as_controller(context=context)
             if not self.system.enable_controller:
                 return
 
@@ -747,7 +747,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         #             control_signal_spec = {CONTROL:[projection]}
         #             self._instantiate_control_signal(control_signal_spec, context=self.name)
 
-    def _take_over_as_default_controller(self, context=None):
+    def _assign_as_controller(self, context=None):
 
         # FIX 5/23/17: INTEGRATE THIS WITH ASSIGNMENT OF control_signals
         # FIX:         (E.G., CHECK IF SPECIFIED ControlSignal ALREADY EXISTS AND IS DEFERRED_INIT)

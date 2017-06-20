@@ -2625,7 +2625,7 @@
 #                   ? use Mechanism.add_projection method
 
 # IMPLEMENT: call ControlMechanism should call ControlProjection._instantiate_sender()
-#                to instantaite new outputStates and Projections in _take_over_as_default_controller()
+#                to instantaite new outputStates and Projections in _assign_as_controller()
 #
 # IMPLEMENT: kwPredictionInputTarget option to specify which mechanism the EVC should use to receive, as input,
 #                the output of a specified prediction mechanims:  tuple(PredictionMechanism, TargetInputMechanism)
@@ -2644,21 +2644,21 @@
 # DOCUMENT:  protocol for assigning DefaultControlMechanism
 #           Initial assignment is to SystemDefaultCcontroller
 #           When any other ControlMechanism is instantiated, if params[MAKE_DEFAULT_CONTROLLER] = True
-#                then the class's _take_over_as_default_controller() method
+#                then the class's _assign_as_controller() method
 #                     is called in _instantiate_attributes_after_function
 # it moves all ControlProjections from DefaultController to itself
 #
 # FIX: IN ControlProjection._instantiate_sender:
 # FIX 6/28/16:  IF CLASS IS ControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
 #
-# FIX: ControlMechanism._take_over_as_default_controller() IS NOT FULLY DELETING DefaultController.outputStates
+# FIX: ControlMechanism._assign_as_controller() IS NOT FULLY DELETING DefaultController.outputStates
 #
-# FIX: PROBLEM - ControlMechanism._take_over_as_default_controller()
+# FIX: PROBLEM - ControlMechanism._assign_as_controller()
 # FIX:           NOT SETTING efferents IN NEW CONTROLLER (e.g., EVC)
 #
 # SOLUTIONS:
 # 1) CLEANER: use _instantiate_sender on ControlProjection to instantiate both outputState and projection
-# 2) EASIER: add self.efferents.append() statement in _take_over_as_default_controller()
+# 2) EASIER: add self.efferents.append() statement in _assign_as_controller()
 #
 #
 # BACKGROUND INFO:
