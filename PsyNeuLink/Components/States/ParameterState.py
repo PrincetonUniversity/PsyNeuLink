@@ -68,18 +68,17 @@ Parameters can be specified in one of several places:
       `pathway` for a process (see :ref:`Runtime Specification <ParameterState_Runtime_Parameters>` below).
 
 The value specified for a parameter (either explicitly or by default) is assigned to the attribute of
-the Mechanism or its `functon <Mechanism.function>` that has its name (for example, the value of a parameter named
-*param* is assigned to an attribute named my_component.param).  
+the ParameterState's owner that has that name (for example, the value of a parameter named *param* is assigned to an
+attribute named my_component.param). When the ParameterState's owner is executed, the
+ParameterState's `function <ParameterState.function>` is called with the attribute's value, and the result is
+assigned as the ParameterState's `value <ParameterState.value>`.  The latter is then used by the owner
+of the ParameterState as the value of the corresponding parameter of its own :keyword:`function`.
 
-name
-parameterState's
-`value <ParameterState>` value.
-
-base, and any projections assigned to it are added to its `mod_afferents <ParameterState.mod_afferents>` attribute.
-When the ParameterState's owner is executed, the ParameterState's `base_value <ParameterState.base_value>` is
-combined with the value of the projections
-it receives to determine the value of the parameter for which the parameterState is responsible
-(see `ParameterState_Execution` for details).
+.. note::
+   It is important to note the distinction between the :keyword:`function` of a ParameterState,
+   and the :keyword:`function` of its owner.**  The former is used to determine the actual value
+   of the parameter used by the latter (see `Figure <LINK>`) -- see `Figure <LINK>` and
+   see `ParameterState_Execution` for additional details).
 
 The specification of a parameter can take any of the following forms:
 
@@ -87,25 +86,24 @@ The specification of a parameter can take any of the following forms:
       assigns the parameter's default value as the parameterState's `base_value <ParameterState.base_value>`,
       and assigns the parameter's name as the name of the parameterState.
     ..
-    * A reference to an existing **parameterState** object.
-      COMMENT:
-      It's name must be the name of a parameter of the
-      owner's ``function``, and its
-      COMMENT
-      Its value must be a valid one for the parameter.
+    * A reference to an existing **ParameterState** object.  It's name must be the name of a parameter of the
+      owner or its :keyword:`function`, and its value must be a valid one for the parameter.
 
       .. note::
           This capability is provided for generality and potential
           future use, but its current use is not advised.
     ..
-    * A `projection specification <Projection_In_Context_Specification>`.  This creates a default parameterState,
-      assigns the parameter's default value as the parameterState's `base_value <ParameterState.base_value>`,
-      and assigns the parameter's name as the name of the parameterState.  It also creates and/or assigns the
-      specified projection, and assigns the parameterState as the projection's
-      `receiver <Projection.Projection.receiver>`.  The projection must be a `ControlProjection` or
-      `LearningProjection`, and its value must be a valid one for the parameter.
+    * A Modulatory specification.  This can be an existing `ControlSignal` or `ControlProjection` object, a
+      `LearningSignal` or `LearningProjection` object, a constructor or the class name for any of these, or the
+      keywords *CONTROL* or *LEARNING*.  Any of these create a default ParameterState, assign the parameter's default
+      value as the ParameterState's `value <ParameterState.value>`, and assign the parameter's name as the name of the
+      ParameterState.  They also create and/or assign the corresponding ModulatorySignal and ModulatoryProjection,
+      and assign the ParameterState as the ModulatoryProjection's `receiver <Projection.Projection.receiver>`.
+      If the ModulatorySignal and/or ModulatoryProjection already exist, their value(s) must be valid one(s) for the
+      parameter.  Note that only Control and Learning Modulatory components can be assigned to a ParameterState
+      (Gating components cannot -- they can only be assgined to InputStates or OutputStates).
     ..
-    * A 2-item (value, projection specification) **tuple**.  This creates a default
+    * A 2-item (value, Modulatory specification) **tuple**.  This creates a default
       parameterState, uses the value (1st) item of the tuple as parameterState's
       `base_value <ParameterState.base_value>`, and assigns the parameter's name as the name of the parameterState.
       The projection (2nd) item of the tuple is used to create and/or assign the specified projection, that is assigned
