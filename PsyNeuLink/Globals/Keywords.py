@@ -529,6 +529,8 @@ kwStateContext = "StateContext"
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
 FULL = 'FULL'
+OWNER = 'owner'
+REFERENCE_VALUE = 'reference_value'
 
 # InputStates:
 PRIMARY = 'Primary'

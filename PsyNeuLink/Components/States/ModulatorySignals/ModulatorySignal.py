@@ -344,8 +344,6 @@ class ModulatorySignal(OutputState):
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
-            # Delete these as they have been moved to params dict (and will not be recognized by OutputState.__init__)
-            del self.init_args['modulation']
 
             # Flag for deferred initialization
             self.value = DEFERRED_INITIALIZATION

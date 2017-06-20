@@ -506,7 +506,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             param_name = control_signal_spec.name
             parameter_state = _get_parameter_state(self, CONTROL_SIGNAL, param_name, mech)
 
-        # Specification was tuple or dict, and parsed into a dict
+        # Specification was tuple or dict, now parsed into a dict
         elif isinstance(control_signal_spec, dict):
             param_name = control_signal_spec[NAME]
             control_signal_params = control_signal_spec[PARAMS]
@@ -561,11 +561,23 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                                                         "must contain a single ControlProjection".
                                                         format(CONTROL_SIGNAL_SPECS, CONTROL_SIGNAL, self.name))
                         if len(spec)>1:
-                            raise ControlMechanismError("PROGRAM ERROR: Multiple ControlProjections is not "
+                            raise ControlMechanismError("PROGRAM ERROR: Multiple ControlProjections are not "
                                                         "currently supported in specification of a ControlSignal")
                         # Get receiver mech
                         if control_projection.value is DEFERRED_INITIALIZATION:
-                            parameter_state = control_projection.init_args['receiver']
+                            parameter_state = control_projection.init_args[RECEIVER]
+                            # ControlProjection was created in response to specification of ControlSignal in tuple
+                            #    so get ControlSignal spec
+                            if SENDER in control_projection.init_args:
+                                control_signal_spec = control_projection.init_args[SENDER]
+                                if control_signal_spec and not isinstance(control_signal_spec, ControlSignal):
+                                    raise ControlMechanismError("PROGRAM ERROR: "
+                                                                "Sender of {} for {} {} of {} is not a {}".
+                                                                format(CONTROL_PROJECTION,
+                                                                       parameter_state.name,
+                                                                       PARAMETER_STATE,
+                                                                       parameter_state.owner.name,
+                                                                       CONTROL_SIGNAL))
                         else:
                             parameter_state = control_projection.receiver
                         param_name = parameter_state.name
@@ -579,50 +591,54 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                                             format(CONTROL_SIGNAL, self.name))
 
 
+        default_name = param_name + '_' + ControlSignal.__name__
+
+        # Get constraint for ControlSignal value
+        #    - get ControlMechanism's value
+        self._update_value(context=context)
+        # - get OutputState's index
+        try:
+            output_state_index = len(self.output_states)
+        except (AttributeError, TypeError):
+            output_state_index = 0
+        # - get constraint for OutputState's value
+        output_state_constraint_value = self.allocation_policy[output_state_index]
+
         # Specification is a ControlSignal (either passed in directly, or parsed from tuple above)
         if isinstance(control_signal_spec, ControlSignal):
             # Deferred Initialization, so assign owner, name, and initialize
             if control_signal_spec.value is DEFERRED_INITIALIZATION:
-                # FIX 5/23/17:  IMPLEMENT DEFERRED_INITIALIZATION FOR ControlSignal
-                # CALL DEFERRED INIT WITH SELF AS OWNER ??AND NAME FROM control_signal_dict?? (OR WAS IT SPECIFIED)
-                # OR ASSIGN NAME IF IT IS DEFAULT, USING CONTROL_SIGNAL_DICT??
-                pass
+                control_signal_spec.init_args[OWNER] = self
+                control_signal_spec.init_args[NAME] = control_signal_spec.init_args[NAME] or default_name
+                # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_constraint_value
+                control_signal_spec.init_args[REFERENCE_VALUE] = defaultControlAllocation
+                control_signal_spec._deferred_init(context=context)
+                control_signal = control_signal_spec
             elif not control_signal_spec.owner is self:
                 raise ControlMechanismError("Attempt to assign ControlSignal to {} ({}) that is already owned by {}".
                                             format(self.name, control_signal_spec.name, control_signal_spec.owner.name))
-            control_signal = control_signal_spec
-            control_signal_name = control_signal_spec.name
-            control_projections = control_signal_spec.efferents
-
-            # IMPLEMENTATION NOTE:
-            #    THIS IS TO HANDLE FUTURE POSSIBILITY OF MULTIPLE ControlProjections FROM A SINGLE ControlSignal;
-            #    FOR NOW, HOWEVER, ONLY A SINGLE ONE IS SUPPORTED
-            # parameter_states = [proj.recvr for proj in control_projections]
-            if len(control_projections) > 1:
-                raise ControlMechanismError("PROGRAM ERROR: list of ControlProjections is not currently supported "
-                                            "as specification in a ControlSignal")
             else:
-                control_projection = control_projections[0]
-                parameter_state = control_projection.receiver
+                control_signal = control_signal_spec
+                control_signal_name = control_signal_spec.name
+                control_projections = control_signal_spec.efferents
+
+                # IMPLEMENTATION NOTE:
+                #    THIS IS TO HANDLE FUTURE POSSIBILITY OF MULTIPLE ControlProjections FROM A SINGLE ControlSignal;
+                #    FOR NOW, HOWEVER, ONLY A SINGLE ONE IS SUPPORTED
+                # parameter_states = [proj.recvr for proj in control_projections]
+                if len(control_projections) > 1:
+                    raise ControlMechanismError("PROGRAM ERROR: list of ControlProjections is not currently supported "
+                                                "as specification in a ControlSignal")
+                else:
+                    control_projection = control_projections[0]
+                    parameter_state = control_projection.receiver
 
         # Instantiate OutputState for ControlSignal
         else:
-            control_signal_name = param_name + '_' + ControlSignal.__name__
+            control_signal_name = default_name
 
-            from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal \
-                import ControlSignal
+            from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
             from PsyNeuLink.Components.States.State import _instantiate_state
-
-            # Get constraint for OutputState's value
-            #    - get ControlMechanism's value
-            self._update_value(context=context)
-            # - get OutputState's index
-            try:
-                output_state_index = len(self.output_states)
-            except (AttributeError, TypeError):
-                output_state_index = 0
-            # - get constraint for OutputState's value
-            output_state_constraint_value = self.allocation_policy[output_state_index]
 
             control_signal_params.update({CONTROLLED_PARAM:param_name})
 
@@ -654,7 +670,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                     # FIX 5/23/17: CLEAN UP NAME STUFF BELOW:
                     control_projection.init_args['name'] = CONTROL_PROJECTION + \
                                                    ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
-                control_projection._deferred_init() # XXX
+                control_projection._deferred_init()
             else:
                 control_projection.sender = control_signal
 
@@ -663,8 +679,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
             from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
             control_projection = ControlProjection(sender=control_signal,
-                                           receiver=parameter_state,
-                                           name=CONTROL_PROJECTION + control_signal_name)
+                                                   receiver=parameter_state,
+                                                   name=CONTROL_PROJECTION + control_signal_name)
 
         # Add ControlProjection to list of outputState's outgoing projections
         # (note: if it was deferred, it just added itself, skip)
@@ -734,20 +750,26 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     def _take_over_as_default_controller(self, context=None):
 
         # FIX 5/23/17: INTEGRATE THIS WITH ASSIGNMENT OF control_signals
-        # FIX:         (E.G., CHECK IF SPECIFIED ControlSignal ALREADY EXISTS)
+        # FIX:         (E.G., CHECK IF SPECIFIED ControlSignal ALREADY EXISTS AND IS DEFERRED_INIT)
         # Check the parameterStates of the system's mechanisms for any ControlProjections with deferred_init()
         for mech in self.system.mechanisms:
             for parameter_state in mech._parameter_states:
                 for projection in parameter_state.mod_afferents:
-                    # If projection was deferred for init, initialize it now and instantiate for self
-                    if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
+                    # If projection was deferred for init, instantiate its ControlSignal and then initialize it
+                    # MODIFIED 6/19/17 OLD:
+                    # if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
+                    # MODIFIED 6/19/17 NEW:
+                    if projection.value is DEFERRED_INITIALIZATION:
+                    # MODIFIED 6/19/17 END
                         # FIX 5/23/17: MODIFY THIS WHEN (param, ControlProjection) tuple
                         # FIX:         IS REPLACED WITH (param, ControlSignal) tuple
+                        # # Check if ControlSignal has already been specified (e.g., *it* was the spec in the tuple)
+                        # if projection.init_args[SENDER]:
+                        #
+                        # # Otherwise, instantiate a ControlSignal
+                        # else:
                         # Add projection itself to any params specified in the ControlProjection for the ControlSignal
                         #    (cached in the ControlProjection's control_signal attrib)
-                        # FIX: UPDATE WITH MODULATION_MODS
-                        # FIX:  control_signal_specs -> modulatory_signal_specs
-                        # FIX:  control_signal -> modulatory_signal_params
                         control_signal_specs = projection.control_signal_params or {}
                         control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
                         self._instantiate_control_signal(control_signal_specs, context=context)

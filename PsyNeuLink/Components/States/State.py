@@ -667,6 +667,11 @@ class State_Base(State):
         + Projection object:
             checks that receiver is self
             checks that projection function output is compatible with self.value
+        + State object:
+            check that it is compatible with (i.e., a legimate sender for) projection
+            assign as sender of the projection
+        + [TBI: State class: instantiate default State]
+        + [TBI: Mechanism object]
         + specification dict (usually from STATE_PROJECTIONS entry of params dict):
             checks that projection function output is compatible with self.value
             implements projection
@@ -676,8 +681,8 @@ class State_Base(State):
         If any of the conditions above fail:
             a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]
         For each projection:
-            if it is a MappingProjection or ControlProjection, it is added to self.path_afferents
-            if it is a GatingProjection, it is added to self.mod_afferents 
+            if it is a MappingProjection, it is added to self.path_afferents
+            if it is a LearningProjection, ControlProjection, or GatingProjection, it is added to self.mod_afferents
         If kwMStateProjections is absent or empty, no projections are created
         """
 
@@ -719,9 +724,11 @@ class State_Base(State):
 # FIX: OR A _parse_projection_spec METHOD
             projection_object = None # flags whether projection object has been instantiated; doesn't store object
             projection_type = None   # stores type of projection to instantiate
+            sender = None
             projection_params = {}
 
-            # INSTANTIATE PROJECTION_SPEC
+            # PARSE AND INSTANTIATE PROJECTION_SPEC --------------------------------------------------------------------
+
             # If projection_spec is a Projection object:
             # - call _check_projection_receiver() to check that receiver is self; if not, it:
             #     returns object with receiver reassigned to self if chosen by user
@@ -729,17 +736,13 @@ class State_Base(State):
             #     note: in that case, projection will be in self.path_afferents list
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.value is DEFERRED_INITIALIZATION:
-                    # FIX: UPDATE FOR LEARNING
-                    # FIX: UPDATE WITH MODULATION_MODS
-                    # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
                     if isinstance(projection_spec, ModulatoryProjection_Base):
-                    # if isinstance(projection_spec, (ControlProjection, GatingProjection)):
                         # Assign projection to mod_afferents
                         self.mod_afferents.append(projection_spec)
                         projection_spec.init_args[RECEIVER] = self
-                        # # Skip any further initialization for now
-                        # #   (remainder will occur as part of deferred init for
-                        # #    ControlProjection or GatingProjection)
+                        # Skip any further initialization for now
+                        #   (remainder will occur as part of deferred init for
+                        #    ControlProjection or GatingProjection)
                         continue
 
                     # Complete init for other (presumably Mapping) projections
@@ -765,6 +768,25 @@ class State_Base(State):
                     # Used for error message
                     default_string = kwDefault
 # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
+
+            # MODIFIED 6/19/17 NEW:
+            # If projection_spec is a State
+            # - assume
+            elif isinstance(projection_spec, State):
+                # Check that State is appropriate for type of projection
+                _check_projection_sender_compatiability(self, default_projection_type, type(projection_spec))
+                # Assign State as projections's sender (for use below)
+                sender = projection_spec
+            # MODIFIED 6/19/17 END
+
+            # FIX: IMPLEMENT FOLLOWING;
+            #      ASSUME PRIMARY OutputState OF ProcessingMechanism FOR MappingProjection OR raise exception
+            #      ASSUME FIRST ModulatorySignal OF AdaptiveMechanism FOR ModulatoryProjection OR raise exception
+            # # MODIFIED 6/19/17 NEW:
+            # elif isinstance(projection_spec, Mechanism):
+            #     pass
+            # # MODIFIED 6/19/17 END
+
 
             # If projection_spec is a dict:
             # - get projection_type
@@ -839,16 +861,18 @@ class State_Base(State):
                                      default_projection_type.__class__.__name__))
 
             # If projection_object has not been assigned, instantiate projection_type
-            # Note: this automatically assigns projection to self.path_afferents and
-            #       to it's sender's efferents list:
-            #           when a projection is instantiated, it assigns itself to:
-            #               its receiver's .path_afferents attribute (in Projection._instantiate_receiver)
-            #               its sender's .efferents attribute (in Projection._instantiate_sender)
+            # Note: this automatically assigns projection to self.path_afferents and to it's sender's efferents list;
+            #       when a projection is instantiated, it assigns itself to:
+            #           its receiver's .path_afferents attribute (in Projection._instantiate_receiver)
+            #           its sender's .efferents attribute (in Projection._instantiate_sender)
             if not projection_object:
                 kwargs = {RECEIVER:self,
                           NAME:self.owner.name+' '+self.name+' '+projection_type.className,
                           PARAMS:projection_params,
                           CONTEXT:context}
+                # If the projection_spec was a State (see above) and assigned as the sender, assign to SENDER arg
+                if sender:
+                    kwargs.update({SENDER:sender})
                 # If the projection was specified with a keyword or attribute value
                 #     then move it to the relevant entry of the params dict for the projection
                 # If projection_spec was in the form of a matrix keyword, move it to a matrix entry in the params dict
@@ -870,10 +894,6 @@ class State_Base(State):
             # Initialization of projection is deferred
             if projection_spec.value is DEFERRED_INITIALIZATION:
                 # Assign instantiated "stub" so it is found on deferred initialization pass (see Process)
-                # FIX: UPDATE FOR LEARNING
-                # FIX: UPDATE WITH MODULATION_MODS
-                # FIX:    CHANGE TO ModulatoryProjection ONCE LearningProjection MODULATES ParameterState Function
-                # if isinstance(projection_spec, (ControlProjection, GatingProjection)):
                 if isinstance(projection_spec, ModulatoryProjection_Base):
                     self.mod_afferents.append(projection_spec)
                 else:
@@ -882,11 +902,10 @@ class State_Base(State):
 
             # Projection was instantiated, so:
             #    - validate value
-            #    - assign to State's afferents or mod_afferents list
+            #    - assign to State's path_afferents or mod_afferents list
             # If it is a ModualatoryProjection:
             #    - check that projection's value is compatible with value of the function param being modulated
             #    - assign projection to mod_afferents
-            # if isinstance(projection_spec, (ControlProjection, GatingProjection)):
             if isinstance(projection_spec, ModulatoryProjection_Base):
                 function_param_value = _get_modulated_param(self, projection_spec).function_param_val
                 # Match the projection's value with the value of the function parameter
@@ -900,7 +919,7 @@ class State_Base(State):
                     continue
             # Otherwise:
             #    - check that projection's value is compatible with the state's variable
-            #    - assign projection to afferents
+            #    - assign projection to path_afferents
             else:
                 if iscompatible(self.variable, projection_spec.value):
                     # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlProjection)
@@ -1934,6 +1953,28 @@ def _check_state_ownership(owner, param_name, mechanism_state):
         # Assign owner to chosen state
         mechanism_state.owner = owner
     return mechanism_state
+
+
+def _check_projection_sender_compatiability(owner, projection_type, sender_type):
+    from PsyNeuLink.Components.States.OutputState import OutputState
+    from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
+    from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
+    from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
+    from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+    from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+    from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+
+    if issubclass(projection_type, MappingProjection) and issubclass(sender_type, OutputState):
+        return
+    if issubclass(projection_type, LearningProjection) and issubclass(sender_type, LearningSignal):
+        return
+    if issubclass(projection_type, ControlProjection) and issubclass(sender_type, ControlSignal):
+        return
+    if issubclass(projection_type, GatingProjection) and issubclass(sender_type, GatingSignal):
+        return
+    else:
+        raise StateError("Illegal specification of a {} for {} of {}".
+                         format(sender_type, owner.__class__.__name__, owner.owner.name))
 
 
 # FIX 5/23/17:  UPDATE TO ACCOMODATE (param, ControlSignal) TUPLE
