@@ -69,7 +69,7 @@ primary attributes:
 .. _ControlSignal_Modulation:
 
 * `modulation <ControlSignal.modulation>` : determines how the ControlProjection is used by the ParameterState to 
-  which it projects to modify its value (see `Modulatory Projections <ModulatoryProjection.modulation>` for an 
+  which it projects to modify its value (see `ModulatorySignals <ModulatorySignals_Modulation>` for an
   explanation of how the modulation is specified and used to modulate the value of a parameter). The default value 
   is set to the value of the `modulation <ControlMechanism.modulation>` attribute of the ControlMechanism to which the 
   ControlSignal belongs;  this the is same for all of the ControlSignals belonging to that ControlMechanism.  
@@ -137,6 +137,9 @@ primary attributes:
 Execution
 ---------
 
+XXX NEED EXPLANATOIN HERE (OR IN PARAMETER STATE) FOR HOW PARAMETER VALUES ARE MODULATED AND ASSIGNED
+    REFERENCE DISCUSSION IN ParameterState
+
 A ControlSignal cannot be executed directly.  It is executed whenever the `ControlMechanism` to which it belongs is
 executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation`, that is used by its
 `function <ControlSignal.function>` to compute its `intensity` for that round of execution.  The `intensity` is used
@@ -157,10 +160,27 @@ ControlSignal's `allocation` for the next round of execution.
 Examples
 ~~~~~~~~
 
-*Modulate the parameter of a Mechanism's <function <Mechanism.function>*. Ordinarily, ControlSignals modify the
-*MULTIPLICATIVE_PARAM* of a ParameterState's `function <ParameterState.function>` to modulate the parameter's value.
-In the example below, this is changed by specifying a `ControlSignal` for the `Logistic` Function of a
-`TransferMechanism` that adds to, rather than multiplies, the value of its `gain <Logistic.gain>` parameter::
+*Modulate the parameter of a Mechanism's <function <Mechanism.function>*.  The following example assigns a
+ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
+
+    My_Mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
+
+Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
+with a ControlProjection that projects to the TransferMechanism's `ParameterState` for the `bias <Logistic.bias>`
+parameter of its `Logistic` Function.  The default value of a ControlSignal's `modulation <ControlSignal.modulation>`
+attribute is Modulation.MULTIPLICATIVE, so that it will multiply
+
+
+of the Control
+When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
+gain parameter.
+
+*Specify attributes of a ControlSignal*.  Ordinarily, ControlSignals modify the *MULTIPLICATIVE_PARAM* of a
+ParameterState's `function <ParameterState.function>` to modulate the parameter's value.
+In the example below, this is changed by specifying the `modulation <ControlSignal.modulation>` attribute of a
+`ControlSignal` for the `Logistic` Function of a `TransferMechanism`.  It is changed so that the value of the
+ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
+function::
 
     My_Mech = TransferMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
 

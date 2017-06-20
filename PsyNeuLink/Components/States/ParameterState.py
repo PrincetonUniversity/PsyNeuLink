@@ -15,11 +15,10 @@ Overview
 
 A parameterState belongs to either a `mechanism <Mechanism>` or a `MappingProjection`, and is used to represent and
 possibly modify the value of a parameter of its owner or it owner's function.  It can receive one or more
-`ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that modify that
-parameter.   The projections received by a parameterState are listed in its
-`afferents <ParameterState.path_afferents>` attribute.
-Its `function <ParameterState.function>` combines the values of these inputs, and uses the result to modify the value
-of the parameter for which it is responsible.
+`ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that modify that parameter.
+The projections received by a parameterState are listed in its `path_afferents <ParameterState.path_afferents>`
+attribute. Its `function <ParameterState.function>` combines the values of these inputs, and uses the result to modify
+the value of the parameter that is used by the Mechanism or its `function <Mechanism.function>`.
 
 
 .. _ParameterState_Creation:
@@ -56,7 +55,7 @@ Parameters can be specified in one of several places:
     ..
     * By direct assignment to the corresponding attribute of the component to which the parameter belongs.  The
       attribute always has the same name as the parameter and can be referenced using standard python attribute
-      notation (e.g., myComponent.paramter_name).      
+      notation (e.g., myComponent.parameter_name).
     ..
     * In the `assign_params` method for the component.
     ..
@@ -68,10 +67,17 @@ Parameters can be specified in one of several places:
       method (only for a mechanism), or in a tuple with the mechanism where it is specified as part of the
       `pathway` for a process (see :ref:`Runtime Specification <ParameterState_Runtime_Parameters>` below).
 
-The value specified for the parameter (either explicitly or by default) is assigned as the parameterState's
-`base_value <ParameterState.base_value>`, and any projections assigned to it are added to its
-`receiveFromProjections <ParameterState.path_afferents>` attribute. When the parameterState's owner is
-executed, the parameterState's `base_value <ParameterState.base_value>` is combined with the value of the projections
+The value specified for a parameter (either explicitly or by default) is assigned to the attribute of
+the Mechanism or its `functon <Mechanism.function>` that has its name (for example, the value of a parameter named
+*param* is assigned to an attribute named my_component.param).  
+
+name
+parameterState's
+`value <ParameterState>` value.
+
+base, and any projections assigned to it are added to its `mod_afferents <ParameterState.mod_afferents>` attribute.
+When the ParameterState's owner is executed, the ParameterState's `base_value <ParameterState.base_value>` is
+combined with the value of the projections
 it receives to determine the value of the parameter for which the parameterState is responsible
 (see `ParameterState_Execution` for details).
 
