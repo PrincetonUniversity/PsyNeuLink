@@ -17,6 +17,7 @@ class MechanismRole(Enum):
     SINGLETON = 5
     MONITORING = 6
     TARGET = 7
+    RECURRENT_INIT = 8
 
 
 class CompositionError(Exception):
@@ -183,6 +184,7 @@ class Composition(object):
             mech.is_processing = True
             self.graph.add_component(mech)  # Set incoming edge list of mech to empty
             self.mechanisms.append(mech)
+            self.mechanisms_to_roles[mech] = None
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
@@ -231,42 +233,33 @@ class Composition(object):
         ########
 
         # Clear old information
-        for mech in self.origin_mechanisms:
-            self.remove_origin(mech)
-        for mech in self.terminal_mechanisms:
-            self.remove_terminal(mech)
-        for mech in self.recurrent_init_mechanisms:
-            self.remove_recurrent_init(mech)
-        for mech in self.cycle_mechanisms:
-            self.remove_cycle(mech)
+        self.mechanisms_to_roles.update({k: None for k in self.mechanisms_to_roles})
 
         # Identify Origin mechanisms
-        for mech in self.graph.mechanisms:
-            if self.graph.get_incoming(mech) == []:
-                self.set_origin(mech)
+        for mech in self.mechanisms:
+            if self.graph.get_incoming_from_component(mech) == []:
+                self.set_mechanism_role(mech, MechanismRole.ORIGIN)
         # Identify Terminal mechanisms
-            if self.graph.get_outgoing(mech) == []:
-                self.set_terminal(mech)
+            if self.graph.get_outgoing_from_component(mech) == []:
+                self.set_mechanism_role(mech, MechanismRole.TERMINAL)
         # Identify Recurrent_init and Cycle mechanisms
         visited = []  # Keep track of all mechanisms that have been visited
-        for origin_mech in self.origin_mechanisms:  # Cycle through origin mechanisms first
+        for origin_mech in self.get_mechanisms_by_role(MechanismRole.ORIGIN):  # Cycle through origin mechanisms first
             visited_current_path = []  # Track all mechanisms visited from the current origin
             next_visit_stack = []  # Keep a stack of mechanisms to be visited next
             next_visit_stack.append(origin_mech)
             for mech in next_visit_stack:  # While the stack isn't empty
                 visited.append(mech)  # Mark the mech as visited
                 visited_current_path.append(mech)  # And visited during the current path
-                children = self.graph.get_children(mech)  # Get the children of that mechanism
+                children = self.graph.get_child_vertices_from_component(mech)  # Get the children of that mechanism
                 for child in children:
                     # If the child has been visited this path and is not already initialized
                     if child in visited_current_path:
-                        if mech not in self.recurrent_init_mechanisms:
-                            self.set_recurrent_init(mech)  # Set the parent as Recurrent_init
-                        if child not in self.cycle_mechanisms:
-                            self.set_cycle(child)  # And the child as Cycle
+                        self.set_mechanism_role(mech, MechanismRole.RECURRENT_INIT)
+                        self.set_mechanism_role(child.component, MechanismRole.CYCLE)
                     elif child not in visited:  # Else if the child has not been explored
                         next_visit_stack.append(child)  # Add it to the visit stack
-        for mech in self.graph.mechanisms:
+        for mech in self.mechanisms:
             if mech not in visited:  # Check the rest of the mechanisms
                 visited_current_path = []
                 next_visit_stack = []
@@ -274,13 +267,11 @@ class Composition(object):
                 for remaining_mech in next_visit_stack:
                     visited.append(remaining_mech)
                     visited_current_path.append(remaining_mech)
-                    children = self.graph.get_children(remaining_mech)
+                    children = self.graph.get_child_vertices_from_component(remaining_mech)
                     for child in children:
                         if child in visited_current_path:
-                            if remaining_mech not in self.recurrent_init_mechanisms:
-                                self.set_recurrent_init(remaining_mech)
-                            if child not in self.cycle_mechanisms:
-                                self.set_cycle(child)
+                            self.set_mechanism_role(remaining_mech, MechanismRole.RECURRENT_INIT)
+                            self.set_mechanism_role(child.component, MechanismRole.CYCLE)
                         elif child not in visited:
                             next_visit_stack.append(child)
 
@@ -339,37 +330,15 @@ class Composition(object):
         except KeyError as e:
             raise CompositionError('Mechanism not assigned to role in mechanisms_to_roles: {0}'.format(e))
 
-    def set_origin(self, mech):
-        if mech not in self.origin_mechanisms:  # If mechanism isn't in Origin list already
-            self.origin_mechanisms.append(mech)  # Add to Origin list
+    def set_mechanism_role(self, mech, role):
+        if role not in MechanismRole:
+            raise CompositionError('Invalid MechanismRole: {0}'.format(role))
 
-    def remove_origin(self, mech):
-        if mech in self.origin_mechanisms:  # If mechanism is in Origin list
-            self.origin_mechanisms.remove(mech)  # Remove from Origin list
+        self.mechanisms_to_roles[mech] = role
 
-    def set_terminal(self, mech):
-        if mech not in self.terminal_mechanisms:  # If mechanism isn't in Terminal list already
-            self.terminal_mechanisms.append(mech)  # Add to Terminal list
-
-    def remove_terminal(self, mech):
-        if mech in self.terminal_mechanisms:  # If mechanism is in Terminal list
-            self.terminal_mechanisms.remove(mech)  # Remove from Terminal list
-
-    def set_recurrent_init(self, mech):
-        if mech not in self.recurrent_init_mechanisms:  # If mechanism isn't in Recurrent_init list already
-            self.recurrent_init_mechanisms.append(mech)  # Add to Recurrent_init list
-
-    def remove_recurrent_init(self, mech):
-        if mech in self.recurrent_init_mechanisms:  # If mechanism is in Recurrent_init list
-            self.recurrent_init_mechanisms.remove(mech)  # Remove from Recurrent_init list
-
-    def set_cycle(self, mech):
-        if mech not in self.cycle_mechanisms:  # If mechanism isn't in Cycle list already
-            self.cycle_mechanisms.append(mech)  # Add to Cycle list
-
-    def remove_cycle(self, mech):
-        if mech in self.cycle_mechanisms:  # If mechanism is in Cycle list
-            self.cycle_mechanisms.remove(mech)  # Remove from Cycle list
+    def clear_mechanism_role(self, mech):
+        if mech in self.mechanisms_to_roles:
+            self.mechanisms_to_roles[mech] = None
 
     # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
     # feed_dict is a dictionary of the input states of each mechanism of the specified type
