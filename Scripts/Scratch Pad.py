@@ -296,27 +296,27 @@ from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import Control
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.Functions.Function import *
 
-# My_Transfer_Mech_A = TransferMechanism(
-#                            function=Logistic(
-#                                         gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+My_Transfer_Mech_A = TransferMechanism(
+                           function=Logistic(
+                                        gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
 
 
-# My_Mech_A = TransferMechanism(function=Logistic)
-# My_Mech_B = TransferMechanism(function=Linear,
-#                              output_states=[RESULT, MEAN])
-#
-# Process_A = process(pathway=[My_Mech_A])
-# Process_B = process(pathway=[My_Mech_B])
-# My_System = system(processes=[Process_A, Process_B])
-#
-# My_EVC_Mechanism = EVCMechanism(system=My_System,
-#                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
-#                                                      My_Mech_B.output_states[MEAN]],
-#                                 control_signals=[(GAIN, My_Mech_A),
-#                                                  {NAME: INTERCEPT,
-#                                                   MECHANISM: My_Mech_B,
-#                                                   MODULATION:ModulationParam.ADDITIVE}],
-#                                 name='My EVC Mechanism')
+My_Mech_A = TransferMechanism(function=Logistic)
+My_Mech_B = TransferMechanism(function=Linear,
+                             output_states=[RESULT, MEAN])
+
+Process_A = process(pathway=[My_Mech_A])
+Process_B = process(pathway=[My_Mech_B])
+My_System = system(processes=[Process_A, Process_B])
+
+My_EVC_Mechanism = EVCMechanism(system=My_System,
+                                monitor_for_control=[My_Mech_A.output_states[RESULT],
+                                                     My_Mech_B.output_states[MEAN]],
+                                control_signals=[(GAIN, My_Mech_A),
+                                                 {NAME: INTERCEPT,
+                                                  MECHANISM: My_Mech_B,
+                                                  MODULATION:ModulationParam.ADDITIVE}],
+                                name='My EVC Mechanism')
 
 
 My_Mech_A = TransferMechanism(function=Logistic)

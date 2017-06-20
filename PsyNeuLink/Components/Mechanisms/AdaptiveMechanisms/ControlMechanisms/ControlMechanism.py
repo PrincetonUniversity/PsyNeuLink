@@ -314,6 +314,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                                                 format(MONITOR_FOR_CONTROL, self.name, spec))
                 # If controller has been assigned to a System,
                 #    check that all the items in monitor_for_control are in the same System
+                # IMPLEMENTATION NOTE:  If self.system is None, onus is on doing the validation
+                #                       when the controller is assigned to a system [TBI]
                 if self.system:
                     if not any((spec is mech.name or spec in mech.output_states.names)
                                for mech in self.system.mechanisms):
@@ -333,6 +335,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                     # If controller has been assigned to a System,
                     #    check that any ControlProjections the ControlSignal has
                     #    are to mechanisms in the controller's system
+                    # IMPLEMENTATION NOTE:  If self.system is None, onus is on doing the validation
+                    #                       when the controller is assigned to a system [TBI]
                     if self.system:
                         if not all(control_proj.receiver.owner in self.system.mechanisms
                                    for control_proj in spec.efferents):
@@ -420,6 +424,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                                                 format(param_name, mech.name, CONTROL_SIGNAL, self.name))
                 # If self has been assigned to a System,
                 #    check that the mechanism to which the parameter belongs is in the controller's system
+                # IMPLEMENTATION NOTE:  If self.system is None, onus is on doing the validation
+                #                       when the controller is assigned to a system [TBI]
                 if self.system and not mech in self.system.mechanisms:
                     raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
                                                 "must be for a Mechanism in {}".
