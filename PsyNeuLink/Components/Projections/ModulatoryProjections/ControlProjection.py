@@ -239,14 +239,18 @@ class ControlProjection(ModulatoryProjection_Base):
                                                   params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if sender is None or receiver is None:
+        if (sender is None or sender.value is DEFERRED_INITIALIZATION or
+                    receiver is None or receiver.value is DEFERRED_INITIALIZATION):
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
             # Delete this as it has been moved to params dict (so it will not be passed to Projection.__init__)
             del self.init_args[CONTROL_SIGNAL_PARAMS]
-
+            if sender:
+                self.init_args[SENDER] = sender
+            if receiver:
+                self.init_args[RECEIVER] = receiver
             # Flag for deferred initialization
             self.value = DEFERRED_INITIALIZATION
             return
@@ -255,11 +259,11 @@ class ControlProjection(ModulatoryProjection_Base):
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         # super(ControlSignal_Base, self).__init__(sender=sender,
         super(ControlProjection, self).__init__(sender=sender,
-                                            receiver=receiver,
-                                            params=params,
-                                            name=name,
-                                            prefs=prefs,
-                                            context=self)
+                                                receiver=receiver,
+                                                params=params,
+                                                name=name,
+                                                prefs=prefs,
+                                                context=self)
 
 
     def _instantiate_sender(self, params=None, context=None):

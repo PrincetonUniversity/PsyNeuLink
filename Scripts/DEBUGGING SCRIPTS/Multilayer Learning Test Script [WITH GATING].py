@@ -1,6 +1,6 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.scheduling.condition import AfterNCalls
 from PsyNeuLink.Components.States.OutputState import *
@@ -28,14 +28,16 @@ random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver,
 
 Gating_Mechanism = GatingMechanism(default_gating_policy=1.0,
                                    gating_signals=[
-                                       # THIS GENERATES ONE GATING SIGNAL WITH THREE PROJECTIONS:
+                                       # THIS GENERATES ONE GatingSignal WITH THREE Projections
                                        {
+                                       # THIS NAMES THE GatingSignal EXPLICITLY, OVERRIDING THE KEY BELOW:
                                        # NAME: 'GATING SIGNAL EXPLICIT NAME',
+                                       # THIS USES THE KEY AS THE NAME OF THE GatingSignal, UNLESS NAMED EXPLICITLY:
                                         'GATE_ALL': [Hidden_Layer_1,
                                                      Hidden_Layer_2,
                                                      Output_Layer]
-},
-                                       # THIS GENERATES THREE GATING SIGNALS EACH WITH ONE PROJECTION:
+                                       },
+                                       # THIS GENERATES THREE GatingSignals, EACH WITH ONE Projection:
                                        # Hidden_Layer_1,
                                        # Hidden_Layer_2,
                                        # Output_Layer

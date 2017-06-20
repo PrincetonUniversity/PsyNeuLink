@@ -842,7 +842,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         for target in object.targetMechanisms:
             # If any projection to a target does not have a sender in the stimulus dict, raise an exception
             if not any(mech is projection.sender.owner for
-                       projection in target.input_states[SAMPLE].afferents
+                       projection in target.input_states[SAMPLE].path_afferents
                        for mech in stimuli.keys()):
                     raise RunError("Entry for {} is missing from specification of targets for run of {}".
                                    format(target.input_states[SAMPLE].
@@ -871,7 +871,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             # Get the process to which the TARGET mechanism belongs:
             try:
                 process = next(projection.sender.owner for
-                               projection in target.input_states[TARGET].afferents if
+                               projection in target.input_states[TARGET].path_afferents if
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
