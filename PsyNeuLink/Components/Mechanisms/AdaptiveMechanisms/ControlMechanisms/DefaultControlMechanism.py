@@ -135,13 +135,16 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
         if isinstance(control_signal, dict):
             projection = control_signal[CONTROL][0]
+            input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
+
+        elif isinstance(control_signal, tuple):
+            input_name = 'DefaultControlAllocation for ' + control_signal[0] + '_ControlSignal'
 
         # Instantiate input_states and allocation_policy attribute for control_signal allocations
-        input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
         self._instantiate_default_input_state(input_name, defaultControlAllocation, context=context)
         self.allocation_policy = self.input_values
 
-        # Call super to instantiate outputStates
+        # Call super to instantiate ControlSignal
         # Note: any params specified with ControlProjection for the control_signal
         #           should be in PARAMS entry of dict passed in control_signal arg
         super()._instantiate_control_signal(control_signal=control_signal, context=context)

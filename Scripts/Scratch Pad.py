@@ -285,9 +285,59 @@ class ScratchPadError(Exception):
 #region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # print = Linear(variable=[[1,1],[2,2]])
+#endregion
 
-# #region TEST ASSIGNMENT OF PROJECTION TO PARAMETER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Modulation @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.Functions.Function import *
+
+# My_Transfer_Mech_A = TransferMechanism(
+#                            function=Logistic(
+#                                         gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+
+
+# My_Mech_A = TransferMechanism(function=Logistic)
+# My_Mech_B = TransferMechanism(function=Linear,
+#                              output_states=[RESULT, MEAN])
 #
+# Process_A = process(pathway=[My_Mech_A])
+# Process_B = process(pathway=[My_Mech_B])
+# My_System = system(processes=[Process_A, Process_B])
+#
+# My_EVC_Mechanism = EVCMechanism(system=My_System,
+#                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
+#                                                      My_Mech_B.output_states[MEAN]],
+#                                 control_signals=[(GAIN, My_Mech_A),
+#                                                  {NAME: INTERCEPT,
+#                                                   MECHANISM: My_Mech_B,
+#                                                   MODULATION:ModulationParam.ADDITIVE}],
+#                                 name='My EVC Mechanism')
+
+
+My_Mech_A = TransferMechanism(function=Logistic)
+My_Mech_B = TransferMechanism(function=Linear,
+                             output_states=[RESULT, MEAN])
+Process_A = process(pathway=[My_Mech_A])
+Process_B = process(pathway=[My_Mech_B])
+
+My_System = system(processes=[Process_A, Process_B],
+                                monitor_for_control=[My_Mech_A.output_states[RESULT],
+                                                     My_Mech_B.output_states[MEAN]],
+                                control_signals=[(GAIN, My_Mech_A),
+                                                 {NAME: INTERCEPT,
+                                                  MECHANISM: My_Mech_B,
+                                                  MODULATION:ModulationParam.ADDITIVE}],
+                   name='My Test System')
+
+#endregion
+
+# region TEST ASSIGNMENT OF PROJECTION TO PARAMETER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 # Decision = DDM(function=BogaczEtAl(drift_rate=ControlProjection),
 #                name='Decision')
 #
@@ -433,7 +483,6 @@ class ScratchPadError(Exception):
 # # print(my_adaptive_integrator.execute([3]))
 # # print(my_adaptive_integrator.execute([3]))
 # # print(my_adaptive_integrator.execute([3]))
-
 #endregion
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -589,13 +638,13 @@ class ScratchPadError(Exception):
 
 #region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from PsyNeuLink.Components.Functions.Function import LinearCombination
+# from PsyNeuLink.Components.Functions.Function import LinearCombination
 
-x = LinearCombination()
-# print (x.execute(([1, 1],[2, 2])))
-
-print (x.execute(([[1, 1],[2, 2]],
-                  [[3, 3],[4, 4]])))
+# x = LinearCombination()
+# # print (x.execute(([1, 1],[2, 2])))
+#
+# print (x.execute(([[1, 1],[2, 2]],
+#                   [[3, 3],[4, 4]])))
 
 # print (x.execute(([[[[1, 1],[2, 2]]]])))
 
@@ -612,7 +661,7 @@ print (x.execute(([[1, 1],[2, 2]],
 
 #endregion
 
-#region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Backprop FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Components.Function import *
 #

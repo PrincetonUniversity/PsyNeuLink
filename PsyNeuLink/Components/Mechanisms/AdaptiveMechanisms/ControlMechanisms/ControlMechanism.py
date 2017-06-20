@@ -125,6 +125,7 @@ from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _parse_state_spec
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
 
 ControlMechanismRegistry = {}
 
@@ -311,10 +312,14 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                 if not isinstance(spec, str):
                     raise ControlMechanismError("Invalid specification in {} arg for {} ({})".
                                                 format(MONITOR_FOR_CONTROL, self.name, spec))
-                if not any((spec is mech.name or spec in mech.output_states.names) for mech in self.system.mechanisms):
-                    raise ControlMechanismError("Specification in {} arg for {} ({}) must be a "
-                                                "Mechanism or an OutputState of one in {}".
-                                                format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
+                # If controller has been assigned to a System,
+                #    check that all the items in monitor_for_control are in the same System
+                if self.system:
+                    if not any((spec is mech.name or spec in mech.output_states.names)
+                               for mech in self.system.mechanisms):
+                        raise ControlMechanismError("Specification in {} arg for {} ({}) must be a "
+                                                    "Mechanism or an OutputState of one in {}".
+                                                    format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
 
         # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
@@ -324,8 +329,10 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             for spec in target_set[CONTROL_SIGNALS]:
 
                 # Specification is for a ControlSignal
-                if isinstance(spec, ControlSignal):
-                    #  Check that any ControlProjections it has are to mechanisms in the controller's system
+                if isinstance(spec, ControlSignal) and self.system:
+                    # If controller has been assigned to a System,
+                    #    check that any ControlProjections the ControlSignal has
+                    #    are to mechanisms in the controller's system
                     if not all(control_proj.receiver.owner in self.system.mechanisms
                                for control_proj in spec.efferents):
                         raise ControlMechanismError("The {} specified in the {} arg for {} ({}) "
@@ -384,13 +391,13 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                     mech = spec[MECHANISM]
                     # Check that all of the other entries in the specification dictionary are valid ControlSignal params
                     for param in spec:
-                        if param in {NAME, MECHANISM}:
+                        if param in {NAME, MECHANISM} | modulatory_signal_keywords:
                             continue
                         if not hasattr(mech, param):
-                            raise ControlMechanismError("Entry in specification dictionary for {} arg of {} ({}) "
-                                                       "is not a valid {} parameter".
-                                                       format(CONTROL_SIGNAL, self.name, param,
-                                                              ControlSignal.__class__.__name__))
+                            raise ControlMechanismError("\'{}\' entry in specification dictionary for {} arg of {} "
+                                                       "is not a valid {} specification".
+                                                       format(CONTROL_SIGNAL, param, self.name,
+                                                              ControlSignal.__name__))
                 else:
                     raise ControlMechanismError("PROGRAM ERROR: unrecognized specification of the {} arg for {} ({})".
                                                 format(CONTROL_SIGNALS, self.name, spec))
@@ -410,8 +417,9 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                     raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
                                                 "specified in {} for {}".
                                                 format(param_name, mech.name, CONTROL_SIGNAL, self.name))
-                # Check that the mechanism to which the parameter belongs is in the controller's system
-                if not mech in self.system.mechanisms:
+                # If self has been assigned to a System,
+                #    check that the mechanism to which the parameter belongs is in the controller's system
+                if self.system and not mech in self.system.mechanisms:
                     raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
                                                 "must be for a Mechanism in {}".
                                                 format(CONTROL_SIGNALS,
@@ -525,7 +533,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             #        or used as param value, if it was a parameter specification tuple
             #    2nd item was placed CONTROL_SIGNAL_PARAMS entry of params dict in control_signal_spec dict,
             #        so parse:
-            # FIX 5/23/17: NEED TO GET THE KEYWORDS STRAIGHT FOR PASSING ControlSignal SPECIFICATIONS
             # IMPLEMENTATION NOTE:
             #    CONTROL_SIGNAL_SPECS is used by _assign_as_controller,
             #                         to pass specification from a parameter specification tuple
@@ -566,8 +573,9 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                         # Get receiver mech
                         if control_projection.value is DEFERRED_INITIALIZATION:
                             parameter_state = control_projection.init_args[RECEIVER]
-                            # ControlProjection was created in response to specification of ControlSignal in tuple
-                            #    so get ControlSignal spec
+                            # ControlProjection was created in response to specification of ControlSignal
+                            #     (in a 2-item tuple where the parameter was specified),
+                            #     so get ControlSignal spec
                             if SENDER in control_projection.init_args:
                                 control_signal_spec = control_projection.init_args[SENDER]
                                 if control_signal_spec and not isinstance(control_signal_spec, ControlSignal):
@@ -734,42 +742,18 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             if not self.system.enable_controller:
                 return
 
-        # # FIX: 5/23/17 CONSOLIDATE/SIMPLIFY THIS RE: control_signal ARG??  USE OF STATE_PROJECTIONS, ETC.
-        # # FIX:         ?? WHERE WOULD CONTROL_PROJECTIONS HAVE BEEN SPECIFIED IN paramsCURRENT??
-        # # FIX:         DOCUMENT THAT VALUE OF CONTROL ENTRY CAN BE A PROJECTION
-        # # FIX:         RE-WRITE parse_state_spec TO TAKE TUPLE THAT SPECIFIES (PARAM VALUE, CONTROL SIGNAL)
-        # #                       RATHER THAN (PARAM VALUE, CONTROL PROJECTION)
-        # # FIX: NOT CLEAR THIS IS GETTING USED AT ALL; ALSO, ??REDUNDANT WITH CALL IN _instantiate_output_states
-        # # If ControlProjections were specified, implement them
-        # if CONTROL_PROJECTIONS in self.paramsCurrent:
-        #     if self.paramsCurrent[CONTROL_PROJECTIONS]:
-        #         for key, projection in self.paramsCurrent[CONTROL_PROJECTIONS].items():
-        #             control_signal_spec = {CONTROL:[projection]}
-        #             self._instantiate_control_signal(control_signal_spec, context=self.name)
-
     def _assign_as_controller(self, context=None):
 
-        # FIX 5/23/17: INTEGRATE THIS WITH ASSIGNMENT OF control_signals
-        # FIX:         (E.G., CHECK IF SPECIFIED ControlSignal ALREADY EXISTS AND IS DEFERRED_INIT)
         # Check the parameterStates of the system's mechanisms for any ControlProjections with deferred_init()
+        # Note: this includes any ControlProjections created where a ControlSignal rather than a ControlProjection
+        #       was used to specify control for a parameter (e.g., in a 2-item tuple specification for the parameter);
+        #       the initialization of the ControlProjection and, if specified, the ControlSignal
+        #       are completed in the call to _instantiate_control_signal() below
         for mech in self.system.mechanisms:
             for parameter_state in mech._parameter_states:
                 for projection in parameter_state.mod_afferents:
                     # If projection was deferred for init, instantiate its ControlSignal and then initialize it
-                    # MODIFIED 6/19/17 OLD:
-                    # if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
-                    # MODIFIED 6/19/17 NEW:
                     if projection.value is DEFERRED_INITIALIZATION:
-                    # MODIFIED 6/19/17 END
-                        # FIX 5/23/17: MODIFY THIS WHEN (param, ControlProjection) tuple
-                        # FIX:         IS REPLACED WITH (param, ControlSignal) tuple
-                        # # Check if ControlSignal has already been specified (e.g., *it* was the spec in the tuple)
-                        # if projection.init_args[SENDER]:
-                        #
-                        # # Otherwise, instantiate a ControlSignal
-                        # else:
-                        # Add projection itself to any params specified in the ControlProjection for the ControlSignal
-                        #    (cached in the ControlProjection's control_signal attrib)
                         control_signal_specs = projection.control_signal_params or {}
                         control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
                         self._instantiate_control_signal(control_signal_specs, context=context)

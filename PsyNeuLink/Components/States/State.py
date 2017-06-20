@@ -667,11 +667,12 @@ class State_Base(State):
         + Projection object:
             checks that receiver is self
             checks that projection function output is compatible with self.value
-        + State object:
-            check that it is compatible with (i.e., a legimate sender for) projection
+        + State object or State class
+            check that it is compatible with (i.e., a legitimate sender for) projection
+            if it is class, instantiate default
             assign as sender of the projection
-        + [TBI: State class: instantiate default State]
-        + [TBI: Mechanism object]
+        + Mechanism object:
+            check that it is compatible with (i.e., a legitimate sender for) projection
         + specification dict (usually from STATE_PROJECTIONS entry of params dict):
             checks that projection function output is compatible with self.value
             implements projection
@@ -754,7 +755,7 @@ class State_Base(State):
                         projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
                         # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
-                        projection_spec._deferred_init()  # XXX
+                        projection_spec._deferred_init()
                 projection_object, default_class_name = self._check_projection_receiver(
                                                                                     projection_spec=projection_spec,
                                                                                     messages=[item_prefix_string,
@@ -769,24 +770,29 @@ class State_Base(State):
                     default_string = kwDefault
 # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
 
-            # MODIFIED 6/19/17 NEW:
-            # If projection_spec is a State
-            # - assume
-            elif isinstance(projection_spec, State):
-                # Check that State is appropriate for type of projection
-                _check_projection_sender_compatiability(self, default_projection_type, type(projection_spec))
+            # If projection_spec is a State or State class
+            # - check that it is appropriate for the type of projection
+            # - create default instance if it is a class (it will use deferred_init since owner is not yet known)
+            # - Assign to sender (for assignment as projection's sender below)
+            # - default projection itself will be created below
+            elif (isinstance(projection_spec, State) or
+                          inspect.isclass(projection_spec) and issubclass(projection_spec, State)):
+                # If it is State, get its type (for check below)
+                if isinstance(projection_spec, State):
+                    state_type = type(projection_spec)
+                # If it is State class, instantiate default
+                else:
+                    projection_spec = projection_spec()
+                # Check appropriateness of State
+                _check_projection_sender_compatiability(self, default_projection_type, state_type)
                 # Assign State as projections's sender (for use below)
                 sender = projection_spec
-            # MODIFIED 6/19/17 END
 
-            # FIX: IMPLEMENT FOLLOWING;
-            #      ASSUME PRIMARY OutputState OF ProcessingMechanism FOR MappingProjection OR raise exception
-            #      ASSUME FIRST ModulatorySignal OF AdaptiveMechanism FOR ModulatoryProjection OR raise exception
-            # # MODIFIED 6/19/17 NEW:
-            # elif isinstance(projection_spec, Mechanism):
-            #     pass
-            # # MODIFIED 6/19/17 END
-
+            # If projection_spec is a Mechanism:
+            # - check compatibility with projection's type
+            # - default projection itself will be created below
+            elif isinstance(projection_spec, Mechanism):
+                _check_projection_sender_compatiability(self, default_projection_type, type(projection_spec))
 
             # If projection_spec is a dict:
             # - get projection_type
@@ -797,6 +803,7 @@ class State_Base(State):
                 # Get projection type from specification dict
                 try:
                     projection_type = projection_spec[PROJECTION_TYPE]
+                    _check_projection_sender_compatiability(self, default_projection_type, projection_type)
                 except KeyError:
                     projection_type = default_projection_type
                     default_string = kwDefault

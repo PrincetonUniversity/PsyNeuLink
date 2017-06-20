@@ -162,38 +162,53 @@ Examples
 In the example below, this is changed by specifying a `ControlSignal` for the `Logistic` Function of a
 `TransferMechanism` that adds to, rather than multiplies, the value of its `gain <Logistic.gain>` parameter::
 
-    My_Transfer_Mech = TransferMechanism(
-                               function=Logistic(
-                                            gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+    My_Mech = TransferMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
 
 Note that the `ModulationParam` specified for the `ControlSignal` pertains to the function of a *ParameterState*
 for the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and *not* the Logistic function
 itself -- that is, the value of the ControlSignal is added to the *gain parameter* of the Logistic function,
 *not* its `variable <Logistic.variable>`).
 
-*Modulate the parameters of several Mechanisms*
+COMMENT:
+    MOVE THIS EXAMPLE TO EVCMechanism
 
-    My_Transfer_Mech = TransferMechanism(
-                               function=Logistic(
-                                            gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
-    My_EVC_Mechanisms = EVCMechanism(
-                               monitor_for_control=[],
-                               control_signals=[]
-                               )
+*Modulate the parameters of several Mechanisms by an EVCMechanism*.  This shows::
 
-*Modulate the parameters of several Mechanisms in a System*
+    My_Mech_A = TransferMechanism(function=Logistic)
+    My_Mech_B = TransferMechanism(function=Linear,
+                                 output_states=[RESULT, MEAN])
+
+    Process_A = process(pathway=[My_Mech_A])
+    Process_B = process(pathway=[My_Mech_B])
+    My_System = system(processes=[Process_A, Process_B])
+
+    My_EVC_Mechanism = EVCMechanism(system=My_System,
+                                    monitor_for_control=[My_Mech_A.output_states[RESULT],
+                                                         My_Mech_B.output_states[MEAN]],
+                                    control_signals=[(GAIN, My_Mech_A),
+                                                     {NAME: INTERCEPT,
+                                                      MECHANISM: My_Mech_B,
+                                                      MODULATION:ModulationParam.ADDITIVE}],
+                                    name='My EVC Mechanism')
+COMMENT
+
+
+*Modulate the parameters of several Mechanisms in a System*.  This shows::
+
+    My_Mech_A = TransferMechanism(function=Logistic)
+    My_Mech_B = TransferMechanism(function=Linear,
+                                 output_states=[RESULT, MEAN])
+    Process_A = process(pathway=[My_Mech_A])
+    Process_B = process(pathway=[My_Mech_B])
 
     My_System = system(processes=[Process_A, Process_B],
-                      controller=EVCMechanism,
-                      enable_controller=True,
-                      monitor_for_control=[Reward,
-                                           Decision.PROBABILITY_UPPER_THRESHOLD,
-                                           (Decision.RESPONSE_TIME, -1, 1)],
-                      control_signals=[(DRIFT_RATE, My_Decision),
-                                        {NAME: THRESHOLD,
-                                         MECHANISM: Decision,
-                                         ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}],
-                      name='My Test System')
+                                    monitor_for_control=[My_Mech_A.output_states[RESULT],
+                                                         My_Mech_B.output_states[MEAN]],
+                                    control_signals=[(GAIN, My_Mech_A),
+                                                     {NAME: INTERCEPT,
+                                                      MECHANISM: My_Mech_B,
+                                                      MODULATION:ModulationParam.ADDITIVE}],
+                       name='My Test System')
 
 
 Class Reference
