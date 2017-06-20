@@ -1,12 +1,12 @@
 import logging
-import pytest
-
 from timeit import timeit
 
-from PsyNeuLink.composition import Composition
+import pytest
+
 from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.composition import Composition, CompositionError, MechanismRole
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +132,7 @@ comp.add_mechanism(B)
         print()
         logger.info('completed {0} addition{2} of a projection to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
 
+
 class TestAnalyzeGraph:
 
     def test_empty_call(self):
@@ -209,6 +210,7 @@ class TestAnalyzeGraph:
         assert D in comp.origin_mechanisms
         assert B in comp.cycle_mechanisms
         assert C in comp.recurrent_init_mechanisms
+
 
 class TestValidateFeedDict:
 
@@ -441,3 +443,36 @@ class TestValidateFeedDict:
         feed_dict_terminal = {B: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.origin_mechanisms, "origin")
         comp.validate_feed_dict(feed_dict_terminal, comp.terminal_mechanisms, "terminal")
+
+
+class TestGetMechanismsByRole:
+
+    def test_multiple_roles(self):
+
+        comp = Composition()
+        mechs = [mechanism() for x in range(4)]
+
+        for mech in mechs:
+            comp.add_mechanism(mech)
+
+        comp.mechanisms_to_roles[mechs[0]] = MechanismRole.ORIGIN
+        comp.mechanisms_to_roles[mechs[1]] = MechanismRole.INTERNAL
+        comp.mechanisms_to_roles[mechs[2]] = MechanismRole.INTERNAL
+        comp.mechanisms_to_roles[mechs[3]] = MechanismRole.CYCLE
+
+        for role in list(MechanismRole):
+            if role is MechanismRole.ORIGIN:
+                assert comp.get_mechanisms_by_role(role) == {mechs[0]}
+            elif role is MechanismRole.INTERNAL:
+                assert comp.get_mechanisms_by_role(role) == set([mechs[1], mechs[2]])
+            elif role is MechanismRole.CYCLE:
+                assert comp.get_mechanisms_by_role(role) == {mechs[3]}
+            else:
+                assert comp.get_mechanisms_by_role(role) == set()
+
+    def test_nonexistent_role(self):
+
+        comp = Composition()
+
+        with pytest.raises(CompositionError):
+            comp.get_mechanisms_by_role(None)
