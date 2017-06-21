@@ -492,7 +492,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
             if len(target_set[INPUT_STATES]) != len(monitored_values):
                 raise ObjectiveMechanismError("The number of items in the \'{}\'arg for {} ({}) "
-                                              "must equal of the number in the \`{}\` arg ({})".
+                                              "must equal of the number in the \'{}\' arg ({})".
                                      format(INPUT_STATES,
                                             self.name,
                                             len(target_set[INPUT_STATES]),
