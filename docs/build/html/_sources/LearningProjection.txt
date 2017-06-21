@@ -1,6 +1,6 @@
 LearningProjection
 ==================
 
-.. automodule:: ModulatoryProjections.LearningProjection
+.. automodule:: LearningProjection
    :members:
    :exclude-members: random, execute

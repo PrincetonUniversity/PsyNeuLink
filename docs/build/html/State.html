@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>State &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>States &mdash; PsyNeuLink 0.1 documentation</title>
   
 
   
@@ -88,11 +88,10 @@
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">State</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">States</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
 <li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-state">Creating a State</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
@@ -134,7 +133,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>State</li>
+    <li>States</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -148,52 +147,48 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="state">
-<h1>State<a class="headerlink" href="#state" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="states">
+<h1>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="InputState.html">InputState</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
 <li class="toctree-l1"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 </div>
 <span class="target" id="module-State"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A State provides an interface to one or more <a class="reference internal" href="Projection.html"><span class="doc">projections</span></a>, and receives the <a class="reference internal" href="Projection.html"><span class="doc">value(s)</span></a>
-provide by them.  The value of a state can be modulated by a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>. There are three types of states,
-all of which are used by <a class="reference internal" href="Mechanism.html"><span class="doc">mechanisms</span></a>, one of which is used by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
-and all of which are subject to modulation by particular types of ModulatoryProjections, as summarized below:</p>
+<p>A State provides an interface to a <a class="reference internal" href="Projection.html"><span class="doc">projection</span></a>, and represents the <a class="reference internal" href="Projection.html"><span class="doc">value</span></a>
+associated with that projection.  There are three types of states, all of which are used by
+<a class="reference internal" href="Mechanism.html"><span class="doc">mechanisms</span></a> and one of which is used by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>, as summarized below:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><strong>InputState</strong>:</dt>
-<dd><p class="first last">used by a mechanism to receive input from <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>;  its value can be modulated
-by a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.</p>
+<dd><p class="first last">used by a mechanism to represent its input, and as the <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.receiver" title="ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> of any incoming
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><strong>ParameterState</strong>:</dt>
-<dd><ul class="first last simple">
+<dd><ul class="first simple">
 <li>used by a mechanism to represent the value of one of its parameters, or a parameter of its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>,
-possibly modulated by a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>;</li>
-<li>used by a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to represent the value of its <code class="xref any docutils literal"><span class="pre">matrix</span></code>
-parameter, possibly modulated by a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.</li>
+possibly regulated by a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>;</li>
+<li>used by a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to represent the value of its <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a></li>
 </ul>
+<p class="last">parameter, possibly regulated by a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><strong>OutputState</strong>:</dt>
 <dd><ul class="first last simple">
-<li>used by a mechanism to send its to any outgoing projection(s):
+<li>used by a mechanism to represent its output, and as the <a class="reference internal" href="Projection.html"><span class="doc">sender</span></a> of any outgoing projection(s):
 * <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>;
-* <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> for a <code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code>.
-* <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> for a <code class="xref any docutils literal"><span class="pre">GatingMechanism</span></code>;
-* <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.
-Its value can be modulated by a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.</li>
+* <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>;
+* <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> for a <code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code>.</li>
 </ul>
 </dd>
 </dl>
@@ -203,94 +198,51 @@ Its value can be modulated by a <a class="reference internal" href="GatingProjec
 <div class="section" id="creating-a-state">
 <span id="state-creation"></span><h2>Creating a State<a class="headerlink" href="#creating-a-state" title="Permalink to this headline">¶</a></h2>
 <p>States can be created using the constructor for one of the subclasses.  However, in general, they are created
-automatically by the objects to which they belong, or through their specification in the constructor for those
-objects.  For example, <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and <code class="xref any docutils literal"><span class="pre">OutputStates</span></code> can be specified, respectively,
-in the <strong>input_states</strong> and <strong>output_states</strong> arguments of the constructor for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>;  and
-a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> can be specified in the argument of the constructor for a function of a Mechanism or
-Projection, where its parameters are specified.  A state can be specified in these ways using any of the following
-forms:</p>
-<blockquote>
-<div><ul class="simple">
-<li>an existing <strong>State</strong> object;</li>
-</ul>
-<ul class="simple">
-<li>the name of a <strong>state subclass</strong> (<a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>, <code class="xref any docutils literal"><span class="pre">ParmeterState</span></code>, or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> - a default state of the
-corresponding type will be created, using a default value for the state that is determined by the context
-in which it is specified.</li>
-</ul>
-<ul class="simple">
-<li>a <strong>value</strong>.  This creates a default State using the specified value as its default <code class="xref any docutils literal"><span class="pre">value</span></code>.</li>
-</ul>
-<ul>
-<li><p class="first">a <strong>state specification dictionary</strong>; every state specification can contain the following <em>KEY</em>:&lt;value&gt;
-entries, in addition to those specific to a particular state subtype (see subtype documentation):
-..
-* <em>NAME</em>:&lt;str&gt; - the string is used as the name of the state;
-..
-* <em>VALUE</em>:&lt;value&gt; - the value is used as the default value of the state;
-..
-* <em>str</em>:&lt;List&gt; - the key is used as the name of the state, and the list must contain specifications for</p>
-<blockquote>
-<div><p>one or more <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">projections</span></a> to or from the state,
-depending on the type of state and the context in which it is specified;
-..</p>
-</div></blockquote>
-</li>
-<li><p class="first">a <strong>2-item tuple</strong> - the first item must be a value, used as the default value for the state,
-and the second item must be a specification for a <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">projection</span></a>
-to or from the state, depending on the type of state and the context in which it is specified;</p>
-</li>
-</ul>
-</div></blockquote>
-<p><a href="#id1"><span class="problematic" id="id2">**</span></a>* EXAMPLES HERE</p>
+automatically by the objects to which they belong, and/or through specification in context (e.g., when
+<a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">specifying the parameters</span></a> of a mechanism or its function to be controlled,
+or of a <a href="#id1"><span class="problematic" id="id2">`</span></a>MappingProjections to be learned &lt;MappingProjection_Tuple_Specification&gt;).</p>
 </div>
 <div class="section" id="structure">
-<span id="state-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>Every state is owned by either a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">projection</span></a>. Like all PsyNeuLink
 components, a state has the three following core attributes:</p>
 <blockquote>
 <div><ul class="simple">
 <li><code class="xref any docutils literal"><span class="pre">variable</span></code>:  for an <a class="reference internal" href="InputState.html"><span class="doc">inputState</span></a> and <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a>,
 the value of this is determined by the  value(s) of the projection(s) that it receives (and that are listed in
-its <code class="xref any docutils literal"><span class="pre">afferents</span></code> attribute).  For an <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a>,
+its <code class="xref any docutils literal"><span class="pre">receivesFromProjections</span></code> attribute).  For an <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a>,
 it is the item of the owner mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> to which the outputState is assigned (specified by the
 outputStates <a class="reference internal" href="OutputState.html#outputstate-index"><span class="std std-ref">index</span></a> attribute.</li>
 </ul>
 <ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">function</span></code>:  for an <a class="reference internal" href="InputState.html"><span class="doc">inputState</span></a> this aggregates the values of the projections
-that the state receives (the default is <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> that sums the values), under the potential influence
-of a <code class="xref any docutils literal"><span class="pre">Gating</span></code> projection;  for a <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a>, it determines the value of the associated
-parameter, under the potential influence of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> (for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>) or a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>
-(for a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>);  for an outputState, it conveys the result  of the mechanism&#8217;s function to its
-output_values, under the potential influence of a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.
-See  <a class="reference internal" href="ModulatoryProjection.html#modulatoryprojection-structure"><span class="std std-ref">ModulatoryProjections</span></a> and the <code class="xref any docutils literal"><span class="pre">AdaptiveMechanisms</span></code> associated with each
-type for a description of how they can be used to modulate the <a href="#id3"><span class="problematic" id="id4">`</span></a>function &lt;State.function&gt; of a state.</li>
+<li><code class="xref any docutils literal"><span class="pre">function</span></code>:  for an <a class="reference internal" href="InputState.html"><span class="doc">inputState</span></a> and <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a>, this
+aggregates the values of the projections that the state receives (the default is <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> that sums
+the values).  At present, the <a class="reference internal" href="OutputState.html#OutputState.OutputState.function" title="OutputState.OutputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an outputState is not
+actively used;  it simply returns the item of the owner mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> to which the outputState is
+assigned.</li>
 </ul>
 <ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">value</span></code>:  for an <a class="reference internal" href="InputState.html"><span class="doc">inputState</span></a> this is the aggregated value of the projections it
-receives;  for a <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a>, this determines the value of the associated parameter;
-for an <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a>, it is the item of the  owner mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> to which the
-outputState is assigned, possibly modified by its <a class="reference internal" href="OutputState.html#outputstate-calculate"><span class="std std-ref">calculate</span></a> attribute.</li>
+<li><code class="xref any docutils literal"><span class="pre">value</span></code>:  for an <a class="reference internal" href="InputState.html"><span class="doc">inputState</span></a> and <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a>, this is the
+aggregated value of the projections it receives.  For an <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a>, this is th item of the
+owner mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> to which the outputState is assigned, possibly modified by a function
+assigned to its <a class="reference internal" href="OutputState.html#outputstate-calculate"><span class="std std-ref">calculate</span></a> attribute.</li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>State cannot be executed.  They are updated when the component to which they belong is executed.  InputStates and
-parameterStates belonging to a mechanism are updated before the mechanism&#8217;s function is called.  OutputStates
-are updated after the mechanism&#8217;s function is called.  When a state is updated, it executes any projections that
-project to it (listed in its <code class="xref any docutils literal"><span class="pre">afferents</span></code> attribute.  It uses the values it receives from any
-<code class="xref any docutils literal"><span class="pre">PathWayProjections</span></code> (listed in its <code class="xref any docutils literal"><span class="pre">pathway_afferents</span></code> attribute) as the variable for its <code class="xref any docutils literal"><span class="pre">function</span></code>,
-and the values it receives from any <code class="xref any docutils literal"><span class="pre">ModulatoryProjections</span></code> (listed in its <a class="reference internal" href="#State.State_Base.mod_afferents" title="State.State_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute) to determine
-the parameters of its <code class="xref any docutils literal"><span class="pre">function</span></code>.  It then calls its <code class="xref any docutils literal"><span class="pre">function</span></code> to determine its
-<code class="xref any docutils literal"><span class="pre">value</span></code>. This conforms to a &#8220;lazy evaluation&#8221; protocol (see <span class="xref std std-ref">Lazy Evaluation</span> for a more
-detailed discussion).</p>
+<p>A state cannot be executed directly.  It is executed when the component to which it belongs is executed.
+When this occurs, each inputState and parameterState belonging to the component executes any projections it receives,
+calls its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> to aggregate their values, and then assigns this as that state&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> &#8211;
+this conforms to a &#8220;lazy evaluation&#8221; protocol (see <span class="xref std std-ref">Lazy Evaluation</span> for a more detailed discussion).
+The <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of an outputState is assigned after the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of the mechanism that owns it has
+been called (see <a class="reference internal" href="Mechanism.html#mechanism-outputstates"><span class="std std-ref">Mechanism OutputStates</span></a>).</p>
 </div>
 <div class="section" id="class-reference">
 <span id="state-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="State.State_Base">
-<em class="property">class </em><code class="descclassname">State.</code><code class="descname">State_Base</code><span class="sig-paren">(</span><em>owner</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#State.State_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">State.</code><code class="descname">State_Base</code><span class="sig-paren">(</span><em>owner            value=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#State.State_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for State.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -305,35 +257,21 @@ or using other methods for specifying a state (see <a class="reference internal"
 </dd></dl>
 
 <dl class="attribute">
-<dt id="State.State_Base.base_value">
-<code class="descname">base_value</code><a class="headerlink" href="#State.State_Base.base_value" title="Permalink to this definition">¶</a></dt>
+<dt id="State.State_Base.baseValue">
+<code class="descname">baseValue</code><a class="headerlink" href="#State.State_Base.baseValue" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number, list or np.ndarray</em> &#8211; value with which the state was initialized.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="State.State_Base.afferents">
-<code class="descname">afferents</code><a class="headerlink" href="#State.State_Base.afferents" title="Permalink to this definition">¶</a></dt>
+<dt id="State.State_Base.receivesFromProjections">
+<code class="descname">receivesFromProjections</code><a class="headerlink" href="#State.State_Base.receivesFromProjections" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Optional[List[Projection]]</em> &#8211; list of projections for which the state is a <code class="xref std std-keyword docutils literal"><span class="pre">receiver</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="State.State_Base.efferents">
-<code class="descname">efferents</code><a class="headerlink" href="#State.State_Base.efferents" title="Permalink to this definition">¶</a></dt>
+<dt id="State.State_Base.sendsToProjections">
+<code class="descname">sendsToProjections</code><a class="headerlink" href="#State.State_Base.sendsToProjections" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Optional[List[Projection]]</em> &#8211; list of projections for which the state is a <code class="xref std std-keyword docutils literal"><span class="pre">sender</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="State.State_Base.mod_afferents">
-<code class="descname">mod_afferents</code><a class="headerlink" href="#State.State_Base.mod_afferents" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[List[GatingProjection]]</em> &#8211; list of GatingProjections for which the state is a <code class="xref std std-keyword docutils literal"><span class="pre">receiver</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="State.State_Base.function">
-<code class="descname">function</code><a class="headerlink" href="#State.State_Base.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TransferFunction : default determined by type</em> &#8211; used to determine the state&#8217;s own value from the value of the projection(s) it receives;  the parameters that
-the TrasnferFunction identifies as ADDITIVE and MULTIPLICATIVE are subject to modulation by a
-<a class="reference internal" href="ModulatoryProjection.html#modulatoryprojection-structure"><span class="std std-ref">ModualtoryProjection</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">

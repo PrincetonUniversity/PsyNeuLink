@@ -1,5 +1,5 @@
-State
-=====
+States
+======
 
 .. toctree::
    :maxdepth: 1
@@ -7,7 +7,6 @@ State
    InputState
    ParameterState
    OutputState
-   ModulatorySignal
 
 .. toctree::
    :maxdepth: 3

@@ -298,9 +298,8 @@ GATING_MECHANISM = 'GatingMechanism'
 
 # States:
 INPUT_STATE = "InputState"
-PARAMETER_STATE = "ParameterState"
 OUTPUT_STATE = "OutputState"
-MODULATORY_SIGNAL = 'ModulatorySignal'
+PARAMETER_STATE = "ParameterState"
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
@@ -529,8 +528,6 @@ kwStateContext = "StateContext"
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
 FULL = 'FULL'
-OWNER = 'owner'
-REFERENCE_VALUE = 'reference_value'
 
 # InputStates:
 PRIMARY = 'Primary'
@@ -549,7 +546,6 @@ OUTPUT_STATE_PARAMS = 'output_states_params'
 STANDARD_OUTPUT_STATES = 'standard_output_states'
 INDEX = 'index'
 CALCULATE = 'calculate'
-
 
 #endregion
 

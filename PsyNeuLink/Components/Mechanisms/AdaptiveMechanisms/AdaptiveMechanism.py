@@ -39,11 +39,8 @@ documentation for the individual subtypes of AdaptiveMechanisms for more specifi
 Structure
 ---------
 
-An AdaptiveMechanism has the same basic structure as a `Mechanism <Mechanisms>`.  In addition, every AdaptiveMechanism
-has a `modulation <AdpativeMechanism.modulation>` attribute, that determines the default method by which its
-ModulatorySignals modify the value of objects that they modulate (see the `modulation <ModulatorySignal_Modulation>`
-for a description of how modulation operates, and the documentation for individual subtypes of AdaptiveMechanism for
-more specific information about their structure and modulatory operation).
+An AdaptiveMechanism has the same basic structure as a `Mechanism <Mechanisms>`.  See the documentation for
+individual subtypes of AdaptiveMechanism for more specific information about their structure.
 
 .. _Comparator_Execution:
 
@@ -68,15 +65,9 @@ class AdaptiveMechanism_Base(Mechanism_Base):
     # IMPLEMENT: consider moving any properties of adaptive mechanisms not used by control mechanisms to here
     """An AdaptiveMechanism is a Type of the `Mechanism <Mechanism>` Category of Component
 
-    Attributes
-    ----------
-
-    modulation : ModulationParam
-        determines how the output of the AdaptiveMechanism's `ModulatorySignal <ModulatorySignal>` are used to modulate
-        the value of the state(s) their ModulatoryProjections <ModulatoryProjection>` projects.
    """
 
-    componentType = ADAPTIVE_MECHANISM
+    componentType = "AdaptiveMechanism"
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -90,22 +81,15 @@ class AdaptiveMechanism_Base(Mechanism_Base):
     variableClassDefault = defaultControlAllocation
 
     def __init__(self,
-                 variable,
-                 modulation,
-                 params,
-                 name,
-                 prefs,
-                 context):
+                 variable=None,
+                 params=None,
+                 name=None,
+                 prefs=None,
+                 context=None):
         """Abstract class for AdaptiveMechanism
         """
 
-        if not hasattr(self, 'system'):
-            self.system = None
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(params=params,
-                                                  modulation=modulation)
-
+        self.system = None
 
         super().__init__(variable=variable,
                          params=params,

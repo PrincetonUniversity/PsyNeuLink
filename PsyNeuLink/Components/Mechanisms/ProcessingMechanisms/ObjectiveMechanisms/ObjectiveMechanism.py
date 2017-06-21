@@ -665,7 +665,7 @@ def _instantiate_monitoring_projections(owner,
                                         context=None):
 
     from PsyNeuLink.Components.States.OutputState import OutputState
-    from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+    from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
     receiver_projection_specs = receiver_projection_specs or [DEFAULT_MATRIX] * len(sender_list)
 
@@ -696,20 +696,20 @@ def _instantiate_monitoring_projections(owner,
         #                           by a 2-item tuple (i.e., with a projection specification as its second item)
         if isinstance(sender, OutputState):
             # Projection has been specified for receiver and initialization begun, so call deferred_init()
-            if receiver.path_afferents:
-                if not receiver.path_afferents[0].value is DEFERRED_INITIALIZATION:
+            if receiver.afferents:
+                if not receiver.afferents[0].value is DEFERRED_INITIALIZATION:
                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
                                                   "implemented and initialized ({})".
                                                   format(receiver.name, owner.name, receiver.aferents[0].name))
-                if not receiver.path_afferents[0].function_params[MATRIX] is projection_spec:
+                if not receiver.afferents[0].function_params[MATRIX] is projection_spec:
                     raise ObjectiveMechanismError("PROGRAM ERROR: Projection specification for {} of {} ({}) "
                                                   "does not match matrix already assigned ({})".
                                                   format(receiver.name,
                                                          owner.name,
                                                          projection_spec,
-                                                         receiver.path_afferents[0].function_params[MATRIX]))
-                receiver.path_afferents[0].init_args[SENDER] = sender
-                receiver.path_afferents[0]._deferred_init()
+                                                         receiver.afferents[0].function_params[MATRIX]))
+                receiver.afferents[0].init_args[SENDER] = sender
+                receiver.afferents[0]._deferred_init()
             else:
                 MappingProjection(sender=sender,
                                   receiver=receiver,

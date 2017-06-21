@@ -82,8 +82,10 @@ Any of the following can be used to specify a projection in context:
       |
       * CONTROL_PROJECTION -- a `ControlProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
       |
-      * GATING_PROJECTION -- a `GatingProjection` with the `DefaultGatingMechanism` as its :keyword:`sender`.
+      COMMENT:
+      * GATING_PROJECTION -- a `GatingProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
       |
+      COMMENT
       * LEARNING_PROJECTION -- a `LearningProjection`.  At present, this can only be used together with the
         specification of a MappingProjection (see `tuple <Mapping_Matrix_Specification>` format).  If the
         :keyword:`receiver` of the MappingProjection projects to a `MonitoringMechanism <MonitoringMechanism>`,
@@ -184,7 +186,7 @@ Receiver
 ~~~~~~~~
 
 This must be an :doc:`InputState` or a :doc:`ParameterState`.  The projection is assigned to the receiver's
-`afferents <State.State_Base.path_afferents>` list, and the output of the projection's
+`afferents <State.State_Base.afferents>` list, and the output of the projection's
 `function <Projection.function>` is transmitted to its receiver.  A `receiver <Projection.receiver>` can be specified as:
 
   * an existing **inputState**;
@@ -842,7 +844,7 @@ def _is_projection_subclass(spec, keyword):
             return True
     return False
 
-# IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignals WHEN THAT IS IMPLEMENTED
+# IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignal WHEN THAT IS IMPLEMENTED
 @tc.typecheck
 def _validate_receiver(sender_mech:Mechanism,
                        projection:Projection,
@@ -1058,7 +1060,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
         projection = projection_spec
         if ((isinstance(sender, OutputState) and projection.sender is sender) or
                 (isinstance(sender, Mechanism) and projection.sender is sender.output_state)):
-            if sender.verbosePref:
+            if self.verbosePref:
                 warnings.warn("Request to assign {} as sender of {}, but it has already been assigned".
                               format(sender.name, projection.name))
                 return

@@ -6,7 +6,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Functions.Function import Linear, Logistic, BogaczEtAl
 from PsyNeuLink.Components.Functions.Function import THRESHOLD
 from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, LEARNING_PROJECTION, NOISE, PARAMETER_STATE_PARAMS, RANDOM_CONNECTIVITY_MATRIX

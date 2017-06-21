@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
+
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Functions.Function import Integrator, SimpleIntegrator, ConstantIntegrator, AccumulatorIntegrator
@@ -25,16 +25,16 @@ def test_integrator_simple():
         ),
         time_scale=TimeScale.TIME_STEP
     )
-#     # P = process(pathway=[I])
+    P = process(pathway=[I])
 
     #  returns previous_value + rate*variable + noise
     # so in this case, returns 10.0
-    val = float(I.execute(10))
+    val = float(P.execute(10))
 
     # testing initializer
     I.function_object.reset_initializer = 5.0
 
-    val2 = float(I.execute(0))
+    val2 = float(P.execute(0))
 
     assert [val, val2] == [10.0, 5.0]
 
@@ -52,14 +52,14 @@ def test_integrator_adaptive():
         time_scale=TimeScale.TIME_STEP
     )
     # val = float(I.execute(10)[0])
-    # P = process(pathway=[I])
-    val = float(I.execute(10))
+    P = process(pathway=[I])
+    val = float(P.execute(10))
     # returns (rate)*variable + (1-rate*previous_value) + noise
     # rate = 1, noise = 0, so in this case, returns 10.0
 
     # testing initializer
     I.function_object.reset_initializer = 1.0
-    val2 = float(I.execute(1))
+    val2 = float(P.execute(1))
 
     assert [val, val2] == [5.0, 1.0]
 # ------------------------------------------------------------------------------------------------
@@ -76,14 +76,14 @@ def test_integrator_constant():
         time_scale=TimeScale.TIME_STEP
     )
     # val = float(I.execute(10)[0])
-    # P = process(pathway=[I])
-    val = float(I.execute())
+    P = process(pathway=[I])
+    val = float(P.execute())
     # returns previous_value + rate + noise
     # rate = 1.0, noise = 0, so in this case returns 1.0
 
     # testing initializer
     I.function_object.reset_initializer = 10.0
-    val2 = float(I.execute())
+    val2 = float(P.execute())
 
     assert [val, val2] == [1.0, 11.0]
 # ------------------------------------------------------------------------------------------------
@@ -99,12 +99,12 @@ def test_integrator_diffusion():
         time_scale=TimeScale.TIME_STEP
     )
     # val = float(I.execute(10)[0])
-    # P = process(pathway=[I])
-    val = float(I.execute(10))
+    P = process(pathway=[I])
+    val = float(P.execute(10))
 
     # testing initializer
     I.function_object.reset_initializer = 1.0
-    val2 = float(I.execute(0))
+    val2 = float(P.execute(0))
 
     assert [val, val2] == [10.0, 1.0]
 
@@ -128,8 +128,8 @@ def test_integrator_diffusion():
 #             time_scale=TimeScale.TIME_STEP
 #         )
 #         # val = float(I.execute(10)[0])
-# #         P = process(pathway=[I])
-#         val = float(I.execute(10))
+#         P = process(pathway=[I])
+#         val = float(P.execute(10))
 #     assert val == 10
 
 
@@ -147,8 +147,8 @@ def test_integrator_input_float():
         function=SimpleIntegrator(
         )
     )
-    # P = process(pathway=[I])
-    val = float(I.execute(10.0))
+    P = process(pathway=[I])
+    val = float(P.execute(10.0))
     assert val == 10.0
 
 # ------------------------------------------------------------------------------------------------
@@ -162,8 +162,8 @@ def test_integrator_input_list():
         function=SimpleIntegrator(
         )
     )
-    # P = process(pathway=[I])
-    val = float(I.execute([10.0]))
+    P = process(pathway=[I])
+    val = float(P.execute([10.0]))
     assert val == 10.0
 
 # ------------------------------------------------------------------------------------------------
@@ -179,8 +179,8 @@ def test_integrator_input_list_len_5():
         function=SimpleIntegrator(
         )
     )
-    # P = process(pathway=[I])
-    val = I.execute([10.0, 5.0, 2.0, 1.0, 0.0])[0]
+    P = process(pathway=[I])
+    val = P.execute([10.0, 5.0, 2.0, 1.0, 0.0])
     expected_output = [10.0, 5.0, 2.0, 1.0, 0.0]
 
     for i in range(len(expected_output)):
@@ -201,9 +201,9 @@ def test_integrator_input_array_len_5():
         function=SimpleIntegrator(
         )
     )
-    # P = process(pathway=[I])
+    P = process(pathway=[I])
     input_array = np.array([10.0, 5.0, 2.0, 1.0, 0.0])
-    val = I.execute(input_array)[0]
+    val = P.execute(input_array)
     expected_output = [10.0, 5.0, 2.0, 1.0, 0.0]
 
     for i in range(len(expected_output)):
@@ -222,14 +222,14 @@ def test_integrator_input_array_len_5():
 
 def test_integrator_input_array_greater_than_default():
 
-    with pytest.raises(MechanismError) as error_text:
+    with pytest.raises(ValueError) as error_text:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_input_value=[0, 0, 0]
         )
-        # P = process(pathway=[I])
-        I.execute([10.0, 5.0, 2.0, 1.0, 0.0])
-    assert "does not match required length" in str(error_text)
+        P = process(pathway=[I])
+        P.execute([10.0, 5.0, 2.0, 1.0, 0.0])
+    assert "shapes" in str(error_text) and "not aligned" in str(error_text)
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
@@ -238,14 +238,14 @@ def test_integrator_input_array_greater_than_default():
 
 def test_integrator_input_array_less_than_default():
 
-    with pytest.raises(MechanismError) as error_text:
+    with pytest.raises(ValueError) as error_text:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             default_input_value=[0, 0, 0, 0, 0]
         )
-        # P = process(pathway=[I])
-        I.execute([10.0, 5.0, 2.0])
-    assert "does not match required length" in str(error_text)
+        P = process(pathway=[I])
+        P.execute([10.0, 5.0, 2.0])
+    assert "shapes" in str(error_text) and "not aligned" in str(error_text)
 
 # ======================================= RATE TESTS ============================================
 
@@ -263,8 +263,8 @@ def test_integrator_type_simple_rate_float():
             rate=5.0
         )
     )
-    # P = process(pathway=[I])
-    val = float(I.execute(10.0))
+    P = process(pathway=[I])
+    val = float(P.execute(10.0))
     assert val == 50.0
 
 # ------------------------------------------------------------------------------------------------
@@ -279,8 +279,8 @@ def test_integrator_type_constant_rate_float():
             rate=5.0
         )
     )
-    # P = process(pathway=[I])
-    val = float(I.execute(10.0))
+    P = process(pathway=[I])
+    val = float(P.execute(10.0))
     assert val == 5.0
 
 # ------------------------------------------------------------------------------------------------
@@ -295,8 +295,8 @@ def test_integrator_type_diffusion_rate_float():
             rate=5.0
         )
     )
-    # P = process(pathway=[I])
-    val = float(I.execute(10.0))
+    P = process(pathway=[I])
+    val = float(P.execute(10.0))
     assert val == 50.0
 
 # ------------------------------------------------------------------------------------------------
@@ -312,8 +312,8 @@ def test_integrator_type_simple_rate_list():
             rate=[5.0, 5.0, 5.0]
         )
     )
-    # P = process(pathway=[I])
-    val = list(I.execute([10.0, 10.0, 10.0])[0])
+    P = process(pathway=[I])
+    val = list(P.execute([10.0, 10.0, 10.0]))
     assert val == [50.0, 50.0, 50.0]
 # ------------------------------------------------------------------------------------------------
 # TEST 5
@@ -328,8 +328,8 @@ def test_integrator_type_constant_rate_list():
             rate=[5.0, 5.0, 5.0]
         )
     )
-    # P = process(pathway=[I])
-    val = list(I.execute([10.0, 10.0, 10.0])[0])
+    P = process(pathway=[I])
+    val = list(P.execute([10.0, 10.0, 10.0]))
     assert val == [5.0, 5.0, 5.0]
 
 # ------------------------------------------------------------------------------------------------
@@ -345,8 +345,8 @@ def test_integrator_type_diffusion_rate_list():
             rate=[5.0, 5.0, 5.0]
         )
     )
-    # P = process(pathway=[I])
-    val = list(I.execute([10.0, 10.0, 10.0])[0])
+    P = process(pathway=[I])
+    val = list(P.execute([10.0, 10.0, 10.0]))
     assert val == [50.0, 50.0, 50.0]
 
 # ------------------------------------------------------------------------------------------------
@@ -362,8 +362,8 @@ def test_integrator_type_adaptive_rate_list():
             rate=[0.5, 0.5, 0.5]
         )
     )
-    # P = process(pathway=[I])
-    val = list(I.execute([10.0, 10.0, 10.0])[0])
+    P = process(pathway=[I])
+    val = list(P.execute([10.0, 10.0, 10.0]))
     assert val == [5.0, 5.0, 5.0]
 
 # ------------------------------------------------------------------------------------------------
@@ -379,8 +379,8 @@ def test_integrator_type_adaptive_rate_float_input_list():
             rate=0.5
         )
     )
-    # P = process(pathway=[I])
-    val = list(I.execute([10.0, 10.0, 10.0])[0])
+    P = process(pathway=[I])
+    val = list(P.execute([10.0, 10.0, 10.0]))
     assert val == [5.0, 5.0, 5.0]
 
 # ------------------------------------------------------------------------------------------------
@@ -395,8 +395,8 @@ def test_integrator_type_adaptive_rate_float():
             rate=0.5
         )
     )
-    # P = process(pathway=[I])
-    val = list(I.execute(10.0))
+    P = process(pathway=[I])
+    val = list(P.execute(10.0))
     assert val == [5.0]
 
 # ------------------------------------------------------------------------------------------------
@@ -418,8 +418,8 @@ def test_integrator_type_simple_rate_list_input_float():
                 rate=[5.0, 5.0, 5.0]
             )
         )
-        # P = process(pathway=[I])
-        float(I.execute(10.0))
+        P = process(pathway=[I])
+        float(P.execute(10.0))
     assert (
         "array specified for the rate parameter" in str(error_text)
         and "must match the length" in str(error_text)
@@ -439,8 +439,8 @@ def test_integrator_type_constant_rate_list_input_float():
                 rate=[5.0, 5.0, 5.0]
             )
         )
-        # P = process(pathway=[I])
-        float(I.execute(10.0))
+        P = process(pathway=[I])
+        float(P.execute(10.0))
     assert (
         "array specified for the rate parameter" in str(error_text)
         and "must match the length" in str(error_text)
@@ -461,8 +461,8 @@ def test_integrator_type_diffusion_rate_list_input_float():
                 rate=[5.0, 5.0, 5.0]
             )
         )
-        # P = process(pathway=[I])
-        float(I.execute(10.0))
+        P = process(pathway=[I])
+        float(P.execute(10.0))
     assert (
         "array specified for the rate parameter" in str(error_text)
         and "must match the length" in str(error_text)
@@ -484,8 +484,8 @@ def test_simple_integrator():
                 offset = 10,
             )
         )
-    # P = process(pathway=[I])
-    val = I.execute(1)
+    P = process(pathway=[I])
+    val = P.execute(1)
     assert val == 25
 
 
@@ -503,18 +503,18 @@ def test_constant_integrator():
                 offset = 10
             )
         )
-    # P = process(pathway=[I])
+    P = process(pathway=[I])
     # constant integrator does not use input value (self.variable)
 
     # step 1:
-    val = I.execute(20000)
+    val = P.execute(20000)
     # value = 10 + 5
     # adjusted_value = 15 + 10
     # previous_value = 25
     # RETURN 25
 
     # step 2:
-    val2 = I.execute(70000)
+    val2 = P.execute(70000)
     # value = 25 + 5
     # adjusted_value = 30 + 10
     # previous_value = 30
@@ -535,9 +535,9 @@ def test_adaptive_integrator():
                 offset = 10,
             )
         )
-    # P = process(pathway=[I])
+    P = process(pathway=[I])
     # 10*0.5 + 1*0.5 + 10
-    val = I.execute(1)
+    val = P.execute(1)
     assert val == 15.5
 
 
@@ -556,9 +556,9 @@ def test_drift_diffusion_integrator():
                 offset=10,
             )
         )
-    # P = process(pathway=[I])
+    P = process(pathway=[I])
     # 10 + 10*0.5 + 0 + 10 = 25
-    val = I.execute(1)
+    val = P.execute(1)
     assert val == 25
 
 
@@ -577,25 +577,25 @@ def test_ornstein_uhlenbeck_integrator():
                 offset=10,
             )
         )
-    # P = process(pathway=[I])
+    P = process(pathway=[I])
     # value = previous_value + decay * rate * new_value * time_step_size + np.sqrt(
             #time_step_size * noise) * np.random.normal()
     # step 1:
-    val = I.execute(1)
+    val = P.execute(1)
     # value = 10 + 0.1*10*1*0.5 + 0
     # adjusted_value = 10.5 + 10
     # previous_value = 20.5
     # RETURN 20.5
 
     # step 2:
-    val2 = I.execute(1)
+    val2 = P.execute(1)
     # value = 20.5 + 0.1*10*1*0.5 + 0
     # adjusted_value = 21 + 10
     # previous_value = 31
     # RETURN 31
 
     # step 3:
-    val3 = I.execute(1)
+    val3 = P.execute(1)
     # value = 31 + 0.1*10*1*0.5 + 0
     # adjusted_value = 31.5 + 10
     # previous_value = 41.5
@@ -607,8 +607,8 @@ def test_ornstein_uhlenbeck_integrator():
 # ------------------------------------------------------------------------------------------------
 def test_integrator_no_function():
     I = IntegratorMechanism(time_scale=TimeScale.TIME_STEP)
-    # P = process(pathway=[I])
-    val = float(I.execute(10))
+    P = process(pathway=[I])
+    val = float(P.execute(10))
     assert val == 5
 
 
@@ -624,16 +624,16 @@ def test_integrator_no_function():
 #                 increment= 1.0
 #             )
 #         )
-# #     P = process(pathway=[I])
+#     P = process(pathway=[I])
 
 #     # value = previous_value * rate + noise + increment
 #     # step 1:
-#     val = I.execute()
+#     val = P.execute()
 #     # value = 10.0 * 5.0 + 0 + 1.0
 #     # RETURN 51
 
 #     # step 2:
-#     val2 = I.execute(2000)
+#     val2 = P.execute(2000)
 #     # value = 51*5 + 0 + 1.0
 #     # RETURN 256
 #     assert (val, val2) == (51, 256)

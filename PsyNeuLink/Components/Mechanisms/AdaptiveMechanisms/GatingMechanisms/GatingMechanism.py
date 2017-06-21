@@ -111,13 +111,14 @@ Class Reference
 # IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
 #                      ADD IN GENERIC CONTROL STUFF FROM DefaultGatingMechanism
 
-from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal, _parse_gating_signal_spec
-from PsyNeuLink.Components.States.State import State_Base, _instantiate_state
+from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal \
+    import GatingSignal, _parse_gating_signal_spec
+from PsyNeuLink.Components.States.State import State_Base, _instantiate_state, _parse_state_spec
+from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 
 GatingMechanismRegistry = {}
 
@@ -256,11 +257,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gating_signals=gating_signals,
+                                                  modulation=modulation,
                                                   function=function,
                                                   params=params)
 
         super().__init__(variable=default_gating_policy,
-                         modulation=modulation,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -556,7 +557,7 @@ def _add_gating_mechanism_to_system(owner:GatingMechanism):
                         system.executionGraph[owner] = set()
                         # FIX: NEED TO ALSO ADD SystemInputState (AND ??ProcessInputState) PROJECTIONS
                         # # Add self to system's list of OriginMechanisms if it doesn't have any afferents
-                        # if not any(state.path_afferents for state in owner.input_states):
+                        # if not any(state.afferents for state in owner.input_states):
                         #     system.originMechanisms.mechs.append(owner)
 
 

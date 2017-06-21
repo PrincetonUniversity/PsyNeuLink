@@ -5,7 +5,6 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.scheduling.condition import AfterNCalls
 
@@ -35,21 +34,10 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                                                                       control_signal_params={
                                                                           ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)},
                                                                       )),
-
                                    threshold=(1.0, ControlProjection(function=Linear,
                                                                      control_signal_params={
                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
                                                                      )),
-
-                                   # threshold=(1.0, ControlProjection(function=Linear,
-                                   #                                   control_signal_params={
-                                   #                                       ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3),
-                                   #                                       MODULATION:ModulationParam.ADDITIVE}
-                                   #                                   )),
-
-                                   # threshold=(1.0, ControlSignal(function=Linear,
-                                   #                               allocation_samples=np.arange(0.1, 1.01, 0.3))),
-
                                    # threshold={VALUE: 1.0,
                                    #            CONTROL_PROJECTION: ControlProjection(function=Linear,
                                    #                                                  control_signal_params={
@@ -57,7 +45,6 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                                    #                                                          np.arange(0.1, 1.01, 0.3)}
                                    #                                                  ),
                                    #            FUNCTION:LinearCombination()},
-
                                    noise=(0.5),
                                    starting_point=(0),
                                    t0=0.45),

@@ -271,7 +271,6 @@ def test_DDM_input_list_len_2():
 def test_DDM_input_fn():
     with pytest.raises(TypeError) as error_text:
         stim = NormalDist().function
-        print(stim)
         T = DDM(
             name='DDM',
             function=DriftDiffusionIntegrator(
@@ -282,8 +281,8 @@ def test_DDM_input_fn():
             ),
             time_scale=TimeScale.TIME_STEP
         )
-        float(T.execute(stim))
-    assert "not supported for the input types" in str(error_text.value)
+        float(T.execute(stim)[0])
+    assert "unsupported operand type" in str(error_text.value)
 
 
 # ======================================= RATE TESTS ============================================

@@ -741,9 +741,8 @@ class Component(object):
 
             # If name is None, mark as deferred so that name can be customized
             #    using info that has become available at time of deferred init
-            self.init_args['name'] = (self.init_args['name'] or
-                                      ('deferred_init_' + self.className) or
-                                      DEFERRED_DEFAULT_NAME)
+            self.init_args['name'] = self.init_args['name'] or ('deferred_init_' + self.className) or \
+                                     DEFERRED_DEFAULT_NAME
 
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
@@ -1423,7 +1422,7 @@ class Component(object):
             # MODIFIED 4/18/17 NEW:
             # For params that are a 2-item tuple, extract the value
             #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
-            #    which is used it instantiate the specified components in the 2nd item of the tuple)
+            #    which is used it instantiate the specified projections)
             # IMPLEMENTATION NOTE:  Do this here rather than in _validate_params, as it needs to be done before
             #                       any override of _validate_params, which (should not, but) may process params
             #                       before calling super()._validate_params
@@ -1834,23 +1833,13 @@ class Component(object):
         from PsyNeuLink.Components.Projections.Projection import Projection
         # from PsyNeuLink.Components.Projections.Modulatory.ControlProjection import ControlProjection
         # from PsyNeuLink.Components.Projections.Modulatory.LearningProjection import LearningProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
-        from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
-        ALLOWABLE_TUPLE_SPEC_KEYWORDS = {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING}
-        ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal)
 
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
         if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                # # MODIFIED 6/19/17 OLD:
-                # (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING} or
-                #      isinstance(param_spec[1], Projection) or
-                #      (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
-                # MODIFIED 6/19/17 NEW:
-                (param_spec[1] in ALLOWABLE_TUPLE_SPEC_KEYWORDS or
-                     isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or
-                         (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES)))
-                # MODIFIED 6/19/17 END
-            ):
+                (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING} or
+                     isinstance(param_spec[1], Projection) or
+                     (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
+              ):
             value =  param_spec[0]
 
         # Otherwise, just return the tuple

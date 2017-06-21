@@ -2,7 +2,6 @@
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
@@ -33,41 +32,18 @@ Reward = TransferMechanism(name='Reward',
                            output_states=[RESULT, MEAN, VARIANCE]
                   )
 
-# # CONTROL SPECIFIED IN control_signals ARG OF System CONSTRUCTOR
-# Decision = DDM(function=BogaczEtAl(drift_rate=1.0,
-#                                    threshold=1.0,
-#                                    noise=0.5,
-#                                    starting_point=0,
-#                                    t0=0.45),
-#                output_states=[DECISION_VARIABLE,
-#                               RESPONSE_TIME,
-#                               PROBABILITY_UPPER_THRESHOLD],
-#                prefs = DDM_prefs,
-#                name='Decision')
-
-# # CONTROL SPECIFIED BY ControlProjections
 # Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear,
-#                                                                       control_signal_params={
+#                                                                       control_signal={
 #                                                                           ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)},
 #                                                                       )),
 #                                    threshold=(1.0, ControlProjection(function=Linear,
-#                                                                      control_signal_params={
+#                                                                      control_signal={
 #                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
 #                                                                      )),
-#                                    noise=(0.5),
-#                                    starting_point=(0),
-#                                    t0=0.45),
-#                output_states=[DECISION_VARIABLE,
-#                               RESPONSE_TIME,
-#                               PROBABILITY_UPPER_THRESHOLD],
-#                prefs = DDM_prefs,
-#                name='Decision')
-
-# CONTROL SPECIFIED BY ControlSignals
-Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(allocation_samples=np.arange(0.1, 1.01, 0.3))),
-                                   threshold=(1.0, ControlSignal(allocation_samples=np.arange(0.1, 1.01, 0.3))),
-                                   noise=(0.5),
-                                   starting_point=(0),
+Decision = DDM(function=BogaczEtAl(drift_rate=1.0,
+                                   threshold=1.0,
+                                   noise=0.5,
+                                   starting_point=0,
                                    t0=0.45),
                output_states=[DECISION_VARIABLE,
                               RESPONSE_TIME,
@@ -106,8 +82,8 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   #                   ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)},
                   #                  {NAME: THRESHOLD,
                   #                   MECHANISM: Decision}],
-                  # control_signals=[(DRIFT_RATE, Decision),
-                  #                  (THRESHOLD, Decision)],
+                  control_signals=[(DRIFT_RATE, Decision),
+                                   (THRESHOLD, Decision)],
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')

@@ -17,7 +17,7 @@ A parameterState belongs to either a `mechanism <Mechanism>` or a `MappingProjec
 possibly modify the value of a parameter of its owner or it owner's function.  It can receive one or more
 `ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that modify that
 parameter.   The projections received by a parameterState are listed in its
-`afferents <ParameterState.path_afferents>` attribute.
+`afferents <ParameterState.afferents>` attribute.
 Its `function <ParameterState.function>` combines the values of these inputs, and uses the result to modify the value
 of the parameter for which it is responsible.
 
@@ -70,7 +70,7 @@ Parameters can be specified in one of several places:
 
 The value specified for the parameter (either explicitly or by default) is assigned as the parameterState's
 `base_value <ParameterState.base_value>`, and any projections assigned to it are added to its
-`receiveFromProjections <ParameterState.path_afferents>` attribute. When the parameterState's owner is
+`receiveFromProjections <ParameterState.afferents>` attribute. When the parameterState's owner is
 executed, the parameterState's `base_value <ParameterState.base_value>` is combined with the value of the projections
 it receives to determine the value of the parameter for which the parameterState is responsible
 (see `ParameterState_Execution` for details).
@@ -184,7 +184,7 @@ responsible.  When the parameterState is updated (i.e., the owner is executed) t
 combined (using the  parameterState's `function <ParameterState.function>`) and the result is used to modify the
 parameter for which the parameterState is responsible (see `Execution <ParameterState_Execution>` below).  The
 projections received by a parameterState are listed in its `receiveFromProjections
-<ParameterState.path_afferents>` attribute. Like all PsyNeuLink components, it has the three following core
+<ParameterState.afferents>` attribute. Like all PsyNeuLink components, it has the three following core
 attributes:
 
 * `variable <ParameterState.variable>`:  this serves as a template for the `value <Projection.Projection.value>` of
@@ -619,14 +619,14 @@ class ParameterState(State_Base):
         return value
 
     @property
-    def pathway_projections(self):
-        raise ParameterStateError("PROGRAM ERROR: Attempt to access path_projection for {};"
+    def trans_projections(self):
+        raise ParameterStateError("PROGRAM ERROR: Attempt to access trans_projection for {};"
                                   "it is a {} which does not have {}s".
                                   format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
 
-    @pathway_projections.setter
-    def pathway_projections(self, value):
-        raise ParameterStateError("PROGRAM ERROR: Attempt to assign path_projection to {};"
+    @trans_projections.setter
+    def trans_projections(self, value):
+        raise ParameterStateError("PROGRAM ERROR: Attempt to assign trans_projection to {};"
                                   "it is a {} which cannot accept {}s".
                                   format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
 

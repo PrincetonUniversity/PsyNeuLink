@@ -601,13 +601,13 @@ class TransferMechanism(ProcessingMechanism_Base):
             if not self.integrator_function:
 
                 self.integrator_function = AdaptiveIntegrator(
-                                            self.variable,
+                                            self.input_state.value,
                                             initializer = self.previous_input,
                                             noise = self.noise,
                                             rate = self.time_constant
                                             )
 
-            current_input = self.integrator_function.execute(self.variable,
+            current_input = self.integrator_function.execute(self.input_state.value,
                                                         # Should we handle runtime params?
                                                              # params={INITIALIZER: self.previous_input,
                                                              #         INTEGRATION_TYPE: ADAPTIVE,

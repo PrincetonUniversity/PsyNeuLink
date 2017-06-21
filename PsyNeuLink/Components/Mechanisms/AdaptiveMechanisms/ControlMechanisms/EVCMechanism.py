@@ -295,7 +295,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCAu
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 
 
 OBJECT_INDEX = 0
@@ -828,7 +828,7 @@ class EVCMechanism(ControlMechanism_Base):
             #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
             for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
                                                             prediction_mechanism.input_states):
-                for projection in orig_input_state.path_afferents:
+                for projection in orig_input_state.afferents:
                     MappingProjection(sender=projection.sender,
                                       receiver=prediction_input_state,
                                       matrix=projection.matrix)

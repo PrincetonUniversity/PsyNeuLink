@@ -94,7 +94,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.O
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 
@@ -347,10 +347,7 @@ class LearningProjection(ModulatoryProjection_Base):
             # VALIDATE SENDER
             sender = self.sender
             if isinstance(sender, LearningMechanism):
-                if len(sender.learning_signals) > 1:
-                    raise LearningProjectionError("PROGRAM ERROR: {} has more than one LearningSignal "
-                                                  "which is not currently supported".format(sender.name))
-                sender = self.sender = sender.learning_signals[0]
+                sender = self.sender = sender.output_state
 
             if any(s in {OutputState, LearningMechanism} for s in {sender, type(sender)}):
                 # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
@@ -467,7 +464,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
-        candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
+        candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].afferents[0].sender.owner
         if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
             learned_projection.objective_mechanism = candidate_objective_mech
         learned_projection.learning_mechanism = learning_mechanism
