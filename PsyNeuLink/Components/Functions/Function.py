@@ -2375,8 +2375,8 @@ class SoftMax(
             COMMENT:
                 D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
             COMMENT
-            D\ :sub:`j`\ S\ :sub:`i` = S\ :sub:`i`\ (𝜹\ :sub:`i,j` - S\ :sub:`j`),
-            where 𝜹\ :sub:`i,j`\ =1 if i=j and 𝜹\ :sub:`i,j`\ =0 if i≠j.
+            D\\ :sub:`j`\\ S\\ :sub:`i` = S\\ :sub:`i`\\ (𝜹\\ :sub:`i,j` - S\\ :sub:`j`),
+            where 𝜹\\ :sub:`i,j`\\ =1 if i=j and 𝜹\\ :sub:`i,j`\\ =0 if i≠j.
         If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
         value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
         (since it is ambiguous as to which element would have been chosen by the SoftMax function)
@@ -5000,15 +5000,15 @@ class BogaczEtAl(
         Calculate the derivative of 1/(reward rate) with respect to the threshold (**output** arg)
         and drift_rate (**input** arg).  Reward rate (RR) is assumed to be:
 
-            RR = (delay\ :sub:`ITI` + Z/A + ED);
+            RR = (delay\\ :sub:`ITI` + Z/A + ED);
 
         the derivative of 1/RR with respect to the `threshold <BogaczEtAl.threshold>` is:
 
-            1/A - E/A - (2A/c\ :sup:`2`\ )ED;
+            1/A - E/A - (2A/c\\ :sup:`2`\\ )ED;
 
         and the derivative of 1/RR with respect to the `drift_rate <BogaczEtAl.drift_rate>` is:
 
-            -Z/A\ :sup:`2` + (Z/A\ :sup:`2`\ )E - (2Z/c\ :sup:`2`\ )ED
+            -Z/A\\ :sup:`2` + (Z/A\\ :sup:`2`\\ )E - (2Z/c\\ :sup:`2`\\ )ED
 
         where:
 
@@ -5018,11 +5018,11 @@ class BogaczEtAl(
 
             c = `noise <BogaczEtAl.noise>`,
 
-            E = exp(-2ZA/\ c\ :sup:`2`\ ), and
+            E = exp(-2ZA/\\ c\\ :sup:`2`\\ ), and
 
-            D = delay\ :sub:`ITI` + delay\ :sub:`penalty` - Z/A
+            D = delay\\ :sub:`ITI` + delay\\ :sub:`penalty` - Z/A
 
-            delay\ :sub:`ITI` is the intertrial interval and delay\ :sub:`penalty` is a penalty delay.
+            delay\\ :sub:`ITI` is the intertrial interval and delay\\ :sub:`penalty` is a penalty delay.
 
 
         Returns

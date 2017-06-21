@@ -245,8 +245,8 @@ An outputState also has two additional attributes that determine its operation, 
   `calculate  <OutputState.calculate>` attribute can be assigned any function that can take as its input the 
   item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` designated by the outputState's
   `index <OutputState.index>` attribute, and the result of which can be used as the variable for the outputState's 
-  `function <OutputState.function>`.  The default is an identity function (`Linear` with **slope**\ =1 and 
-  **intercept**\ =0), that simply assigns the specified item of the mechanism's `value <Mechanism.Mechanism_Base.value>` 
+  `function <OutputState.function>`.  The default is an identity function (`Linear` with **slope**\\ =1 and
+  **intercept**\\ =0), that simply assigns the specified item of the mechanism's `value <Mechanism.Mechanism_Base.value>`
   unmodified as the variable for outputState's `function <OutputState.function>`.  
 
 .. _OutputState_Execution:

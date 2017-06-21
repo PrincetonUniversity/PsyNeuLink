@@ -1066,7 +1066,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             elif size_of_states_heterog:
                 expected_dim = 4
             else:
-                raise RunError("PROGRAM ERROR: Unexepcted shape of intputs: {}".format(inputs.shape))
+                raise RunError("PROGRAM ERROR: Unexpected shape of inputs: {}".format(inputs.shape))
 
         if inputs.ndim != expected_dim:
             raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
