@@ -125,8 +125,7 @@ Examples
 ~~~~~~~~
 
 In the following example, a mechanism is created by specifying two of its parameters, as well as its
-`function <Component.function>` and two of that function's parameters, each of which is specified using a different
-specification format::
+`function <Component.function>` and two of that function's parameters, each using a different specification format::
 
     my_mechanism = RecurrentTransferMechanism(size=5
                                               noise=ControlSignal),
@@ -134,15 +133,15 @@ specification format::
                                                                 bias=(1.0, ControlSignal(
                                                                               modulation=ModulationParam.ADDITIVE))))
 
-The first parameter of the mechanism specified is its `size <Component.size>` , by assigning a value
-directly in the **size** argument of its constructor.  The `noise <RecurrentTransferMechanism.noise>`
-parameter is specified by assigning a default `ControlSignal` in the **noise** argument;  this will use the default
-value of the mechanism's `noise <RecurrentTransferMechanism.noise>` attribute.  The **function** argument is assigned
-a constructor for a `Logistic` function, that specifies two of its parameters.  The `gain <Logistic.gain>` parameter
-is specified using a tuple, the first item of which is the value to be assinged, and the second which specifies
-assignment of a default `ControlSignal`.  The `bias <Logistic.bias>` parameter is also specified using a tuple,
-in this case with a constructor for the ControlSignal which specifies its `modulation <ControlSignal.modulation>`
-value.
+The first argument of the constructor for the Mechanism specifies its `size <Component.size>` parameter by
+directly assigning a value to it.  The second specifies the `noise <RecurrentTransferMechanism.noise>` parameter
+by assigning a default `ControlSignal`;  this will use the default value of the
+`noise <RecurrentTransferMechanism.noise>` attribute.  The **function** argument is specified using the constructor for
+a `Logistic` function, that specifies two of its parameters.  The `gain <Logistic.gain>` parameter
+is specified using a tuple, the first item of which is the value to be assigned, and the second that specifies
+a default `ControlSignal`.  The `bias <Logistic.bias>` parameter is also specified using a tuple,
+in this case with a constructor for the ControlSignal that specifies its `modulation <ControlSignal.modulation>`
+parameter.
 
 In the following example, a `MappingProjection` is created, and its
 `matrix <MappingProjection.MappingProjection.matrix>` parameter is assigned a random weight matrix (using a
@@ -158,21 +157,26 @@ In the following example, a `MappingProjection` is created, and its
    its arguments are available in the constructor for the projection (see
    `Component_Specifying_Functions_and_Parameters` for a more detailed explanation).
 
-The example below shows how to specify the parameters in each of the two previous two examples using a
-parameter specification dictionary::
+The example below shows how to specify the parameters in the first example using a parameter specification dictionary::
 
-    my_mechanism = RecurrentTransferMechanism(params={FUNCTION:Logistic()
-                                                      FUNCTION_PARAMS:{
-                                                    'param_a':1.0,
-                                                    'param_b':(0.5, ControlSignal),
-                                                    'param_c':(36, ControlSignal(modulation=ModulationParam.ADDITIVE),
-                                                    'param_d':=ControlSignal}})
+    my_mechanism = RecurrentTransferMechanism(
+                              size=5
+                              params={SIZE:5,
+                                      NOISE:ControlSignal,
+                                      FUNCTION:Logistic,
+                                      FUNCTION_PARAMS:{gain:(0.5, ControlSignal),
+                                                       bias:(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
 
-    my_mapping_projection = MappingProjection(sender=my_input_mechanism,
-                                              params={RECEIVER:my_output_mechanism,
-                                                      MATRIX:(RANDOM_CONNECTIVITY_MATRIX, LearningSignal)})
+There are several things to note here.  First, the parameter specification dictionary must be assigned to the
+**params** argument of the constructor.  Second, both methods of specification -- directly in an argument or in a
+parameter specification dictionary -- can be used within the same constructor.  If a particular parameter is
+specified in both ways (as is the case for size in the example), the value in the parameter specification dictionary
+takes priority (i.e., it is the value that will be assigned to the parameter).
 
-
+parameters can be specified in an argument and/or a paramethods oer
+specification dictdionary
+and in a
+parameter specification dictionary can be
 
 COMMENT:
     CONVERT THESE TO ACTUAL MECHANISMS AND FUNCTIONS
