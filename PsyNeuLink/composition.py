@@ -23,6 +23,7 @@ class CompositionError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
+
 class Vertex(object):
     ########
     # Helper class for Compositions.
@@ -59,19 +60,21 @@ class Graph(object):
             self.comp_to_vertex[component] = vertex
             self.vertices.append(vertex)
 
+    def connect_components(self, parent, child):
+        self.connect_vertices(self.comp_to_vertex[parent], self.comp_to_vertex[child])
+
     def connect_vertices(self, parent, child):
-        parent_vertex = self.comp_to_vertex[parent]
-        child_vertex = self.comp_to_vertex[child]
-        if child_vertex in parent_vertex.children:
-            return
-        parent_vertex.children.append(child_vertex)
-        child_vertex.parents.append(parent_vertex)
+        if child not in parent.children:
+            parent.children.append(child)
+        if parent not in child.parents:
+            child.parents.append(parent)
 
     def get_parents_from_component(self, component):
         return self.comp_to_vertex[component].parents
 
     def get_children_from_component(self, component):
         return self.comp_to_vertex[component].children
+
 
 class Composition(object):
 
@@ -127,6 +130,7 @@ class Composition(object):
             self.graph.add_vertex(mech)  # Set incoming edge list of mech to empty
             self.graph_analyzed = False  # Added mech so must re-analyze graph
             self.mechanisms.append(mech)
+            mech.is_processing = True
 
     def add_projection(self, sender, projection, receiver):
         ########
@@ -137,8 +141,8 @@ class Composition(object):
             self.graph.add_vertex(projection)
 
             # Add connections between mechanisms and the projection
-            self.graph.connect_vertices(sender, projection)
-            self.graph.connect_vertices(projection, receiver)
+            self.graph.connect_components(sender, projection)
+            self.graph.connect_components(projection, receiver)
             self.graph_analyzed = False  # Added projection so must re-analyze graph
 
     def analyze_graph(self):
@@ -222,6 +226,33 @@ class Composition(object):
                         elif child not in visited:
                             next_visit_stack.append(child)
         return
+
+    def update_processing_graph(self):
+        # need to create a copy of self.graph here instead of below
+        # copy should duplicate graph's vertices, which should point to the same component objects as the originals
+        # self.graph_processing = copy.copy(self.graph) or deepcopy
+        visited_vertices = set()
+        next_vertices = []  # a queue
+
+        while len(self.vertices) < len(visited_vertices):
+            for vertex in self.vertices:
+                if vertex not in visited_vertices:
+                    next_vertices.append(vertex)
+                    break
+
+            while len(next_vertices) > 0:
+                cur_vertex = next_vertices.pop(0)
+
+                if not cur_vertex.is_processing:
+                    for parent in cur_vertex.parents:
+                        for child in cur_vertex.children:
+                            self.graph_processing.connect_vertices(parent, child)
+                    # need to remove cur_vertex from self.graph_processing here
+                    # should it be done with a remove_vertex method? if so should that auto connect parents and children?
+
+                visited_vertices.add(cur_vertex)
+                # add to frontier any parents and children of cur_vertex that have not been visited yet
+                next_vertices.extend([vertex for vertex in cur_vertex.parents + cur_vertex.children if vertex not in visited_vertices])
 
     def get_mechanisms_by_role(self, role):
         if role not in MechanismRole:
