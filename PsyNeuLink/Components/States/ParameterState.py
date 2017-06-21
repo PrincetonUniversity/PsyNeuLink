@@ -121,28 +121,36 @@ Mechanism's `execute <Mechanism.execute>` method.
 
 .. _ParameterState_Specification_Examples:
 
-**Examples**
+Examples
+~~~~~~~~
 
-In the following example, a mechanism is created with a function that has four parameters,
-each of which is specified using a different format::
+In the following example, a mechanism is created by specifying two of its parameters, as well as its
+`function <Component.function>` and two of that function's parameters, each of which is specified using a different
+specification format::
 
-    my_mechanism = SomeMechanism(function=SomeFunction(param_a=1.0,
-                                                       param_b=(0.5, ControlProjection),
-                                                       param_c=(36, ControlProjection(function=Logistic),
-                                                       param_d=ControlProjection)))
+    my_mechanism = RecurrentTransferMechanism(size=5
+                                              noise=ControlSignal),
+                                              function=Logistic(gain=(0.5, ControlSignal),
+                                                                bias=(1.0, ControlSignal(
+                                                                              modulation=ModulationParam.ADDITIVE))))
 
-The first parameter of the mechanism's function (``param_a``) is assigned a value directly; the second (``param_b``) is
-assigned a value and a ControlProjection; the third (``param_c``) is assigned a value and a
-`ControlProjection with a specified function  <ControlProjection_Structure>`; and the fourth (``param_d``) is
-assigned just a `ControlProjection` (the default value for the parameter will be used).
+The first parameter of the mechanism specified is its `size <Component.size>` , by assigning a value
+directly in the **size** argument of its constructor.  The `noise <RecurrentTransferMechanism.noise>`
+parameter is specified by assigning a default `ControlSignal` in the **noise** argument;  this will use the default
+value of the mechanism's `noise <RecurrentTransferMechanism.noise>` attribute.  The **function** argument is assigned
+a constructor for a `Logistic` function, that specifies two of its parameters.  The `gain <Logistic.gain>` parameter
+is specified using a tuple, the first item of which is the value to be assinged, and the second which specifies
+assignment of a default `ControlSignal`.  The `bias <Logistic.bias>` parameter is also specified using a tuple,
+in this case with a constructor for the ControlSignal which specifies its `modulation <ControlSignal.modulation>`
+value.
 
 In the following example, a `MappingProjection` is created, and its
 `matrix <MappingProjection.MappingProjection.matrix>` parameter is assigned a random weight matrix (using a
-`matrix keyword <Matrix_Keywords>`) and `LearningProjection`::
+`matrix keyword <Matrix_Keywords>`) and `LearningSignal`::
 
     my_mapping_projection = MappingProjection(sender=my_input_mechanism,
                                               receiver=my_output_mechanism,
-                                              matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningProjection))
+                                              matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal))
 
 .. note::
    the `matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's
@@ -150,8 +158,29 @@ In the following example, a `MappingProjection` is created, and its
    its arguments are available in the constructor for the projection (see
    `Component_Specifying_Functions_and_Parameters` for a more detailed explanation).
 
+The example below shows how to specify the parameters in each of the two previous two examples using a
+parameter specification dictionary::
+
+    my_mechanism = RecurrentTransferMechanism(params={FUNCTION:Logistic()
+                                                      FUNCTION_PARAMS:{
+                                                    'param_a':1.0,
+                                                    'param_b':(0.5, ControlSignal),
+                                                    'param_c':(36, ControlSignal(modulation=ModulationParam.ADDITIVE),
+                                                    'param_d':=ControlSignal}})
+
+    my_mapping_projection = MappingProjection(sender=my_input_mechanism,
+                                              params={RECEIVER:my_output_mechanism,
+                                                      MATRIX:(RANDOM_CONNECTIVITY_MATRIX, LearningSignal)})
+
+
+
 COMMENT:
-    ADD EXAMPLE USING A PARAMS DICT, INCLUDING FUNCTION_PARAMS, AND assign_params
+    CONVERT THESE TO ACTUAL MECHANISMS AND FUNCTIONS
+    NOTICE:
+        args and params dict methods can be intermixed (e.g., sender vs. RECEIVER
+        param assignments in params dict take precedence
+        keys in params dict must be a string that is the name of the param (and arg) (e.g., `param_a` for param_a
+        FUNCTION_PARAMS can be used to specify the paramters of the component's function in the Component's constructor
 COMMENT
 
 .. _ParameterState_Structure:
