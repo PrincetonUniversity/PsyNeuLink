@@ -49,7 +49,7 @@ Parameters can be specified in one of several places:
       (or a corresponding keyword) as its key, and the parameter's specification as its value (see 
       `examples <ParameterState_Specification_Examples>` below). Parameters for a Component's
       `function <Component.function>` can be specified in an entry with the key *FUNCTION_PARAMS*,
-      the value of which is itself a parameter specification dictionary containing an entry for each of the
+      a value that is itself a parameter specification dictionary containing an entry for each of the
       function's parameters to be specified.  When a value is assigned to a parameter in a specification dictionary,
       it overrides any value assigned to the argument for the parameter in the Component's constructor.
     ..
@@ -162,63 +162,66 @@ The example below shows how to specify the parameters in the first example using
     my_mechanism = RecurrentTransferMechanism(
                               size=5
                               params={SIZE:5,
-                                      NOISE:ControlSignal,
+                                      'size':ControlSignal,
                                       FUNCTION:Logistic,
-                                      FUNCTION_PARAMS:{gain:(0.5, ControlSignal),
-                                                       bias:(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+                                      FUNCTION_PARAMS:{GAIN:(0.5, ControlSignal),
+                                                       BIAS:(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
 
 There are several things to note here.  First, the parameter specification dictionary must be assigned to the
-**params** argument of the constructor.  Second, both methods of specification -- directly in an argument or in a
-parameter specification dictionary -- can be used within the same constructor.  If a particular parameter is
-specified in both ways (as is the case for size in the example), the value in the parameter specification dictionary
-takes priority (i.e., it is the value that will be assigned to the parameter).
-
-parameters can be specified in an argument and/or a paramethods oer
-specification dictdionary
-and in a
-parameter specification dictionary can be
-
-COMMENT:
-    CONVERT THESE TO ACTUAL MECHANISMS AND FUNCTIONS
-    NOTICE:
-        args and params dict methods can be intermixed (e.g., sender vs. RECEIVER
-        param assignments in params dict take precedence
-        keys in params dict must be a string that is the name of the param (and arg) (e.g., `param_a` for param_a
-        FUNCTION_PARAMS can be used to specify the paramters of the component's function in the Component's constructor
-COMMENT
+**params** argument of the constructor.  Second, both methods for specifying a parameter -- directly in an argument
+for the parameter, or in an entry of a parameter specification dictionary -- can be used within the same constructor.
+If a particular parameter is specified in both ways (as is the case for **size** in the example), the value in the
+parameter specification dictionary takes priority (i.e., it is the value that will be assigned to the parameter).  If
+the parameter is specified in a parameter specification dictionary, the key for the parameter must be a string that is
+the same as the name of parameter (i.e., identical to how it appears as an arg in the constructor; as is shown
+for **size** in the example), or using a keyword that resolves to such a string (as shown for *NOISE* in the
+example).  Finally, the keyword *FUNCTION_PARAMS* can be used in a parameter specification dictionary to specify
+parameters of the Component's `function <Component.function>`, as shown for the **gain** and **bias** parameters of
+the Logistic function in the example.
 
 .. _ParameterState_Structure:
 
 Structure
 ---------
 
-Every parameterState is owned by a `mechanism <Mechanism>` or `MappingProjection`. It can receive one or more
-`ControlProjections <ControlProjection>` or `LearningProjections <LearningProjection>`.  However, the format (the
-number and type of its elements) of each must match the value of the parameter for which the parameterState is
-responsible.  When the parameterState is updated (i.e., the owner is executed) the values of its projections are
-combined (using the  parameterState's `function <ParameterState.function>`) and the result is used to modify the
-parameter for which the parameterState is responsible (see `Execution <ParameterState_Execution>` below).  The
-projections received by a parameterState are listed in its `receiveFromProjections
-<ParameterState.path_afferents>` attribute. Like all PsyNeuLink components, it has the three following core
+Every ParameterState is owned by a `Mechanism` or `MappingProjection`. It can receive one or more
+`ControlProjections <ControlProjection>` or `LearningProjections <LearningProjection>`, that are listed in its
+`mod_afferents <ParameterState.mod_afferents>` attribute.  However, the `value <ModulatoryProjection.value>` of each
+must be compatible with (i.e., have the number and type of elements as) the value of the parameter for which the
+ParameterState is responsible.  A ParameterState cannot receive `PathwayProjections <PathwayProjection>` or
+`GatingProjections <GatingProjection>`.  When the ParameterState is updated (i.e., its owner is executed), it uses
+the values of its ControlProjections and LearningProjections to determine whether and how to modify its parameter's
+attribute value, which is then assigned as the ParameterState's `value <ParameterState.value>`
+(see `ParameterState_Execution` for addition details). Like all PsyNeuLink components, it has the three following core
 attributes:
 
-* `variable <ParameterState.variable>`:  this serves as a template for the `value <Projection.Projection.value>` of
-  each projection that the parameterState receives.  It must match the format (the number and type of elements) of the
-  parameter for which the parameterState is responsible. Any projections the parameterState receives must, it turn,
-  match the format of :keyword:`variable`.
+* `variable <ParameterState.variable>`:  the parameter's attribute value -- that is, the value assigned to the
+  attribute of the ParameterState's owner, that can be thought of as the parameter's "base: value.  It is used
+  by `function <ParameterState.function>` to determine the ParameterState's `value <ParameterState.value>`.  It must
+  match the format (the number and type of elements) of the parameter's attribute value.
 
-* `function <ParameterState.function>`:  this performs an elementwise (Hadamard) aggregation  of the values of the
+* `function <ParameterState.function>`:  this takes
+XXXX
+performs an elementwise (Hadamard) aggregation  of the values of the
   projections received by the parameterState.  The default function is `LinearCombination` that multiplies the
   values. A custom function can be specified (e.g., to perform a Hadamard sum, or to handle non-numeric values in
   some way), so long as it generates a result that is compatible with the `value <ParameterState.value>` of the
   parameterState.
 
-* `value <ParameterState.value>`:  this is the value assigned to the parameter for which the parameterState is
+* `value <ParameterState.value>`:
+
+XXXX
+this is the value assigned to the parameter for which the parameterState is
   responsible.  It is the `base_value <ParameterState.base_value>` of the parameterState, modified by
   aggregated value of the projections received by the parameterState returned by the
   `function <ParameterState.function>.
 
-In addition, a parameterState has two other attributes that are used to determine the value it assigns to the
+XXXX
+In addition, like all `States <State>`, a ParameterState has a `mod_afferents`
+
+two other attributes that are used to determine the
+value it assigns
+to the
 parameter for which it is responsible (as shown in the `figure <ParameterState_Figure>` below):
 
 .. ParameterState_BaseValue:
@@ -227,6 +230,7 @@ parameter for which it is responsible (as shown in the `figure <ParameterState_F
   parameterState is responsible.  It is combined with the result of the parameterState's
   `function <ParameterState.function>` to determine the value of the parameter for which the parameterState is
   responsible.
+
 
 All of the user-modifiable parameters of a component are listed in its `user_params <Component.user_params>` attribute, 
 which is a read-only dictionary with an entry for each parameter.  The parameters of a component can be 
