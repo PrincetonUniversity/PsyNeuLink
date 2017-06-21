@@ -23,19 +23,6 @@ class CompositionError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-
-class Edge(object):
-    ########
-    # Helper class for Compositions.
-    # Contains a sender and receiver.
-    # Performs no operations outside getting and setting these attributes.
-    ########
-
-    def __init__(self, sender, receiver):
-        self.sender = sender  # Vertex that feeds into edge
-        self.receiver = receiver  # Vertex that edge feeds to
-
-
 class Vertex(object):
     ########
     # Helper class for Compositions.
@@ -43,16 +30,16 @@ class Vertex(object):
     # Contains lists of incoming edges and outgoing edges.
     ########
 
-    def __init__(self, component, incoming=None, outgoing=None):
+    def __init__(self, component, parents=None, children=None):
         self.component = component
-        if incoming is not None:
-            self.incoming = incoming
+        if parents is not None:
+            self.parents = parents
         else:
-            self.incoming = []
-        if outgoing is not None:
-            self.outgoing = outgoing
+            self.parents = []
+        if children is not None:
+            self.children = children
         else:
-            self.outgoing = []
+            self.children = []
 
 
 class Graph(object):
@@ -65,7 +52,6 @@ class Graph(object):
     def __init__(self):
         self.comp_to_vertex = OrderedDict()  # Translate from mechanisms to related vertex
         self.vertices = []  # List of vertices within graph
-        self.edges = []  # List of edges within graph
 
     def add_vertex(self, component):
         if component not in [vertex.component for vertex in self.vertices]:
@@ -73,34 +59,19 @@ class Graph(object):
             self.comp_to_vertex[component] = vertex
             self.vertices.append(vertex)
 
-    def add_edge(self, sender, receiver):
-        sender_vertex = self.comp_to_vertex[sender]
-        receiver_vertex = self.comp_to_vertex[receiver]
-        if any([(edge.sender, edge.receiver) is (sender_vertex, receiver_vertex) for edge in self.edges]):
+    def connect_vertices(self, parent, child):
+        parent_vertex = self.comp_to_vertex[parent]
+        child_vertex = self.comp_to_vertex[child]
+        if child_vertex in parent_vertex.children:
             return
-        new_edge = Edge(sender_vertex, receiver_vertex)
-        sender_vertex.outgoing.append(new_edge)
-        receiver_vertex.incoming.append(new_edge)
-        self.edges.append(new_edge)
+        parent_vertex.children.append(child_vertex)
+        child_vertex.parents.append(parent_vertex)
 
-    def get_incoming_from_component(self, component):
-        return self.comp_to_vertex[component].incoming
+    def get_parents_from_component(self, component):
+        return self.comp_to_vertex[component].parents
 
-    def get_outgoing_from_component(self, component):
-        return self.comp_to_vertex[component].outgoing
-
-    def get_child_vertices_from_component(self, component):
-        return [edge.receiver for edge in self.comp_to_vertex[component].outgoing]
-
-    def get_child_components_from_component(self, component):
-        return [edge.receiver.component for edge in self.comp_to_vertex[component].outgoing]
-
-    def get_parent_vertices_from_component(self, component):
-        return [edge.sender for edge in self.comp_to_vertex[component].incoming]
-
-    def get_parent_components_from_component(self, component):
-        return [edge.sender.component for edge in self.comp_to_vertex[component].incoming]
-
+    def get_children_from_component(self, component):
+        return self.comp_to_vertex[component].children
 
 class Composition(object):
 
@@ -165,9 +136,9 @@ class Composition(object):
         if projection not in [vertex.component for vertex in self.graph.vertices]:
             self.graph.add_vertex(projection)
 
-            # Add edges connecting sender and receiver components to projection
-            self.graph.add_edge(sender, projection)
-            self.graph.add_edge(projection, receiver)
+            # Add connections between mechanisms and the projection
+            self.graph.connect_vertices(sender, projection)
+            self.graph.connect_vertices(projection, receiver)
             self.graph_analyzed = False  # Added projection so must re-analyze graph
 
     def analyze_graph(self):
