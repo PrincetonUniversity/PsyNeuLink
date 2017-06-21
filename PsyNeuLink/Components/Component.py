@@ -705,7 +705,10 @@ class Component(object):
         self._instantiate_attributes_after_function(context=context)
 
     def __repr__(self):
-        return '({0} {1})'.format(type(self).__name__, self.name)
+        try:
+            return '({0} {1})'.format(type(self).__name__, self.name)
+        except AttributeError:
+            return '({0} {1})'.format(type(self).__name__, '_')
         #return '{1}'.format(type(self).__name__, self.name)
 
     def _deferred_init(self, context=None):
