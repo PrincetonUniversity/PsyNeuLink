@@ -14,11 +14,12 @@ Overview
 --------
 
 A parameterState belongs to either a `mechanism <Mechanism>` or a `MappingProjection`, and is used to represent and
-possibly modify the value of a parameter of its owner or it owner's function.  It can receive one or more
-`ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that modify that parameter.
-The projections received by a parameterState are listed in its `path_afferents <ParameterState.path_afferents>`
-attribute. Its `function <ParameterState.function>` combines the values of these inputs, and uses the result to modify
-the value of the parameter that is used by the Mechanism or its `function <Mechanism.function>`.
+possibly modify the value of the parameter used by its owner or owner's `function <Component.function>`.  It can
+receive one or more `ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that
+modify the value of the parameter. The projections received by a parameterState are listed in its
+`path_afferents <ParameterState.path_afferents>` attribute. Its `function <ParameterState.function>` combines the
+values of those projections, and uses the result to modify the value of the parameter that is used by the
+owner or its `function <Component.function>`.
 
 
 .. _ParameterState_Creation:
@@ -26,13 +27,12 @@ the value of the parameter that is used by the Mechanism or its `function <Mecha
 Creating a ParameterState
 -------------------------
 
-A parameterState can be created by calling its constructor, but in general this is not necessary or advisable as
-parameterStates are created automatically when the mechanism or projection to which they belong is created.  The
-`owner <ParamaterState.owner>` of a parameterState must be a `mechanism <Mechanism>` or `MappingProjection`.  If the
-`owner <ParamaterState.owner>` is not explicitly specified, and can't be determined by context, the parameterState
-will be assigned to the :ref:`DefaultProcessingMechanism`.  One parameterState is created for each configurable
-parameter of its owner, as well as for each parameter that has been specified for that component's :keyword:`function`.
-Each parameterState is created using the specification of the parameter for which it is responsible, as described below.
+A ParameterState can be created by calling its constructor, but in general this is not necessary or advisable as
+ParameterStates are created automatically when the Mechanism or Projection to which they belong is created.  The
+`owner <ParamaterState.owner>` of a ParameterState must be a `Mechanism <Mechanism>` or `MappingProjection`.  One
+ParameterState is created for each configurable parameter of its owner, as well as for each configurable parameter
+of the owner's `function <Component.function>`.  Each ParameterState is created using the value specified for the
+corresponding parameter, as described below.
 
 .. _ParameterState_Specifying_Parameters:
 
@@ -41,31 +41,24 @@ Specifying Parameters
 
 Parameters can be specified in one of several places:
 
-    * In the **argument for the parameter** of the constructor for the `component <Component>` to which the parameter 
+    * In the **argument for the parameter** of the constructor for the `Component` to which the parameter
       belongs (see :ref:`Component_Specifying_Functions_and_Parameters` for additional details).
     ..
-    * In a **parameter specification dictionary** assigned to the **params** argument in the constructor for the 
-      component to which the parameter belongs. The entry for each parameter must use the name of the parameter
+    * In a *parameter specification dictionary* assigned to the **params** argument in the constructor for the
+      Component to which the parameter belongs. The entry for each parameter must use the name of the parameter
       (or a corresponding keyword) as its key, and the parameter's specification as its value (see 
-      `examples <ParameterState_Specification_Examples>` below). Parameters for a component's :keyword:`function` 
-      must be specified in an entry with the key FUNCTION_PARAMS, the value of which is a parameter dictionary 
-      containing an entry for each of the function's parameters to be specified.  When a value is assigned to a 
-      parameter in a parameter dictionary, it overrides any value assigned to the argument for the parameter in the 
-      component's constructor.
+      `examples <ParameterState_Specification_Examples>` below). Parameters for a Component's
+      `function <Component.function>` can be specified in an entry with the key *FUNCTION_PARAMS*,
+      the value of which is itself a parameter specification dictionary containing an entry for each of the
+      function's parameters to be specified.  When a value is assigned to a parameter in a specification dictionary,
+      it overrides any value assigned to the argument for the parameter in the Component's constructor.
     ..
-    * By direct assignment to the corresponding attribute of the component to which the parameter belongs.  The
-      attribute always has the same name as the parameter and can be referenced using standard python attribute
-      notation (e.g., myComponent.parameter_name).
+    * By direct assignment to the Component's attribute for the parameter (see below).
     ..
-    * In the `assign_params` method for the component.
+    * In the `assign_params` method for the Component.
     ..
-    * When the component is executed, in the **runtime_params** argument of a call to component's
-      `execute <Mechanism.Mechanism_Base.execute>`
-      COMMENT:
-          or `run <Mechanism.Mechanism_Base.run>` methods
-      COMMENT
-      method (only for a mechanism), or in a tuple with the mechanism where it is specified as part of the
-      `pathway` for a process (see :ref:`Runtime Specification <ParameterState_Runtime_Parameters>` below).
+    * When the Component is executed, in the **runtime_params** argument of a call to component's
+      `execute <Mechanism.Mechanism_Base.execute>` method.
 
 The value specified for a parameter (either explicitly or by default) is assigned to the attribute of
 the ParameterState's owner that has that name (for example, the value of a parameter named *param* is assigned to an
@@ -80,11 +73,17 @@ of the ParameterState as the value of the corresponding parameter of its own :ke
    of the parameter used by the latter (see `figure <ModulatorySignals_Figure>`, and `ParameterState_Execution` for
    additional details).
 
+# The value specified for a parameter (either explicitly or by default) is assigned as the value of an attribute of
+# the Component or its `function <Mechanism.function>` to which the parameter belongs.  The attribute has the same
+# name as the parameter, and can be referenced using standard python attribute ("dot") notation;  for example,
+# the value of a parameter named *param* is assigned to an attribute named ``param`` that can be referenced as
+# ``my_component.param``).
+
 The specification of a parameter can take any of the following forms:
 
-    * A **value**.  This must be a valid value for the parameter.  it creates a default parameterState,
-      assigns the parameter's default value as the parameterState's `base_value <ParameterState.base_value>`,
-      and assigns the parameter's name as the name of the parameterState.
+    * A **value**.  This must be a valid value for the parameter.  it creates a default ParameterState,
+      assigns the parameter's default value as the ParameterState's `value <ParameterState.value>`,
+      and assigns the parameter's name as the name of the ParameterState.
     ..
     * A reference to an existing **ParameterState** object.  It's name must be the name of a parameter of the
       owner or its :keyword:`function`, and its value must be a valid one for the parameter.
@@ -139,6 +138,8 @@ COMMENT:
         note: although it may receive multiple projections, the output of each must conform to self.variable,
               as they will be combined to produce a single value that must be compatible with self.variable
 COMMENT
+
+XXXX FIX:: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 .. _ParameterState_Specification_Examples:
