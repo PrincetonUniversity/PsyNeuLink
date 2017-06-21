@@ -14,9 +14,8 @@
 Overview
 --------
 
-A GatingProjection is a subclass of `Projection` that modulates the function of the `inputState 
-<InputState>` or `outputState <OutputState>` of a `ProcessingMechanism`. It takes the value of an 
-`outputState <OutputState> of another mechanism (e.g., usually a `GatingMechanism <GatingMechanism>`), and uses it 
+A GatingProjection is a subclass of `ModulatoryProjection` that modulates the function of the `InputState` or
+`OutputState` of a `ProcessingMechanism`. It takes the value of a `GatingSignal` of a `GatingMechanism`, and uses it
 to modulate the value of the state to which it projects.
 
 .. _GatingProjection_Creation:
@@ -24,40 +23,42 @@ to modulate the value of the state to which it projects.
 Creating a GatingProjection
 ----------------------------
 
-A GatingProjection can be created using any of the standard ways to `create a projection <Projection_Creation>`,
-or by including it in the specification of an inputState or outputState .  If a GatingProjection is created using its
-constructor on its own, the `receiver <GatingProjection.receiver>` argument must be specified.  It can be specified
-as a particular inputState or outputState of a mechanism, or simply as a mechanism.  In the latter case, 
-the mechanism's `primary inputState <Mechanism_InputStates>` will be used. If the GatingProjection is included in an
-inputState or outputState specification, that state will be assigned as the GatingProjection's 
-`receiver <GatingProjection.receiver>`.  If GatingProjection's `sender <GatingProjection.sender>` is not
-specified, the `sender <GatingProjection.sender>` is assigned to the outputState of a `DefaultGatingMechanism`.
+A GatingProjection can be created using any of the standard ways to `create a projection <Projection_Creation>`, or
+by including it in the specification of an `InputState` or `OutputState` .  If a GatingProjection is created using its
+constructor on its own, the **receiver** argument must be specified.  It can be specified as a particular InputState
+or OutputState of a Mechanism, or simply as a `Mechanism`.  In the latter case, the Mechanism's
+`primary InputState <Mechanism_InputStates>` will be used. If the GatingProjection is included in an InputState or
+OutputState specification, that state will be assigned as the GatingProjection's `receiver <GatingProjection.receiver>`.
+If a GatingProjection's `sender <GatingProjection.sender>` is not specified, the `sender <GatingProjection.sender>`
+is assigned to the OutputState of a `DefaultGatingMechanism`.
 
 .. _GatingProjection_Structure:
 
 Structure
 ---------
 
-A GatingProjection has the same structure as a `Projection`.  Its `sender <GatingProjection.sender>`
-can be the outputState of any mechanism, but is generally a `GatingMechanism <GatingMechanism>`.  Its 
-`receiver <GatingProjection.receiver>` is the `inputState <InputState>` or `outputState <OutputState>`  
-of a `ProcessingMechanism`.  The `function <GatingProjection.function>` of a
-GatingProjection is, by default, the identity function;  that is, it uses the :keyword:`value` of its `sender
-<GatingProjection.sender>` to modulate the value of the state to which it projects.
+The `sender <GatingProjection.sender>` of a GatingProjection is a `GatingSignal` of a
+`GatingMechanism <GatingMechanism>`.  Its `receiver <GatingProjection.receiver>` is the `InputState` or `OutputState`
+of a `ProcessingMechanism`.  The `function <GatingProjection.function>` of a GatingProjection is, by default, the
+identity function;  that is, it conveys the `value <GatingSignal.value>` of its `sender <GatingProjection.sender>` to
+its `receiver <GatingProjection.receiver>`, for use in modifying the value of the State that it gates.
 
 .. _GatingProjection_Execution:
 
 Execution
 ---------
 
-A GatingProjection uses its `function <GatingProjection.function>` to assign its `value <GatingProjection.value>`
-from the one received from its `sender <GatingProjection.sender>`.  This is used by the inputState or outputState to 
-which the GatingProjection projects to modulate its own value.
+A GatingProjection cannot be executed directly.  It is executed when the `InputState` or `OutputState` to which it
+projects is updated.  Note that this only occurs when the ProcessingMechanism to which the State belongs (see
+:ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+When a GatingProjection is executed, its `function <GatingProjection.function>` assigns the value of the `GatingSignal`
+from which it projects as its own `value <GatingProjection.value>`. This is used by the InputState or OutputState
+to which the GatingProjection projects to modulate its own `value <State.value>`.
 
 .. note::
-   The changes in an inputState or outputState's value in response to the execution of a GatingProjection are not 
-   applied until the mechanism to which the state belongs is next executed; see :ref:`Lazy Evaluation` for an 
-   explanation of "lazy" updating).
+   The changes in an InputState or OutputState's `value <State.value >`in response to the execution of a
+   GatingProjection are not applied until the Mechanism to which the State belongs is next executed;
+   see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
 
 .. _GatingProjection_Class_Reference:
 

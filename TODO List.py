@@ -387,6 +387,8 @@
 # DOCUMENTATION: can instantiate LearningSignal w/o LearningProjections:
 #                    creates a default LearningSignal, along with ERROR output_state
 
+# IMPLEMENT: control_signal property for ControlProjection (assign to self.variable, as for LearningProjection)
+#            gating_signal property for GatingProjection (assign to self.variable, as for LearningProjection)
 # IMPLEMENT / FIX:  CHANGE LearningProjection BACK TO TRANSMISSIVE PROJECTION (OR A NEW CATEGORY?)
 #                   - Reassign class specification
 #                   - Check for anyplace it is assigned to mod_afferents and move to trans_afferents 
