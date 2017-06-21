@@ -92,8 +92,14 @@ class Graph(object):
     def get_child_vertices_from_component(self, component):
         return [edge.receiver for edge in self.comp_to_vertex[component].outgoing]
 
+    def get_child_components_from_component(self, component):
+        return [edge.receiver.component for edge in self.comp_to_vertex[component].outgoing]
+
     def get_parent_vertices_from_component(self, component):
         return [edge.sender for edge in self.comp_to_vertex[component].incoming]
+
+    def get_parent_components_from_component(self, component):
+        return [edge.sender.component for edge in self.comp_to_vertex[component].incoming]
 
 
 class Composition(object):

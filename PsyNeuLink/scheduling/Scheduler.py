@@ -184,7 +184,7 @@ class Scheduler(object):
         self.termination_conds = None
 
         if composition is not None:
-            self.nodes = [vert.mechanism for vert in composition.graph.vertices]
+            self.nodes = [vert.component for vert in composition.graph.vertices]
             self._init_consideration_queue_from_composition(composition)
         elif nodes is not None:
             self.nodes = nodes
@@ -201,9 +201,9 @@ class Scheduler(object):
     def _init_consideration_queue_from_composition(self, composition):
         dependencies = {}
         for vert in composition.graph.vertices:
-            dependencies[vert.mechanism] = set()
-            for parent in composition.graph.get_parents(vert.mechanism):
-                dependencies[vert.mechanism].add(parent)
+            dependencies[vert.component] = set()
+            for parent in composition.graph.get_parent_components_from_component(vert.component):
+                dependencies[vert.component].add(parent)
 
         self.consideration_queue = list(toposort(dependencies))
         logger.debug('Consideration queue: {0}'.format(self.consideration_queue))
