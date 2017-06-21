@@ -6,10 +6,10 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# ******************************************  TransmissiveProjection *****************************************************
+# ******************************************  PathwayProjection *****************************************************
 
 """
-.. _TransmissiveProjection_Overview:
+.. _PathwayProjection_Overview:
 
 Overview
 --------
@@ -26,33 +26,33 @@ needed to transmit that information to the `inputState <InputState>` of another 
 
 .. _Projection_Creation:
 
-Creating a TransmissiveProjection
+Creating a PathwayProjection
 ---------------------------------
 
-A TransmissiveProjection can be created on its own, by calling the constructor for the desired type of projection.  More
+A PathwayProjection can be created on its own, by calling the constructor for the desired type of projection.  More
 commonly, however, projections are either specified `in context <Projection_In_Context_Specification>`, or
 are `created automatically <Projection_Automatic_Creation>`, as described below.
 
 
 
-.. _TransmissiveProjection_Structure:
+.. _PathwayProjection_Structure:
 
 Structure
 ---------
 
-.. _TransmissiveProjection_Execution:
+.. _PathwayProjection_Execution:
 
 Execution
 ---------
 
-.. _TransmissiveProjection_Class_Reference:
+.. _PathwayProjection_Class_Reference:
 
 """
 
 from PsyNeuLink.Components.Projections.Projection import Projection_Base
 from PsyNeuLink.Globals.Keywords import TRANSMISSIVE_PROJECTION
 
-class TransmissiveProjection_Base(Projection_Base):
+class PathwayProjection_Base(Projection_Base):
 
     componentCategory = TRANSMISSIVE_PROJECTION
 

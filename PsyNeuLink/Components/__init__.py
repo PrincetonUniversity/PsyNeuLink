@@ -129,7 +129,7 @@ from PsyNeuLink.Components.Projections.Projection import Projection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
 
 # MappingProjection
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 register_category(entry=MappingProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,

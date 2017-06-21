@@ -212,6 +212,8 @@ def is_function_type(x):
 
 ADDITIVE_PARAM = 'additive_param'
 MULTIPLICATIVE_PARAM = 'multiplicative_param'
+OVERRIDE = 'OVERRIDE'
+DISABLE = 'DISABLE'
 
 
 class AdditiveParam():
@@ -231,6 +233,8 @@ class MultiplicativeParam():
 class ModulationParam():
     ADDITIVE = AdditiveParam
     MULTIPLICATIVE = MultiplicativeParam
+    OVERRIDE = OVERRIDE
+    DISABLE = DISABLE
 
 
 def _is_modulation_param(val):
@@ -254,7 +258,6 @@ def _get_modulated_param(owner, mod_proj:ModulatoryProjection_Base):
     function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
 
     # Get the function parameter's value
-    # function_param_value = owner.function_object.params[function_param_name]
     function_param_value = owner.function_object.params[function_param_name]
     # MODIFIED 6/9/17 OLD:
     # if function_param_value is None:
@@ -2825,7 +2828,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def keyword(self, keyword):
 
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
         rows = None
         cols = None
         if isinstance(self, MappingProjection):
@@ -5865,7 +5868,7 @@ class Stability(ObjectiveFunction):
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
      """
 
-    from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+    from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
     from PsyNeuLink.Components.States.ParameterState import ParameterState
 
     componentName = STABILITY_FUNCTION
@@ -5919,7 +5922,7 @@ class Stability(ObjectiveFunction):
         # Validate error_matrix specification
         if MATRIX in target_set:
 
-            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
             from PsyNeuLink.Components.States.ParameterState import ParameterState
 
             matrix = target_set[MATRIX]
@@ -5977,7 +5980,7 @@ class Stability(ObjectiveFunction):
 
         size = len(np.squeeze(self.variable))
 
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         if isinstance(self.matrix,MappingProjection):
             self._matrix = self.matrix._parameter_states[MATRIX]
@@ -6206,6 +6209,7 @@ class Distance(ObjectiveFunction):
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************
 
+ReturnVal = namedtuple('ReturnVal', 'learning_signal, error_signal')
 
 class LearningFunction(Function_Base):
     """Abstract class of `Function` used for learning.
@@ -6226,13 +6230,20 @@ class LearningFunction(Function_Base):
 
     componentType = LEARNING_FUNCTION_TYPE
 
+    # def __init__(self, variable_default, params, owner, prefs, context):
+    #     super().__init__(variable_default=variable_default,
+    #                      params=params,
+    #                      owner=owner,
+    #                      prefs=prefs,
+    #                      context=context)
+    #     self.return_val = return_val(None, None)
+
 
 LEARNING_ACTIVATION_FUNCTION = 'activation_function'
 LEARNING_ACTIVATION_INPUT = 0  # a(j)
 # MATRIX = 1             # w
 LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
 LEARNING_ERROR_OUTPUT = 2
-
 
 class Reinforcement(
     LearningFunction):  # -------------------------------------------------------------------------------
@@ -6370,6 +6381,8 @@ class Reinforcement(
                                                   learning_rate=learning_rate,
                                                   params=params)
 
+        # self.return_val = ReturnVal(None, None)
+
         super().__init__(variable_default=variable_default,
                          params=params,
                          owner=owner,
@@ -6440,13 +6453,12 @@ class Reinforcement(
 
         Returns
         -------
+        error signal : 1d np.array
+            same as value received in `error_signal <Reinforcement.error_signal>` argument.
 
         diagonal weight change matrix : 2d np.array
             has a single non-zero entry in the same row and column as the one in
             `activation_output <Reinforcement.activation_output>` and `error_signal <Reinforcement.error_signal>`.
-
-        error signal : 1d np.array
-            same as value received in `error_signal <Reinforcement.error_signal>` argument.
         """
 
         self._check_args(variable=variable, params=params, context=context)
@@ -6474,8 +6486,12 @@ class Reinforcement(
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        # return:
-        # - weight_change_matrix and error_array
+        # self.return_val.error_signal = error_array
+        # self.return_val.learning_signal = weight_change_matrix
+        #
+        # # return:
+        # # - weight_change_matrix and error_array
+        # return list(self.return_val)
         return [weight_change_matrix, error_array]
 
 
@@ -6630,6 +6646,8 @@ class BackPropagation(LearningFunction):
                                                   learning_rate=learning_rate,
                                                   params=params)
 
+        # self.return_val = ReturnVal(None, None)
+
         super().__init__(variable_default=variable_default,
                          params=params,
                          owner=owner,
@@ -6685,7 +6703,7 @@ class BackPropagation(LearningFunction):
             error_matrix = target_set[ERROR_MATRIX]
 
             from PsyNeuLink.Components.States.ParameterState import ParameterState
-            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
             if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
                 raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
                                     "MappingProjection".format(ERROR_MATRIX, self.name))
@@ -6729,7 +6747,7 @@ class BackPropagation(LearningFunction):
             if cols != error_signal_len:
                 raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
                                     "must match the length of the error signal ({}) it receives".
-                                    format(cols, MATRIX, error_matrix.shape, self.name, cols))
+                                    format(cols, MATRIX, error_matrix.shape, self.name, error_signal_len))
 
             # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
             if rows != activity_output_len:
@@ -6764,14 +6782,13 @@ class BackPropagation(LearningFunction):
         Returns
         -------
 
-        weight change matrix : 2d np.array
-            the modifications to make to the matrix.
-
         weighted error signal : 1d np.array
             `error_signal <BackPropagation.error_signal>`, weighted by the contribution made by each element of
             `activation_output <BackPropagation.activation_output>` as a function of
             `error_matrix <BackPropagation.error_matrix>`.
 
+        weight change matrix : 2d np.array
+            the modifications to make to the matrix.
         """
 
         self._check_args(variable=variable, params=params, context=context)
@@ -6816,6 +6833,11 @@ class BackPropagation(LearningFunction):
         #           "-derivative (dA_dW): {}\n    "
         #           "-error_derivative (dE_dW): {}\n".
         #           format(self.owner.name, self.activation_input, dE_dA, dA_dW ,dE_dW))
+
+        # self.return_val.error_signal = dE_dW
+        # self.return_val.learning_signal = weight_change_matrix
+        #
+        # return list(self.return_val)
 
         return [weight_change_matrix, dE_dW]
 

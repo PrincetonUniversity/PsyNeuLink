@@ -1369,6 +1369,7 @@ class Mechanism_Base(Mechanism):
                 runtime_params=None,
                 clock=CentralClock,
                 time_scale=TimeScale.TRIAL,
+                ignore_execution_id = False,
                 context=None):
         """Carry out a single execution of the mechanism.
 
@@ -1378,11 +1379,11 @@ class Mechanism_Base(Mechanism):
 
             Execution sequence:
             - Call self.input_state.execute() for each entry in self.input_states:
-                + execute every self.input_state.afferents.[<Projection>.execute()...]
+                + execute every self.input_state.path_afferents.[<Projection>.execute()...]
                 + aggregate results using self.input_state.params[FUNCTION]()
                 + store the result in self.input_state.value
             - Call every self.params[<ParameterState>].execute(); for each:
-                + execute self.params[<ParameterState>].afferents.[<Projection>.execute()...]
+                + execute self.params[<ParameterState>].path_afferents.[<Projection>.execute()...]
                     (usually this is just a single ControlProjection)
                 + aggregate results (if > one) using self.params[<ParameterState>].params[FUNCTION]()
                 + apply the result to self.params[<ParameterState>].value
@@ -1428,7 +1429,7 @@ class Mechanism_Base(Mechanism):
             either one time_step or a trial.
 
         """
-
+        self.ignore_execution_id = ignore_execution_id
         context = context or NO_CONTEXT
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
@@ -1695,11 +1696,12 @@ class Mechanism_Base(Mechanism):
                                             len(input_state.variable),
                                             input_state.name,
                                             append_type_to_name(self)))
+        self.variable = np.array(self.input_values)
 
     def _update_input_states(self, runtime_params=None, time_scale=None, context=None):
         """ Update value for each inputState in self.input_states:
 
-        Call execute method for all (MappingProjection) projections in inputState.afferents
+        Call execute method for all (MappingProjection) projections in inputState.path_afferents
         Aggregate results (using inputState execute method)
         Update inputState.value
         """
