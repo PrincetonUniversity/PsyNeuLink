@@ -60,33 +60,31 @@ Parameters can be specified in one of several places:
     * When the Component is executed, in the **runtime_params** argument of a call to component's
       `execute <Mechanism.Mechanism_Base.execute>` method.
 
-The value specified for a parameter (either explicitly or by default) is assigned to the attribute of
-the ParameterState's owner that has that name (for example, the value of a parameter named *param* is assigned to an
-attribute named my_component.param). When the ParameterState's owner is executed, the
-ParameterState's `function <ParameterState.function>` is called with the attribute's value, and the result is
-assigned as the ParameterState's `value <ParameterState.value>`.  The latter is then used by the owner
-of the ParameterState as the value of the corresponding parameter of its own :keyword:`function`.
+The value specified for a parameter (either explicitly or by default) is assigned to an attribute of the
+Component or its `function <Mechanism.function>` to which the parameter belongs.  The attribute has the same
+name as the parameter, and can be referenced using standard python attribute ("dot") notation;  for example,
+the value of a parameter named *param* is assigned to an attribute named ``param`` that can be referenced as
+``my_component.param``).
+
+When the Component is executed, it updates the ParameterState by calling the ParameterState's
+`function <ParameterState.function>` with the attribute's value for the parameter.  The result is
+assigned as the ParameterState's `value <ParameterState.value>`, which is used by the owner
+of the ParameterState as the value of the correspondign parameter of its own `function <Component.function>`.
 
 .. note::
-   It is important to note the distinction between the :keyword:`function` of a ParameterState,
-   and the :keyword:`function` of its owner.**  The former is used to determine the actual value
-   of the parameter used by the latter (see `Figure <LINK>`) -- see `Figure <LINK>` and
-   see `ParameterState_Execution` for additional details).
+   It is important to recognize the distinction between the `function <ParameterState.function>` of a ParameterState,
+   and the `function <Component.function>` of its owner.  The former is used to determine the value of the parameter
+   used by the latter, and is what allows modification of that value by `ModulatorySignals` (see `Figure <LINK>`,
+   and `ParameterState_Exectution` for additional details)
 
-# The value specified for a parameter (either explicitly or by default) is assigned as the value of an attribute of
-# the Component or its `function <Mechanism.function>` to which the parameter belongs.  The attribute has the same
-# name as the parameter, and can be referenced using standard python attribute ("dot") notation;  for example,
-# the value of a parameter named *param* is assigned to an attribute named ``param`` that can be referenced as
-# ``my_component.param``).
-
-The specification of a parameter can take any of the following forms:
+The specification of the initial value of a parameter can take any of the following forms:
 
     * A **value**.  This must be a valid value for the parameter.  it creates a default ParameterState,
       assigns the parameter's default value as the ParameterState's `value <ParameterState.value>`,
       and assigns the parameter's name as the name of the ParameterState.
     ..
     * A reference to an existing **ParameterState** object.  It's name must be the name of a parameter of the
-      owner or its :keyword:`function`, and its value must be a valid one for the parameter.
+      owner or its `function <Component.function>`, and its value must be a valid one for the parameter.
 
       .. note::
           This capability is provided for generality and potential
@@ -110,36 +108,15 @@ The specification of a parameter can take any of the following forms:
       `ControlProjection` or `LearningProjection`, and its value must be a valid one for the parameter.
 
       .. note::
-          Currently, the :keyword:`function` of a component, although it can be specified a parameter value,
-          cannot be assigned
-          COMMENT:
-          a ControlProjection, LearningProjection, or a runtime specification.
-          COMMENT
-          a ControlProjection or a LearningProjection. This may change in the future.
+          Currently, the `function <Component.function>` of a Component, although it can be specified as a
+          parameter value, cannot be assigned a `ModulatorySignal` or modified in the **runtime_params** argument of
+          a call to a Mechanism's `execute <Mechanism.execute>` method. This may change in the future.
 
-The **default value** assigned to a parameterState is the default value of the argument for the parameter in the
-constructor for the parameter's owner.  If the value of a parameter is specified as `None`, `NotImplemented`,
-or any other non-numeric value that is not one of those listed above, then no parameter state is created and the
-parameter cannot be modified by a `ControlProjection`, 'LearningProjection', or 
-`runtime specification <ParameterState_Runtime_Parameters>`.
-
-COMMENT:
-    - No parameterState is created for parameters that are:
-       assigned a non-numeric value (including None, NotImplemented, False or True)
-          unless it is:
-              a tuple (could be one specifying ControlProjection, LearningProjection or Modulation)
-              a dict with an entry with the key FUNCTION_PARAMS and a value that is a dict (otherwise exclude)
-       a function
-           IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-           (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-           i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
-
-    - self.variable must be compatible with self.value (enforced in _validate_variable)
-        note: although it may receive multiple projections, the output of each must conform to self.variable,
-              as they will be combined to produce a single value that must be compatible with self.variable
-COMMENT
-
-XXXX FIX:: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The **default value** assigned to a ParameterState is the default value of the argument for the corresponding parameter
+in the constructor for the parameter's owner.  If the value of a parameter is specified as `None`, `NotImplemented`,
+or any other non-numeric value that is not one of those listed above, then no ParameterState is created and the
+parameter cannot be modified by a `ModulatorySignal` or in the **runtime_params** argument of a call to a
+Mechanism's `execute <Mechanism.execute>` method.
 
 
 .. _ParameterState_Specification_Examples:
