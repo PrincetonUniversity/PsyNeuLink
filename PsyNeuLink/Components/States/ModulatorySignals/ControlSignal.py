@@ -137,7 +137,7 @@ primary attributes:
 Execution
 ---------
 
-XXX NEED EXPLANATOIN HERE (OR IN PARAMETER STATE) FOR HOW PARAMETER VALUES ARE MODULATED AND ASSIGNED
+XXX NEED EXPLANATION HERE (OR IN PARAMETER STATE) FOR HOW PARAMETER VALUES ARE MODULATED AND ASSIGNED
     REFERENCE DISCUSSION IN ParameterState
 
 A ControlSignal cannot be executed directly.  It is executed whenever the `ControlMechanism` to which it belongs is
