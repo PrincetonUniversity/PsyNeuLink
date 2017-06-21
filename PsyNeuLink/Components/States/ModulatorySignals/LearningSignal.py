@@ -70,10 +70,9 @@ the parameter(s) to be learned.  A LearningSignal has the following primary attr
 
 .. _LearningSignal_Modulation:
 
-* `modulation <LearningSignal.modulation>` : determines how the LearningSignal's `value <LearningSignal.value>` 
-  is used by the ParameterState(s) to which it projects to modify their value (see 
-  `Modulatory Projections <ModulatoryProjection.modulation>` for an 
-  explanation of how the modulation is specified and used to modulate the value of a parameter). The default value 
+* `modulation <LearningSignal.modulation>` : determines how the LearningSignal's `value <LearningSignal.value>` is
+  used by the ParameterState(s) to which it projects to modify their value (see `ModulatorySignal_Modulation` for an
+  explanation of how the modulation is specified and used to modulate the value of a parameter). The default value
   is set to the value of the `modulation <LearningMechanism.modulation>` attribute of the LearningMechanism to which 
   the LearningSignal belongs;  this the is same for all of the LearningSignals belonging to that LearningMechanism.  
   However, the `modulation <LearningSignal.modulation>` can be specified individually for a LearningSignal using a 

@@ -75,7 +75,7 @@ Modulation
 ~~~~~~~~~~
 
 Each GatingSignal has a `modulation <GatingSignal.modulation>` attribute that determines how the GatingProjection 
-is used by the state to which it projects to modify its value (see `modulation <ModulatoryProjection.modulation>` 
+is used by the state to which it projects to modify its value (see `ModulatorySignal_Modulation`
 for an explanation of how this attribute is specified and used to modulate the value of a state).  The default value 
 is set to the value of the `modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the 
 GatingSignal belongs;  this the is same for all of the GatingSignals belonging to that GatingMechanism.  However, the

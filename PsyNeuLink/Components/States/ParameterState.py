@@ -72,10 +72,10 @@ assigned as the ParameterState's `value <ParameterState.value>`, which is used b
 of the ParameterState as the value of the correspondign parameter of its own `function <Component.function>`.
 
 .. note::
-   It is important to recognize the distinction between the `function <ParameterState.function>` of a ParameterState,
-   and the `function <Component.function>` of its owner.  The former is used to determine the value of the parameter
-   used by the latter, and is what allows modification of that value by `ModulatorySignals` (see `Figure <LINK>`,
-   and `ParameterState_Exectution` for additional details)
+   It is important to note the distinction between the `function <ParameterState.function>` of a ParameterState,
+   and the `function <Component.function>` of its owner.**  The former is used to determine the actual value
+   of the parameter used by the latter (see `figure <ModulatorySignals_Figure>`, and `ParameterState_Execution` for
+   additional details).
 
 The specification of the initial value of a parameter can take any of the following forms:
 
