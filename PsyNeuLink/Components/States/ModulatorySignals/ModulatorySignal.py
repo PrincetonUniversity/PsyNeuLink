@@ -16,8 +16,10 @@ Overview
 --------
 A ModulatorySignal is a subclass of `OutputState` that belongs to an `AdaptiveMechanism`, and is used to
 `modulate <ModulatorySignal_Modulation>` the `value <State.value>` of one or more `States <State>` by of way one or
-more `ModulatoryProjections <ModulatoryProjection>`.  There are three types of ModulatySignals, each of which is
-associated with a particular type of `AdaptiveMechanism` and `ModulatoryProjection`, as described below:
+more `ModulatoryProjections <ModulatoryProjection>`.  ModulatorySignals modulate the value of a state by modifying a
+parameter of the State's `function <State.function>`.  There are three types of ModulatySignals, each of which is
+associated with a particular type of `AdaptiveMechanism` and `ModulatoryProjection`, and modifies the value of a
+diffent type of State, as described below (and shown in the `figure <ModulatorySignal_Figure>`):
 
 * `LearningSignal`
     This takes the `value <LearningSignal.value>` assigned to it by the `LearningMechanism` to which it belongs,
@@ -31,6 +33,16 @@ associated with a particular type of `AdaptiveMechanism` and `ModulatoryProjecti
 * `GatingSignal`
     This takes the `value <GatingSignal.value>` assigned to it by the `GatingMechanism` to which it belongs,
     and uses it to modulate the value of the `InputState` or `OutputState` of a `Mechanism`.
+
+
+.. _ModulatorySignal_Figure:
+
+**Modulatory Mechanisms, Signals, and Projections**
+
+.. figure:: _static/Modulation_fig.pdf
+   :alt: Modulation
+   :scale: 150 %
+
 
 .. _ModulatorySignal_Creation:
 
@@ -92,12 +104,20 @@ Execution
 ModulatorySignals cannot be executed.  They are updated when the `AdaptiveMechanism` to which they belong is executed.
 When a ModulatorySignal is updated, it calculates its value, which is then made available to the
 `ModulatoryProjections <ModulatoryProjection>` listed in its `efferents <ModulatorySignal.efferents>` attribute.
-When those projections execute, they convey the ModulatorySignal's value to the `ModulationParam` of the function
-of the `State` to which they project.  The modulation then takes effect when that State calls its
-`function <State.function>` to update itself.
+When those projections execute, they convey the ModulatorySignal's value to the function of the `State` to which they
+project.  The State's `function <State.function>` then uses that value for the parameter designated by the
+`modulation <ModulatorySignal.modulation>` attribute of the ModulatorySignal when the State is updated.  For example,
+consider a `ControlSignal` that modulates the `bias <Logistic.bias>` parameter of a `Logistic` Function used by a
+`TransferMechanism`; and assume that the `ParameterState` for the bias parameter (to which the ControlSignal projects)
+uses a `Linear` function to update its value (which is the default for a ParameterState).  If the
+`modulation  <ModulatorySignal.modulation>` attribute of the `ControlSignal` is `ModulationParam.MULTIPLICATIVE`,
+then it will be assigned to the `slope <Linear>` parameter of the ParameterState's `function <ParameterState.function>`.
+Accordingly, when the ParameterState is updated it will multiply the bias parameter's value by the value of the
+ControlSignal to determine the value of the bias parameter.  The result will used as the value of the bias for the
+Logistic Function when the TransferMechanism is executed.
 
 .. note::
-   The change in the value of a `State` in response to a ModulatorySignal is not applied until the mechanism(s) to
+   The change in the value of a `State` in response to a ModulatorySignal does not occur until the Mechanism to
    which the state belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 Class Reference

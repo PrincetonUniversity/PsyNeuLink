@@ -75,10 +75,10 @@ assigned as the ParameterState's `value <ParameterState.value>`.  The latter is 
 of the ParameterState as the value of the corresponding parameter of its own :keyword:`function`.
 
 .. note::
-   It is important to note the distinction between the :keyword:`function` of a ParameterState,
-   and the :keyword:`function` of its owner.**  The former is used to determine the actual value
-   of the parameter used by the latter (see `Figure <LINK>`) -- see `Figure <LINK>` and
-   see `ParameterState_Execution` for additional details).
+   It is important to note the distinction between the `function <ParameterState.function>` of a ParameterState,
+   and the `function <Component.function>` of its owner.**  The former is used to determine the actual value
+   of the parameter used by the latter (see `figure <ModulatorySignals_Figure>`, and `ParameterState_Execution` for
+   additional details).
 
 The specification of a parameter can take any of the following forms:
 
