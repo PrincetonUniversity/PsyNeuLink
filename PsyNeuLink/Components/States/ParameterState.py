@@ -65,7 +65,7 @@ the ParameterState's owner that has that name (for example, the value of a param
 attribute named my_component.param). When the ParameterState's owner is executed, the
 ParameterState's `function <ParameterState.function>` is called with the attribute's value, and the result is
 assigned as the ParameterState's `value <ParameterState.value>`.  The latter is then used by the owner
-of the ParameterState as the value of the corresponding parameter of its own :keyword:`function`.
+of the ParameterState as the value of the corresponding parameter of its own `function <Component.function>`.
 
 .. note::
    It is important to note the distinction between the `function <ParameterState.function>` of a ParameterState,

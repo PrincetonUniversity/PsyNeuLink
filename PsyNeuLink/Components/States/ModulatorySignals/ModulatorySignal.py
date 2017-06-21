@@ -34,16 +34,6 @@ diffent type of State, as described below (and shown in the `figure <ModulatoryS
     This takes the `value <GatingSignal.value>` assigned to it by the `GatingMechanism` to which it belongs,
     and uses it to modulate the value of the `InputState` or `OutputState` of a `Mechanism`.
 
-
-.. _ModulatorySignal_Figure:
-
-**Modulatory Mechanisms, Signals, and Projections**
-
-.. figure:: _static/Modulation_fig.pdf
-   :alt: Modulation
-   :scale: 150 %
-
-
 .. _ModulatorySignal_Creation:
 
 Creating a ModulatorySignal
@@ -96,6 +86,34 @@ create the ModulatorySignal. If the value of the `modulation <ModulatorySignal.m
 when a ModulatorySignal is created, it is assigned the value of the `modulation <AdaptiveMechanism.modulation>`
 attribute for the `AdaptiveMechanism` to which it belongs.
 
+.. note::
+   'OVERRIDE <ModulatorySignal_Modulation>' can be specified for **only one** ModulatoryProjection to a State;
+   specifying it for more than one causes an error.
+
+.. _ModulatorySignal_Figure:
+
+    **Modulatory Mechanisms, Signals, and Projections**
+
+    .. figure:: _static/Modulation_fig.pdf
+       :alt: Modulation
+       :scale: 150 %
+       ..
+
+       +------------------+--------------------------------------------------------------------------------------------+
+       |    Modulatory    | Default ModulationParam |                                   | Default Function (mod param) |
+       |    Component     |  for ModulatorySignal   |         Recipient State           |    for Recipient State       |
+       +==================+============================================================================================+
+       | Control (blue)   |      MULTIPLICATIVE     |     Mechanism ParameterState      |       Linear (slope)         |
+       +------------------+--------------------------------------------------------------------------------------------+
+       | Gating (brown)   |      MULTIPLICATIVE     |  Mechanism InputState/OutputState |       Linear (slope)         |
+       +------------------+--------------------------------------------------------------------------------------------+
+       | Learning (green) |          ADDITIVE       |  MappingProjection ParameterState |    Accumulator (increment)   |
+       +------------------+--------------------------------------------------------------------------------------------+
+
+       The figure above shows the three types of Modulatory Components and the States they modulate.
+       The table lists the default ModulatoryParam for each type of ModulatorySignal, and the default Function
+       and modulated parameter of its recipient State.
+
 .. _ModulatorySignal_Execution:
 
 Execution
@@ -114,15 +132,16 @@ uses a `Linear` function to update its value (which is the default for a Paramet
 then it will be assigned to the `slope <Linear>` parameter of the ParameterState's `function <ParameterState.function>`.
 Accordingly, when the ParameterState is updated it will multiply the bias parameter's value by the value of the
 ControlSignal to determine the value of the bias parameter.  The result will used as the value of the bias for the
-Logistic Function when the TransferMechanism is executed.
+Logistic Function when the TransferMechanism is executed (see `State_Execution` for additional details).
 
 .. note::
    The change in the value of a `State` in response to a ModulatorySignal does not occur until the Mechanism to
    which the state belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
+.. _ModulatorySignal_Class_Reference:
+
 Class Reference
 ---------------
-
 """
 
 from PsyNeuLink.Components.States.State import *
