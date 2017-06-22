@@ -54,11 +54,27 @@ class Graph(object):
         self.comp_to_vertex = OrderedDict()  # Translate from mechanisms to related vertex
         self.vertices = []  # List of vertices within graph
 
-    def add_vertex(self, component):
+    def copy(self):
+        g = Graph()
+
+        for vertex in self.vertices:
+            g.add_vertex(Vertex(vertex.component))
+
+        for i in range(len(self.vertices)):
+            g.vertices[i].parents = [g.comp_to_vertex[parent_vertex.component] for parent_vertex in self.vertices[i].parents]
+            g.vertices[i].children = [g.comp_to_vertex[parent_vertex.component] for parent_vertex in self.vertices[i].children]
+
+        return g
+
+    def add_component(self, component):
         if component not in [vertex.component for vertex in self.vertices]:
             vertex = Vertex(component)
             self.comp_to_vertex[component] = vertex
-            self.vertices.append(vertex)
+            self.add_vertex(vertex)
+
+    def add_vertex(self, vertex):
+        self.vertices.append(vertex)
+        self.comp_to_vertex[vertex.component] = vertex
 
     def connect_components(self, parent, child):
         self.connect_vertices(self.comp_to_vertex[parent], self.comp_to_vertex[child])
