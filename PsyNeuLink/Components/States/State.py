@@ -128,14 +128,14 @@ Modulation
 Every type of State has a `mod_afferents <State.mod_afferents>` attribute, that lists the
 `ModulatoryProjections <ModulatoryProjection>` it receives.  Each ModulatoryProjection comes from a `ModulatorySignal`
 that specifies how it should modulate the State's `value <State.value>` when the State is updated (see
-`ModulatorySignal_Modulation`).  In most cases, a ModulatorySignal uses the State's `function <State.function>` to
-modulate its `value <State.value>`.  The function of every State assigns one of its parameters as its
-*MULTIPLICATIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The `modulation <ModulatorySigal.modulation>`
-attribute of a ModulatorySignal determines which of these to modify when the State uses it `function <State.function>`
-to calculate its `value  <State.value>`.  However, the ModulatorySignal can also be configured to override the
-State's `value <State.value>` (i.e., assign it directly), or to disable modulation, using one of the values of
-'ModulationParm` for its `modulation <ModulatorySignal.modulation>` attribute (see `ModulatorySignal_Modulation` for
-a more detailed discussion).
+`ModulatorySignal_Modulation` and `ModulatorySignal_Anatomy_Figure).  In most cases, a ModulatorySignal uses the
+State's `function <State.function>` to modulate its `value <State.value>`.  The function of every State assigns one
+of its parameters as its *MULTIPLICATIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The
+`modulation <ModulatorySigal.modulation>` attribute of a ModulatorySignal determines which of these to modify when
+the State uses it `function <State.function>` to calculate its `value  <State.value>`.  However, the ModulatorySignal
+can also be configured to override the State's `value <State.value>` (i.e., assign it directly), or to disable
+modulation, using one of the values of 'ModulationParm` for its `modulation <ModulatorySignal.modulation>` attribute
+(see `ModulatorySignal_Modulation` for a more detailed discussion).
 
 .. _State_Execution:
 

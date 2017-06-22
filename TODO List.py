@@ -229,6 +229,7 @@
 #                 # @property
 #                 # def base_value(self):
 
+# IMPLEMENT:  ASSIGN ParameterState.variable TO BACKING FIELD OF PARAMETER (ParameterState.owner._<param_name>)
 # IMPLEMENT:  FUNCTION ENTRIES OF STATE SPECIFICATION DICTIONARY - SHOULD NOW BE FUNCTIONAL (6/13/17)
 #             TEST BY ASSIGNING INTEGRATION FUNCTION TO InputState and/or OutputState
 # IMPLEMENT:  USE STATE_SPECIFICATION_DICT TO OVERRIDE MODULATION META PARAMS (BY REASSIGNING THEM TO OTHER FCT PARAMS)
@@ -1622,12 +1623,13 @@
 #                    - this is so Mechanism base class can do housekeeping before and after subclass._execute)
 #                    - if a subclass does not implement _execute, calling it will call .function directly
 #                    -  if INITIALIZING is in context for call to execute, initMethod is checked to determine whether:
-#                        only subclass._execute is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
-#                        only subclass.function is run (initMethod = INIT_FUNCTION_METHOD_ONLY)
+#                        subclass._execute (but NOT Mechanism.execute) is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
+#                        ONLY subclass.function is run (initMethod = INIT_FUNCTION_METHOD_ONLY)
+#                              (EXAMPLE: EVCMechanism -- don't want to run full simulation during init)
 #                        full subclass._execute and Mechanism.execute method are run
 #                States use .execute only to call .function (during init);  they are updated using <state>.update()
 #            .function is the "business end" of the object:
-#                - generally it is a Function Function
+#                - generally it is a Function object
 #                - but can be anything that adheres to the Function API
 
 # DOCUMENT: Construction/Initialization Implementation:
