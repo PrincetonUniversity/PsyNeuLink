@@ -140,7 +140,7 @@ it adds the `value <GatingSignal.value>` of the `GatingSignal` to the `value <In
                                           modulation=ModulationParam.ADDITIVE)
 
 Note that, again, the gating_signals are listed as mechanisms, since their primary InputStates are to be gated.
-Since they are all listed in a single entry of a `state specification dictionary`, they will all be gated by a
+Since they are all listed in a single entry of a `state specification dictionary <LINK>`, they will all be gated by a
 single GatingSignal named *GATE_ALL*, that will send a `GatingProjections <GatingProjection>` to the InputState of
 each of the Mechanisms listed (the next example below shows how InputStates can be differentially gated by a
 `GatingMechanism`). Finally, note that the `ModulationParam` specified for the `GatingMechanism` (and therefore the
