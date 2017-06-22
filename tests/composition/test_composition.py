@@ -1,8 +1,10 @@
 import logging
+
 from timeit import timeit
 
 import pytest
 
+from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
@@ -69,8 +71,8 @@ class TestAddMechanism:
         t = timeit(
             'comp.add_mechanism(mechanism())',
             setup='''
-from PsyNeuLink.composition import Composition
 from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
+from PsyNeuLink.composition import Composition
 comp = Composition()
 ''',
             number=count
@@ -118,9 +120,9 @@ class TestAddProjection:
     def test_timing_stress(self, count):
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
                    setup='''
-from PsyNeuLink.composition import Composition
 from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.composition import Composition
 comp = Composition()
 A = mechanism()
 B = mechanism()
@@ -476,3 +478,46 @@ class TestGetMechanismsByRole:
 
         with pytest.raises(CompositionError):
             comp.get_mechanisms_by_role(None)
+
+
+class TestGraph:
+
+    class TestProcessingGraph:
+
+        def test_all_mechanisms(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+            mechs = [A, B, C]
+            for m in mechs:
+                comp.add_mechanism(m)
+
+            assert len(comp.graph_processing.vertices) == 3
+            assert len(comp.graph_processing.comp_to_vertex) == 3
+            for m in mechs:
+                assert m in comp.graph_processing.comp_to_vertex
+
+            assert comp.graph.get_parents_from_component(A) == []
+            assert comp.graph.get_parents_from_component(B) == []
+            assert comp.graph.get_parents_from_component(C) == []
+
+        def test_triangle(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+            mechs = [A, B, C]
+            for m in mechs:
+                comp.add_mechanism(m)
+            comp.add_projection(A, MappingProjection(), B)
+            comp.add_projection(B, MappingProjection(), C)
+
+            assert len(comp.graph_processing.vertices) == 3
+            assert len(comp.graph_processing.comp_to_vertex) == 3
+            for m in mechs:
+                assert m in comp.graph_processing.comp_to_vertex
+
+            assert comp.graph.get_parents_from_component(A) == []
+            assert comp.graph.get_parents_from_component(B) == [A]
+            assert comp.graph.get_parents_from_component(C) == [B]

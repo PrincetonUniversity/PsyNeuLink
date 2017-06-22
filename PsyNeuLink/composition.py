@@ -1,7 +1,11 @@
+import logging
+
 from collections import Iterable, OrderedDict
 from enum import Enum
 
 from PsyNeuLink.scheduling.Scheduler import Scheduler
+
+logger = logging.getLogger(__name__)
 
 
 class MechanismRole(Enum):
@@ -42,6 +46,9 @@ class Vertex(object):
         else:
             self.children = []
 
+    def __repr__(self):
+        return '(Vertex {0} {1})'.format(id(self), self.component)
+
 
 class Graph(object):
     ########
@@ -67,14 +74,34 @@ class Graph(object):
         return g
 
     def add_component(self, component):
-        if component not in [vertex.component for vertex in self.vertices]:
+        if component in [vertex.component for vertex in self.vertices]:
+            logger.info('Component {1} is already in graph {0}'.format(component, self))
+        else:
             vertex = Vertex(component)
             self.comp_to_vertex[component] = vertex
             self.add_vertex(vertex)
 
     def add_vertex(self, vertex):
-        self.vertices.append(vertex)
-        self.comp_to_vertex[vertex.component] = vertex
+        if vertex in self.vertices:
+            logger.info('Vertex {1} is already in graph {0}'.format(vertex, self))
+        else:
+            self.vertices.append(vertex)
+            self.comp_to_vertex[vertex.component] = vertex
+
+    def remove_component(self, component):
+        try:
+            self.remove_vertex(self.comp_to_vertex(component))
+        except KeyError as e:
+            raise CompositionError('Component {1} not found in graph {2}: {0}'.format(e, component, self))
+
+    def remove_vertex(self, vertex):
+        try:
+            self.vertices.remove(vertex)
+
+            # TODO:
+            #   check if this removal puts the graph in an inconsistent state
+        except ValueError as e:
+            raise CompositionError('Vertex {1} not found in graph {2}: {0}'.format(e, vertex, self))
 
     def connect_components(self, parent, child):
         self.connect_vertices(self.comp_to_vertex[parent], self.comp_to_vertex[child])
@@ -112,11 +139,14 @@ class Composition(object):
 
         # core attributes
         self.graph = Graph()  # Graph of the Composition
+        self._graph_processing = None
         self.mechanisms = []
 
         # status attributes
         # Needs to be created still| self.scheduler = Scheduler()
-        self.graph_analyzed = False  # Tracks if the Composition is ready to run
+        self.needs_update_graph = True   # Tracks if the Composition graph has been analyzed to assign roles to components
+        self.needs_update_graph_processing = True   # Tracks if the processing graph is current with the full graph
+        self.graph_consistent = True  # Tracks if the Composition is in a state that can be run (i.e. no dangling projections, (what else?))
 
         # helper attributes
         self.mechanisms_to_roles = OrderedDict()
@@ -137,16 +167,25 @@ class Composition(object):
         self.target_mechanisms = []  # Do not need to track explicit as they mush be explicit
         self.sched = Scheduler(self)
 
+    @property
+    def graph_processing(self):
+        if self.needs_update_graph_processing or self._graph_processing is None:
+            self._update_processing_graph()
+
+        return self._graph_processing
+
     def add_mechanism(self, mech):
         ########
         # Adds a new Mechanism to the Composition.
         # If the mechanism has already been added, passes.
         ########
         if mech not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
-            self.graph.add_vertex(mech)  # Set incoming edge list of mech to empty
-            self.graph_analyzed = False  # Added mech so must re-analyze graph
-            self.mechanisms.append(mech)
             mech.is_processing = True
+            self.graph.add_component(mech)  # Set incoming edge list of mech to empty
+            self.mechanisms.append(mech)
+
+            self.needs_update_graph = True
+            self.needs_update_graph_processing = True
 
     def add_projection(self, sender, projection, receiver):
         ########
@@ -154,12 +193,14 @@ class Composition(object):
         # If the projection has already been added, passes.
         ########
         if projection not in [vertex.component for vertex in self.graph.vertices]:
-            self.graph.add_vertex(projection)
+            projection.is_processing = False
+            self.graph.add_component(projection)
 
             # Add connections between mechanisms and the projection
             self.graph.connect_components(sender, projection)
             self.graph.connect_components(projection, receiver)
-            self.graph_analyzed = False  # Added projection so must re-analyze graph
+            self.needs_update_graph = True
+            self.needs_update_graph_processing = True
 
     def analyze_graph(self):
         ########
@@ -241,34 +282,40 @@ class Composition(object):
                                 self.set_cycle(child)
                         elif child not in visited:
                             next_visit_stack.append(child)
-        return
 
-    def update_processing_graph(self):
-        # need to create a copy of self.graph here instead of below
-        # copy should duplicate graph's vertices, which should point to the same component objects as the originals
-        # self.graph_processing = copy.copy(self.graph) or deepcopy
+        self.needs_update_graph = False
+
+    def _update_processing_graph(self):
+        logger.debug('Updating processing graph')
+        self._graph_processing = self.graph.copy()
         visited_vertices = set()
         next_vertices = []  # a queue
 
-        while len(self.vertices) < len(visited_vertices):
-            for vertex in self.vertices:
+        while len(self.graph.vertices) > len(visited_vertices):
+            for vertex in self.graph.vertices:
                 if vertex not in visited_vertices:
                     next_vertices.append(vertex)
                     break
 
             while len(next_vertices) > 0:
                 cur_vertex = next_vertices.pop(0)
+                logger.debug('Examining vertex {0}'.format(cur_vertex))
 
-                if not cur_vertex.is_processing:
+                if not cur_vertex.component.is_processing:
                     for parent in cur_vertex.parents:
+                        parent.children.remove(cur_vertex)
                         for child in cur_vertex.children:
-                            self.graph_processing.connect_vertices(parent, child)
-                    # need to remove cur_vertex from self.graph_processing here
-                    # should it be done with a remove_vertex method? if so should that auto connect parents and children?
+                            child.parents.remove(cur_vertex)
+                            self._graph_processing.connect_vertices(parent, child)
+
+                    logger.debug('Removing vertex {0}'.format(cur_vertex))
+                    self._graph_processing.remove_vertex(cur_vertex)
 
                 visited_vertices.add(cur_vertex)
                 # add to frontier any parents and children of cur_vertex that have not been visited yet
                 next_vertices.extend([vertex for vertex in cur_vertex.parents + cur_vertex.children if vertex not in visited_vertices])
+
+        self.needs_update_graph_processing = False
 
     def get_mechanisms_by_role(self, role):
         if role not in MechanismRole:
