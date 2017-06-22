@@ -2415,7 +2415,10 @@ def make_property(name, default_value):
 
         # MODIFIED 6/8/17 OLD:
         if isinstance(self, Function_Base) and self.owner:
+            param_state_owner = self.owner
             self.owner.function_params.__additem__(name, val)
+        else:
+            param_state_owner = self
 
         # # MODIFIED 6/8/17 NEW:
         # if isinstance(self, Function_Base):
@@ -2431,17 +2434,9 @@ def make_property(name, default_value):
         #     param_state_owner._parameter_states[name].value = val
 
         # # MODIFIED 6/22/17 NEWER:
-        # if isinstance(self, Function_Base):
-        #     if self.owner:
-        #         self.owner.function_params.__additem__(name, val)
-        #         param_state_owner = self.owner
-        #     else:
-        #         param_state_owner = None
-        # else:
-        #     param_state_owner = self
-        # # If the parameter is associated with a parameter state on the owner
-        # if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
-        #     param_state_owner._parameter_states[name].variable = val
+        # # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
+        if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
+            param_state_owner._parameter_states[name].variable = val
         # MODIFIED 6/8/17 END
 
     # Create the property
