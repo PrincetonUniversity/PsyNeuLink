@@ -1512,11 +1512,7 @@ class Mechanism_Base(Mechanism):
 
         # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
-        # # MODIFIED 5/7/17 OLD:
-        # self._check_args(variable=self.input_value,
-        # MODIFIED 5/7/17 NEW:
         self._check_args(variable=self.variable,
-        # MODIFIED 5/7/17 END
                         params=runtime_params,
                         target_set=runtime_params)
         #endregion
