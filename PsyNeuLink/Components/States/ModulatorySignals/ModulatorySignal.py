@@ -80,7 +80,7 @@ a value of 'ModulationParam` (see individual ModulatorySignals for examples):
   ..
   * `ModulationParam.DISABLE` - calculate the State's `value <State.value>` ignoring the ModulatorySignal.
 
-The default for `ControlSignals <ControlSignal>` and `GatingSignals <GatingSignal>` is `ModulationParam.MULTIPLICATIVE`,
+The default for `ControlSignals <ControlSignal>` and `GatingSignals <GatingSignal>` is `ModulationParam.MULTIPLICATIVE`;
 for `LearningSignals <LearningSignal>` it is `ModulationParam.ADDITIVE`, so that weight changes are *added*
 to (rather than multiply) the weight `matrix <MappingProjection.matrix>` of a `MappingProjection` being learned.
 The value of the `modulation <ModulatorySignal.modulation>` attribute can be specified in the **modulation** arg of
@@ -90,47 +90,46 @@ when a ModulatorySignal is created, it is assigned the value of the `modulation 
 attribute for the `AdaptiveMechanism` to which it belongs.
 
 .. note::
-   'OVERRIDE <ModulatorySignal_Modulation>' can be specified for **only one** ModulatoryProjection to a State;
+   `OVERRIDE <ModulatorySignal_Modulation>` can be specified for **only one** ModulatoryProjection to a State;
    specifying it for more than one causes an error.
+
 
 .. _ModulatorySignal_Anatomy_Figure:
 
-    **Anatomy of Modulation**
+**Anatomy of Modulation**
 
-    .. figure:: _static/Modulation_fig.pdf
-       :alt: Modulation
-       :scale: 150 %
-       ..
+.. figure:: _static/Modulation_fig.pdf
+   :alt: Modulation
+   :scale: 150 %
 
-       +------------------+--------------------------------------------------------------------------------------------+
-       |    Modulatory    | Default ModulationParam |                                   | Default Function (mod param) |
-       |    Component     |  for ModulatorySignal   |         Recipient State           |    for Recipient State       |
-       +==================+============================================================================================+
-       | Control (blue)   |      MULTIPLICATIVE     |     Mechanism ParameterState      |       Linear (slope)         |
-       +------------------+--------------------------------------------------------------------------------------------+
-       | Gating (brown)   |      MULTIPLICATIVE     |  Mechanism InputState/OutputState |       Linear (slope)         |
-       +------------------+--------------------------------------------------------------------------------------------+
-       | Learning (green) |          ADDITIVE       |  MappingProjection ParameterState |    Accumulator (increment)   |
-       +------------------+--------------------------------------------------------------------------------------------+
+   **Three types of Modulatory Components and the States they modulate**.
+   The table below lists the default ModulatoryParam for each type of ModulatorySignal, and the default Function
+   and modulated parameter of its recipient State.  The figure below shows a detailed view of how
+   ModulatorySignals modulate the parameters of a State's function.
 
-       The figure above shows the three types of Modulatory Components and the States they modulate.
-       The table lists the default ModulatoryParam for each type of ModulatorySignal, and the default Function
-       and modulated parameter of its recipient State.  The figure below shows a detailed view of how
-       ModulatorySignals modulate the parameters of a State's function.
+   +--------------------+-----------------------+--------------------------------------+------------------------------+
+   |     Modulatory     |Default ModulationParam|                                      | Default Function (mod param) |
+   |     Component      | for ModulatorySignal  |          Recipient State             |    for Recipient State       |
+   +====================+=======================+======================================+==============================+
+   | **Control** (blue) |   *MULTIPLICATIVE*    |     `Mechanism` `ParameterState`     |       `Linear` (`slope`)     |
+   +--------------------+-----------------------+--------------------------------------+------------------------------+
+   | **Gating** (brown) |   *MULTIPLICATIVE*    |`Mechanism` `InputState`/`OutputState`|       `Linear` (`slope`)     |
+   +--------------------+-----------------------+--------------------------------------+------------------------------+
+   |**Learning** (green)|     *ADDITIVE*        | `MappingProjection` `ParameterState` | `Accumulator` (`increment`)  |
+   +--------------------+-----------------------+--------------------------------------+------------------------------+
 
-    **Detailed View of Modulation**
+**Detailed View of Modulation**
 
-    .. figure:: _static/Modulation_Detail_fig.pdf
-       :alt: Modulation_Detail
-       :scale: 150 %
-       ..
+.. figure:: _static/Modulation_Detail_fig.pdf
+   :alt: Modulation_Detail
+   :scale: 150 %
 
-       How a ModulatorySignal signal influences the value of a state is determined by its
-       `modulation <ModulatorySignal.modulation>` attribute, which is specified as a value of `ModulationParam`:
-       *ADDITIVE* and *MULTIPLICATIVE* specify that the `value <ModulatorySignal.value>` of the ModulatorySignal
-       be assigned to the correspondingly designated parameter of the State's function;  *OVERRIDE* specifies
-       that ModulatorySignal's `value <ModulatorySignal.value>` by assigned directly as the State's
-       `value <State.value>`, in effect ignoring its `variable <State.variable>` and `function <State.function>`.
+   How a ModulatorySignal signal influences the value of a state is determined by its
+   `modulation <ModulatorySignal.modulation>` attribute, which is specified as a value of `ModulationParam`:
+   *ADDITIVE* and *MULTIPLICATIVE* specify that the `value <ModulatorySignal.value>` of the ModulatorySignal
+   be assigned to the correspondingly designated parameter of the State's function;  *OVERRIDE* specifies
+   that ModulatorySignal's `value <ModulatorySignal.value>` by assigned directly as the State's
+   `value <State.value>`, in effect ignoring its `variable <State.variable>` and `function <State.function>`.
 
 
 .. _ModulatorySignal_Execution:

@@ -278,38 +278,27 @@ See  <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-
 with each type for a description of how they can be used to modulate the <a href="#id1"><span class="problematic" id="id2">`</span></a>function &lt;State.function&gt; of a State.</li>
 </ul>
 <ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">value</span></code>:  for an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> this is the aggregated value of the <code class="xref any docutils literal"><span class="pre">PathWayProjections</span></code> it
-receives;  for a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>, this determines the value of the associated parameter;
-for an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, it is the item of the  owner Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code> to which the
-OutputState is assigned, possibly modified by its <a class="reference internal" href="OutputState.html#outputstate-calculate"><span class="std std-ref">calculate</span></a> attribute and/or a
-<a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>, and used as the <code class="xref any docutils literal"><span class="pre">value</span></code> of any the projections listed in its
-<code class="xref any docutils literal"><span class="pre">efferents</span></code> attribute.</li>
+<li><code class="xref any docutils literal"><span class="pre">value</span></code>:  for an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> this is the aggregated value of the <code class="xref any docutils literal"><span class="pre">PathwayProjections</span></code> it
+receives;  for a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>, this represents the value of the parameter that will be used by the
+State&#8217;s owner or its <code class="xref any docutils literal"><span class="pre">function</span></code>; for an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, it is the item of the  owner
+Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code> to which the OutputState is assigned, possibly modified by its
+<a class="reference internal" href="OutputState.html#outputstate-calculate"><span class="std std-ref">calculate</span></a> attribute and/or a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>, and used as the
+<code class="xref any docutils literal"><span class="pre">value</span></code> of the projections listed in its <code class="xref any docutils literal"><span class="pre">efferents</span></code> attribute.</li>
 </ul>
 </div></blockquote>
 <div class="section" id="modulation">
 <span id="state-modulation"></span><h3>Modulation<a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
 <p>Every type of State has a <code class="xref any docutils literal"><span class="pre">mod_afferents</span></code> attribute, that lists the
 <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> it receives.  Each ModulatoryProjection comes from a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a>
-that specifies how it should modulate the State&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code> when the State is
-<code class="xref any docutils literal"><span class="pre">updated</span> <span class="pre">&lt;State_Execution&gt;</span> <span class="pre">(see</span> <span class="pre">`ModulatorySignal_Modulation</span></code>).  In most cases a ModulatorySignal uses the State&#8217;s
-<code class="xref any docutils literal"><span class="pre">function</span></code> to modulate its <code class="xref any docutils literal"><span class="pre">value</span></code>.  The function of every State assigns one of its
-parameters as its <em>MULTIPLICATIVE_PARAM</em> and another as its <em>MULTIPLICATIVE_PARAM</em>. The
-<code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute of a ModulatorySignal determines which of these to modify
-when the State uses it <code class="xref any docutils literal"><span class="pre">fucntion</span></code> to calculate its <code class="xref any docutils literal"><span class="pre">value</span></code>.  However, the
-ModulatorySignal can also be configured to override the State&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code> (i.e., assign it directly),
-or to disable modulation, using one of the values of &#8216;ModulationParm` for its <code class="xref any docutils literal"><span class="pre">modulation</span></code>
-attribute (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> and <code class="xref any docutils literal"><span class="pre">ModulatorySignal_Examples</span></code>).</p>
-<p>When a State is <a class="reference internal" href="#state-execution"><span class="std std-ref">updated</span></a>, it executes all of the ModulatoryProjections it receives.  Different
-ModulatorySignals may call for different forms of modulation.  Accordingly, it seprately sums the values specified
-by any ModulatorySignals for the <em>MULTIPLICATIVE_PARAM</em> of its <code class="xref any docutils literal"><span class="pre">function</span></code>, and similarly for the
-<em>ADDITIVE_PARAM</em>.  It then applies the summed value for each to the corresponding parameter of its
-<code class="xref any docutils literal"><span class="pre">function</span></code>.  If any of the ModulatorySignals specifies <em>OVERRIDE</em>, then the value of that
-ModulatorySignal is used as the State&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code>.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">&#8216;OVERRIDE &lt;ModulatorySignal_Modulation&gt;&#8217; can be specified for <strong>only one</strong> ModulatoryProjection to a State;
-specifying it for more than one causes an error.</p>
-</div>
+that specifies how it should modulate the State&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code> when the State is updated (see
+<a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> and <code class="xref any docutils literal"><span class="pre">ModulatorySignal_Anatomy_Figure).</span>&#160; <span class="pre">In</span> <span class="pre">most</span> <span class="pre">cases,</span> <span class="pre">a</span> <span class="pre">ModulatorySignal</span> <span class="pre">uses</span> <span class="pre">the</span>
+<span class="pre">State's</span> <span class="pre">`function</span></code> to modulate its <code class="xref any docutils literal"><span class="pre">value</span></code>.  The function of every State assigns one
+of its parameters as its <em>MULTIPLICATIVE_PARAM</em> and another as its <em>MULTIPLICATIVE_PARAM</em>. The
+<code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute of a ModulatorySignal determines which of these to modify when
+the State uses it <code class="xref any docutils literal"><span class="pre">function</span></code> to calculate its <code class="xref any docutils literal"><span class="pre">value</span></code>.  However, the ModulatorySignal
+can also be configured to override the State&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code> (i.e., assign it directly), or to disable
+modulation, using one of the values of &#8216;ModulationParm` for its <code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute
+(see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a more detailed discussion).</p>
 </div>
 </div>
 <div class="section" id="execution">
@@ -319,10 +308,19 @@ ParameterStates belonging to a Mechanism are updated before the Mechanism&#8217;
 are updated after the Mechanism&#8217;s function is called.  When a State is updated, it executes any Projections that
 project to it (listed in its <code class="xref any docutils literal"><span class="pre">all_afferents</span></code> attribute.  It uses the values it receives from any
 <code class="xref any docutils literal"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="#State.State_Base.path_afferents" title="State.State_Base.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its <code class="xref any docutils literal"><span class="pre">function</span></code>,
-and the values it receives from any <code class="xref any docutils literal"><span class="pre">ModulatoryProjections</span></code> (listed in its <a class="reference internal" href="#State.State_Base.mod_afferents" title="State.State_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute) to determine
-the parameters of its <code class="xref any docutils literal"><span class="pre">function</span></code> (as described <a class="reference internal" href="#state-modulation"><span class="std std-ref">above</span></a>).  It then calls its
-<code class="xref any docutils literal"><span class="pre">function</span></code> to determine its <code class="xref any docutils literal"><span class="pre">value</span></code>. This conforms to a &#8220;lazy evaluation&#8221; protocol
-(see <span class="xref std std-ref">Lazy Evaluation</span> for a more detailed discussion).</p>
+It then executes all of the ModulatoryProjections it receives.  Different ModulatorySignals may call for different
+forms of modulation (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>).  Accordingly, it separately sums the values specified
+by any ModulatorySignals for the <em>MULTIPLICATIVE_PARAM</em> of its <code class="xref any docutils literal"><span class="pre">function</span></code>, and similarly for the
+<em>ADDITIVE_PARAM</em>.  It then applies the summed value for each to the corresponding parameter of its
+<code class="xref any docutils literal"><span class="pre">function</span></code>.  If any of the ModulatorySignals specifies <em>OVERRIDE</em>, then the value of that
+ModulatorySignal is used as the State&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code>. Finally, the State calls its
+<code class="xref any docutils literal"><span class="pre">function</span></code> to determine its <code class="xref any docutils literal"><span class="pre">value</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The change in the value of a <a class="reference internal" href="#"><span class="doc">State</span></a> does not occur until the Mechanism to which the state belongs is next
+executed; This conforms to a &#8220;lazy evaluation&#8221; protocol (see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation
+of &#8220;lazy&#8221; updating).</p>
+</div>
 </div>
 <div class="section" id="class-reference">
 <span id="state-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
