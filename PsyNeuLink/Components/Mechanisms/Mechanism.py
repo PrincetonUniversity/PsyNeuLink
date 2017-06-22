@@ -1524,7 +1524,8 @@ class Mechanism_Base(Mechanism):
 
         #region UPDATE INPUT STATE(S)
         # Executing or simulating process or system, get input by updating input_states
-        if input is None and (EXECUTING in context or EVC_SIMULATION in context):
+
+        if input is None and (EXECUTING in context or EVC_SIMULATION in context) and (self.input_state.path_afferents != []):
             self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
 
         # Direct call to execute mechanism with specified input, so assign input to mechanism's input_states
