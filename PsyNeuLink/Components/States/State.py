@@ -113,12 +113,12 @@ components, a State has the three following core attributes:
       See  `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated
       with each type for a description of how they can be used to modulate the `function <State.function> of a State.
     ..
-    * `value <State.value>`:  for an `InputState` this is the aggregated value of the `PathWayProjections` it
-      receives;  for a `ParameterState`, this determines the value of the associated parameter;
-      for an `OutputState`, it is the item of the  owner Mechanism's `value <Mechanisms.value>` to which the
-      OutputState is assigned, possibly modified by its `calculate <OutputState_Calculate>` attribute and/or a
-      `GatingSignal`, and used as the `value <Projection.value>` of any the projections listed in its
-      `efferents <OutputState.path_efferents>` attribute.
+    * `value <State.value>`:  for an `InputState` this is the aggregated value of the `PathwayProjections` it
+      receives;  for a `ParameterState`, this represents the value of the parameter that will be used by the
+      State's owner or its `function <Component.function>`; for an `OutputState`, it is the item of the  owner
+      Mechanism's `value <Mechanisms.value>` to which the OutputState is assigned, possibly modified by its
+      `calculate <OutputState_Calculate>` attribute and/or a `GatingSignal`, and used as the
+      `value <Projection.value>` of the projections listed in its `efferents <OutputState.path_efferents>` attribute.
 
 .. _State_Modulation:
 
@@ -127,26 +127,15 @@ Modulation
 
 Every type of State has a `mod_afferents <State.mod_afferents>` attribute, that lists the
 `ModulatoryProjections <ModulatoryProjection>` it receives.  Each ModulatoryProjection comes from a `ModulatorySignal`
-that specifies how it should modulate the State's `value <State.value>` when the State is
-`updated <State_Execution> (see `ModulatorySignal_Modulation`).  In most cases a ModulatorySignal uses the State's
-`function <State.function>` to modulate its `value <State.value>`.  The function of every State assigns one of its
-parameters as its *MULTIPLICATIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The
-`modulation <ModulatorySigal.modulation>` attribute of a ModulatorySignal determines which of these to modify
-when the State uses it `fucntion <State.function>` to calculate its `value  <State.value>`.  However, the
-ModulatorySignal can also be configured to override the State's `value <State.value>` (i.e., assign it directly),
-or to disable modulation, using one of the values of 'ModulationParm` for its `modulation <ModulatorySignal.modulation>`
-attribute (see `ModulatorySignal_Modulation` and `ModulatorySignal_Examples`).
-
-When a State is `updated <State_Execution>`, it executes all of the ModulatoryProjections it receives.  Different
-ModulatorySignals may call for different forms of modulation.  Accordingly, it seprately sums the values specified
-by any ModulatorySignals for the *MULTIPLICATIVE_PARAM* of its `function <State.function>`, and similarly for the
-*ADDITIVE_PARAM*.  It then applies the summed value for each to the corresponding parameter of its
-`function <State.function>`.  If any of the ModulatorySignals specifies *OVERRIDE*, then the value of that
-ModulatorySignal is used as the State's `value <State.value>`.
-
-.. note::
-   'OVERRIDE <ModulatorySignal_Modulation>' can be specified for **only one** ModulatoryProjection to a State;
-   specifying it for more than one causes an error.
+that specifies how it should modulate the State's `value <State.value>` when the State is updated (see
+`ModulatorySignal_Modulation` and `ModulatorySignal_Anatomy_Figure).  In most cases, a ModulatorySignal uses the
+State's `function <State.function>` to modulate its `value <State.value>`.  The function of every State assigns one
+of its parameters as its *MULTIPLICATIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The
+`modulation <ModulatorySigal.modulation>` attribute of a ModulatorySignal determines which of these to modify when
+the State uses it `function <State.function>` to calculate its `value  <State.value>`.  However, the ModulatorySignal
+can also be configured to override the State's `value <State.value>` (i.e., assign it directly), or to disable
+modulation, using one of the values of 'ModulationParm` for its `modulation <ModulatorySignal.modulation>` attribute
+(see `ModulatorySignal_Modulation` for a more detailed discussion).
 
 .. _State_Execution:
 
@@ -158,10 +147,18 @@ ParameterStates belonging to a Mechanism are updated before the Mechanism's func
 are updated after the Mechanism's function is called.  When a State is updated, it executes any Projections that
 project to it (listed in its `all_afferents <State.all_afferents>` attribute.  It uses the values it receives from any
 `PathWayProjections` (listed in its `path_afferents` attribute) as the variable for its `function <State.function>`,
-and the values it receives from any `ModulatoryProjections` (listed in its `mod_afferents` attribute) to determine
-the parameters of its `function <State.function>` (as described `above <State_Modulation>`).  It then calls its
-`function <State.function>` to determine its `value <State.value>`. This conforms to a "lazy evaluation" protocol
-(see :ref:`Lazy Evaluation <LINK>` for a more detailed discussion).
+It then executes all of the ModulatoryProjections it receives.  Different ModulatorySignals may call for different
+forms of modulation (see `ModulatorySignal_Modulation`).  Accordingly, it separately sums the values specified
+by any ModulatorySignals for the *MULTIPLICATIVE_PARAM* of its `function <State.function>`, and similarly for the
+*ADDITIVE_PARAM*.  It then applies the summed value for each to the corresponding parameter of its
+`function <State.function>`.  If any of the ModulatorySignals specifies *OVERRIDE*, then the value of that
+ModulatorySignal is used as the State's `value <State.value>`. Finally, the State calls its
+`function <State.function>` to determine its `value <State.value>`.
+
+.. note::
+   The change in the value of a `State` does not occur until the Mechanism to which the state belongs is next
+   executed; This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for an explanation
+   of "lazy" updating).
 
 .. _State_Class_Reference:
 

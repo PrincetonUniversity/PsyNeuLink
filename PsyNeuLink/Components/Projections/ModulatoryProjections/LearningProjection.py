@@ -14,11 +14,11 @@
 Overview
 --------
 
-A LearningProjection is a subclass of `Projection` that projects from a `LearningMechanism` to the
+A LearningProjection is a subclass of `ModulatoryProjection` that projects from a `LearningMechanism` to the
 MATRIX `parameterState <ParameterState>` of a `MappingProjection`, and modifies the value of the
 `matrix <MappingProjection.matrix>` parameter of that MappingProjection.  All of the LearningProjections in a system, 
 along with its other `learning components <LearningMechanism>`, can be displayed using the system's `show_graph` method 
-with its **show_learning** argument assigned :keyword:`True`.
+with its **show_learning** argument assigned as :keyword:`True`.
 
 .. _LearningProjection_Creation:
 
@@ -29,18 +29,23 @@ A LearningProjection can be created using any of the standard ways to `create a 
 or by including it in a tuple that specifies the `matrix <Mapping_Matrix_Specification>` parameter for a
 `MappingProjection`.  LearningProjections are also created automatically, along with the other
 `components required for learning <LearningMechanism_Learning_Configurations>`, when learning is specified for a
-`process <Process_Learning>` or a `system <System_Execution_Learning>`.
+`Process <Process_Learning>` or a `System <System_Execution_Learning>`.
 
 If a LearningProjection is created using its constructor on its own, the `receiver <ControlProjection.receiver>`
 argument must be specified.  If it is included in the `matrix specification <Mapping_Matrix_Specification>` for a
-MappingProjection, the parameterState for the MappingProjection's MATRIX will be assigned as the
+`MappingProjection`, the *MATRIX* `ParameterState` for the MappingProjection will be assigned as the
 LearningProjection's `receiver <LearningProjection.receiver>`.  If its `sender <LearningProjection.sender>` is not
 specified, its assignment depends on the `receiver <LearningProjection.receiver>`.  If the receiver belongs to a
-MappingProjection that projects between two mechanisms that are both in the same `process <Process_Learning>` or
-`system <System_Execution_Learning>`, then the LearningProjection's `sender <LearningProjection.sender>` is assigned
-to the `LEARNING_SIGNAL <LearningMechanism_Learning_Signal>` outputState of the `LearningMechanism` for the
-MappingProjection. If there is none, it is `created <LearningMechanism_Creation>` along with any other components
+MappingProjection that projects between two mechanisms that are both in the same `Process <Process_Learning>` or
+`System <System_Execution_Learning>`, then the LearningProjection's `sender <LearningProjection.sender>` is assigned
+to a `LearningSignal` of the `LearningMechanism` for the MappingProjection. If there is none, it is
+`created <LearningMechanism_Creation>` along with any other components
 needed to implement learning for the MappingProjection (see `LearningMechanism_Learning_Configurations`).
+
+.. _LearningProjection_Deferred_Initialization:
+
+Deferred Initialization
+~~~~~~~~~~~~~~~~~~~~~~~
 
 When a LearningProjection is created, its full initialization is :ref:`deferred <Component_Deferred_Init>` until its
 `sender <LearningProjection.sender>` and `receiver <LearningProjection.receiver>` have been fully specified.  This
@@ -56,28 +61,32 @@ process -- in those cases, deferred initialization is completed automatically.
 Structure
 ---------
 
-The `sender <LearningProjection.sender>` of a LearningProjection is the
-`LEARNING_SIGNAL <LearingMechanisms.Learning_Signal>` outputState of a LearningMechanism. Its
-`receiver <LearningProjection.receiver>` is the `MATRIX` parameterState of a MappingProjection,
-Its `function simply conveys the `learning_signal <LearningProjection.learning_signal>` received from its
-`sender <LearningProjection.sender>` to the `receiver <LearningProjection.receiver>`, possibly modulated by
-the `learning_rate <LearningProjection.learning_rate>`.
-
+The `sender <LearningProjection.sender>` of a LearningProjection is a `LearningSignal` of a `LearningMechanism`.  Its
+`receiver <LearningProjection.receiver>` is the *MATRIX* `ParameterState` of a `MappingProjection`,  The
+`function <LearningProjection.function>` of a LearningProjection is, by default, the identity function;  that is,
+it conveys the `value <LearningSignal.value>` of its `sender <LearningProjection.sender>` to
+its `receiver <LearningProjection.receiver>`, for use in modifying the `matrix <MappingProjection.matrix>` parameter
+of the `MappingProjection` being learned.
 
 .. _LearningProjection_Execution:
 
 Execution
 ---------
 
-A LearningProjection cannot be executed directly.  It is executed when its
-`learned_projection <LearningProjection.learned_projection>` is executed the MATRIX parameterState
-for the `learned_projection <LearningProjection.learned_projection>` is updated.  Note that these events only occur
-when the ProcessingMechanism to which the `learned_projection <LearningProjection.learned_projection>` projects is
+A LearningProjection cannot be executed directly.  It is executed when the *MATRIX* ParameterState to which it
+projects is updated.  This occurs when the `learned_projection <LearningProjection.learned_projection>` (i.e.,
+`MappingProjection` to which the *MATRIX* ParameterState belongs) is updated. Note that these events occur only
+when the ProcessingMechanism that receives the `learned_projection <LearningProjection.learned_projection>` is
 executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When the LearningProjection is
-executed, it gets the `learning_signal` from its `sender <LearningProjection.sender>`
-and conveys this to its `receiver <LearningProjection.receiver>`, modified only by the `learning_rate
-<LearningProjection.learning_rate>` if that is specified.  Additional attributes are described under
-`Class Reference <LearningProjection_Class_Reference>` below.
+executed, it gets the `learning_signal <LearningProjection.learning_signal>` from its
+`sender <LearningProjection.sender>` and conveys this to its `receiver <LearningProjection.receiver>`,
+possibly modified by its `learning_rate <LearningProjection.learning_rate>` parameter if that is specified.
+
+.. note::
+   The changes in the `matrix <MappingProjection.maitrix>` parameter of a `MappingProjection` in response to the
+   execution of a LearningProjection are not applied until the `Mechanism` that receives MappingProjection are next
+   executed; see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
+
 
 .. _LearningProjection_Class_Reference:
 
