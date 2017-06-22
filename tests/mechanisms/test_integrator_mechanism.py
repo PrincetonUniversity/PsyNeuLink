@@ -651,7 +651,27 @@ def test_mechanisms_without_system_or_process():
     T = TransferMechanism(function=Linear(slope=2.0, intercept=5.0))
     M = MappingProjection(sender=I, receiver=T)
 
-    res1 = float(I.execute(10, context=EXECUTING))
-    res2 = float(T.execute(context=EXECUTING))
+    print(I.variable, " = I.var")
+    print(T.variable, " = T.var")
+
+    res1 = float(I.execute(10, context=EXECUTING + " MECHANISM"))
+    res2 = float(T.execute(context=EXECUTING + " MECHANISM"))
     assert res1, res2 == (10, 25)
 
+def test_mechanisms_without_system_or_process_no_input():
+    I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            default_input_value= 10,
+            function=SimpleIntegrator(
+            ),
+            time_scale=TimeScale.TIME_STEP
+        )
+    T = TransferMechanism(function=Linear(slope=2.0, intercept=5.0))
+    M = MappingProjection(sender=I, receiver=T)
+
+    print(I.variable, " = I.var")
+    print(T.variable, " = T.var")
+    res1 = float(I.execute(context=EXECUTING + " MECHANISM"))
+
+    res2 = float(T.execute(context=EXECUTING))
+    assert res1, res2 == (10, 25)

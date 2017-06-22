@@ -1,7 +1,8 @@
 import numpy as np
-import pytest
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Globals.Keywords import EXECUTING
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Functions.Function import Linear, SimpleIntegrator, ConstantIntegrator, AccumulatorIntegrator
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
@@ -71,3 +72,22 @@ print([val, val2] == [10.0, 5.0])
 # print(val2)
 # assert [val, val2] == [5.0, 1.0]
 # print([val, val2] == [5.0, 1.0])
+
+def test_mechanisms_without_system_or_process_no_input():
+    I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            default_input_value= 10,
+            function=SimpleIntegrator(
+            ),
+            time_scale=TimeScale.TIME_STEP
+        )
+    T = TransferMechanism(function=Linear(slope=2.0, intercept=5.0))
+    M = MappingProjection(sender=I, receiver=T)
+
+    print(I.variable, " = I.var")
+    print(T.variable, " = T.var")
+    res1 = float(I.execute(context=EXECUTING + " MECHANISM"))
+
+    res2 = float(T.execute(context=EXECUTING))
+    assert res1, res2 == (10, 25)
+test_mechanisms_without_system_or_process_no_input()
