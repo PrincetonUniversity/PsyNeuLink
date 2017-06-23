@@ -1846,7 +1846,7 @@ class Mechanism_Base(Mechanism):
         # kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here
         try:
-            output_string = re.sub('[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output]))
+            output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output]))
         except TypeError:
             output_string = output
 

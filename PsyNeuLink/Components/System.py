@@ -385,7 +385,7 @@ def system(default_input_value=None,
     ---------
 
     default_input_value : list or ndarray of values : default default input for `ORIGIN` mechanism of each Process
-        the input to the system if none is provided in a call to the `execute <System_Base.exeucte> or
+        the input to the system if none is provided in a call to the `execute <System_Base.execute> or
         `run <System_Base.run> methods. Should contain one item corresponding to the input of each `ORIGIN` mechanism
         in the system.
         COMMENT:
@@ -484,7 +484,7 @@ class System_Base(System):
     enable_controller=:keyword:`False`,       \
     monitor_for_control=None,                 \
     control_signals=None,                     \
-    learning_rate=None,                       \ 
+    learning_rate=None,                       \
     targets=None,                             \
     params=None,                              \
     name=None,                                \
@@ -1913,6 +1913,11 @@ class System_Base(System):
             Each item is a 2d array that contains arrays for each outputState.value of each TERMINAL mechanism
 
         """
+        if self.scheduler_processing is None:
+            self.scheduler_processing = Scheduler(system=self)
+
+        if self.scheduler_learning is None:
+            self.scheduler_learning = Scheduler(nodes=self.learningExecutionList, toposort_ordering=toposort(self.learningGraph))
 
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
@@ -2143,7 +2148,7 @@ class System_Base(System):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub('[\[,\],\n]','',str(process_names))))
+                                         re.sub(r'[\[,\],\n]','',str(process_names))))
 
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                 component.execute(
@@ -2179,7 +2184,7 @@ class System_Base(System):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub('[\[,\],\n]','',str(process_names))))
+                                         re.sub(r'[\[,\],\n]','',str(process_names))))
 
                 component._parameter_states[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
 
@@ -2200,7 +2205,7 @@ class System_Base(System):
                 print("- error for target ({}): {}".
                       # format(append_type_to_name(target_mech),
                       format(target_mech.name,
-                             re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i)))
+                             re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i)))
                                                          for i in target_mech.output_state.value])),
                              ))
                              # process_names))

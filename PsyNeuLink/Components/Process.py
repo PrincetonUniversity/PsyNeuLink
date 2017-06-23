@@ -2300,7 +2300,7 @@ class Process_Base(Process):
         print("\n\'{}\' executing with:\n- pathway: [{}]".
               format(append_type_to_name(self),
               # format(self.name,
-                     re.sub('[\[,\],\n]','',str(self.mechanismNames))))
+                     re.sub(r'[\[,\],\n]','',str(self.mechanismNames))))
         # # MODIFIED 2/17/17 OLD:
         # variable = [list(i) for i in self.variable]
         # print("- variable: {1}".format(self, re.sub('[\[,\],\n]','',
@@ -2326,7 +2326,7 @@ class Process_Base(Process):
 
         print("\n\'{}' completed:\n- output: {}".
               format(append_type_to_name(self),
-                     re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.value]))))
+                     re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.value]))))
 
         if self.learning:
             from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
