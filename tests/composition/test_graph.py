@@ -20,6 +20,9 @@ class TestGraph:
 
         g2 = g1.copy()
 
+        assert len(g1.vertices) == len(g2.vertices)
+        assert len(g1.comp_to_vertex) == len(g2.comp_to_vertex)
+
         for i in range(len(g2.vertices)):
             assert g2.vertices[i].parents == [g2.vertices[(i - 1) % len(g2.vertices)]]
             assert g2.vertices[i].children == [g2.vertices[(i + 1) % len(g2.vertices)]]

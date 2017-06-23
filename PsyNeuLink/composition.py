@@ -97,7 +97,7 @@ class Graph(object):
     def remove_vertex(self, vertex):
         try:
             self.vertices.remove(vertex)
-
+            del self.comp_to_vertex[vertex.component]
             # TODO:
             #   check if this removal puts the graph in an inconsistent state
         except ValueError as e:
@@ -291,12 +291,17 @@ class Composition(object):
         visited_vertices = set()
         next_vertices = []  # a queue
 
-        while len(self.graph.vertices) > len(visited_vertices):
-            for vertex in self.graph.vertices:
+        unvisited_vertices = True
+
+        while unvisited_vertices:
+            for vertex in self._graph_processing.vertices:
                 if vertex not in visited_vertices:
                     next_vertices.append(vertex)
                     break
+            else:
+                unvisited_vertices = False
 
+            logger.debug('processing graph vertices: {0}'.format(self._graph_processing.vertices))
             while len(next_vertices) > 0:
                 cur_vertex = next_vertices.pop(0)
                 logger.debug('Examining vertex {0}'.format(cur_vertex))
@@ -308,6 +313,8 @@ class Composition(object):
                             child.parents.remove(cur_vertex)
                             self._graph_processing.connect_vertices(parent, child)
 
+                    for node in cur_vertex.parents + cur_vertex.children:
+                        logger.debug('New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(node, node.parents, node.children))
                     logger.debug('Removing vertex {0}'.format(cur_vertex))
                     self._graph_processing.remove_vertex(cur_vertex)
 
