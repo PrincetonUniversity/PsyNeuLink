@@ -457,10 +457,10 @@ class TestGetMechanismsByRole:
         for mech in mechs:
             comp.add_mechanism(mech)
 
-        comp.mechanisms_to_roles[mechs[0]] = MechanismRole.ORIGIN
-        comp.mechanisms_to_roles[mechs[1]] = MechanismRole.INTERNAL
-        comp.mechanisms_to_roles[mechs[2]] = MechanismRole.INTERNAL
-        comp.mechanisms_to_roles[mechs[3]] = MechanismRole.CYCLE
+        comp.add_mechanism_role(mechs[0], MechanismRole.ORIGIN)
+        comp.add_mechanism_role(mechs[1], MechanismRole.INTERNAL)
+        comp.add_mechanism_role(mechs[2], MechanismRole.INTERNAL)
+        comp.add_mechanism_role(mechs[3], MechanismRole.CYCLE)
 
         for role in list(MechanismRole):
             if role is MechanismRole.ORIGIN:

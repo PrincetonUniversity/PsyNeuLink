@@ -184,7 +184,7 @@ class Composition(object):
             mech.is_processing = True
             self.graph.add_component(mech)  # Set incoming edge list of mech to empty
             self.mechanisms.append(mech)
-            self.mechanisms_to_roles[mech] = None
+            self.mechanisms_to_roles[mech] = set()
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
@@ -233,15 +233,15 @@ class Composition(object):
         ########
 
         # Clear old information
-        self.mechanisms_to_roles.update({k: None for k in self.mechanisms_to_roles})
+        self.mechanisms_to_roles.update({k: set() for k in self.mechanisms_to_roles})
 
         # Identify Origin mechanisms
         for mech in self.mechanisms:
             if self.graph.get_incoming_from_component(mech) == []:
-                self.set_mechanism_role(mech, MechanismRole.ORIGIN)
+                self.add_mechanism_role(mech, MechanismRole.ORIGIN)
         # Identify Terminal mechanisms
             if self.graph.get_outgoing_from_component(mech) == []:
-                self.set_mechanism_role(mech, MechanismRole.TERMINAL)
+                self.add_mechanism_role(mech, MechanismRole.TERMINAL)
         # Identify Recurrent_init and Cycle mechanisms
         visited = []  # Keep track of all mechanisms that have been visited
         for origin_mech in self.get_mechanisms_by_role(MechanismRole.ORIGIN):  # Cycle through origin mechanisms first
@@ -255,8 +255,8 @@ class Composition(object):
                 for child in children:
                     # If the child has been visited this path and is not already initialized
                     if child in visited_current_path:
-                        self.set_mechanism_role(mech, MechanismRole.RECURRENT_INIT)
-                        self.set_mechanism_role(child.component, MechanismRole.CYCLE)
+                        self.add_mechanism_role(mech, MechanismRole.RECURRENT_INIT)
+                        self.add_mechanism_role(child.component, MechanismRole.CYCLE)
                     elif child not in visited:  # Else if the child has not been explored
                         next_visit_stack.append(child)  # Add it to the visit stack
         for mech in self.mechanisms:
@@ -270,8 +270,8 @@ class Composition(object):
                     children = self.graph.get_child_vertices_from_component(remaining_mech)
                     for child in children:
                         if child in visited_current_path:
-                            self.set_mechanism_role(remaining_mech, MechanismRole.RECURRENT_INIT)
-                            self.set_mechanism_role(child.component, MechanismRole.CYCLE)
+                            self.add_mechanism_role(remaining_mech, MechanismRole.RECURRENT_INIT)
+                            self.add_mechanism_role(child.component, MechanismRole.CYCLE)
                         elif child not in visited:
                             next_visit_stack.append(child)
 
@@ -326,19 +326,30 @@ class Composition(object):
             raise CompositionError('Invalid MechanismRole: {0}'.format(role))
 
         try:
-            return set([mech for mech in self.mechanisms if self.mechanisms_to_roles[mech] == role])
+            return set([mech for mech in self.mechanisms if role in self.mechanisms_to_roles[mech]])
         except KeyError as e:
             raise CompositionError('Mechanism not assigned to role in mechanisms_to_roles: {0}'.format(e))
 
-    def set_mechanism_role(self, mech, role):
+    def set_mechanism_roles(self, mech, roles):
+        self.clear_mechanism_role(mech)
+        for role in roles:
+            self.add_mechanism_role(role)
+
+    def clear_mechanism_roles(self, mech):
+        if mech in self.mechanisms_to_roles:
+            self.mechanisms_to_roles[mech] = set()
+
+    def add_mechanism_role(self, mech, role):
         if role not in MechanismRole:
             raise CompositionError('Invalid MechanismRole: {0}'.format(role))
 
-        self.mechanisms_to_roles[mech] = role
+        self.mechanisms_to_roles[mech].add(role)
 
-    def clear_mechanism_role(self, mech):
-        if mech in self.mechanisms_to_roles:
-            self.mechanisms_to_roles[mech] = None
+    def remove_mechanism_role(self, mech, role):
+        if role not in MechanismRole:
+            raise CompositionError('Invalid MechanismRole: {0}'.format(role))
+
+        self.mechanisms_to_roles[mech].remove(role)
 
     # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
     # feed_dict is a dictionary of the input states of each mechanism of the specified type
