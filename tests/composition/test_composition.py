@@ -146,7 +146,6 @@ class TestAnalyzeGraph:
         A = mechanism()
         comp.add_mechanism(A)
         comp.analyze_graph()
-        assert A in comp.graph.mechanisms
         assert A in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert A in comp.get_mechanisms_by_role(MechanismRole.TERMINAL)
 
