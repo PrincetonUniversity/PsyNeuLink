@@ -212,15 +212,8 @@ def is_function_type(x):
 
 ADDITIVE_PARAM = 'additive_param'
 MULTIPLICATIVE_PARAM = 'multiplicative_param'
-OVERRIDE = 'OVERRIDE'
-DISABLE = 'DISABLE'
-
-
-class AdditiveParam():
-    attrib_name = ADDITIVE_PARAM
-    name = 'ADDITIVE_PARAM'
-    init_val = 0
-    reduce = lambda x : np.sum(np.array(x), axis=0)
+OVERRIDE_PARAM = 'OVERRIDE'
+DISABLE_PARAM = 'DISABLE'
 
 
 class MultiplicativeParam():
@@ -230,12 +223,63 @@ class MultiplicativeParam():
     reduce = lambda x : np.product(np.array(x), axis=0)
 
 
-class ModulationParam():
-    ADDITIVE = AdditiveParam
-    MULTIPLICATIVE = MultiplicativeParam
-    OVERRIDE = OVERRIDE
-    DISABLE = DISABLE
+class AdditiveParam():
+    attrib_name = ADDITIVE_PARAM
+    name = 'ADDITIVE_PARAM'
+    init_val = 0
+    reduce = lambda x : np.sum(np.array(x), axis=0)
 
+# ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
+
+
+class ModulationParam():
+    """Specify parameter of a `Function` for `modulation <ModulatorySignal_Modulation>`
+
+    Each term specifies a different type of modulation used by a `ModulatorySignal`.  The first two refer to classes
+    that define the following terms:
+        * attrib_name (*ADDITIVE_PARAM* or *MULTIPLICATIVE_PARAM*):  specifies which meta-parameter of the function
+          to use for modulation;
+        * name (str): name of the meta-parameter
+        * init_val (int or float): value with which to initialize the parameter being modulated if it is not otherwise
+          specified
+        * reduce (function): the manner by which to aggregate multiple ModulatorySignals of that type, if the
+          `ParameterState` receives more than one `ModulatoryProjection` of that type.
+
+    Attributes
+    ----------
+
+    MULTIPLICATIVE : MultiplicativeParam
+        assign the `value <ModulatorySignal.value> of the ModulatorySignal to
+        the *MULTIPLICATIVE* parameter of the State's `function <State.function>`;
+
+    ADDITIVE = AdditiveParam
+        assign the `value <ModulatorySignal.value> of the ModulatorySignal to
+        the *ADDITIVE* parameter of the State's `function <State.function>`;
+
+    OVERRIDE : OVERRIDE
+        assign the `value <ModulatorySignal.value> of the ModulatorySignal directly to the State's
+        the State's `value <State.value>` (ignoring its `variable <State.variable>` and `function <State.function>`);
+
+    DISABLE : DISABLE
+        calculate the State's `value <State.value>` ignoring the ModulatorySignal.
+    """
+    MULTIPLICATIVE = MultiplicativeParam
+    # MULTIPLICATIVE = ModulationType(MULTIPLICATIVE_PARAM,
+    #                                 'MULTIPLICATIVE',
+    #                                 1,
+    #                                 lambda x : np.product(np.array(x), axis=0))
+    ADDITIVE = AdditiveParam
+    # ADDITIVE = ModulationType(ADDITIVE_PARAM,
+    #                           'ADDITIVE_PARAM',
+    #                           0,
+    #                           lambda x : np.sum(np.array(x), axis=0))
+    OVERRIDE = OVERRIDE_PARAM
+    DISABLE = DISABLE_PARAM
+
+MULTIPLICATIVE = ModulationParam.MULTIPLICATIVE
+ADDITIVE = ModulationParam.ADDITIVE
+OVERRIDE = ModulationParam.OVERRIDE
+DISABLE = ModulationParam.DISABLE
 
 def _is_modulation_param(val):
     if val in ModulationParam.__dict__.values():

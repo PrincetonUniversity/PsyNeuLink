@@ -61,22 +61,22 @@ modulates a State's `value <State.value>` is determined by the ModulatorySignal'
 Modulation
 ~~~~~~~~~~
 
-A ModulatorySignal modulates the value of a `State` either by modifying a parameter of the state's `function
+A ModulatorySignal modulates the value of a `State` either by modifying a parameter of the State's `function
 <State.function>` (which determines the State's `value <State.value>`), or by assigning a value to the State directly.
 The `function <State.function>` of every state designates one of its parameters as its *MULTIPLICATIVE_PARAM* and
-another as its *MULTIPLICATIVE_PARAM*.  The `modulation <ModulatorySigal.modulation>` attribute of a ModulatorySignal
+another as its *MULTIPLICATIVE_PARAM*.  The `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal
 determines which of these two parameters should be assigned its value, or which of two other actions to take when the
-State updates its `value <State.value>`.  The `modulation <ModulatorySigal.modulation>` attribute is specified using
-a value of 'ModulationParam` (see individual ModulatorySignals for examples):
+State updates its `value <State.value>`.  The `modulation <ModulatorySignal.modulation>` attribute is specified using
+a value of `ModulationParam <Function.ModulationParam>` (see individual ModulatorySignals for examples):
 
   * `ModulationParam.MULTIPLICATIVE` - assign the `value <ModulatorySignal.value> of the ModulatorySignal to
-    the *MULTIPLICATIVE* parameter of the state's `function <State.function>`;
+    the *MULTIPLICATIVE* parameter of the State's `function <State.function>`;
   ..
   * `ModulationParam.ADDITIVE` - assign the `value <ModulatorySignal.value> of the ModulatorySignal to
-    the *ADDITIVE* parameter of the state's `function <State.function>`;
+    the *ADDITIVE* parameter of the State's `function <State.function>`;
   ..
   * `ModulationParam.OVERRIDE` - assign the `value <ModulatorySignal.value> of the ModulatorySignal directly to
-    the state's `value <State.value>` (ignoring its `variable <State.variable>` and `function <State.function>`);
+    the State's `value <State.value>` (ignoring its `variable <State.variable>` and `function <State.function>`);
   ..
   * `ModulationParam.DISABLE` - calculate the State's `value <State.value>` ignoring the ModulatorySignal.
 
@@ -179,7 +179,7 @@ modulatory_signal_keywords.update(component_keywords)
 
 class ModulatorySignal(OutputState):
     """
-    ModulatorySignal(                                   \
+    ModulatorySignal(                               \
         owner,                                      \
         function=LinearCombination(operation=SUM),  \
         modulation=ModulationParam.MULTIPLICATIVE   \
@@ -225,9 +225,11 @@ class ModulatorySignal(OutputState):
         specifies the function used to determine the value of the ModulatorySignal from the value of its
         `owner <GatingMechanism.owner>`.
 
-    COMMENT: [NEEDS DOCUMENTATION]
+    COMMENT:
+        [NEEDS DOCUMENTATION]
     COMMENT
-    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE 
+
+    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
