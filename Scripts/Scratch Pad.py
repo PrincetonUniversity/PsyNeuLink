@@ -34,6 +34,17 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
 
+#region TEST Component Hierarchy
+
+# print('TEST Component Hierarchy')
+# from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+# from PsyNeuLink.Components.Functions.Function import Linear
+# # P = Linear()
+# P = MappingProjection()
+# P.test_attribute
+
+#endregion
+
 #region TEST whether function attribute assignment is used and "sticks"
 
 # my_mech = IntegratorMechanism()
