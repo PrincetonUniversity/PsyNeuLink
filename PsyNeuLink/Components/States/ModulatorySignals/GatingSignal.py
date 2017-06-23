@@ -75,7 +75,7 @@ Modulation
 ~~~~~~~~~~
 
 Each GatingSignal has a `modulation <GatingSignal.modulation>` attribute that determines how the GatingProjection 
-is used by the state to which it projects to modify its value (see `modulation <ModulatoryProjection.modulation>` 
+is used by the state to which it projects to modify its value (see `ModulatorySignal_Modulation`
 for an explanation of how this attribute is specified and used to modulate the value of a state).  The default value 
 is set to the value of the `modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the 
 GatingSignal belongs;  this the is same for all of the GatingSignals belonging to that GatingMechanism.  However, the
@@ -140,7 +140,7 @@ it adds the `value <GatingSignal.value>` of the `GatingSignal` to the `value <In
                                           modulation=ModulationParam.ADDITIVE)
 
 Note that, again, the gating_signals are listed as mechanisms, since their primary InputStates are to be gated.
-Since they are all listed in a single entry of a `state specification dictionary`, they will all be gated by a
+Since they are all listed in a single entry of a `state specification dictionary <LINK>`, they will all be gated by a
 single GatingSignal named *GATE_ALL*, that will send a `GatingProjections <GatingProjection>` to the InputState of
 each of the Mechanisms listed (the next example below shows how InputStates can be differentially gated by a
 `GatingMechanism`). Finally, note that the `ModulationParam` specified for the `GatingMechanism` (and therefore the

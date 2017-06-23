@@ -72,8 +72,8 @@ class AdaptiveMechanism_Base(Mechanism_Base):
     ----------
 
     modulation : ModulationParam
-        determines how the output of the AdaptiveMechanism's `ModulatorySignal <ModulatorySignal>` are used to modulate
-        the value of the state(s) their ModulatoryProjections <ModulatoryProjection>` projects.
+        determines how the output of the AdaptiveMechanism's `ModulatorySignal(s) <ModulatorySignal>` are used to
+        modulate the value of the State(s) to which their `ModulatoryProjection(s) <ModulatoryProjection>` project.
    """
 
     componentType = ADAPTIVE_MECHANISM

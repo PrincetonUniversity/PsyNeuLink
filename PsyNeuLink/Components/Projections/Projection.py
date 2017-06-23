@@ -184,8 +184,9 @@ Receiver
 ~~~~~~~~
 
 This must be an :doc:`InputState` or a :doc:`ParameterState`.  The projection is assigned to the receiver's
-`afferents <State.State_Base.path_afferents>` list, and the output of the projection's
-`function <Projection.function>` is transmitted to its receiver.  A `receiver <Projection.receiver>` can be specified as:
+`path_afferents <State.State_Base.path_afferents>` list, and the output of the projection's
+`function <Projection.function>` is transmitted to its receiver.  A `receiver <Projection.receiver>`
+can be specified as:
 
   * an existing **inputState**;
   ..

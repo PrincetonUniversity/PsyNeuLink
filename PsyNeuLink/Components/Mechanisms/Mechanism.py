@@ -1380,22 +1380,20 @@ class Mechanism_Base(Mechanism):
             Execution sequence:
             - Call self.input_state.execute() for each entry in self.input_states:
                 + execute every self.input_state.path_afferents.[<Projection>.execute()...]
-                + aggregate results using self.input_state.params[FUNCTION]()
-                + store the result in self.input_state.value
+                + aggregate results and/or gate state using self.input_state.function()
+                + assign the result in self.input_state.value
             - Call every self.params[<ParameterState>].execute(); for each:
-                + execute self.params[<ParameterState>].path_afferents.[<Projection>.execute()...]
+                + execute self.params[<ParameterState>].mod_afferents.[<Projection>.execute()...]
                     (usually this is just a single ControlProjection)
-                + aggregate results (if > one) using self.params[<ParameterState>].params[FUNCTION]()
-                + apply the result to self.params[<ParameterState>].value
+                + aggregate results for each ModulationParam or assign value from an OVERRIDE specification
+                + assign the result to self.params[<ParameterState>].value
             - Call subclass' self.execute(params):
                 - use self.input_state.value as its variable,
-                - use params[kw<*>] or self.params[<ParameterState>].value for each param of subclass self.execute,
-                - apply the output to self.outputState.value
+                - use self.params[<ParameterState>].value for each param of subclass' self.function
+                - call self._update_output_states() to assign the output to each self.output_states[<OutputState>].value
                 Note:
-                * if execution is occuring as part of initialization, outputState(s) are reset to 0
-                * otherwise, they are left in the current state until the next update
-
-            - [TBI: Call self.outputState.execute() (output gating) to update self.outputState.value]
+                * if execution is occurring as part of initialization, each output_state is reset to 0
+                * otherwise, their values are left as is until the next update
         COMMENT
 
         Arguments
@@ -1441,7 +1439,7 @@ class Mechanism_Base(Mechanism):
             if PROCESS_INIT in context or SYSTEM_INIT in context:
                 # Run full execute method for init of Process and System
                 pass
-            # Only call mechanism's _execute method for init
+            # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
                 return_value =  self._execute(variable=self.variable,
                                                  runtime_params=runtime_params,
@@ -1476,7 +1474,7 @@ class Mechanism_Base(Mechanism):
                     return converted_to_2d
                 # MODIFIED 3/3/17 END
 
-            # Only call mechanism's function method for init
+            # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
                 return_value = self.function(variable=self.variable,
                                              params=runtime_params,
@@ -1513,16 +1511,13 @@ class Mechanism_Base(Mechanism):
 
         # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
-        # # MODIFIED 5/7/17 OLD:
-        # self._check_args(variable=self.input_value,
-        # MODIFIED 5/7/17 NEW:
         self._check_args(variable=self.variable,
-        # MODIFIED 5/7/17 END
                         params=runtime_params,
                         target_set=runtime_params)
         #endregion
 
         #region UPDATE INPUT STATE(S)
+
         # Executing or simulating process or system, get input by updating input_states
 
         if input is None and (EXECUTING in context or EVC_SIMULATION in context) and (self.input_state.path_afferents != []):
@@ -1535,7 +1530,6 @@ class Mechanism_Base(Mechanism):
             if input is None:
                 input = self.variableClassDefault
             self._assign_input(input)
-        # MODIFIED 11/27/16 END
 
         #endregion
 
@@ -1604,18 +1598,12 @@ class Mechanism_Base(Mechanism):
         if '_init_' in context:
             for state in self.input_states:
                 self.input_states[state].value = self.input_states[state].variable
-            # # MODIFIED 6/1/17 OLD:
-            # for state in self._parameter_states:
-            #     self._parameter_states[state].value =  self._parameter_states[state].base_value
-            # MODIFIED 6/1/17 NEW:
             for state in self._parameter_states:
                 self._parameter_states[state].value =  getattr(self, '_'+state)
-            # MODIFIED 6/1/17 END
             for state in self.output_states:
                 # Zero outputStates in case of recurrence:
                 #    don't want any non-zero values as a residuum of initialization runs to be
                 #    transmittted back via recurrent projections as initial inputs
-                # FIX: IMPLEMENT zero_all_values METHOD
                 self.output_states[state].value = self.output_states[state].value * 0.0
         #endregion
 
