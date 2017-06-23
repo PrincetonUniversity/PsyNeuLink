@@ -568,7 +568,7 @@ class TestGraph:
             assert comp.graph_processing.get_children_from_component(D) == []
             assert comp.graph_processing.get_children_from_component(E) == []
 
-        def test_cycle(self):
+        def test_cycle_linear(self):
             comp = Composition()
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             B = TransferMechanism(function=Linear(intercept=4.0), name='B')
@@ -592,3 +592,97 @@ class TestGraph:
             assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[B]]
             assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
             assert comp.graph_processing.get_children_from_component(C) == [comp.graph_processing.comp_to_vertex[A]]
+
+        def test_cycle_x(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+            D = TransferMechanism(function=Linear(intercept=1.5), name='D')
+            E = TransferMechanism(function=Linear(intercept=1.5), name='E')
+            mechs = [A, B, C, D, E]
+            for m in mechs:
+                comp.add_mechanism(m)
+            comp.add_projection(A, MappingProjection(), C)
+            comp.add_projection(B, MappingProjection(), C)
+            comp.add_projection(C, MappingProjection(), D)
+            comp.add_projection(C, MappingProjection(), E)
+            comp.add_projection(D, MappingProjection(), A)
+            comp.add_projection(E, MappingProjection(), B)
+
+            assert len(comp.graph_processing.vertices) == 5
+            assert len(comp.graph_processing.comp_to_vertex) == 5
+            for m in mechs:
+                assert m in comp.graph_processing.comp_to_vertex
+
+            assert comp.graph_processing.get_parents_from_component(A) == [comp.graph_processing.comp_to_vertex[D]]
+            assert comp.graph_processing.get_parents_from_component(B) == [comp.graph_processing.comp_to_vertex[E]]
+            assert set(comp.graph_processing.get_parents_from_component(C)) == set([
+                comp.graph_processing.comp_to_vertex[A],
+                comp.graph_processing.comp_to_vertex[B],
+            ])
+            assert comp.graph_processing.get_parents_from_component(D) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_parents_from_component(E) == [comp.graph_processing.comp_to_vertex[C]]
+
+            assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
+            assert set(comp.graph_processing.get_children_from_component(C)) == set([
+                comp.graph_processing.comp_to_vertex[D],
+                comp.graph_processing.comp_to_vertex[E],
+            ])
+            assert comp.graph_processing.get_children_from_component(D) == [comp.graph_processing.comp_to_vertex[A]]
+            assert comp.graph_processing.get_children_from_component(E) == [comp.graph_processing.comp_to_vertex[B]]
+
+        def test_cycle_x_multiple_incoming(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+            D = TransferMechanism(function=Linear(intercept=1.5), name='D')
+            E = TransferMechanism(function=Linear(intercept=1.5), name='E')
+            mechs = [A, B, C, D, E]
+            for m in mechs:
+                comp.add_mechanism(m)
+            comp.add_projection(A, MappingProjection(), C)
+            comp.add_projection(B, MappingProjection(), C)
+            comp.add_projection(C, MappingProjection(), D)
+            comp.add_projection(C, MappingProjection(), E)
+            comp.add_projection(D, MappingProjection(), A)
+            comp.add_projection(D, MappingProjection(), B)
+            comp.add_projection(E, MappingProjection(), A)
+            comp.add_projection(E, MappingProjection(), B)
+
+            assert len(comp.graph_processing.vertices) == 5
+            assert len(comp.graph_processing.comp_to_vertex) == 5
+            for m in mechs:
+                assert m in comp.graph_processing.comp_to_vertex
+
+            assert set(comp.graph_processing.get_parents_from_component(A)) == set([
+                comp.graph_processing.comp_to_vertex[D],
+                comp.graph_processing.comp_to_vertex[E],
+            ])
+            assert set(comp.graph_processing.get_parents_from_component(B)) == set([
+                comp.graph_processing.comp_to_vertex[D],
+                comp.graph_processing.comp_to_vertex[E],
+            ])
+            assert set(comp.graph_processing.get_parents_from_component(C)) == set([
+                comp.graph_processing.comp_to_vertex[A],
+                comp.graph_processing.comp_to_vertex[B],
+            ])
+            assert comp.graph_processing.get_parents_from_component(D) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_parents_from_component(E) == [comp.graph_processing.comp_to_vertex[C]]
+
+            assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
+            assert set(comp.graph_processing.get_children_from_component(C)) == set([
+                comp.graph_processing.comp_to_vertex[D],
+                comp.graph_processing.comp_to_vertex[E],
+            ])
+            assert set(comp.graph_processing.get_children_from_component(D)) == set([
+                comp.graph_processing.comp_to_vertex[A],
+                comp.graph_processing.comp_to_vertex[B],
+            ])
+            assert set(comp.graph_processing.get_children_from_component(E)) == set([
+                comp.graph_processing.comp_to_vertex[A],
+                comp.graph_processing.comp_to_vertex[B],
+            ])
