@@ -245,7 +245,7 @@ class Composition(object):
             for mech in next_visit_stack:  # While the stack isn't empty
                 visited.append(mech)  # Mark the mech as visited
                 visited_current_path.append(mech)  # And visited during the current path
-                children = self.graph.get_child_vertices_from_component(mech)  # Get the children of that mechanism
+                children = [vertex.component for vertex in self.graph.get_child_vertices_from_component(mech)]  # Get the children of that mechanism
                 for child in children:
                     # If the child has been visited this path and is not already initialized
                     if child in visited_current_path:
@@ -261,7 +261,7 @@ class Composition(object):
                 for remaining_mech in next_visit_stack:
                     visited.append(remaining_mech)
                     visited_current_path.append(remaining_mech)
-                    children = self.graph.get_child_vertices_from_component(remaining_mech)
+                    children = [vertex.component for vertex in self.graph.get_child_vertices_from_component(remaining_mech)]
                     for child in children:
                         if child in visited_current_path:
                             self.add_mechanism_role(remaining_mech, MechanismRole.RECURRENT_INIT)
