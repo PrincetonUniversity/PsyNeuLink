@@ -287,6 +287,10 @@ class Composition(object):
         self.needs_update_graph = False
 
     def _update_processing_graph(self):
+        '''
+        Constructs the processing graph (the graph that contains only non-learning mechanisms as vertices)
+        from the composition's full graph
+        '''
         logger.debug('Updating processing graph')
         self._graph_processing = self.graph.copy()
         visited_vertices = set()
