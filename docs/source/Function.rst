@@ -6,6 +6,7 @@ Functions
 
 .. automodule:: Function
    :members: Function_Base,
+             ModulationParam,
              ArgumentTherapy,
              UserDefinedFunction,
              Reduce,

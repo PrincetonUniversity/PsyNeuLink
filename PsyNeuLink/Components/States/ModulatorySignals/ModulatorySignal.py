@@ -61,33 +61,22 @@ modulates a State's `value <State.value>` is determined by the ModulatorySignal'
 Modulation
 ~~~~~~~~~~
 
-A ModulatorySignal modulates the value of a `State` either by modifying a parameter of the state's `function
+A ModulatorySignal modulates the value of a `State` either by modifying a parameter of the State's `function
 <State.function>` (which determines the State's `value <State.value>`), or by assigning a value to the State directly.
 The `function <State.function>` of every state designates one of its parameters as its *MULTIPLICATIVE_PARAM* and
-another as its *MULTIPLICATIVE_PARAM*.  The `modulation <ModulatorySigal.modulation>` attribute of a ModulatorySignal
+another as its *MULTIPLICATIVE_PARAM*.  The `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal
 determines which of these two parameters should be assigned its value, or which of two other actions to take when the
-State updates its `value <State.value>`.  The `modulation <ModulatorySigal.modulation>` attribute is specified using
-a value of 'ModulationParam` (see individual ModulatorySignals for examples):
-
-  * `ModulationParam.MULTIPLICATIVE` - assign the `value <ModulatorySignal.value> of the ModulatorySignal to
-    the *MULTIPLICATIVE* parameter of the state's `function <State.function>`;
-  ..
-  * `ModulationParam.ADDITIVE` - assign the `value <ModulatorySignal.value> of the ModulatorySignal to
-    the *ADDITIVE* parameter of the state's `function <State.function>`;
-  ..
-  * `ModulationParam.OVERRIDE` - assign the `value <ModulatorySignal.value> of the ModulatorySignal directly to
-    the state's `value <State.value>` (ignoring its `variable <State.variable>` and `function <State.function>`);
-  ..
-  * `ModulationParam.DISABLE` - calculate the State's `value <State.value>` ignoring the ModulatorySignal.
-
-The default for `ControlSignals <ControlSignal>` and `GatingSignals <GatingSignal>` is `ModulationParam.MULTIPLICATIVE`;
-for `LearningSignals <LearningSignal>` it is `ModulationParam.ADDITIVE`, so that weight changes are *added*
-to (rather than multiply) the weight `matrix <MappingProjection.matrix>` of a `MappingProjection` being learned.
-The value of the `modulation <ModulatorySignal.modulation>` attribute can be specified in the **modulation** arg of
+State updates its `value <State.value>`.  It is specified using a value of `ModulationParam <Function.ModulationParam>`.
+The default for `ControlSignals <ControlSignal>` and `GatingSignals <GatingSignal>` is `ModulationParam.MULTIPLICATIVE`,
+which multiplies the State`s `variable <State.variable>` by the `value <ModulatorySignal>` of the ModulatorySignal
+before passing it to the State's `function <State.function>`.  The default for `LearningSignals <LearningSignal>` is
+`ModulationParam.ADDITIVE`, which adds the `value <LearningSignal.value>` of the LearningSignal (i.e., the weight
+changes computed by the `LearningMechanism`) to the State's `variable <State.variable>` (i.e., the current weight
+`matrix <MappingProjection.matrix>` for the `MappingProjection` being learned).  The
+`modulation <ModulatorySignal.modulation>` attribute can be specified in the **modulation** arg of
 the ModulatorySignal's constructor, or in a *MODULATION* entry of a `state specification dictionary <LINK>` used to
-create the ModulatorySignal. If the value of the `modulation <ModulatorySignal.modulation>` attribute is not specified
-when a ModulatorySignal is created, it is assigned the value of the `modulation <AdaptiveMechanism.modulation>`
-attribute for the `AdaptiveMechanism` to which it belongs.
+create the ModulatorySignal. If it is not specified when a ModulatorySignal is created, it is assigned the value of
+the `modulation <AdaptiveMechanism_Base.modulation>` attribute for the `AdaptiveMechanism` to which it belongs.
 
 .. note::
    `OVERRIDE <ModulatorySignal_Modulation>` can be specified for **only one** ModulatoryProjection to a State;
@@ -179,7 +168,7 @@ modulatory_signal_keywords.update(component_keywords)
 
 class ModulatorySignal(OutputState):
     """
-    ModulatorySignal(                                   \
+    ModulatorySignal(                               \
         owner,                                      \
         function=LinearCombination(operation=SUM),  \
         modulation=ModulationParam.MULTIPLICATIVE   \
@@ -225,9 +214,12 @@ class ModulatorySignal(OutputState):
         specifies the function used to determine the value of the ModulatorySignal from the value of its
         `owner <GatingMechanism.owner>`.
 
-    COMMENT: [NEEDS DOCUMENTATION]
+    COMMENT:
+        [NEEDS DOCUMENTATION]
     COMMENT
-    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE 
+
+    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
+        specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -248,42 +240,43 @@ class ModulatorySignal(OutputState):
     Attributes
     ----------
 
-    owner : GatingMechanism
-        the `GatingMechanism` to which the ModulatorySignal belongs.
+    owner : AdaptiveMechanism
+        the `AdaptiveMechanism` to which the ModulatorySignal belongs.
 
     variable : number, list or np.ndarray
-        used by `function <ModulatorySignal.function>` to compute the ModulatorySignal's `value <ModulatorySignal.value>`.
+        value assigned by the ModulatorySignal's `owner <ModulatorySignal.owner>`, and used by the ModulatorySignal's
+        `function <ModulatorySignal.function>` to compute its `value <ModulatorySignal.value>`.
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
-        provides the ModulatorySignal's `value <GatingMechanism.value>`; the default is an identity function that
-        passes the input to the GatingMechanism as value for the ModulatorySignal.
+        provides the ModulatorySignal's `value <ModulatorySignal.value>`; the default is an identity function that
+        assigns `variable <ModulatorySignal.variable` as ModulatorySignal's `value <ModulatorySignal.value>`.
 
     value : number, list or np.ndarray
-        result of `function <ModulatorySignal.function>`.
+        result of `function <ModulatorySignal.function>`, and is the value used to determine the `value <State.value>`
+        of the State(s) being modulated.
     
     modulation : ModulationParam
-        determines how the output of the ModulatorySignal is used to modulate the value of the state(s)
-        to which its GatingProjection(s) project(s).
+        determines how the output of the ModulatorySignal is used to modulate the value of the state(s) being modulated.
 
     efferents : [List[GatingProjection]]
-        a list of the `GatingProjections <GatingProjection>` assigned to the ModulatorySignal.
+        a list of the `ModulatoryProjections <ModulatoryProjection>` assigned to the ModulatorySignal.
 
-    name : str : default <State subclass>-<index>
-        name of the outputState.
-        Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
-        assigned by the StateRegistry of the mechanism to which the outputState belongs
+    name : str : default <ModulatorySignal>-<index>
+        name of the ModulatorySignal.
+        Specified in the **name** argument of the constructor for the ModulatorySignal.  If not is specified, a default
+        is assigned by the StateRegistry of the mechanism to which the ModulatorySignal belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
-            Unlike other PsyNeuLink components, state names are "scoped" within a mechanism, meaning that states with
-            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
-            mechanism: states within a mechanism with the same base name are appended an index in the order of their
+            Unlike other PsyNeuLink components, State names are "scoped" within a mechanism, meaning that States with
+            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
+            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the outputState.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
+        the `PreferenceSet` for the ModulatorySignal.
+        Specified in the **prefs** argument of the constructor for the ModulatorySignal;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """
