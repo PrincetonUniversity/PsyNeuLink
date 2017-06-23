@@ -498,9 +498,9 @@ class TestGraph:
             for m in mechs:
                 assert m in comp.graph_processing.comp_to_vertex
 
-            assert comp.graph.get_parents_from_component(A) == []
-            assert comp.graph.get_parents_from_component(B) == []
-            assert comp.graph.get_parents_from_component(C) == []
+            assert comp.graph_processing.get_parents_from_component(A) == []
+            assert comp.graph_processing.get_parents_from_component(B) == []
+            assert comp.graph_processing.get_parents_from_component(C) == []
 
         def test_triangle(self):
             comp = Composition()
@@ -518,6 +518,6 @@ class TestGraph:
             for m in mechs:
                 assert m in comp.graph_processing.comp_to_vertex
 
-            assert comp.graph.get_parents_from_component(A) == []
-            assert comp.graph.get_parents_from_component(B) == [A]
-            assert comp.graph.get_parents_from_component(C) == [B]
+            assert comp.graph_processing.get_parents_from_component(A) == []
+            assert comp.graph_processing.get_parents_from_component(B) == [comp.graph_processing.comp_to_vertex[A]]
+            assert comp.graph_processing.get_parents_from_component(C) == [comp.graph_processing.comp_to_vertex[B]]
