@@ -199,7 +199,7 @@ class Composition(object):
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
 
-    def analyze_graph(self):
+    def analyze_graph(self, graph=None):
         ########
         # Determines identity of significant nodes of the graph
         # Each node falls into one or more of the following categories
@@ -225,16 +225,18 @@ class Composition(object):
         #   compare the target value to the output of another mechanism in the composition.
         # - Monitored: Monitored mechanisms send projections to Target mechanisms.
         ########
+        if graph is None:
+            graph = self.graph_processing
 
         # Clear old information
         self.mechanisms_to_roles.update({k: set() for k in self.mechanisms_to_roles})
 
         # Identify Origin mechanisms
         for mech in self.mechanisms:
-            if self.graph.get_incoming_from_component(mech) == []:
+            if graph.get_parents_from_component(mech) == []:
                 self.add_mechanism_role(mech, MechanismRole.ORIGIN)
         # Identify Terminal mechanisms
-            if self.graph.get_outgoing_from_component(mech) == []:
+            if graph.get_children_from_component(mech) == []:
                 self.add_mechanism_role(mech, MechanismRole.TERMINAL)
         # Identify Recurrent_init and Cycle mechanisms
         visited = []  # Keep track of all mechanisms that have been visited
@@ -245,12 +247,12 @@ class Composition(object):
             for mech in next_visit_stack:  # While the stack isn't empty
                 visited.append(mech)  # Mark the mech as visited
                 visited_current_path.append(mech)  # And visited during the current path
-                children = [vertex.component for vertex in self.graph.get_child_vertices_from_component(mech)]  # Get the children of that mechanism
+                children = [vertex.component for vertex in graph.get_children_from_component(mech)]  # Get the children of that mechanism
                 for child in children:
                     # If the child has been visited this path and is not already initialized
                     if child in visited_current_path:
                         self.add_mechanism_role(mech, MechanismRole.RECURRENT_INIT)
-                        self.add_mechanism_role(child.component, MechanismRole.CYCLE)
+                        self.add_mechanism_role(child, MechanismRole.CYCLE)
                     elif child not in visited:  # Else if the child has not been explored
                         next_visit_stack.append(child)  # Add it to the visit stack
         for mech in self.mechanisms:
@@ -261,11 +263,11 @@ class Composition(object):
                 for remaining_mech in next_visit_stack:
                     visited.append(remaining_mech)
                     visited_current_path.append(remaining_mech)
-                    children = [vertex.component for vertex in self.graph.get_child_vertices_from_component(remaining_mech)]
+                    children = [vertex.component for vertex in graph.get_children_from_component(remaining_mech)]
                     for child in children:
                         if child in visited_current_path:
                             self.add_mechanism_role(remaining_mech, MechanismRole.RECURRENT_INIT)
-                            self.add_mechanism_role(child.component, MechanismRole.CYCLE)
+                            self.add_mechanism_role(child, MechanismRole.CYCLE)
                         elif child not in visited:
                             next_visit_stack.append(child)
 
