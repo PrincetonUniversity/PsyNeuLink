@@ -1,17 +1,19 @@
 from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
+from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.scheduling.condition import AfterNCalls
+from PsyNeuLink.Components.States.OutputState import *
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
-                       function=Logistic,
-                       default_input_value = np.zeros((2,)))
+                                function=Logistic,
+                                default_input_value = np.zeros((2,)))
 
 Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
@@ -132,12 +134,15 @@ def show_target():
     print ('- Input Weights: \n', Input_Weights.matrix)
     print ('- Middle Weights: \n', Middle_Weights.matrix)
     print ('- Output Weights: \n', Output_Weights.matrix)
+    # print ('- Input Weights: \n', Input_Weights._parameter_states[MATRIX].function_object.previous_value)
+    # print ('- Middle Weights: \n', Input_Weights._parameter_states[MATRIX].function_object.previous_value)
+    # print ('- Output Weights: \n', Input_Weights._parameter_states[MATRIX].function_object.previous_value)
     print ('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
     print ('ACTIVITY FROM OLD WEIGHTS: \n')
     print ('- Middle 1: \n', Hidden_Layer_1.value)
     print ('- Middle 2: \n', Hidden_Layer_2.value)
     print ('- Output:\n', Output_Layer.value)
-    # print ('MSE: \n', Output_Layer.outputValue[0])
+    # print ('MSE: \n', Output_Layer.output_values[0])
 
 if COMPOSITION is PROCESS:
     # z.execute()
@@ -162,15 +167,19 @@ elif COMPOSITION is SYSTEM:
     x.reportOutputPref = True
     composition = x
 
-    # x.show_graph_with_learning()
-    results = x.run(num_executions=10,
-                    # inputs=stim_list,
-                    # inputs=[[-1, 30],[2, 10]],
-                    # targets=[[0, 0, 1],[0, 0, 1]],
-                    inputs=stim_list,
-                    targets=target_list,
-                    call_before_trial=print_header,
-                    call_after_trial=show_target)
+    # x.show_graph(show_learning=True)
+    # x.show_graph()
+    results = x.run(
+        num_executions=10,
+        # inputs=stim_list,
+        # inputs=[[-1, 30],[2, 10]],
+        # targets=[[0, 0, 1],[0, 0, 1]],
+        inputs=stim_list,
+        targets=target_list,
+        call_before_trial=print_header,
+        call_after_trial=show_target,
+        termination_processing={TimeScale.TRIAL: AfterNCalls(Output_Layer, 1)}
+    )
 
 else:
     print ("Multilayer Learning Network NOT RUN")

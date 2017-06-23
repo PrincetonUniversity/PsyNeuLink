@@ -24,8 +24,8 @@ Creating an IntegratorMechanism
 -------------------------------
 
 An IntegratorMechanism can be created directly by calling its constructor, or using the
-:py:func:`mechanism <Mechanism.mechanism>` function and specifying :keyword:`IntegratorMechanism` as its `mech_spec`
-argument.  Its function is specified in the :keyword:`function` argument, which can be parameterized by calling its
+`mechanism() <Mechanism.mechanism>` function and specifying INTEGRATOR_MECHANISM as its **mech_spec**
+argument.  Its function is specified in the **function** argument, which can be parameterized by calling its
 constructor with parameter values::
 
     my_time_averaging_mechanism = IntegratorMechanism(function=Integrator(integration_type=ADAPTIVE, rate=0.5))
@@ -159,13 +159,13 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
     name : str : default IntegratorMechanism-<index>
         the name of the mechanism.
-        Specified in the :keyword:`name` argument of the constructor for the mechanism;
+        Specified in the :keyword:**name** argument of the constructor for the mechanism;
         if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the `PreferenceSet` for mechanism.
-        Specified in the `prefs` argument of the constructor for the mechanism;
+        Specified in the **prefs** argument of the constructor for the mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -180,43 +180,42 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
     # Sets template for variable (input)
-    variableClassDefault = [[0]]
+    variableClassDefault = None
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
         OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
+
     })
 
     # Set default input_value to default bias for SigmoidLayer
     paramNames = paramClassDefaults.keys()
 
-    from PsyNeuLink.Components.Functions.Function import Integrator
+    from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator
 
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
-                 function=Integrator(rate=0.5,
-                                     integration_type=ADAPTIVE),
+                 size:tc.optional(int)=None,
+                 function=AdaptiveIntegrator(rate=0.5),
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
-
-        :param default_input_value: (value)
-        :param params: (dict)
-        :param name: (str)
-        :param prefs: (PreferenceSet)
         """
 
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function, params=params)
+        self.variableClassDefault = default_input_value or [[0]]
+        params = self._assign_args_to_param_dicts(function=function,
+                                                  params=params)
 
         # if default_input_value is NotImplemented:
         #     default_input_value = SigmoidLayer_DEFAULT_NET_INPUT
+
+        self.size = size
 
         super(IntegratorMechanism, self).__init__(variable=default_input_value,
                                   params=params,

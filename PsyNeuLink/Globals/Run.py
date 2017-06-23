@@ -107,7 +107,7 @@ COMMENT:
     used for the format of the input for the execute method of a process or system.  This can be specified as a
     nested set of lists, or an ndarray.  The exact structure is determined by a number of factors, as described below.
     the number of `ORIGIN` mechanisms involved (a process has only one, but a system can have several), the
-    number of inputStates for each `ORIGIN` mechanism, and whether the input to those inputStates is
+    number of input_states for each `ORIGIN` mechanism, and whether the input to those input_states is
     single-element (such as scalars), multi-element (such as vectors) or a mix.  For the run method, the structure is
     further determined by whether only a single execution or multiple executions is specified.  Rather than specifying a
     single format structure that must be used for all purposes (which would necessarily be the most complex one),
@@ -115,7 +115,7 @@ COMMENT:
     particular process or input, which can vary according to circumstance.  Examples are provided below.  In all cases,
     either nested lists or ndarrays can be used, in which the innermost level (highest axis of an ndarray) is used to
     specify the input values for a given inputState (if any are multi-element), the next nested level (second highest
-    axis) is used to specify the different inputStates of a given mechanism (if any have more than one), the level
+    axis) is used to specify the different input_states of a given mechanism (if any have more than one), the level
     (axis) after that is used to specify the different `ORIGIN` mechanisms (if there is more than one), and
     finally the outermost level (lowest axis) is used to specify different trials (if there is more than one to be run).
 
@@ -126,15 +126,15 @@ COMMENT:
     an inputstae as a list or array (axis of an ndarray).
 COMMENT
 
-The :keyword:`run` function presents the inputs for each round of execution to the inputStates of the relevant
+The :keyword:`run` function presents the inputs for each round of execution to the input_states of the relevant
 mechanisms. These are specified in the **inputs** argument of the :keyword:`execute` or :keyword:`run` method.
-For a mechanism, they comprise the input value for each of the mechanism's `inputStates <InputState>`.  For a process
+For a mechanism, they comprise the input value for each of the mechanism's `input_states <InputState>`.  For a process
 or system, they comprise the input values for the inputState(s) of the `ORIGIN` mechanism(s).  Input values can be
 specified in one of two ways: `sequence format <Run_Inputs_Sequence_Format>` and `mechanism format <Run_Dict_format>`.
 Sequence format is more complex, but does not require the specification of mechanisms by name, and thus may better
 suited for automated means of generating inputs.  Mechanism format requires that inputs be assigned to mechanisms by
 name, but is easier to use (as the order in which the mechanisms are specified does not matter).  Both formats require
-that inputs be specified as nested lists or ndarrays, that define the number of executions, mechanisms, inputStates
+that inputs be specified as nested lists or ndarrays, that define the number of executions, mechanisms, input_states
 and elements of each input value.  These factors determine the levels of nesting required for a list, or
 the dimensionality (number of axes) for an ndarray.  They are described below, followed by a description of the two
 formats.
@@ -152,10 +152,10 @@ formats.
   has only one `ORIGIN` mechanism.  It is also not relevant for the `mechanism format <Run_Inputs_Mechanism_Format>`,
   since that separates the inputs for each mechanism into separate entries of a dictionary.
 ..
-* **Number of inputStates.** In general, mechanisms have a single ("primary") inputState; however, some types of
+* **Number of input_states.** In general, mechanisms have a single ("primary") inputState; however, some types of
   mechanisms can have more than one (see `Mechanism_InputStates`).  If any `ORIGIN` mechanism in a process or
   system has more than one inputState, then the next level of nesting of a list, or next higher axis of an ndarray,
-  is used for the set of inputStates for each mechanism.
+  is used for the set of input_states for each mechanism.
 ..
 * **Number of elements for the value of an inputState.** The input for an inputState can be a single element (e.g.,
   a scalar) or have multiple elements (e.g., a vector).  By convention, even if the input to an inputState is only a
@@ -187,8 +187,8 @@ above.  The `figure <Run_Sequence_Format_Fig>` below shows examples.
     *Lists:* if there is more than one round, then the outermost level of the list is used for the sequence of
     executions.  If there is only one `ORIGIN` mechanism and it has only one inputState (the most common
     case), then a single sublist is used for the input of each round.  If the `ORIGIN` mechanism has more
-    than one inputState, then the entry for each round is a sublist of the inputStates, each entry of which is a 
-    sublist containing the input for that inputState.  If there is more than one mechanism, but none have more than 
+    than one inputState, then the entry for each round is a sublist of the input_states, each entry of which is a
+    sublist containing the input for that inputState.  If there is more than one mechanism, but none have more than
     one inputState, then a sublist is used for each mechanism in each round, within which a sublist is used for the
     input for that mechanism.  If there is more than one mechanism, and any have more than one inputState,
     then a sublist is used for each mechanism for each round, within which a sublist is used for each
@@ -199,10 +199,10 @@ above.  The `figure <Run_Sequence_Format_Fig>` below shows examples.
     more than one round, only one `ORIGIN` mechanism, and that has only one inputState (the most common case),
     then axis 0 is used for round, and axis 1 for inputs per round.  In the extreme, if there are multiple rounds,
     more than one `ORIGIN` mechanism, and more than one inputState for one or more of the `ORIGIN` mechanisms,
-    then axis 0 is used for rounds, axis 1 for mechanisms within round, axis 2 for inputStates of each mechanism, and
+    then axis 0 is used for rounds, axis 1 for mechanisms within round, axis 2 for input_states of each mechanism, and
     axis 3 for the input to each inputState of a mechanism.  Note that if *any* mechanism being run (directly, or as
     one of the `ORIGIN` mechanisms of a process or system) has more than one inputState, then an axis must be
-    committed to inputStates, and the input to every inputState of every mechanism must be specified in that axis
+    committed to input_states, and the input to every inputState of every mechanism must be specified in that axis
     (i.e., even for those mechanisms that have a single inputState).
 
     .. _Run_Sequence_Format_Fig:
@@ -227,9 +227,9 @@ sequence of inputs for an `ORIGIN` mechanism;  there must be one such entry for 
 process or system being run.  The key for each entry is the `ORIGIN` mechanism, and the value contains either a list
 or ndarray specifying the sequence of inputs for that mechanism, one for each round of execution.  If a list is used,
 and the mechanism has more than one inputState, then a sublist is used in each item of the list to specify the inputs
-for each of the mechanism's inputStates for that round.  If an ndarray is used, axis 0 is used for the sequence of
+for each of the mechanism's input_states for that round.  If an ndarray is used, axis 0 is used for the sequence of
 rounds. If the mechanism has a single inputState, then axis 1 is used for the input for each round.  If the mechanism
-has multiple inputStates, then axis 1 is used for the inputStates, and axis 2 is used for the input to each
+has multiple input_states, then axis 1 is used for the input_states, and axis 2 is used for the input to each
 inputState for each round.
 
     .. figure:: _static/Mechanism_format_input_specs_fig.*
@@ -249,7 +249,7 @@ to such mechanisms, that will be used to initialize the process or system when i
 specified in the :keyword:`initial_values` argument of :keyword:`run`, as a dictionary. The key for each entry must
 be a mechanism designated as `INITIALIZE_CYCLE`, and its value an input for the mechanism to be used as its initial
 value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an np.ndarray),
-must equal the number of inputStates of the mechanism, and the size of each value must match (in number and type of
+must equal the number of input_states of the mechanism, and the size of each value must match (in number and type of
 elements) that of the `variable <InputState.InputState.variable>` for the corresponding inputState.
 
 .. _Run_Targets:
@@ -263,7 +263,7 @@ are specified in the :keyword:`targets` argument of the :keyword:`execute` or :k
 any of three formats.  The two formats used for :keyword:`inputs` (`sequence <Run_Inputs_Sequence_Format>` and
 `mechanism <Run_Inputs_Mechanism_Format>` format) can also be used for targets.  However, the format of the lists or
 ndarrays is simpler, since each `TARGET` mechanism is assigned only a single target value, so there is never the need
-for the extra level of nesting (or dimension of ndarray) used for inputStates in the specification of :keyword:`inputs`.
+for the extra level of nesting (or dimension of ndarray) used for input_states in the specification of :keyword:`inputs`.
 Details concerning the use of the `sequence <Run_Targets_Sequence_Format>`  and
 `mechanism <Run_Targets_Mechanism_Format>` formats for targets is described below. Targets can also be specified
 as a `function <Run_Targets_Function_Format>` (for example, to allow the target to depend on the outcome of processing).
@@ -338,14 +338,13 @@ Class Reference
 
 """
 
-
-import numpy as np
 from collections import Iterable
-from PsyNeuLink.Globals.Utilities import *
+
 from PsyNeuLink.Components.Component import function_type
-from PsyNeuLink.Components.System import System
-from PsyNeuLink.Components.Process import Process, ProcessInputState
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.Process import Process, ProcessInputState
+from PsyNeuLink.Components.System import System
+from PsyNeuLink.Globals.Utilities import *
 
 HOMOGENOUS = 1
 HETEROGENOUS = 0
@@ -393,12 +392,14 @@ def run(object,
         intial_values:tc.optional(tc.any(list, np.ndarray))=None,
         targets:tc.optional(tc.any(list, dict, np.ndarray, function_type))=None,
         learning:tc.optional(bool)=None,
-        call_before_trial:tc.optional(function_type)=None,
-        call_after_trial:tc.optional(function_type)=None,
-        call_before_time_step:tc.optional(function_type)=None,
-        call_after_time_step:tc.optional(function_type)=None,
+        call_before_trial:tc.optional(callable)=None,
+        call_after_trial:tc.optional(callable)=None,
+        call_before_time_step:tc.optional(callable)=None,
+        call_after_time_step:tc.optional(callable)=None,
         clock=CentralClock,
         time_scale:tc.optional(tc.enum(TimeScale.TRIAL, TimeScale.TIME_STEP))=None,
+        termination_processing=None,
+        termination_learning=None,
         context=None):
     """run(                         \
     inputs,                      \
@@ -493,6 +494,7 @@ def run(object,
     """
 
     inputs = _construct_stimulus_sets(object, inputs)
+
     if targets:
         targets = _construct_stimulus_sets(object, targets, is_target=True)
 
@@ -546,10 +548,9 @@ def run(object,
 
     # SET LEARNING_RATE, if specified, for all learningProjections in process or system
     if object.learning_rate is not None:
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         for learning_mech in object.monitoringMechanisms.mechanisms:
-            for projection in learning_mech.outputState.sendsToProjections:
+            for projection in learning_mech.output_state.efferents:
                 if isinstance(projection, LearningProjection):
                     projection.function_object.learning_rate = object.learning_rate
 
@@ -636,6 +637,8 @@ def run(object,
                                     execution_id=execution_id,
                                     clock=clock,
                                     time_scale=time_scale,
+                                    termination_processing=termination_processing,
+                                    termination_learning=termination_learning,
                                     context=context)
 
             if call_after_time_step:
@@ -693,8 +696,8 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
        axis 0: num_input_sets
        axis 1: object._phaseSpecMax
        axis 2: len(object.originMechanisms)
-       axis 3: len(mech.inputStates)
-       axis 4: items of inputStates
+       axis 3: len(mech.input_states)
+       axis 4: items of input_states
 
     Notes:
     * Construct as lists and then convert to np.array, since size of inputs can be different for different mechs
@@ -728,7 +731,6 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
     return stim_list_array
 
 def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
-
     object_type = _get_obect_type(object)
 
     # Check for header
@@ -776,26 +778,31 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
     execution_offset = 0  # Used for indexing w/ headers
     stim_list = []
 
+    # NOTE: never happens as guessed
+    # if object.numPhases > 1:
+    #     print('NUM PHASES: {0}'.format(object.numPhases))
+    #     import code
+    #     code.interact(local=locals())
+
     for execution in range(num_input_sets):
         execution_len = 0  # Used for indexing w/ headers
         stimuli_in_execution = []
         for phase in range(object.numPhases):
             stimuli_in_phase = []
             for mech_num in range(num_mechs):
-                mech, runtime_params, phase_spec = list(object.originMechanisms.mech_tuples)[mech_num]
+                mech = list(object.originMechanisms.mechs)[mech_num]
                 mech_len = np.size(mechs[mech_num].variable)
                 # Assign stimulus of appropriate size for mech and fill with 0's
                 stimulus = np.zeros(mech_len)
                 # Assign input elements to stimulus if phase is correct one for mech
-                if phase == phase_spec:
-                    for stim_elem in range(mech_len):
-                        if headers:
-                            input_index = headers.index(mech) + execution_offset
-                        else:
-                            input_index = input_elem
-                        stimulus[stim_elem] = inputs_flattened[input_index]
-                        input_elem += 1
-                        execution_len += 1
+                for stim_elem in range(mech_len):
+                    if headers:
+                        input_index = headers.index(mech) + execution_offset
+                    else:
+                        input_index = input_elem
+                    stimulus[stim_elem] = inputs_flattened[input_index]
+                    input_elem += 1
+                    execution_len += 1
                 # Otherwise, assign vector of 0's with proper length
                 stimuli_in_phase.append(stimulus)
             stimuli_in_execution.append(stimuli_in_phase)
@@ -835,11 +842,11 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         for target in object.targetMechanisms:
             # If any projection to a target does not have a sender in the stimulus dict, raise an exception
             if not any(mech is projection.sender.owner for
-                       projection in target.inputStates[SAMPLE].receivesFromProjections
+                       projection in target.input_states[SAMPLE].path_afferents
                        for mech in stimuli.keys()):
                     raise RunError("Entry for {} is missing from specification of targets for run of {}".
-                                   format(target.inputStates[SAMPLE].
-                                          receivesFromProjections[0].sender.owner.name,
+                                   format(target.input_states[SAMPLE].
+                                          afferents[0].sender.owner.name,
                                           object.name))
 
         # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
@@ -850,11 +857,11 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         for mech in stimuli.keys():
             # If any mechanism in the stimulus dict does not have a projection to the target, raise an exception
             if not any(target is projection.receiver.owner for
-                       projection in mech.outputState.sendsToProjections
+                       projection in mech.output_state.efferents
                        for target in object.targetMechanisms):
                 raise RunError("{} is not a target mechanism in {}".format(mech.name, object.name))
             # Get target mech (comparator) for each entry in stimuli dict:
-            terminal_to_target_mapping[mech] = mech.outputState.sendsToProjections[0]
+            terminal_to_target_mapping[mech] = mech.output_state.efferents[0]
 
         # Insure that target lists in dict are accessed in the same order as the
         #   targets in the system's targetMechanisms list, by reassigning targets to an OrderedDict:
@@ -864,7 +871,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             # Get the process to which the TARGET mechanism belongs:
             try:
                 process = next(projection.sender.owner for
-                               projection in target.inputStates[TARGET].receivesFromProjections if
+                               projection in target.input_states[TARGET].path_afferents if
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
@@ -925,6 +932,12 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                 stims_in_execution.append(stimuli[mech][i])
             stim_list.append(stims_in_execution)
 
+    # NOTE: never happens as guessed
+    # if object.numPhases > 1:
+    #     print('NUM PHASES: {0}'.format(object.numPhases))
+    #     import code
+    #     code.interact(local=locals())
+
     # Otherwise, for inputs to a system, construct stimulus from dict with phases
     elif object_type is SYSTEM:
         for execution in range(num_input_sets):
@@ -933,19 +946,14 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                 stimuli_in_phase = []
                 # Only assign inputs to originMechanisms
                 #    and assign them in the order they appear in originMechanisms and fill out each phase
-                for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
+                for mech in object.originMechanisms.mechs:
                     # Assign input elements to stimulus if phase is correct one for mech
-                    if phase == phase_spec:
-                        # Get stimulus for mech for current execution, and enforce 2d to accomodate inputStates per mech
-                        stimulus = np.atleast_2d(stimuli[mech][execution])
-                        if not isinstance(stimulus, Iterable):
-                            stimulus = np.atleast_2d([stimulus])
-                    # Otherwise, pad stimulus for this phase with zeros
-                    else:
-                        if not isinstance(stimuli[mech][execution], Iterable):
-                            stimulus = np.atleast_2d(np.zeros(1))
-                        else:
-                            stimulus = np.atleast_2d(np.zeros(len(stimuli[mech][execution])))
+
+                    # Get stimulus for mech for current execution, and enforce 2d to accomodate input_states per mech
+                    stimulus = np.atleast_2d(stimuli[mech][execution])
+                    if not isinstance(stimulus, Iterable):
+                        stimulus = np.atleast_2d([stimulus])
+
                     stimuli_in_phase.append(stimulus)
 
                 stimuli_in_execution.append(stimuli_in_phase)
@@ -1028,13 +1036,13 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
         elif inputs.dtype is np.dtype('O'):
             input_homogenity = HETEROGENOUS
             # Determine whether the number of states/mech is homogenous
-            num_states_in_first_mech = len(object.originMechanisms[0].inputStates)
-            if any(len(mech.inputStates) != num_states_in_first_mech for mech in object.originMechanisms):
+            num_states_in_first_mech = len(object.originMechanisms[0].input_states)
+            if any(len(mech.input_states) != num_states_in_first_mech for mech in object.originMechanisms):
                 states_per_mech_heterog = True
             # Determine whether the size of all states is homogenous
-            size_of_first_state = len(list(object.originMechanisms[0].inputStates.values())[0].value)
+            size_of_first_state = len(object.originMechanisms[0].input_states[0].value)
             for origin_mech in object.originMechanisms:
-                if any(len(state.value) != size_of_first_state for state in origin_mech.inputStates.values()):
+                if any(len(state.value) != size_of_first_state for state in origin_mech.input_states):
                     size_of_states_heterog = True
         else:
             raise RunError("Unknown data type for inputs in {}".format(object.name))
@@ -1058,7 +1066,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             elif size_of_states_heterog:
                 expected_dim = 4
             else:
-                raise RunError("PROGRAM ERROR: Unexepcted shape of intputs: {}".format(inputs.shape))
+                raise RunError("PROGRAM ERROR: Unexpected shape of inputs: {}".format(inputs.shape))
 
         if inputs.ndim != expected_dim:
             raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
@@ -1088,19 +1096,19 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
                                    format(len(inputs_for_phase), phase_num, num_mechs))
                 for mech_num in range(num_mechs):
                     input_for_mech = inputs_for_phase[mech_num]
-                    if len(input_for_mech) != len(mechs[mech_num].inputValue):
+                    if len(input_for_mech) != len(mechs[mech_num].input_values):
                         raise RunError("Number of states ({}) in input for {} should be {}".
                                        format(len(input_for_mech),
                                               mechs[mech_num].name,
-                                              len(mechs[mech_num].inputValue)))
+                                              len(mechs[mech_num].input_values)))
                     for state_num in range(len(input_for_mech)):
-                        input_for_state = mechs[mech_num].inputValue[state_num]
-                        if len(input_for_state) != len(mechs[mech_num].inputValue[state_num]):
+                        input_for_state = mechs[mech_num].input_values[state_num]
+                        if len(input_for_state) != len(mechs[mech_num].input_values[state_num]):
                             raise RunError("Length of state {} ({}) in input for {} should be {}".
-                                           format(list(mechs[mech_num].inputStates)[state_num],
+                                           format(list(mechs[mech_num].input_states)[state_num],
                                                   len(input_for_state),
                                                   mechs[mech_num].name,
-                                                  len(mechs[mech_num].inputValue[state_num])))
+                                                  len(mechs[mech_num].input_values[state_num])))
         return num_execution_sets
 
     else:
@@ -1129,7 +1137,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
         # Check that each target generated is compatible with the targetMechanism for which it is intended
         for target, targetMechanism in zip(generated_targets, object.targetMechanisms):
             target_len = np.size(target)
-            if target_len != np.size(targetMechanism.inputStates[TARGET].variable):
+            if target_len != np.size(targetMechanism.input_states[TARGET].variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1148,7 +1156,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             target_len = np.size(target_array[0])
             num_target_sets = np.size(target_array, 0)
 
-            if target_len != np.size(object.targetMechanism.inputStates[TARGET].variable):
+            if target_len != np.size(object.targetMechanism.input_states[TARGET].variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1218,7 +1226,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
 
             for target, targetMechanism in zip(targets, object.targetMechanisms):
                 target_len = np.size(target)
-                if target_len != np.size(targetMechanism.inputStates[TARGET].variable):
+                if target_len != np.size(targetMechanism.input_states[TARGET].variable):
                     if num_targets_per_set > 1:
                         plural = 's'
                     else:
@@ -1226,7 +1234,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                     raise RunError("Length ({}) of target{} specified for run of {}"
                                        " does not match expected target length of {}".
                                        format(target_len, plural, append_type_to_name(object),
-                                              np.size(targetMechanism.inputStates[TARGET].variable)))
+                                              np.size(targetMechanism.input_states[TARGET].variable)))
 
                 if any(np.size(target) != target_len for target in target_array):
                     raise RunError("Not all of the targets specified for {} are of the same length".
@@ -1252,7 +1260,7 @@ def _get_obect_type(object):
         return SYSTEM
     else:
         raise RunError("{} type not supported by Run module".format(object.__class__.__name__))
-    
+
 
 import uuid
 def _get_unique_id():

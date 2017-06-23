@@ -678,9 +678,9 @@ class PreferenceSet(object):
         Arguments:
         - pref_ivar_name (str): name of ivar for preference attribute for which to return the setting;
         - requested_level (PreferenceLevel): preference level for which the setting should be returned
-
-        :param requested_level: (PreferenceLevel)
-        :return PreferenceEntry.setting, str:
+        
+        Returns:
+        - PreferenceEntry.setting, str:
         """
         pref_entry = getattr(self, pref_ivar_name)
 
@@ -698,14 +698,14 @@ class PreferenceSet(object):
             elif requested_level > self.owner.__class__.classPreferenceLevel:
                 # IMPLEMENTATION NOTE: REMOVE HACK BELOW, ONCE ALL CLASSES ARE ASSIGNED classPreferences ON INIT
                 next_level = self.owner.__class__.__bases__[0]
-                try:
-                    next_level.classPreferences
-                except AttributeError:
-                    # If classPreferences for level have not been assigned, assign them
+                # MODIFIED ~4/30/17 NEW:
+                # If classPreferences for level have not yet been assigned as PreferenceSet, assign them
+                if (not hasattr(next_level, 'classPreferences') or
+                        not isinstance(next_level.classPreferences, PreferenceSet)):
                     from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
                     ComponentPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
-                return_val = next_level.classPreferences.get_pref_setting_for_level(pref_ivar_name,
-                                                                                    requested_level)
+                # MODIFIED ~4/30/17 END
+                return_val = next_level.classPreferences.get_pref_setting_for_level(pref_ivar_name, requested_level)
                 return return_val[0],return_val[1]
             # Otherwise, return value for current level
             else:
@@ -758,6 +758,14 @@ class PreferenceSet(object):
                                           pref_entry.level.__class__.__name__+'.'+pref_entry.level.name))
                         return pref_value, err_msg
                 else:
+                    # MODIFIED 5/2/17 NEW:
+                    # If classPreferences for level have not yet been assigned as PreferenceSet, assign them
+                    next_level = self.owner.__bases__[0]
+                    if (not hasattr(next_level, 'classPreferences') or
+                            not isinstance(next_level.classPreferences, PreferenceSet)):
+                        from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
+                        ComponentPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
+                    # MODIFIED 5/2/17 END
                     return_val = self.owner.__bases__[0].classPreferences.get_pref_setting_for_level(pref_ivar_name,
                                                                                                requested_level)
                     return return_val[0], return_val[1]
@@ -796,17 +804,17 @@ class PreferenceSet(object):
                 # GET TABLE INFO
                 # Get base_value of pref
                 base_value, level = self.__dict__[pref_name]
-                # This is needed because value of ModulationOperation is callable (lambda function)
+                # This is needed because value of Modulation is callable (lambda function)
                 if inspect.isfunction(base_value):
-                    if 'ModulationOperation' in repr(base_value):
+                    if 'Modulation' in repr(base_value):
                         base_value = get_modulationOperation_name(base_value)
                 # Get current_value of pref
                 current_value, msg = self.get_pref_setting_for_level(pref_ivar_name=pref_name, requested_level=level)
                 if msg:
                     error_messages.append(msg)
-                # Get name of ModulationOperation (the value of which is a lambda function)
+                # Get name of Modulation (the value of which is a lambda function)
                 if inspect.isfunction(current_value):
-                    if 'ModulationOperation' in repr(current_value):
+                    if 'Modulation' in repr(current_value):
                         current_value = get_modulationOperation_name(current_value)
                 # Get name of any enums
                 if isinstance(base_value, (Enum, IntEnum)):

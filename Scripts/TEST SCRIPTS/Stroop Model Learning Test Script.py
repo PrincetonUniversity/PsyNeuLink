@@ -1,9 +1,10 @@
+import numpy as np
+
 from PsyNeuLink.Components.Functions.Function import Linear, Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import *
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-import numpy as np
 
 process_prefs = {REPORT_OUTPUT_PREF: True,
                  VERBOSE_PREF: False}
@@ -76,12 +77,11 @@ def print_header():
 
 def show_target():
     print ('\nColor Naming\n\tInput: {}\n\tTarget: {}'.
-           # format(color_naming_process.input, color_naming_process.target))
-           format(colors.inputValue, mySystem.targets))
+           format(colors.input_states.values_as_lists, mySystem.targets))
     print ('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.
            # format(word_reading_process.input, word_reading_process.target))
-           format(words.inputValue, mySystem.targets))
-    print ('Response: \n', response.outputValue[0])
+           format(words.input_states.values_as_lists, mySystem.targets))
+    print ('Response: \n', response.output_values[0])
     print ('Hidden-Output:')
     print (HO_Weights.matrix)
     print ('Color-Hidden:')

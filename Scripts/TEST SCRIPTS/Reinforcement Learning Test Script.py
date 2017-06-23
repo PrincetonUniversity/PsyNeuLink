@@ -2,7 +2,7 @@ import numpy as np
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Functions.Function import PROB
 from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
 from PsyNeuLink.Components.System import System_Base, system
@@ -28,8 +28,8 @@ p = process(default_input_value=[0, 0, 0],
             learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)),
             target=0)
 
-print ('reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
-print ('targetMechanism weights: \n', action_selection.outputState.sendsToProjections[0].matrix)
+print ('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+print ('targetMechanism weights: \n', action_selection.output_state.efferents[0].matrix)
 
 actions = ['left', 'middle', 'right']
 # reward_values = [15, 7, 13]
@@ -38,20 +38,20 @@ reward_values =[10, 10, 10]
 first_reward = 0
 
 # Must initialize reward (won't be used, but needed for declaration of lambda function)
-action_selection.outputState.value = [0, 0, 1]
+action_selection.output_state.value = [0, 0, 1]
 # Get reward value for selected action)
-reward = lambda : [reward_values[int(np.nonzero(action_selection.outputState.value)[0])]]
+reward = lambda : [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
 
 def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial)
 
 def show_weights():
-    # print ('\nreward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
+    # print ('\nreward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
     # print ('action selected: ', action_selection.outputState.value)
-    print ('Reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
+    print ('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
     print ('\nAction selected:  {}; predicted reward: {}'.
-           format(np.nonzero(action_selection.outputState.value)[0][0],
-           action_selection.outputState.value[np.nonzero(action_selection.outputState.value)][0]))
+           format(np.nonzero(action_selection.output_state.value)[0][0],
+           action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]))
 
 p.run(num_executions=10,
       inputs=[[[1, 1, 1]]],

@@ -82,6 +82,8 @@ Any of the following can be used to specify a projection in context:
       |
       * CONTROL_PROJECTION -- a `ControlProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
       |
+      * GATING_PROJECTION -- a `GatingProjection` with the `DefaultGatingMechanism` as its :keyword:`sender`.
+      |
       * LEARNING_PROJECTION -- a `LearningProjection`.  At present, this can only be used together with the
         specification of a MappingProjection (see `tuple <Mapping_Matrix_Specification>` format).  If the
         :keyword:`receiver` of the MappingProjection projects to a `MonitoringMechanism <MonitoringMechanism>`,
@@ -138,7 +140,7 @@ Sender
 ~~~~~~
 
 This must be an `OutputState`.  The projection is assigned to the outputState's
-`sendsToProjections <State.State_Base.sendsToProjections>` list, and outputState's `value
+`efferents <State.State_Base.efferents>` list, and outputState's `value
 <OutputState.OutputState.value>` is used as the :keyword:`variable` for projection's `function <Projection.function>`.
 A sender can be specified as:
 
@@ -160,18 +162,21 @@ is assigned as follows:
     :py:const:`DefaultProcessingMechanism <Components.__init__.DefaultProcessingMechanism LINK>`
     is used, and its `primary outputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
   ..
-  COMMENT:
-     CONFIRM THIS IS TRUE
-  COMMENT
   * `ControlProjection`: if the projection's `receiver <Projection.receiver>` belongs to a system, then the system's
-    `controller` is used as the mechanism for the `sender <Projection.sender>.  Otherwise, the `DefaultControlMechanism`
-    is used.  In either case, an outputState is added to the ControlMechanism and assigned as the
-    projection's `sender <Projection.sender>`.
+    `controller` is used as the mechanism for the `sender <Projection.sender>`, an outputState is added to the
+    ControlMechanism, and assigned as the projection's `sender <Projection.sender>`.  If the receiver does not
+    belong to a system, the ControlProjection will be ignored.
+  ..
+  COMMENT:
+  * `GatingProjection`:  DOCUMENT
+  COMMENT
   ..
   * `LearningProjection`: if it is to a MappingProjection that projects to the `TERMINAL` mechanism of a process,
     then a `ComparatorMechanism` is created, and its `primary outputState <OutputState_Primary>` is assigned as the
     `sender <Projection.sender>`.  Otherwise, a `WeightedErrorMechanism` is created and its
     `primary outputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
+
+
 
 .. _Projection_Receiver:
 
@@ -179,8 +184,9 @@ Receiver
 ~~~~~~~~
 
 This must be an :doc:`InputState` or a :doc:`ParameterState`.  The projection is assigned to the receiver's
-`receivesFromProjections <State.State_Base.receivesFromProjections>` list, and the output of the projection's
-`function <Projection.function>` is transmitted to its receiver.  A `receiver <Projection.receiver>` can be specified as:
+`path_afferents <State.State_Base.path_afferents>` list, and the output of the projection's
+`function <Projection.function>` is transmitted to its receiver.  A `receiver <Projection.receiver>`
+can be specified as:
 
   * an existing **inputState**;
   ..
@@ -198,7 +204,7 @@ COMMENT:
     If the ``receiver`` of a projection is specified as a projection or mechanism, the type of state created and added
     to the mechanism depends on the type of projection:
         MappingProjection:
-            receiver = <Mechanism>.inputState
+            receiver = <Mechanism>.input_state
         ControlProjection:
             sender = <Mechanism>.outputState
             receiver = <Mechanism>.parameterState if there is a corresponding parameter; otherwise, an error occurs
@@ -236,14 +242,11 @@ kpProjectionTimeScaleLogEntry = "Projection TimeScale"
 
 projection_keywords = set()
 
-PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
-                            DEFAULT_MATRIX,
-                            IDENTITY_MATRIX,
-                            FULL_CONNECTIVITY_MATRIX,
-                            OFF_DIAGNOAL_MATRIX,
-                            RANDOM_CONNECTIVITY_MATRIX,
-                            LEARNING_PROJECTION,
-                            CONTROL_PROJECTION}
+PROJECTION_SPEC_KEYWORDS = {MAPPING_PROJECTION,
+                            LEARNING, LEARNING_PROJECTION,
+                            CONTROL, CONTROL_PROJECTION,
+                            GATING, GATING_PROJECTION}
+
 
 class ProjectionError(Exception):
     def __init__(self, error_value):
@@ -355,13 +358,13 @@ class Projection_Base(Projection):
 
     name : str : default <Projection subclass>-<index>
         the name of the projection.
-        Specified in the `name` argument of the constructor for the projection;  if not is specified,
+        Specified in the **name** argument of the constructor for the projection;  if not is specified,
         a default is assigned by ProjectionRegistry based on the projection's subclass
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for the projection.
-        Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
+        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -415,7 +418,7 @@ class Projection_Base(Projection):
         * If sender and/or receiver is a Mechanism, the appropriate State is inferred as follows:
             MappingProjection:
                 sender = <Mechanism>.outputState
-                receiver = <Mechanism>.inputState
+                receiver = <Mechanism>.input_state
             ControlProjection:
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
@@ -461,7 +464,7 @@ class Projection_Base(Projection):
                           context=context)
 
 # FIX: 6/23/16 NEEDS ATTENTION *******************************************************A
-#      NOTE: SENDER IS NOT YET KNOWN FOR DEFAULT controlSignal
+#      NOTE: SENDER IS NOT YET KNOWN FOR DEFAULT control_signal
 #      WHY IS self.sender IMPLEMENTED WHEN sender IS NOT??
 
         self.sender = sender
@@ -490,11 +493,11 @@ class Projection_Base(Projection):
         # MODIFIED 4/21/17 NEW: [MOVED FROM MappingProjection._instantiate_receiver]
         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
         if isinstance(self.receiver, Mechanism):
-            if (len(self.receiver.inputStates) > 1 and
+            if (len(self.receiver.input_states) > 1 and
                     (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
                 print("{0} has more than one inputState; {1} was assigned to the first one".
                       format(self.receiver.owner.name, self.name))
-            self.receiver = self.receiver.inputState
+            self.receiver = self.receiver.input_state
         # MODIFIED 4/21/17 END
 
 
@@ -615,72 +618,63 @@ class Projection_Base(Projection):
                                                  self.paramClassDefaults[PROJECTION_SENDER]))
 
     def _instantiate_attributes_before_function(self, context=None):
-
         self._instantiate_sender(context=context)
+        self._instantiate_parameter_states(context=context)
+
+    def _instantiate_parameter_states(self, context=None):
 
         from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
         _instantiate_parameter_states(owner=self, context=context)
+
 
     def _instantiate_sender(self, context=None):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
         Assume self.sender has been assigned in _validate_params, from either sender arg or PROJECTION_SENDER
-        Validate, set self.variable, and assign projection to sender's sendsToProjections attribute
+        Validate, set self.variable, and assign projection to sender's efferents attribute
 
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
         If self.sender is a State class reference, validate that it is a OutputState
-        Assign projection to sender's sendsToProjections attribute
+        Assign projection to sender's efferents attribute
         If self.value / self.variable is None, set to sender.value
-
-        Notes:
-        * ControlProjection initially overrides this method to check if sender is DefaultControlMechanism;
-            if so, it assigns a ControlProjection-specific inputState and outputState to it
-        [TBI: * LearningProjection overrides this method to check if sender is kwDefaultSender;
-            if so, it instantiates a default MonitoringMechanism and a projection to it from receiver's outputState]
-
-        :param context: (str)
-        :return:
         """
 
         from PsyNeuLink.Components.States.OutputState import OutputState
         from PsyNeuLink.Components.States.ParameterState import ParameterState
 
-        # If sender is a class, instantiate it:
-        # - assume it is Mechanism or State (as validated in _validate_params)
-        # - implement default sender of the corresponding type
-        if inspect.isclass(self.sender):
-            if issubclass(self.sender, OutputState):
-                # MODIFIED 9/12/16 NEW:
-                # self.paramsCurrent['function_params']['matrix']
-                # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING_PROJECTION??
-                # MODIFIED 9/12/16 END
-                self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
-            else:
-                raise ProjectionError("Sender ({0}) for {1} must be a OutputState".
-                                      format(self.sender.__name__, self.name))
+        # # IMPLEMENTATION NOTE:  The following supported instantiation of a default sender type by a projection, for
+        # #                       projections that did not yet have their sender specified;  however, this should now
+        # #                       be covered by deferred_init(): sender is assigned in that call or by the time is made.
+        # # If sender is a class, instantiate it:
+        # # - assume it is a Mechanism or State (should have been validated in _validate_params)
+        # # - implement default sender of the corresponding type
+        # if inspect.isclass(self.sender):
+        #     if issubclass(self.sender, OutputState):
+        #         # MODIFIED 9/12/16 NEW:
+        #         # self.paramsCurrent['function_params']['matrix']
+        #         # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING_PROJECTION??
+        #         # MODIFIED 9/12/16 END
+        #         self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
+        #     else:
+        #         raise ProjectionError("Sender ({0}) for {1} must be a OutputState".
+        #                               format(self.sender.__name__, self.name))
 
-        # # If sender is a Mechanism (rather than a State), get relevant outputState and assign it to self.sender
+        # If sender is specified as a Mechanism (rather than a State),
+        #     get relevant outputState and assign it to self.sender
+        # IMPLEMENTATION NOTE: Assume that sender should be the primary OutputState; if that is not the case,
+        #                      sender should either be explicitly assigned, or handled in an override of the
+        #                      method by the relevant subclass prior to calling super
         if isinstance(self.sender, Mechanism):
-
-            # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
-            # #            - kwMATRIX NEEDS TO BE A 3D np.array, EACH 3D ITEM OF WHICH IS A 2D WEIGHT MATRIX
-            # #            - MAKE SURE len(self.sender.value) == len(self.receiver.inputStates.items())
-            # # for i in range (len(self.sender.value)):
-            # #            - CHECK EACH MATRIX AND ASSIGN??
-            # # FOR NOW, ASSUME SENDER HAS ONLY ONE OUTPUT STATE, AND THAT RECEIVER HAS ONLY ONE INPUT STATE
-            self.sender = self.sender.outputState
+            self.sender = self.sender.output_state
 
         # At this point, self.sender should be a OutputState
-        # MODIFIED 2/10/17 OLD: 2/21/17
         if not isinstance(self.sender, OutputState):
-        # # MODIFIED 2/10/17 NEW: [ADDED ParameterState TO ACCOMODATE LEARNING PROJECTION FOR BACKPROPAGATION]
-        # if not isinstance(self.sender, (OutputState, ParameterState)):
-        # MODIFIED 2/10/17 END
-            raise ProjectionError("Sender for MappingProjection must be a Mechanism or State")
+            raise ProjectionError("Sender specified for {} ({}) must be a Mechanism or an OutputState".
+                                  format(self.name, self.sender))
 
-        # Assign projection to sender's sendsToProjections list attribute
-        # MODIFIED 8/4/16 OLD:  SHOULD CALL _add_projection_from
-        self.sender.sendsToProjections.append(self)
+        # Assign projection to sender's efferents list attribute
+        if not self in self.sender.efferents:
+            self.sender.efferents.append(self)
 
         # Validate projection's variable (self.variable) against sender.outputState.value
         if iscompatible(self.variable, self.sender.value):
@@ -706,17 +700,16 @@ class Projection_Base(Projection):
         self._instantiate_receiver(context=context)
 
     def _instantiate_receiver(self, context=None):
-        """Call receiver's owner to add projection to its receivesFromProjections list
+        """Call receiver's owner to add projection to its afferents list
 
         Notes:
         * Assume that subclasses implement this method in which they:
           - test whether self.receiver is a Mechanism and, if so, replace with State appropriate for projection
           - calls this method (as super) to assign projection to the Mechanism
-        * Constraint that self.value is compatible with receiver.inputState.value
+        * Constraint that self.value is compatible with receiver.input_state.value
             is evaluated and enforced in _instantiate_function, since that may need to be modified (see below)
         * Verification that projection has not already been assigned to receiver is handled by _add_projection_to;
             if it has, a warning is issued and the assignment request is ignored
-
 
         :param context: (str)
         :return:
@@ -742,7 +735,7 @@ class Projection_Base(Projection):
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
-        for state_name, state in self.parameterStates.items():
+        for state_name, state in self._parameter_states.items():
 
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
@@ -761,7 +754,7 @@ class Projection_Base(Projection):
 
             # Get its type
             param_type = type(param_template[state_name])
-            # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or ModulationOperation)
+            # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or Modulation)
             if param_type is tuple:
                 param_type = type(param_template[state_name][0])
 
@@ -773,17 +766,20 @@ class Projection_Base(Projection):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
 
-def _is_projection_spec(spec):
+def _is_projection_spec(spec, include_matrix_keywords=True):
     """Evaluate whether spec is a valid Projection specification
 
     Return :keyword:`true` if spec is any of the following:
     + Projection class (or keyword string constant for one):
     + Projection object:
+    + 2-item tuple of which the second is a projection_spec (checked recursively with thi method):
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
+    + Matrix keyword (if include_matrix_keywords is set to `True`)
 
     Otherwise, return :keyword:`False`
     """
+
     if inspect.isclass(spec) and issubclass(spec, Projection):
         return True
     if isinstance(spec, Projection):
@@ -792,15 +788,23 @@ def _is_projection_spec(spec):
         return True
     if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS:
         return True
-    if get_matrix(spec) is not None:
-        return True
+    if include_matrix_keywords:
+        if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
+            return True
+        from PsyNeuLink.Components.Functions.Function import get_matrix
+        if get_matrix(spec) is not None:
+            return True
     if isinstance(spec, tuple) and len(spec) == 2:
         # Call recursively on first item, which should be a standard projection spec
         if _is_projection_spec(spec[0]):
             # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
-            if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
+            if _is_projection_subclass(spec[1], MAPPING_PROJECTION):
                 return True
             if _is_projection_subclass(spec[1], LEARNING_PROJECTION):
+                return True
+            if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
+                return True
+            if _is_projection_subclass(spec[1], GATING_PROJECTION):
                 return True
     return False
 
@@ -839,30 +843,103 @@ def _is_projection_subclass(spec, keyword):
             return True
     return False
 
+# IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignals WHEN THAT IS IMPLEMENTED
+@tc.typecheck
+def _validate_receiver(sender_mech:Mechanism,
+                       projection:Projection,
+                       expected_owner_type:type,
+                       spec_type=None,
+                       context=None):
+    """Check that projection is to expected_receiver_type and in the same system as the sender_mech (if specified)
+    
+    expected_owner_type must be a Mechanism or a Projection
+    spec_type should be LEARNING_SIGNAL, CONTROL_SIGNAL or GATING_SIGNAL
+
+    """
+    spec_type = " in the {} arg ".format(spec_type) or ""
+
+    if projection.value is DEFERRED_INITIALIZATION:
+        # receiver = projection.init_args['receiver'].owner
+        state = projection.init_args['receiver']
+        receiver = state.owner
+    else:
+        # receiver = projection.receiver.owner
+        state = projection.receiver
+        receiver = state.owner
+
+    if isinstance(receiver, Mechanism):
+        receiver_mech = receiver
+    elif isinstance(receiver, Projection):
+        receiver_mech = receiver.receiver.owner
+    else:
+        raise ProjectionError("receiver of projection ({}) must be a {} or {}".
+                              format(projection.name, MECHANISM, PROJECTION))
+
+    if not isinstance(receiver, expected_owner_type):
+        raise ProjectionError("A {} specified {}for {} ({}) projects to a component other than the {} of a {}".
+                                    format(projection.__class__.__name__,
+                                           spec_type,
+                                           sender_mech.name,
+                                           receiver,
+                                           state.__class__.__name__,
+                                           expected_owner_type.__name__))
+
+    # Check if receiver_mech is in the same system as sender_mech;
+    #    if either has not been assigned a system, return
+
+    # Check whether mech is in the same system as sender_mech
+    receiver_systems = set()
+    # receiver_mech is a ControlMechanism (which has a system but no systems attribute)
+    if hasattr(receiver_mech, 'system') and receiver_mech.system:
+        receiver_systems.update({receiver_mech.system})
+    # receiver_mech is a ProcessingMechanism (which has a systems but system attribute is usually None)
+    elif hasattr(receiver_mech, 'systems') and receiver_mech.systems:
+        receiver_systems.update(set(receiver_mech.systems))
+    else:
+        return
+
+    sender_systems = set()
+    # sender_mech is a ControlMechanism (which has a system but no systems attribute)
+    if hasattr(sender_mech, 'system') and sender_mech.system:
+        sender_systems.update({sender_mech.system})
+    # sender_mech is a ProcessingMechanism (which has a systems but system attribute is usually None)
+    elif hasattr(sender_mech, 'systems')and sender_mech.systems:
+        sender_systems.update(set(sender_mech.systems))
+    else:
+        return
+
+    #  Check that projection is to a (projection to a) mechanisms in the same system as sender_mech
+    if not receiver_systems & sender_systems:
+        raise ProjectionError("A {} specified {}for {} projects to a component that is not in the same system".
+                                    format(projection.__class__.__name__,
+                                           spec_type,
+                                           sender_mech.name))
+
+# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_projection_to(receiver, state, projection_spec, context=None):
-    """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
+    """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Component object
 
     Verify that projection has not already been assigned to receiver;
         if it has, issue a warning and ignore the assignment request.
 
     Requirements:
-       * receiver must be an appropriate Function object (currently, a Mechanism or a Projection);
+       * receiver must be an appropriate Component object (currently, a Mechanism or a Projection);
        * state must be a specification of an InputState or ParameterState;
        * specification of InputState can be any of the following:
                 - INPUT_STATE - assigns projection_spec to (primary) inputState;
                 - InputState object;
-                - index for Mechanism.inputStates OrderedDict;
-                - name of inputState (i.e., key for Mechanism.inputStates OrderedDict));
+                - index for Mechanism.input_states;
+                - name of an existing inputState (i.e., key for Mechanism.input_states);
                 - the keyword kwAddInputState or the name for an inputState to be added;
        * specification of ParameterState must be a ParameterState object
        * projection_spec can be any valid specification of a projection_spec
            (see `State._instantiate_projections_to_state`).
 
     Args:
-        receiver (Mechanism or Projection):
+        receiver (Mechanism or Projection)
+        state (State subclass)
         projection_spec: (Projection, dict, or str)
-        state (State subclass):
-        context:
+        context
 
     """
     # IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
@@ -876,7 +953,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     if not isinstance(state, (int, str, InputState, ParameterState)):
         raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
                              " that is not a name, reference to an inputState or parameterState object, "
-                             " or an index (for inputStates)".
+                             " or an index (for input_states)".
                              format(receiver.name, projection_spec.name))
 
     # state is State object, so use that
@@ -886,25 +963,25 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     # Generic INPUT_STATE is specified, so use (primary) inputState
     elif state is INPUT_STATE:
-        receiver.inputState._instantiate_projections_to_state(projections=projection_spec, context=context)
+        receiver.input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
-    # input_state is index into inputStates OrderedDict, so get corresponding key and assign to input_state
+    # input_state is index into input_states OrderedDict, so get corresponding key and assign to input_state
     elif isinstance(state, int):
         try:
-            key = list(receiver.inputStates.keys)[state]
+            key = receiver.input_states[state]
         except IndexError:
             raise ProjectionError("Attempt to assign projection_spec ({0}) to inputState {1} of {2} "
-                                 "but it has only {3} inputStates".
-                                 format(projection_spec.name, state, receiver.name, len(receiver.inputStates)))
+                                 "but it has only {3} input_states".
+                                 format(projection_spec.name, state, receiver.name, len(receiver.input_states)))
         else:
             input_state = key
 
     # input_state is string (possibly key retrieved above)
-    #    so try as key in inputStates OrderedDict (i.e., as name of an inputState)
+    #    so try as key in input_states OrderedDict (i.e., as name of an inputState)
     if isinstance(state, str):
         try:
-            receiver.inputState[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
+            receiver.input_state[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -926,7 +1003,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     # validate that projection has not already been assigned to receiver
     if receiver.verbosePref or projection_spec.sender.owner.verbosePref:
-        if projection_spec in receiver.receivesFromProjections:
+        if projection_spec in receiver.all_afferents:
             warnings.warn("Request to assign {} as projection to {} was ignored; it was already assigned".
                           format(projection_spec.name, receiver.owner.name))
 
@@ -937,15 +1014,21 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                                     constraint_value=projection_spec.value,
                                     constraint_value_name='Projection_spec value for new inputState',
                                     context=context)
-        #  Update inputState and inputStates
-    try:
-        receiver.inputStates[input_state.name] = input_state
+
+    #  Update inputState and input_states
+    if receiver.input_states:
+        receiver.input_states[input_state.name] = input_state
+
     # No inputState(s) yet, so create them
-    except AttributeError:
-        receiver.inputStates = OrderedDict({input_state.name:input_state})
-        receiver.inputState = list(receiver.inputStates)[0]
+    else:
+        receiver.input_states = ContentAddressableList(component_type=State_Base,
+                                                       list=[input_state],
+                                                       name=receiver.name+'.input_states')
+
     input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
 
+
+# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_projection_from(sender, state, projection_spec, receiver, context=None):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
@@ -964,11 +1047,22 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
         state (OutputState, str, or value):
         context:
     """
-    # IMPLEMENTATION NOTE: add verification that projection is not already assigned to sender; if so, warn and ignore
+
 
     from PsyNeuLink.Components.States.State import _instantiate_state
     from PsyNeuLink.Components.States.State import State_Base
     from PsyNeuLink.Components.States.OutputState import OutputState
+
+    # Validate that projection is not already assigned to sender; if so, warn and ignore
+
+    if isinstance(projection_spec, Projection):
+        projection = projection_spec
+        if ((isinstance(sender, OutputState) and projection.sender is sender) or
+                (isinstance(sender, Mechanism) and projection.sender is sender.output_state)):
+            if sender.verbosePref:
+                warnings.warn("Request to assign {} as sender of {}, but it has already been assigned".
+                              format(sender.name, projection.name))
+                return
 
     if not isinstance(state, (int, str, OutputState)):
         raise ProjectionError("State specification for {0} (as sender of {1}) must be the name, reference to "
@@ -981,17 +1075,17 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
 
     # Generic OUTPUT_STATE is specified, so use (primary) outputState
     elif state is OUTPUT_STATE:
-        sender.outputState._instantiate_projections_to_state(projections=projection_spec, context=context)
+        sender.output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # input_state is index into outputStates OrderedDict, so get corresponding key and assign to output_state
     elif isinstance(state, int):
         try:
-            key = list(sender.outputStates.keys)[state]
+            key = list(sender.output_states.keys)[state]
         except IndexError:
             raise ProjectionError("Attempt to assign projection_spec ({0}) to outputState {1} of {2} "
                                  "but it has only {3} outputStates".
-                                 format(projection_spec.name, state, sender.name, len(sender.outputStates)))
+                                 format(projection_spec.name, state, sender.name, len(sender.output_states)))
         else:
             output_state = key
 
@@ -999,7 +1093,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     #    so try as key in outputStates OrderedDict (i.e., as name of an outputState)
     if isinstance(state, str):
         try:
-            sender.outputState[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
+            sender.output_state[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -1008,7 +1102,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                               format(projection_spec.name, state, sender.name))
             # return
 
-    # input_state is either the name for a new inputState or kwAddNewInputState
+    # output_state is either the name for a new outputState or kwAddNewOutputState
     if not state is kwAddOutputState:
         if sender.prefs.verbosePref:
             reassign = input("\nAdd new outputState named {0} to {1} (as sender for {2})? (y/n):".
@@ -1026,11 +1120,14 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                                      constraint_value=projection_spec.value,
                                      constraint_value_name='Projection_spec value for new inputState',
                                      context=context)
-    #  Update inputState and inputStates
+    #  Update outputState and outputStates
     try:
-        sender.outputStates[output_state.name] = output_state
-    # No inputState(s) yet, so create them
+        sender.output_states[output_state.name] = output_state
+    # No outputState(s) yet, so create them
     except AttributeError:
-        sender.outputStates = OrderedDict({output_state.name:output_state})
-        sender.outputState = list(sender.outputStates)[0]
+        from PsyNeuLink.Components.States.State import State_Base
+        sender.output_states = ContentAddressableList(component_type=State_Base,
+                                                      list=[output_state],
+                                                      name=sender.name+'.output_states')
+
     output_state._instantiate_projections_to_state(projections=projection_spec, context=context)

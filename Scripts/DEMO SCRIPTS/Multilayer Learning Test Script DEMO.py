@@ -3,8 +3,8 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMe
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 import matplotlib
 matplotlib.use('TkAgg')
@@ -82,7 +82,7 @@ my_process = process(default_input_value=[0, 0],
 #     print ('- Middle 1: \n', Hidden_Layer_1.value)
 #     print ('- Middle 2: \n', Hidden_Layer_2.value)
 #     print ('- Output:\n', Output_Layer.value)
-#     # print ('MSE: \n', Output_Layer.outputValue[0])
+#     # print ('MSE: \n', Output_Layer.output_values[0])
 #
 # # **************************************************
 #endregion

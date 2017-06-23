@@ -26,15 +26,22 @@ TYPE CHECKING VALUE COMPARISON
 .. note::
    PsyNeuLink-specific typechecking functions are in the `Component` module
 
-* `is_numeric_or_none`
+* `parameter_spec`
+* `optional_parameter_spec`
+* `is_matrix
+* `is_matrix_spec`
 * `is_numeric`
+* `is_numeric_or_none`
 * `iscompatible`
+* `is_value_spec`
+* `is_unit_interval`
+* `is_same_function_spec`
 
 ENUM
 ~~~~
 
 * `Autonumber`
-* `ModulationOperation`
+* `Modulation`
 * `get_modulationOperation_name`
 
 KVO
@@ -57,6 +64,9 @@ OTHER
 * `underscore_to_camelCase`
 * `append_type_to_name`
 * `ReadOnlyOrderedDict`
+* `ContentAddressableList`
+* `make_readonly_property`
+* `get_class_attributes`
 
 """
 
@@ -65,11 +75,11 @@ import warnings
 warnings.filterwarnings("error")
 
 import numbers
-from random import random
 import numpy as np
 from enum import EnumMeta
 from enum import IntEnum
 import typecheck as tc
+import inspect
 
 from PsyNeuLink.Globals.Defaults import *
 from PsyNeuLink.Globals.Keywords import *
@@ -85,20 +95,35 @@ class UtilitiesError(Exception):
         return repr(self.error_value)
 
 
-class ModulationOperation(Enum):
-    DISABLED = 0
-    ADD = lambda runtime, default : runtime + default
+MODULATION_OVERRIDE = 'Modulation.OVERRIDE'
+MODULATION_MULTIPLY = 'Modulation.MULTIPLY'
+MODULATION_ADD = 'Modulation.ADD'
+
+
+class Modulation(Enum):
     MULTIPLY = lambda runtime, default : runtime * default
+    ADD = lambda runtime, default : runtime + default
     OVERRIDE = lambda runtime, default : runtime
+    DISABLE = 0
+
+def is_modulation_operation(val):
+    # try:
+    #     val(0,0)
+    #     return True
+    # except:
+    #     return False
+    return get_modulationOperation_name(val)
 
 def get_modulationOperation_name(operation):
         x = operation(1,2)
         if x is 1:
-            return 'ModulationOperation.OVERRIDE'
+            return MODULATION_OVERRIDE
         elif x is 2:
-            return 'ModulationOperation.MULTIPLY'
+            return MODULATION_MULTIPLY
         elif x is 3:
-            return 'ModulationOperation.ADD'
+            return MODULATION_ADD
+        else:
+            return False
 
 
 
@@ -124,12 +149,12 @@ class AutoNumber(IntEnum):
     * Start of numbering changed to 0 (from 1 in example)
     * obj based on int rather than object
     """
-    def __new__(cls):
+    def __new__(component_type):
         # Original example:
-        # value = len(cls.__members__) + 1
-        # obj = object.__new__(cls)
-        value = len(cls.__members__)
-        obj = int.__new__(cls)
+        # value = len(component_type.__members__) + 1
+        # obj = object.__new__(component_type)
+        value = len(component_type.__members__)
+        obj = int.__new__(component_type)
         obj._value_ = value
         return obj
 
@@ -138,13 +163,87 @@ class AutoNumber(IntEnum):
 
 TEST_CONDTION = False
 
+
+def optional_parameter_spec(param):
+    """Test whether param is a legal PsyNeuLink parameter specification or `None`
+
+    Calls parameter_spec if param is not `None`
+    Used with typecheck
+
+    Returns
+    -------
+    `True` if it is a legal parameter or `None`.
+    `False` if it is neither.
+
+
+    """
+    if not param:
+        return True
+    return parameter_spec(param)
+
+
+def parameter_spec(param):
+    """Test whether param is a legal PsyNeuLink parameter specification
+
+    Used with typecheck
+
+    Returns
+    -------
+    `True` if it is a legal parameter.
+    `False` if it is not.
+    """
+    # if isinstance(param, property):
+    #     param = ??
+    # if is_numeric(param):
+    from PsyNeuLink.Components.Functions.Function import function_type
+    from PsyNeuLink.Components.Projections.Projection import Projection
+    from PsyNeuLink.Components.Component import parameter_keywords
+
+    if (isinstance(param, (numbers.Number,
+                           np.ndarray,
+                           list,
+                           tuple,
+                           dict,
+                           function_type,
+                           Projection)) or
+        (inspect.isclass(param) and issubclass(param, Projection)) or
+        param in parameter_keywords):
+        return True
+    return False
+
+
 def is_numeric_or_none(x):
     if x is None:
         return True
     return is_numeric(x)
 
+
 def is_numeric(x):
     return iscompatible(x, **{kwCompatibilityNumeric:True, kwCompatibilityLength:0})
+
+
+def is_matrix_spec(m):
+    return isinstance(m, str) and m in MATRIX_KEYWORD_VALUES
+
+
+def is_matrix(m):
+    if is_matrix_spec(m):
+        return True
+    if isinstance(m, (list, np.ndarray, np.matrix)):
+        return True
+    if callable(m):
+        try:
+            return is_matrix(m())
+        except:
+            return False
+
+
+def is_distance_metric(s):
+    if s in DISTANCE_METRICS:
+        return True
+    else:
+        return False
+
 
 kwCompatibilityType = "type"
 kwCompatibilityLength = "length"
@@ -261,6 +360,12 @@ def iscompatible(candidate, reference=None, **kargs):
               format(candidate, kargs, match_length))
         match_length = 0
 
+    # # FIX??
+    # # Reference is a matrix or a keyword specification for one
+    # # from PsyNeuLink.Components.Functions.Function import matrix_spec
+    if is_matrix_spec(reference):
+        return is_matrix(candidate)
+
     # IMPLEMENTATION NOTE:
     #   modified to allow numeric type mismatches (e.g., int and float;
     #   should be added as option in future (i.e., to disallow it)
@@ -269,6 +374,8 @@ def iscompatible(candidate, reference=None, **kargs):
             (isinstance(candidate, numbers.Number) and issubclass(match_type,numbers.Number)) or
             # IMPLEMENTATION NOTE: Allow UserDict types to match dict (make this an option in the future)
             (isinstance(candidate, UserDict) and match_type is dict) or
+            # IMPLEMENTATION NOTE: Allow UserList types to match list (make this an option in the future)
+            (isinstance(candidate, UserList) and match_type is list) or
             # IMPLEMENTATION NOTE: This is needed when kwCompatiblityType is not specified
             #                      and so match_type==list as default
             (isinstance(candidate, numbers.Number) and issubclass(match_type,list)) or
@@ -472,7 +579,13 @@ def type_match(value, value_type):
         return list(value)
     if value_type is None:
         return None
-    raise UtilitiesError("Type of {} not recognized".format(value))
+    if value_type is type(None):
+        # # MODIFIED 6/9/17 OLD:
+        # raise UtilitiesError("PROGRAM ERROR: template provided to type_match for {} is \'None\'".format(value))
+        # MODIFIED 6/9/17 NEW:
+        return value
+        # MODIFIED 6/9/17 END
+    raise UtilitiesError("Type of {} not recognized".format(value_type))
 
 def get_value_from_array(array):
     """Extract numeric value from array, preserving numeric type
@@ -544,7 +657,296 @@ class ReadOnlyOrderedDict(UserDict):
         self.data[key] = value
         if not key in self._ordered_keys:
             self._ordered_keys.append(key)
+    def __deleteitem__(self, key):
+        del self.data[key]
     def keys(self):
         return self._ordered_keys
     def copy(self):
         return self.data.copy()
+
+from collections import UserList
+class ContentAddressableList(UserList):
+    """
+    ContentAddressableList( component_type, key=None, list=None)
+    
+    Implements dict-like list, that can be keyed by the names of the `compoments <Component>` in its entries.
+
+    Supports:
+      * getting and setting entries in the list using keys (string), in addition to numeric indices.
+        the key to use is specified by the **key** arg of the constructor, and must be a string attribute;
+        * for getting an entry:
+          the key must match the keyed attribute of a component in the list; otherwise an exception is raised;
+        * for setting an entry:
+            - the key must match the key of the component being assigned;
+            - if there is already a component in the list the keyed vaue of which matches the key, it is replaced;
+            - if there is no component in the list the keyed attribute of which matches the key,
+              the component is appended to the list;
+        * for getting lists of the names, values of the keyed attributes, and values of the `value <Component.value>`
+            attributes of components in the list.
+
+    IMPLEMENTATION NOTE:
+        This class allows components to be maintained in lists, while providing ordered storage
+        and the convenience access and assignment by name (e.g., akin to a dict).
+        Lists are used (instead of a dict or OrderedDict) since:
+            - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
+                collections of states to other variables, such as lists of their values);
+            - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
+                or by key (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for
+                accessing by key/name less critical;
+            - the number of states in a collection for a given mechanism is likely to be small so that, even when
+                accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
+
+    Arguments
+    ---------
+
+    component_type : Class
+        specifies the class of the items in the list.
+
+    name : str : 'ContentAddressableList'
+        name to use for ContentAddressableList
+
+    key : str : default `name`
+        specifies the attribute of **component_type** used to key items in the list by content;
+        **component_type** must have this attribute or, if it is not provided, an attribute with the name 'name'.
+
+    list : List : default None
+        specifies a list used to initialize the list;
+        all of the items must be of type **component_type** and have the **key** attribute.
+
+    Attributes
+    ----------
+
+    component_type : Class
+        the class of the items in the list.
+
+    name: str
+        name if provided as arg, else name of of ContentAddressableList class
+
+    key : str
+        the attribute of `component_type <ContentAddressableList.component_type>` used to key items in the list by content;
+
+    data : List (property)
+        the actual list of items.
+
+    names : List (property)
+        values of the `name <Component>` attribute of components in the list.
+
+    key_values : List (property)
+        values of the keyed attribute of each component in the list.
+
+    values : List (property)
+        values of the `value <Component>` attribute of components in the list.
+
+    """
+
+    def __init__(self, component_type, key=None, list=None, name=None, **kwargs):
+        self.component_type = component_type
+        self.key = key or 'name'
+        self.name = name or component_type.__name__
+        if not isinstance(component_type, type):
+            raise UtilitiesError("component_type arg for {} ({}) must be a class"
+                                 .format(self.name, component_type))
+        if not isinstance(self.key, str):
+            raise UtilitiesError("key arg for {} ({}) must be a string".
+                                 format(self.name, self.key))
+        if not hasattr(component_type, self.key):
+            raise UtilitiesError("key arg for {} (\'{}\') must be an attribute of {}".
+                                 format(self.name,
+                                        self.key,
+                                        component_type.__name__))
+        if list is not None:
+            if not all(isinstance(obj, self.component_type) for obj in list):
+                raise UtilitiesError("All of the items in the list arg for {} "
+                                     "must be of the type specified in the component_type arg ({})"
+                                     .format(self.name, self.component_type.__name__))
+        UserList.__init__(self, list, **kwargs)
+
+    def __repr__(self):
+        return '[\n\t{0}\n]'.format('\n\t'.join(['{0}\t{1}\t{2}'.format(i, self[i].name, repr(self[i].value)) for i in range(len(self))]))
+
+    def __getitem__(self, key):
+        if key is None:
+            raise KeyError("None is not a legal key for {}".format(self.name))
+        try:
+            return self.data[key]
+        except TypeError:
+            key_num = self._get_key_for_item(key)
+            if key_num is None:
+                # raise TypeError("\'{}\' is not a key in the {} being addressed".
+                                # format(key, self.__class__.__name__))
+                raise TypeError("\'{}\' is not a key in {}".
+                                format(key, self.name))
+            return self.data[key_num]
+
+
+    def __setitem__(self, key, value):
+        # For efficiency, first assume the key is numeric (duck typing in action!)
+        try:
+            self.data[key] = value
+        # If it is not
+        except TypeError:
+            # It must be a string
+            if not isinstance(key, str):
+                raise UtilitiesError("Non-numer key used for {} ({})must be a string)".
+                                      format(self.name, key))
+            # The specified string must also match the value of the attribute of the class used for addressing
+            if not key == value.name:
+                raise UtilitiesError("The key of the entry for {} {} ({}) "
+                                     "must match the value of its {} attribute ({})".
+                                      format(self.name,
+                                             value.__class__.__name__,
+                                             key,
+                                             self.key,
+                                             getattr(value, self.key)))
+            key_num = self._get_key_for_item(key)
+            if key_num is not None:
+                self.data[key_num] = value
+            else:
+                self.data.append(value)
+
+    def __contains__(self, item):
+        if super().__contains__(item):
+            return True
+        else:
+            return any(item == obj.name for obj in self.data)
+
+    def _get_key_for_item(self, key):
+        if isinstance(key, str):
+            obj = next((obj for obj in self.data if obj.name == key), None)
+            if obj is None:
+                return None
+            else:
+                return self.data.index(obj)
+        elif isinstance(key, self.component_type):
+            return self.data.index(key)
+        else:
+            raise UtilitiesError("{} is not a legal key for {} (must be number, string or State)".
+                                  format(key, self.key))
+
+    def __delitem__(self, key):
+        if key is None:
+            raise KeyError("None is not a legal key for {}".format(self.name))
+        try:
+            del self.data[key]
+        except TypeError:
+            key_num = self._get_key_for_item(key)
+            del self.data[key_num]
+
+    def clear(self):
+        super().clear()
+
+    # def pop(self, key, *args):
+    #     raise UtilitiesError("{} is read-only".format(self.name))
+    #
+    # def popitem(self):
+    #     raise UtilitiesError("{} is read-only".format(self.name))
+
+    def __additem__(self, key, value):
+        if key >= len(self.data):
+            self.data.append(value)
+        else:
+            self.data[key] = value
+
+    def copy(self):
+        return self.data.copy()
+
+    @property
+    def names(self):
+        """Return list of `values <Component.value>` of the name attribute of components in the list.
+        Returns
+        -------
+        names :  list
+            list of the values of the `name <Component.name>` attributes of components in the list.
+        """
+        return [getattr(item, NAME) for item in self.data]
+
+    @property
+    def key_values(self):
+        """Return list of `values <Component.value>` of the keyed attribute of components in the list.
+        Returns
+        -------
+        key_values :  list
+            list of the values of the `keyed <Component.name>` attributes of components in the list.
+        """
+        return [getattr(item, self.key) for item in self.data]
+
+    @property
+    def values(self):
+        """Return list of values of components in the list.
+        Returns
+        -------
+        values :  list
+            list of the values of the `value <Component.value>` attributes of components in the list.
+        """
+        return [getattr(item, VALUE) for item in self.data]
+
+    @property
+    def values_as_lists(self):
+        """Return list of values of components in the list, each converted to a list.
+        Returns
+        -------
+        values :  list
+            list of list values of the `value <Component.value>` attributes of components in the list,
+        """
+        return [np.ndarray.tolist(getattr(item, VALUE)) for item in self.data]
+
+
+def is_value_spec(spec):
+    if isinstance(spec, (int, float, list, np.ndarray)):
+        return True
+    else:
+        return False
+
+
+def is_unit_interval(spec):
+    if isinstance(spec, (int, float)) and 0 <= spec <= 1:
+        return True
+    else:
+        return False
+
+
+def is_same_function_spec(fct_spec_1, fct_spec_2):
+    """Compare two function specs and return True if both are for the same class of Function
+
+    Arguments can be either a class or instance of a PsyNeuLink Function, or any other callable method or function
+    Return True only if both are instances or classes of a PsyNeuLink Function;  otherwise, return False
+    """
+    from PsyNeuLink.Components.Functions.Function import Function
+
+    def _convert_to_type(fct):
+        if isinstance(fct, Function):
+            return type(fct)
+        elif inspect.isclass(fct) and issubclass(fct, Function):
+            return fct
+        else:
+            return None
+
+    fct_1 = _convert_to_type(fct_spec_1)
+    fct_2 = _convert_to_type(fct_spec_2)
+
+    if fct_1 and fct_2 and fct_1 == fct_2:
+        return True
+    else:
+        return False
+
+
+def make_readonly_property(val):
+    """Return property that provides read-only access to its value
+    """
+
+    def getter(self):
+        return val
+
+    def setter(self, val):
+        raise UtilitiesError("{} is read-only property of {}".format(val, self.__class__.__name__))
+
+    # Create the property
+    prop = property(getter).setter(setter)
+    return prop
+
+
+def get_class_attributes(cls):
+    boring = dir(type('dummy', (object,), {}))
+    return [item
+            for item in inspect.getmembers(cls)
+            if item[0] not in boring]

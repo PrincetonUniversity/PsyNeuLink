@@ -1,33 +1,25 @@
-import numpy as np
-
 # GLOBALS:
 from PsyNeuLink.Globals.Keywords import *
-# FUNCTIONS:
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Functions.Function import Linear
 
+# MECHANISMS:
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
+
+# COMPOSITIONS:
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.System import system
+
+
+# FUNCTIONS:
 # STATES:
 # from PsyNeuLink.Components.States.OutputState import OutputState
 # from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
-
 # PROJECTIONS:
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-# from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-# from PsyNeuLink.Components.Projections.ControlProjection import ControldProjection
+# from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+# from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControldProjection
 # from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
-
-# MECHANISMS:
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, Mechanism, mechanism
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-
-# COMPOSITIONS:
-from PsyNeuLink.Components.Process import Process, Process_Base, process
-from PsyNeuLink.Components.System import system, System, System_Base
 
 class ScratchPadError(Exception):
     def __init__(self, error_value):
@@ -109,6 +101,15 @@ class ScratchPadError(Exception):
 # print(my_sys.name)
 # my_sys = System_Base()
 # print(my_sys.name)
+
+#endregion
+
+#region TEST arg vs. paramClassDefault @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# myTransfer = TransferMechanism(output_states=[*TransferMechanism.my_mean, {NAME: 'NEW_STATE'}],
+#                                # input_states={NAME: 'MY INPUT'}
+#                                )
+# TEST_CONDITION = True
 
 #endregion
 
@@ -284,9 +285,75 @@ class ScratchPadError(Exception):
 #region TEST Linear FUNCTION WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # print = Linear(variable=[[1,1],[2,2]])
+#endregion
 
-# #region TEST ASSIGNMENT OF PROJECTION TO PARAMETER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+#region TEST 2 Mechanisms and a Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+# from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 #
+# my_mech_A = IntegratorMechanism()
+# my_mech_B = TransferMechanism()
+# proj = MappingProjection(sender=my_mech_A,
+#                          receiver=my_mech_B)
+# my_mech_B.execute(context=EXECUTING)
+#
+#endregion
+
+
+#region TEST Modulation @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
+# from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
+# from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+# from PsyNeuLink.Components.Functions.Function import *
+#
+# My_Transfer_Mech_A = TransferMechanism(
+#                            function=Logistic(
+#                                         gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+#
+#
+# My_Mech_A = TransferMechanism(function=Logistic)
+# My_Mech_B = TransferMechanism(function=Linear,
+#                              output_states=[RESULT, MEAN])
+#
+# Process_A = process(pathway=[My_Mech_A])
+# Process_B = process(pathway=[My_Mech_B])
+# My_System = system(processes=[Process_A, Process_B])
+#
+# My_EVC_Mechanism = EVCMechanism(system=My_System,
+#                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
+#                                                      My_Mech_B.output_states[MEAN]],
+#                                 control_signals=[(GAIN, My_Mech_A),
+#                                                  {NAME: INTERCEPT,
+#                                                   MECHANISM: My_Mech_B,
+#                                                   MODULATION:ModulationParam.ADDITIVE}],
+#                                 name='My EVC Mechanism')
+#
+#
+# My_Mech_A = TransferMechanism(function=Logistic)
+# My_Mech_B = TransferMechanism(function=Linear,
+#                              output_states=[RESULT, MEAN])
+# Process_A = process(pathway=[My_Mech_A])
+# Process_B = process(pathway=[My_Mech_B])
+#
+# My_System = system(processes=[Process_A, Process_B],
+#                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
+#                                                      My_Mech_B.output_states[MEAN]],
+#                                 control_signals=[(GAIN, My_Mech_A),
+#                                                  {NAME: INTERCEPT,
+#                                                   MECHANISM: My_Mech_B,
+#                                                   MODULATION:ModulationParam.ADDITIVE}],
+#                    name='My Test System')
+
+#endregion
+
+# region TEST ASSIGNMENT OF PROJECTION TO PARAMETER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 # Decision = DDM(function=BogaczEtAl(drift_rate=ControlProjection),
 #                name='Decision')
 #
@@ -308,14 +375,14 @@ class ScratchPadError(Exception):
 # #
 # # # my_process = process(pathway=[transfer_mechanism_1,
 # # #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
-# # #                                                                                     ModulationOperation.OVERRIDE)}}),
+# # #                                                                                     Modulation.OVERRIDE)}}),
 # # #                               transfer_mechanism_2])
 # # # my_process.run(inputs=[[[0]]])
 # #
 # # # mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
 # # # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
 # # print(transfer_mechanism_3.execute(input=1.0,
-# #                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
+# #                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, Modulation.OVERRIDE)}}))
 # #
 #
 # my_control = ControlProjection(name='MY CONTROL')
@@ -361,7 +428,7 @@ class ScratchPadError(Exception):
 # transfer_mechanism_1.execute()
 # # my_process = process(pathway=[transfer_mechanism_1,
 # #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
-# #                                                                                     ModulationOperation.OVERRIDE)}}),
+# #                                                                                     Modulation.OVERRIDE)}}),
 # #                               transfer_mechanism_2])
 # # my_process.run(inputs=[[[0]]])
 #
@@ -369,13 +436,13 @@ class ScratchPadError(Exception):
 # # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
 # transfer_mechanism_3.function_object.runtimeParamStickyAssignmentPref = False
 # print(transfer_mechanism_3.execute(input=1.0,
-#                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.OVERRIDE)}}))
+#                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, Modulation.OVERRIDE)}}))
 # # print(transfer_mechanism_3.execute(input=1.0))
 # print(transfer_mechanism_3.execute(input=1.0,
 #                                    runtime_params={PARAMETER_STATE_PARAMS:{INTERCEPT:(100.0,
-#                                                                                    ModulationOperation.OVERRIDE),
+#                                                                                    Modulation.OVERRIDE),
 #                                                                             # SLOPE:(6.0,
-#                                                                             #        ModulationOperation.OVERRIDE
+#                                                                             #        Modulation.OVERRIDE
 #                                                                                       }}))
 # # print(transfer_mechanism_3.run(inputs=[1.0],
 # #                                num_executions=3))
@@ -432,7 +499,6 @@ class ScratchPadError(Exception):
 # # print(my_adaptive_integrator.execute([3]))
 # # print(my_adaptive_integrator.execute([3]))
 # # print(my_adaptive_integrator.execute([3]))
-
 #endregion
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -459,7 +525,7 @@ class ScratchPadError(Exception):
 #
 # from PsyNeuLink.Components.System import System_Base
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-# from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+# from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 #
 # mech = DDM()
 #
@@ -588,10 +654,16 @@ class ScratchPadError(Exception):
 
 #region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Components.Function import *
-# #
+# from PsyNeuLink.Components.Functions.Function import LinearCombination
+
 # x = LinearCombination()
-# print (x.execute(([1, 1],[2, 2])))
+# # print (x.execute(([1, 1],[2, 2])))
+#
+# print (x.execute(([[1, 1],[2, 2]],
+#                   [[3, 3],[4, 4]])))
+
+# print (x.execute(([[[[1, 1],[2, 2]]]])))
+
 
 #endregion
 
@@ -605,7 +677,7 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Backprop FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Components.Function import *
 #
@@ -618,45 +690,65 @@ class ScratchPadError(Exception):
 #
 #endregion
 
-#region TEST AutoAssociator
-
-my_auto = TransferMechanism(default_input_value=[0,0,0],
-                            # function=Logistic
-                            )
-
-my_auto_matrix = MappingProjection(sender=my_auto,
-                                   receiver=my_auto,
-                                   matrix=FULL_CONNECTIVITY_MATRIX)
-# THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
-#                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
-my_process = process(pathway=[my_auto],
-
-# THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
-# my_process = process(pathway=[my_auto, my_auto_matrix],
-                     learning=LEARNING
-                     )
-
-# my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
-#                      learning=LEARNING,
-#                      target=[0,0,0])
-
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
-# print(my_process.execute([1,1,1]))
+# region TEST RecurrentTransferMechanism / LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-input_list = {my_auto:[1,1,1]}
-target_list = {my_auto:[0,0,0]}
-
-# print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
-
-my_system = system(processes=[my_process],
-                   targets=[0,0,0])
-
-print(my_system.run(inputs=input_list,
-                    targets=target_list,
-                    num_executions=5))
-
+# # print("TEST RecurrentTransferMechanism / LCA")
+# # my_auto = LCA(
+# #         size=3,
+# #         output_states=[LCA_OUTPUT.RESULT,
+# #                        LCA_OUTPUT.ENTROPY,
+# #                        LCA_OUTPUT.ENERGY,
+# #                        LCA_OUTPUT.MAX_VS_AVG]
+# #         # inhibition
+# # )
+#
+# # my_auto = RecurrentTransferMechanism(
+# #         default_input_value=[0,0,0],
+# #         size=3,
+# #         function=Logistic,
+# #         # matrix=RANDOM_CONNECTIVITY_MATRIX,
+# #         matrix=np.array([[1,1,1],[1,1,1],[1,1,1]])
+# #         # matrix=[[1,1,1],[1,1,1],[1,1,1]]
+# # )
+#
+# # my_auto = TransferMechanism(default_input_value=[0,0,0],
+# #                             # function=Logistic
+# #                             )
+# #
+# # my_auto_matrix = MappingProjection(sender=my_auto,
+# #                                    receiver=my_auto,
+# #                                    matrix=FULL_CONNECTIVITY_MATRIX)
+#
+# # THIS DOESN'T WORK, AS Process._instantiate_pathway() EXITS AFTER PROCESSING THE LONE MECHANISM
+# #                    SO NEVER HAS A CHANCE TO SEE THE PROJECTION AND THEREBY ASSIGN IT A LearningProjection
+# my_process = process(pathway=[my_auto],
+#
+# # THIS DOESN'T WORK, AS Process._instantiate_pathway() ONLY CHECKS PROJECTIONS AFTER ENCOUNTERING ANOTHER MECHANISM
+# # my_process = process(pathway=[my_auto, my_auto_matrix],
+#                      target=[0,0,0],
+#                      learning=LEARNING
+#                      )
+#
+# # my_process = process(pathway=[my_auto, FULL_CONNECTIVITY_MATRIX, my_auto],
+# #                      learning=LEARNING,
+# #                      target=[0,0,0])
+#
+# # print(my_process.execute([1,1,1]))
+# # print(my_process.execute([1,1,1]))
+# # print(my_process.execute([1,1,1]))
+# # print(my_process.execute([1,1,1]))
+# #
+# input_list = {my_auto:[1,1,1]}
+# target_list = {my_auto:[0,0,0]}
+#
+# # print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
+#
+# my_system = system(processes=[my_process],
+#                    targets=[0,0,0])
+#
+# print(my_system.run(inputs=input_list,
+#                     targets=target_list,
+#                     num_executions=5))
 
 #endregion
 
@@ -709,13 +801,12 @@ print(my_system.run(inputs=input_list,
 
 #endregion
 
-
 #region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Process import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear
-# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+# from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 #
 # my_mech = TransferMechanism(function=Linear())
 # my_mech2 = TransferMechanism(function=Linear())
@@ -730,7 +821,7 @@ print(my_system.run(inputs=input_list,
 
 #endregion
 
-#region TEST matrix
+#region TEST matrix @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
 # Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
@@ -746,6 +837,28 @@ print(my_system.run(inputs=input_list,
 # c = np.dot(b, a, )
 # print(c)
 
+#endregion  ********
+
+#region TEST Stability and Distance @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# matrix = [[0,-1],[-1,0]]
+# normalize = False
+# activity = [100,0]
+#
+#
+# eng = Stability(variable_default=activity,
+#              matrix=matrix,
+#              normalize=normalize
+#              )
+#
+# dist = Distance(variable_default=[activity,activity],
+#                 metric=CROSS_ENTROPY,
+#                 # normalize=normalize
+#                 )
+#
+# print("Stability: ",eng.function(activity))
+# print("Distance: ", dist.function(activity))
+
 #endregion
 
 #region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -753,7 +866,7 @@ print(my_system.run(inputs=input_list,
 # from PsyNeuLink.Components.Process import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+# from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 #
 # color_naming = TransferMechanism(default_input_value=[0,0],
 #                         function=Linear,
@@ -785,12 +898,9 @@ print(my_system.run(inputs=input_list,
 #
 # endregion
 
-
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
 #region TEST typecheck: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-import typecheck as tc
 
 # @tc.typecheck
 # def foo2(record:(int,int,bool), rgb:tc.re("^[rgb]$")) -> tc.any(int,float) :
@@ -854,6 +964,26 @@ import typecheck as tc
 
 #endregion
 
+#region TEST get_user_attributes @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# import inspect
+#
+# def get_class_attributes(cls):
+#     boring = dir(type('dummy', (object,), {}))
+#     return [item
+#             for item in inspect.getmembers(cls)
+#             if item[0] not in boring]
+#
+# class my_class():
+#     attrib1 = 0
+#     attrib2 = 1
+#     # def __init__(self):
+#         # self.attrib1 = 0
+#         # self.attrib2 = 1
+#
+# print(get_class_attributes(my_class))
+
+#endregion
 
 #region TEST Function definition in class: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -1548,9 +1678,8 @@ import typecheck as tc
 #         return self._prefs
 #
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-#
-# # - TEST: Preferences:
+
+#region TEST: Preferences @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # # x = DDM()
 # # x.prefs.show()
@@ -1558,7 +1687,7 @@ import typecheck as tc
 # DDM_prefs = ComponentPreferenceSet(
 #                 reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
 #                 verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
-#                 kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
+#                 kpFunctionRuntimeParams_pref=PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.TYPE)
 #                 )
 # DDM_prefs.show()
 # # DDM.classPreferences = DDM_prefs
@@ -1568,9 +1697,8 @@ import typecheck as tc
 #
 
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# # - TEST:  GET ATTRIBUTE LIST
+#region TEST:  GET ATTRIBUTE LIST @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # class x:
 #     def __init__(self):
@@ -1590,10 +1718,9 @@ import typecheck as tc
 #         print (value)
 
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# - TEST:  PROPERTY GETTER AND SETTER
-
+#region TEST:  PROPERTY GETTER AND SETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
 # ************
 # 
 # EXAMPLE:
@@ -1833,7 +1960,6 @@ import typecheck as tc
 #
 #
 #
-
 #endregion
 
 #region TEST:  DICTIONARY MERGE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -1858,7 +1984,7 @@ import typecheck as tc
 #
 #endregion
 
-# #region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # # state_params = None
 # state_params = {}
 # # state_params = {'Already there': 0}
@@ -1882,8 +2008,6 @@ import typecheck as tc
 # except TypeError:
 #     pass
 # #endregion
-
-# print(state_params)
 
 #region TEST:  ORDERED DICTIONARY ORDERING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # from collections import OrderedDict
@@ -2047,6 +2171,333 @@ import typecheck as tc
 # #
 #
 # #endregion
+
+#region TEST OF List indexed by string @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+# # a = MyClass()
+# # b = MyClass()
+# # # a.name = 'hello'
+# # a.name.append('hello')
+# # print(a.name)
+# # print(b.name)
+#
+#
+# # from collections import UserList
+# #
+# # class ClassListTest(UserList):
+# #     """Implements dict-like list, that can be indexed by the names of the States in its entries.
+# #
+# #     Supports getting and setting entries in the list using string (in addition to numeric) indices.
+# #     For getting an entry:
+# #         the string must match the name of a State in the list; otherwise an excpetion is raised.
+# #     For setting an entry:
+# #         the string must match the name of the State being assigned;
+# #         if there is already a State in the list the name of which matches the string, it is replaced;
+# #         if there is no State in the list the name of which matches the string, the State is appended to the list.
+# #
+# #     IMPLEMENTATION NOTE:
+# #         This class allows the states of a mechanism to be maintained in lists, while providing the convenience
+# #         (to the user) of access and assignment by name (e.g., akin to a dict).
+# #         Lists are used (instead of a dict or OrderedDict) since:
+# #             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
+# #                 collections of states to other variables, such as lists of their values);
+# #             - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
+# #                 or by index (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for
+# #                 accessing by key/name less critical;
+# #             - the number of states in a collection for a given mechanism is likely to be small so that, even when
+# #                 accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
+# #     """
+# #
+# #     def __init__(self, list=None, name=None, **kwargs):
+# #         self.name = name or self.__class__.__name__
+# #         UserList.__init__(self, list, **kwargs)
+# #         # self._ordered_keys = []
+# #
+# #     def __getitem__(self, index):
+# #         try:
+# #             return self.data[index]
+# #         except TypeError:
+# #             index = self._get_index_for_item(index)
+# #             return self.data[index]
+# #
+# #     def __setitem__(self, index, value):
+# #         try:
+# #             self.data[index] = value
+# #         except TypeError:
+# #             if not index is value.name:
+# #                 raise ScratchPadError("Name of entry for {} ({}) must match the name of its State ({})".
+# #                                       format(self.name, index, value.name))
+# #             index_num = self._get_index_for_item(index)
+# #             if index_num is not None:
+# #                 self.data[index_num] = value
+# #             else:
+# #                 self.data.append(value)
+# #
+# #     def _get_index_for_item(self, index):
+# #         if isinstance(index, str):
+# #             # return self.data.index(next(obj for obj in self.data if obj.name is index))
+# #             obj = next((obj for obj in self.data if obj.name is index), None)
+# #             if obj is None:
+# #                 return None
+# #             else:
+# #                 return self.data.index(obj)
+# #
+# #         elif isinstance(index, MyClass):
+# #             return self.data.index(index)
+# #         else:
+# #             raise ScratchPadError("{} is not a legal index for {} (must be number, string or State".
+# #                                   format(index, self.name))
+# #
+# #     def __delitem__(self, index):
+# #         del self.data[index]
+# #
+# #     def clear(self):
+# #         super().clear(self)
+# #
+# #     # def pop(self, index, *args):
+# #     #     raise UtilitiesError("{} is read-only".format(self.name))
+# #     # def popitem(self):
+# #     #     raise UtilitiesError("{} is read-only".format(self.name))
+# #
+# #     def __additem__(self, index, value):
+# #         if index >= len(self.data):
+# #             self.data.append(value)
+# #         else:
+# #             self.data[index] = value
+# #
+# #
+# #     def __contains__(self, item):
+# #         if super().__contains__(item):
+# #             return True
+# #         else:
+# #             return any(item is obj.name for obj in self.data)
+# #
+# #     def copy(self):
+# #         return self.data.copy()
+#
+# class MyClass():
+#     name = None
+#     def __init__(self, name=None):
+#         self.name = name
+#         # self.name = name
+#
+# my_obj = MyClass(name='hello')
+# my_obj_2 = MyClass(name='goodbye')
+# my_obj_3 = MyClass(name='goodbye')
+#
+# from PsyNeuLink.Globals.Utilities import ContentAddressableList
+#
+# my_list = ContentAddressableList(component_type=MyClass)
+# # my_list.append(my_state)
+# my_list['hello'] = my_obj
+# my_list['goodbye'] = my_obj_2
+# print(my_list, len(my_list))
+# print(my_list[0])
+# print(my_list['hello'])
+# print(my_list['goodbye'])
+# my_list['goodbye'] = my_obj_3
+# print(my_list['goodbye'])
+# print('hello' in my_list)
+
+#endregion
+
+#region TEST parse_state_spec @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# print("TEST parse_gated_state_spec")
+#
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import _parse_gating_signal_spec
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+# from PsyNeuLink.Components.Functions.Function import ModulationParam
+# from PsyNeuLink.Components.States.OutputState import OutputState
+#
+# gating_mech = GatingMechanism()
+# mech_1 = DDM()
+# mech_2 = DDM()
+#
+# single_dict = {NAME:'DECISION_VARIABLE', MECHANISM:mech_1}
+# a = _parse_gating_signal_spec(owner=gating_mech, state_spec=single_dict)
+# print('\nsingle_dict:', a)
+#
+# # THESE ARE A HACK TO ASSIGN A PRE-EXISTING GATING SIGNAL TO gating_mech WITHOUTH HAVING TO CONSTRUCT ONE
+# x = DDM()
+# x.name ='Default_input_state_GatingSignal'
+# x.efferents = []
+# gating_mech._gating_signals = [x]
+# # --------------------------------------------------------------
+#
+# single_tuple = ('DECISION_VARIABLE', mech_1)
+# b = _parse_gating_signal_spec(gating_mech, state_spec=single_tuple)
+# print('\nsingle_tuple:', b)
+#
+# multi_states_dicts = {'MY_SIGNAL':[{NAME:'DECISION_VARIABLE',
+#                                    MECHANISM:mech_1},
+#                                    {NAME:'RESPONSE_TIME',
+#                                    MECHANISM:mech_1}],
+#                       MODULATION: ModulationParam.ADDITIVE}
+# c = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_dicts)
+# print('\nmulti_states_dicts:', c)
+#
+# multi_states_tuples = {'MY_SIGNAL':[('Default_input_state',mech_1),
+#                                    ('Default_input_state',mech_2)]}
+# d = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_tuples)
+# print('\nmulti_states_tuples:', d)
+#
+# multi_states_combo = {'MY_SIGNAL':[{NAME:'Default_input_state',
+#                                    MECHANISM:mech_1},
+#                                    ('Default_input_state',mech_2)]}
+# e = _parse_gating_signal_spec(gating_mech, state_spec=multi_states_combo)
+# print('\nmulti_states_combo:', e)
+
+#endregion
+
+# region TEST parse_monitored_value @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import *
+# from PsyNeuLink.Components.States.OutputState import OutputState
+#
+# print("TEST parse_monitored_value")
+#
+# def _parse_monitored_value(owner, monitored_values):
+#     """Parse specifications contained in monitored_values list or dict,
+#
+#     Can take either a list or dict of specifications.
+#     If it is a list, each item must be one of the following:
+#         - OuptutState
+#         - Mechanism
+#         - string
+#         - value
+#         - dict
+#
+#     If it is a dict, each item must be an entry, the key of which must be a string that is used as a name
+#         specification, and the value of which can be any of the above.
+#
+#     Return a list of specification dicts, one for each item of monitored_values
+#     """
+#
+#
+#     def parse_spec(spec):
+#
+#         # OutputState:
+#         if isinstance(spec, OutputState):
+#             name = spec.owner.name + MONITORED_VALUE_NAME_SUFFIX
+#             value = spec.value
+#             call_for_projection = True
+#
+#         # Mechanism:
+#         elif isinstance(spec, Mechanism_Base):
+#             name = spec.name + MONITORED_VALUE_NAME_SUFFIX
+#             value = spec.output_state.value
+#             call_for_projection = True
+#
+#         # # If spec is a MonitoredOutputStatesOption:
+#         # # FIX: NOT SURE WHAT TO DO HERE YET
+#         # elif isinstance(montiored_value, MonitoredOutputStateOption):
+#         #     value = ???
+#         #     call_for_projection = True
+#
+#         # If spec is a string:
+#         # - use as name of inputState
+#         # - instantiate InputState with defalut value (1d array with single scalar item??)
+#
+#         # str:
+#         elif isinstance(spec, str):
+#             name = spec
+#             value = DEFAULT_MONITORED_VALUE
+#             call_for_projection = False
+#
+#         # value:
+#         elif is_value_spec(spec):
+#             name = owner.name + MONITORED_VALUE_NAME_SUFFIX
+#             value = spec
+#             call_for_projection = False
+#
+#         elif isinstance(spec, tuple):
+#             # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
+#             name = owner.name + MONITORED_VALUE_NAME_SUFFIX
+#             value = spec[0]
+#             call_for_projection = spec[1]
+#
+#         # dict:
+#         elif isinstance(spec, dict):
+#
+#             name = None
+#             for k, v in spec.items():
+#                 # Key is not a spec keyword, so dict must be of the following form: STATE_NAME_ASSIGNMENT:STATE_SPEC
+#                 #
+#                 if not k in {NAME, VALUE, STATE_PROJECTIONS}:
+#                     name = k
+#                     value = v
+#
+#             if NAME in spec:
+#                 name = spec[NAME]
+#
+#             call_for_projection = False
+#             if STATE_PROJECTIONS in spec:
+#                 call_for_projection = spec[STATE_PROJECTIONS]
+#
+#             if isinstance(spec[VALUE], (dict, tuple)):
+#                 # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
+#                 entry_name, value, call_for_projection = parse_spec(spec[VALUE])
+#
+#             else:
+#                 value = spec[VALUE]
+#
+#         else:
+#             raise ObjectiveMechanismError("Specification for {} arg of {} ({}) must be an "
+#                                           "OutputState, Mechanism, value or string".
+#                                           format(MONITORED_VALUES, owner.name, spec))
+#
+#         return name, value, call_for_projection
+#
+#     # If it is a dict, convert to list by:
+#     #    - assigning the key of each entry to a NAME entry of the dict
+#     #    - placing the value in a VALUE entry of the dict
+#     if isinstance(monitored_values, dict):
+#         monitored_values_list = []
+#         for name, spec in monitored_values.items():
+#             monitored_values_list.append({NAME: name, VALUE: spec})
+#         monitored_values = monitored_values_list
+#
+#     if isinstance(monitored_values, list):
+#
+#         for i, monitored_value in enumerate(monitored_values):
+#             name, value, call_for_projection = parse_spec(monitored_value)
+#             monitored_values[i] = {NAME: name,
+#                                    VALUE: value,
+#                                    PROJECTION: call_for_projection}
+#
+#     else:
+#         raise ObjectiveMechanismError("{} arg for {} ({} )must be a list or dict".
+#                                       format(MONITORED_VALUES, owner.name, monitored_values))
+#
+#     return monitored_values
+#
+#
+#
+#     # def add_monitored_values(self, states_spec, context=None):
+#     #     """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
+#     #
+#     #     Use by other objects to add a state or list of states to be monitored by EVC
+#     #     states_spec can be a Mechanism, OutputState or list of either or both
+#     #     If item is a Mechanism, each of its outputStates will be used
+#     #
+#     #     Args:
+#     #         states_spec (Mechanism, MechanimsOutputState or list of either or both:
+#     #         context:
+#     #     """
+#     #     states_spec = list(states_spec)
+#     #     validate_monitored_value(self, states_spec, context=context)
+#     #     self._instantiate_monitored_output_states(states_spec, context=context)
+#
+# class SCRATCH_PAD():
+#     name = 'SCRATCH_PAD'
+#
+# print(_parse_monitored_value(SCRATCH_PAD, {'TEST_STATE_NAME':{VALUE: (32, 'Projection')}}))
+
+#endregion
 
 #region PREFERENCE TESTS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -2339,7 +2790,7 @@ import typecheck as tc
 
 # from Components.Projections.ControlProjection import *
 #
-# # Initialize controlSignal with some settings
+# # Initialize control_signal with some settings
 # settings = ControlSignalSettings.DEFAULTS | \
 #            ControlSignalSettings.DURATION_COST | \
 #            ControlSignalSettings.LOG
@@ -2356,7 +2807,7 @@ import typecheck as tc
 # # Can also change settings on the fly (note:  ControlProjection.OFF is just an enum defined in the ControlProjection module)
 # x.set_adjustment_cost(OFF)
 #
-# # Display some values in controlSignal (just to be sure it is set up OK)
+# # Display some values in control_signal (just to be sure it is set up OK)
 # print("Intensity Function: ", x.functions[kwControlSignalIntensityFunction].name)
 # print("Initial Intensity: ", x.intensity)
 #

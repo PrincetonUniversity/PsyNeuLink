@@ -2,17 +2,13 @@
 # Runs examples in the PsyNeuLink Documentation
 #
 
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Globals.Run import run
-
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+
+# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 
 #region PROCESS EXAMPLES ********************************************************************
 
@@ -111,7 +107,7 @@ from PsyNeuLink.Components.Functions.Function import *
 mechanism_1 = TransferMechanism()
 mechanism_2 = DDM()
 some_params = {PARAMETER_STATE_PARAMS:{THRESHOLD:2,NOISE:0.1}}
-my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params, 0)])
+my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
 print(my_process.execute())
 
 # Default projection specification

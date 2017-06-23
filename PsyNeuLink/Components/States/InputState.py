@@ -17,11 +17,11 @@ An inputState receives the input to a mechanism provided by the projections to t
 or system.  If the inputState belongs to an `ORIGIN` mechanism (see
 `role of mechanisms in processes and systems <Mechanism_Role_In_Processes_And_Systems>`), then it receives the input
 specified when that process or system is `run <Run>`.  The projections received by an inputState are
-listed in its `receivesFromProjections <InputState.receivesFromProjections>` attribute. Its
+listed in its `path_afferents <InputState.path_afferents>` attribute. Its
 `function <InputState.function>` combines the values of these inputs, and the result is assigned to an item
 corresponding to the inputState in the owner mechanism's :keyword:`variable <Mechanism.Mechanism_Base.variable>` and
-`inputValue <Mechanism.Mechanism_Base.inputValue>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
-for additional details about the role of inputStates in mechanisms).
+`input_value <Mechanism.Mechanism_Base.input_value>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
+for additional details about the role of input_states in mechanisms).
 
 
 .. _InputState_Creation:
@@ -33,7 +33,7 @@ InputStates are created automatically when a mechanism is created.  For example,
 the `pathway` of a process`, the inputState for that mechanism will be created and assigned as the
 `receiver <MappingProjection.MappingProjection.receiver>` of a `MappingProjection` from the  preceding mechanism in the
 pathway;  and a `ControlMechanism <ControlMechanism>` automatically creates an inputState for each mechanism that it
-monitors. PsyNeuLink does not currently support the explicit creation of inputStates (this may be implemented in the
+monitors. PsyNeuLink does not currently support the explicit creation of input_states (this may be implemented in the
 future). However they can modified as described below.
 
 COMMENT:
@@ -46,10 +46,15 @@ An inputState must be owned by a mechanism. Therefore, if the inputState is crea
 must be specified in the ``owner`` argument of its constructor; if the inputState is specified in the
 INPUT_STATES entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.
 
-If one or more custom inputStates need to be specified when a mechanism is created, or added to an existing mechanism,
+.. _InputState_Specification
+
+InputState Specification
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+If one or more custom input_states need to be specified when a mechanism is created, or added to an existing mechanism,
 they can be specified in an entry of the mechanism's parameter dictionary, using the key :keyword`INPUT_STATES`
-and a value that specifies one or more inputStates. For a single inputState, the value can be any of the
-specifications in the the list below.  To create multiple inputStates, the value of the INPUT_STATES entry
+and a value that specifies one or more input_states. For a single inputState, the value can be any of the
+specifications in the the list below.  To create multiple input_states, the value of the INPUT_STATES entry
 can be either a list, each item of which can be any of the specifications below;  or, it can be an OrderedDict,
 in which the key for each entry is a string specifying the name for the inputState to be created, and its value is
 one of the specifications below:
@@ -82,8 +87,8 @@ one of the specifications below:
       :ref:`projection specification dictionary <Projection_In_Context_Specification>`, or a list containing
       items that are either of those.
     ..
-    * A :any:`ParamValueProjection` tuple.  This creates a default inputState using the ``value`` item as its
-    ``variable``, and assigns the state as the ``receiver`` of the projection item.
+    * A **2-item tuple**.  This creates a default inputState using the first (value) item as its
+      :keyword:`variable`, and assigns the state as the :keyword:`receiver` of the 2nd (projection) item.
 
     .. note::
        In all cases, the resulting ``value`` of the inputState must be compatible with (that is, have the same number
@@ -104,17 +109,17 @@ COMMENT:
 COMMENT
 
 COMMENT:
-Assigning inputStates using the INPUT_STATES entry of a mechanism's parameter dictionary adds them to any
+Assigning input_states using the INPUT_STATES entry of a mechanism's parameter dictionary adds them to any
 that are automatically generated for that mechanism;  if the name of one explicitly specified is them same as one
 automatically generated, the name will be suffixed with a numerical index and added (that is, it will *not* replace
 the one automatically generated). InputStates can also be added by using the
-:py:func:`assign_output_state <OutputState.assign_output_state>`. If the mechanism requires multiple inputStates
+:py:func:`assign_output_state <OutputState.assign_output_state>`. If the mechanism requires multiple input_states
 (i.e., it's ``variable`` attribute has more than on item), it assigns the ``value`` of each inputState to an item of
-its ``variable`` (see :ref:`Mechanism Variable <Mechanism_Variable>`). Therefore, the number of inputStates
+its ``variable`` (see :ref:`Mechanism Variable <Mechanism_Variable>`). Therefore, the number of input_states
 specified must equal the number of items in the mechanisms's ``variable``.  An exception is if the mechanism's
 ``variable`` has more than one item, it may still be assigned a single inputState;  in that case, the ``value`` of
 that inputState must have the same number of items as the  mechanisms's ``variable``.  For cases in which there are
-multiple inputStates, the order in which they are specified in the list or OrderedDict must parallel the order of
+multiple input_states, the order in which they are specified in the list or OrderedDict must parallel the order of
 the items to which they will be assined in the mechanism's ``variable``; furthemore, as noted above, the ``value`` for
 each inputState must match (in number and types of elements) the item of ``variable`` to which it will be assigned.
 COMMENT
@@ -127,7 +132,7 @@ Structure
 Every inputState is owned by a `mechanism <Mechanism>`. It can receive one or more
 `MappingProjections <MappingProjection>` from other mechanisms, as well as from the process or system to which its
 owner belongs (if it is the `ORIGIN` mechanism for that process or system).  The projections received by an
-inputState are listed in its `receivesFromProjections <InputState.receivesFromProjections>` attribute.
+inputState are listed in its `path_afferents <InputState.path_afferents>` attribute.
 
 Like all PsyNeuLink components, an inputState has the three following core attributes:
 
@@ -153,8 +158,8 @@ An inputState cannot be executed directly.  It is executed when the mechanism to
 When this occurs, the inputState executes any projections it receives, calls its `function <InputState.function>` to
 aggregate their values, and then assigns the result to the inputState's `value <InputState.value>` attribute.  This,
 in turn, is assigned to the item of the mechanism's `variable <Mechanism.Mechanism_Base.variable>` and
-`inputValue <Mechanism.Mechanism_Base.inputValue>` attributes corresponding to that inputState
-(see `mechanism variable and inputValue attributes <Mechanism_Variable>` for additional details).
+`input_value <Mechanism.Mechanism_Base.input_value>` attributes corresponding to that inputState
+(see `mechanism variable and input_value attributes <Mechanism_Variable>` for additional details).
 
 .. _InputState_Class_Reference:
 
@@ -194,8 +199,8 @@ class InputState(State_Base):
     InputState(                                \
     owner,                                     \
     reference_value=None,                      \
-    value=None,                                \
     function=LinearCombination(operation=SUM), \
+    value=None,                                \
     params=None,                               \
     name=None,                                 \
     prefs=None)
@@ -243,10 +248,8 @@ class InputState(State_Base):
         the value of the item of the owner mechanism's `variable <Mechanism.Mechanism_Base.variable>` attribute to which
         the inputState is assigned; used as the template for the inputState's `value <InputState.value>` attribute.
 
-    value : number, list or np.ndarray
-        specifies the template for the inputState's `variable <InputState.variable>` attribute (since an inputState's
-        `variable <InputState.variable>` and `value <InputState.value>` attributes must have the same format
-        (number and type of elements).
+    variable : number, list or np.ndarray
+        specifies the template for the inputState's `variable <InputState.variable>` attribute.
 
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to aggregate the values of the projections received by the inputState.
@@ -274,7 +277,7 @@ class InputState(State_Base):
     owner : Mechanism
         the mechanism to which the inputState belongs.
 
-    receivesFromProjections : Optional[List[Projection]]
+    afferents : Optional[List[Projection]]
         a list of the projections received by the inputState
         (i.e., for which it is a `receiver <Projection.Projection.receiver>`).
 
@@ -291,7 +294,7 @@ class InputState(State_Base):
 
     name : str : default <State subclass>-<index>
         the name of the inputState.
-        Specified in the `name` argument of the constructor for the outputState.  If not is specified, a default is
+        Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
         assigned by the StateRegistry of the mechanism to which the outputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
@@ -303,7 +306,7 @@ class InputState(State_Base):
 
     prefs : PreferenceSet or specification dict : State.classPreferences
         the `PreferenceSet` for the inputState.
-        Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
+        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -336,24 +339,49 @@ class InputState(State_Base):
                  reference_value=None,
                  variable=None,
                  function=LinearCombination(operation=SUM),
+                 weight=None,
+                 exponent=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function, params=params)
+        params = self._assign_args_to_param_dicts(function=function,
+                                                  weight=weight,
+                                                  exponent=exponent,
+                                                  params=params)
 
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of owner (to override assignment of componentName in super.__init__)
         super(InputState, self).__init__(owner,
-                                                  variable=variable,
-                                                  params=params,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=self)
+                                         variable=variable,
+                                         params=params,
+                                         name=name,
+                                         prefs=prefs,
+                                         context=self)
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate weights and exponents
+        
+        This needs to be done here, since paramClassDefault declarations assign None as default
+            (so that they can be ignored if not specified here or in the function)
+        """
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        
+        if WEIGHT in target_set and target_set[WEIGHT] is not None:
+            if not isinstance(target_set[WEIGHT], (int, float)):
+                raise InputStateError("{} parameter of {} for {} ({}) must be an int or float".
+                                      format(WEIGHT, self.name, self.owner.name, target_set[WEIGHT]))
+
+        if EXPONENT in target_set and target_set[EXPONENT] is not None:
+            if not isinstance(target_set[EXPONENT], (int, float)):
+                raise InputStateError("{} parameter of {} for {} ({}) must be an int or float".
+                                      format(EXPONENT, self.name, self.owner.name, target_set[EXPONENT]))
+
 
     def _instantiate_function(self, context=None):
         """Insure that function is LinearCombination and that output is compatible with owner.variable
@@ -394,17 +422,48 @@ class InputState(State_Base):
                                                   self.reference_value))
                                                   # self.owner.variable))
 
+    def _execute(self, function_params, context):
+        """Call self.function with self.variable
+
+        If there were no Transmissive projections, ignore and return None
+        """
+
+        # If there were any Transmissive projections:
+        if self._path_proj_values:
+            # Combine projection values
+            combined_values = self.function(variable=self._path_proj_values,
+                                            params=function_params,
+                                            context=context)
+            return combined_values
+
+        # There were no projections
+        else:
+            # mark combined_values as none, so that (after being assigned to self.value)
+            #    it is ignored in execute method (i.e., not combined with base_value)
+            return None
+
+    @property
+    def pathway_projections(self):
+        return self.path_afferents
+
+    @pathway_projections.setter
+    def pathway_projections(self, assignment):
+        self.path_afferents = assignment
+
+
 def _instantiate_input_states(owner, context=None):
     """Call State._instantiate_state_list() to instantiate orderedDict of inputState(s)
 
-    Create OrderedDict of inputState(s) specified in paramsCurrent[INPUT_STATES]
+    Create ContentAddressableList of inputState(s) specified in paramsCurrent[INPUT_STATES]
+
     If INPUT_STATES is not specified, use self.variable to create a default input state
+
     When completed:
-        - self.inputStates contains an OrderedDict of one or more inputStates
-        - self.inputState contains the `primary inputState <Mechanism_InputStates>`:  first or only one in OrderedDict
-        - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more inputStates)
+        - self.input_states contains an OrderedDict of one or more input_states
+        - self.input_state contains the `primary inputState <Mechanism_InputStates>`:  first or only one in OrderedDict
+        - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more input_states)
         - each inputState corresponds to an item in the variable of the owner's function
-        - the value of all of the inputStates is stored in a list in inputValue
+        - the value of all of the input_states is stored in a list in input_value
         - if there is only one inputState, it is assigned the full value
 
     Note: State._instantiate_state_list()
@@ -412,22 +471,43 @@ def _instantiate_input_states(owner, context=None):
               into individual 1D arrays, one for each input state
 
     (See State._instantiate_state_list() for additional details)
-
-    :param context:
-    :return:
     """
-    owner.inputStates = _instantiate_state_list(owner=owner,
-                                               state_list=owner.paramsCurrent[INPUT_STATES],
-                                               state_type=InputState,
-                                               state_param_identifier=INPUT_STATES,
-                                               constraint_value=owner.variable,
-                                               constraint_value_name="function variable",
-                                               context=context)
 
-    # Check that number of inputStates and their variables are consistent with owner.variable,
+    state_list = _instantiate_state_list(owner=owner,
+                                         state_list=owner.input_states,
+                                         state_type=InputState,
+                                         state_param_identifier=INPUT_STATES,
+                                         constraint_value=owner.variable,
+                                         constraint_value_name="function variable",
+                                         context=context)
+
+
+    # FIX: 5/23/17:  SHOULD APPEND THIS TO LIST OF EXISTING INPUT_STATES RATHER THAN JUST ASSIGN;
+    #                THAT WAY CAN USE INCREMENTALLY IN COMPOSITION
+    # if context and 'COMMAND_LINE' in context:
+    #     if owner.input_states:
+    #         owner.input_states.extend(state_list)
+    #     else:
+    #         owner.input_states = state_list
+    # else:
+    #     if owner._input_states:
+    #         owner._input_states.extend(state_list)
+    #     else:
+    #         owner._input_states = state_list
+
+    # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
+    # FIX: Hack to prevent recursion in calls to setter and assign_params
+    if context and 'COMMAND_LINE' in context:
+        owner.input_states = state_list
+    else:
+        owner._input_states = state_list
+
+
+
+    # Check that number of input_states and their variables are consistent with owner.variable,
     #    and adjust the latter if not
-    for i in range (len(owner.inputStates)):
-        input_state = list(owner.inputStates.values())[i]
+    for i in range (len(owner.input_states)):
+        input_state = owner.input_states[i]
         try:
             variable_item_is_OK = iscompatible(owner.variable[i], input_state.value)
             if not variable_item_is_OK:
@@ -439,25 +519,10 @@ def _instantiate_input_states(owner, context=None):
     if not variable_item_is_OK:
         old_variable = owner.variable
         new_variable = []
-        for state_name, state in owner.inputStates:
+        for state_name, state in owner.input_states:
             new_variable.append(state.value)
         owner.variable = np.array(new_variable)
         if owner.verbosePref:
             warnings.warn("Variable for {} ({}) has been adjusted "
-                          "to match number and format of its inputStates: ({})".
+                          "to match number and format of its input_states: ({})".
                           format(old_variable, append_type_to_name(owner),owner.variable))
-
-
-    # Initialize self.inputValue to correspond to format of owner's variable, and zero it
-# FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
-# FIX:  IS THIS A LIST OR np.array (SHOULD BE A LIST)
-    # ??REPLACE THIS WITH owner.inputValue = list(owner.variable) * 0.0??
-    owner.inputValue = owner.variable.copy() * 0.0
-
-    # Assign self.inputState to first inputState in dict
-    try:
-        owner.inputState = list(owner.inputStates.values())[0]
-    except AttributeError:
-        owner.inputState = None
-
-

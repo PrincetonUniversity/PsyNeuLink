@@ -30,7 +30,7 @@ class Keywords:
         receive projections from other processes in the system. The `ORIGIN` mechanisms of a process or
         system are listed in its :keyword:`originMechanisms` attribute, and can be displayed using its :keyword:`show`
         method.  For additional details about `ORIGIN` mechanisms in processes, see
-        `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Ouput>`;
+        `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`;
         and for systems see `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
 
@@ -58,7 +58,7 @@ class Keywords:
         as it may send projections to other processes in the system.  The `TERMINAL` mechanisms of a process
         or system are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
         :keyword:`show` method.  For additional details about `TERMINAL` mechanisms in processes, see
-        `Process_Mechanisms` and `Process_Input_And_Ouput`; and for systems see `System_Mechanisms`.
+        `Process_Mechanisms` and `Process_Input_And_Output`; and for systems see `System_Mechanisms`.
 
     SINGLETON
         A `ProcessingMechanism` that is the only mechanism in a process and/or system.  It can serve the functions
@@ -100,7 +100,7 @@ class MatrixKeywords:
         a square matrix of 1's along the diagnoal, 0's elsewhere; this requires that the length of the sender and 
         receiver values are the same.
 
-    OFF_DIAGONAL_MATRIX
+    HOLLOW_MATRIX
         a square matrix of 0's along the diagnoal, 1's elsewhere; this requires that the length of the sender and 
         receiver values are the same.
 
@@ -124,7 +124,7 @@ class MatrixKeywords:
     def __init__(self):
         self.MATRIX = MATRIX
         self.IDENTITY_MATRIX = IDENTITY_MATRIX
-        self.OFF_DIAGONAL = OFF_DIAGNOAL_MATRIX
+        self.HOLLOW_MATRIX = HOLLOW_MATRIX
         self.FULL_CONNECTIVITY_MATRIX = FULL_CONNECTIVITY_MATRIX
         self.RANDOM_CONNECTIVITY_MATRIX = RANDOM_CONNECTIVITY_MATRIX
         self.AUTO_ASSIGN_MATRIX = AUTO_ASSIGN_MATRIX
@@ -133,12 +133,15 @@ class MatrixKeywords:
     def _values(self):
         return list(self.__dict__.values())
 
+    def _set(self):
+        return set(self.__dict__.values())
+
     def _names(self):
         return list(self.__dict__)
 
 MATRIX = "matrix"
 IDENTITY_MATRIX = "IdentityMatrix"
-OFF_DIAGNOAL_MATRIX = "OffDiagonalMatrix"
+HOLLOW_MATRIX = "HollowMatrix"
 FULL_CONNECTIVITY_MATRIX = "FullConnectivityMatrix"
 RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
 AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
@@ -146,10 +149,12 @@ AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
 DEFAULT_MATRIX = IDENTITY_MATRIX
 
 MATRIX_KEYWORDS = MatrixKeywords()
+MATRIX_KEYWORD_SET = MATRIX_KEYWORDS._set()
 MATRIX_KEYWORD_VALUES = MATRIX_KEYWORDS._values()
 MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
 # MATRIX_KEYWORD_VALUES = list(MATRIX_KEYWORDS.__dict__.values())
 # MATRIX_KEYWORD_NAMES = list(MATRIX_KEYWORDS.__dict__)
+
 
 # **********************************************************************************************************************
 # ******************************************    CONSTANTS  *************************************************************
@@ -159,6 +164,7 @@ ON = True
 OFF = False
 DEFAULT = False
 AUTO = True
+
 
 # Used by initDirective
 INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
@@ -177,12 +183,13 @@ NO_CONTEXT = "NO_CONTEXT"
 INITIALIZING = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
 EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
-kwAssign = ': Assign' # Used in context for Log
+kwAssign = '| Assign' # Used in context for Log
 ASSIGN_VALUE = ': Assign value'
 kwAggregate = ': Aggregate' # Used in context for Log
-kwReceiver = "receiver"
+RECEIVER = "receiver"
 VALIDATE = 'Validate'
 COMMAND_LINE = "COMMAND_LINE"
+SET_ATTRIBUTE = "SET ATTRIBUTE"
 kwParams = 'params'
 CHANGED = 'CHANGED'
 UNCHANGED = 'UNCHANGED'
@@ -234,12 +241,14 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------
 
-# General:
-PREFS_ARG = "prefs"
+# Standard arg / attribute names:
 VARIABLE = "variable"
-NAME = "name"
+VALUE = "value"
 PARAMS = "params"
+NAME = "name"
+PREFS_ARG = "prefs"
 CONTEXT = "context"
+STANDARD_ARGS = {NAME, VARIABLE, VALUE, PARAMS, PREFS_ARG, CONTEXT}
 
 INITIAL_VALUES = 'initial_values'
 
@@ -251,6 +260,7 @@ INPUTS_DIM = 3
 
 COMPONENT_INIT = 'Component.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
+DEFERRED_ASSIGNMENT = 'Deferred Assignment'
 DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
 USER_PARAMS = 'user_params' # Params available to user for inspection in user_params dict
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
@@ -262,9 +272,8 @@ PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect f
                                                    #    in general, this includes params specifed as arg in a
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
-
 FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
-kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Function Components to set output type
+FUNCTION_OUTPUT_TYPE_CONVERSION = "FunctionOutputTypeConversion" # Used in Function Components to set output type
 
 #endregion
 
@@ -283,20 +292,26 @@ kwComponentCategory = "Function_Base"
 
 # Mechanisms:
 PROCESSING_MECHANISM = "ProcessingMechanism"
-MONITORING_MECHANISM = "MonitoringMechanism"
-CONTROL_MECHANISM = "ControlMechanism"
+ADAPTIVE_MECHANISM = "AdpativeMechanism"
 LEARNING_MECHANISM = "LearningMechanism"
+CONTROL_MECHANISM = "ControlMechanism"
+GATING_MECHANISM = 'GatingMechanism'
 
 # States:
 INPUT_STATE = "InputState"
-OUTPUT_STATE = "OutputState"
 PARAMETER_STATE = "ParameterState"
+OUTPUT_STATE = "OutputState"
+MODULATORY_SIGNAL = 'ModulatorySignal'
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
 LEARNING_PROJECTION = "LearningProjection"
 CONTROL_PROJECTION = "ControlProjection"
 GATING_PROJECTION = "GatingProjection"
+TRANSMISSIVE_PROJECTION = "TransmissiveProjection"
+MODULATORY_PROJECTION = "ModulatoryProjection"
+MODULATORY_PROJECTIONS = "ModulatoryProjections"
+
 
 # Function:
 EXAMPLE_FUNCTION_TYPE = "EXAMPLE FUNCTION"
@@ -304,10 +319,10 @@ USER_DEFINED_FUNCTION_TYPE = "USER DEFINED FUNCTION TYPE"
 COMBINATION_FUNCTION_TYPE = "COMBINATION FUNCTION TYPE"
 DIST_FUNCTION_TYPE = "DIST FUNCTION TYPE"
 INTEGRATOR_FUNCTION_TYPE = "INTEGRATOR FUNCTION TYPE"
-TRANFER_FUNCTION_TYPE = "TRANSFER FUNCTION TYPE"
-LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
+TRANSFER_FUNCTION_TYPE = "TRANSFER FUNCTION TYPE"
 DISTRIBUTION_FUNCTION_TYPE = "DISTRIBUTION FUNCTION TYPE"
-
+OBJECTIVE_FUNCTION_TYPE = "OBJECTIVE FUNCTION TYPE"
+LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 
 
 # Component SUBTYPES -----------------
@@ -317,45 +332,67 @@ DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
 EVC_MECHANISM = "EVCMechanism"
 
 # MonitoringMechanisms:
-COMPARATOR_MECHANISM = "ComparatorMechanism"
-WEIGHTED_ERROR_MECHANISM = "WeightedErrorMechanism"
 OBJECTIVE_MECHANISM = "ObjectiveMechanism"
+COMPARATOR_MECHANISM = "ComparatorMechanism"
+MONITORING_MECHANISM = "MonitoringMechanism"
 
 # ProcessingMechanisms:
-DDM_MECHANISM = "DDM"
 TRANSFER_MECHANISM = "TransferMechanism"
-INTEGRATOR_MECHANISM = "IntegratorMechanmism"
+RECURRENT_TRANSFER_MECHANISM = "RecurrentTransferMechanism"
+LCA = "LCA"
+INTEGRATOR_MECHANISM = "IntegratorMechanism"
+DDM_MECHANISM = "DDM"
 
-# Function:
-ARGUMENT_THERAPY_FUNCTION = "Contradiction"
+# Functions:
+ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
-REDUCE_FUNCTION = "Reduce"
-LINEAR_COMBINATION_FUNCTION = "LinearCombination"
-WEIGHTED_ERROR_FUNCTION = "WeighedErrorFunction"
-LINEAR_FUNCTION = "Linear"
-EXPONENTIAL_FUNCTION = "Exponential"
-LOGISTIC_FUNCTION = "Logistic"
-SOFTMAX_FUNCTION = 'SoftMax'
-INTEGRATOR_FUNCTION = "Integrator"
-LINEAR_MATRIX_FUNCTION = "Linear Matrix"
-BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
-RL_FUNCTION = 'Reinforcement Learning Algorithm'
-ERROR_DERIVATIVE_FUNCTION = 'Error Derivative'
+REDUCE_FUNCTION = "Reduce Function"
+LINEAR_COMBINATION_FUNCTION = "LinearCombination Function"
+LINEAR_FUNCTION = "Linear Function"
+EXPONENTIAL_FUNCTION = "Exponential Function"
+LOGISTIC_FUNCTION = "Logistic Function"
+SOFTMAX_FUNCTION = 'SoftMax Function'
+INTEGRATOR_FUNCTION = "Integrator Function"
+SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
+CONSTANT_INTEGRATOR_FUNCTION = "ConstantIntegrator Function"
+ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumualtorIntegrator Function"
+ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
+DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
+ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
+LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
+BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
+RL_FUNCTION = 'ReinforcementLearning Function'
+ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
 
-#Distribution functions 
+# Distribution functions
 
-NORMAL_DIST_FUNCTION = "Normal Distribution"
-UNIFORM_DIST_FUNCTION = "Uniform Distribution"
-EXPONENTIAL_DIST_FUNCTION = "Exponential Distribution"
-GAMMA_DIST_FUNCTION = "Gamma Distribution"
-WALD_DIST_FUNCTION = "Wald Distribution"
+NORMAL_DIST_FUNCTION = "Normal Distribution Function"
+UNIFORM_DIST_FUNCTION = "Uniform Distribution Function"
+EXPONENTIAL_DIST_FUNCTION = "Exponential Distribution Function"
+GAMMA_DIST_FUNCTION = "Gamma Distribution Function"
+WALD_DIST_FUNCTION = "Wald Distribution Function"
 
+# Objective functions
+STABILITY_FUNCTION = 'Stability Function'
+DISTANCE_FUNCTION = 'Distance Function'
+
+ENERGY = 'energy'
+ENTROPY = 'entropy'
+
+DIFFERENCE = 'difference'
+EUCLIDEAN = 'euclidean'
+ANGLE = 'angle'
+CORRELATION = 'correlation'
+PEARSON = 'Pearson'
+CROSS_ENTROPY = 'cross-entropy'
+DISTANCE_METRICS = {DIFFERENCE, EUCLIDEAN, ANGLE, CORRELATION, PEARSON, CROSS_ENTROPY}
 
 #endregion
 
 #region ----------------------------------------------    SYSTEM   ----------------------------------------------------
 
 SYSTEM = "System"
+SCHEDULER = "scheduler"
 SYSTEM_INIT = 'System.__init__'
 DEFAULT_SYSTEM = "DefaultSystem"
 CONTROLLER = "controller"
@@ -378,6 +415,7 @@ HARD_CLAMP = "hard_clamp"
 LEARNING = 'learning'
 LEARNING_RATE = "learning_rate"
 CONTROL = 'control'
+GATING = 'gating'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"
@@ -387,7 +425,6 @@ kpMechanismExecutedLogEntry = "Mechanism Executed"
 #region ---------------------------------------------    MECHANISM   ---------------------------------------------------
 
 MECHANISM = 'MECHANISM'
-kwMechanism = "MECHANISM"
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
@@ -408,12 +445,17 @@ MONITORING = 'MONITORING'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 
-kwStateValue = "State value"   # Used in State specification dict
+RESULT = 'RESULT'
+MEAN = 'MEAN'
+MEDIAN = 'MEDIAN'
+VARIANCE = 'VARIANCE'
+
+STATE_VALUE = "State value"   # Used in State specification dict
                                                  #  to specify State value
 STATE_PARAMS = "State params" # Used in State specification dict
 
 # ParamClassDefaults:
-kwMechanismTimeScale = "Mechanism Time Scale"
+MECHANISM_TIME_SCALE = "Mechanism Time Scale"
 kwMechanismExecutionSequenceTemplate = "Mechanism Execution Sequence Template"
 
 # Entries for output OrderedDict, describing the current state of the Mechanism
@@ -428,18 +470,32 @@ kwMechanismAdjustFunction = "MECHANISM ADJUST FUNCTION"
 kwMechanismInterrogateFunction = "MECHANISM INTERROGATE FUNCTION"
 kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 # TBI: kwMechanismAccuracyFunction = "MECHANISM ACCURACY FUNCTION"
+
+#DDM
+kwThreshold = 'thresh'
+kwInitialPoint = 'initial_point'
 #endregion
 
 
-#region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
+#region ----------------------------------------    MODULATORY MECHANISMS ----------------------------------------------
 
+MODULATION = 'modulation'
+
+# ControlMechanism / EVCMechanism
 MAKE_DEFAULT_CONTROLLER = "make_default_controller"
 MONITOR_FOR_CONTROL = "monitor_for_control"
 PREDICTION_MECHANISM = "Prediction Mechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
+LEARNING_SIGNAL = 'learning_signal'
+LEARNING_SIGNALS = 'learning_signals'
+LEARNING_SIGNAL_SPECS = 'LEARNING_SIGNAL_SPECS'
+LEARNED_PARAM = 'learned_param'
 CONTROL_SIGNAL = 'control_signal'
+CONTROL_SIGNALS = 'control_signals'
+CONTROL_SIGNAL_SPECS = 'CONTROL_SIGNAL_SPECS'
+CONTROLLED_PARAM = 'controlled_param'
 CONTROL_PROJECTIONS = 'ControlProjections'
 OUTCOME_FUNCTION = 'outcome_function'
 COST_FUNCTION = 'cost_function'
@@ -450,28 +506,52 @@ SYSTEM_DEFAULT_CONTROLLER = "DefaultController"
 EVC_SIMULATION = 'SIMULATING'
 ALLOCATION_SAMPLES = "allocation_samples"
 
+# GatingMechanism
+MAKE_DEFAULT_GATING_MECHANISM = "make_default_gating_mechanism"
+GATING_SIGNAL = 'gating_signal'
+GATING_SIGNALS = 'gating_signals'
+GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
+GATE = 'GATE'
+GATED_STATE = "gated_state"
+GATING_PROJECTIONS = 'GatingProjections'
+GATING_POLICY = 'gating_policy'
+
 #endregion
 
 #region ----------------------------------------------    STATES  ------------------------------------------------------
 
-kwState = "State"
-# These are use for dict specification of State
+STATE = "State"
+# These are used as keys in State specification dictionaries
+STATES = "STATES"
 STATE_PROJECTIONS = "StateProjections"  # Used to specify projection list to State
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
-
-INPUT_STATES = 'input_states'
-INPUT_STATE_PARAMS = 'input_state_params'
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
+FULL = 'FULL'
+OWNER = 'owner'
+REFERENCE_VALUE = 'reference_value'
+
+# InputStates:
+PRIMARY = 'Primary'
+INPUT_STATES = 'input_states'
+INPUT_STATE_PARAMS = 'input_state_params'
+WEIGHT = 'weight'
+EXPONENT = 'exponent'
+
+# ParameterStates:
 PARAMETER_STATES = 'parameter_states'
 PARAMETER_STATE_PARAMS = 'parameter_state_params'
-PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
+
+# OutputStates:
 OUTPUT_STATES = 'output_states'
 OUTPUT_STATE_PARAMS = 'output_states_params'
+STANDARD_OUTPUT_STATES = 'standard_output_states'
 INDEX = 'index'
 CALCULATE = 'calculate'
+
+
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------
@@ -481,10 +561,11 @@ PROJECTION = "Projection"
 PROJECTION_TYPE = "ProjectionType"
 PROJECTION_PARAMS = "ProjectionParams"
 MAPPING_PROJECTION_PARAMS = "MappingProjectionParams"
-CONTROL_PROJECTION_PARAMS = "ControlProjectionParams"
 LEARNING_PROJECTION_PARAMS = 'LearningProjectionParams'
+CONTROL_PROJECTION_PARAMS = "ControlProjectionParams"
+GATING_PROJECTION_PARAMS = 'GatingProjectionParams'
 PROJECTION_SENDER = 'projection_sender'
-kwSenderArg = 'sender'
+SENDER = 'sender'
 PROJECTION_SENDER_VALUE =  "projection_sender_value"
 kwProjectionReceiver = 'projection_receiver'
 kwReceiverArg = 'receiver'
@@ -497,8 +578,10 @@ MONITOR_FOR_LEARNING = 'monitor_for_learning'
 #region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
 
+FUNCTION_OUTPUT_TYPE = 'functionOutputType'
+
 SUM = 'sum'
-DIFFERENCE = 'difference'
+DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS
 PRODUCT = 'product'
 QUOTIENT = 'quotient'
 SUBTRACTION = 'subtraction'
@@ -516,19 +599,21 @@ NOISE = 'noise'
 
 AUTO_DEPENDENT='auto_dependent'
 DRIFT_RATE = 'drift_rate'
+INCREMENT = 'increment'
 INTEGRATOR_FUNCTION = 'integrator_function'
 INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
-
-MEAN = 'mean'
-STANDARD_DEV = 'standard_dev'
+DECAY = 'decay'
 
 LOW = 'low'
 HIGH = 'high'
 
 BETA = 'beta'
 
-SHAPE = 'shape'
+DIST_SHAPE = 'dist_shape'
+
+STANDARD_DEV = 'standard_dev'
+DIST_MEAN = 'mean'
 
 OUTPUT_TYPE = 'output'
 ALL = 'all'

@@ -23,11 +23,6 @@ TBI:
   `Mechanism`, `Projection` (and possibly `State`) classes should be extensible:
   developers should be able to create, register and refer to subclasses (plug-ins), without modifying core code
 
-Typechecking
-------------
-* `parameter_spec`
-* `optional_parameter_spec`
-
 """
 
 from PsyNeuLink.Components.Component import *
@@ -95,8 +90,6 @@ class Process(ShellClass):
                          context=context)
 
 # ******************************************* MECHANISM ****************************************************************
-
-ParamValueProjection = namedtuple('ParamValueProjection', 'value projection')
 
 
 class Mechanism(ShellClass):
@@ -183,46 +176,3 @@ class Function(ShellClass):
 
     def execute(self, variable, params, context):
         raise ShellClassError("Must implement function in {0}".format(self))
-
-
-def optional_parameter_spec(param):
-    """Test whether param is a legal PsyNeuLink parameter specification or `None`
-
-    Calls parameter_spec if param is not `None`
-    Used with typecheck
-
-    Returns
-    -------
-    `True` if it is a legal parameter or `None`.
-    `False` if it is neither.
-
-
-    """
-    if not param:
-        return True
-    return parameter_spec(param)
-
-def parameter_spec(param):
-    """Test whether param is a legal PsyNeuLink parameter specification
-
-    Used with typecheck
-
-    Returns
-    -------
-    `True` if it is a legal parameter.
-    `False` if it is not.
-    """
-    # if isinstance(param, property):
-    #     param = ??
-    # if is_numeric(param):
-    if (isinstance(param, (numbers.Number,
-                           np.ndarray,
-                           list,
-                           tuple,
-                           function_type,
-                           ParamValueProjection,
-                           Projection)) or
-        (inspect.isclass(param) and issubclass(param, Projection)) or
-        param in parameter_keywords):
-        return True
-    return False

@@ -7,6 +7,7 @@
 #
 #
 # ***********************************************  Init ****************************************************************
+import logging
 
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
@@ -14,13 +15,38 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import System, system
 from PsyNeuLink.Globals.Defaults import DefaultControlAllocationMode
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
+
+
+# https://stackoverflow.com/a/17276457/3131666
+class Whitelist(logging.Filter):
+    def __init__(self, *whitelist):
+        self.whitelist = [logging.Filter(name) for name in whitelist]
+
+    def filter(self, record):
+        return any(f.filter(record) for f in self.whitelist)
+
+
+class Blacklist(Whitelist):
+    def filter(self, record):
+        return not Whitelist.filter(self, record)
+
+
+logging.basicConfig(
+    level=logging.ERROR,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+for handler in logging.root.handlers:
+    handler.addFilter(Blacklist(
+        'PsyNeuLink.scheduling.Scheduler',
+        'PsyNeuLink.scheduling.condition',
+    ))
 
 __all__ = ['System',
            'system',
@@ -60,7 +86,7 @@ __all__ = ['System',
            'SCALE',
            'MATRIX',
            'IDENTITY_MATRIX',
-           'OFF_DIAGNOAL_MATRIX',
+           'HOLLOW_MATRIX',
            'FULL_CONNECTIVITY_MATRIX',
            'DEFAULT_MATRIX',
            'ALL',

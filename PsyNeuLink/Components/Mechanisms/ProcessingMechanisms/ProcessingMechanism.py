@@ -78,11 +78,13 @@ class ProcessingMechanism_Base(Mechanism_Base):
     #     kp<pref>: <setting>...}
 
     # variableClassDefault = defaultControlAllocation
-    # This must be a list, as there may be more than one (e.g., one per controlSignal)
+    # This must be a list, as there may be more than one (e.g., one per control_signal)
     variableClassDefault = defaultControlAllocation
 
     def __init__(self,
                  variable=None,
+                 input_states=None,
+                 output_states=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -99,6 +101,8 @@ class ProcessingMechanism_Base(Mechanism_Base):
         self.system = None
 
         super().__init__(variable=variable,
+                         input_states=input_states,
+                         output_states=output_states,
                          params=params,
                          name=name,
                          prefs=prefs,
