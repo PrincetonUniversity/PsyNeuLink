@@ -281,6 +281,7 @@ ADDITIVE = ModulationParam.ADDITIVE
 OVERRIDE = ModulationParam.OVERRIDE
 DISABLE = ModulationParam.DISABLE
 
+
 def _is_modulation_param(val):
     if val in ModulationParam.__dict__.values():
         return True
