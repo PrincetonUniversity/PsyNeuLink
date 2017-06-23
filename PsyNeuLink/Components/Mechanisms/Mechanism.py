@@ -1369,6 +1369,7 @@ class Mechanism_Base(Mechanism):
                 runtime_params=None,
                 clock=CentralClock,
                 time_scale=TimeScale.TRIAL,
+                ignore_execution_id = False,
                 context=None):
         """Carry out a single execution of the mechanism.
 
@@ -1426,7 +1427,7 @@ class Mechanism_Base(Mechanism):
             either one time_step or a trial.
 
         """
-
+        self.ignore_execution_id = ignore_execution_id
         context = context or NO_CONTEXT
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
@@ -1516,8 +1517,10 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE INPUT STATE(S)
-        # Executing or simulating process or system, so get input by updating input_states
-        if input is None and (EXECUTING in context or EVC_SIMULATION in context):
+
+        # Executing or simulating process or system, get input by updating input_states
+
+        if input is None and (EXECUTING in context or EVC_SIMULATION in context) and (self.input_state.path_afferents != []):
             self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
 
         # Direct call to execute mechanism with specified input, so assign input to mechanism's input_states
@@ -1682,6 +1685,7 @@ class Mechanism_Base(Mechanism):
                                             len(input_state.variable),
                                             input_state.name,
                                             append_type_to_name(self)))
+        self.variable = np.array(self.input_values)
 
     def _update_input_states(self, runtime_params=None, time_scale=None, context=None):
         """ Update value for each inputState in self.input_states:

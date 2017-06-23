@@ -1291,7 +1291,6 @@ class State_Base(State):
     """
 
         # SET UP -------------------------------------------------------------------------------------------------------
-
         # Get state-specific param_specs
         try:
             # Get State params
@@ -1365,8 +1364,12 @@ class State_Base(State):
                 continue
 
             sender_id = sender.owner._execution_id
-            if sender_id != self_id:
-                continue
+            if isinstance(sender.owner, Mechanism):
+                if (not sender.owner.ignore_execution_id) and (sender_id != self_id):
+                    continue
+            else:
+                if sender_id != self_id:
+                    continue
 
             # Only accept projections from a Process to which the owner Mechanism belongs
             if isinstance(sender, ProcessInputState):
