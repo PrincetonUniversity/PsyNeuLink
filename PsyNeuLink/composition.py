@@ -194,6 +194,7 @@ class Composition(object):
         ########
         if projection not in [vertex.component for vertex in self.graph.vertices]:
             projection.is_processing = False
+            projection.name = '{0} to {1}'.format(sender, receiver)
             self.graph.add_component(projection)
 
             # Add connections between mechanisms and the projection
@@ -306,7 +307,8 @@ class Composition(object):
                 cur_vertex = next_vertices.pop(0)
                 logger.debug('Examining vertex {0}'.format(cur_vertex))
 
-                if not cur_vertex.component.is_processing:
+                # must check that cur_vertex is not already visited because in cycles, some nodes may be added to next_vertices twice
+                if cur_vertex not in visited_vertices and not cur_vertex.component.is_processing:
                     for parent in cur_vertex.parents:
                         parent.children.remove(cur_vertex)
                         for child in cur_vertex.children:
@@ -319,7 +321,7 @@ class Composition(object):
                     self._graph_processing.remove_vertex(cur_vertex)
 
                 visited_vertices.add(cur_vertex)
-                # add to frontier any parents and children of cur_vertex that have not been visited yet
+                # add to next_vertices (frontier) any parents and children of cur_vertex that have not been visited yet
                 next_vertices.extend([vertex for vertex in cur_vertex.parents + cur_vertex.children if vertex not in visited_vertices])
 
         self.needs_update_graph_processing = False
