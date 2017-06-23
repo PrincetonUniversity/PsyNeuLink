@@ -154,12 +154,6 @@ class Composition(object):
 
         # Create lists to track identity of certain mechanism classes within the
         # composition.
-        # Analyzed classes:
-        self.origin_mechanisms = []
-        self.terminal_mechanisms = []
-        self.monitored_mechanisms = []
-        self.recurrent_init_mechanisms = []
-        self.cycle_mechanisms = []
         # Explicit classes:
         self.explicit_input_mechanisms = []  # Need to track to know which to leave untouched
         self.all_input_mechanisms = []
