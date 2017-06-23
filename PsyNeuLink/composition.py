@@ -15,7 +15,7 @@ class MechanismRole(Enum):
     INITIALIZE_CYCLE = 3
     TERMINAL = 4
     SINGLETON = 5
-    MONITORING = 6
+    MONITORED = 6
     TARGET = 7
     RECURRENT_INIT = 8
 
