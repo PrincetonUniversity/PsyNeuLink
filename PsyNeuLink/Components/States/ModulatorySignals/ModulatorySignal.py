@@ -230,6 +230,7 @@ class ModulatorySignal(OutputState):
     COMMENT
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
+        specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -250,42 +251,43 @@ class ModulatorySignal(OutputState):
     Attributes
     ----------
 
-    owner : GatingMechanism
-        the `GatingMechanism` to which the ModulatorySignal belongs.
+    owner : AdaptiveMechanism
+        the `AdaptiveMechanism` to which the ModulatorySignal belongs.
 
     variable : number, list or np.ndarray
-        used by `function <ModulatorySignal.function>` to compute the ModulatorySignal's `value <ModulatorySignal.value>`.
+        value assigned by the ModulatorySignal's `owner <ModulatorySignal.owner>`, and used by the ModulatorySignal's
+        `function <ModulatorySignal.function>` to compute its `value <ModulatorySignal.value>`.
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
-        provides the ModulatorySignal's `value <GatingMechanism.value>`; the default is an identity function that
-        passes the input to the GatingMechanism as value for the ModulatorySignal.
+        provides the ModulatorySignal's `value <ModulatorySignal.value>`; the default is an identity function that
+        assigns `variable <ModulatorySignal.variable` as ModulatorySignal's `value <ModulatorySignal.value>`.
 
     value : number, list or np.ndarray
-        result of `function <ModulatorySignal.function>`.
+        result of `function <ModulatorySignal.function>`, and is the value used to determine the `value <State.value>`
+        of the State(s) being modulated.
     
     modulation : ModulationParam
-        determines how the output of the ModulatorySignal is used to modulate the value of the state(s)
-        to which its GatingProjection(s) project(s).
+        determines how the output of the ModulatorySignal is used to modulate the value of the state(s) being modulated.
 
     efferents : [List[GatingProjection]]
-        a list of the `GatingProjections <GatingProjection>` assigned to the ModulatorySignal.
+        a list of the `ModulatoryProjections <ModulatoryProjection>` assigned to the ModulatorySignal.
 
-    name : str : default <State subclass>-<index>
-        name of the outputState.
-        Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
-        assigned by the StateRegistry of the mechanism to which the outputState belongs
+    name : str : default <ModulatorySignal>-<index>
+        name of the ModulatorySignal.
+        Specified in the **name** argument of the constructor for the ModulatorySignal.  If not is specified, a default
+        is assigned by the StateRegistry of the mechanism to which the ModulatorySignal belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
-            Unlike other PsyNeuLink components, state names are "scoped" within a mechanism, meaning that states with
-            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
-            mechanism: states within a mechanism with the same base name are appended an index in the order of their
+            Unlike other PsyNeuLink components, State names are "scoped" within a mechanism, meaning that States with
+            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
+            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the outputState.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
+        the `PreferenceSet` for the ModulatorySignal.
+        Specified in the **prefs** argument of the constructor for the ModulatorySignal;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """

@@ -229,6 +229,7 @@ class AdditiveParam():
     init_val = 0
     reduce = lambda x : np.sum(np.array(x), axis=0)
 
+# IMPLEMENTATION NOTE:  USING A namedtuple DOESN'T WORK, AS CAN'T COPY PARAM IN Component._validate_param
 # ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
 
 
