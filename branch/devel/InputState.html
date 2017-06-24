@@ -1,0 +1,382 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>InputState &mdash; PsyNeuLink 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+        <link rel="up" title="State" href="State.html"/>
+        <link rel="next" title="ParameterState" href="ParameterState.html"/>
+        <link rel="prev" title="State" href="State.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="State.html">State</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">InputState</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-an-inputstate">Creating an InputState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PsyNeuLink</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="State.html">State</a> &raquo;</li>
+      
+    <li>InputState</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/InputState.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-InputState">
+<span id="inputstate"></span><h1>InputState<a class="headerlink" href="#module-InputState" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>An inputState receives the input to a mechanism provided by the projections to that mechanism from others in a process
+or system.  If the inputState belongs to an <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism (see
+<a class="reference internal" href="Mechanism.html#mechanism-role-in-processes-and-systems"><span class="std std-ref">role of mechanisms in processes and systems</span></a>), then it receives the input
+specified when that process or system is <a class="reference internal" href="Run.html"><span class="doc">run</span></a>.  The projections received by an inputState are
+listed in its <code class="xref any docutils literal"><span class="pre">path_afferents</span></code> attribute. Its
+<a class="reference internal" href="#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> combines the values of these inputs, and the result is assigned to an item
+corresponding to the inputState in the owner mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code> and
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.input_value" title="Mechanism.Mechanism_Base.input_value"><code class="xref any py py-attr docutils literal"><span class="pre">input_value</span></code></a> attributes  (see <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">Mechanism InputStates</span></a>
+for additional details about the role of input_states in mechanisms).</p>
+</div>
+<div class="section" id="creating-an-inputstate">
+<span id="inputstate-creation"></span><h2>Creating an InputState<a class="headerlink" href="#creating-an-inputstate" title="Permalink to this headline">¶</a></h2>
+<p>InputStates are created automatically when a mechanism is created.  For example, if a mechanism is created within
+the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a process`, the inputState for that mechanism will be created and assigned as the
+<code class="xref any docutils literal"><span class="pre">receiver</span></code> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the  preceding mechanism in the
+pathway;  and a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> automatically creates an inputState for each mechanism that it
+monitors. PsyNeuLink does not currently support the explicit creation of input_states (this may be implemented in the
+future). However they can modified as described below.</p>
+</div>
+<div class="section" id="structure">
+<span id="inputstate-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>Every inputState is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a>. It can receive one or more
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> from other mechanisms, as well as from the process or system to which its
+owner belongs (if it is the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism for that process or system).  The projections received by an
+inputState are listed in its <code class="xref any docutils literal"><span class="pre">path_afferents</span></code> attribute.</p>
+<p>Like all PsyNeuLink components, an inputState has the three following core attributes:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>:  this serves as a template for the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of each projection that the
+inputState receives: each must match both the number and type of elements of the inputState&#8217;s
+<a class="reference internal" href="#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+</ul>
+<ul class="simple">
+<li><a class="reference internal" href="#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:  this performs an elementwise (Hadamard) aggregation  of the
+<code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of all of the projections received by the inputState, and assigns the result to the inputState&#8217;s
+<a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.  The default function is <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> that sums the values.  A custom
+function can be specified (e.g., to perform a Hadamard product, or to handle non-numeric values in some way), so long
+as it generates a result that is compatible with the format of the <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the inputState
+expected by its owner mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+</ul>
+<ul class="simple">
+<li><a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>:  this is the aggregated value of the projections received by the inputState, assigned to
+it by the inputState&#8217;s <a class="reference internal" href="#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  It must be compatible with item of the owner mechanism&#8217;s
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to which the inputState has been assigned.</li>
+</ul>
+</div>
+<div class="section" id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>An inputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
+When this occurs, the inputState executes any projections it receives, calls its <a class="reference internal" href="#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to
+aggregate their values, and then assigns the result to the inputState&#8217;s <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.  This,
+in turn, is assigned to the item of the mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.input_value" title="Mechanism.Mechanism_Base.input_value"><code class="xref any py py-attr docutils literal"><span class="pre">input_value</span></code></a> attributes corresponding to that inputState
+(see <a class="reference internal" href="Mechanism.html#mechanism-variable"><span class="std std-ref">mechanism variable and input_value attributes</span></a> for additional details).</p>
+</div>
+<div class="section" id="class-reference">
+<span id="inputstate-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="InputState.InputState">
+<em class="property">class </em><code class="descclassname">InputState.</code><code class="descname">InputState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=None</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>value=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#InputState.InputState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements a subclass of State that calculates and represents the input to a mechanism.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>owner</strong> (<a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a>) &#8211; the mechanism to which the inputState belongs;  it must be specified or determinable from the context in which
+the inputState is created.</li>
+<li><strong>reference_value</strong> (<em>number, list or np.ndarray</em>) &#8211; the value of the item of the owner mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute to which
+the inputState is assigned; used as the template for the inputState&#8217;s <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.</li>
+<li><strong>variable</strong> (<em>number, list or np.ndarray</em>) &#8211; specifies the template for the inputState&#8217;s <a class="reference internal" href="#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute.</li>
+<li><strong>function</strong> (<em>Function or method : default LinearCombination(operation=SUM)</em>) &#8211; specifies the function used to aggregate the values of the projections received by the inputState.
+It must produce a result that has the same format (number and type of elements) as its input.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+the inputState or its function, and/or a custom function and its parameters. Values specified for parameters in
+the dictionary override any assigned to those parameters in arguments of the constructor.</li>
+<li><strong>name</strong> (<em>str : default InputState-&lt;index&gt;</em>) &#8211; a string used for the name of the inputState.
+If not is specified, a default is assigned by StateRegistry of the mechanism to which the inputState belongs
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : State.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the inputState.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="InputState.InputState.owner">
+<code class="descname">owner</code><a class="headerlink" href="#InputState.InputState.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> &#8211; the mechanism to which the inputState belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="InputState.InputState.afferents">
+<code class="descname">afferents</code><a class="headerlink" href="#InputState.InputState.afferents" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[List[Projection]]</em> &#8211; a list of the projections received by the inputState
+(i.e., for which it is a <code class="xref any docutils literal"><span class="pre">receiver</span></code>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="InputState.InputState.variable">
+<code class="descname">variable</code><a class="headerlink" href="#InputState.InputState.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> &#8211; the template for the <code class="xref any docutils literal"><span class="pre">value</span></code> of each projection that the inputState receives,
+each of which must match the format (number and types of elements) of the inputState&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="InputState.InputState.function">
+<code class="descname">function</code><a class="headerlink" href="#InputState.InputState.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>CombinationFunction : default LinearCombination(operation=SUM))</em> &#8211; performs an element-wise (Hadamard) aggregation of the <code class="xref any docutils literal"><span class="pre">value</span></code> of each
+projection received by the inputState.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="InputState.InputState.value">
+<code class="descname">value</code><a class="headerlink" href="#InputState.InputState.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> &#8211; the aggregated value of the projections received by the inputState; output of <a class="reference internal" href="#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="InputState.InputState.name">
+<code class="descname">name</code><a class="headerlink" href="#InputState.InputState.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> &#8211; the name of the inputState.
+Specified in the <strong>name</strong> argument of the constructor for the outputState.  If not is specified, a default is
+assigned by the StateRegistry of the mechanism to which the outputState belongs
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Unlike other PsyNeuLink components, state names are &#8220;scoped&#8221; within a mechanism, meaning that states with
+the same name are permitted in different mechanisms.  However, they are <em>not</em> permitted in the same
+mechanism: states within a mechanism with the same base name are appended an index in the order of their
+creation.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="InputState.InputState.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#InputState.InputState.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the inputState.
+Specified in the <strong>prefs</strong> argument of the constructor for the projection;  if it is not specified, a default is
+assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ParameterState.html" class="btn btn-neutral float-right" title="ParameterState" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="State.html" class="btn btn-neutral" title="State" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
