@@ -4,8 +4,8 @@ ComparatorMechanism
 .. toctree::
    :maxdepth: 3
 
-   ProcessingMechanisms.ComparatorMechanism
+   ProcessingMechanisms.ObjectiveMechanisms..ComparatorMechanism
 
-.. automodule:: ProcessingMechanisms.ComparatorMechanism
+.. automodule:: ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism
    :members:
    :exclude-members: random, validate_monitored_value, add_monitored_values
