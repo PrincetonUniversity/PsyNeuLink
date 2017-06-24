@@ -160,7 +160,7 @@ def show_target():
         t = composition.target
     elif COMPOSITION is SYSTEM:
         i = composition.input
-        t = composition.targetInputStates[0].value
+        t = composition.target_input_states[0].value
     print ('\nOLD WEIGHTS: \n')
     print ('- Input Weights: \n', Input_Weights.matrix)
     print ('- Middle Weights: \n', Middle_Weights.matrix)

@@ -63,7 +63,7 @@ def print_header():
     
 def show_target():
     i = xor_system.input
-    t = xor_system.targetInputStates[0].value
+    t = xor_system.target_input_states[0].value
     print('\nSTIMULI:\n\n- Input: {}\n- Target: {}'.format(i, t))
     print('- Output: {}'.format(output_layer.value))
     # # print('INPUT-OUTPUT WEIGHTS:')
