@@ -180,12 +180,13 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
     # Sets template for variable (input)
-    variableClassDefault = [[0]]
+    variableClassDefault = None
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
         OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
+
     })
 
     # Set default input_value to default bias for SigmoidLayer
@@ -207,6 +208,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        self.variableClassDefault = default_input_value or [[0]]
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 

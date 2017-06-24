@@ -189,7 +189,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
         specification options).
 
-    control_signals : List[parameter of Mechanism or its function, \ 
+    control_signals : List[parameter of Mechanism or its function, \
                       ParameterState, Mechanism tuple[str, Mechanism] or dict]
         specifies the parameters to be controlled by the ControlMechanism 
         (see `control_signals <ControlMechanism.control_signals>` for details).
@@ -221,7 +221,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     ----------
 
     monitoring_mechanism : ObjectiveMechanism
-        mechanism that monitors and evalutes the values specified in the ControlMechanism's **monitor_for_control** 
+        mechanism that monitors and evaluates the values specified in the ControlMechanism's **monitor_for_control**
         argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL* 
         `input_state <ControlMechanism.input_state>`.    
 
