@@ -32,21 +32,20 @@ needed to transmit that information to the `inputState <InputState>` of another 
 * `MappingProjection`
     These take the output of a `ProcessingMechanism <ProcessingMechanism>`, convert this by convolving it with
     the projection's `matrix <MappingProjection.MappingProjection.matrix>` parameter, and transmit the result as
-    input to another ProcessingMechanism.  Typically, MappingProjections are used to connect mechanisms in the
+    input to another ProcessingMechanism.  Typically, MappingProjections are used to connect Mechanisms in the
     `pathway` of a `Process`.
 ..
 * `ControlProjection`
     These take an `allocation <ControlProjection.ControlProjection.allocation>` specification, usually the ouptput
-    of a `ControlMechanism <ControlMechanism>`, and transmit this to the `parameterState <ParameterState>` of
-    a ProcessingMechanism which uses this to modulate a parameter of the mechanism or its function.
-    ControlProjections are typically used in the context of a `System`.
+    of a `ControlMechanism <ControlMechanism>`, and transmit this to the `ParameterState` of a `ProcessingMechanism`
+    that uses this to modulate a parameter of the mechanism or its function. ControlProjections are typically used
+    in the context of a `System`.
 ..
 * `LearningProjection`
-    These take an `error_signal <LearningProjection.LearningProjection.error_signal>`, usually the output of a
-    `MonitoringMechanism <MonitoringMechanism>`, and transmit this to the `parameterState <ParameterState>` of a
-    `MappingProjection` which uses this to modify its `matrix <MappingProjection.MappingProjection.matrix>`
-    parameter. LearningProjections are used when learning has been specified for a `process <Process_Learning>`
-    or `system <System_Execution_Learning>`.
+    These take the value of a `LearningSignal` from a `LearningMechanism`, and transmit this to the
+    `ParameterState` of a `MappingProjection` which uses this to modify its
+    `matrix <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when
+    learning has been specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`.
 
 COMMENT:
 * Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
@@ -86,9 +85,9 @@ Any of the following can be used to specify a projection in context:
       |
       * LEARNING_PROJECTION -- a `LearningProjection`.  At present, this can only be used together with the
         specification of a MappingProjection (see `tuple <Mapping_Matrix_Specification>` format).  If the
-        :keyword:`receiver` of the MappingProjection projects to a `MonitoringMechanism <MonitoringMechanism>`,
+        :keyword:`receiver` of the MappingProjection projects to a `LearningMechanism <LearningMechanism>`,
         the latter will be used as the :keyword:`sender` for the LearningProjection.  Otherwise,
-        a MonitoringMechanism will be created for it
+        a LearningMechanism will be created for it
         (see `Automatic Instantiation <LearningProjection_Automatic_Creation>` of a LearningProjection for details).
   ..
   * *Projection type*.  This creates a default instance of the specified Projection subclass.

@@ -84,7 +84,7 @@ class Keywords:
         self.INITIALIZE_CYCLE = INITIALIZE_CYCLE
         self.TERMINAL = TERMINAL
         self.SINGLETON = SINGLETON
-        self.MONITORING = MONITORING
+        self.LEARNING = LEARNING
         self.TARGET = TARGET
 
 
@@ -328,10 +328,9 @@ LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
 EVC_MECHANISM = "EVCMechanism"
 
-# MonitoringMechanisms:
+# ObjectiveMechanisms:
 OBJECTIVE_MECHANISM = "ObjectiveMechanism"
 COMPARATOR_MECHANISM = "ComparatorMechanism"
-MONITORING_MECHANISM = "MonitoringMechanism"
 
 # ProcessingMechanisms:
 TRANSFER_MECHANISM = "TransferMechanism"
@@ -425,7 +424,6 @@ MECHANISM = 'MECHANISM'
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
-DEFAULT_MONITORING_MECHANISM = "DefaultMonitoringMechanism"
 kwProcessDefaultMechanism = "ProcessDefaultMechanism"
 kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
 kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
@@ -438,7 +436,6 @@ CYCLE = 'CYCLE'
 INITIALIZE_CYCLE = 'INITIALIZE_CYCLE'
 TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
-MONITORING = 'MONITORING'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 

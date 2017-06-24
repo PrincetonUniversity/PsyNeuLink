@@ -195,15 +195,21 @@ which learning has been specified must be `compatible with learning <LearningPro
 
 When learning is specified , the following objects are automatically created for each projection involved (see figure
 below):
-    * a `MonitoringMechanism` used to evaluate the output of the projection's `receiver <MappingProjection_Receiver>`
-      against a target value;
+    * a `ComparatorMechanism` used to evaluate the output of the projection's `receiver <MappingProjection_Receiver>`          against a target value;
     ..
-    * a `MappingProjection` from the projection's `receiver <MappingProjection_Receiver>` to the MonitoringMechanism;
+    * a `MappingProjection` from the projection's `receiver <MappingProjection_Receiver>` to the ComparatorMechanism;
     ..
-    * a `LearningProjection` from the MonitoringMechanism to the projection being learned.
+    * a `LearningMechanism` that uses the error signal calculated by the ComparatorMechanism to generate a
+      matrix of weight changes (`learning_signal <LearningMechanism.learning_signal>`) to be applied to the
+      projection being learned;
+    ..
+    * a `MappingProjection` from the ComparatorMechanism's *ERROR_SIGNAL* OutputState to LearningMechanism's
+      *ERROR_SIGNAL* InputState;
+    ..
+    * a `LearningProjection` from the LearningMechanism's `LearningSignal` OutputState to the projection being learned.
 
 Different learning algorithms can be specified (e.g., `Reinforcement` or `BackPropagation`), that implement the
-MonitoringMechanisms and LearningSignals required for the specified type of learning. However,  as noted above,
+Mechanisms and LearningSignals required for the specified type of learning. However,  as noted above,
 all mechanisms that receive projections being learned must be compatible with learning.
 
 When a process or any of its projections is specified for learning, a set of `target values <Run_Targets>`
@@ -693,8 +699,8 @@ class Process_Base(Process):
              Contains a tuple for the `TARGET` mechanism of the process.
              (Note:  the use of a list is for compatibility with the MechanismList object)
 
-      .. _monitoring_mechs : List[MechanismTuple]
-             `MechanismTuples <Mechanism.MechanismTuples>` for all `MonitoringMechanism <MonitoringMechanisms>` in the
+      .. _learning_mechs : List[MechanismTuple]
+             `MechanismTuples <Mechanism.MechanismTuples>` for all `LearningMechanism <LearningMechanisms>` in the
              process (used for learning).
 
       .. mechanisms : List[Mechanism]
@@ -716,26 +722,26 @@ class Process_Base(Process):
                   methods that are also used for systems.
 
         COMMENT:
-            based on _origin_mechs;  process.input contains the input to `ORIGIN` mechanism.
+            based on _origin_mechs;  process.input contains the input to `ORIGIN` Mechanism.
         COMMENT
 
     terminalMechanisms : MechanismList
-        a list with the `TERMINAL` mechanism of the process.
+        a list with the `TERMINAL` Mechanism of the process.
 
-        .. note:: A process can have only one `TERMINAL` mechanism; the use of a list is for compatibility with
+        .. note:: A process can have only one `TERMINAL` Mechanism; the use of a list is for compatibility with
                   methods that are also used for systems.
 
         COMMENT:
-            based on _terminal_mechs; process.output contains the output of the `TERMINAL` mechanism.
+            based on _terminal_mechs; process.output contains the output of the `TERMINAL` Mechanism.
         COMMENT
 
-    monitoringMechanisms : MechanismList
-        a list of all of the monitoring mechanisms in the process.
+    learning_mechanisms : MechanismList
+        a list of all of the `LearningMechanism <LearningMechanisms` in the Process.
 
-        .. based on _monitoring_mechs
+        .. based on _learning_mechs
 
-    targetMechanisms : MechanismList
-        a list with the `TARGET` mechanism of the process.
+    target_mechanisms : MechanismList
+        a list with the `TARGET` Mechanism (`ComparatorMechanism`) of the process.
 
         .. note:: A process can have only one `TARGET` mechanism; the use of a list is for compatibility with
                   methods that are also used for systems.
@@ -987,7 +993,7 @@ class Process_Base(Process):
         """
         pathway = self.paramsCurrent[PATHWAY]
         self._mechs = []
-        self._monitoring_mechs = []
+        self._learning_mechs = []
         self._target_mechs = []
 
         self._standardize_config_entries(pathway=pathway, context=context)
@@ -1035,8 +1041,8 @@ class Process_Base(Process):
             self._learning_enabled = False
 
         self._allMechanisms = MechanismList(self, self._mechs)
-        self.monitoringMechanisms = MechanismList(self, self._monitoring_mechs)
-        self.targetMechanisms = MechanismList(self, self._target_mechs)
+        self.learning_mechanisms = MechanismList(self, self._learning_mechs)
+        self.target_mechanisms = MechanismList(self, self._target_mechs)
 
     def _standardize_config_entries(self, pathway, context=None):
 
@@ -1743,10 +1749,10 @@ class Process_Base(Process):
                 exhaustively check all of components of each mechanism,
                     including all projections to its input_states and parameterStates
                 initialize all items that specified deferred initialization
-                construct a _monitoring_mechs of mechanism tuples (mech, params, phase_spec):
-                    assign phase_spec for each MonitoringMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
-                add _monitoring_mechs to the Process' _mechs
-                assign input projection from Process to first mechanism in _monitoring_mechs
+                construct a _learning_mechs of mechanism tuples (mech, params, phase_spec):
+                    assign phase_spec for each LearningMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
+                add _learning_mechs to the Process' _mechs
+                assign input projection from Process to first mechanism in _learning_mechs
 
         IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningProjection
                              this is implemented to be fully general, but at present may be overkill
@@ -1784,11 +1790,11 @@ class Process_Base(Process):
                     raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterState for a Mechanism")
                 # MODIFIED 5/2/17 END
 
-        # Label monitoring mechanisms and add _monitoring_mechs to _mechs for execution
-        if self._monitoring_mechs:
+        # Label monitoring mechanisms and add _learning_mechs to _mechs for execution
+        if self._learning_mechs:
 
-            # Add designations to newly created MonitoringMechanisms:
-            for object_item in self._monitoring_mechs:
+            # Add designations to newly created LearningMechanisms:
+            for object_item in self._learning_mechs:
                 mech = object_item
                 # If
                 # - mech is a TARGET ObjectiveMechanism, and
@@ -1811,13 +1817,13 @@ class Process_Base(Process):
                         mech.function_object.learning_rate = self.learning_rate
 
                     # Assign its label
-                    object_item.processes[self] = MONITORING
+                    object_item.processes[self] = LEARNING
 
-            # Add _monitoring_mechs to _mechs
-            self._mechs.extend(self._monitoring_mechs)
+            # Add _learning_mechs to _mechs
+            self._mechs.extend(self._learning_mechs)
 
             # IMPLEMENTATION NOTE:
-            #   MonitoringMechanisms for learning are assigned _phaseSpecMax;
+            #   LearningMechanisms are assigned _phaseSpecMax;
             #   this is so that they will run after the last ProcessingMechansisms have run
 
     def _instantiate__deferred_init_projections(self, projection_list, context=None):
@@ -1835,29 +1841,29 @@ class Process_Base(Process):
                     for param_projection in parameter_state.mod_afferents:
                         param_projection._deferred_init(context=context)
                         if isinstance(param_projection, LearningProjection):
-                            # Get ObjectiveMechanism if there is one, and add to _monitoring_mechs
+                            # Get ObjectiveMechanism if there is one, and add to _learning_mechs
                             try:
                                 objective_mechanism = projection.objective_mechanism
                             except AttributeError:
                                 pass
                             else:
-                                # If objective_mechanism is not already in _monitoring_mechs,
+                                # If objective_mechanism is not already in _learning_mechs,
                                 #     pack in tuple and add it
-                                if objective_mechanism and not objective_mechanism in self._monitoring_mechs:
+                                if objective_mechanism and not objective_mechanism in self._learning_mechs:
                                     # objective_object_item = objective_mechanism
-                                    self._monitoring_mechs.append(objective_mechanism)
-                            # Get LearningMechanism and add to _monitoring_mechs; raise exception if not found
+                                    self._learning_mechs.append(objective_mechanism)
+                            # Get LearningMechanism and add to _learning_mechs; raise exception if not found
                             try:
                                 learning_mechanism = projection.learning_mechanism
                             except AttributeError:
                                 raise ProcessError("{} is missing a LearningMechanism".format(param_projection.name))
                             else:
-                                # If learning_mechanism is not already in _monitoring_mechs,
+                                # If learning_mechanism is not already in _learning_mechs,
                                 #     pack in tuple and add it
                                 if learning_mechanism and not any(learning_mechanism is object_item for
-                                                                    object_item in self._monitoring_mechs):
+                                                                    object_item in self._learning_mechs):
                                     # learning_object_item = learning_mechanism
-                                    self._monitoring_mechs.append(learning_mechanism)
+                                    self._learning_mechs.append(learning_mechanism)
 
             # Not all Projection subclasses instantiate parameterStates
             except AttributeError as e:
@@ -1916,7 +1922,7 @@ class Process_Base(Process):
             #   (in case terminal mechanism of process is part of another process that has learning implemented)
             #    in which case, shouldn't assign target ObjectiveMechanism, but rather just a LearningMechanism)
             try:
-                target_mech = trace_learning_objective_mechanism_projections(self._monitoring_mechs[0][0])
+                target_mech = trace_learning_objective_mechanism_projections(self._learning_mechs[0][0])
             except IndexError:
                 raise ProcessError("Learning specified for {} but no ObjectiveMechanisms or LearningMechanisms found"
                                    .format(self.name))
@@ -1969,7 +1975,7 @@ class Process_Base(Process):
                                                 name=TARGET)
         self.targetInputStates.append(target_input_state)
 
-        # Add MappingProjection from target_input_state to MonitoringMechanism's target inputState
+        # Add MappingProjection from target_input_state to ComparatorMechanism's TARGET InputState
         from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
         MappingProjection(sender=target_input_state,
                 receiver=target_mech_target,
@@ -2128,7 +2134,7 @@ class Process_Base(Process):
 
         # # Zero any input from projections to target from any other processes
         # # Note: there is only one targetMechanism in a Process, so can assume it is first item and no need to iterate
-        for process in list(self.targetMechanisms)[0].processes:
+        for process in list(self.target_mechanisms)[0].processes:
             process.targetInputStates[0].value *= 0
         if callable(self.target):
             self.targetInputStates[0].variable = self.target()
@@ -2144,7 +2150,7 @@ class Process_Base(Process):
         # # MODIFIED 3/22/17 END
 
         # THEN, execute Objective and LearningMechanisms
-        for mechanism in self._monitoring_mechs:
+        for mechanism in self._learning_mechs:
             # # MODIFIED 3/22/17 NEW:
             # # If learning_rate was specified for process and this is a LearningMechanism
             # if process_learning_rate_spec_dict is not None and isinstance(mechanism, LearningMechanism):
@@ -2331,7 +2337,7 @@ class Process_Base(Process):
         if self.learning:
             from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
                 import MSE
-            for mech in self.targetMechanisms:
+            for mech in self.target_mechanisms:
                 if not MSE in mech.output_states:
                     continue
                 print("\n- MSE: {:0.3}".

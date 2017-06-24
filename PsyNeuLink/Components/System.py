@@ -293,7 +293,6 @@ TERMINAL_MECHANISMS = 'terminal_mechanisms'
 OUTPUT_STATE_NAMES = 'output_state_names'
 OUTPUT_VALUE_ARRAY = 'output_value_array'
 NUM_PHASES_PER_TRIAL = 'num_phases'
-MONITORING_MECHANISMS = 'monitoring_mechanisms'
 TARGET_MECHANISMS = 'target_mechanisms'
 LEARNING_PROJECTION_RECEIVERS = 'learning_projection_receivers'
 CONTROL_MECHANISMS = 'control_mechanisms'
@@ -640,8 +639,8 @@ class System_Base(System):
         .. _terminal_mechs : list of (mechanism, runtime_param, phaseSpec) tuples
             Tuples for all TERMINAL mechanisms in the system.
 
-        .. _monitoring_mechs : list of (mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all MonitoringMechanisms in the system (used for learning).
+        .. _learning_mechs : list of (mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all LearningMechanisms in the system.
 
         .. _target_mechs : list of (mechanism, runtime_param, phaseSpec) tuples
             Tuples for all TARGET `ObjectiveMechanisms <ObjectiveMechanism>`  in the system that are a `TERMINAL`
@@ -671,13 +670,13 @@ class System_Base(System):
         contains mechanisms with recurrent projections that are candidates for
         `initialization <System_Execution_Input_And_Initialization>`.
 
-    monitoringMechanisms : MechanismList)
-        contains all `MONITORING` mechanisms in the system (used for learning).
+    learning_mechanisms : MechanismList)
+        contains all `LearningMechanism <LearningMechanism>` in the system.
         COMMENT:
-            based on _monitoring_mechs)
+            based on _learning_mechs)
         COMMENT
 
-    targetMechanisms : MechanismList)
+    target_mechanisms : MechanismList)
         contains all `TARGET` mechanisms in the system (used for learning.
         COMMENT:
             based on _target_mechs)
@@ -1184,9 +1183,9 @@ class System_Base(System):
 
             # If sender is an ObjectiveMechanism being used for learning or control,
             #     or a LearningMechanism or a ControlMechanism,
-            # Assign as MONITORING and move on
+            # Assign as LEARNING and move on
             if is_monitoring_mech(sender_mech):
-                sender_mech.systems[self] = MONITORING
+                sender_mech.systems[self] = LEARNING
                 return
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
@@ -1521,7 +1520,7 @@ class System_Base(System):
 
 
     def _instantiate_learning_graph(self, context=None):
-        """Build graph of monitoringMechanisms and learningProjections for use in learning
+        """Build graph of LearningMechanisms and LearningProjections
         """
 
         self.learningGraph = OrderedDict()
@@ -1535,7 +1534,7 @@ class System_Base(System):
             if isinstance(sender_mech, MappingProjection):
                 return
 
-            # All other sender_mechs must be either a MonitoringMechanism or an ObjectiveMechanism with role=LEARNING
+            # All other sender_mechs must be either a LearningMechanism or a ComparatorMechanism with role=LEARNING
             elif not (isinstance(sender_mech, LearningMechanism) or
                           (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role is LEARNING)):
                 raise SystemError("PROGRAM ERROR: {} is not a legal object for learning graph;"
@@ -1747,7 +1746,7 @@ class System_Base(System):
                             self.learningExecutionGraph[receiver] = {sender_mech}
 
                     if not sender_mech.systems:
-                        sender_mech.systems[self] = MONITORING
+                        sender_mech.systems[self] = LEARNING
 
                     # Traverse list of mechanisms in process recursively
                     build_dependency_sets_by_traversing_projections(receiver, process)
@@ -1755,20 +1754,19 @@ class System_Base(System):
         # Sort for consistency of output
         sorted_processes = sorted(self.processes, key=lambda process : process.name)
 
-        # This assumes that the first mechanism in process.monitoringMechanisms is the last in the learning sequence
+        # This assumes that the first mechanism in process.learning_mechanisms is the last in the learning sequence
         # (i.e., that the list is being traversed "backwards")
         for process in sorted_processes:
             if process.learning and process._learning_enabled:
-                build_dependency_sets_by_traversing_projections(process.monitoringMechanisms[0], process)
+                build_dependency_sets_by_traversing_projections(process.learning_mechanisms[0], process)
 
         # FIX: USE TOPOSORT TO FIND, OR AT LEAST CONFIRM, TARGET MECHANISMS, WHICH SHOULD EQUAL COMPARATOR MECHANISMS
         self.learningExecutionList = toposort_flatten(self.learningExecutionGraph, sort=False)
         # self.learningExecutionList = self._toposort_with_ordered_mechs(self.learningExecutionGraph)
 
-        # Construct monitoringMechanisms and targetMechanisms MechanismLists
+        # Construct learning_mechanisms and target_mechanisms MechanismLists
 
-        # MODIFIED 3/12/17 NEW: [MOVED FROM _instantiate_graph]
-        self._monitoring_mechs = []
+        self._learning_mechs = []
         self._target_mechs = []
 
         from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -1783,14 +1781,12 @@ class System_Base(System):
                         item.function_object.learning_rate is None):
                 item.function_object.learning_rate = self.learning_rate
 
-            # object_item = self._allMechanisms._get_tuple_for_mech(item)
-            if not item in self._monitoring_mechs:
-                self._monitoring_mechs.append(item)
+            if not item in self._learning_mechs:
+                self._learning_mechs.append(item)
             if isinstance(item, ObjectiveMechanism) and not item in self._target_mechs:
                 self._target_mechs.append(item)
-        self.monitoringMechanisms = MechanismList(self, self._monitoring_mechs)
-        self.targetMechanisms = MechanismList(self, self._target_mechs)
-        # MODIFIED 3/12/17 END
+        self.learning_mechanisms = MechanismList(self, self._learning_mechs)
+        self.target_mechanisms = MechanismList(self, self._target_mechs)
 
         # Instantiate TargetInputStates
         self._instantiate_target_inputs()
@@ -1798,10 +1794,10 @@ class System_Base(System):
     def _instantiate_target_inputs(self, context=None):
 
         if self.learning and self.targets is None:
-            if not self.targetMechanisms:
+            if not self.target_mechanisms:
                 raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no targetMechanisms".
                                   format(self.name))
-            elif len(self.targetMechanisms)==1:
+            elif len(self.target_mechanisms)==1:
                 error_msg = "Learning has been specified for {} so a target must also be specified"
             else:
                 error_msg = "Learning has been specified for {} but no targets have been specified."
@@ -1813,7 +1809,7 @@ class System_Base(System):
         #    assign MappingProjection from the SystemInputState
         #    to the TARGET mechanism's TARGET inputSate
         #    (i.e., from the SystemInputState to the ComparatorMechanism)
-        for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
+        for i, target_mech in zip(range(len(self.target_mechanisms)), self.target_mechanisms):
 
             # Create ProcessInputState for each target and assign to targetMechanism's target inputState
             target_mech_TARGET_input_state = target_mech.input_states[TARGET]
@@ -2104,7 +2100,7 @@ class System_Base(System):
             i += 1
 
     def _execute_learning(self, clock=CentralClock, context=None):
-        # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
+        # Execute each LearningMechanism as well as LearningProjections in self.learningExecutionList
 
         # FIRST, if targets were specified as a function, call the function now
         #    (i.e., after execution of the pathways, but before learning)
@@ -2116,7 +2112,7 @@ class System_Base(System):
         if self.current_targets is None:
            raise SystemError("No targets were specified in the call to execute {} with learning".format(self.name))
 
-        for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
+        for i, target_mech in zip(range(len(self.target_mechanisms)), self.target_mechanisms):
         # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
         #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
             self.targetInputStates[i].value = self.current_targets[i]
@@ -2159,7 +2155,7 @@ class System_Base(System):
                     context=context_str
                 )
                 # # TEST PRINT:
-                # print ("EXECUTING MONITORING UPDATES: ", component.name)
+                # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
         # THEN update all MappingProjections
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
@@ -2197,7 +2193,7 @@ class System_Base(System):
             # Sort for consistency of reporting:
             print("\n\'{}' learning completed:".format(self.name))
 
-            for target_mech in self.targetMechanisms:
+            for target_mech in self.target_mechanisms:
                 processes = list(target_mech.processes.keys())
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
@@ -2246,7 +2242,7 @@ class System_Base(System):
             sequence of executions.
 
         targets : List[input] or np.ndarray(input) : default `None`
-            the target values for the MonitoringMechanisms of the system for each execution (used for learning).
+            the target values for the LearningMechanisms of the system for each execution.
             The length (of the outermost level if a nested list, or lowest axis if an ndarray) must be equal to that
             of ``inputs``.
 
@@ -2348,7 +2344,7 @@ class System_Base(System):
         if self.learning:
             from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
                 import MSE
-            for mech in self.targetMechanisms:
+            for mech in self.target_mechanisms:
                 if not MSE in mech.output_states:
                     continue
                 print("\n- MSE: {:0.3}".
@@ -2497,7 +2493,7 @@ class System_Base(System):
 
             NUM_PHASES_PER_TRIAL:number of phases required to execute all mechanisms in the system
 
-            MONITORING_MECHANISMS:list of MONITORING mechanisms
+            LEARNING_MECHANISMS:list of LEARNING mechanisms
 
             TARGET:list of TARGET mechanisms
 
@@ -2564,8 +2560,8 @@ class System_Base(System):
             OUTPUT_STATE_NAMES: output_state_names,
             OUTPUT_VALUE_ARRAY: output_value_array,
             NUM_PHASES_PER_TRIAL: self.numPhases,
-            MONITORING_MECHANISMS: self.monitoringMechanisms,
-            TARGET_MECHANISMS: self.targetMechanisms,
+            LEARNING_MECHANISMS: self.learning_mechanisms,
+            TARGET_MECHANISMS: self.target_mechanisms,
             LEARNING_PROJECTION_RECEIVERS: learning_projections,
             CONTROL_MECHANISMS: self.controlMechanism,
             CONTROL_PROJECTION_RECEIVERS: controlled_parameters,

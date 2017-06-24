@@ -1347,7 +1347,7 @@ class Component(object):
             #     C) no default function, default functionParams
             #         example: ??DDM
             #     D) no default function, no default functionParams
-            #         example: System, Process, MonitoringMechanism, WeightedErrorMechanism
+            #         example: System, Process, ??ComparatorMechanism, ??LearningMechanism
 
             self.assign_default_FUNCTION_PARAMS = True
 

@@ -93,7 +93,7 @@ above, or using one of the following:
           specified in the `pathway` attribute of a `Process`.
 
   * **automatically** -- PsyNeuLink automatically creates one or more mechanisms under some circumstances.
-    For example, `MonitoringMechanisms <MonitorMechanism>` (and associated `LearningProjections <LearningProjection>`)
+    For example, `LearningMechanisms <LearningMechanism>` (and associated `LearningProjections <LearningProjection>`)
     are created automatically when `learing <Process_Learning>` is specified for a process.
 
 Every mechanism has one or more `inputStates <InputState>`, `parameterStates <ParameterState>`, and
@@ -320,7 +320,7 @@ constructor, or with the mechanism's `assign_params` method, using the following
       <ControlMechanism_Monitored_OutputStates>` for details of specification).
     ..
     * MONITOR_FOR_LEARNING - specifies which of the mechanism's outputStates is used for learning
-      (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).
+      (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
 
 The parameters of a mechanism are listed in a dictionary in its `params <Mechanism_Base.params>
 attribute;  the key for each entry is the name of the parameter, and its value is the parameter's value.
@@ -1276,7 +1276,7 @@ class Mechanism_Base(Mechanism):
                 params[OUTPUT_STATES] = None
 
     def _validate_inputs(self, inputs=None):
-        # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and MonitoringMechanism do not
+        # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and LearningMechanism do not
         raise MechanismError("{} does not support run() method".format(self.__class__.__name__))
 
     def _instantiate_attributes_before_function(self, context=None):
