@@ -109,7 +109,7 @@ and/or the role they play in a system:
 
     `CONTROL`: monitors the value of another mechanism for use in controlling parameter values;
 
-    `MONITORING`: monitors the value of another mechanism for use in learning;
+    `LEARNING`: monitors the value of another mechanism for use in learning;
 
     `TARGET`: ObjectiveMechanism that monitors a `TERMINAL` mechanism of a process
 
