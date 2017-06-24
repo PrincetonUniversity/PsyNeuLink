@@ -4,8 +4,8 @@ DDM
 .. toctree::
    :maxdepth: 3
 
-   DDM
+   ProcessingMechanisms.DDM
 
-.. automodule:: DDM
+.. automodule:: ProcessingMechanisms.DDM
    :members:
    :exclude-members: random

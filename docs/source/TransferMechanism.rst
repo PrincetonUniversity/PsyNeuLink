@@ -4,7 +4,7 @@ TransferMechanism
 .. toctree::
    :maxdepth: 3
 
-   TransferMechanism
+   ProcessingMechanisms.TransferMechanism
 
 .. automodule:: ProcessingMechanisms.TransferMechanism
    :members:
