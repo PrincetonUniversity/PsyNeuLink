@@ -4,7 +4,7 @@ RecurrentTransferMechanism
 .. toctree::
    :maxdepth: 3
 
-   RecurrentTransferMechanism
+   ProcessingMechanisms.RecurrentTransferMechanism
 
 .. automodule:: ProcessingMechanisms.RecurrentTransferMechanism
    :members:

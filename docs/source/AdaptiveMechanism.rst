@@ -6,6 +6,7 @@ Adaptive Mechanism
 
    LearningMechanism
    ControlMechanism
+   GatingMechanism
 
 .. automodule:: AdaptiveMechanisms.AdaptiveMechanism
    :members:

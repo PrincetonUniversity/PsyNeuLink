@@ -34,9 +34,9 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="up" title="EVCMechanism" href="EVCMechanism.html"/>
-        <link rel="next" title="State" href="State.html"/>
-        <link rel="prev" title="ControlSignal" href="ControlSignal.html"/> 
+        <link rel="up" title="ModulatoryProjection" href="ModulatoryProjection.html"/>
+        <link rel="next" title="GatingProjection" href="GatingProjection.html"/>
+        <link rel="prev" title="LearningProjection" href="LearningProjection.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -85,37 +85,12 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projection</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="PathwayProjection.html">PathwayProjection</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjection</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="LearningProjection.html">LearningProjection</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">ControlProjection</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-controlprojection">Creating a ControlProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="GatingProjection.html">GatingProjection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html#creating-a-modulatoryprojection">Creating a ModulatoryProjection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
@@ -149,13 +124,9 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
+          <li><a href="Projection.html">Projection</a> &raquo;</li>
       
-          <li><a href="AdaptiveMechanism.html">Adaptive Mechanism</a> &raquo;</li>
-      
-          <li><a href="ControlMechanism.html">Control Mechanism</a> &raquo;</li>
-      
-          <li><a href="EVCMechanism.html">EVCMechanism</a> &raquo;</li>
+          <li><a href="ModulatoryProjection.html">ModulatoryProjection</a> &raquo;</li>
       
     <li>ControlProjection</li>
       <li class="wy-breadcrumbs-aside">
@@ -196,7 +167,7 @@ Mechanism that is part of a System, then the ControlProjection&#8217;s <a class=
 <span id="controlprojection-deferred-initialization"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>When a ControlProjection is created, its full initialization is <span class="xref std std-ref">deferred</span> until its
 <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This allows
-a ControlProjection to be created before its <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.sender" title="ModulatoryProjections.LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> (and/or <a class="reference internal" href="Function.html#Function.Stability.MappingProjection.receiver" title="Function.Stability.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>) have been created (e.g., before them in a
+a ControlProjection to be created before its <a class="reference internal" href="Function.html#Function.Stability.MappingProjection.sender" title="Function.Stability.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> (and/or <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>) have been created (e.g., before them in a
 script), by calling its constructor without specifying its <strong>sender</strong> or <strong>receiver</strong> arguments. However, for the
 ControlProjection to be operational, initialization must be completed by calling its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method.  This is
 not necessary if the parameter(s) to be controlled are specified in the <strong>control_signals</strong> argument of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, or
@@ -328,10 +299,10 @@ if it is not specified, a default is assigned using <code class="xref any docuti
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="State.html" class="btn btn-neutral float-right" title="State" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="GatingProjection.html" class="btn btn-neutral float-right" title="GatingProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="ControlSignal.html" class="btn btn-neutral" title="ControlSignal" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="LearningProjection.html" class="btn btn-neutral" title="LearningProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

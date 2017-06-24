@@ -4,8 +4,8 @@ IntegratorMechanism
 .. toctree::
    :maxdepth: 3
 
-   IntegratorMechanism
+   ProcessingMechanisms.IntegratorMechanism
 
-.. automodule:: IntegratorMechanism
+.. automodule:: ProcessingMechanisms.IntegratorMechanism
    :members:
    :exclude-members: random

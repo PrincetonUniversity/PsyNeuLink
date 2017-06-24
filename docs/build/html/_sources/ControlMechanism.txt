@@ -4,8 +4,8 @@ Control Mechanism
 .. toctree::
    :maxdepth: 2
 
-   DefaultControlMechanism
-   EVCMechanism
+   AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism
+   AdaptiveMechanisms.ControlMechanisms.EVCMechanism
 
 .. automodule:: AdaptiveMechanisms.ControlMechanisms.ControlMechanism
    :members:

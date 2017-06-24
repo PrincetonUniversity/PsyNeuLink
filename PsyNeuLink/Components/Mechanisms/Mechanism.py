@@ -187,7 +187,7 @@ Every mechanism has three types of states (shown schematically in the figure bel
 
 .. _Mechanism_Figure:
 
-.. figure:: _static/Mechanism_states_fig.jpg
+.. figure:: _static/Mechanism_States_fig.svg
    :alt: Mechanism States
    :scale: 75 %
    :align: center

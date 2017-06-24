@@ -109,7 +109,7 @@ and/or the role they play in a system:
 
     `CONTROL`: monitors the value of another mechanism for use in controlling parameter values;
 
-    `MONITORING`: monitors the value of another mechanism for use in learning;
+    `LEARNING`: monitors the value of another mechanism for use in learning;
 
     `TARGET`: ObjectiveMechanism that monitors a `TERMINAL` mechanism of a process
 
@@ -140,7 +140,7 @@ COMMENT
 
 **Components of a System**
 
-.. figure:: _static/System_full_fig.pdf
+.. figure:: _static/System_full_fig.svg
    :alt: Overview of major PsyNeuLink components
    :scale: 75 %
 
@@ -672,7 +672,7 @@ class System_Base(System):
         `initialization <System_Execution_Input_And_Initialization>`.
 
     monitoringMechanisms : MechanismList)
-        contains all `MONITORING` mechanisms in the system (used for learning).
+        contains all `LEARNING` mechanisms in the system (used for learning).
         COMMENT:
             based on _monitoring_mechs)
         COMMENT
@@ -1155,7 +1155,7 @@ class System_Base(System):
                 for each assignment, use toposort to test whether the dependency introduced a cycle; if so:
                     eliminate the dependent from the executionGraph, and designate it as CYCLE (unless it is an ORIGIN)
                     designate the sender as INITIALIZE_CYCLE (it can receive and initial_value specification)
-                if a mechanism doe not project to any other ProcessingMechanisms (ignore monitoring and control mechs):
+                if a mechanism doe not project to any other ProcessingMechanisms (ignore learning and control mechs):
                     assign as TERMINAL unless it is already an ORIGIN, in which case assign as SINGLETON
 
         Construct execution_sets and exeuction_list
@@ -2497,7 +2497,7 @@ class System_Base(System):
 
             NUM_PHASES_PER_TRIAL:number of phases required to execute all mechanisms in the system
 
-            MONITORING_MECHANISMS:list of MONITORING mechanisms
+            LEARNING_MECHANISMS:list of LEARNING mechanisms
 
             TARGET:list of TARGET mechanisms
 
