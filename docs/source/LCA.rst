@@ -4,7 +4,7 @@ LCA
 .. toctree::
    :maxdepth: 3
 
-   LCA
+   ProcessingMechanisms.LCA
 
 .. automodule:: ProcessingMechanisms.LCA
    :members:

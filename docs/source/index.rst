@@ -30,13 +30,13 @@ PsyNeuLink is open source, and meant to be extended. Its goal is to provide an e
 of mind/brain function that are modular, customizable, extensible, disseminable, and clearly documented.  It does this
 in a manner that:
 
- - is *computationally general* — that is, that can implement any desired mechanism or process;
+ - is *computationally general* -- that is, that can implement any desired mechanism or process;
  ..
  - adheres as closely as possible to the insights and design principles that have been learned in computer science
    (e.g., function-based, object-oriented programming);
  ..
- - expresses (as few as possible) *commitments* that reflect general principles of how the brain/mind is organized
-   and operates, without committing to any particular model or theory;
+ - expresses (as few as possible) *commitments* that reflect general principles of how the mind/brain is organized
+   and operates, without committing to any particular detailed model or theory;
  ..
  - expresses these commitments in a form that is powerful, easy to use, and familiar to cognitive neuroscientists;
  ..
@@ -47,12 +47,13 @@ in a manner that:
  ..
  - provides a standard and accessible environment for model comparison, sharing, and documentation;
  ..
- - interface (API) can easily be constructed to other powerful tools for implementing individual components, such as:
+ - has an interface (API) that allows it to be used with other powerful tools for implementing individual components,
+   such as:
 
    * MatLab (general purpose mathematical tools);
    * TensorFlow, Teano (ODE's, deep learning);
    * Emergent (broad class of neurally-plausible connectionist models);
-   * ACT-R (sybmolic, production system models).
+   * ACT-R (symbolic, production system models).
 
 The goal is to encourage users to think about information processing in a "mind/brain-like" way, while imposing as few
 constraints as possible on what it is possible to implement or ask the model to do.
@@ -79,11 +80,11 @@ Other packages that are much better for such applications are:
 and `Nengo <http://www.nengo.ca>`_  (for biophysically-realistic models of neuronal function).
 
 These packages are all better for elaborate and detailed models of a particular form.
-In contrast, the initial efforts in the design and implementation of PsyNeuLink have been put into making it as
-flexible and easy to use as possible, including its ability to integrate components constructed in other packages
+In contrast, the focus in designing and implementing PsyNeuLink has been to make it as flexible and easy to use as
+possible, with the ability to integrate components constructed in other packages
 (includling some of the ones listed above).  These are characteristics that are often (at least in the initial
 stages of development) in tension with efficiency (think:  interpreted vs. compiled).  As PsyNeuLink grows and matures,
-our expectation is that effort will be put into making it more efficient.
+our expectation is that it be made computationally more efficient.
 
 
 .. _Overview:
@@ -241,7 +242,7 @@ Contributors
 * **Ted Willke**, Intel Labs, Intel Corporation
 * **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
 
-with substantial assistance from:
+with substantial and greatly appreciated assistance from:
 
 * **Abhishek Bhattacharjee**, Department of Computer Science, Rutgers University
 * **Mihai Capota**, Intel Labs, Intel Corporation

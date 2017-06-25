@@ -87,7 +87,7 @@ the `modulation <AdaptiveMechanism_Base.modulation>` attribute for the `Adaptive
 
 **Anatomy of Modulation**
 
-.. figure:: _static/Modulation_fig.pdf
+.. figure:: _static/Modulation_fig.svg
    :alt: Modulation
    :scale: 150 %
 
@@ -109,7 +109,7 @@ the `modulation <AdaptiveMechanism_Base.modulation>` attribute for the `Adaptive
 
 **Detailed View of Modulation**
 
-.. figure:: _static/Modulation_Detail_fig.pdf
+.. figure:: _static/Modulation_Detail_fig.svg
    :alt: Modulation_Detail
    :scale: 150 %
 
