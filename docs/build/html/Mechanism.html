@@ -191,7 +191,7 @@ output of a Mechanism to generate learning signals that are used to modify
 <code class="xref any docutils literal"><span class="pre">MappingProjection</span></code> (see <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning</span></a>).</li>
 <li><a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a> - these evaluate the output of a specified set of Mechanisms, and
 generate control signals used to modify the parameters of those or other Mechanisms.</li>
-<li><code class="xref any docutils literal"><span class="pre">GatingMechanisms</span></code> - these receive input, and use this to determine whether and how to
+<li><a class="reference internal" href="GatingMechanism.html"><span class="doc">GatingMechanisms</span></a> - these receive input, and use this to determine whether and how to
 modify the value of the InputState(s) and/or OutputState(s) of other Mechanisms.</li>
 </ul>
 <p>Each type of AdaptiveMechanism is associated with a corresponding type of Projection (<a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>,
@@ -282,7 +282,7 @@ specified, using the <a class="reference internal" href="OutputState.html#Output
 <p>Notice that the parameters of the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> (in this case, <a class="reference internal" href="Function.html#Function.SoftMax.gain" title="Function.SoftMax.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> and <a class="reference internal" href="Function.html#Function.Logistic.bias" title="Function.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a>) can be specified by including
 them in its constructor.  Some Mechanisms support only a single function.  In that case, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>
 argument is not available in the Mechanism&#8217;s constructor, but it does include arguments for the function&#8217;s
-parameters.  For example, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a <code class="xref any docutils literal"><span class="pre">ComparatorMechanism</span></code> is always the <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function,
+parameters.  For example, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is always the <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function,
 so its constructor does not have a <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> argument.  However, it does have a <code class="xref any docutils literal"><span class="pre">comparison_operation</span></code>
 argument, that is used to set the LinearCombination function&#8217;s <a class="reference internal" href="Function.html#Function.LinearCombination.operation" title="Function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> parameter.</p>
 <p>For Mechanisms that offer a selection of functions, if all of the functions use the same parameters then those
@@ -318,14 +318,14 @@ which is then used by its outputStates to assign items to its <a class="referenc
 <span id="mechanism-states"></span><h3>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h3>
 <p>Every Mechanism has three types of States (shown schematically in the figure below):</p>
 <div class="figure align-center" id="id6">
-<span id="mechanism-figure"></span><a class="reference internal image-reference" href="_images/Mechanism_states_fig.jpg"><img alt="Mechanism States" src="_images/Mechanism_states_fig.jpg" style="width: 1230.75px; height: 875.25px;" /></a>
+<span id="mechanism-figure"></span><a class="reference internal image-reference" href="_images/Mechanism_States_fig.svg"><img alt="Mechanism States" src="_images/Mechanism_States_fig.svg" /></a>
 <p class="caption"><span class="caption-text">Schematic of a Mechanism showing its three types of States (input, parameter and output).</span></p>
 </div>
 <div class="section" id="inputstates">
 <span id="mechanism-inputstates"></span><h4>InputStates<a class="headerlink" href="#inputstates" title="Permalink to this headline">¶</a></h4>
 <p>These receive and represent the input to a Mechanism. A Mechanism usually has only one (<strong>primary</strong>) <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>,
 identified by its <a class="reference internal" href="#Mechanism.Mechanism_Base.input_state" title="Mechanism.Mechanism_Base.input_state"><code class="xref any py py-attr docutils literal"><span class="pre">input_state,</span></code></a> attribute.  However some Mechanisms have
-more  than one InputState. For example, a <code class="xref any docutils literal"><span class="pre">ComparatorMechanism</span></code> has one InputState for its <code class="xref any docutils literal"><span class="pre">sample</span></code> and another for its
+more  than one InputState. For example, a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> has one InputState for its <code class="xref any docutils literal"><span class="pre">sample</span></code> and another for its
 <code class="xref any docutils literal"><span class="pre">target</span></code> input. If a Mechanism has more than one InputState, they are identified in a ContentAddressableList in the
 Mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.input_states" title="Mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute (note the plural).  A specific InputState in the
 list can be accessed by using its name as the index for the list (e.g., my_mechanism[&#8216;InputState name&#8217;].</p>
@@ -350,7 +350,7 @@ processing.  A parameter value (and the value of its associated ParameterState) 
 its function is first created  using the corresponding argument in the object&#8217;s constructor.  Parameter values can
 also be assigned later, by direct assignment of a value to the corresponding attribute, or by using the Mechanism&#8217;s
 <code class="xref any docutils literal"><span class="pre">assign_param</span></code> method (the safest means;  see <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">Specifying Parameters</span></a>).  All of the Mechanism&#8217;s
-parameters are list in a dict in its <code class="xref any docutils literal"><span class="pre">user_params</span></code> attribute; the dict contains a <a class="reference internal" href="DDM.html#DDM.DDM.function_params" title="DDM.DDM.function_params"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> entry which
+parameters are list in a dict in its <code class="xref any docutils literal"><span class="pre">user_params</span></code> attribute; the dict contains a <a class="reference internal" href="#Mechanism.Mechanism_Base.function_params" title="Mechanism.Mechanism_Base.function_params"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> entry which
 in turn contains a dict of the parameters for the Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 </div>
 <div class="section" id="outputstates">
@@ -782,7 +782,7 @@ each execution of the Mechanism.</p>
 <dt id="Mechanism.Mechanism_Base.plot">
 <code class="descname">plot</code><span class="sig-paren">(</span><em>x_range=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a plot of the mechanism&#8217;s function using the specified parameter values. See (see
-<a class="reference internal" href="DDM.html#DDM.DDM.plot" title="DDM.DDM.plot"><code class="xref any py py-meth docutils literal"><span class="pre">DDM.plot</span></code></a> for details of the animated DDM plot).</p>
+<a class="reference internal" href="DDM.html#ProcessingMechanisms.DDM.DDM.plot" title="ProcessingMechanisms.DDM.DDM.plot"><code class="xref any py py-meth docutils literal"><span class="pre">DDM.plot</span></code></a> for details of the animated DDM plot).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

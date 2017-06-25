@@ -92,6 +92,9 @@ our expectation is that it be made computationally more efficient.
 Overview and "Sampler"
 ----------------------
 
+Basics
+~~~~~~
+
 PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
 PsyNeuLink models are made of `Components <Component>` and `Compositions <Composition>`:
 Components are objects that perform a specific function, and Compositions are used to combine Components into an
@@ -107,6 +110,9 @@ taking the inputs to a model and generating its outputs;  and ones that *modulat
 of information.  PsyNeuLink provides a library of Components of each type.  For example, there is a variety of
 ProcessingMechanisms that can be used to transform, integrate, and evaluate information; and there
 LearningMechanisms, ControlMechanisms, and GatingMechanism that can be used to modulate those processes.
+
+Simple Configurations
+~~~~~~~~~~~~~~~~~~~~~
 
 Mechanisms can be executed on their own (to gain familiarity with their functions), linked in simple configurations
 (for testing isolated interactions), or in Compositions to implement a full model.
@@ -143,15 +149,24 @@ have been inserted directly, as follows::
 
     my_encoder = process(pathway=[input_layer, (.2 * np.random.rand(2, 5)) + -.1)), hidden_layer, output_layer])
 
-PsyNeuLink knows to create MappingProjection using the matrix.  For example, the following addition to the script
-creates a recurrent Projection from the ``output_layer`` back to the ``hidden_lalyer``::
+PsyNeuLink knows to create a MappingProjection using the matrix.  PsyNeuLink is also flexible.  For example,
+a recurrent Projection from the ``output_layer`` back to the ``hidden_lalyer`` can be added simply by adding another
+entry to the pathway::
 
+    my_encoder = process(pathway=[input_layer, hidden_layer, output_layer, hidden_layer])
+
+This tells PsyNeuLink to create a Projection from the output_layer back to the hidden_layer.  The same could have also
+been accomplished by explicilty creating the recurrent connection:
+
+    my_encoder = process(pathway=[input_layer, hidden_layer, output_layer])
     MappingProjection(sender=output_layer,
-                      receiver=hidden_layer,
-                      matrix=((.2 * np.random.rand(5, 2)) + -.1))
+                      receiver=hidden_layer)
 
-Configuring more complex features is just as simple and flexible.  For example, the network above can be trained using
-backpropagation (the default) simply by adding an argument to the constructor for the Process::
+More Elaborate Configurations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Configuring more complex features is just as simple and flexible.  For example, the feedforward network above can be
+trained using backpropagation simply by adding an argument to the constructor for the Process::
 
     my_encoder = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
 
@@ -160,10 +175,13 @@ and then specifying the target for each trial when it is run (here five trials o
     my_encoder.run(input=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]],
                    target=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
 
+`Backpropation <BackPropagation>` is the default learning method, but PsyNeuLink also currently supports
+`Reinforcement Learning <Reinforcement>`, and others are currently being implemented (including Hebbian, Temporal
+Differences, and supervised learning for recurrent networks).
+
 PsyNeuLink can also be used to construct models with different kinds of Mechanisms.  For example, the script below
 uses a `System` -- a more powerful form of Composition -- to create two feedforward networks that converge on a single
-output layer that combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the
-response::
+output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the response::
 
     colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
     words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
@@ -190,6 +208,9 @@ As the name of the ``show_graph()`` method suggests, Compositions are represente
 standard dependency dictionary format, so that they can also be submitted to other graph theoretic packages for
 display and/or analysis (such as `NetworkX <https://networkx.github.io>`_ and `igraph <http://igraph.org/redirect
 .html>`_).
+
+Time Scales
+~~~~~~~~~~~
 
 COMMENT:
     XXX DIFFERENT TIME SCALES / SCHEDULER

@@ -228,6 +228,8 @@ our expectation is that it be made computationally more efficient.</p>
 </div>
 <div class="section" id="overview-and-sampler">
 <span id="overview"></span><h2>Overview and &#8220;Sampler&#8221;<a class="headerlink" href="#overview-and-sampler" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="basics">
+<h3>Basics<a class="headerlink" href="#basics" title="Permalink to this headline">¶</a></h3>
 <p>PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
 PsyNeuLink models are made of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> and <code class="xref any docutils literal"><span class="pre">Compositions</span></code>:
 Components are objects that perform a specific function, and Compositions are used to combine Components into an
@@ -242,6 +244,9 @@ taking the inputs to a model and generating its outputs;  and ones that <em>modu
 of information.  PsyNeuLink provides a library of Components of each type.  For example, there is a variety of
 ProcessingMechanisms that can be used to transform, integrate, and evaluate information; and there
 LearningMechanisms, ControlMechanisms, and GatingMechanism that can be used to modulate those processes.</p>
+</div>
+<div class="section" id="simple-configurations">
+<h3>Simple Configurations<a class="headerlink" href="#simple-configurations" title="Permalink to this headline">¶</a></h3>
 <p>Mechanisms can be executed on their own (to gain familiarity with their functions), linked in simple configurations
 (for testing isolated interactions), or in Compositions to implement a full model.
 Linking Mechanisms for execution can be as simple as placing them in a list &#8211; PsyNeuLink provides the necessary
@@ -279,24 +284,34 @@ have been inserted directly, as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="p">(</span><span class="o">.</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="o">+</span> <span class="o">-.</span><span class="mi">1</span><span class="p">)),</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>PsyNeuLink knows to create MappingProjection using the matrix.  For example, the following addition to the script
-creates a recurrent Projection from the <code class="docutils literal"><span class="pre">output_layer</span></code> back to the <code class="docutils literal"><span class="pre">hidden_lalyer</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">output_layer</span><span class="p">,</span>
-                  <span class="n">receiver</span><span class="o">=</span><span class="n">hidden_layer</span><span class="p">,</span>
-                  <span class="n">matrix</span><span class="o">=</span><span class="p">((</span><span class="o">.</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="o">-.</span><span class="mi">1</span><span class="p">))</span>
+<p>PsyNeuLink knows to create a MappingProjection using the matrix.  PsyNeuLink is also flexible.  For example,
+a recurrent Projection from the <code class="docutils literal"><span class="pre">output_layer</span></code> back to the <code class="docutils literal"><span class="pre">hidden_lalyer</span></code> can be added simply by adding another
+entry to the pathway:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Configuring more complex features is just as simple and flexible.  For example, the network above can be trained using
-backpropagation (the default) by simply adding one line in the creation of the Process, to turn on learning:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">],</span>
-                     <span class="n">learning</span><span class="o">=</span><span class="n">learning</span><span class="p">)</span>
+<p>This tells PsyNeuLink to create a Projection from the output_layer back to the hidden_layer.  The same could have also
+been accomplished by explicilty creating the recurrent connection:</p>
+<blockquote>
+<div><p>my_encoder = process(pathway=[input_layer, hidden_layer, output_layer])
+MappingProjection(sender=output_layer,</p>
+<blockquote>
+<div>receiver=hidden_layer)</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="more-elaborate-configurations">
+<h3>More Elaborate Configurations<a class="headerlink" href="#more-elaborate-configurations" title="Permalink to this headline">¶</a></h3>
+<p>Configuring more complex features is just as simple and flexible.  For example, the feedforward network above can be
+trained using backpropagation simply by adding an argument to the constructor for the Process:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">],</span> <span class="n">learning</span><span class="o">=</span><span class="n">ENABLED</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>and another when it is run, specifying the target for each trial:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">run</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
-                   <span class="n">target</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<p>and then specifying the target for each trial when it is run (here five trials of inputs and targets are specified):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
+               <span class="n">target</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 </pre></div>
 </div>
+<p><code class="xref any docutils literal"><span class="pre">Backpropation</span></code> is the default learning method, but others are also possible, such as <a class="reference internal" href="Function.html#Function.Reinforcement" title="Function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span> <span class="pre">Learning</span></code></a> (learning for recurrent networks has not been implemented yet, but will be soon).</p>
 <p>PsyNeuLink can also be used to construct models with different kinds of Mechanisms.  For example, the script below
 uses a <a class="reference internal" href="System.html"><span class="doc">System</span></a> &#8211; a more powerful form of Composition &#8211; to create two feedforward networks that converge on a single
 output layer that combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the
@@ -312,8 +327,8 @@ response:</p>
 <span class="n">my_simple_Stroop</span> <span class="o">=</span> <span class="n">system</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">colors_process</span><span class="p">,</span> <span class="n">words_process</span><span class="p">,</span> <span class="n">decision_process</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>As Compositions get complex, it helps to visualize them.  PsyNeuLink has built-in methods for doing so.  For example,
-calling <code class="docutils literal"><span class="pre">my_simple_Stroop.show_graph()</span></code> produces the following display:</p>
+<p>As a Composition get more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
+For example, calling <code class="docutils literal"><span class="pre">my_simple_Stroop.show_graph()</span></code> produces the following display:</p>
 <p id="index-simple-stroop-example-figure"><strong>Composition Graph</strong></p>
 <div class="figure" id="id6">
 <img alt="_images/Simple_Stroop_Example_fig.svg" src="_images/Simple_Stroop_Example_fig.svg" /><p class="caption"><span class="caption-text">Graph representation of the Composition in the example above.</span></p>
@@ -321,6 +336,9 @@ calling <code class="docutils literal"><span class="pre">my_simple_Stroop.show_g
 <p>As the name of the <code class="docutils literal"><span class="pre">show_graph()</span></code> method suggests, Compositions are represented in PsyNeuLink as graphs, using a
 standard dependency dictionary format, so that they can also be submitted to other graph theoretic packages for
 display and/or analysis (such as <a class="reference external" href="https://networkx.github.io">NetworkX</a> and <a class="reference external" href="http://igraph.org/redirect.html">igraph</a>).</p>
+</div>
+<div class="section" id="time-scales">
+<h3>Time Scales<a class="headerlink" href="#time-scales" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
 <dt>COMMENT:</dt>
 <dd>XXX DIFFERENT TIME SCALES / SCHEDULER
@@ -330,6 +348,7 @@ that execute are arbitrary and disparate &#8220;time-scales&#8221;.</dd>
 <p>COMMENT</p>
 <p>The <a class="reference internal" href="UserGuide.html"><span class="doc">User&#8217;s Guide</span></a> provides a more detailed review of PsyNeuLink&#8217;s organization and capabilities,
 and the <code class="xref any docutils literal"><span class="pre">Tutorial</span></code> provides an interactive introduction to its use.</p>
+</div>
 </div>
 <div class="section" id="installation">
 <span id="id3"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>

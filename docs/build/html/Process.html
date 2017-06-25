@@ -202,15 +202,15 @@ Mechanism in the pathway must project at least to the next one in the pathway, t
 also receive recurrent (feedback) projections from them.  However, pathways cannot be used to construct branching
 patterns;  that requires the use of a  <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  The Mechanisms specified in the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> for a Process are generally
 <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>.  The projections between Mechanisms in a Process must be
-<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.  These transmit the output of a Mechanism (the projection&#8217;s
-<code class="xref any docutils literal"><span class="pre">sender</span></code>) to the input of another Mechanism (the projection&#8217;s
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.  These transmit the output of a Mechanism (the Projection&#8217;s
+<code class="xref any docutils literal"><span class="pre">sender</span></code>) to the input of another Mechanism (the Projection&#8217;s
 <code class="xref any docutils literal"><span class="pre">receiver</span></code>). Specification of a <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> requires, at the least, a list
 of Mechanisms.  These can be specified directly, or in a <strong>tuple</strong> that also contains a set of
 <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime parameters</span></a> and/or a <a class="reference internal" href="System.html#system-execution-phase"><span class="std std-ref">phase</span></a> specification (see
 <a class="reference internal" href="#process-mechanism-specification"><span class="std std-ref">below</span></a>). Projections between a pair of Mechanisms can be specified by
 interposing
-them in the list between the pair.  When no projection appears between two adjacent Mechanisms in the pathway, and
-there is no otherwise specified projection between them, PsyNeuLink assigns a default projection. Specifying the
+them in the list between the pair.  When no Projection appears between two adjacent Mechanisms in the pathway, and
+there is no otherwise specified Projection between them, PsyNeuLink assigns a default Projection. Specifying the
 components of a pathway is described in detail below.</p>
 </div>
 <div class="section" id="mechanisms">
@@ -249,34 +249,34 @@ converted internally to a MechanismTuple, and listed in the Process&#8217; <a cl
 <li><dl class="first docutils">
 <dt>Inline specification</dt>
 <dd><p class="first last">Projection specifications can be interposed between any two Mechanisms in the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> list.  This creates a
-projection from the preceding Mechanism in the list to the one that follows it.  The projection specification can
+Projection from the preceding Mechanism in the list to the one that follows it.  The Projection specification can
 be an instance of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, the class name <code class="xref std std-keyword docutils literal"><span class="pre">MappingProjection</span></code>, a
 <code class="xref any docutils literal"><span class="pre">matrix</span> <span class="pre">keyword</span></code> for a type of MappingProjection (<a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a>, <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a>,
-or <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX" title="Keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">RANDOM_CONNECTIVITY_MATRIX</span></code></a>), or a dictionary with <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">specifications for the projection</span></a>.</p>
+or <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX" title="Keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">RANDOM_CONNECTIVITY_MATRIX</span></code></a>), or a dictionary with <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">specifications for the Projection</span></a>.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Stand-alone projection</dt>
-<dd><p class="first last">When a projection is created on its own, it can be assigned <span class="xref std std-ref">sender</span>
+<dt>Stand-alone Projection</dt>
+<dd><p class="first last">When a Projection is created on its own, it can be assigned <span class="xref std std-ref">sender</span>
 and <span class="xref std std-ref">receiver</span> Mechanisms. If both are in the Process, then that
-projection will be used when creating the Process.  Stand-alone specification of a projection between two
+Projection will be used when creating the Process.  Stand-alone specification of a Projection between two
 Mechanisms in a Process takes precedence over default or inline specification; that is, the stand-alone
-projection will be used in place of any that is specified in the pathway. Stand-alone specification is required
+Projection will be used in place of any that is specified in the pathway. Stand-alone specification is required
 to implement projections between Mechanisms that are not adjacent to one another in the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> list.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>Default assignment</dt>
-<dd><p class="first last">For any Mechanism that does not receive a projection from another Mechanism in the Process (specified using one of
+<dd><p class="first last">For any Mechanism that does not receive a Projection from another Mechanism in the Process (specified using one of
 the methods above), a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is automatically created from the Mechanism that precedes it in the
 <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>.  If the format of the preceding Mechanism&#8217;s output matches that of the next Mechanism, then
-<a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a> is used for the projection;  if the formats do not match, or
-<a class="reference internal" href="#process-learning"><span class="std std-ref">learning has been specified</span></a> either for the projection or the Process,
+<a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a> is used for the Projection;  if the formats do not match, or
+<a class="reference internal" href="#process-learning"><span class="std std-ref">learning has been specified</span></a> either for the Projection or the Process,
 then a <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a> is used. If the Mechanism is the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism (i.e., first in the
 <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>), a <code class="xref any docutils literal"><span class="pre">ProcessInputState</span></code> will be used as the sender,
-and an <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a> is used for the projection.</p>
+and an <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a> is used for the Projection.</p>
 </dd>
 </dl>
 </li>
@@ -318,12 +318,12 @@ input value to <a class="reference internal" href="Keywords.html#Keywords.Keywor
 </div>
 <div class="section" id="learning">
 <span id="process-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
-<p>Learning modifies projections between Mechanisms in a Process&#8217;s <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, so that the input to each projection`s
+<p>Learning modifies projections between Mechanisms in a Process&#8217;s <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, so that the input to each Projection`s
 <code class="xref any docutils literal"><span class="pre">sender</span></code> produces the desired (&#8220;target&#8221;) output from its
-<code class="xref any docutils literal"><span class="pre">receiver</span></code>.  Learning occurs when a projection or Process for which learning has been
-specified is executed.  Learning can be specified for a particular projection in a Process, or for the entire
-Process. It is specified for a particular projection by including a <a class="reference internal" href="LearningProjection.html#learningprojection-creation"><span class="std std-ref">LearningProjection specification</span></a> in the specification for the projection.  It is specified for the entire Process by
-assigning either a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> specification, or the keyword <a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING" title="Keywords.Keywords.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a> to the <a class="reference internal" href="#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> argument of the
+<code class="xref any docutils literal"><span class="pre">receiver</span></code>.  Learning occurs when a Projection or Process for which learning has been
+specified is executed.  Learning can be specified for a particular Projection in a Process, or for the entire
+Process. It is specified for a particular Projection by including a <a class="reference internal" href="LearningProjection.html#learningprojection-creation"><span class="std std-ref">LearningProjection specification</span></a> in the specification for the Projection.  It is specified for the entire Process by
+assigning either a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> specification, or the keyword <em>ENABLED</em> to the <a class="reference internal" href="#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> argument of the
 Process` constructor.  Specifying learning for a Process will implement it for all eligible projections in the
 Process (i.e., all <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>, excluding projections from
 the Process&#8217; InputState to its <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism, and projections from the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism to
@@ -331,26 +331,26 @@ the Process&#8217; OutputState). When learning is specified for the Process, all
 so that input to the Process (i.e., its <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism) will generate the specified target value as its
 output (i.e., the output of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism). In either case, all Mechanisms that receive projections for
 which learning has been specified must be <a class="reference internal" href="LearningProjection.html"><span class="doc">compatible with learning</span></a>).</p>
-<p>When learning is specified , the following objects are automatically created for each projection involved (see figure
+<p>When learning is specified , the following objects are automatically created for each Projection involved (see figure
 below):</p>
 <blockquote>
 <div><ul class="simple">
-<li>a <code class="xref any docutils literal"><span class="pre">ComparatorMechanism</span></code> used to evaluate the output of the projection&#8217;s <code class="xref any docutils literal"><span class="pre">receiver</span></code>          against a target value;</li>
+<li>a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> used to evaluate the output of the Projection&#8217;s <code class="xref any docutils literal"><span class="pre">receiver</span></code>          against a target value;</li>
 </ul>
 <ul class="simple">
-<li>a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the projection&#8217;s <code class="xref any docutils literal"><span class="pre">receiver</span></code> to the ComparatorMechanism;</li>
+<li>a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the Projection&#8217;s <code class="xref any docutils literal"><span class="pre">receiver</span></code> to the ComparatorMechanism;</li>
 </ul>
 <ul class="simple">
 <li>a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> that uses the error signal calculated by the ComparatorMechanism to generate a
 matrix of weight changes (<code class="xref any docutils literal"><span class="pre">learning_signal</span></code>) to be applied to the
-projection being learned;</li>
+Projection being learned;</li>
 </ul>
 <ul class="simple">
 <li>a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the ComparatorMechanism&#8217;s <em>ERROR_SIGNAL</em> OutputState to LearningMechanism&#8217;s
 <em>ERROR_SIGNAL</em> InputState;</li>
 </ul>
 <ul class="simple">
-<li>a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> from the LearningMechanism&#8217;s <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> OutputState to the projection being learned.</li>
+<li>a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> from the LearningMechanism&#8217;s <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> OutputState to the Projection being learned.</li>
 </ul>
 </div></blockquote>
 <p>Different learning algorithms can be specified (e.g., <a class="reference internal" href="Function.html#Function.Reinforcement" title="Function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span></code></a> or <a class="reference internal" href="Function.html#Function.BackPropagation" title="Function.BackPropagation"><code class="xref any py py-class docutils literal"><span class="pre">BackPropagation</span></code></a>), that implement the
@@ -385,7 +385,7 @@ specified for the Process or any of the projections in its <a class="reference i
 Projections.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The changes to a projection induced by learning are not applied until the Mechanisms that receive those
+<p class="last">The changes to a Projection induced by learning are not applied until the Mechanisms that receive those
 projections are next executed; see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of &#8220;lazy&#8221; updating).</p>
 </div>
 <p class="rubric">Examples</p>
@@ -399,26 +399,26 @@ default value of 0):</p>
 <span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">TransferMechanism</span><span class="p">,</span> <span class="p">(</span><span class="n">mechanism_2</span><span class="p">,</span> <span class="n">some_params</span><span class="p">)])</span>
 </pre></div>
 </div>
-<p><em>Default projection specification:</em>  The <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> for this Process uses default projection specifications; as a
+<p><em>Default Projection specification:</em>  The <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> for this Process uses default Projection specifications; as a
 result, a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is automatically instantiated between each of the Mechanisms listed:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
-<p><em>Inline projection specification using an existing projection:</em>  In this <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, <code class="docutils literal"><span class="pre">projection_A</span></code> is specified as
-the projection between the first and second Mechanisms; a default projection will be created between <code class="docutils literal"><span class="pre">mechanism_2</span></code>
+<p><em>Inline Projection specification using an existing Projection:</em>  In this <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, <code class="docutils literal"><span class="pre">projection_A</span></code> is specified as
+the Projection between the first and second Mechanisms; a default Projection will be created between <code class="docutils literal"><span class="pre">mechanism_2</span></code>
 and <code class="docutils literal"><span class="pre">mechanism_3</span></code>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">projection_A</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">()</span>
 <span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">projection_A</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
-<p><em>Inline projection specification using a keyword:</em>  In this <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, a <code class="xref any docutils literal"><span class="pre">RANDOM_CONNECTIVITY_MATRIX</span></code>
-is assigned as the projection between the first and second Mechanisms:</p>
+<p><em>Inline Projection specification using a keyword:</em>  In this <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, a <code class="xref any docutils literal"><span class="pre">RANDOM_CONNECTIVITY_MATRIX</span></code>
+is assigned as the Projection between the first and second Mechanisms:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">RANDOM_CONNECTIVITY_MATRIX</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
-<p><em>Stand-alone projection specification:</em>  In this <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, <code class="docutils literal"><span class="pre">projection_A</span></code> is explicilty specified as a projection
-between <code class="docutils literal"><span class="pre">mechanism_1</span></code> and <code class="docutils literal"><span class="pre">mechanism_2</span></code>, and so will be used as the projection between them in <code class="docutils literal"><span class="pre">my_process</span></code>;
-a default projection will be created between <code class="docutils literal"><span class="pre">mechanism_2</span></code> and <code class="docutils literal"><span class="pre">mechanism_3</span></code>:</p>
+<p><em>Stand-alone Projection specification:</em>  In this <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, <code class="docutils literal"><span class="pre">projection_A</span></code> is explicilty specified as a Projection
+between <code class="docutils literal"><span class="pre">mechanism_1</span></code> and <code class="docutils literal"><span class="pre">mechanism_2</span></code>, and so will be used as the Projection between them in <code class="docutils literal"><span class="pre">my_process</span></code>;
+a default Projection will be created between <code class="docutils literal"><span class="pre">mechanism_2</span></code> and <code class="docutils literal"><span class="pre">mechanism_3</span></code>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">projection_A</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">mechanism_2</span><span class="p">)</span>
 <span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
@@ -453,10 +453,10 @@ to the arguments in the call to <a class="reference internal" href="#Process.pro
 will be named by using the Process&#8217; <a class="reference internal" href="#Process.Process_Base.componentType" title="Process.Process_Base.componentType"><code class="xref any py py-attr docutils literal"><span class="pre">componentType</span></code></a> attribute as the base and
 adding an indexed suffix: componentType-n.</li>
 <li><strong>default_input_value</strong> (<em>List[values] or ndarray :  default default input value of ORIGIN Mechanism</em>) &#8211; the input to the Process used if none is provided in a call to the <a class="reference internal" href="#Process.Process_Base.execute" title="Process.Process_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method. This must be the same length as the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism&#8217;s input.</li>
-<li><strong>pathway</strong> (<em>List[Mechanism spec[, projection spec], Mechanism spec...] : default List[DefaultMechanism]</em>) &#8211; the set of Mechanisms and projections between them to execute when the Process is executed.  Each Mechanism
+<li><strong>pathway</strong> (<em>List[Mechanism spec[, Projection spec], Mechanism spec...] : default List[DefaultMechanism]</em>) &#8211; the set of Mechanisms and projections between them to execute when the Process is executed.  Each Mechanism
 must a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>.  The specification for each can be an instance,
 a class name (creates a default instance), or a <a class="reference internal" href="Mechanism.html#mechanism-creation"><span class="std std-ref">specification dictionary</span></a>.  Each
-projection must be a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>. The specification for each can be the class name (creates a
+Projection must be a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>. The specification for each can be the class name (creates a
 default instance), an instance, or a <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">specification dictionary</span></a>.</li>
 <li><strong>initial_values</strong> (<em>Optional[Dict[Mechanism, param value]] : default None</em>) &#8211; a dictionary of values used to initialize the specified Mechanisms. The key for each entry must be a Mechanism
 object, and the value must be a number, list or np.array that must be compatible with the format of
@@ -478,7 +478,7 @@ in a round of executions.</li>
 </li>
 <li><strong>default_projection_matrix</strong> (<em>keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,</em>) &#8211; the type of matrix used for default projections (see <a class="reference internal" href="Function.html#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>).</li>
 <li><strong>learning</strong> (<em>Optional[LearningProjection spec]</em>) &#8211; implements <code class="xref any docutils literal"><span class="pre">learning</span></code> for all eligible projections in the Process.</li>
-<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all Mechanisms in the Process (see <a class="reference internal" href="System.html#System.System_Base.learning_rate" title="System.System_Base.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
+<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all Mechanisms in the Process (see <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.learning_rate" title="ModulatoryProjections.LearningProjection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
 information).</li>
 <li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; the value assigned as the TARGET input for the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to which the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of the
 Process projects (and assigned as its <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism; used for <a class="reference internal" href="#process-learning"><span class="std std-ref">learning</span></a>).
@@ -520,24 +520,24 @@ They should be instantiated using the <a class="reference internal" href="#Proce
 <dl class="attribute">
 <dt id="Process.Process_Base.pathway">
 <code class="descname">pathway</code><a class="headerlink" href="#Process.Process_Base.pathway" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[(Mechanism, dict, int), (projection, LearningProjection spec, None), (Mechanism, dict, int)...]</em> &#8211; specifies the list of Mechanisms that are executed (in the order specified) when the Process executes.
+<dd><p><em>List[(Mechanism, dict, int), (Projection, LearningProjection spec, None), (Mechanism, dict, int)...]</em> &#8211; specifies the list of Mechanisms that are executed (in the order specified) when the Process executes.
 Entries are alternating tuples specifying Mechanisms and projections.  For Mechanism tuples, the dict specifies
 a set of <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime parameters</span></a> to use for execution of the Mechanism,
 and the int specifies the <a class="reference internal" href="System.html#system-execution-phase"><span class="std std-ref">phase</span></a> in which the Mechanism should be executed when the
-Process to which it belongs is executed by a System. For projection tuples, the LearningProjection
+Process to which it belongs is executed by a System. For Projection tuples, the LearningProjection
 specification can be a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> object, the class or the <code class="xref any docutils literal"><span class="pre">LEARNING_PROJECTION</span></code> keyword (which
 specifies a default instance) or the constructor for a LearningProjection (including parameters).  The second
-and third items of Mechanism tuples, and the second item of projection tuples are optional and therefore may
-be <code class="xref any docutils literal"><span class="pre">None</span></code>. The third item of projection tuples is currently not used and is always <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
+and third items of Mechanism tuples, and the second item of Projection tuples are optional and therefore may
+be <code class="xref any docutils literal"><span class="pre">None</span></code>. The third item of Projection tuples is currently not used and is always <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The value of this attribute is constructed from the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> argument of the <a class="reference internal" href="#Process.process" title="Process.process"><code class="xref py py-func docutils literal"><span class="pre">process()</span></code></a>
 function, the entries of which do not necessarily have to have all items in a tuple, or even be in tuple
 form.  All entries of the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> argument are converted to tuples when assigned to the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>
-attribute.  Entries that are not tuples must be a Mechanism or projection.  For tuple entries,
-the first item must be a Mechanism or projection;  the second is optional, and <code class="xref any docutils literal"><span class="pre">None</span></code> is entered for
+attribute.  Entries that are not tuples must be a Mechanism or Projection.  For tuple entries,
+the first item must be a Mechanism or Projection;  the second is optional, and <code class="xref any docutils literal"><span class="pre">None</span></code> is entered for
 missing values; the third item is optional for Mechanism tuples (0 is the default) and is currently
-ignored for projection tuples (and assigned <code class="xref any docutils literal"><span class="pre">None</span></code>, as it is not currently in use).</p>
+ignored for Projection tuples (and assigned <code class="xref any docutils literal"><span class="pre">None</span></code>, as it is not currently in use).</p>
 </div>
 </dd></dl>
 
@@ -654,7 +654,7 @@ methods that are also used for Systems.</p>
 <dl class="attribute">
 <dt id="Process.Process_Base.target_mechanisms">
 <code class="descname">target_mechanisms</code><a class="headerlink" href="#Process.Process_Base.target_mechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; a list with the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism (<code class="xref any docutils literal"><span class="pre">ComparatorMechanism</span></code>) of the Process.</p>
+<dd><p><em>MechanismList</em> &#8211; a list with the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism (<a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a>) of the Process.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">A Process can have only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism; the use of a list is for compatibility with
