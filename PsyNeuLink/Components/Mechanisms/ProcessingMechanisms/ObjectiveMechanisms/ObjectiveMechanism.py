@@ -225,7 +225,6 @@ Class Reference
 """
 
 from PsyNeuLink.Components.Functions.Function import LinearCombination
-# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import standard_output_states, PRIMARY_OUTPUT_STATE

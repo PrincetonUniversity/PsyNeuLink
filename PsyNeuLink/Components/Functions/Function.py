@@ -334,9 +334,12 @@ def get_param_value_for_keyword(owner, keyword):
     try:
         return owner.paramsCurrent[FUNCTION].keyword(owner, keyword)
     except FunctionError as e:
+        # assert(False)
         if owner.prefs.verbosePref:
             print("{} of {}".format(e, owner.name))
-        return None
+        # return None
+        else:
+            raise FunctionError(e)
     except AttributeError:
         if owner.prefs.verbosePref:
             print("Keyword ({}) not recognized for {}".format(keyword, owner.name))
@@ -2953,13 +2956,13 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     if specification is IDENTITY_MATRIX:
         if rows != cols:
-            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
+            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
         return np.identity(rows)
 
     if specification is HOLLOW_MATRIX:
         if rows != cols:
-            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
+            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
         return 1-np.identity(rows)
 

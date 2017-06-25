@@ -34,17 +34,77 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
 
-#region TEST Component Hierarchy
+#region USER GUIDE
+# from PsyNeuLink.Components.Process import process, Process_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+import numpy as np
 
-# print('TEST Component Hierarchy')
-# from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-# from PsyNeuLink.Components.Functions.Function import Linear
-# # P = Linear()
-# P = MappingProjection()
-# P.test_attribute
+# SIMPLE NN EXAMPLE:
 
-#endregion
+# input_layer = TransferMechanism(size=5)
+# hidden_layer = TransferMechanism(size=2, function=Logistic)
+# output_layer = TransferMechanism(size=5, function=Logistic)
+input_layer = TransferMechanism(default_input_value=[0,0,0,0,0])
+hidden_layer = TransferMechanism(default_input_value=[0,0], function=Logistic)
+output_layer = TransferMechanism(default_input_value=[0,0,0,0,0], function=Logistic)
+# my_process = process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
+my_process = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
 
+# my_system = system(processes=[my_process], targets=[0,0,0,0,0])
+my_system = system(processes=[my_process])
+my_system.show_graph(show_learning=True, direction='TB')
+# MappingProjection(sender=output_layer,
+#                   receiver=hidden_layer,
+#                   matrix=((.2 * np.random.rand(5, 2)) + -.1))
+# print(output_layer.execute([2,2,2,2,2]))
+
+# print(process.execute([2,2,2,2,2]))
+
+
+# # SIMPLE STROOP EXAMPLE:
+
+# VERSION 1
+# colors_input_layer = TransferMechanism(default_input_value=[0,0],
+#                                        function=Logistic,
+#                                        name='COLORS INPUT')
+# words_input_layer = TransferMechanism(default_input_value=[0,0],
+#                                        function=Logistic,
+#                                        name='WORDS INPUT')
+# output_layer = TransferMechanism(default_input_value=[0,0],
+#                                        function=Logistic,
+#                                        name='OUTPUT')
+# decision_mech = DDM(name='DECISION')
+# colors_process = process(pathway=[colors_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='COLOR PROCESS')
+# words_process = process(pathway=[words_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='WORD PROCESS')
+# decision_process = process(pathway=[output_layer, FULL_CONNECTIVITY_MATRIX, decision_mech], name='DECISION_PROCESS')
+# my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+#
+
+# VERSION 2:
+# differencing_weights = np.array([[1], [-1]])
+# colors_input_layer = TransferMechanism(default_input_value=[0,0], function=Logistic, name='COLORS INPUT')
+# words_input_layer = TransferMechanism(default_input_value=[0,0], function=Logistic, name='WORDS INPUT')
+# output_layer = TransferMechanism(default_input_value=[0], name='OUTPUT')
+# decision_mech = DDM(name='DECISION')
+# colors_process = process(pathway=[colors_input_layer, differencing_weights, output_layer],
+#                          target=[0],
+#                          name='COLOR PROCESS')
+# words_process = process(pathway=[words_input_layer, differencing_weights, output_layer],
+#                         target=[0],
+#                         name='WORD PROCESS')
+# decision_process = process(pathway=[output_layer, decision_mech],
+#                            name='DECISION PROCESS')
+# my_simple_Stroop = system(processes=[colors_process, words_process],
+#                           targets=[0])
+#
+# my_simple_Stroop.show_graph(direction='LR')
+# print(my_simple_Stroop.run(inputs=[-1, 1], targets=[-1, 1]))
+
+
+#f
 #region TEST whether function attribute assignment is used and "sticks"
 
 # my_mech = IntegratorMechanism()

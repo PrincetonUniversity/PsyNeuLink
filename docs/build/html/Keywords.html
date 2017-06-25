@@ -143,15 +143,15 @@
 <dd><dl class="attribute">
 <dt id="Keywords.Keywords.ORIGIN">
 <code class="descname">ORIGIN</code><a class="headerlink" href="#Keywords.Keywords.ORIGIN" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is the first mechanism of a process and/or system,
-and that receives the input to the process or system when it is <span class="xref std std-ref">executed or run</span>.  A process may
-have only one <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, but a system may have many.  Note that the <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a>
-mechanism of a process is not necessarily an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> of the system to which it belongs, as it may
-receive projections from other processes in the system. The <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms of a process or
-system are listed in its <code class="xref std std-keyword docutils literal"><span class="pre">originMechanisms</span></code> attribute, and can be displayed using its <code class="xref std std-keyword docutils literal"><span class="pre">show</span></code>
-method.  For additional details about <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms in processes, see
+<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is the first Mechanism of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a>,
+and that receives the input to the Process or System when it is <span class="xref std std-ref">executed or run</span>.  A Process may
+have only one <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism, but a System may have many.  Note that the <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a>
+Mechanism of a Process is not necessarily an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> of the System to which it belongs, as it may receiver
+<a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> from other Processes in the System. The <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms of a Process or
+System are listed in its <code class="xref std std-keyword docutils literal"><span class="pre">origin_mechanisms</span></code> attribute, and can be displayed using its <code class="xref std std-keyword docutils literal"><span class="pre">show</span></code>
+method.  For additional details about <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms in Processes, see
 <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Process Mechanisms</span></a> and <code class="xref any docutils literal"><span class="pre">Process</span> <span class="pre">Input</span> <span class="pre">and</span> <span class="pre">Output</span></code>;
-and for systems see <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">System Mechanisms</span></a> and
+and for Systems see <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">System Mechanisms</span></a> and
 <a class="reference internal" href="System.html#system-execution-input-and-initialization"><span class="std std-ref">System Input and Initialization</span></a>.</p>
 </dd></dl>
 
@@ -164,8 +164,8 @@ and for systems see <a class="reference internal" href="System.html#system-mecha
 <dl class="attribute">
 <dt id="Keywords.Keywords.CYCLE">
 <code class="descname">CYCLE</code><a class="headerlink" href="#Keywords.Keywords.CYCLE" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is <em>not</em> an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and receives a projection
-that closes a recurrent loop in a process and/or system.  If it is an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, then it is simply
+<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is <em>not</em> an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism, and receives a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>
+that closes a recurrent loop in a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  If it is an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism, then it is simply
 designated as such (since it will be assigned input and therefore be initialized in any event).</p>
 </dd></dl>
 
@@ -173,9 +173,9 @@ designated as such (since it will be assigned input and therefore be initialized
 <dt id="Keywords.Keywords.INITIALIZE_CYCLE">
 <code class="descname">INITIALIZE_CYCLE</code><a class="headerlink" href="#Keywords.Keywords.INITIALIZE_CYCLE" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is the <code class="xref any docutils literal"><span class="pre">sender</span></code> of a
-projection that closes a loop in a process or system, and that is not an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism (since in that
-case it will be initialized in any event). An <code class="xref any docutils literal"><span class="pre">initial</span> <span class="pre">value</span></code> can be assigned to such
-mechanisms, that will be used to initialize the process or system when it is first run.  For additional
+<a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> that closes a loop in a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a>, and that is not an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism (since in
+that case it will be initialized in any event). An <code class="xref any docutils literal"><span class="pre">initial</span> <span class="pre">value</span></code> can be assigned to such
+Mechanisms, that will be used to initialize the Process or System when it is first run.  For additional
 information, see <a class="reference internal" href="Run.html#run-initial-values"><span class="std std-ref">Run</span></a>, <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">System Mechanisms</span></a> and
 <a class="reference internal" href="System.html#system-execution-input-and-initialization"><span class="std std-ref">System Input and Initialization</span></a>.</p>
 </dd></dl>
@@ -183,8 +183,8 @@ information, see <a class="reference internal" href="Run.html#run-initial-values
 <dl class="attribute">
 <dt id="Keywords.Keywords.TERMINAL">
 <code class="descname">TERMINAL</code><a class="headerlink" href="#Keywords.Keywords.TERMINAL" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is the last mechanism of a process and/or system, and
-that provides the output to the process or system when it is <a class="reference internal" href="Run.html"><span class="doc">executed or run</span></a>.  A process may
+<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is the last Mechanism of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a>, and
+that provides the output to the Process or System when it is <a class="reference internal" href="Run.html"><span class="doc">executed or run</span></a>.  A Process may
 have only one <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism, but a system may have many.  Note that the <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>
 mechanism of a process is not necessarily a <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of the system to which it belongs,
 as it may send projections to other processes in the system.  The <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms of a process
@@ -196,27 +196,24 @@ or system are listed in its <code class="xref std std-keyword docutils literal">
 <dl class="attribute">
 <dt id="Keywords.Keywords.SINGLETON">
 <code class="descname">SINGLETON</code><a class="headerlink" href="#Keywords.Keywords.SINGLETON" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a> that is the only mechanism in a process and/or system.  It can serve the functions
-of an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and/or a <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism.</p>
+<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a> that is the only Mechanism in a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  It can serve the
+functions of an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and/or a <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="Keywords.Keywords.MONITORING">
-<code class="descname">MONITORING</code><a class="headerlink" href="#Keywords.Keywords.MONITORING" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code> configured for learning that is not a <a class="reference internal" href="#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>; that is, it
-is associated with an <a class="reference internal" href="#Keywords.Keywords.INTERNAL" title="Keywords.Keywords.INTERNAL"><code class="xref any py py-attr docutils literal"><span class="pre">INTERNAL</span></code></a> rather than a <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> ProcessingMechanism in the process and/or system to
-which it belongs. For <a class="reference internal" href="Function.html#Function.BackPropagation" title="Function.BackPropagation"><code class="xref any py py-class docutils literal"><span class="pre">backpropagation</span></code></a> learning, it is a <code class="xref any docutils literal"><span class="pre">WeightedErrorMechanism</span></code>.
-See <a href="#id1"><span class="problematic" id="id2">`</span></a>MonitoringMechanisms &lt;LearningProjection_MonitoringMechanism&gt; for additional details.</p>
+<dt id="Keywords.Keywords.LEARNING">
+<code class="descname">LEARNING</code><a class="headerlink" href="#Keywords.Keywords.LEARNING" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> in a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Keywords.Keywords.TARGET">
 <code class="descname">TARGET</code><a class="headerlink" href="#Keywords.Keywords.TARGET" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> of a process and/or system configured for learning that receives a target value from
-its <code class="xref any docutils literal"><span class="pre">execute</span></code> or
+<dd><p>A <code class="xref any docutils literal"><span class="pre">ComparatorMechanism</span></code> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a> configured for learning that receives a target value
+from its <code class="xref any docutils literal"><span class="pre">execute</span></code> or
 <code class="xref any docutils literal"><span class="pre">run</span></code> method.  It must be associated with the <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>
-mechanism of the process or system. The <a class="reference internal" href="#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanisms of a process or system are listed in its
-<code class="xref std std-keyword docutils literal"><span class="pre">targetMechanisms</span></code> attribute, and can be displayed using its <code class="xref std std-keyword docutils literal"><span class="pre">show</span></code> method.  For additional
+Mechanism of the Process or System. The <a class="reference internal" href="#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms of a Process or System are listed in its
+<code class="xref std std-keyword docutils literal"><span class="pre">target_mechanisms</span></code> attribute, and can be displayed using its <code class="xref std std-keyword docutils literal"><span class="pre">show</span></code> method.  For additional
 details, see <code class="xref any docutils literal"><span class="pre">TARGET</span> <span class="pre">mechanisms</span></code> and specifying <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">target values</span></a>.</p>
 </dd></dl>
 

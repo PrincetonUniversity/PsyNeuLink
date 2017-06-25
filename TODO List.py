@@ -936,7 +936,7 @@
 #                    FOR ARGUMENTS OF __init__ , THERE IS USUALLY AN ATTRIBUTE OF THE OBJECT THAT CAN BE ASSIGNED A
 #                    VALUE AFTER IT IS CREATED.  (PUT THIS WHEREVER PARAMS, PARAMSCURRENT, INSTANCE DEFAULTS ETC.
 #                    ARE DISCUSSED.
-# DOCUMENTATION: ControlMechanism -> controlMechanism or control mechanism (in appropriate places)
+# DOCUMENTATION: ControlMechanism -> control_mechanism or control mechanism (in appropriate places)
 # DOCUMENTATION: Call subclass -> "Constructor"
 
 #  DOCUMENTATION: Learning -> LearningProjection (name of doc)
@@ -1195,7 +1195,7 @@
 #
 # NEED FOR EVC MODEL:
 # - Sequential adjust effects:
-#   "Reactive":  simple controlMechanism that maps input values into ControlProjection intensities
+#   "Reactive":  simple ControlMechanism that maps input values into ControlProjection intensities
 #   "Simple Exhaustive Search": find optimal policy for stimulus/reward values
 #   "Feature-based model learning" (Falk & Tom)
 #   "Exhaustive Search + learning":
@@ -2360,7 +2360,7 @@
 #                                or wherever matching referenced in Process actually gets done
 # FIX: Deploy _is_mechanism_spec in validation contexts generally
 #
-# CONFIRM: Assignment of processInputStates when mechanism belongs to more than one process
+# CONFIRM: Assignment of process_input_states when mechanism belongs to more than one process
 # TEST (line 1442):
     # if params:
     #     projection.matrix = params
