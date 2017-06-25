@@ -119,7 +119,7 @@ def _is_learning_spec(spec):
     Otherwise, return `False`
 
     """
-    if spec is LEARNING:
+    if spec in {LEARNING, ENABLED}:
         return True
     else:
         return _is_projection_spec(spec)
@@ -362,7 +362,7 @@ class LearningProjection(ModulatoryProjection_Base):
                 sender = self.sender = sender.learning_signals[0]
 
             if any(s in {OutputState, LearningMechanism} for s in {sender, type(sender)}):
-                # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
+                # If it is the outputState of a LearningMechanism, check that it is a list or 1D np.array
                 if isinstance(sender, OutputState):
                     if not isinstance(sender.value, (list, np.ndarray)):
                         raise LearningProjectionError("Sender for \'{}\' (outputState of LearningMechanism \'{}\') "

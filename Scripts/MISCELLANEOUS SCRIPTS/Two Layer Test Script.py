@@ -55,7 +55,7 @@ def show_target():
         t = composition.target
     elif COMPOSITION is SYSTEM:
         i = composition.input
-        t = composition.targetInputStates[0].value
+        t = composition.target_input_states[0].value
     print ('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
 
 

@@ -14,30 +14,30 @@ Overview
 --------
 
 A State provides an interface to one or more `projections <Projection>`, and receives the `value(s) <Projection>`
-provide by them.  The value of a state can be modulated by a `ModulatoryProjection`. There are three primary types of
-states, all of which are used by `Mechanisms <Mechanism>`, one of which is used by
+provide by them.  The value of a State can be modulated by a `ModulatoryProjection`. There are three primary types of
+States, all of which are used by `Mechanisms <Mechanism>`, one of which is used by
 `MappingProjections <MappingProjection>`, and all of which are subject to modulation by
 `ModulatorySignals <ModulatorySignal>`, as summarized below:
 
 * `InputState`:
-    used by a mechanism to receive input from `MappingProjections <MappingProjection>`;
+    used by a Mechanism to receive input from `MappingProjections <MappingProjection>`;
     its value can be modulated by a `GatingSignal`.
 
 * `ParameterState`:
-    * used by a mechanism to represent the value of one of its parameters, or a parameter of its
+    * used by a Mechanism to represent the value of one of its parameters, or a parameter of its
       `function <Mechanism.function>`, that can be modulated by a `ControlSignal`;
     * used by a `MappingProjection` to represent the value of its `matrix <MappingProjection.MappingProjection.matrix>`
       parameter, that can be modulated by a `LearningSignal`.
 
 * `OutputState`:
-    used by a mechanism to send its value to any efferent projections.  For
+    used by a Mechanism to send its value to any efferent projections.  For
     `ProcessingMechanisms <ProcessingMechanism>` these are `PathwayProjections <PathwayProjection>`, most commonly
     `MappingProjection <MappingProjection>`.  For `ModulatoryMechanisms <ModulatoryMechanism>`, these
     `ModulatoryProjectios <ModulatoryProjection>` as described below. The `value <OutputState.value> of an
     OutputState can be modulated by a `GatingSignal`.
 
 * `ModulatorySignal`:
-    used by an `AdaptiveMechanism` to modulate the value of the primary types of states listed above.
+    used by an `AdaptiveMechanism` to modulate the value of the primary types of States listed above.
     There are three types of ModulatorySignals:
     * `LearningSignal`, used by a `LearningMechanism` to modulate the *MATRIX* ParameterState of a `MappingProjection`;
     * `ControlSignal`, used by a `ControlMechanism` to modulate the `ParameterState` of a `Mechanism`;
@@ -51,40 +51,40 @@ Creating a State
 ----------------
 
 States can be created using the constructor for one of the subclasses.  However, in general, they are created
-automatically by the objects to which they belong, or by specifying the state in the constructor for the object
+automatically by the objects to which they belong, or by specifying the State in the constructor for the object
 to which it belongs.  For example, `InputStates <InputState>` and `OutputStates <OutputStates>` can be specified,
 in the **input_states** and **output_states** arguments, respectively, of the constructor for a `Mechanism`;
 and a `ParameterState` can be specified in the argument of the constructor for a function of a Mechanism or Projection,
-where its parameters are specified.  A state can be specified in those cases in any of the following forms:
+where its parameters are specified.  A State can be specified in those cases in any of the following forms:
 
     * an existing **State** object;
     ..
-    * the name of a **state subclass** (`InputState`, `ParmeterState`, or `OutputState` - a default state of the
-      corresponding type will be created, using a default value for the state that is determined by the context
+    * the name of a **State subclass** (`InputState`, `ParmeterState`, or `OutputState` - a default State of the
+      corresponding type will be created, using a default value for the State that is determined by the context
       in which it is specified.
     ..
     * a **value**.  This creates a default State using the specified value as its default `value <State.value>`.
     ..
-    * a **state specification dictionary**; every state specification can contain the following *KEY*:<value>
-      entries, in addition to those specific to a particular state subtype (see subtype documentation):
+    * a **State specification dictionary**; every State specification can contain the following *KEY*:<value>
+      entries, in addition to those specific to a particular State subtype (see subtype documentation):
       ..
-      * *NAME*:<str> - the string is used as the name of the state;
+      * *NAME*:<str> - the string is used as the name of the State;
       ..
-      * *VALUE*:<value> - the value is used as the default value of the state;
+      * *VALUE*:<value> - the value is used as the default value of the State;
       COMMENT:
           ..
           * *PROJECTIONS*:<List> - the list must contain specifications for one or more
-            `projections <Projection_In_Context_Specification> to or from the state,
-            depending the type of state and the context in which it is specified;
+            `projections <Projection_In_Context_Specification> to or from the State,
+            depending the type of State and the context in which it is specified;
       COMMENT
       ..
-      * *str*:<List> - the key is used as the name of the state, and the list must contain specifications for
-        one or more `projections <Projection_In_Context_Specification>` to or from the state,
-        depending on the type of state and the context in which it is specified;
+      * *str*:<List> - the key is used as the name of the State, and the list must contain specifications for
+        one or more `projections <Projection_In_Context_Specification>` to or from the State,
+        depending on the type of State and the context in which it is specified;
         ..
-    * a **2-item tuple** - the first item must be a value, used as the default value for the state,
+    * a **2-item tuple** - the first item must be a value, used as the default value for the State,
       and the second item must be a specification for a `projection <Projection_In_Context_Specification>`
-      to or from the state, depending on the type of state and the context in which it is specified;
+      to or from the State, depending on the type of State and the context in which it is specified;
 
 COMMENT:
 *** EXAMPLES HERE
@@ -101,10 +101,10 @@ components, a State has the three following core attributes:
     * `variable <State.variable>`:  for an `InputState` and `ParameterState`,
       the value of this is determined by the  value(s) of the projection(s) that it receives (and that are listed in
       its `path_afferents <State.path_afferents>` attribute).  For an `OutputState`, it is the item of the owner
-      mechanism's `value <Mechanism.value>` to which the OutputState is assigned (specified by the OutputState's
+      Mechanism's `value <Mechanism.value>` to which the OutputState is assigned (specified by the OutputState's
       `index <OutputState_Index>` attribute.
     ..
-    * `function <State.function>`:  for an `InputState` this aggregates the values of the projections that the state
+    * `function <State.function>`:  for an `InputState` this aggregates the values of the projections that the State
       receives (the default is `LinearCombination` that sums the values), under the potential influence of a
       `GatingSignal`;  for a `ParameterState`, it determines the value of the associated parameter, under the
       potential influence of a `ControlSignal` (for a `Mechanism`) or a `LearningSignal` (for a `MappingProjection`);
@@ -156,7 +156,7 @@ ModulatorySignal is used as the State's `value <State.value>`. Finally, the Stat
 `function <State.function>` to determine its `value <State.value>`.
 
 .. note::
-   The change in the value of a `State` does not occur until the Mechanism to which the state belongs is next
+   The change in the value of a `State` does not occur until the Mechanism to which the State belongs is next
    executed; This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for an explanation
    of "lazy" updating).
 
@@ -193,8 +193,8 @@ def _is_state_type (spec):
         return True
     return False
 
-# Note:  This is created only for assignment of default projection types for each state subclass (see .__init__.py)
-#        Individual stateRegistries (used for naming) are created for each mechanism
+# Note:  This is created only for assignment of default projection types for each State subclass (see .__init__.py)
+#        Individual stateRegistries (used for naming) are created for each Mechanism
 StateRegistry = {}
 
 class StateError(Exception):
@@ -211,7 +211,7 @@ class StateError(Exception):
 #
 #        If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (ParameterState)
 #         If called with a name string:
-#             - if registered in owner mechanism's state_registry as name of a subclass, instantiates that class
+#             - if registered in owner Mechanism's state_registry as name of a subclass, instantiates that class
 #             - otherwise, uses it as the name for an instantiation of the default subclass, and instantiates that
 #         If a params dictionary is included, it is passed to the subclass
 #
@@ -221,7 +221,7 @@ class StateError(Exception):
 #         """
 #
 #         # Call to instantiate a particular subclass, so look up in MechanismRegistry
-#         if name in mechanism's _stateRegistry:
+#         if name in Mechanism's _stateRegistry:
 #             return _stateRegistry[name].mechanismSubclass(params)
 #         # Name is not in MechanismRegistry or is not provided, so instantiate default subclass
 #         else:
@@ -245,18 +245,18 @@ class State_Base(State):
     .. note::
        States should NEVER be instantiated by a direct call to the base class.
        They should be instantiated by calling the constructor for the desired subclass,
-       or using other methods for specifying a state (see :ref:`State_Creation`).
+       or using other methods for specifying a State (see :ref:`State_Creation`).
 
     COMMENT:
         Description
         -----------
-            Represents and updates the state of an input, output or parameter of a mechanism
+            Represents and updates the value of the input, output or parameter of a Mechanism
                 - receives inputs from projections (self.path_afferents, STATE_PROJECTIONS)
                 - input_states and parameterStates: combines inputs from all projections (mapping, control or learning)
                     and uses this as variable of function to update the value attribute
-                - outputStates: represent values of output of function
+                - output_states: represent values of output of function
             Value attribute:
-                 - is updated by the execute method (which calls state's function)
+                 - is updated by the execute method (which calls State's function)
                  - can be used as sender (input) to one or more projections
                  - can be accessed by KVO
             Constraints:
@@ -271,11 +271,11 @@ class State_Base(State):
                         + FUNCTION_PARAMS (optional)
                         + PROJECTION_TYPE - specifies type of projection to use for instantiation of default subclass
                 Standard subclasses and constraints:
-                    InputState - used as input state for Mechanism;  additional constraint:
+                    InputState - used as input State for Mechanism;  additional constraint:
                         - value must be compatible with variable of owner's function method
-                    OutputState - used as output state for Mechanism;  additional constraint:
+                    OutputState - used as output State for Mechanism;  additional constraint:
                         - value must be compatible with the output of the owner's function
-                    MechanismsParameterState - used as state for Mechanism parameter;  additional constraint:
+                    MechanismsParameterState - used as State for Mechanism parameter;  additional constraint:
                         - output of function must be compatible with the parameter's value
 
         Class attributes
@@ -304,20 +304,20 @@ class State_Base(State):
 
         StateRegistry
         -------------
-            Used by .__init__.py to assign default projection types to each state subclass
+            Used by .__init__.py to assign default projection types to each State subclass
             Note:
-            * All states that belong to a given owner are registered in the owner's _stateRegistry,
-                which maintains a dict for each state type that it uses, a count for all instances of that type,
+            * All States that belong to a given owner are registered in the owner's _stateRegistry,
+                which maintains a dict for each State type that it uses, a count for all instances of that type,
                 and a dictionary of those instances;  NONE of these are registered in the StateRegistry
-                This is so that the same name can be used for instances of a state type by different owners
+                This is so that the same name can be used for instances of a State type by different owners
                     without adding index suffixes for that name across owners,
                     while still indexing multiple uses of the same base name within an owner
 
         Arguments
         ---------
         - value (value) - establishes type of value attribute and initializes it (default: [0])
-        - owner(Mechanism) - assigns state to mechanism (default: NotImplemented)
-        - params (dict):  (if absent, default state is implemented)
+        - owner(Mechanism) - assigns State to Mechanism (default: NotImplemented)
+        - params (dict):  (if absent, default State is implemented)
             + FUNCTION (method)         |  Implemented in subclasses; used in update()
             + FUNCTION_PARAMS (dict) |
             + STATE_PROJECTIONS:<projection specification or list of ones>
@@ -343,10 +343,10 @@ class State_Base(State):
     ----------
 
     owner : Mechanism or Projection
-        object to which the state belongs.
+        object to which the State belongs.
 
     base_value : number, list or np.ndarray
-        value with which the state was initialized.
+        value with which the State was initialized.
     
     all_afferents : Optional[List[Projection]]
         list of all Projections received by the State (i.e., for which it is a `receiver <Projection.receiver>`.
@@ -363,27 +363,27 @@ class State_Base(State):
         (note:  only `OutputStates <OutputState> have efferents;  the list is empty for other types of States).
 
     function : TransferFunction : default determined by type
-        used to determine the state's own value from the value of the projection(s) it receives;  the parameters that 
+        used to determine the State's own value from the value of the projection(s) it receives;  the parameters that
         the TrasnferFunction identifies as ADDITIVE and MULTIPLICATIVE are subject to modulation by a 
         `ModualtoryProjection <ModulatoryProjection_Structure>`. 
 
     value : number, list or np.ndarray
-        current value of the state (updated by `update <State.update>` method).
+        current value of the State (updated by `update <State.update>` method).
 
     name : str : default <State subclass>-<index>
-        the name of the state.
-        Specified in the **name** argument of the constructor for the state;  if not is specified,
-        a default is assigned by StateRegistry based on the states's subclass
+        the name of the State.
+        Specified in the **name** argument of the constructor for the State;  if not is specified,
+        a default is assigned by StateRegistry based on the States's subclass
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
-            Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
-            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
-            mechanism: states within a mechanism with the same base name are appended an index in the order of their
+            Unlike other PsyNeuLink Components, States names are "scoped" within a Mechanism, meaning that States with
+            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
+            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation).
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the state.
+        the `PreferenceSet` for the State.
         Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -420,17 +420,17 @@ class State_Base(State):
                  prefs=None,
                  context=None,
                  **kargs):
-        """Initialize subclass that computes and represents the value of a particular state of a mechanism
+        """Initialize subclass that computes and represents the value of a particular State of a Mechanism
 
-        This is used by subclasses to implement the inputState(s), outputState(s), and parameterState(s) of a Mechanism.
+        This is used by subclasses to implement the InputState(s), OutputState(s), and ParameterState(s) of a Mechanism.
 
         Arguments:
             - owner (Mechanism):
-                 mechanism with which state is associated (default: NotImplemented)
+                 Mechanism with which State is associated (default: NotImplemented)
                  this argument is required, as can't instantiate a State without an owning Mechanism
-            - variable (value): value of the state:
+            - variable (value): value of the State:
                 must be list or tuple of numbers, or a number (in which case it will be converted to a single-item list)
-                must match input and output of state's update function, and any sending or receiving projections
+                must match input and output of State's update function, and any sending or receiving projections
             - params (dict):
                 + if absent, implements default State determined by PROJECTION_TYPE param
                 + if dict, can have the following entries:
@@ -439,7 +439,7 @@ class State_Base(State):
                         if dict, must contain entries specifying a projection:
                             + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
                             + PROJECTION_PARAMS:<dict> - must be dict of params for PROJECTION_TYPE
-            - name (str): string with name of state (default: name of owner + suffix + instanceIndex)
+            - name (str): string with name of State (default: name of owner + suffix + instanceIndex)
             - prefs (dict): dictionary containing system preferences (default: Prefs.DEFAULTS)
             - context (str)
             - **kargs (dict): dictionary of arguments using the following keywords for each of the above kargs:
@@ -497,11 +497,11 @@ class State_Base(State):
         # if isinstance(owner, (Mechanism, Projection)):
         #     self.owner = owner
         # else:
-        #     raise StateError("\'owner\' argument ({0}) for {1} must be a mechanism or projection".
+        #     raise StateError("\'owner\' argument ({0}) for {1} must be a Mechanism or projection".
         #                               format(owner, name))
         self.owner = owner
 
-        # Register state with StateRegistry of owner (mechanism to which the state is being assigned)
+        # Register State with StateRegistry of owner (Mechanism to which the State is being assigned)
         register_category(entry=self,
                           base_class=State_Base,
                           name=name,
@@ -617,16 +617,16 @@ class State_Base(State):
         """
 
         var_is_matrix = False
-        # If variable is a matrix (e.g., for the MATRIX parameterState of a MappingProjection),
+        # If variable is a matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
         #     it needs to be embedded in a list so that it is properly handled by LinearCombination
         #     (i.e., solo matrix is returned intact, rather than treated as arrays to be combined);
         # Notes:
-        #     * this is not a problem when LinearCombination is called in state.update(), since that puts
+        #     * this is not a problem when LinearCombination is called in State.update(), since that puts
         #         projection values in a list before calling LinearCombination to combine them
         #     * it is removed from the list below, after calling _instantiate_function
         # FIX: UPDATE WITH MODULATION_MODS REMOVE THE FOLLOWING COMMENT:
         #     * no change is made to PARAMETER_MODULATION_FUNCTION here (matrices may be multiplied or added)
-        #         (that is handled by the individual state subclasses (e.g., ADD is enforced for MATRIX parameterState)
+        #         (that is handled by the individual State subclasses (e.g., ADD is enforced for MATRIX ParameterState)
         if ((inspect.isclass(self.function) and issubclass(self.function, LinearCombination) or
                  isinstance(self.function, LinearCombination)) and
                 (isinstance(self.variable, np.matrix) or
@@ -656,7 +656,7 @@ class State_Base(State):
                                              self.variable))
 
     def _instantiate_projections_to_state(self, projections, context=None):
-        """Instantiate projections to a state and assign them to self.path_afferents
+        """Instantiate projections to a State and assign them to self.path_afferents
 
         For each spec in projections arg, check that it is one or a list of any of the following:
         + Projection class (or keyword string constant for one):
@@ -893,7 +893,7 @@ class State_Base(State):
             #    variable of the State to which it projects;  if it is not, raise exception:
             # The buck stops here; can't modify projection's function to accommodate the State,
             #    or there would be an unmanageable regress of reassigning projections,
-            #    requiring reassignment or modification of sender outputStates, etc.
+            #    requiring reassignment or modification of sender OutputStates, etc.
 
             # Initialization of projection is deferred
             if projection_spec.value is DEFERRED_INITIALIZATION:
@@ -922,7 +922,7 @@ class State_Base(State):
                         self.mod_afferents.append(projection_spec)
                     continue
             # Otherwise:
-            #    - check that projection's value is compatible with the state's variable
+            #    - check that projection's value is compatible with the State's variable
             #    - assign projection to path_afferents
             else:
                 if iscompatible(self.variable, projection_spec.value):
@@ -942,7 +942,7 @@ class State_Base(State):
                                     self.value))
 
     def _instantiate_projection_from_state(self, projection_spec, receiver, context=None):
-        """Instantiate outgoing projection from a state and assign it to self.efferents
+        """Instantiate outgoing projection from a State and assign it to self.efferents
 
         Check that projection_spec is one of the following:
         + Projection class (or keyword string constant for one):
@@ -990,7 +990,7 @@ class State_Base(State):
         from PsyNeuLink.Components.States.InputState import InputState
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         if not isinstance(receiver, (InputState, ParameterState)):
-            raise StateError("Receiver {} of {} from {} must be an inputState or parameterState".
+            raise StateError("Receiver {} of {} from {} must be an InputState or ParameterState".
                              format(receiver, projection_spec, self.name))
 
         # INSTANTIATE PROJECTION_SPEC
@@ -1291,7 +1291,7 @@ class State_Base(State):
     """
 
         # SET UP -------------------------------------------------------------------------------------------------------
-        # Get state-specific param_specs
+        # Get State-specific param_specs
         try:
             # Get State params
             self.stateParams = params[self.paramsType]
@@ -1441,9 +1441,9 @@ class State_Base(State):
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
 
-        # For each modulated parameter of the state's function, 
+        # For each modulated parameter of the State's function,
         #    combine any values received from the relevant projections into a single modulation value
-        #    and assign that to the relevant entry in the params dict for the state's function.
+        #    and assign that to the relevant entry in the params dict for the State's function.
         for mod_param, value_list in self._mod_proj_values.items():
             if value_list:
                 aggregated_mod_val = mod_param.reduce(value_list)
@@ -1521,11 +1521,11 @@ class State_Base(State):
 def _instantiate_state_list(owner,
                            state_list,              # list of State specs, (state_spec, params) tuples, or None
                            state_type,              # StateType subclass
-                           state_param_identifier,  # used to specify state_type state(s) in params[]
-                           constraint_value,       # value(s) used as default for state and to check compatibility
+                           state_param_identifier,  # used to specify state_type State(s) in params[]
+                           constraint_value,       # value(s) used as default for State and to check compatibility
                            constraint_value_name,  # name of constraint_value type (e.g. variable, output...)
                            context=None):
-    """Instantiate and return a ContentAddressableList of states specified in state_list
+    """Instantiate and return a ContentAddressableList of States specified in state_list
 
     Arguments:
     - state_type (class): State class to be instantiated
@@ -1536,12 +1536,12 @@ def _instantiate_state_list(owner,
                                  # ??CORRECT: (state_spec, params_dict) tuple  
                                      SHOULDN'T IT BE: (state_spec, projection) tuple?
                                  dict (key=name, value=constraint_value or param dict) 
-                         if None, instantiate a single default state using constraint_value as state_spec
-    - state_param_identifier (str): kw used to identify set of states in params;  must be one of:
+                         if None, instantiate a single default State using constraint_value as state_spec
+    - state_param_identifier (str): kw used to identify set of States in params;  must be one of:
         - INPUT_STATE
         - OUTPUT_STATE
     - constraint_value (2D np.array): set of 1D np.ndarrays used as default values and
-        for compatibility testing in instantiation of state(s):
+        for compatibility testing in instantiation of State(s):
         - INPUT_STATE: self.variable
         - OUTPUT_STATE: self.value
         ?? ** Note:
@@ -1558,22 +1558,22 @@ def _instantiate_state_list(owner,
         - a list:
             instantiate each item (if necessary) and place in a ContentAddressableList
     In each case, generate a ContentAddressableList with one or more entries, assigning:
-        # the key for each entry the name of the outputState if provided,
+        # the key for each entry the name of the OutputState if provided,
         #     otherwise, use MECHANISM<state_type>States-n (incrementing n for each additional entry)
-        # the state value for each entry to the corresponding item of the mechanism's state_type state's value
+        # the State value for each entry to the corresponding item of the Mechanism's state_type State's value
         # the dict to both self.<state_type>States and paramsCurrent[MECHANISM<state_type>States]
         # self.<state_type>State to self.<state_type>States[0] (the first entry of the dict)
     Notes:
-        * if there is only one state, but the value of the mechanism's state_type has more than one item:
-            assign it to the sole state, which is assumed to have a multi-item value
-        * if there is more than one state:
-            the number of states must match length of mechanisms state_type value or an exception is raised
+        * if there is only one State, but the value of the Mechanism's state_type has more than one item:
+            assign it to the sole State, which is assumed to have a multi-item value
+        * if there is more than one State:
+            the number of States must match length of Mechanisms state_type value or an exception is raised
     """
 
     state_entries = state_list
     # FIX: INSTANTIATE DICT SPEC BELOW FOR ENTRIES IN state_list
 
-    # If no states were passed in, instantiate a default state_type using constraint_value
+    # If no States were passed in, instantiate a default state_type using constraint_value
     if not state_entries:
         # assign constraint_value as single item in a list, to be used as state_spec below
         state_entries = constraint_value
@@ -1592,7 +1592,7 @@ def _instantiate_state_list(owner,
         # VALIDATE THAT NUMBER OF STATES IS COMPATIBLE WITH NUMBER OF CONSTRAINT VALUES
         num_states = len(state_entries)
 
-        # Check that constraint_value is an indexable object, the items of which are the constraints for each state
+        # Check that constraint_value is an indexable object, the items of which are the constraints for each State
         # Notes
         # * generally, this will be a list or an np.ndarray (either >= 2D np.array or with a dtype=object)
         # * for OutputStates, this should correspond to its value
@@ -1604,9 +1604,9 @@ def _instantiate_state_list(owner,
                                  " must be an indexable object (e.g., list or np.ndarray)".
                                  format(constraint_value, constraint_value_name, state_type.__name__))
 
-        # IMPLEMENTATION NOTE: NO LONGER VALID SINCE outputStates CAN NOW BE ONE TO MANY OR MANY TO ONE
+        # IMPLEMENTATION NOTE: NO LONGER VALID SINCE output_states CAN NOW BE ONE TO MANY OR MANY TO ONE
         #                      WITH RESPECT TO ITEMS OF constraint_value (I.E., owner.value)
-        # If number of states exceeds number of items in constraint_value, raise exception
+        # If number of States exceeds number of items in constraint_value, raise exception
         if num_states > num_constraint_items:
             raise StateError("There are too many {0} specified ({1}) in {2} "
                                  "for the number of values ({3}) in the {4} of its function".
@@ -1616,7 +1616,7 @@ def _instantiate_state_list(owner,
                                         num_constraint_items,
                                         constraint_value_name))
 
-        # If number of states is less than number of items in constraint_value, raise exception
+        # If number of States is less than number of items in constraint_value, raise exception
         elif num_states < num_constraint_items:
             raise StateError("There are fewer {0} specified ({1}) than the number of values ({2}) "
                                  "in the {3} of the function for {4}".
@@ -1634,13 +1634,13 @@ def _instantiate_state_list(owner,
         states = ContentAddressableList(component_type=State_Base,
                                         name=owner.name+' ContentAddressableList of ' + state_param_identifier)
 
-        # Instantiate state for entry in list or dict
+        # Instantiate State for entry in list or dict
         # Note: if state_entries is a list, state_spec is the item, and key is its index in the list
         for index, state_spec in state_entries if isinstance(state_entries, dict) else enumerate(state_entries):
             state_name = ""
 
             # State_entries is a dict, so use:
-            # - entry index as state's name
+            # - entry index as State's name
             # - entry value as state_spec
             if isinstance(index, str):
                 state_name = index
@@ -1669,7 +1669,7 @@ def _instantiate_state_list(owner,
                     state_params = None
 
                 # If state_spec is a string, then use:
-                # - string as the name for a default state
+                # - string as the name for a default State
                 # - index (index in list) to get corresponding value from constraint_value as state_spec
                 # - assign same item of constraint_value as the constraint
                 if isinstance(state_spec, str):
@@ -1701,12 +1701,12 @@ def _instantiate_state_list(owner,
                 # - use default name (which is incremented for each instance in register_categories)
                 # - use item as state_spec (i.e., assume it is a specification for a State)
                 #   Note:  still need to get indexed element of constraint_value,
-                #          since it was passed in as a 2D array (one for each state)
+                #          since it was passed in as a 2D array (one for each State)
                 else:
-                    # If only one state, don't add index suffix
+                    # If only one State, don't add index suffix
                     if num_states == 1:
                         state_name = 'Default_' + state_param_identifier[:-1]
-                    # Add incremented index suffix for each state name
+                    # Add incremented index suffix for each State name
                     else:
                         state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
                     # If it is an "exposed" number, make it a 1d np.array
@@ -1758,7 +1758,7 @@ def _instantiate_state(owner,                  # Object to which state will belo
         assign first item to state_spec
             if it is a string:
                 test if it is a keyword and get its value by calling keyword method of owner's execute method
-                otherwise, return None (suppress assignment of parameterState)
+                otherwise, return None (suppress assignment of ParameterState)
         assign second item to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
     + Projection object:
         assign constraint_value to value
@@ -1772,15 +1772,15 @@ def _instantiate_state(owner,                  # Object to which state will belo
         implement default using the value
     + str:
         test if it is a keyword and get its value by calling keyword method of owner's execute method
-        # otherwise, return None (suppress assignment of parameterState)
+        # otherwise, return None (suppress assignment of ParameterState)
         otherwise, implement default using the string as its name
     Check compatibility with constraint_value
     If any of the conditions above fail:
         a default State of specified type is instantiated using constraint_value as value
 
-    If state_params is specified, include as params arg with instantiation of state
+    If state_params is specified, include as params arg with instantiation of State
     
-    Returns a state or None
+    Returns a State or None
     """
 
     # IMPLEMENTATION NOTE: CONSIDER MOVING MUCH IF NOT ALL OF THIS TO State.__init__()
@@ -1949,10 +1949,10 @@ def _check_state_ownership(owner, param_name, mechanism_state):
             # mechanism_state = copy.deepcopy(mechanism_state)
             # MODIFIED 10/28/16 NEW:
             # if owner.verbosePref:
-                # warnings.warn("WARNING: at present, 'deepcopy' can be used to copy states, "
+                # warnings.warn("WARNING: at present, 'deepcopy' can be used to copy States, "
                 #               "so some components of {} might be missing".format(mechanism_state.name))
             print("WARNING: at present, 'deepcopy' can be used to copy states, "
-                  "so some components of {} assigned to {} might be missing".
+                  "so some Components of {} assigned to {} might be missing".
                   format(mechanism_state.name, append_type_to_name(owner)))
             mechanism_state = copy.copy(mechanism_state)
             # MODIFIED 10/28/16 END
@@ -1997,15 +1997,15 @@ def _parse_state_spec(owner,
                       params=None,
                       force_dict=False):
 
-    """Return either state object or state specification dict for state_spec
+    """Return either State object or State specification dict for state_spec
     
-    If state_spec is or resolves to a state object:
-        if force_dict is False:  return state object 
-        if force_dict is True: parse into state specification_dictionary 
+    If state_spec is or resolves to a State object:
+        if force_dict is False:  return State object
+        if force_dict is True: parse into State specification_dictionary
             (replacing any components with their id to avoid problems with deepcopy)   
-    Otherwise, return state specification dictionary using arguments provided as defaults
+    Otherwise, return State specification dictionary using arguments provided as defaults
     Warn if variable is assigned the default value, and verbosePref is set on owner.
-    **value** arg should generally be a constraint for the value of the state;  
+    **value** arg should generally be a constraint for the value of the State;
         if state_spec is a Projection, and method is being called from:
             InputState, value should be the projection's value; 
             ParameterState, value should be the projection's value; 
@@ -2165,7 +2165,7 @@ def _parse_state_spec(owner,
         # IMPLEMENTATION NOTE: Mechanism allowed in tuple to accomodate specification of param for ControlSignal
         if not (_is_projection_spec(state_spec[1]) or isinstance(state_spec[1], (Mechanism, State))):
             raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
-                             "for a mechanism, state, or projection".
+                             "for a Mechanism, State, or Projection".
                              format(state_type_name, owner.__class__.__name__, state_spec[1]))
         # Put projection spec from second item of tuple in params
         params = params or {}

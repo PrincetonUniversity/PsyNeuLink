@@ -352,7 +352,7 @@ processes converge on that mechanism), only one ObjectiveMechanism will be creat
        Therefore, Mechanism 3 is designated as an `INTERNAL` mechanism for the system, and Mechanism 4 is its `TERMINAL`
        mechanism. As a consequence, if `BackPropagation` is used for learning, then Mechanism 4 is an
        `ObjectiveMechanism` and designated as a `TARGET`, while Mechanism 3 is a LearningMechanism
-       and designated as a `MONITORING` mechanism.
+       and designated as a `LEARNING` mechanism.
 
 .. _LearningMechanism_Execution:
 

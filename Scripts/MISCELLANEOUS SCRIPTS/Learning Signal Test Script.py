@@ -51,9 +51,8 @@ z = process(name="TEST LEARNER",
                    REPORT_OUTPUT_PREF: True})
 
 
-# Learned_Weights.monitoringMechanism.target = [1,1]
-# Learned_Weights.monitoringMechanism.target = [0,0]
-# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import COMPARATOR_TARGET
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+#                                                                                   import COMPARATOR_TARGET
 # Learned_Weights.monitoringMechanism.paramsCurrent[COMPARATOR_TARGET] = [1,1]
 
 # z.execute(input=[-1, 30],
