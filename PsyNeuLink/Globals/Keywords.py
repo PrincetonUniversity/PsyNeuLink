@@ -190,6 +190,7 @@ SET_ATTRIBUTE = "SET ATTRIBUTE"
 kwParams = 'params'
 CHANGED = 'CHANGED'
 UNCHANGED = 'UNCHANGED'
+ENABLED = 'ENABLED'
 
 
 #endregion
@@ -408,7 +409,7 @@ PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
 SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
-LEARNING = 'learning'
+LEARNING = 'LEARNING'
 LEARNING_RATE = "learning_rate"
 CONTROL = 'control'
 GATING = 'gating'

@@ -119,7 +119,7 @@ def _is_learning_spec(spec):
     Otherwise, return `False`
 
     """
-    if spec is LEARNING:
+    if spec in {LEARNING, ENABLED}:
         return True
     else:
         return _is_projection_spec(spec)

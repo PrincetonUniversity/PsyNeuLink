@@ -150,13 +150,11 @@ creates a recurrent Projection from the ``output_layer`` back to the ``hidden_la
                       matrix=((.2 * np.random.rand(5, 2)) + -.1))
 
 Configuring more complex features is just as simple and flexible.  For example, the network above can be trained using
-backpropagation (the default) by simply adding a couple of lines to the constructor for the Process::
+backpropagation (the default) simply by adding an argument to the constructor for the Process::
 
-    my_encoder = process(pathway=[input_layer, hidden_layer, output_layer],
-                         learning=LEARNING,
-                         target=[0,0,0,0,0])
+    my_encoder = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
 
-and another when it is run, specifying the target for each trial (here five trials of inputs and targets are specified::
+and then specifying the target for each trial when it is run (here five trials of inputs and targets are specified)::
 
     my_encoder.run(input=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]],
                    target=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])

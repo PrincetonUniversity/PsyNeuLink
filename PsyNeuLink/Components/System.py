@@ -1798,8 +1798,17 @@ class System_Base(System):
             if not self.target_mechanisms:
                 raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no targetMechanisms".
                                   format(self.name))
-            raise SystemError("Learning has been specified for {} so its \'targets\' argument must also be specified".
-                              format(self.name))
+            # # MODIFIED 6/25/17 OLD:
+            # raise SystemError("Learning has been specified for {} so its \'targets\' argument must also be specified".
+            #                   format(self.name))
+            # MODIFIED 6/25/17 NEW:
+            # target arg was not specified in System's constructor,
+            #    so use the value of the TARGET InputState for the TARGET Mechanism(s) as the default
+            self.targets = [target.input_states[TARGET].value for target in self.target_mechanisms]
+            if self.verbosePref:
+                warnings.warn("Learning has been specified for {} but its \'targets\' argument was not specified;"
+                              "default will be used ({})".format(self.name, self.targets))
+            # MODIFIED 6/25/17 END
 
         self.targets = np.atleast_2d(self.targets)
 

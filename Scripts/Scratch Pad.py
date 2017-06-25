@@ -51,11 +51,11 @@ input_layer = TransferMechanism(default_input_value=[0,0,0,0,0])
 hidden_layer = TransferMechanism(default_input_value=[0,0], function=Logistic)
 output_layer = TransferMechanism(default_input_value=[0,0,0,0,0], function=Logistic)
 # my_process = process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
-my_process = process(pathway=[input_layer, hidden_layer, output_layer], learning=LEARNING)
+my_process = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
 
 # my_system = system(processes=[my_process], targets=[0,0,0,0,0])
 my_system = system(processes=[my_process])
-my_system.show_graph(show_learning=True)
+my_system.show_graph(show_learning=True, direction='TB')
 # MappingProjection(sender=output_layer,
 #                   receiver=hidden_layer,
 #                   matrix=((.2 * np.random.rand(5, 2)) + -.1))
@@ -104,10 +104,7 @@ my_system.show_graph(show_learning=True)
 # print(my_simple_Stroop.run(inputs=[-1, 1], targets=[-1, 1]))
 
 
-
-
-
-#endregion
+#f
 #region TEST whether function attribute assignment is used and "sticks"
 
 # my_mech = IntegratorMechanism()
