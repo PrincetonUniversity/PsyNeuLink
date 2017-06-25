@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PsyNeuLink User’s Guide &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>User’s Guide &mdash; PsyNeuLink 0.1 documentation</title>
   
 
   
@@ -121,7 +121,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>PsyNeuLink User&#8217;s Guide</li>
+    <li>User&#8217;s Guide</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -135,7 +135,200 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="psyneulink-user-s-guide">
+  <div class="section" id="user-s-guide">
+<h1>User&#8217;s Guide<a class="headerlink" href="#user-s-guide" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="conventions">
+<span id="id1"></span><h2>Conventions<a class="headerlink" href="#conventions" title="Permalink to this headline">¶</a></h2>
+<p>The following conventions are used for the names of PsyNeuLink objects and their documentation:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="Component.html"><span class="doc">Component</span></a> (class): names use CamelCase (with initial capitalization);
+the initial mention in a section documentation is formatted as a link (in colored text)
+to the documentation for that component.</li>
+</ul>
+<ul class="simple">
+<li><code class="xref any docutils literal"><span class="pre">attribute</span></code> or <code class="xref any docutils literal"><span class="pre">method</span></code> of a component:  names use lower_case_and_underscore; formatted in a <code class="xref any docutils literal"><span class="pre">small</span> <span class="pre">box</span></code>.</li>
+</ul>
+<ul class="simple">
+<li><strong>argument</strong> of a method or function:  names use lower_case_and_underscore; formatted in <strong>boldface</strong>.</li>
+</ul>
+<ul class="simple">
+<li>KEYWORD: use UPPER_CASE_AND_UNDERSCORE;  formatted as simple text.</li>
+</ul>
+<ul>
+<li><p class="first">Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Appear</span> <span class="ow">in</span> <span class="n">boxed</span> <span class="n">insets</span><span class="o">.</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+<p>The primary constructs in PsyNeuLink are mechanisms, projections, processes, and systems.</p>
+<p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  A PsyNeuLink mechanism takes an input, transforms it with a function in some way, and makes the
+output available to other mechanisms. Its primary purpose is representational transformation (that is, &#8220;information
+processing&#8221;). Mechanisms can take any form of input, use any function, and generate any form of
+output.  PsyNeuLink provides Mechanisms with standard functions (e.g., linear and logistic transforms for scalars and
+arrays;  integrator functions, including various forms of drift diffusion processes; matrix algebraic functions;
+and evaluation/comparison functions). However a mechanism can easily be customized with any function that can be
+written in or called from Python.</p>
+<p><a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> and <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a>.  Mechanisms are composed into processes, by linking them into
+pathways with projections.  A projection takes the output of its sender mechanism, and transforms it as necessary to
+provide it as input to its receiver mechanism.  The primary purpose of a projection is to convey information from one
+component to another, converting the information from its sender into a form that is usable by its receiver.
+A process is a linear chain of mechanisms connected by projections.
+Projections within a pathway can be recurrent, but they cannot branch (that is done with systems, as described below).
+Processes can also be configured for learning, in which the projections are trained to produce a specified output for
+each of a given set of inputs.</p>
+<p><a class="reference internal" href="System.html"><span class="doc">System</span></a>.  A system is composed of a set of processes.  Typically, the processes of a system overlap &#8211; that is,
+they share one or more mechanisms.  The network of processes in a system is explicitly represented as a graph, in which
+each node is a mechanism, and each edge is a projection.  The system&#8217;s graph is used to execute it, and can be
+exported to display and/or analyze it.  Each system can also have a controller, that can be configured to monitor
+the output of any of its mechanisms, evaluate this according to any objective function, and used to control any of the
+parameters of the mechanisms&#8217; function so as to optimize the objective function.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The functionality described under <strong>Execution</strong> below is still being implemented.  At present, all mechanisms
+operate in <code class="xref std std-keyword docutils literal"><span class="pre">trial</span></code> mode, and some operate in <code class="xref std std-keyword docutils literal"><span class="pre">time_step</span></code> mode;  however, the coordination and
+has execution of components with mixed time scales has not yet been fully implemented and debugged.</p>
+</div>
+<p><strong>Execution</strong>.  Mechanisms in PsyNeuLink can be run at one of two time scales.  In <code class="xref std std-keyword docutils literal"><span class="pre">trial</span></code> mode, the
+transformation computed by a mechanism is &#8220;complete&#8221; (i.e., the result is stationary.  For example, for an
+integrator, the full integral is computed in a single step (analytically where possible).  In <code class="xref std std-keyword docutils literal"><span class="pre">time_step</span></code>
+mode, PsyNeuLink approximates &#8220;continuous time&#8221; by breaking computations into sequential time steps at a specified
+level of precision. For example, for an intergrator, it numerically integrates the path at a specified rate. A system
+automatically coordinates the execution of its mechanisms, synchronizing those that are operating on different time
+scales (e.g., suspending ones using <code class="xref std std-keyword docutils literal"><span class="pre">trial</span> <span class="pre">mode</span></code> until those using  <code class="xref std std-keyword docutils literal"><span class="pre">time_step</span></code> mode have met
+specified criteria.]</p>
+<p>Since mechanisms can implement any function, projections insure that they can &#8220;communicate&#8221; with
+each other seamlessly, and systems coordinate execution over different time scales, PsyNeuLink can be used to
+integrate mechanisms of different types, levels of analysis, and/or time scales of operation, composing heterogeneous
+elements into a single integrated system.  This affords modelers the flexibility to commit each component of their
+model to a form of processing and/or level of analysis that is appropriate for that component, while providing
+the opportunity to test and explore how they interact with one another in a single system.</p>
+<p id="system-figure"><strong>Major Components in PsyNeuLink</strong></p>
+<div class="figure" id="id4">
+<a class="reference internal image-reference" href="_images/System_simple_fig.jpg"><img alt="Overview of major PsyNeuLink components" src="_images/System_simple_fig.jpg" style="width: 498.0px; height: 571.5px;" /></a>
+<p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  Each process has a
+series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
+that converge on a common final ProcessingMechanism (see <a class="reference internal" href="System.html#system-full-fig"><span class="std std-ref">figure in System</span></a> for a more
+complete example, that includes components responsible for control and learning).</span></p>
+</div>
+</div>
+<div class="section" id="component-hierarchy">
+<span id="id2"></span><h2>Component Hierarchy<a class="headerlink" href="#component-hierarchy" title="Permalink to this headline">¶</a></h2>
+<p>PsyNeuLink uses the following primary constructs (illustrated in the <a class="reference internal" href="#system-figure"><span class="std std-ref">figure</span></a> below):</p>
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="System.html"><span class="doc">System</span></a></dt>
+<dd><p class="first">Set of (potentially interacting) processes, that can be managed by a “budget” of control and trained.</p>
+<ul class="last">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="Process.html"><span class="doc">Process</span></a></dt>
+<dd><p class="first">Takes an input, processes it through an ordered list of mechanisms and projections, and generates an output.</p>
+<ul class="last">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a></dt>
+<dd><p class="first">Transforms an input representation into an output representation.
+Parameters determine its operation, under the influence of Projections.
+There are two primary types:</p>
+<ul class="last">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a></dt>
+<dd><p class="first last">Aggregates the inputs it receives from its afferent Projections, transforms them in some way,
+and provides the result as output to its efferent Projections.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a></dt>
+<dd><p class="first">Uses the input it receives from other Mechanisms to modify the parameters of one or more other
+PsyNeuLink components.  There are three primary types:</p>
+<ul class="last">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a></dt>
+<dd><p class="first last">Modifies the matrix of a MappingProjection.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a></dt>
+<dd><p class="first last">Modifies one or more parameters of other Mechanisms.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a></dt>
+<dd><p class="first last">Modifies the value of one or more InputStates and/or OutputStates of other Mechanisms.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a></dt>
+<dd><p class="first">Conveys the output of a Mechanism to another Component. There are two primary types, that correspond
+to the two types of Mechanisms:</p>
+<ul class="last">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a></dt>
+<dd><p class="first last">The primary type of PathwayProjection is a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, that provides the output of one
+ProcessingMechanism to the input of another.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="xref any docutils literal"><span class="pre">ModuatoryProjection</span></code></dt>
+<dd><p class="first">Takes the output of an AdaptiveMechanism and uses it to modify the input, output or parameter of
+another Coomponent.  There are three types of ModulatoryProjections, corresponding to the three
+types of AdaptiveMechanisms:</p>
+<ul class="last">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
+<dd><p class="first last">Takes a LearningSignal from LearningMechanism and uses it to modify the matrix of a
+MappingProjection.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
+<dd><p class="first last">Takes a ControlSignal from ControlMechanism and uses it to modify the parameter of a
+ProcessingMechanism.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a></dt>
+<dd><p class="first last">Takes a GatingSignal from a GatingMechanism and uses it to modulate the input or output of a
+ProcessingMechanism</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="psyneulink-user-s-guide">
 <h1>PsyNeuLink User&#8217;s Guide<a class="headerlink" href="#psyneulink-user-s-guide" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="#user-guide-organization-and-principles"><span class="std std-ref">Organization and Basic Principles</span></a></li>
@@ -146,15 +339,28 @@
 </ul>
 <div class="section" id="organization-and-basic-principles">
 <span id="user-guide-organization-and-principles"></span><h2>Organization and Basic Principles<a class="headerlink" href="#organization-and-basic-principles" title="Permalink to this headline">¶</a></h2>
-<p>This section provides a overview of the basic kinds of objects in PsyNeuLink, and how they can be used to construct
-models of mind/brain function.  There are two primary kinds of objects in PsyNeuLink:  <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> and
-<code class="xref any docutils literal"><span class="pre">Compositions</span></code>.  Components are objects that perform a specific function, and Compositions are objects
-that combine Components to form a model that can be run to examine how the Components interact, and the kinds of
-behavior to which they give rise.  There are two primary types of Components:  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, that
-process their input to generate an output that is transformed in some way (these can be thought of as the &#8220;blocks&#8221; in
-a block modeling system);  and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> that take the output of one Mechanism and convey it as the
-input to another (akin to the &#8220;links&#8221; in a block modeling system).  There are several subtyptes of each of these
-primary components that serve an array of specific purposes, as well as two other fundamental types of Components
+<p>This section provides a overview of the basic objects in PsyNeuLink, and how they are used to construct and run models.
+There are two primary kinds of objects in PsyNeuLink:  <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> and <code class="xref any docutils literal"><span class="pre">Compositions</span></code>.
+Components are objects that perform a specific function, and Compositions are objects
+that combine Components into a runnable model.</p>
+<div class="section" id="components">
+<h3>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>There are two primary types of Components:  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>.
+For those familiar with block modeling systems, Mechanisms are the &#8220;blocks&#8221; in PsyNeuLink, and Projections are the
+&#8220;links&#8221;.  Mechanisms take inputs, process them in some way, and generate outputs that can be sent to other
+Mechanisms. Projections are the means of sending information from one Mechanism to another.  There are several
+varieties of Mechanisms and Projections, that serve a range of different functions.  At the highest level, they
+are divided into two types:  ones responsible for processing, and ones responsible for modulation.</p>
+<p><strong>Processing</strong>
+The Components responsible for processing are <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> and
+<code class="xref any docutils literal"><span class="pre">PathwayProjection</span></code>.  They are used to create pathways that transmit and transform
+information, taking the inputs to a model and generating its outputs. The primary types of ProcessingMechanisms
+are <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a> (that perform a &#8220;memory-less&#8221; transformation of
+their input), IntegratorMechanisms (that maintain a memory of their prior state, and integrate that with new
+inputs), and ObjectiveMechanisms (that evalute and/or compare different sources of input).</p>
+</div></blockquote>
+<p>, as well as two other fundamental types of Components
 (<a class="reference internal" href="State.html"><span class="doc">States</span></a> and <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>), that are described in the section below on
 <a class="reference internal" href="#user-guide-components"><span class="std std-ref">Components</span></a>.  The other primary type of object, <code class="xref any docutils literal"><span class="pre">Composition</span></code>, has two primary types:
 <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> and <a class="reference internal" href="System.html"><span class="doc">Systems</span></a> that allow Compositions of different degrees of size and complexity to
@@ -216,8 +422,9 @@ Gating</div></blockquote>
 </dd>
 </dl>
 </div>
-<div class="section" id="components">
-<span id="user-guide-components"></span><h2>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="user-guide-components">
+<span id="id3"></span><h2>Components<a class="headerlink" href="#user-guide-components" title="Permalink to this headline">¶</a></h2>
 <p>Other packages that are much better for such applications are:
 <a class="reference external" href="https://URL">Text description</a></p>
 </div>
