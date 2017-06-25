@@ -1790,7 +1790,7 @@ class System_Base(System):
         self.target_mechanisms = MechanismList(self, self._target_mechs)
 
         # Instantiate TargetInputStates
-        self._instantiate_target_inputs()
+        self._instantiate_target_inputs(context=context)
 
     def _instantiate_target_inputs(self, context=None):
 
@@ -1798,11 +1798,8 @@ class System_Base(System):
             if not self.target_mechanisms:
                 raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no targetMechanisms".
                                   format(self.name))
-            elif len(self.target_mechanisms)==1:
-                error_msg = "Learning has been specified for {} so a target must also be specified"
-            else:
-                error_msg = "Learning has been specified for {} but no targets have been specified."
-            raise SystemError(error_msg.format(self.name))
+            raise SystemError("Learning has been specified for {} so its \'targets\' argument must also be specified".
+                              format(self.name))
 
         self.targets = np.atleast_2d(self.targets)
 

@@ -1036,7 +1036,7 @@ class Process_Base(Process):
         if self.learning:
             self._check_for_target_mechanism()
             if self.targetMechanism:
-                self._instantiate_target_input()
+                self._instantiate_target_input(context=context)
             self._learning_enabled = True
         else:
             self._learning_enabled = False
@@ -1954,11 +1954,11 @@ class Process_Base(Process):
                 print("\'{}\' assigned as TARGET ObjectiveMechanism for output of \'{}\'".
                       format(self.targetMechanism.name, self.name))
 
-    def _instantiate_target_input(self):
+    def _instantiate_target_input(self, context=None):
 
         if self.target is None:
             raise ProcessError("Learning has been specified for {} and it has a TARGET ObjectiveMechanism, "
-                               "so it must also have a target.".format(self.name))
+                               "so it must also have a target input when run.".format(self.name))
 
         target = np.atleast_1d(self.target)
 

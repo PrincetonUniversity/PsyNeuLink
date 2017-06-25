@@ -88,135 +88,119 @@ our expectation is that effort will be put into making it more efficient.
 
 .. _Overview:
 
-Overview
---------
+Overview and "Sampler"
+----------------------
 
-PsyNeuLink is written in Python, and conforms to the syntax and (most of the) coding standards for the language.
-The primary constructs in PsyNeuLink are mechanisms, projections, processes, and systems.
+PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
+PsyNeuLink models are made of `Components <Component>` and `Compositions <Composition>`:
+Components are objects that perform a specific function, and Compositions are used to combine Components into an
+executable model.  There are two primary kinds of Components:  `Mechanisms <Mechanism>` and `Projections <Projection>`.
+For those familiar with block modeling systems, Mechanisms are the "blocks" in PsyNeuLink, and Projections are the
+"links".  Mechanisms take inputs, process them in some way, and generate outputs that can be sent to other
+Mechanisms. Projections are used to send information from one Mechanism to another.  A `Composition` uses Projections
+to link Mechanisms together into pathways that can execute a process, and processes can be combined to form networks or
+circuits that make up a systems-level model.
 
-:doc:`Mechanism`.  A PsyNeuLink mechanism takes an input, transforms it with a function in some way, and makes the
-output available to other mechanisms. Its primary purpose is representational transformation (that is, "information
-processing"). Mechanisms can take any form of input, use any function, and generate any form of
-output.  PsyNeuLink provides mechanisms with standard functions (e.g., linear and logistic transforms for scalars and
-arrays;  integrator functions, including various forms of drift diffusion processes; and matrix algebraic functions).
-However a mechanism can easily be customized with any function that can be written in or called from Python.
+Mechanisms and Projections fall into two broad categories:  ones that *directly transmit and transform* information,
+taking the inputs to a model and generating its outputs;  and ones that *modulate* the transmission and transformation
+of information.  PsyNeuLink provides a library of Components of each type.  For example, there is a variety of
+ProcessingMechanisms that can be used to transform, integrate, and evaluate information; and there
+LearningMechanisms, ControlMechanisms, and GatingMechanism that can be used to modulate those processes.
 
-:doc:`Projection` and :doc:`Processes <Process>`.  Mechanisms are composed into processes, by linking them into
-pathways with projections.  A projection takes the output of its sender mechanism, and transforms it as necessary to
-provide it as input to its receiver mechanism.  The primary purpose of a projection is to convey information from one
-mechanism to another, converting the information from its sender into a form that is usable by its receiver.
-A process is a linear chain of mechanisms connected by projections.
-Projections within a pathway can be recurrent, but they cannot branch (that is done with systems, as described below).
-Processes can also be configured for learning, in which the projections are trained to produce a specified output for
-each of a given set of inputs.
+Mechanisms can be executed on their own (to gain familiarity with their functions), linked in simple configurations
+(for testing isolated interactions), or in Compositions to implement a full model.
+Linking Mechanisms for execution can be as simple as placing them in a list -- PsyNeuLink provides the necessary
+Projections that connects each to the next one in the list.  For example, the following script uses a simple form of
+Composition -- a `Process` -- to create a 3-layered 5-2-5 encoder network, the first layer of which uses a Linear
+function (the default for a TransferMechanism), and the other two of which use a LogisticFunction::
 
-:doc:`System`.  A system is composed of a set of processes.  Typically, the processes of a system overlap -- that is,
-they share one or more mechanisms.  The network of processes in a system is explicitly represented as a graph, in which
-each node is a mechanism, and each edge is a projection.  The system's graph is used to execute it, and can be
-exported to display and/or analyze it.  Each system can also have a controller, that can be configured to monitor
-the output of any of its mechanisms, evaluate this according to any objective function, and used to control any of the
-parameters of the mechanisms' function so as to optimize the objective function.
+    input_layer = TransferMechanism(size=5)
+    hidden_layer = TransferMechanism(size=2, function=Logistic)
+    output_layer = TransferMechanism(size=5, function=Logistic)
+    my_encoder = process(pathway=[input_layer, hidden_layer, output_layer])
 
-.. note::
-   The functionality described under **Execution** below is still being implemented.  At present, all mechanisms
-   operate in :keyword:`trial` mode, and some operate in :keyword:`time_step` mode;  however, the coordination and
-   has execution of components with mixed time scales has not yet been fully implemented and debugged.
+Each of the Mechanisms can be executed individually, by simply calling its execute method with an input array::
 
-**Execution**.  Mechanisms in PsyNeuLink can be run at one of two time scales.  In :keyword:`trial` mode, the
-transformation computed by a mechanism is "complete" (i.e., the result is stationary.  For example, for an
-integrator, the full integral is computed in a single step (analytically where possible).  In :keyword:`time_step`
-mode, PsyNeuLink approximates "continuous time" by breaking computations into sequential time steps at a specified
-level of precision. For example, for an intergrator, it numerically integrates the path at a specified rate. A system
-automatically coordinates the execution of its mechanisms, synchronizing those that are operating on different time
-scales (e.g., suspending ones using :keyword:`trial mode` until those using  :keyword:`time_step` mode have met
-specified criteria.]
+    output_layer.execute([0, 2.5, 10.9, 2, 7.6])
 
-Since mechanisms can implement any function, projections insure that they can "communicate" with
-each other seamlessly, and systems coordinate execution over different time scales, PsyNeuLink can be used to
-integrate mechanisms of different types, levels of analysis, and/or time scales of operation, composing heterogeneous
-elements into a single integrated system.  This affords modelers the flexibility to commit each component of their
-model to a form of processing and/or level of analysis that is appropriate for that component, while providing
-the opportunity to test and explore how they interact with one another in a single system.
+The full process can be run simply by calling its run method::
+
+    my_encoder.run([0, 2.5, 10.9, 2, 7.6])
+
+The order of that the Mechanisms appear in the list determines the order of their Projections, and PsyNeuLink
+picks sensible defaults when necessary Components are not specified.  In the example above, since no projections were
+specified, PsyNeuLink automatically created ones that were properly sized to connect each pair of mechanism,
+using random initial weights.  However, it is easy to spcify them explicitly, simply by inserting them in between the
+ mechanisms in the pathway for the process::
+
+    my_projection_1 = MappingProjection(matrix=(.2 * np.random.rand(2, 5)) + -.1))
+    my_encoder = process(pathway=[input_layer, my_projection_1, hidden_layer, output_layer])
+
+The first line above creates a Projection with a 5x2 matrix of random weights constrained to be between -.1 and +.1,
+which is then inserted in the pathway between the ``input_layer`` and ``output_layer``.  The matrix itself could also
+have been inserted directly, as follows::
+
+    my_encoder = process(pathway=[input_layer, (.2 * np.random.rand(2, 5)) + -.1)), hidden_layer, output_layer])
+
+PsyNeuLink knows to create MappingProjection using the matrix.  For example, the following addition to the script
+creates a recurrent Projection from the ``output_layer`` back to the ``hidden_lalyer``::
+
+    MappingProjection(sender=output_layer,
+                      receiver=hidden_layer,
+                      matrix=((.2 * np.random.rand(5, 2)) + -.1))
+
+Configuring more complex features is just as simple and flexible.  For example, the network above can be trained using
+backpropagation (the default) by simply adding a couple of lines to the constructor for the Process::
+
+    my_encoder = process(pathway=[input_layer, hidden_layer, output_layer],
+                         learning=LEARNING,
+                         target=[0,0,0,0,0])
+
+and another when it is run, specifying the target for each trial (here five trials of inputs and targets are specified::
+
+    my_encoder.run(input=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]],
+                   target=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
+
+PsyNeuLink can also be used to construct models with different kinds of Mechanisms.  For example, the script below
+uses a `System` -- a more powerful form of Composition -- to create two feedforward networks that converge on a single
+output layer that combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the
+response::
+
+    colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
+    words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
+    differencing_weights = np.array([[1], [-1]])
+    output_layer = TransferMechanism(size=1, name='OUTPUT')
+    decision_mech = DDM(name='DECISION')
+    colors_process = process(pathway=[colors_input_layer, differencing_weights, output_layer])
+    words_process = process(pathway=[words_input_layer, differencing_weights, output_layer])
+    decision_process = process(pathway=[output_layer, decision_mech])
+    my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+
+As a Composition get more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
+For example, calling ``my_simple_Stroop.show_graph()`` produces the following display:
+
+.. _Index_Simple_Stroop_Example_Figure:
+
+**Composition Graph**
+
+.. figure:: _static/Simple_Stroop_Example_fig.svg
+
+   Graph representation of the Composition in the example above.
+
+As the name of the ``show_graph()`` method suggests, Compositions are represented in PsyNeuLink as graphs, using a
+standard dependency dictionary format, so that they can also be submitted to other graph theoretic packages for
+display and/or analysis (such as `NetworkX <https://networkx.github.io>`_ and `igraph <http://igraph.org/redirect
+.html>`_).
+
+COMMENT:
+    XXX DIFFERENT TIME SCALES / SCHEDULER
+    Finally, perhaps the most powerful feature of PsyNeuLink is its ability to carry out simulations with Components
+    that execute are arbitrary and disparate "time-scales".
+COMMENT
 
 
-.. _System__Figure:
-
-**Major Components in PsyNeuLink**
-
-.. figure:: _static/System_simple_fig.jpg
-   :alt: Overview of major PsyNeuLink components
-   :scale: 50 %
-
-   Two :doc:`processes <Process>` are shown, both belonging to the same :doc:`system <System>`.  Each process has a
-   series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
-   that converge on a common final ProcessingMechanism (see :ref:`figure in System <System_Full_Fig>` for a more
-   complete example, that includes components responsible for control and learning).
-
-..
-    Every PsyNeuLink object is a subclass of the :doc:`Component` subclass.  Every component has a:
-        * ``variable``
-            the input to its function, used both as a template for the format of the input, as its default value
-        * ``function``
-            performs the core computation of a component.
-        * ``params``
-            dictionary of parameters for the function
-        * ``value``
-            the output of its the function
-
-
-.. _Component_Hierarchy:
-
-Component Hierarchy
--------------------
-
-PsyNeuLink uses the following primary constructs (illustrated in the :ref:`figure <System__Figure>` below):
-
-- :doc:`System`
-    Set of (potentially interacting) processes, that can be managed by a “budget” of control and trained.
-
-    - :doc:`Process`
-        Takes an input, processes it through an ordered list of mechanisms and projections, and generates an output.
-
-        - :doc:`Mechanism`
-            Transforms an input representation into an output representation.
-            Parameters determine its operation, under the influence of projections.
-            There are two primary types:
-
-            + :doc:`ProcessingMechanism`
-                  Aggregates the inputs it receives from other mechanisms or the input to a process or system,
-                  transforms them in some way, and provides the result either as input to other mechanisms and/or
-                  to the output of a process or system.
-
-            + :doc:`AdaptiveMechanism`
-                  Uses the input it receives from other mechanisms  or the input to a process or system to modify the
-                  parameters of one or more other PsyNeuLink components.  There are two primary types:
-
-                  + :doc:`LearningMechanism`
-                        Uses an error signal it receives to modify the matrix of a MappingProjection.
-
-                  + :doc:`ControlMechanism`
-                        Evaluates the output of one or more other mechanisms, and uses this to modify the
-                        parameters of those or other mechanisms in the system to which it belongs.
-
-        - :doc:`Projection`
-             Takes the output of a mechanism, possibly transforms it, and uses it to determine the operation of
-             another mechanism. There are three primary types:
-
-            + :doc:`MappingProjection`
-                Takes the output of a sender mechanism, transform it as necessary to be usable by a receiver mechanism,
-                and provides it as input to that receiver mechanism.
-
-            + :doc:`LearningProjection`
-                 Takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism)
-                 and uses it to modulate the parameter of a projection (usually the matrix of a MappingProjection).
-
-            + :doc:`ControlProjection`
-                 Takes an allocation (scalar) (usually the output of a ControlMechanism) and uses it to modulate
-                 the parameter(s) of a mechanism.
-
-            [+ GatingSignal — Not yet implemented
-                 Takes a gating signal source and uses it to modulate the input or output state of a mechanism.
-
+The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
+and the `Tutorial` provides an interactive introduction to its use.
 
 .. _Installation:
 
@@ -245,27 +229,6 @@ of the PsyNeuLink package.  Once the jupyter notebook opens, within the list of 
 started.
 
 If you have trouble installing the package, or run into other problems, please contact psyneulinkhelp@princeton.edu.
-
-.. _Conventions:
-
-Conventions
------------
-
-The following conventions are used for the names of PsyNeuLink objects and their documentation:
-
-  + `Component` (class): names use CamelCase (with initial capitalization);
-    the initial mention in a section documentation is formatted as a link (in colored text)
-    to the documentation for that component.
-  ..
-  + `attribute` or `method` of a component:  names use lower_case_and_underscore; formatted in a `small box`.
-  ..
-  + **argument** of a method or function:  names use lower_case_and_underscore; formatted in **boldface**.
-  ..
-  + KEYWORD: use UPPER_CASE_AND_UNDERSCORE;  formatted as simple text.
-  ..
-  + Example::
-
-          Appear in boxed insets.
 
 
 .. _Contributors:
