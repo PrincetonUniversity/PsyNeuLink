@@ -838,7 +838,7 @@ class TestBranching:
 
         sched = Scheduler(composition=comp)
 
-        for m in comp.graph.mechanisms:
+        for m in comp.mechanisms:
             sched.add_condition(m, Always())
 
         termination_conds = {ts: None for ts in TimeScale}

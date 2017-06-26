@@ -171,7 +171,7 @@ class SchedulerError(Exception):
 
 class Scheduler(object):
 
-    def __init__(self, composition=None, condition_set=None, nodes=None, toposort_ordering=None):
+    def __init__(self, composition=None, graph=None, condition_set=None, nodes=None, toposort_ordering=None):
         '''
         :param self:
         :param composition: (Composition) - the Composition this scheduler is scheduling for
@@ -184,25 +184,28 @@ class Scheduler(object):
         self.termination_conds = None
 
         if composition is not None:
-            self.nodes = [vert.component for vert in composition.graph.vertices]
-            self._init_consideration_queue_from_composition(composition)
+            self.nodes = [vert.component for vert in composition.graph_processing.vertices]
+            self._init_consideration_queue_from_graph(composition.graph_processing)
+        elif graph is not None:
+            self.nodes = [vert.component for vert in graph.vertices]
+            self._init_consideration_queue_from_graph(graph)
         elif nodes is not None:
             self.nodes = nodes
             if toposort_ordering is None:
                 raise SchedulerError('Instantiating Scheduler by list of nodes requires a toposort ordering (kwarg toposort_ordering)')
             self.consideration_queue = list(toposort_ordering)
         else:
-            raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition), or a list of Mechanisms (kwarg nodes) and and a toposort ordering over them (kwarg toposort_ordering)')
+            raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition) [defaulting to its processing graph, Graph (kwarg graph), or a list of Mechanisms (kwarg nodes) and and a toposort ordering over them (kwarg toposort_ordering)')
 
         self._init_counts()
 
-    # the consideration queue is the ordered list of sets of nodes in the composition graph, by the
+    # the consideration queue is the ordered list of sets of nodes in the graph, by the
     # order in which they should be checked to ensure that all parents have a chance to run before their children
-    def _init_consideration_queue_from_composition(self, composition):
+    def _init_consideration_queue_from_graph(self, graph):
         dependencies = {}
-        for vert in composition.graph.vertices:
+        for vert in graph.vertices:
             dependencies[vert.component] = set()
-            for parent in composition.graph.get_parents_from_component(vert.component):
+            for parent in graph.get_parents_from_component(vert.component):
                 dependencies[vert.component].add(parent.component)
 
         self.consideration_queue = list(toposort(dependencies))
