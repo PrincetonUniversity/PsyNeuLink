@@ -205,7 +205,7 @@ runs only a single execution of the object;</li>
 execution.  For a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a>, the scope of execution is simply that mechanism.  For a <a class="reference internal" href="Process.html"><span class="doc">process</span></a>,
 the scope of execution is all of the mechanisms specified in its <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> attribute.  For a <a class="reference internal" href="System.html"><span class="doc">system</span></a>,
 the scope of execution is all of the mechanisms in the processes specified in the system&#8217;s
-<a class="reference internal" href="System.html#System.System_Base.processes" title="System.System_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> attribute.</p>
+<code class="xref any docutils literal"><span class="pre">processes</span></code> attribute.</p>
 </div>
 <div class="section" id="timing">
 <span id="run-timing"></span><h3>Timing<a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
@@ -232,8 +232,8 @@ internal numerical iteration or an analytic calculation). Execution of a <code c
 <p>The <strong>time_scale</strong> argument of an <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method determines the time scale for each
 round of execution: a <code class="xref any docutils literal"><span class="pre">time_step</span></code> or a <code class="xref any docutils literal"><span class="pre">trial</span></code>.  When a <a class="reference internal" href="Process.html"><span class="doc">process</span></a> is run, each mechanism is executed in the
 order that it appears in the process&#8217; <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, once per round of execution.  When a <a class="reference internal" href="System.html"><span class="doc">system</span></a> is run,
-the order of execution is determined by the system&#8217;s <a class="reference internal" href="System.html#System.System_Base.executionList" title="System.System_Base.executionList"><code class="xref any py py-attr docutils literal"><span class="pre">executionList</span></code></a> attribute, which is based on the system&#8217;s
-<a class="reference internal" href="System.html#System.System_Base.graph" title="System.System_Base.graph"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a> (a list of the dependencies among all of the mechanisms in the system).  Execution of the mechanisms in a
+the order of execution is determined by the system&#8217;s <code class="xref any docutils literal"><span class="pre">executionList</span></code> attribute, which is based on the system&#8217;s
+<code class="xref any docutils literal"><span class="pre">graph</span></code> (a list of the dependencies among all of the mechanisms in the system).  Execution of the mechanisms in a
 system also depends on the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.phaseSpec" title="Mechanism.Mechanism_Base.phaseSpec"><code class="xref any py py-attr docutils literal"><span class="pre">phaseSpec</span></code></a> of each mechanism: this determines <em>when</em> in an execution sequence it should
 be executed. The <code class="xref any docutils literal"><span class="pre">CentralClock</span></code> is used to control timing, so executing a system
 requires that it be appropriately updated.</p>
@@ -291,7 +291,7 @@ number of nestings for a list, or lowest dimension of an ndarray).  It can be sp
 <p><em>(List[values] or ndarray)</em> &#8211; this uses a nested list or ndarray to fully specify the input for
 each round of execution in a sequence.  It is more complex than the <a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">mechanism format</span></a>,
 and for systems requires that the inputs for each mechanism be specified in the same order in which those mechanisms
-appear in the system&#8217;s <a class="reference internal" href="System.html#System.System_Base.originMechanisms" title="System.System_Base.originMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">originMechanisms</span></code></a> attribute.  This is
+appear in the system&#8217;s <code class="xref any docutils literal"><span class="pre">originMechanisms</span></code> attribute.  This is
 generally the same order in which they are declared, and can be displayed using the system&#8217;s
 <a class="reference internal" href="System.html#System.System_Base.show" title="System.System_Base.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method). Although this is format is more demanding, it may be better suited to
 automated input generation, since it does not require that mechanisms be referenced explicitly (though it is

@@ -111,6 +111,8 @@ of information.  PsyNeuLink provides a library of Components of each type.  For 
 ProcessingMechanisms that can be used to transform, integrate, and evaluate information; and there
 LearningMechanisms, ControlMechanisms, and GatingMechanism that can be used to modulate those processes.
 
+.. _Index_Simple_Configurations:
+
 Simple Configurations
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -162,6 +164,8 @@ been accomplished by explicilty creating the recurrent connection:
     MappingProjection(sender=output_layer,
                       receiver=hidden_layer)
 
+.. _Index_Elaborate_Configurations:
+
 More Elaborate Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -209,15 +213,53 @@ standard dependency dictionary format, so that they can also be submitted to oth
 display and/or analysis (such as `NetworkX <https://networkx.github.io>`_ and `igraph <http://igraph.org/redirect
 .html>`_).
 
-Time Scales
-~~~~~~~~~~~
+.. _Index_Dynamics_of_Execution:
 
-COMMENT:
-    XXX DIFFERENT TIME SCALES / SCHEDULER
-    Finally, perhaps the most powerful feature of PsyNeuLink is its ability to carry out simulations with Components
-    that execute are arbitrary and disparate "time-scales".
-COMMENT
+Dynamics of Execution
+~~~~~~~~~~~~~~~~~~~~~
 
+Finally, perhaps the most powerful feature of PsyNeuLink is its ability to simulate models with Components
+that execute at arbitrary and disparate "time scales". For example, a Composition can include some Mechanisms
+that require fine-grained updates (e.g., Euler integration of a drift diffusion process) with ones that carry out
+"single shot" computations (e.g., a single pass through a feedforward neural network). By default, when a Composition
+is run, each Component in it is executed at least once.  However, PsyNeuLink has a `Scheduler` that can be used to
+design more complex dynamics of execution by assigning one or more `Conditions` to any Mechanism. Conditions can
+specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each
+`round of execution <LINK>`), or its behavior relative to that of one or more other Components (e.g., how many times
+it should execute or when it should stop executing relative to other Mechanisms).
+
+For example, the following script configures a `RecurrentTransferMechanism` that begins executing immediately after
+receiving input from an input layer, and then executes repeatedly until the change in its value falls below a specified
+threshold, at which point the output layer is executed::
+
+    my_input_layer = TransferMechanism(size = 3)
+    my_recurrent_layer = RecurrentTransferMechanism(size=10)
+    my_response_layer = TransferMechanism(size = 3)
+    settling_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])
+    **?? settling_scheduler = **??
+    settling_system=(processes=[settling_process],
+                     scheduler=setting_scheduler)
+
+
+Mechanisms can also be configured to execute in parallel but at different time scales relative to one another.  For
+example, a single-pass feedforward layer can be added to the network above, that executes once for each settling of
+the recurrent layer, with the following simple additions::
+
+    my_input_layer = TransferMechanism(size = 3)
+    my_recurrent_layer = RecurrentTransferMechanism(size=10)
+    my_response_layer = TransferMechanism(size = 3)
+    settling_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])
+    **single_pass_mech = TransferMechanism(size=5)**
+    **single_pass_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])**
+    **?? settling_scheduler = **??**
+    settling_system=(processes=[settling_process, **single_pass_process**],
+                     scheduler=setting_scheduler)
+
+Time scales can also be specified explicitly.  For example, changing the Condition for the single_pass_layer
+to ``**??`` configures it to execute once for each 10 executions of ``my_recurrent_layer``, rather than only
+when it has settled.  Needless to say, the same methods can be used schedule different kinds of mechanisms and
+their dependencies on one another (such as a neural network that executes only after a DDM has reached its
+decision threshold).
 
 The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
 and the `Tutorial` provides an interactive introduction to its use.

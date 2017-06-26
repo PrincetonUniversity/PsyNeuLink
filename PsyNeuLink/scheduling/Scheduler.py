@@ -127,7 +127,7 @@ time_step is not defined (and should not matter since, by definition, there are 
 Examples
 --------
 
-Please see `Condition`<Condition> documentation for a list of all included Conditions and their behavior.
+Please see `Condition` for a list of all supported Conditions and their behavior.
 
 *Basic phasing in a linear process:*
     A = TransferMechanism(function = Linear(), name = 'A')
