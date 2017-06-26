@@ -202,8 +202,8 @@ class Scheduler(object):
         dependencies = {}
         for vert in composition.graph.vertices:
             dependencies[vert.component] = set()
-            for parent in composition.graph.get_parent_components_from_component(vert.component):
-                dependencies[vert.component].add(parent)
+            for parent in composition.graph.get_parents_from_component(vert.component):
+                dependencies[vert.component].add(parent.component)
 
         self.consideration_queue = list(toposort(dependencies))
         logger.debug('Consideration queue: {0}'.format(self.consideration_queue))
