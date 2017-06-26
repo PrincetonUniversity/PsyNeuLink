@@ -86,16 +86,16 @@ class TestAddProjection:
 
     def test_add_once(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
 
     def test_add_twice(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -103,8 +103,8 @@ class TestAddProjection:
 
     def test_add_same_twice(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         proj = MappingProjection()
@@ -120,12 +120,12 @@ class TestAddProjection:
     def test_timing_stress(self, count):
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
                    setup='''
-from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 from PsyNeuLink.composition import Composition
 comp = Composition()
-A = mechanism()
-B = mechanism()
+A = TransferMechanism(name='A')
+B = TransferMechanism(name='B')
 comp.add_mechanism(A)
 comp.add_mechanism(B)
 ''',
@@ -143,7 +143,7 @@ class TestAnalyzeGraph:
 
     def test_singleton(self):
         comp = Composition()
-        A = mechanism()
+        A = TransferMechanism(name='A')
         comp.add_mechanism(A)
         comp.analyze_graph()
         assert A in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
@@ -151,8 +151,8 @@ class TestAnalyzeGraph:
 
     def test_two_independent(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.analyze_graph()
@@ -163,8 +163,8 @@ class TestAnalyzeGraph:
 
     def test_two_in_a_row(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -177,8 +177,8 @@ class TestAnalyzeGraph:
     # (A)<->(B)
     def test_two_recursive(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -194,10 +194,10 @@ class TestAnalyzeGraph:
     # (A)->(B)<->(C)<-(D)
     def test_two_origins_pointing_to_recursive_pair(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
-        C = mechanism()
-        D = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+        C = TransferMechanism(name='C')
+        D = TransferMechanism(name='D')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_mechanism(C)
@@ -217,8 +217,8 @@ class TestValidateFeedDict:
 
     def test_empty_feed_dicts(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -230,8 +230,8 @@ class TestValidateFeedDict:
 
     def test_origin_and_terminal_with_mapping(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -243,8 +243,8 @@ class TestValidateFeedDict:
 
     def test_origin_and_terminal_with_swapped_feed_dicts_1(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -256,8 +256,8 @@ class TestValidateFeedDict:
 
     def test_origin_and_terminal_with_swapped_feed_dicts_2(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -269,9 +269,9 @@ class TestValidateFeedDict:
 
     def test_multiple_origin_mechs(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
-        C = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+        C = TransferMechanism(name='C')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_mechanism(C)
@@ -285,9 +285,9 @@ class TestValidateFeedDict:
 
     def test_multiple_origin_mechs_only_one_in_feed_dict(self):
         comp = Composition()
-        A = mechanism()
-        B = mechanism()
-        C = mechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+        C = TransferMechanism(name='C')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_mechanism(C)
@@ -302,7 +302,7 @@ class TestValidateFeedDict:
     def test_input_state_len_3(self):
         comp = Composition()
         A = TransferMechanism(default_input_value=[0, 1, 2])
-        B = mechanism()
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -315,7 +315,7 @@ class TestValidateFeedDict:
     def test_input_state_len_3_feed_dict_len_2(self):
         comp = Composition()
         A = TransferMechanism(default_input_value=[0, 1, 2])
-        B = mechanism()
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -328,7 +328,7 @@ class TestValidateFeedDict:
     def test_input_state_len_2_feed_dict_len_3(self):
         comp = Composition()
         A = TransferMechanism(default_input_value=[0, 1])
-        B = mechanism()
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -341,7 +341,7 @@ class TestValidateFeedDict:
     def test_feed_dict_includes_mechs_of_correct_and_incorrect_types(self):
         comp = Composition()
         A = TransferMechanism(default_input_value=[0])
-        B = mechanism()
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -353,7 +353,7 @@ class TestValidateFeedDict:
     def test_input_state_len_3_brackets_extra_1(self):
         comp = Composition()
         A = TransferMechanism(default_input_value=[0, 1, 2])
-        B = mechanism()
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -366,7 +366,7 @@ class TestValidateFeedDict:
     def test_input_state_len_3_brackets_missing_1(self):
         comp = Composition()
         A = TransferMechanism(default_input_value=[0, 1, 2])
-        B = mechanism()
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -379,7 +379,7 @@ class TestValidateFeedDict:
     def test_empty_feed_dict_for_empty_type(self):
         comp = Composition()
         A = TransferMechanism(default_input_value=[0])
-        B = mechanism()
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -391,7 +391,7 @@ class TestValidateFeedDict:
     def test_mech_in_feed_dict_for_empty_type(self):
         comp = Composition()
         A = TransferMechanism(default_input_value=[0])
-        B = mechanism()
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -422,7 +422,7 @@ class TestValidateFeedDict:
     def test_multiple_time_steps_1(self):
         comp = Composition()
         A = TransferMechanism(default_input_value=[[0, 1, 2]])
-        B = mechanism()
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -435,7 +435,7 @@ class TestValidateFeedDict:
     def test_multiple_time_steps_2(self):
         comp = Composition()
         A = TransferMechanism(default_input_value=[[0, 1, 2]])
-        B = mechanism()
+        B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
