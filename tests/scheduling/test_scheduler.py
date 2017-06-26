@@ -1,12 +1,13 @@
 import logging
+import pytest
 
+from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Functions.Function import Linear
+from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.composition import Composition
 from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.scheduling.condition import AfterNCalls, AfterNTrials, AfterPass, All, Always, Any, AtPass, BeforePass, EveryNCalls, EveryNPasses, JustRan, WhenFinished
-from PsyNeuLink.Globals.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class TestLinear:
             A, A, B, A, A, B, A, A, B, C,
         ]
         # pprint.pprint(output)
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     # tests below are copied from old scheduler, need renaming
     def test_1(self):
@@ -75,7 +76,7 @@ class TestLinear:
             A, A, B, A, A, B, A, A, B, C,
         ]
         # pprint.pprint(output)
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_1b(self):
         comp = Composition()
@@ -105,7 +106,7 @@ class TestLinear:
             A, B, A, B, A, B, C,
         ]
         # pprint.pprint(output)
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_2(self):
         comp = Composition()
@@ -129,7 +130,7 @@ class TestLinear:
         output = list(sched.run(termination_conds=termination_conds))
 
         expected_output = [A, A, B, A, A, B, C]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_3(self):
         comp = Composition()
@@ -156,7 +157,7 @@ class TestLinear:
             A, A, B, A, A, B, C, A, A, B, C, A, A, B, C, A, A, B, C
         ]
         # pprint.pprint(output)
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_6(self):
         comp = Composition()
@@ -183,7 +184,7 @@ class TestLinear:
             A, A, A, A, A, B, C, B, C, B, C
         ]
         # pprint.pprint(output)
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_6_two_trials(self):
         comp = Composition()
@@ -211,7 +212,7 @@ class TestLinear:
             A, A, A, A, A, B, C, B, C, B, C
         ]
         # pprint.pprint(output)
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_7(self):
         comp = Composition()
@@ -232,7 +233,7 @@ class TestLinear:
         output = list(sched.run(termination_conds=termination_conds))
 
         expected_output = [A]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_8(self):
         comp = Composition()
@@ -253,7 +254,7 @@ class TestLinear:
         output = list(sched.run(termination_conds=termination_conds))
 
         expected_output = [A, A, B]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_9(self):
         comp = Composition()
@@ -281,7 +282,7 @@ class TestLinear:
             i += 1
 
         expected_output = [A, A, A, A, B, A, B]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_9b(self):
         comp = Composition()
@@ -303,7 +304,7 @@ class TestLinear:
         output = list(sched.run(termination_conds=termination_conds))
 
         expected_output = [A, A, A, A, A]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_10(self):
         comp = Composition()
@@ -326,7 +327,7 @@ class TestLinear:
         output = list(sched.run(termination_conds=termination_conds))
 
         expected_output = [A, B, A, B, A, B, A, B, A, B]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_10b(self):
         comp = Composition()
@@ -349,7 +350,7 @@ class TestLinear:
         output = list(sched.run(termination_conds=termination_conds))
 
         expected_output = [A, A, A, B, A, B, A, B, A, B]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_10c(self):
         comp = Composition()
@@ -372,7 +373,7 @@ class TestLinear:
         output = list(sched.run(termination_conds=termination_conds))
 
         expected_output = [A, A, A, B, A, B, A, B, A, B]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_10d(self):
         comp = Composition()
@@ -395,7 +396,7 @@ class TestLinear:
         output = list(sched.run(termination_conds=termination_conds))
 
         expected_output = [A, A, A, A, A, A, A, A, A, A]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     ########################################
     # tests with linear compositions
@@ -419,7 +420,7 @@ class TestLinear:
         output = list(sched.run(termination_conds=termination_conds))
 
         expected_output = [A, A, B, A, A, B]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_linear_ABB(self):
         comp = Composition()
@@ -440,7 +441,7 @@ class TestLinear:
         output = list(sched.run(termination_conds=termination_conds))
 
         expected_output = [A, B, B, A, B, B, A, B, B, A, B, B]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_linear_ABBCC(self):
         comp = Composition()
@@ -464,7 +465,7 @@ class TestLinear:
         output = list(sched.run(termination_conds=termination_conds))
 
         expected_output = [A, B, B, C, C, A, B, B, C, C]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_linear_ABCBC(self):
         comp = Composition()
@@ -488,7 +489,7 @@ class TestLinear:
         output = list(sched.run(termination_conds=termination_conds))
 
         expected_output = [A, B, C, B, C, A, B, C, B, C]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     ########################################
     # tests with small branching compositions
@@ -527,7 +528,7 @@ class TestBranching:
             A, set([B, C]),
         ]
         # pprint.pprint(output)
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_triangle_2(self):
         comp = Composition()
@@ -559,7 +560,7 @@ class TestBranching:
             A, set([B, C]),
         ]
         # pprint.pprint(output)
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_triangle_3(self):
         comp = Composition()
@@ -586,7 +587,7 @@ class TestBranching:
             A, A, B, A, C, A, B, A, A, set([B, C])
         ]
         # pprint.pprint(output)
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     # this is test 11 of original constraint_scheduler.py
     def test_triangle_4(self):
@@ -619,7 +620,7 @@ class TestBranching:
 
         expected_output = [A, A, B, A, A, B, A, A, set([B, C])]
         # pprint.pprint(output)
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_triangle_4b(self):
         comp = Composition()
@@ -651,7 +652,7 @@ class TestBranching:
 
         expected_output = [A, A, B, A, A, B, A, A, B, A, A, set([B, C])]
         # pprint.pprint(output)
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     #   inverted triangle:           A   B
     #                                 \ /
@@ -684,7 +685,7 @@ class TestBranching:
             A, set([A, B]), A, C, set([A, B]), C, A, C, set([A, B]), C
         ]
         # pprint.pprint(output)
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     # this is test 5 of original constraint_scheduler.py
     # this test has an implicit priority set of A<B !
@@ -712,7 +713,7 @@ class TestBranching:
         expected_output = [
             A, set([A, B]), A, set([A, B]), A, set([A, B]), C, A, C
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     #   checkmark:                   A
     #                                 \
@@ -748,7 +749,7 @@ class TestBranching:
         expected_output = [
             set([A, C]), B, D
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_checkmark_2(self):
         comp = Composition()
@@ -777,7 +778,7 @@ class TestBranching:
         expected_output = [
             A, set([A, C]), B, A, set([A, C]), B, D
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_checkmark2_1(self):
         comp = Composition()
@@ -807,7 +808,7 @@ class TestBranching:
         expected_output = [
             A, set([A, C]), B, A, set([A, C]), B, D
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     #   multi source:                   A1    A2
     #                                   / \  / \
@@ -848,7 +849,7 @@ class TestBranching:
         expected_output = [
             set([A1, A2]), set([B1, B2, B3]), set([C1, C2])
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_multisource_2(self):
         comp = Composition()
@@ -891,4 +892,4 @@ class TestBranching:
         expected_output = [
             set([A1, A2]), set([A1, A2]), set([B1, B3]), set([A1, A2]), set([A1, A2]), set([B1, B2, B3]), set([C1, C2])
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)

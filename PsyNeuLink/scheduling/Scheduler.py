@@ -379,10 +379,7 @@ class Scheduler(object):
 
                     # add a new time step at each step in a pass, if the time step would not be empty
                     if len(cur_time_step_exec) >= 1:
-                        if len(cur_time_step_exec) > 1:
-                            self.execution_list.append(cur_time_step_exec)
-                        else:
-                            self.execution_list.append(cur_time_step_exec.pop())
+                        self.execution_list.append(cur_time_step_exec)
                         yield self.execution_list[-1]
 
                         self._increment_time(TimeScale.TIME_STEP)

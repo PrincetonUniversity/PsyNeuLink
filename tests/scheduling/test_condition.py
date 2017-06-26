@@ -1,14 +1,14 @@
 import logging
 import pytest
 
+from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Functions.Function import Linear
+from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.composition import Composition
 from PsyNeuLink.scheduling.Scheduler import Scheduler
-from PsyNeuLink.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNTrials, AfterNPasses, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, BeforeTrial, BeforePass, EveryNCalls, EveryNPasses, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny
+from PsyNeuLink.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, BeforePass, BeforeTrial, EveryNCalls, EveryNPasses, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny
 from PsyNeuLink.scheduling.condition import ConditionError, ConditionSet
-from PsyNeuLink.Globals.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A for _ in range(5)]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_All_end_after_one_finished(self):
             comp = Composition()
@@ -69,7 +69,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A for _ in range(5)]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_Not_AtPass(self):
             comp = Composition()
@@ -85,7 +85,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [set(), A, A, A, A]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_Not_AtPass_in_middle(self):
             comp = Composition()
@@ -101,7 +101,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A, A, set(), A, A]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
     class TestTime:
 
@@ -119,7 +119,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A, A, set(), set(), set()]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_AtPass(self):
             comp = Composition()
@@ -135,7 +135,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A, set(), set(), set(), set()]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_AtPass_underconstrained(self):
             comp = Composition()
@@ -156,7 +156,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A, B, C, B, C]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_AtPass_in_middle(self):
             comp = Composition()
@@ -172,7 +172,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [set(), set(), A, set(), set()]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_AtPass_at_end(self):
             comp = Composition()
@@ -188,7 +188,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [set(), set(), set(), set(), set()]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_AtPass_after_end(self):
             comp = Composition()
@@ -204,7 +204,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [set(), set(), set(), set(), set()]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_AfterPass(self):
             comp = Composition()
@@ -220,7 +220,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [set(), A, A, A, A]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_AfterNPasses(self):
             comp = Composition()
@@ -236,7 +236,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [set(), A, A, A, A]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_BeforeTrial(self):
             comp = Composition()
@@ -252,7 +252,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A, A, A, A, set()]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_AtTrial(self):
             comp = Composition()
@@ -268,7 +268,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A, A, A, A]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_AfterTrial(self):
             comp = Composition()
@@ -284,7 +284,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A, A, A, A, A]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_AfterNTrials(self):
             comp = Composition()
@@ -300,7 +300,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [set(), A, A, A, A]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
     class TestComponentBased:
 
@@ -318,7 +318,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A, A, A, set(), set()]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         # NOTE:
         # The behavior is not desired (i.e. depending on the order mechanisms are checked, B running AtCall(A, x))
@@ -343,7 +343,7 @@ class TestCondition:
         #     output = list(sched.run(termination_conds=termination_conds))
 
         #     expected_output = [A, A, set([A, B]), A, A]
-        #     assert output == expected_output
+        #     assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_AfterCall(self):
             comp = Composition()
@@ -361,7 +361,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A, A, A, set([A, B]), set([A, B])]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_AfterNCalls(self):
             comp = Composition()
@@ -380,7 +380,7 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A, A, set([A, B]), set([A, B]), set([A, B])]
-            assert output == expected_output
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_composite_condition_multi(self):
         comp = Composition()
@@ -414,7 +414,7 @@ class TestCondition:
         expected_output = [
             A, A, B, A, A, B, C, A, C, A, B, C
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_WhenFinishedAny_1(self):
         comp = Composition()
@@ -440,7 +440,7 @@ class TestCondition:
         expected_output = [
             set([A, B]), C
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_WhenFinishedAny_2(self):
         comp = Composition()
@@ -466,7 +466,7 @@ class TestCondition:
         expected_output = [
             set([A, B]), C, set([A, B]), C, set([A, B]), C, set([A, B]), C, set([A, B])
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_WhenFinishedAny_noargs(self):
         comp = Composition()
@@ -499,7 +499,7 @@ class TestCondition:
         expected_output = [
             set([A, B]), C, set([A, B]), C,
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_WhenFinishedAll_1(self):
         comp = Composition()
@@ -525,7 +525,7 @@ class TestCondition:
         expected_output = [
             set([A, B]), C
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_WhenFinishedAll_2(self):
         comp = Composition()
@@ -551,7 +551,7 @@ class TestCondition:
         expected_output = [
             set([A, B]), set([A, B]), set([A, B]), set([A, B]), set([A, B]),
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_WhenFinishedAll_noargs(self):
         comp = Composition()
@@ -584,7 +584,7 @@ class TestCondition:
         expected_output = [
             set([A, B]), C, set([A, B]), C, set([A, B]),
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_AfterNCallsCombined(self):
         comp = Composition()
@@ -609,7 +609,7 @@ class TestCondition:
         expected_output = [
             A, A, B, A, A, B, C, A, A, B
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_AllHaveRun(self):
         comp = Composition()
@@ -634,7 +634,7 @@ class TestCondition:
         expected_output = [
             A, A, B, A, A, B, C
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_AllHaveRun_2(self):
         comp = Composition()
@@ -659,7 +659,7 @@ class TestCondition:
         expected_output = [
             A, A, B, A, A, B, C
         ]
-        assert output == expected_output
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
 
 class TestConditionSet:
