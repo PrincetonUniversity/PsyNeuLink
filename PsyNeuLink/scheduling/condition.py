@@ -10,25 +10,40 @@
 
 """
 
+COMMENT:
+    [**NAME OF THE MODULE SHOULD BE CAPITALIZED]
+COMMENT
+
+.. _Condition_Overview
+
 Overview
 --------
 
-`Conditions <Condition>` represent any conditions that can be satisfied. Each Condition is associated with an owner (a
-`Component` that the Condition "belongs" to, relevant for relative conditions such as `EveryNCalls`), and
-a `Scheduler` that maintains most of the data required to test satisfaction. These properties can usually
-be determined automatically based on the context in which Conditions are created.
+`Conditions <Condition>` are used to specify when `Mechanisms <Mechanism>` execute.  They fall broadly into two
+categories: ones that specify the behavior of a Mechanism irrespective of others (e.g., the exact number of times it
+should be executed, and whether this should be based on its `value <Mechanism.value>`); and ones that specify whether
+and how its execution depends on other Mechanisms (e.g., the frequency with which it executes relative to others,
+or that it begin executing and/or execute repeatedly until a Condition is met for some other Mechanism).  Each
+Condition is associated with an `owner <Condition.owner>` (a `Mechanism` to which the Condition belongs), and a
+`scheduler <Condition.scheduler>` that maintains most of the data required to test for satisfaction of the condition.
 
+.. _Condition_Creation:
 
-Creating new Conditions
+Creating Conditions
 -----------------------
 
-Each Condition must
-    - be a subclass of `Condition`<Condition>
-    - pass `dependencies` as the first argument to the __init__ function of Condition
-    - pass `func` as the second argument to the __init__ function of Condition
-
-In determining whether a Condition is satisfied, `func` is called with `dependencies` as parameter (and optionally,
-additional named and unnamed arguments).
+COMMENT:
+    [**??IS THE FOLLOWING CORRECT?  owner AND scheduler DON'T SEEM TO BE ARGS OF Condition.__init__??]
+Conditions can be created at any time, and take effect immediately for the execution of any `Scheduler(s) <Scheduler>`
+with which they are associated.  The `owner <Condition.owner>` and `scheduler <Condition.scheduler>` can also be
+specified explicitly, in the corresponding arguments of its constructor;  however, usually these can be determined
+and assigned automatically based on the context in which the Condition is created [**?? EXAMPLE?].  The Condition's
+**dependencies** and **func** arguments must both be explicitly specified.  These are used to determine whether a
+Condition is satisfied during each `round of execution <LINK>`: `func <Condition.func>` is called with
+`dependencies <Condition.dependencies>` as its parameter (and optionally, additional named and unnamed arguments).
+COMMENT:
+     [**??func AND dependencies NEED TO BE CLARIFIED:  WHAT FORMAT, EXAMPLE OF HOW THEY WORK??]
+COMMENT
 
 Hint:
     If you do not want to use the dependencies parameter, and instead want to use only args or kwargs, you may
@@ -46,6 +61,27 @@ Hint:
                     count_sum += self.scheduler.counts_total[time_scale][d]
                 return count_sum >= n
             super().__init__(None, func, *dependencies, n=n)
+
+.. Condition_Structure:
+
+Structure
+---------
+
+COMMENT:
+     **??DESCRIBE HOW CONDITIONS ARE STRUCTURED;
+     INCLUDE FULL LIST OF CONDITIONS
+COMMENT
+
+.. Condition_Execution:
+
+Execution
+---------
+
+COMMENT:
+     **??DESCRIBE HOW CONITION IS EVALUATED
+COMMENT
+
+
 
 """
 
@@ -116,21 +152,35 @@ class ConditionSet(object):
 
 class Condition(object):
     """
-    An object used in conjunction with `Scheduler`<Scheduler> to specify a running pattern for PNL objects.
-    Each Condition will be satisfied based on some criteria.
+    Used in conjunction with a `Scheduler` to specify the pattern of execution for `Mechanisms <Mechanism>` in a
+    `System.
 
-    Properties:
-        scheduler (Scheduler): a Scheduler object that this condition is associated with. This condition will
-            use scheduler's state for its satisfaction checks
-        owner (Component): the PNL object this condition is associated with.
+    Arguments
+    ---------
 
-    Attributes:
-        dependencies: one or more PNL objects over which func is evaluated to determine satisfaction of the :keyword:`Condition`
-            user must ensure that dependencies are suitable as func parameters
-        func: parameters over which func is evaluated to determine satisfaction of the :keyword:`Condition`
-        args: additional formal arguments passed to func
-        kwargs: additional keyword arguments passed to func
-    """
+    dependencies : **??LIST? DICT?
+        one or more `Mechanisms <Mechanism>` over which `func <Condition.func>` is evaluated to determine satisfaction
+        of the `Condition`;  user must ensure that dependencies are suitable as func parameters
+    func : **??FORMAT?
+        parameters over which func is evaluated to determine satisfaction of the `Condition`
+
+    args :
+        additional formal arguments passed to func
+
+    kwargs :
+        additional keyword arguments passed to func
+
+    Attributes
+    ----------
+
+    scheduler : Scheduler
+        the `Scheduler` with which the Condition is associated;  the scheduler's state is used to evaluate whether
+        the Condition`s specifications are satisfied.
+
+    owner (Component):
+        the `Mechanism` with which the Condition is associated, and the execution of which it determines.
+
+        """
     def __init__(self, dependencies, func, *args, **kwargs):
         """
         :param self:

@@ -16,15 +16,12 @@ Overview
 A Scheduler is used to generate an order in which the `Mechanisms <Mechanism>`s of a `System` are to be executed.
 By default, Mechanisms are executed in the order in which they are specified in the `Processes <System.processes>`
 of the System, with each Mechanism executed once per `round of execution <Run_TRIAL>`.  A Scheduler can be used to
-implement more sophistcated patterns of execution, by specifying a set of `Conditions <Condition>`
+implement more sophisticated patterns of execution, by specifying `Conditions <Condition>` that determine when and
 COMMENT:
   (`ConditionSet`)  [<- **??REFERENCE HERE OR INTRODUCE BELOW?]
 COMMENT
-.  There two broad types of Conditions:  ones that pertain to an individual Mechanism (e.g., how many times it should
-be executed in each round of execution, or when it should stop executing based on its `value <Mechanism.value>`);
-and ones that depend on other Mechanisms (e.g., the frequency with which it should execute relative to
-others, or that it being or end executing based on the value or execution of another Mechanism).  Conditions can be
-combined in arbitrary way to generate any pattern of execution that is logically possible.
+how many times individual Mechanisms execute, and whether and how this depends on the execution of others.  Conditions
+can be combined in arbitrary ways to generate any pattern of execution that is logically possible.
 
 .. _Scheduler_Creation:
 
@@ -231,8 +228,29 @@ class SchedulerError(Exception):
 
 class Scheduler(object):
     """
-        An object that can be used to generate an order in which components are to be run, using a set of
-        arbitrary `Conditions <Condition>` (`ConditionSet`<ConditionSet>).
+        Used to generate the order in which `Mechanisms <Mechanism>` are executed, using a set of arbitrary
+        `Conditions <Condition>` (`ConditionSet`<ConditionSet>).
+
+        Arguments
+        ---------
+
+        system : System
+            specifies the Mechanisms to be ordered for execution, and any dependencies among them, based on the
+            Sysytem's `executionGraph <System.executionGraph>` and `executionList <System.executionList>`.
+
+        COMMENT:
+            [**??IS THE FOLLOWING CORRECT]:
+        condition  : ConditionSet
+            set of `Conditions <Condition>` that specify when individual Mechanisms in **system**
+            execute and any dependencies among them, that complements any that are implicit in the System,
+            and supercede those where they are in conflict.
+
+        nodes : List[Mechanism]
+            list of Mechanisms to be ordered for execution;  must be paired with a specification of the **toposort**
+            argument which is used to determine the order of execution.
+
+        toposort : **??list?? dict??
+            topological ordering of Mechanisms, **??FORMAT?  DEPENDENCY DICT?
 
         Attributes
         ----------
