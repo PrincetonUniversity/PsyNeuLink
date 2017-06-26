@@ -232,13 +232,19 @@ For example, the following script configures a `RecurrentTransferMechanism` that
 receiving input from an input layer, and then executes repeatedly until the change in its value falls below a specified
 threshold, at which point the output layer is executed::
 
-    my_input_layer = TransferMechanism(size = 3)
+    my_input_layer = TransferMechanism(size=3)
     my_recurrent_layer = RecurrentTransferMechanism(size=10)
-    my_response_layer = TransferMechanism(size = 3)
+    my_response_layer = TransferMechanism(size=3)
     settling_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])
-    **?? settling_scheduler = **??
-    settling_system=(processes=[settling_process],
-                     scheduler=setting_scheduler)
+
+    settling_system = system(
+        processes=[settling_process]
+    )
+
+    settling_system.scheduler_processing = Scheduler(system=settling_system)
+    settling_system.scheduler_processing.add_condition(my_response_layer, WhenFinished(my_recurrent_layer))
+
+    settling_system.run()
 
 
 Mechanisms can also be configured to execute in parallel but at different time scales relative to one another.  For
