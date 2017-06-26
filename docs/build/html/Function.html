@@ -90,6 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Functions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
@@ -2131,11 +2132,11 @@ to the ParameterState&#8217;s <a class="reference internal" href="#Function.Stab
 <dl class="attribute">
 <dt id="Function.Stability.ParameterState.value">
 <code class="descname">value</code><a class="headerlink" href="#Function.Stability.ParameterState.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> &#8211; the result returned by the ParameterState&#8217;s <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and used by the
+<dd><p><em>number, list or np.ndarray</em> &#8211; the result returned by the ParameterState&#8217;s <a class="reference internal" href="#Function.Stability.ParameterState.function" title="Function.Stability.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and used by the
 ParameterState&#8217;s owner or its <code class="xref any docutils literal"><span class="pre">function</span></code> as the value of the parameter for which the
 ParmeterState is responsible.  Note that this is not necessarily the same as the parameter&#8217;s attribute value
 (that is, the value of the owner&#8217;s attribute for the parameter), since the ParameterState&#8217;s
-<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> may modify the latter under the influence of its
+<a class="reference internal" href="#Function.Stability.ParameterState.function" title="Function.Stability.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> may modify the latter under the influence of its
 <a class="reference internal" href="#Function.Stability.ParameterState.mod_afferents" title="Function.Stability.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a>.</p>
 </dd></dl>
 
@@ -2253,7 +2254,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="#Function.NavarroAndFuss.variable" title="Function.NavarroAndFuss.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="IntegratorMechanism.html#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.variable" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">

@@ -90,6 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
@@ -246,7 +247,7 @@ ProcessingMechanisms that can be used to transform, integrate, and evaluate info
 LearningMechanisms, ControlMechanisms, and GatingMechanism that can be used to modulate those processes.</p>
 </div>
 <div class="section" id="simple-configurations">
-<h3>Simple Configurations<a class="headerlink" href="#simple-configurations" title="Permalink to this headline">¶</a></h3>
+<span id="index-simple-configurations"></span><h3>Simple Configurations<a class="headerlink" href="#simple-configurations" title="Permalink to this headline">¶</a></h3>
 <p>Mechanisms can be executed on their own (to gain familiarity with their functions), linked in simple configurations
 (for testing isolated interactions), or in Compositions to implement a full model.
 Linking Mechanisms for execution can be as simple as placing them in a list &#8211; PsyNeuLink provides the necessary
@@ -300,7 +301,7 @@ MappingProjection(sender=output_layer,</p>
 </div></blockquote>
 </div>
 <div class="section" id="more-elaborate-configurations">
-<h3>More Elaborate Configurations<a class="headerlink" href="#more-elaborate-configurations" title="Permalink to this headline">¶</a></h3>
+<span id="index-elaborate-configurations"></span><h3>More Elaborate Configurations<a class="headerlink" href="#more-elaborate-configurations" title="Permalink to this headline">¶</a></h3>
 <p>Configuring more complex features is just as simple and flexible.  For example, the feedforward network above can be
 trained using backpropagation simply by adding an argument to the constructor for the Process:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">],</span> <span class="n">learning</span><span class="o">=</span><span class="n">ENABLED</span><span class="p">)</span>
@@ -311,11 +312,12 @@ trained using backpropagation simply by adding an argument to the constructor fo
                <span class="n">target</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 </pre></div>
 </div>
-<p><code class="xref any docutils literal"><span class="pre">Backpropation</span></code> is the default learning method, but others are also possible, such as <a class="reference internal" href="Function.html#Function.Reinforcement" title="Function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span> <span class="pre">Learning</span></code></a> (learning for recurrent networks has not been implemented yet, but will be soon).</p>
+<p><a class="reference internal" href="Function.html#Function.BackPropagation" title="Function.BackPropagation"><code class="xref any py py-class docutils literal"><span class="pre">Backpropation</span></code></a> is the default learning method, but PsyNeuLink also currently supports
+<a class="reference internal" href="Function.html#Function.Reinforcement" title="Function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span> <span class="pre">Learning</span></code></a>, and others are currently being implemented (including Hebbian, Temporal
+Differences, and supervised learning for recurrent networks).</p>
 <p>PsyNeuLink can also be used to construct models with different kinds of Mechanisms.  For example, the script below
 uses a <a class="reference internal" href="System.html"><span class="doc">System</span></a> &#8211; a more powerful form of Composition &#8211; to create two feedforward networks that converge on a single
-output layer that combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the
-response:</p>
+output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the response:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">colors_input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;COLORS INPUT&#39;</span><span class="p">)</span>
 <span class="n">words_input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;WORDS INPUT&#39;</span><span class="p">)</span>
 <span class="n">differencing_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
@@ -337,15 +339,48 @@ For example, calling <code class="docutils literal"><span class="pre">my_simple_
 standard dependency dictionary format, so that they can also be submitted to other graph theoretic packages for
 display and/or analysis (such as <a class="reference external" href="https://networkx.github.io">NetworkX</a> and <a class="reference external" href="http://igraph.org/redirect.html">igraph</a>).</p>
 </div>
-<div class="section" id="time-scales">
-<h3>Time Scales<a class="headerlink" href="#time-scales" title="Permalink to this headline">¶</a></h3>
-<dl class="docutils">
-<dt>COMMENT:</dt>
-<dd>XXX DIFFERENT TIME SCALES / SCHEDULER
-Finally, perhaps the most powerful feature of PsyNeuLink is its ability to carry out simulations with Components
-that execute are arbitrary and disparate &#8220;time-scales&#8221;.</dd>
-</dl>
-<p>COMMENT</p>
+<div class="section" id="dynamics-of-execution">
+<span id="index-dynamics-of-execution"></span><h3>Dynamics of Execution<a class="headerlink" href="#dynamics-of-execution" title="Permalink to this headline">¶</a></h3>
+<p>Finally, perhaps the most powerful feature of PsyNeuLink is its ability to simulate models with Components
+that execute at arbitrary and disparate &#8220;time scales&#8221;. For example, a Composition can include some Mechanisms
+that require fine-grained updates (e.g., Euler integration of a drift diffusion process) with ones that carry out
+&#8220;single shot&#8221; computations (e.g., a single pass through a feedforward neural network). By default, when a Composition
+is run, each Component in it is executed at least once.  However, PsyNeuLink has a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> that can be used to
+design more complex dynamics of execution by assigning one or more <code class="xref any docutils literal"><span class="pre">Conditions</span></code> to any Mechanism. Conditions can
+specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each
+<code class="xref any docutils literal"><span class="pre">round</span> <span class="pre">of</span> <span class="pre">execution</span></code>), or its behavior relative to that of one or more other Components (e.g., how many times
+it should execute or when it should stop executing relative to other Mechanisms). For example, the following script
+configures a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that begins executing immediately after receiving input from an input layer,
+and then executes repeatedly until the change in its value falls below a specified threshold, at which point the
+output layer is executed:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>my_input_layer = TransferMechanism(size = 3)
+my_recurrent_layer = RecurrentTransferMechanism(size=10)
+my_response_layer = TransferMechanism(size = 3)
+settling_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])
+**?? settling_scheduler = **??
+settling_system=(processes=[settling_process],
+                 scheduler=setting_scheduler)
+</pre></div>
+</div>
+<p>Mechanisms can also be configured to execute in parallel but at different time scales relative to one another.  For
+example, a single-pass feedforward layer can be added to the network above, that executes once for each settling of
+the recurrent layer, with the following simple additions:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>my_input_layer = TransferMechanism(size = 3)
+my_recurrent_layer = RecurrentTransferMechanism(size=10)
+my_response_layer = TransferMechanism(size = 3)
+settling_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])
+**single_pass_mech = TransferMechanism(size=5)**
+**single_pass_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])**
+**?? settling_scheduler = **??**
+settling_system=(processes=[settling_process, **single_pass_process**],
+                 scheduler=setting_scheduler)
+</pre></div>
+</div>
+<p>Time scales can also be specified explicitly.  For example, changing the Condition for the single_pass_layer
+to <code class="docutils literal"><span class="pre">**??</span></code> configures it to execute once for each 10 executions of <code class="docutils literal"><span class="pre">my_recurrent_layer</span></code>, rather than only
+when it has settled.  Needless to say, the same methods can be used schedule different kinds of mechanisms and
+their dependencies on one another (such as a neural network that executes only after a DDM has reached its
+decision threshold).</p>
 <p>The <a class="reference internal" href="UserGuide.html"><span class="doc">User&#8217;s Guide</span></a> provides a more detailed review of PsyNeuLink&#8217;s organization and capabilities,
 and the <code class="xref any docutils literal"><span class="pre">Tutorial</span></code> provides an interactive introduction to its use.</p>
 </div>
