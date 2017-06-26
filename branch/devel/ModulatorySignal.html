@@ -116,6 +116,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
@@ -224,7 +225,7 @@ documentation for each type of ModulatorySignal).</p>
 <span id="modulatorysignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatorySignal is associated with one or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> of the
 corresponding type, that project to the State(s), the value(s) of which it modulates.  THe ModulatoryProjections
-received by a <a class="reference internal" href="State.html"><span class="doc">State</span></a> are listed in its <a class="reference internal" href="Function.html#Function.Stability.ParameterState.mod_afferents" title="Function.Stability.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute. The method by which a ModulatorySignal
+received by a <a class="reference internal" href="State.html"><span class="doc">State</span></a> are listed in its <a class="reference internal" href="State.html#State.State_Base.mod_afferents" title="State.State_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute. The method by which a ModulatorySignal
 modulates a State&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code> is determined by the ModulatorySignal&#8217;s
 <a class="reference internal" href="#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute, as described below.</p>
 <div class="section" id="modulation">
@@ -324,7 +325,7 @@ consider a <a class="reference internal" href="ControlSignal.html"><span class="
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>; and assume that the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the bias parameter (to which the ControlSignal projects)
 uses a <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function to update its value (which is the default for a ParameterState).  If the
 <a class="reference internal" href="#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute of the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is <a class="reference internal" href="Function.html#Function.ModulationParam.MULTIPLICATIVE" title="Function.ModulationParam.MULTIPLICATIVE"><code class="xref any py py-attr docutils literal"><span class="pre">ModulationParam.MULTIPLICATIVE</span></code></a>,
-then it will be assigned to the <a class="reference internal" href="Function.html#linear"><span class="std std-ref">slope</span></a> parameter of the ParameterState&#8217;s <a class="reference internal" href="Function.html#Function.Stability.ParameterState.function" title="Function.Stability.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.
+then it will be assigned to the <a class="reference internal" href="Function.html#linear"><span class="std std-ref">slope</span></a> parameter of the ParameterState&#8217;s <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.
 Accordingly, when the ParameterState is updated it will multiply the bias parameter&#8217;s value by the value of the
 ControlSignal to determine the value of the bias parameter.  The result will used as the value of the bias for the
 Logistic Function when the TransferMechanism is executed (see <a class="reference internal" href="State.html#state-execution"><span class="std std-ref">Execution</span></a> for additional details).</p>
@@ -345,7 +346,7 @@ which the state belongs is next executed; see <span class="xref std std-ref">Laz
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#module-AdaptiveMechanisms.GatingMechanisms.GatingMechanism" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism"><em>GatingMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the ModulatorySignal.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism"><em>GatingMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the ModulatorySignal.</li>
 <li><strong>function</strong> (<em>Function or method : default Linear</em>) &#8211; specifies the function used to determine the value of the ModulatorySignal from the value of its
 <code class="xref any docutils literal"><span class="pre">owner</span></code>.</li>
 <li><strong>modulation</strong> (<em>ModulationParam : default ModulationParam.MULTIPLICATIVE</em>) &#8211; specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.</li>

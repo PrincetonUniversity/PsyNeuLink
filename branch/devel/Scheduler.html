@@ -1,0 +1,350 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Scheduler &mdash; PsyNeuLink 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+        <link rel="next" title="Condition" href="Condition.html"/>
+        <link rel="prev" title="Run" href="Run.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Scheduler</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Condition.html">Condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-scheduler">Creating a Scheduler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#algorithm">Algorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PsyNeuLink</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Scheduler</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/Scheduler.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="scheduler">
+<h1>Scheduler<a class="headerlink" href="#scheduler" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Condition.html">Condition</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Condition.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Condition.html#creating-conditions">Creating Conditions</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<span class="target" id="module-scheduling.Scheduler"></span><div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A Scheduler is used to generate an order in which the <code class="xref any docutils literal"><span class="pre">Mechanisms</span> <span class="pre">&lt;Mechanism&gt;`s</span> <span class="pre">of</span> <span class="pre">a</span> <span class="pre">`System</span></code> are to be executed.
+By default, Mechanisms are executed in the order in which they are specified in the <code class="xref any docutils literal"><span class="pre">Processes</span></code>
+of the System, with each Mechanism executed once per <a class="reference internal" href="Run.html#run-trial"><span class="std std-ref">round of execution</span></a>.  A Scheduler can be used to
+implement more sophisticated patterns of execution, by specifying <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that determine when and
+how many times individual Mechanisms execute, and whether and how this depends on the execution of others.  Conditions
+can be combined in arbitrary ways to generate any pattern of execution that is logically possible.</p>
+</div>
+<div class="section" id="creating-a-scheduler">
+<span id="scheduler-creation"></span><h2>Creating a Scheduler<a class="headerlink" href="#creating-a-scheduler" title="Permalink to this headline">¶</a></h2>
+<p>A Scheduler is created either explicitly, or automatically by a <a class="reference internal" href="System.html"><span class="doc">System</span></a>. When creating a Scheduler explicitly,
+the set of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> to be executed and their order must be specified in one of the following
+ways in the Scheduler&#8217;s constructor:</p>
+<ul class="simple">
+<li>a <a class="reference internal" href="System.html"><span class="doc">System</span></a> or a <strong>graph specification dictionary</strong> in the <strong>system</strong> argument - if a System is specified,
+the schedule is created using the Mechanisms in the System&#8217;s <code class="xref any docutils literal"><span class="pre">executionList</span></code> and the order
+specified in its <code class="xref any docutils literal"><span class="pre">executionGraph</span></code>.  If graph specification dictionary is used,  it must
+describe a directed acyclic graph of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, in which the key for each entry is a Mechanism and
+the value is a set specifying the Mechanisms that project directly to the one in the key;  an error is generated if
+any cycles (e.g., recurrent <code class="xref any docutils literal"><span class="pre">Projections</span></code>) are detected.</li>
+<li>a <strong>list of Mechanisms</strong> in the <strong>nodes</strong> argument - the list must acyclic; as with a
+graph specification dictionary, an error is generated if any cycles (e.g., recurrent <code class="xref any docutils literal"><span class="pre">Projections</span></code>)
+are detected.  If the <strong>nodes</strong> argument is used, then a topologically sorted list of the Mechanisms must be
+provided in the <strong>toposort_ordering</strong> argument</li>
+</ul>
+<p>In addition, a <a class="reference internal" href="Condition.html#scheduling.condition.ConditionSet" title="scheduling.condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a> may be specified, by assigning one to the <strong>condition_set</strong> argument of the constructor.
+A ConditionSet is simply a list of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>.  These will be added to the list generated from the
+<a class="reference internal" href="System.html"><span class="doc">System</span></a> or graph specified in the <strong>system</strong> argument, or the list specified in the <strong>toposort_ordering</strong> argument.
+The Conditions will be added to the ones derived from the <a class="reference internal" href="System.html"><span class="doc">System</span></a>, graph, or list specified in the <strong>system</strong> or
+<strong>toposort_ordering</strong> arguments, with any conflicts resolved in favor of the ConditionSet. ConditionSets can also
+be added after a Scheduler has been created, using its <a class="reference internal" href="Condition.html#scheduling.condition.ConditionSet.add_condition" title="scheduling.condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and <a class="reference internal" href="Condition.html#scheduling.condition.ConditionSet.add_condition_set" title="scheduling.condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods.
+If both a System and a set of nodes are specified, the Scheduler will initialize based on the System.</p>
+</div>
+<div class="section" id="algorithm">
+<span id="scheduler-algorithm"></span><h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><dl class="docutils">
+<dt>[<a href="#id1"><span class="problematic" id="id2">**</span></a>??HOW IS IT USED BY Conditions?]</dt>
+<dd>The Scheduler evaluates the</dd>
+</dl>
+</div></blockquote>
+<p><code class="xref any docutils literal"><span class="pre">consider_sets</span></code> in their order in the <code class="xref any docutils literal"><span class="pre">consideration_queue</span></code>, and determines which Mechanisms in
+each are allowed to run based on whether their associated Conditions have been met; all Mechanisms within a
+<code class="xref any docutils literal"><span class="pre">consideration_set</span></code> that are allowed to run comprise a <code class="xref any docutils literal"><span class="pre">time_step`&lt;TimeScale.TIME_STEP&gt;.</span> <span class="pre">These</span> <span class="pre">Mechanisms</span> <span class="pre">are</span>
+<span class="pre">considered</span> <span class="pre">for</span> <span class="pre">simultaneous</span> <span class="pre">execution,</span> <span class="pre">and</span> <span class="pre">so</span> <span class="pre">the</span> <span class="pre">execution</span> <span class="pre">of</span> <span class="pre">a</span> <span class="pre">Mechanism</span> <span class="pre">within</span> <span class="pre">a</span> <span class="pre">`time_step</span></code> may trigger the
+execution of another Mechanism within its <code class="xref any docutils literal"><span class="pre">consideration_set</span></code>.</p>
+<blockquote>
+<div>[** ??DOES &#8216;Always` MEAN IT RUNS ONCE AND ONLY ONCE PER ROUND OF EXECUTION??]
+[** NEED TO DEFINE <code class="xref any docutils literal"><span class="pre">time_step</span></code> AND <code class="xref any docutils literal"><span class="pre">round</span> <span class="pre">of</span> <span class="pre">execution</span></code>]
+[** CONDITION NAMES SHOULD PROBABLY USE UNDERSCORE NOTATION OR, AT LEAST INITIAL LOWER CASE CAMEL CASE]</div></blockquote>
+<dl class="class">
+<dt id="scheduling.Scheduler.Scheduler">
+<em class="property">class </em><code class="descclassname">scheduling.Scheduler.</code><code class="descname">Scheduler</code><span class="sig-paren">(</span><em>system=None</em>, <em>condition_set=None</em>, <em>nodes=None</em>, <em>toposort_ordering=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scheduling.Scheduler.Scheduler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to generate the order in which <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> are executed, using a set of arbitrary
+<a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> (<a href="#id3"><span class="problematic" id="id4">`</span></a>ConditionSet`&lt;ConditionSet&gt;).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>system</strong> (<a class="reference internal" href="System.html#module-System" title="System"><em>System</em></a>) &#8211; specifies the Mechanisms to be ordered for execution, and any dependencies among them, based on the
+Sysytem&#8217;s <code class="xref any docutils literal"><span class="pre">executionGraph</span></code> and <code class="xref any docutils literal"><span class="pre">executionList</span></code>.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="scheduling.Scheduler.Scheduler.add_condition">
+<code class="descname">add_condition</code><span class="sig-paren">(</span><em>owner</em>, <em>condition</em><span class="sig-paren">)</span><a class="headerlink" href="#scheduling.Scheduler.Scheduler.add_condition" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body"><p class="first">self:</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>owner</strong> &#8211; the <code class="xref std std-keyword docutils literal"><span class="pre">Component</span></code> that is dependent on the :param conditions:</li>
+<li><strong>conditions</strong> &#8211; a <code class="xref std std-keyword docutils literal"><span class="pre">Condition</span></code> (including All or Any)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scheduling.Scheduler.Scheduler.add_condition_set">
+<code class="descname">add_condition_set</code><span class="sig-paren">(</span><em>conditions</em><span class="sig-paren">)</span><a class="headerlink" href="#scheduling.Scheduler.Scheduler.add_condition_set" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">self:</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> &#8211; a <code class="xref std std-keyword docutils literal"><span class="pre">dict</span></code> mapping <code class="xref std std-keyword docutils literal"><span class="pre">Component`s</span> <span class="pre">to</span> <span class="pre">:keyword:`Condition`s,</span>
+<span class="pre">can</span> <span class="pre">be</span> <span class="pre">added</span> <span class="pre">later</span> <span class="pre">with</span> <span class="pre">:keyword:`add_condition</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="scheduling.Scheduler.Scheduler.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>termination_conds=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scheduling.Scheduler.Scheduler.run" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>self</strong> &#8211; </li>
+<li><strong>termination_conds</strong> &#8211; (dict) - a mapping from <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale`s</span> <span class="pre">to</span> <span class="pre">:keyword:`Condition`s</span> <span class="pre">that</span> <span class="pre">when</span> <span class="pre">met</span>
+<span class="pre">terminate</span> <span class="pre">the</span> <span class="pre">execution</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">specified</span> <span class="pre">:keyword:`TimeScale</span></code></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Condition.html" class="btn btn-neutral float-right" title="Condition" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Run.html" class="btn btn-neutral" title="Run" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

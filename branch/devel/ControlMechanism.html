@@ -116,6 +116,7 @@
 <li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
@@ -219,7 +220,7 @@ of one.  These are assigned to the ObjectiveMechanism&#8217;s <a class="referenc
 ObjectiveMechanism is referenced by the ControlMechanism&#8217;s
 <code class="xref any docutils literal"><span class="pre">monitoring_mechanism</span></code> attribute.</p>
 <p>ObjectiveMechanism monitors each mechanism and/or outputState listed in the ControlMechanism&#8217;s
-&#8216;monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="Function.html#Function.LinearCombination.function" title="Function.LinearCombination.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
+&#8216;monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.
 This information is used to set the value of the ControlMechanism&#8217;s ControlSignals.</p>
 <p class="rubric" id="controlmechanism-examples">Examples</p>
 <p>EXAMPLES HERE</p>
@@ -227,7 +228,7 @@ This information is used to set the value of the ControlMechanism&#8217;s Contro
 </div>
 <div class="section" id="execution">
 <span id="controlmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A ControlMechanism that is a system&#8217;s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is always the last mechanism to be executed (see <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System Control</span></a>).  Its <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the value in its
+<p>A ControlMechanism that is a system&#8217;s <code class="xref any docutils literal"><span class="pre">controller</span></code> is always the last mechanism to be executed (see <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System Control</span></a>).  Its <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the value in its
 <em>ERROR_SIGNAL</em> <code class="xref any docutils literal"><span class="pre">input_state</span></code>, and use that to determine its
 <code class="xref any docutils literal"><span class="pre">allocation_policy</span></code> that specifies the value assigned to each of its
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  Each of those is used by its associated <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to set the
