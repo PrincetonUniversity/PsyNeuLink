@@ -13,9 +13,9 @@
 Overview
 --------
 
-`Condition`<Condition>s represent any conditions that can be satisfied. Each Condition is associated with an owner (a
-`Component`<Component> that the Condition "belongs" to, relevant for relative conditions such as `EveryNCalls`), and
-a `Scheduler`<Scheduler>, which maintains most of the data required to test satisfaction. These properties can usually
+`Conditions <Condition>` represent any conditions that can be satisfied. Each Condition is associated with an owner (a
+`Component` that the Condition "belongs" to, relevant for relative conditions such as `EveryNCalls`), and
+a `Scheduler` that maintains most of the data required to test satisfaction. These properties can usually
 be determined automatically based on the context in which Conditions are created.
 
 

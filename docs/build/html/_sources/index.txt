@@ -175,13 +175,13 @@ and then specifying the target for each trial when it is run (here five trials o
     my_encoder.run(input=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]],
                    target=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
 
-`Backpropation` is the default learning method, but others are also possible, such as `Reinforcement Learning
-<Reinforcement>` (learning for recurrent networks has not been implemented yet, but will be soon).
+`Backpropation <BackPropagation>` is the default learning method, but PsyNeuLink also currently supports
+`Reinforcement Learning <Reinforcement>`, and others are currently being implemented (including Hebbian, Temporal
+Differences, and supervised learning for recurrent networks).
 
 PsyNeuLink can also be used to construct models with different kinds of Mechanisms.  For example, the script below
 uses a `System` -- a more powerful form of Composition -- to create two feedforward networks that converge on a single
-output layer that combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the
-response::
+output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the response::
 
     colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
     words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
@@ -305,6 +305,7 @@ with substantial and greatly appreciated assistance from:
    State
    Projection
    Run
+   Scheduler
    Component
    Function
 
