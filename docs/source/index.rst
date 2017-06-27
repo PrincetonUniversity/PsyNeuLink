@@ -63,11 +63,11 @@ constraints as possible on what it is possible to implement or ask the model to 
 What PsyNeuLink is **NOT**
 --------------------------
 
-PsyNeuLink is not presently well suited to:
+While PsyNeuLink is well suited to developing high level models that integrate disparate components into a single,
+integrated model -- to explore interactions among the components -- it is not presently well suited to:
 
  - extensive model fitting
  - large scale simulations
- - elaborate and detailed models of a particular form
  - biophysically-realistic models of individual neurons
 
 Other packages that are much better for such applications are:
@@ -78,13 +78,15 @@ Other packages that are much better for such applications are:
 `Genesis <http://www.genesis-sim.org>`_,
 `Neuron <https://www.neuron.yale.edu/neuron/>`_,
 and `Nengo <http://www.nengo.ca>`_  (for biophysically-realistic models of neuronal function).
-
 These packages are all better for elaborate and detailed models of a particular form.
 In contrast, the focus in designing and implementing PsyNeuLink has been to make it as flexible and easy to use as
 possible, with the ability to integrate components constructed in other packages
 (includling some of the ones listed above).  These are characteristics that are often (at least in the initial
 stages of development) in tension with efficiency (think:  interpreted vs. compiled).  As PsyNeuLink grows and matures,
-our expectation is that it be made computationally more efficient.
+our expectation is that it will be made computationally more efficient.  That said, in its present form it is well
+better suited to developing simpler models, or taking complex or highly detailed models ones that have been developed --
+or subjected to extensive parameter fitting -- in other frameworks, and re-expressing them in a form that is amenable
+to integration, dissemination, and documentation.
 
 
 .. _Overview:
