@@ -162,7 +162,7 @@ class Composition(object):
         self.explicit_output_mechanisms = []  # Need to track to know which to leave untouched
         self.all_output_mechanisms = []
         self.target_mechanisms = []  # Do not need to track explicit as they mush be explicit
-        self.sched = Scheduler(self)
+        self.sched = Scheduler(composition=self)
 
     @property
     def graph_processing(self):
@@ -388,23 +388,27 @@ class Composition(object):
         #     self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
 
         is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
-        for v in self.graph.vertices:
-            if isinstance(v.component, Mechanism):
-                if (v.component in is_origin) and (v.component in inputs.keys()):
-                    print()
-                    num = v.component.execute(input=inputs[v.component], context=EXECUTING)
-                    print("=============================================")
-                    print(" -------------- EXECUTING ", v.component.name, " -------------- ")
-                    print("result = ", num)
-                    print()
-                    print()
-                else:
-                    num = v.component.execute(context=EXECUTING)
-                    print("=============================================")
-                    print(" -------------- EXECUTING ", v.component.name, " -------------- ")
-                    print("result = ", num)
-                    print()
-                    print()
+        
+        for next_execution_set in scheduler.run():
+
+            for mechanism in next_execution_set:
+
+                if isinstance(mechanism, Mechanism):
+                    if (mechanism in is_origin) and (mechanism in inputs.keys()):
+                        print()
+                        num = mechanism.execute(input=inputs[mechanism], context=EXECUTING)
+                        print("=============================================")
+                        print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
+                        print("result = ", num)
+                        print()
+                        print()
+                    else:
+                        num = mechanism.execute(context=EXECUTING)
+                        print("=============================================")
+                        print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
+                        print("result = ", num)
+                        print()
+                        print()
         '''
         for current_component in scheduler.run_trial():
             if current_component.name != "Clock":
