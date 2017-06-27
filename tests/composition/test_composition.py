@@ -7,7 +7,7 @@ import pytest
 from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.composition import Composition, CompositionError, MechanismRole
 
 logger = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ class TestAddProjection:
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
                    setup='''
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.composition import Composition
 comp = Composition()
 A = TransferMechanism(name='A')

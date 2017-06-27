@@ -705,10 +705,7 @@ class Component(object):
         self._instantiate_attributes_after_function(context=context)
 
     def __repr__(self):
-        try:
-            return '({0} {1})'.format(type(self).__name__, self.name)
-        except AttributeError:
-            return '({0} {1})'.format(type(self).__name__, '_')
+        return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
 
     def _deferred_init(self, context=None):
@@ -744,8 +741,9 @@ class Component(object):
 
             # If name is None, mark as deferred so that name can be customized
             #    using info that has become available at time of deferred init
-            self.init_args['name'] = self.init_args['name'] or ('deferred_init_' + self.className) or \
-                                     DEFERRED_DEFAULT_NAME
+            self.init_args['name'] = (self.init_args['name'] or
+                                      ('deferred_init_' + self.className) or
+                                      DEFERRED_DEFAULT_NAME)
 
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
@@ -1349,7 +1347,7 @@ class Component(object):
             #     C) no default function, default functionParams
             #         example: ??DDM
             #     D) no default function, no default functionParams
-            #         example: System, Process, MonitoringMechanism, WeightedErrorMechanism
+            #         example: System, Process, ??ComparatorMechanism, ??LearningMechanism
 
             self.assign_default_FUNCTION_PARAMS = True
 
@@ -1425,7 +1423,7 @@ class Component(object):
             # MODIFIED 4/18/17 NEW:
             # For params that are a 2-item tuple, extract the value
             #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
-            #    which is used it instantiate the specified projections)
+            #    which is used it instantiate the specified components in the 2nd item of the tuple)
             # IMPLEMENTATION NOTE:  Do this here rather than in _validate_params, as it needs to be done before
             #                       any override of _validate_params, which (should not, but) may process params
             #                       before calling super()._validate_params
@@ -1836,13 +1834,23 @@ class Component(object):
         from PsyNeuLink.Components.Projections.Projection import Projection
         # from PsyNeuLink.Components.Projections.Modulatory.ControlProjection import ControlProjection
         # from PsyNeuLink.Components.Projections.Modulatory.LearningProjection import LearningProjection
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+        from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
+        ALLOWABLE_TUPLE_SPEC_KEYWORDS = {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING}
+        ALLOWABLE_TUPLE_SPEC_CLASSES = (ModulatoryProjection_Base, ModulatorySignal)
 
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
         if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING} or
-                     isinstance(param_spec[1], Projection) or
-                     (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
-              ):
+                # # MODIFIED 6/19/17 OLD:
+                # (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION, CONTROL, LEARNING} or
+                #      isinstance(param_spec[1], Projection) or
+                #      (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
+                # MODIFIED 6/19/17 NEW:
+                (param_spec[1] in ALLOWABLE_TUPLE_SPEC_KEYWORDS or
+                     isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or
+                         (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES)))
+                # MODIFIED 6/19/17 END
+            ):
             value =  param_spec[0]
 
         # Otherwise, just return the tuple
@@ -2402,25 +2410,17 @@ def make_property(name, default_value):
         self.user_params.__additem__(name, val)
 
         # If component is a Function and has an owner, update function_params dict for owner
-        #    also, get parameter_state_owner if one exsits
+        #    also, get parameter_state_owner if one exists
         from PsyNeuLink.Components.Functions.Function import Function_Base
-        # MODIFIED 6/8/17 OLD:
         if isinstance(self, Function_Base) and self.owner:
+            param_state_owner = self.owner
             self.owner.function_params.__additem__(name, val)
-        # # MODIFIED 6/8/17 NEW:
-        # if isinstance(self, Function_Base):
-        #     if self.owner:
-        #         self.owner.function_params.__additem__(name, val)
-        #         param_state_owner = self.owner
-        #     else:
-        #         param_state_owner = None
-        # else:
-        #     param_state_owner = self
-        # # If the parameter is associated with a parameter state on the owner
-        # if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
-        #     param_state_owner._parameter_states[name].value = val
-        # MODIFIED 6/8/17 END
+        else:
+            param_state_owner = self
 
+        # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
+        if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
+            param_state_owner._parameter_states[name].variable = val
 
     # Create the property
     prop = property(getter).setter(setter)

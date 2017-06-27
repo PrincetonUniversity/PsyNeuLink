@@ -212,13 +212,8 @@ def is_function_type(x):
 
 ADDITIVE_PARAM = 'additive_param'
 MULTIPLICATIVE_PARAM = 'multiplicative_param'
-
-
-class AdditiveParam():
-    attrib_name = ADDITIVE_PARAM
-    name = 'ADDITIVE_PARAM'
-    init_val = 0
-    reduce = lambda x : np.sum(np.array(x), axis=0)
+OVERRIDE_PARAM = 'OVERRIDE'
+DISABLE_PARAM = 'DISABLE'
 
 
 class MultiplicativeParam():
@@ -228,9 +223,66 @@ class MultiplicativeParam():
     reduce = lambda x : np.product(np.array(x), axis=0)
 
 
+class AdditiveParam():
+    attrib_name = ADDITIVE_PARAM
+    name = 'ADDITIVE_PARAM'
+    init_val = 0
+    reduce = lambda x : np.sum(np.array(x), axis=0)
+
+# IMPLEMENTATION NOTE:  USING A namedtuple DOESN'T WORK, AS CAN'T COPY PARAM IN Component._validate_param
+# ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
+
+
 class ModulationParam():
-    ADDITIVE = AdditiveParam
+    """Specify parameter of a `Function <Function>` for `modulation <ModulatorySignal_Modulation>` by a ModulatorySignal
+
+    COMMENT:
+        Each term specifies a different type of modulation used by a `ModulatorySignal`.  The first two refer to classes
+        that define the following terms:
+            * attrib_name (*ADDITIVE_PARAM* or *MULTIPLICATIVE_PARAM*):  specifies which meta-parameter of the function
+              to use for modulation;
+            * name (str): name of the meta-parameter
+            * init_val (int or float): value with which to initialize the parameter being modulated if it is not otherwise
+              specified
+            * reduce (function): the manner by which to aggregate multiple ModulatorySignals of that type, if the
+              `ParameterState` receives more than one `ModulatoryProjection` of that type.
+    COMMENT
+
+    Attributes
+    ----------
+
+    MULTIPLICATIVE
+        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
+        of the State's `function <State.function>`;
+
+    ADDITIVE
+        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
+        of the State's `function <State.function>`;
+
+    OVERRIDE
+        assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the State's
+        `value <State.value>` (ignoring its `variable <State.variable>` and `function <State.function>`);
+
+    DISABLE
+        ignore the ModulatorySignal when calculating the State's `value <State.value>`.
+    """
     MULTIPLICATIVE = MultiplicativeParam
+    # MULTIPLICATIVE = ModulationType(MULTIPLICATIVE_PARAM,
+    #                                 'MULTIPLICATIVE',
+    #                                 1,
+    #                                 lambda x : np.product(np.array(x), axis=0))
+    ADDITIVE = AdditiveParam
+    # ADDITIVE = ModulationType(ADDITIVE_PARAM,
+    #                           'ADDITIVE_PARAM',
+    #                           0,
+    #                           lambda x : np.sum(np.array(x), axis=0))
+    OVERRIDE = OVERRIDE_PARAM
+    DISABLE = DISABLE_PARAM
+
+MULTIPLICATIVE = ModulationParam.MULTIPLICATIVE
+ADDITIVE = ModulationParam.ADDITIVE
+OVERRIDE = ModulationParam.OVERRIDE
+DISABLE = ModulationParam.DISABLE
 
 
 def _is_modulation_param(val):
@@ -254,7 +306,6 @@ def _get_modulated_param(owner, mod_proj:ModulatoryProjection_Base):
     function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
 
     # Get the function parameter's value
-    # function_param_value = owner.function_object.params[function_param_name]
     function_param_value = owner.function_object.params[function_param_name]
     # MODIFIED 6/9/17 OLD:
     # if function_param_value is None:
@@ -283,9 +334,12 @@ def get_param_value_for_keyword(owner, keyword):
     try:
         return owner.paramsCurrent[FUNCTION].keyword(owner, keyword)
     except FunctionError as e:
+        # assert(False)
         if owner.prefs.verbosePref:
             print("{} of {}".format(e, owner.name))
-        return None
+        # return None
+        else:
+            raise FunctionError(e)
     except AttributeError:
         if owner.prefs.verbosePref:
             print("Keyword ({}) not recognized for {}".format(keyword, owner.name))
@@ -2375,8 +2429,8 @@ class SoftMax(
             COMMENT:
                 D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
             COMMENT
-            D\ :sub:`j`\ S\ :sub:`i` = S\ :sub:`i`\ (𝜹\ :sub:`i,j` - S\ :sub:`j`),
-            where 𝜹\ :sub:`i,j`\ =1 if i=j and 𝜹\ :sub:`i,j`\ =0 if i≠j.
+            D\\ :sub:`j`\\ S\\ :sub:`i` = S\\ :sub:`i`\\ (𝜹\\ :sub:`i,j` - S\\ :sub:`j`),
+            where 𝜹\\ :sub:`i,j`\\ =1 if i=j and 𝜹\\ :sub:`i,j`\\ =0 if i≠j.
         If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
         value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
         (since it is ambiguous as to which element would have been chosen by the SoftMax function)
@@ -2825,7 +2879,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def keyword(self, keyword):
 
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
         rows = None
         cols = None
         if isinstance(self, MappingProjection):
@@ -2902,13 +2956,13 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     if specification is IDENTITY_MATRIX:
         if rows != cols:
-            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
+            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
         return np.identity(rows)
 
     if specification is HOLLOW_MATRIX:
         if rows != cols:
-            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
+            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
         return 1-np.identity(rows)
 
@@ -5000,15 +5054,15 @@ class BogaczEtAl(
         Calculate the derivative of 1/(reward rate) with respect to the threshold (**output** arg)
         and drift_rate (**input** arg).  Reward rate (RR) is assumed to be:
 
-            RR = (delay\ :sub:`ITI` + Z/A + ED);
+            RR = (delay\\ :sub:`ITI` + Z/A + ED);
 
         the derivative of 1/RR with respect to the `threshold <BogaczEtAl.threshold>` is:
 
-            1/A - E/A - (2A/c\ :sup:`2`\ )ED;
+            1/A - E/A - (2A/c\\ :sup:`2`\\ )ED;
 
         and the derivative of 1/RR with respect to the `drift_rate <BogaczEtAl.drift_rate>` is:
 
-            -Z/A\ :sup:`2` + (Z/A\ :sup:`2`\ )E - (2Z/c\ :sup:`2`\ )ED
+            -Z/A\\ :sup:`2` + (Z/A\\ :sup:`2`\\ )E - (2Z/c\\ :sup:`2`\\ )ED
 
         where:
 
@@ -5018,11 +5072,11 @@ class BogaczEtAl(
 
             c = `noise <BogaczEtAl.noise>`,
 
-            E = exp(-2ZA/\ c\ :sup:`2`\ ), and
+            E = exp(-2ZA/\\ c\\ :sup:`2`\\ ), and
 
-            D = delay\ :sub:`ITI` + delay\ :sub:`penalty` - Z/A
+            D = delay\\ :sub:`ITI` + delay\\ :sub:`penalty` - Z/A
 
-            delay\ :sub:`ITI` is the intertrial interval and delay\ :sub:`penalty` is a penalty delay.
+            delay\\ :sub:`ITI` is the intertrial interval and delay\\ :sub:`penalty` is a penalty delay.
 
 
         Returns
@@ -5865,7 +5919,7 @@ class Stability(ObjectiveFunction):
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
      """
 
-    from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+    from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
     from PsyNeuLink.Components.States.ParameterState import ParameterState
 
     componentName = STABILITY_FUNCTION
@@ -5919,7 +5973,7 @@ class Stability(ObjectiveFunction):
         # Validate error_matrix specification
         if MATRIX in target_set:
 
-            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
             from PsyNeuLink.Components.States.ParameterState import ParameterState
 
             matrix = target_set[MATRIX]
@@ -5977,7 +6031,7 @@ class Stability(ObjectiveFunction):
 
         size = len(np.squeeze(self.variable))
 
-        from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         if isinstance(self.matrix,MappingProjection):
             self._matrix = self.matrix._parameter_states[MATRIX]
@@ -6206,6 +6260,7 @@ class Distance(ObjectiveFunction):
 
 # region **************************************   LEARNING FUNCTIONS ***************************************************
 
+ReturnVal = namedtuple('ReturnVal', 'learning_signal, error_signal')
 
 class LearningFunction(Function_Base):
     """Abstract class of `Function` used for learning.
@@ -6226,13 +6281,20 @@ class LearningFunction(Function_Base):
 
     componentType = LEARNING_FUNCTION_TYPE
 
+    # def __init__(self, variable_default, params, owner, prefs, context):
+    #     super().__init__(variable_default=variable_default,
+    #                      params=params,
+    #                      owner=owner,
+    #                      prefs=prefs,
+    #                      context=context)
+    #     self.return_val = return_val(None, None)
+
 
 LEARNING_ACTIVATION_FUNCTION = 'activation_function'
 LEARNING_ACTIVATION_INPUT = 0  # a(j)
 # MATRIX = 1             # w
 LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
 LEARNING_ERROR_OUTPUT = 2
-
 
 class Reinforcement(
     LearningFunction):  # -------------------------------------------------------------------------------
@@ -6370,6 +6432,8 @@ class Reinforcement(
                                                   learning_rate=learning_rate,
                                                   params=params)
 
+        # self.return_val = ReturnVal(None, None)
+
         super().__init__(variable_default=variable_default,
                          params=params,
                          owner=owner,
@@ -6440,13 +6504,12 @@ class Reinforcement(
 
         Returns
         -------
+        error signal : 1d np.array
+            same as value received in `error_signal <Reinforcement.error_signal>` argument.
 
         diagonal weight change matrix : 2d np.array
             has a single non-zero entry in the same row and column as the one in
             `activation_output <Reinforcement.activation_output>` and `error_signal <Reinforcement.error_signal>`.
-
-        error signal : 1d np.array
-            same as value received in `error_signal <Reinforcement.error_signal>` argument.
         """
 
         self._check_args(variable=variable, params=params, context=context)
@@ -6474,8 +6537,12 @@ class Reinforcement(
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        # return:
-        # - weight_change_matrix and error_array
+        # self.return_val.error_signal = error_array
+        # self.return_val.learning_signal = weight_change_matrix
+        #
+        # # return:
+        # # - weight_change_matrix and error_array
+        # return list(self.return_val)
         return [weight_change_matrix, error_array]
 
 
@@ -6630,6 +6697,8 @@ class BackPropagation(LearningFunction):
                                                   learning_rate=learning_rate,
                                                   params=params)
 
+        # self.return_val = ReturnVal(None, None)
+
         super().__init__(variable_default=variable_default,
                          params=params,
                          owner=owner,
@@ -6685,7 +6754,7 @@ class BackPropagation(LearningFunction):
             error_matrix = target_set[ERROR_MATRIX]
 
             from PsyNeuLink.Components.States.ParameterState import ParameterState
-            from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
             if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
                 raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
                                     "MappingProjection".format(ERROR_MATRIX, self.name))
@@ -6729,7 +6798,7 @@ class BackPropagation(LearningFunction):
             if cols != error_signal_len:
                 raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
                                     "must match the length of the error signal ({}) it receives".
-                                    format(cols, MATRIX, error_matrix.shape, self.name, cols))
+                                    format(cols, MATRIX, error_matrix.shape, self.name, error_signal_len))
 
             # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
             if rows != activity_output_len:
@@ -6764,14 +6833,13 @@ class BackPropagation(LearningFunction):
         Returns
         -------
 
-        weight change matrix : 2d np.array
-            the modifications to make to the matrix.
-
         weighted error signal : 1d np.array
             `error_signal <BackPropagation.error_signal>`, weighted by the contribution made by each element of
             `activation_output <BackPropagation.activation_output>` as a function of
             `error_matrix <BackPropagation.error_matrix>`.
 
+        weight change matrix : 2d np.array
+            the modifications to make to the matrix.
         """
 
         self._check_args(variable=variable, params=params, context=context)
@@ -6816,6 +6884,11 @@ class BackPropagation(LearningFunction):
         #           "-derivative (dA_dW): {}\n    "
         #           "-error_derivative (dE_dW): {}\n".
         #           format(self.owner.name, self.activation_input, dE_dA, dA_dW ,dE_dW))
+
+        # self.return_val.error_signal = dE_dW
+        # self.return_val.learning_signal = weight_change_matrix
+        #
+        # return list(self.return_val)
 
         return [weight_change_matrix, dE_dW]
 

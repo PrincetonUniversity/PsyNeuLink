@@ -149,7 +149,7 @@ Class Reference
 """
 
 from PsyNeuLink.Components.Projections.Projection import *
-from PsyNeuLink.Components.Projections.TransmissiveProjections.TransmissiveProjection import TransmissiveProjection_Base
+from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
 from PsyNeuLink.Components.Functions.Function import *
 
 parameter_keywords.update({MAPPING_PROJECTION})
@@ -161,7 +161,7 @@ class MappingError(Exception):
         self.error_value = error_value
 
 
-class MappingProjection(TransmissiveProjection_Base):
+class MappingProjection(PathwayProjection_Base):
     """
     MappingProjection(                                      \
         sender=None,                                        \
@@ -254,7 +254,7 @@ class MappingProjection(TransmissiveProjection_Base):
     receiver: InputState
         identifies the destination of the projection.
 
-    monitoringMechanism : MonitoringMechanism
+    learning_mechanism : LearningMechanism
         source of error signal for that determine changes to the `matrix <MappingProjection.matrix>` when
         `learning <LearningProjection>` is used.
 
@@ -442,16 +442,13 @@ class MappingProjection(TransmissiveProjection_Base):
         super()._instantiate_receiver(context=context)
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
-    # def execute(self, input=None, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
-        # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
-        # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """
         If there is a functionParameterStates[LEARNING_PROJECTION], update the matrix parameterState:
                  it should set params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
                  and then call its super().execute
            - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)
 
-        Assumes that if self.monitoringMechanism is assigned *and* parameterState[MATRIX] has been instantiated
+        Assumes that if self.learning_mechanism is assigned *and* parameterState[MATRIX] has been instantiated
         then learningSignal exists;  this averts duck typing which otherwise would be required for the most
         frequent cases (i.e., *no* learningSignal).
 
@@ -462,16 +459,12 @@ class MappingProjection(TransmissiveProjection_Base):
         # Check whether error_signal has changed
         if self.learning_mechanism and self.learning_mechanism.status == CHANGED:
 
-            # Assume that if monitoringMechanism attribute is assigned,
+            # Assume that if learning_mechanism attribute is assigned,
             #    both a LearningProjection and parameterState[MATRIX] to receive it have been instantiated
             matrix_parameter_state = self._parameter_states[MATRIX]
 
             # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
-            # # MODIFIED 6/1/17 OLD:
-            # matrix_parameter_state.base_value = self.matrix
-            # MODIFIED 6/1/17 NEW:
             setattr(self, '_'+MATRIX, self.matrix)
-            # MODIFIED 6/1/17 END
 
             # FIX: UPDATE FOR LEARNING BEGIN
             #    ??DELETE ONCE INTEGRATOR FUNCTION IS IMPLEMENTED
@@ -481,10 +474,8 @@ class MappingProjection(TransmissiveProjection_Base):
             # Update parameter state: combines weightChangeMatrix from LearningProjection with matrix base_value
             matrix_parameter_state.update(weight_change_params, context=context)
 
-            # MODIFIED 2/21/17 OLD: [REPLACE WITH ASSIGNMENT UNDER @property value IN ParmaterState??]
             # Update MATRIX
             self.matrix = matrix_parameter_state.value
-            # MODIFIED 2/21/17 END
             # FIX: UPDATE FOR LEARNING END
 
             # # TEST PRINT

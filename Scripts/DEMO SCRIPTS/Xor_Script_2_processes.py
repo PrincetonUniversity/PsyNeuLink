@@ -6,7 +6,7 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 
 
@@ -82,7 +82,7 @@ def print_header():
     
 def show_target():
     i = three_layer_net.input
-    t = three_layer_net.targetInputStates[0].value
+    t = three_layer_net.target_input_states[0].value
     print('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
     print('INPUT-OUTPUT WEIGHTS:')
     print(input_hidden_weights.matrix)

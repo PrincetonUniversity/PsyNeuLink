@@ -4,7 +4,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 import matplotlib
 matplotlib.use('TkAgg')
@@ -77,7 +77,7 @@ my_process = process(default_input_value=[0, 0],
 #     print ('- Middle Weights: \n', Middle_Weights.matrix)
 #     print ('- Output Weights: \n', Output_Weights.matrix)
 #     print ('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(my_system.input,
-#                                                               my_system.targetInputStates[0].value))
+#                                                               my_system.target_input_states[0].value))
 #     print ('ACTIVITY FROM OLD WEIGHTS: \n')
 #     print ('- Middle 1: \n', Hidden_Layer_1.value)
 #     print ('- Middle 2: \n', Hidden_Layer_2.value)

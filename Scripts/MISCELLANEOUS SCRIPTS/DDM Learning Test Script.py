@@ -2,7 +2,7 @@ from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic(),
@@ -41,11 +41,6 @@ z = process(default_input_value=[0, 0],
                            Output_Layer],
             prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
-
-# Learned_Weights.monitoringMechanism.target = [1,1]
-# Learned_Weights.monitoringMechanism.target = [0,0]
-# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import COMPARATOR_TARGET
-# Learned_Weights.monitoringMechanism.paramsCurrent[COMPARATOR_TARGET] = [1,1]
 
 # z.execute(input=[-1, 30],
 #           runtime_params={COMPARATOR_TARGET: [1, 1]})

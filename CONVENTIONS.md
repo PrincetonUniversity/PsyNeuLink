@@ -6,6 +6,8 @@
 #### Content:
 - Component names always end in their type (e.g., TransferMechanism, LearningProjection)
   (the only exception is the DDM)
+- Components should *always* be referred to in caps
+  (e.g., All Mechanisms have Projections; the receiver for a Projection is an InputState; etc.).
 
 #### Format:
 - class names:

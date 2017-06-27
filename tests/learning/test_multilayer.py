@@ -4,7 +4,7 @@ from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism import MSE
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import LEARNING, SOFT_CLAMP
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
@@ -101,7 +101,7 @@ def test_multilayer():
 
     def show_target():
         i = s.input
-        t = s.targetInputStates[0].value
+        t = s.target_input_states[0].value
         print('\nOLD WEIGHTS: \n')
         print('- Input Weights: \n', Input_Weights.matrix)
         print('- Middle Weights: \n', Middle_Weights.matrix)

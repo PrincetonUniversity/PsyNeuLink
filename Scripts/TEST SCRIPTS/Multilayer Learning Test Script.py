@@ -2,7 +2,7 @@ from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.scheduling.condition import AfterNCalls
@@ -129,7 +129,7 @@ def show_target():
         t = composition.target
     elif COMPOSITION is SYSTEM:
         i = composition.input
-        t = composition.targetInputStates[0].value
+        t = composition.target_input_states[0].value
     print ('\nOLD WEIGHTS: \n')
     print ('- Input Weights: \n', Input_Weights.matrix)
     print ('- Middle Weights: \n', Middle_Weights.matrix)

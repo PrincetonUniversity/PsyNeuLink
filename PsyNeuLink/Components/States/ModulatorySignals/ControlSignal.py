@@ -12,16 +12,15 @@
 Overview
 --------
 
-A ControlSignal is an `OutputState` specialized for use with a `ControlMechanism`. It is used to modify the
-parameter of a mechanism or of its :keyword:`function` that has been
-`specified for control <ControlMechanism_Control_Signals>`, in a system that regulates its performance using a
-`ControlMechanism` as its `controller`.  A ControlSignal is associated with a `ControlProjection` to the 
-`parameterState <ParameterState>` for the parameter to be controlled.  It receives an `allocation` value specified by 
-the ControlMechanism's `function <ControlMechanism.function>`, and uses that to compute an `intensity` that is assigned 
-as the `value <ControlProjection.ControlProjection.value>` of its ControlProjection. The parameterState that receives 
-the ControlProjection uses that value to modify the :keyword:`value` of the mechanism's (or function's) parameter for
-which it is responsible.  A ControlSignal also calculates a `cost`, based on its `intensity` and/or its time course,
-that is used by the ControlMechanism to adapt its `allocation` in the future.
+A ControlSignal is a type of `ModulatorySignal`, specialized for use with a `ControlMechanism` and a
+`ControlProjection`, to modify the parameter of a `Mechanism` or its `function <Mechanism.function>`, that in turn
+controls the `value <Mechanisms.value>` of that Mechanism. A ControlSignal receives an `allocation` value from the
+ControlMechanism to which it belongs, and uses that to compute an `intensity` that is assigned as the `value
+<ControlProjection.ControlProjection.value>` of its ControlProjection.  The ControlProjection conveys its value to
+the `ParameterState` for the parameter of a `Mechanism` or its `function <Mechanism.function>`, which uses that value
+to `control <ModulatorySignal_Modulation>` the `value <ParameterState.value>` of the parameter.  A ControlSignal also
+calculates a `cost`, based on its `intensity` and/or its time course, that is used by the ControlMechanism to adapt
+its `allocation` in the future.
 
 .. _ControlSignal_Creation:
 
@@ -70,7 +69,7 @@ primary attributes:
 .. _ControlSignal_Modulation:
 
 * `modulation <ControlSignal.modulation>` : determines how the ControlProjection is used by the ParameterState to 
-  which it projects to modify its value (see `Modulatory Projections <ModulatoryProjection.modulation>` for an 
+  which it projects to modify its value (see `ModulatorySignals <ModulatorySignals_Modulation>` for an
   explanation of how the modulation is specified and used to modulate the value of a parameter). The default value 
   is set to the value of the `modulation <ControlMechanism.modulation>` attribute of the ControlMechanism to which the 
   ControlSignal belongs;  this the is same for all of the ControlSignals belonging to that ControlMechanism.  
@@ -138,6 +137,9 @@ primary attributes:
 Execution
 ---------
 
+XXX NEED EXPLANATION HERE (OR IN PARAMETER STATE) FOR HOW PARAMETER VALUES ARE MODULATED AND ASSIGNED
+    REFERENCE DISCUSSION IN ParameterState
+
 A ControlSignal cannot be executed directly.  It is executed whenever the `ControlMechanism` to which it belongs is
 executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation`, that is used by its
 `function <ControlSignal.function>` to compute its `intensity` for that round of execution.  The `intensity` is used
@@ -153,6 +155,82 @@ ControlSignal's `allocation` for the next round of execution.
    with the parameter being controlled is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
    "lazy" updating).
 
+.. _ControlSignal_Examples:
+
+Examples
+~~~~~~~~
+
+*Modulate the parameter of a Mechanism's <function <Mechanism.function>*.  The following example assigns a
+ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
+
+    My_Mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
+
+Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
+with a ControlProjection that projects to the TransferMechanism's `ParameterState` for the `bias <Logistic.bias>`
+parameter of its `Logistic` Function.  The default value of a ControlSignal's `modulation <ControlSignal.modulation>`
+attribute is Modulation.MULTIPLICATIVE, so that it will multiply
+
+
+of the Control
+When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
+gain parameter.
+
+*Specify attributes of a ControlSignal*.  Ordinarily, ControlSignals modify the *MULTIPLICATIVE_PARAM* of a
+ParameterState's `function <ParameterState.function>` to modulate the parameter's value.
+In the example below, this is changed by specifying the `modulation <ControlSignal.modulation>` attribute of a
+`ControlSignal` for the `Logistic` Function of a `TransferMechanism`.  It is changed so that the value of the
+ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
+function::
+
+    My_Mech = TransferMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+
+Note that the `ModulationParam` specified for the `ControlSignal` pertains to the function of a *ParameterState*
+for the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and *not* the Logistic function
+itself -- that is, the value of the ControlSignal is added to the *gain parameter* of the Logistic function,
+*not* its `variable <Logistic.variable>`).
+
+COMMENT:
+    MOVE THIS EXAMPLE TO EVCMechanism
+
+*Modulate the parameters of several Mechanisms by an EVCMechanism*.  This shows::
+
+    My_Mech_A = TransferMechanism(function=Logistic)
+    My_Mech_B = TransferMechanism(function=Linear,
+                                 output_states=[RESULT, MEAN])
+
+    Process_A = process(pathway=[My_Mech_A])
+    Process_B = process(pathway=[My_Mech_B])
+    My_System = system(processes=[Process_A, Process_B])
+
+    My_EVC_Mechanism = EVCMechanism(system=My_System,
+                                    monitor_for_control=[My_Mech_A.output_states[RESULT],
+                                                         My_Mech_B.output_states[MEAN]],
+                                    control_signals=[(GAIN, My_Mech_A),
+                                                     {NAME: INTERCEPT,
+                                                      MECHANISM: My_Mech_B,
+                                                      MODULATION:ModulationParam.ADDITIVE}],
+                                    name='My EVC Mechanism')
+COMMENT
+
+
+*Modulate the parameters of several Mechanisms in a System*.  This shows::
+
+    My_Mech_A = TransferMechanism(function=Logistic)
+    My_Mech_B = TransferMechanism(function=Linear,
+                                 output_states=[RESULT, MEAN])
+    Process_A = process(pathway=[My_Mech_A])
+    Process_B = process(pathway=[My_Mech_B])
+
+    My_System = system(processes=[Process_A, Process_B],
+                                    monitor_for_control=[My_Mech_A.output_states[RESULT],
+                                                         My_Mech_B.output_states[MEAN]],
+                                    control_signals=[(GAIN, My_Mech_A),
+                                                     {NAME: INTERCEPT,
+                                                      MECHANISM: My_Mech_B,
+                                                      MODULATION:ModulationParam.ADDITIVE}],
+                       name='My Test System')
+
+
 Class Reference
 ---------------
 
@@ -164,7 +242,7 @@ Class Reference
 from PsyNeuLink.Components.Functions.Function import _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import *
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.State import *
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
 
 
 # class OutputStateLog(IntEnum):
@@ -200,7 +278,7 @@ class ControlSignalError(Exception):
         return repr(self.error_value)
 
 
-class ControlSignal(OutputState):
+class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                       \
         owner,                                           \
@@ -406,8 +484,8 @@ class ControlSignal(OutputState):
 
     @tc.typecheck
     def __init__(self,
-                 owner,
-                 reference_value,
+                 owner=None,
+                 reference_value=None,
                  variable=None,
                  index=PRIMARY_OUTPUT_STATE,
                  calculate=Linear,
@@ -434,10 +512,7 @@ class ControlSignal(OutputState):
                                                   duration_cost_function=duration_cost_function,
                                                   cost_combination_function=cost_combination_function,
                                                   allocation_samples=allocation_samples,
-                                                  modulation=modulation,
                                                   params=params)
-
-        self.reference_value = reference_value
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
@@ -445,19 +520,16 @@ class ControlSignal(OutputState):
         #  (test for it, and create if necessary, as per outputStates in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        super().__init__(owner,
-                         reference_value,
+        super().__init__(owner=owner,
+                         reference_value=reference_value,
                          variable=variable,
+                         modulation=modulation,
                          index=index,
                          calculate=calculate,
                          params=params,
                          name=name,
                          prefs=prefs,
                          context=self)
-
-        # FIX: PUT IN ModulatorySignal CLASS WHEN IMPLEMENTED
-        # Set default value of modulation to owner's value
-        self._modulation = self.modulation or owner.modulation
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions

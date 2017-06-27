@@ -1,5 +1,5 @@
 import numpy as np
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
 from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Logistic
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
@@ -132,7 +132,7 @@ def test_gating():
 
     def show_target():
         i = s.input
-        t = s.targetInputStates[0].value
+        t = s.target_input_states[0].value
         print('\nOLD WEIGHTS: \n')
         print('- Input Weights: \n', Input_Weights.matrix)
         print('- Middle Weights: \n', Middle_Weights.matrix)

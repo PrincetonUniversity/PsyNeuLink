@@ -462,7 +462,7 @@ def run(object,
         the initial values assigned to mechanisms designated as `INITIALIZE_CYCLE`.
 
     targets : List[input] or np.ndarray(input) : default None
-        the target values assigned to the `MonitoringMechanism` for each execution (used for learning).
+        the target values assigned to the `ComparatorMechanism` for each execution (used for learning).
         The length must be equal to :keyword:`inputs`.
 
     learning : bool :  default None
@@ -549,7 +549,7 @@ def run(object,
     # SET LEARNING_RATE, if specified, for all learningProjections in process or system
     if object.learning_rate is not None:
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-        for learning_mech in object.monitoringMechanisms.mechanisms:
+        for learning_mech in object.learning_mechanisms.mechanisms:
             for projection in learning_mech.output_state.efferents:
                 if isinstance(projection, LearningProjection):
                     projection.function_object.learning_rate = object.learning_rate
@@ -838,11 +838,10 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         # FIX: RE-WRITE USING NEXT AND StopIteration EXCEPTION ON FAIL TO FIND (THIS GIVES SPECIFICS)
         # FIX: TRY USING compare METHOD OF DICT OR LIST?
         # Check that every target in the process or system receives a projection from a mechanism named in the dict
-        # from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import SAMPLE
-        for target in object.targetMechanisms:
+        for target in object.target_mechanisms:
             # If any projection to a target does not have a sender in the stimulus dict, raise an exception
             if not any(mech is projection.sender.owner for
-                       projection in target.input_states[SAMPLE].afferents
+                       projection in target.input_states[SAMPLE].path_afferents
                        for mech in stimuli.keys()):
                     raise RunError("Entry for {} is missing from specification of targets for run of {}".
                                    format(target.input_states[SAMPLE].
@@ -858,7 +857,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             # If any mechanism in the stimulus dict does not have a projection to the target, raise an exception
             if not any(target is projection.receiver.owner for
                        projection in mech.output_state.efferents
-                       for target in object.targetMechanisms):
+                       for target in object.target_mechanisms):
                 raise RunError("{} is not a target mechanism in {}".format(mech.name, object.name))
             # Get target mech (comparator) for each entry in stimuli dict:
             terminal_to_target_mapping[mech] = mech.output_state.efferents[0]
@@ -867,11 +866,11 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         #   targets in the system's targetMechanisms list, by reassigning targets to an OrderedDict:
         from collections import OrderedDict
         ordered_targets = OrderedDict()
-        for target in object.targetMechanisms:
+        for target in object.target_mechanisms:
             # Get the process to which the TARGET mechanism belongs:
             try:
                 process = next(projection.sender.owner for
-                               projection in target.input_states[TARGET].afferents if
+                               projection in target.input_states[TARGET].path_afferents if
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
@@ -1066,7 +1065,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             elif size_of_states_heterog:
                 expected_dim = 4
             else:
-                raise RunError("PROGRAM ERROR: Unexepcted shape of intputs: {}".format(inputs.shape))
+                raise RunError("PROGRAM ERROR: Unexpected shape of inputs: {}".format(inputs.shape))
 
         if inputs.ndim != expected_dim:
             raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
@@ -1081,7 +1080,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
 
         # Check that length of each input matches length of corresponding origin mechanism over all executions and phases
         if is_target:
-            mechs = list(object.targetMechanisms)
+            mechs = list(object.target_mechanisms)
         else:
             mechs = list(object.originMechanisms)
         num_mechs = len(mechs)
@@ -1128,14 +1127,14 @@ def _validate_targets(object, targets, num_input_sets, context=None):
         # Check that function returns a number of items equal to the number of target mechanisms
         generated_targets = targets()
         num_targets = len(generated_targets)
-        num_target_mechs = len(object.targetMechanisms)
+        num_target_mechs = len(object.target_mechanisms)
         if num_targets != num_target_mechs:
             raise RunError("function for target argument of run returns {} items "
                            "but {} has {} targets".
                            format(num_targets, object.name, num_target_mechs))
 
         # Check that each target generated is compatible with the targetMechanism for which it is intended
-        for target, targetMechanism in zip(generated_targets, object.targetMechanisms):
+        for target, targetMechanism in zip(generated_targets, object.target_mechanisms):
             target_len = np.size(target)
             if target_len != np.size(targetMechanism.input_states[TARGET].variable):
                 if num_target_sets > 1:
@@ -1209,7 +1208,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             num_targets_per_set = np.size(targets,PROCESSES_DIM-1)
             # MODIFIED 2/16/17 END
             # Check that number of target values in each execution equals the number of target mechanisms in the system
-            if num_targets_per_set != len(object.targetMechanisms):
+            if num_targets_per_set != len(object.target_mechanisms):
                 raise RunError("The number of target values for each execution ({}) in the call to {}.run() "
                                   "does not match the number of processes in the system ({})".
                                   format(
@@ -1224,7 +1223,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             # FIX: MAKE SURE THAT ITEMS IN targets ARE ALIGNED WITH CORRESPONDING object.targetMechanisms
             target_array = np.atleast_2d(targets)
 
-            for target, targetMechanism in zip(targets, object.targetMechanisms):
+            for target, targetMechanism in zip(targets, object.target_mechanisms):
                 target_len = np.size(target)
                 if target_len != np.size(targetMechanism.input_states[TARGET].variable):
                     if num_targets_per_set > 1:

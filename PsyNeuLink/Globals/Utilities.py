@@ -101,10 +101,10 @@ MODULATION_ADD = 'Modulation.ADD'
 
 
 class Modulation(Enum):
-    DISABLED = 0
-    ADD = lambda runtime, default : runtime + default
     MULTIPLY = lambda runtime, default : runtime * default
+    ADD = lambda runtime, default : runtime + default
     OVERRIDE = lambda runtime, default : runtime
+    DISABLE = 0
 
 def is_modulation_operation(val):
     # try:

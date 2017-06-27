@@ -45,7 +45,7 @@ the length specified for an inputState can differ from its corresponding OutputS
 MappingProjection created uses a `FULL_CONNECTIVITY` matrix.  Thus, outputStates of differing lengths can be mapped 
 to the sample and target inputStates of a ComparatorMechanism (see the `example <ComparatorMechanism_Example>` below),
 so long as the latter are of the same length.  If a projection other than a `FULL_CONNECTIVITY` matrix is needed, 
-this can be specified using the *PROJECTION* entry of a `state specification dictionary <InputState_Specification>` 
+this can be specified using the *PROJECTION* entry of a `state specification dictionary <LINK>`
 for the inputState in the **input_states** argument.
 
 .. _ComparatorMechanism_Structure:

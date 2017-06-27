@@ -33,10 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="up" title="Control Mechanism" href="ControlMechanism.html"/>
-        <link rel="next" title="EVCMechanism" href="EVCMechanism.html"/>
-        <link rel="prev" title="Control Mechanism" href="ControlMechanism.html"/> 
+    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -85,38 +82,14 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="ControlMechanism.html">Control Mechanism</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="#">DefaultControlMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="EVCMechanism.html">EVCMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ControlMechanism.html#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ControlMechanism.html#creating-a-controlmechanism">Creating A ControlMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ControlMechanism.html#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ControlMechanism.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#creating-an-adaptivemechanism">Creating an AdaptiveMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#execution">Execution</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
@@ -149,12 +122,6 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
-      
-          <li><a href="AdaptiveMechanism.html">Adaptive Mechanism</a> &raquo;</li>
-      
-          <li><a href="ControlMechanism.html">Control Mechanism</a> &raquo;</li>
-      
     <li>DefaultControlMechanism</li>
       <li class="wy-breadcrumbs-aside">
         
@@ -171,14 +138,11 @@
             
   <div class="section" id="module-AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism">
 <span id="defaultcontrolmechanism"></span><h1>DefaultControlMechanism<a class="headerlink" href="#module-AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism" title="Permalink to this headline">¶</a></h1>
-<p>The DefaultControlMechanism is created whenever PsyNeuLink is run.  It is assigned as the ControlMechanism for any
-<a class="reference internal" href="System.html"><span class="doc">System</span></a> that is created for which no ControlMechanism is specified.  The DefaultControlMechanism creates
-an inputState for each ControlProjection it is assigned, and uses <code class="xref py py-data docutils literal"><span class="pre">defaultControlAllocation</span></code> as the value for
-the control signal.  By default,  <code class="xref py py-data docutils literal"><span class="pre">defaultControlAllocation</span></code> = 1, so that ControlProjections from the
-DefaultControlMechanism have no effect on their parameters.  Thus, for the most part, the DefaultControlMechanism
-serves as a place marker for ControlProjections (having on effect on the parameters it &#8220;controls&#8221;), until the system
-is assigned a more useful ControlMechanism (such as the <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a>).  However, it can be used to uniformly
-control the parameters that receive ControlProjections from it, by manually changing the value of
+<p>The DefaultControlMechanism is created for a <a class="reference internal" href="System.html"><span class="doc">System</span></a> if no other controller type is specified. The
+DefaultControlMechanism createsan inputState for each ControlProjection it is assigned, and uses
+<code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code> as the value for the control signal.  By default,  <code class="xref py py-data docutils literal"><span class="pre">defaultControlAllocation</span></code> =  1,
+so that ControlProjections from the DefaultControlMechanism have no effect on their parameters.  However, it can be
+used to uniformly control the parameters that receive ControlProjections from it, by manually changing the value of
 <code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code>.  See <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> for additional details of how ControlMechanisms are
 created, executed and their attributes.</p>
 </div>
@@ -187,15 +151,6 @@ created, executed and their attributes.</p>
            </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="EVCMechanism.html" class="btn btn-neutral float-right" title="EVCMechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="ControlMechanism.html" class="btn btn-neutral" title="Control Mechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

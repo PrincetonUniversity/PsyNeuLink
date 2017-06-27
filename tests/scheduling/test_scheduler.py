@@ -3,7 +3,7 @@ import pytest
 
 from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.composition import Composition
 from PsyNeuLink.scheduling.Scheduler import Scheduler

@@ -1,7 +1,7 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
@@ -55,7 +55,7 @@ def show_target():
         t = composition.target
     elif COMPOSITION is SYSTEM:
         i = composition.input
-        t = composition.targetInputStates[0].value
+        t = composition.target_input_states[0].value
     print ('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
 
 

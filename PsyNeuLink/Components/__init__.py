@@ -77,12 +77,6 @@ DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=DEFAULT_PROCES
 SystemDefaultControlMechanism = DefaultControlMechanism
 
 
-# MODIFIED 2/22/17 OLD:
-# # Use as DefaultPreferenceSetOwner if owner is not specified for ComponentPreferenceSet (in ComponentPreferenceSet)
-# # Note: this must be an instantiated object
-# DefaultMonitoringMechanism = ComparatorMechanism(name=DEFAULT_MONITORING_MECHANISM)
-# MODIFIED 2/22/17 END
-
 #region ****************************************** REGISTER SUBCLASSES *************************************************
 
 
@@ -129,7 +123,7 @@ from PsyNeuLink.Components.Projections.Projection import Projection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
 
 # MappingProjection
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 register_category(entry=MappingProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
