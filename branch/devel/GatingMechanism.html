@@ -173,27 +173,27 @@
 </div>
 <span class="target" id="module-AdaptiveMechanisms.GatingMechanisms.GatingMechanism"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A GatingMechanism is an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> that modulates the value of the inputState(s) and/or outputState(s) of
+<p>A GatingMechanism is an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> that modulates the value of the InputState(s) and/or OutputState(s) of
 one or more <code class="xref any docutils literal"><span class="pre">ProcessingMechanisms</span></code>.   It&#8217;s function takes a value
 and uses that to calculate a <a class="reference internal" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a>:  a list of <code class="xref any docutils literal"><span class="pre">gating</span></code> values, one for each of states that it
 gates.  Each of these values is assigned as the value of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> (a subclass of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>) in the
 GatingMechanism, and used by an associated <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> to modulate the value of the state to which it projects.
-A GatingMechanism can regulate only the parameters of mechanisms in the <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which it belongs.
-The gating components of a system are executed after all <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Proces singMechanisms</span></a>,
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a>, and  <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a> in that system have been executed.</p>
+A GatingMechanism can regulate only the parameters of Mechanisms in the <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which it belongs.
+The gating components of a System are executed after all <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Proces singMechanisms</span></a>,
+<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a>, and  <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a> in that System have been executed.</p>
 </div>
 <div class="section" id="creating-a-gatingmechanism">
 <span id="gatingmechanism-creation"></span><h2>Creating A GatingMechanism<a class="headerlink" href="#creating-a-gatingmechanism" title="Permalink to this headline">¶</a></h2>
 <p>GatingMechanisms can be created using the standard Python method of calling the constructor for the desired type.
 A GatingMechanism is also created automatically if <a class="reference internal" href="#gatingmechanism-specifying-gating"><span class="std std-ref">gating is specified</span></a> for an
-inputState or outputState, in which case a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> is also automatically created that projects
-from the GatingMechanism to the specified state. How a GatingMechanism creates its <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> and determines their value depends on the <a class="reference internal" href="#"><span class="doc">subclass</span></a>.</p>
+InputState or OutputState, in which case a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> is also automatically created that projects
+from the GatingMechanism to the specified state.</p>
 <div class="section" id="specifying-gating">
 <span id="gatingmechanism-specifying-gating"></span><h3>Specifying gating<a class="headerlink" href="#specifying-gating" title="Permalink to this headline">¶</a></h3>
-<p>GatingMechanisms are used to modulate the value of an <a class="reference internal" href="InputState.html"><span class="doc">inputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a>.
-An inputState or outputState can be specified for gating by assigning it a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> in the
-<strong>input_states</strong> or <strong>output_states</strong> arguments of the constructor for the mechanism to which it belongs
-(see <code class="xref any docutils literal"><span class="pre">Mechanism_States</span></code>).  The inputStates and outputStates to be gated by a GatingMechanism can also be
+<p>GatingMechanisms are used to modulate the value of an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>.
+An InputState or OutputState can be specified for gating by assigning it a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> in the
+<strong>input_states</strong> or <strong>output_states</strong> arguments of the constructor for the Mechanism to which it belongs
+(see <code class="xref any docutils literal"><span class="pre">Mechanism_States</span></code>).  The InputStates and OutputStates to be gated by a GatingMechanism can also be
 specified in the  <strong>gating_signals</strong>  argument of the constructor for a GatingMechanism.  The <strong>gating_signals</strong>
 argument must be a list, each item of which must refer to one or more states to be gated by that GatingSignal.
 The specification for each item in the list can use any of the forms used to
@@ -202,7 +202,7 @@ The specification for each item in the list can use any of the forms used to
 <span id="gatingmechanism-gatingsignals"></span><h4>GatingSignals<a class="headerlink" href="#gatingsignals" title="Permalink to this headline">¶</a></h4>
 <p>A <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> is created for each item listed in <strong>gating_signals</strong>, and all of the GatingSignals for a
 GatingMechanism are listed in its <a class="reference internal" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_signals" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_signals"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signals</span></code></a> attribute.  Each GatingSignal is
-assigned one or more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> to the inputState(s) and/or outputState(s) it gates.
+assigned one or more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> to the InputState(s) and/or OutputState(s) it gates.
 GatingSignals are a type of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, and so they are also listed in the GatingMechanism&#8217;s
 <code class="xref any docutils literal"><span class="pre">output_states</span></code> attribute.</p>
 </div>
@@ -218,7 +218,7 @@ modulate the value of a state).  Each GatingSignal uses this value, unless its v
 </div>
 <div class="section" id="execution">
 <span id="gatingmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A GatingMechanism executes in the same way as a ProcessingMechanism, based on its place in the system&#8217;s
+<p>A GatingMechanism executes in the same way as a ProcessingMechanism, based on its place in the System&#8217;s
 <code class="xref any docutils literal"><span class="pre">graph</span></code>.  Because GatingProjections are likely to introduce cycles (loops) in the graph,
 the effects of a GatingMechanism and its projections will generally not be applied in the first
 <code class="xref any docutils literal"><span class="pre">round</span> <span class="pre">of</span> <span class="pre">execution</span></code> (see <code class="xref any docutils literal"><span class="pre">initialization</span></code> for a description of how to configure the initialization
@@ -229,11 +229,11 @@ round of execution , each GatingProjection&#8217;s value is used by the state to
 <p>When a GatingMechanism executes, the value of each item in its <a class="reference internal" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a> is assigned as the value of each of
 the corresponding GatingSignals in its <a class="reference internal" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_signals" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_signals"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signals</span></code></a> attribute.  These, in turn, are used by their associated
 <code class="xref any docutils literal"><span class="pre">GatingProjections</span></code> to modulate the value of the state to which they project.  This is done by assigning the
-GatingSignal&#8217;s value to a parameter of the state&#8217;s function, as specified by the GatingSignal&#8217;s <a class="reference internal" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.modulation" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a>
+GatingSignal&#8217;s value to a parameter of the state&#8217;s function, as specified by the GatingSignal&#8217;s <a class="reference internal" href="ModulatorySignal.html#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a>
 parameter (see <code class="xref any docutils literal"><span class="pre">GatingSignal_Execution</span></code> for details).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">A state that receives a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> does not update its value until its owner mechanism executes
+<p class="last">A state that receives a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> does not update its value until its owner Mechanism executes
 (see <code class="xref any docutils literal"><span class="pre">Lazy</span> <span class="pre">Evaluation</span></code> for an explanation of &#8220;lazy&#8221; updating).  This means that even if a GatingMechanism
 has executed, a state that it gates will not assume its new value until the state&#8217;s owner has executed.</p>
 </div>
@@ -242,7 +242,7 @@ has executed, a state that it gates will not assume its new value until the stat
 <span id="gatingmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism">
-<em class="property">class </em><code class="descclassname">AdaptiveMechanisms.GatingMechanisms.GatingMechanism.</code><code class="descname">GatingMechanism</code><span class="sig-paren">(</span><em>default_gating_policy=None</em>, <em>function=(Linear Linear Function-6)</em>, <em>gating_signals: &lt;typecheck.framework.optional object at 0x10bd9fef0&gt; = None</em>, <em>modulation: &lt;typecheck.framework.optional object at 0x10b8aaef0&gt; = &lt;class 'PsyNeuLink.Components.Functions.Function.MultiplicativeParam'&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x109967048&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">AdaptiveMechanisms.GatingMechanisms.GatingMechanism.</code><code class="descname">GatingMechanism</code><span class="sig-paren">(</span><em>default_gating_policy=None</em>, <em>function=(Linear Linear Function-6)</em>, <em>gating_signals: &lt;typecheck.framework.optional object at 0x10c09c518&gt; = None</em>, <em>modulation: &lt;typecheck.framework.optional object at 0x10b9174e0&gt; = &lt;class 'PsyNeuLink.Components.Functions.Function.MultiplicativeParam'&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x109a87048&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>GatingMechanism_Base(                                   default_input_value=None,                           gating_signals=None                                 modulation=ModulationParam.MULTIPLICATIVE           function=Linear,                                    params=None,                                        name=None,                                          prefs=None)</p>
 <p>Abstract class for GatingMechanism.</p>
 <div class="admonition note">
@@ -257,22 +257,22 @@ They should be instantiated using the constructor for a <a class="reference inte
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>default_gating_policy</strong> (value, list or np.ndarray : <code class="xref py py-data docutils literal"><span class="pre">defaultGatingPolicy</span></code>) &#8211; the default value for each of the GatingMechanism&#8217;s GatingSignals;
 its length must equal the number of items specified in the <strong>gating_signals</strong> arg.</li>
-<li><strong>gating_signals</strong> (<em>List[InputState or OutputState, Mechanism, tuple[str, Mechanism], or dict]</em>) &#8211; specifies the inputStates and/or outputStates to be gated by the GatingMechanism;
+<li><strong>gating_signals</strong> (<em>List[InputState or OutputState, Mechanism, tuple[str, Mechanism], or dict]</em>) &#8211; specifies the InputStates and/or OutputStates to be gated by the GatingMechanism;
 the number of items must equal the length of the <strong>default_gating_policy</strong> arg;
-if a Mechanism is specified, its <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">primary inputState</span></a> will be used
+if a Mechanism is specified, its <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">primary InputState</span></a> will be used
 (see <a class="reference internal" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_signals" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_signals"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signals</span></code></a> for details).</li>
 <li><strong>modulation</strong> (<em>ModulationParam : ModulationParam.MULTIPLICATIVE</em>) &#8211; specifies the default form of modulation to be used by the GatingMechanism&#8217;s GatingSignals, unless
 they are <a class="reference internal" href="GatingSignal.html#gatingsignal-specification"><span class="std std-ref">individually specified</span></a>.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear(slope=1, intercept=0)</em>) &#8211; specifies function used to transform input to <a class="reference internal" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a> to value;  the default is an identity function
-that simply assigns the GatingMechanism&#8217;s input to its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.value" title="ModulatoryProjections.ControlProjection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
+that simply assigns the GatingMechanism&#8217;s input to its <a class="reference internal" href="ObjectiveMechanism.html#ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism.ObjectiveMechanism.value" title="ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism.ObjectiveMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters
-for the mechanism, parameters for its function, and/or a custom function and its parameters. Values
+for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
 specified for parameters in the dictionary override any assigned to those parameters in arguments of the
 constructor.</li>
-<li><strong>name</strong> (<em>str : default ControlMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
+<li><strong>name</strong> (<em>str : default ControlMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the Mechanism.
 If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the mechanism.
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Mechanism.
 If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</li>
 </ul>
@@ -284,7 +284,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dt id="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_signals">
 <code class="descname">gating_signals</code><a class="headerlink" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_signals" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[GatingSignal]</em> &#8211; list of <code class="xref any docutils literal"><span class="pre">GatingSignals</span></code> for the GatingMechanism, each of which sends a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>
-to the <a class="reference internal" href="InputState.html"><span class="doc">inputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a> that it gates (same as GatingMechanism&#8217;s
+to the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> that it gates (same as GatingMechanism&#8217;s
 <code class="xref any docutils literal"><span class="pre">output_states</span></code> attribute).</p>
 </dd></dl>
 

@@ -175,11 +175,11 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ControlMechanism is an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> that modifies the parameter(s) of one or more <code class="xref any docutils literal"><span class="pre">ProcessingMechanisms</span></code>.
 It&#8217;s function takes a value (usually the output of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>) and uses that to calculate an
-<a class="reference internal" href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>:  a list of <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> values for each of its ControlSignals that specify the value to assign
+<a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>:  a list of <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> values for each of its ControlSignals that specify the value to assign
 to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is assigned as
 the value of a corresponding <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> (a subclass of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> used by ControlMechanisms), and conveyed by
-the associated <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of the relevant ProcessingMechanism.
-A ControlMechanism can regulate only the parameters of mechanisms in the system for which it is the
+the associated <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of the relevant ProcessingMechanism.
+A ControlMechanism can regulate only the parameters of Mechanisms in the system for which it is the
 <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a>.  The control components of a system can be displayed using the system&#8217;s
 <a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method with its <strong>show_control</strong> argument assigned :keyword:<a href="#id1"><span class="problematic" id="id2">``</span></a>True`.</p>
 <p>The control components of a
@@ -199,28 +199,28 @@ specified in <strong>control_signals</strong>, as described below. The kind of O
 and how it evalutes the values it monitors, depends on the <a class="reference internal" href="#"><span class="doc">subclass</span></a> of ControlMechanism.</p>
 <div class="section" id="specifying-parameters-to-control">
 <span id="controlmechanism-control-signals"></span><h3>Specifying Parameters to Control<a class="headerlink" href="#specifying-parameters-to-control" title="Permalink to this headline">¶</a></h3>
-<p>ControlMechanisms are used to control the parameter values of mechanisms and/or their functions.  A parameter can be
+<p>ControlMechanisms are used to control the parameter values of Mechanisms and/or their functions.  A parameter can be
 specified for control by assigning it a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> (along with the parameter&#8217;s value) when creating the
-mechanism or function to which the parameter belongs (see <a class="reference internal" href="Mechanism.html#mechanism-parameters"><span class="std std-ref">Mechanism Parameters</span></a>).  The parameters to be controlled by
+Mechanism or function to which the parameter belongs (see <a class="reference internal" href="Mechanism.html#mechanism-parameters"><span class="std std-ref">Mechanism Parameters</span></a>).  The parameters to be controlled by
 a ControlMechanism can also be specified in the <strong>control_signals</strong>  argument of the constructor for a ControlMechanism.
 The <strong>control_signals</strong> argument must be a list, each item of which can use any of the forms used for
 <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">specifying a ControlSignal</span></a>.</p>
 <p>A <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is created for each item listed in <strong>control_signals</strong>, and all of the ControlSignals for a
 ControlMechanism are listed in its <code class="xref any docutils literal"><span class="pre">control_signals</span></code> attribute.  Each ControlSignal
-is assigned a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the parameterState of the mechanisms associated with the specified parameter of the
-mechanism or its function, that is used to control the parameter&#8217;s value. ControlSignals are a type of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>,
+is assigned a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the ParameterState of the Mechanisms associated with the specified parameter of the
+Mechanism or its function, that is used to control the parameter&#8217;s value. ControlSignals are a type of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>,
 and so they are also listed in the ControlMechanism&#8217;s <code class="xref any docutils literal"><span class="pre">output_states</span></code> attribute.</p>
 </div>
 <div class="section" id="specifying-values-to-monitor-for-control">
 <span id="controlmechanism-monitored-values"></span><h3>Specifying Values to Monitor for Control<a class="headerlink" href="#specifying-values-to-monitor-for-control" title="Permalink to this headline">¶</a></h3>
 <p>When an ControlMechanism is created, it automatically creates an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that is used to monitor and
 evaluate the values specified in the <strong>monitor_for_control</strong> argument of the ControlMechanism&#8217;s constructor.
-The <strong>monitor_for_control</strong> argument must be a list, each item of which must refer to a mechanism or the outputState
+The <strong>monitor_for_control</strong> argument must be a list, each item of which must refer to a Mechanism or the OutputState
 of one.  These are assigned to the ObjectiveMechanism&#8217;s <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">monitored_values</span></a> attribute, and the
 ObjectiveMechanism is referenced by the ControlMechanism&#8217;s
 <code class="xref any docutils literal"><span class="pre">monitoring_mechanism</span></code> attribute.</p>
-<p>ObjectiveMechanism monitors each mechanism and/or outputState listed in the ControlMechanism&#8217;s
-&#8216;monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="DDM.html#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.
+<p>ObjectiveMechanism monitors each Mechanism and/or OutputState listed in the ControlMechanism&#8217;s
+&#8216;monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.
 This information is used to set the value of the ControlMechanism&#8217;s ControlSignals.</p>
 <p class="rubric" id="controlmechanism-examples">Examples</p>
 <p>EXAMPLES HERE</p>
@@ -228,17 +228,17 @@ This information is used to set the value of the ControlMechanism&#8217;s Contro
 </div>
 <div class="section" id="execution">
 <span id="controlmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A ControlMechanism that is a system&#8217;s <code class="xref any docutils literal"><span class="pre">controller</span></code> is always the last mechanism to be executed (see <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System Control</span></a>).  Its <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the value in its
+<p>A ControlMechanism that is a system&#8217;s <code class="xref any docutils literal"><span class="pre">controller</span></code> is always the last Mechanism to be executed (see <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System Control</span></a>).  Its <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the value in its
 <em>ERROR_SIGNAL</em> <code class="xref any docutils literal"><span class="pre">input_state</span></code>, and use that to determine its
 <code class="xref any docutils literal"><span class="pre">allocation_policy</span></code> that specifies the value assigned to each of its
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  Each of those is used by its associated <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to set the
 value of the ParameterState for the parameter it controls.  In the subsequent round of execution,
-those parameter values are used by the mechanism when it executes.</p>
+those parameter values are used by the Mechanism when it executes.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">A <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner mechanism
+<p class="last">A <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner Mechanism
 executes (see <code class="xref any docutils literal"><span class="pre">Lazy</span> <span class="pre">Evaluation</span></code> for an explanation of &#8220;lazy&#8221; updating).  This means that even if a
-ControlMechanism has executed, a parameter that it controls will not assume its new value until the mechanism
+ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
 to which it belongs has executed.</p>
 </div>
 </div>
@@ -258,21 +258,21 @@ They should be instantiated using the constructor for a <a class="reference inte
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>monitor_for_control</strong> (<em>List[OutputState specification] : default None</em>) &#8211; specifies set of outputStates to monitor (see <span class="xref std std-ref">ControlMechanism_Monitored_OutputStates</span> for
+<li><strong>monitor_for_control</strong> (<em>List[OutputState specification] : default None</em>) &#8211; specifies set of OutputStates to monitor (see <span class="xref std std-ref">ControlMechanism_Monitored_OutputStates</span> for
 specification options).</li>
 <li><strong>control_signals</strong> (<em>List[parameter of Mechanism or its function,                       ParameterState, Mechanism tuple[str, Mechanism] or dict]</em>) &#8211; specifies the parameters to be controlled by the ControlMechanism
 (see <code class="xref any docutils literal"><span class="pre">control_signals</span></code> for details).</li>
 <li><strong>modulation</strong> (<em>ModulationParam : ModulationParam.MULTIPLICATIVE</em>) &#8211; specifies the default form of modulation to be used by the ControlMechanism&#8217;s ControlSignals,
 unless they are <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">individually specified</span></a>.</li>
-<li><strong>function</strong> (<em>TransferFunction : default Linear(slope=1, intercept=0)</em>) &#8211; specifies function used to combine values of monitored output states.</li>
+<li><strong>function</strong> (<em>TransferFunction : default Linear(slope=1, intercept=0)</em>) &#8211; specifies function used to combine values of monitored OutputStates.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters
-for the mechanism, parameters for its function, and/or a custom function and its parameters. Values
+for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
 specified for parameters in the dictionary override any assigned to those parameters in arguments of the
 constructor.</li>
-<li><strong>name</strong> (<em>str : default ControlMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
+<li><strong>name</strong> (<em>str : default ControlMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the Mechanism.
 If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the mechanism.
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Mechanism.
 If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</li>
 </ul>
@@ -283,7 +283,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.monitoring_mechanism">
 <code class="descname">monitoring_mechanism</code><a class="headerlink" href="#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.monitoring_mechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ObjectiveMechanism</em> &#8211; mechanism that monitors and evaluates the values specified in the ControlMechanism&#8217;s <strong>monitor_for_control</strong>
+<dd><p><em>ObjectiveMechanism</em> &#8211; Mechanism that monitors and evaluates the values specified in the ControlMechanism&#8217;s <strong>monitor_for_control</strong>
 argument, and transmits the result to the ControlMechanism&#8217;s <em>ERROR_SIGNAL</em>
 <code class="xref any docutils literal"><span class="pre">input_state</span></code>.</p>
 </dd></dl>
@@ -292,7 +292,7 @@ argument, and transmits the result to the ControlMechanism&#8217;s <em>ERROR_SIG
 <dt id="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.control_signals">
 <code class="descname">control_signals</code><a class="headerlink" href="#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.control_signals" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[ControlSignal]</em> &#8211; list of <code class="xref any docutils literal"><span class="pre">ControlSignals</span></code> for the ControlMechanism, each of which sends a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>
-to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> for the parameter it controls (same as ControlMechanism&#8217;s
+to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter it controls (same as ControlMechanism&#8217;s
 <code class="xref any docutils literal"><span class="pre">output_states</span></code> attribute).</p>
 </dd></dl>
 
