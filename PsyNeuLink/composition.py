@@ -4,6 +4,8 @@ from collections import Iterable, OrderedDict
 from enum import Enum
 
 from PsyNeuLink.scheduling.Scheduler import Scheduler
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Globals.Keywords import EXECUTING
 
 logger = logging.getLogger(__name__)
 
@@ -378,13 +380,31 @@ class Composition(object):
 
     def run(self, scheduler, inputs=None, targets=None, recurrent_init=None):
 
-        if inputs:
-            self.validate_feed_dict(inputs, self.origin_mechanisms, "Inputs")
-        if targets:
-            self.validate_feed_dict(targets, self.target_mechanisms, "Targets")
-        if recurrent_init:
-            self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
+        # if inputs:
+        #     self.validate_feed_dict(inputs, self.origin_mechanisms, "Inputs")
+        # if targets:
+        #     self.validate_feed_dict(targets, self.target_mechanisms, "Targets")
+        # if recurrent_init:
+        #     self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
 
+        is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        for v in self.graph.vertices:
+            if isinstance(v.component, Mechanism):
+                if (v.component in is_origin) and (v.component in inputs.keys()):
+                    print()
+                    num = v.component.execute(input=inputs[v.component], context=EXECUTING)
+                    print("=============================================")
+                    print(" -------------- EXECUTING ", v.component.name, " -------------- ")
+                    print("result = ", num)
+                    print()
+                    print()
+                else:
+                    num = v.component.execute(context=EXECUTING)
+                    print("=============================================")
+                    print(" -------------- EXECUTING ", v.component.name, " -------------- ")
+                    print("result = ", num)
+                    print()
+                    print()
         '''
         for current_component in scheduler.run_trial():
             if current_component.name != "Clock":
