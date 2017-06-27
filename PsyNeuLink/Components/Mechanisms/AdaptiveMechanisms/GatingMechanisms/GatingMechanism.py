@@ -12,7 +12,7 @@
 Overview
 --------
 
-A GatingMechanism is an `AdaptiveMechanism` that modulates the value of the inputState(s) and/or outputState(s) of 
+A GatingMechanism is an `AdaptiveMechanism` that modulates the value of the InputState(s) and/or OutputState(s) of
 one or more `ProcessingMechanisms`.   It's function takes a value 
 COMMENT:
     ??FROM WHERE?
@@ -20,13 +20,13 @@ COMMENT
 and uses that to calculate a `gating_policy`:  a list of `gating <LINK>` values, one for each of states that it 
 gates.  Each of these values is assigned as the value of a `GatingSignal` (a subclass of `OutputState`) in the
 GatingMechanism, and used by an associated `GatingProjection` to modulate the value of the state to which it projects.  
-A GatingMechanism can regulate only the parameters of mechanisms in the `System` to which it belongs. 
+A GatingMechanism can regulate only the parameters of Mechanisms in the `System` to which it belongs.
 COMMENT: TBI
-The gating components of a system can be displayed using the system's 
+The gating components of a System can be displayed using the System's
 `show_graph` method with its **show_gating** argument assigned as :keyword:``True`.  
 COMMENT
-The gating components of a system are executed after all `Proces singMechanisms <ProcessingMechanism>`, 
-`LearningMechanisms <LearningMechanism>`, and  `ControlMechanisms <ControlMechanism>` in that system have been executed.
+The gating components of a System are executed after all `Proces singMechanisms <ProcessingMechanism>`,
+`LearningMechanisms <LearningMechanism>`, and  `ControlMechanisms <ControlMechanism>` in that System have been executed.
 
 
 .. _GatingMechanism_Creation:
@@ -36,19 +36,18 @@ Creating A GatingMechanism
 
 GatingMechanisms can be created using the standard Python method of calling the constructor for the desired type.
 A GatingMechanism is also created automatically if `gating is specified <GatingMechanism_Specifying_Gating>` for an 
-inputState or outputState, in which case a `GatingProjection` is also automatically created that projects 
-from the GatingMechanism to the specified state. How a GatingMechanism creates its `GatingProjections 
-<GatingProjection>` and determines their value depends on the `subclass <GatingMechanism>`.
+InputState or OutputState, in which case a `GatingProjection` is also automatically created that projects
+from the GatingMechanism to the specified state.
 
 .. _GatingMechanism_Specifying_Gating:
 
 Specifying gating
 ~~~~~~~~~~~~~~~~~
 
-GatingMechanisms are used to modulate the value of an `inputState <InputState>` or `outputState <OutputState>`.  
-An inputState or outputState can be specified for gating by assigning it a `GatingProjection` in the 
-**input_states** or **output_states** arguments of the constructor for the mechanism to which it belongs 
-(see `Mechanism_States <LINK>`).  The inputStates and outputStates to be gated by a GatingMechanism can also be 
+GatingMechanisms are used to modulate the value of an `InputState` or `OutputState`.
+An InputState or OutputState can be specified for gating by assigning it a `GatingProjection` in the
+**input_states** or **output_states** arguments of the constructor for the Mechanism to which it belongs
+(see `Mechanism_States <LINK>`).  The InputStates and OutputStates to be gated by a GatingMechanism can also be
 specified in the  **gating_signals**  argument of the constructor for a GatingMechanism.  The **gating_signals** 
 argument must be a list, each item of which must refer to one or more states to be gated by that GatingSignal.  
 The specification for each item in the list can use any of the forms used to 
@@ -61,7 +60,7 @@ GatingSignals
 
 A `GatingSignal` is created for each item listed in **gating_signals**, and all of the GatingSignals for a  
 GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.  Each GatingSignal is 
-assigned one or more `GatingProjections <GatingProjection>` to the inputState(s) and/or outputState(s) it gates. 
+assigned one or more `GatingProjections <GatingProjection>` to the InputState(s) and/or OutputState(s) it gates.
 GatingSignals are a type of `OutputState`, and so they are also listed in the GatingMechanism's 
 `output_states <GatingMechanism.outut_states>` attribute.  
 
@@ -81,7 +80,7 @@ modulate the value of a state).  Each GatingSignal uses this value, unless its v
 Execution
 ---------
 
-A GatingMechanism executes in the same way as a ProcessingMechanism, based on its place in the system's 
+A GatingMechanism executes in the same way as a ProcessingMechanism, based on its place in the System's
 `graph <System.graph>`.  Because GatingProjections are likely to introduce cycles (loops) in the graph,
 the effects of a GatingMechanism and its projections will generally not be applied in the first
 `round of execution <LINK>` (see `initialization <LINK>` for a description of how to configure the initialization
@@ -97,7 +96,7 @@ GatingSignal's value to a parameter of the state's function, as specified by the
 parameter (see `GatingSignal_Execution` for details). 
 
 .. note::
-   A state that receives a `GatingProjection` does not update its value until its owner mechanism executes 
+   A state that receives a `GatingProjection` does not update its value until its owner Mechanism executes
    (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a GatingMechanism 
    has executed, a state that it gates will not assume its new value until the state's owner has executed.
 
@@ -148,12 +147,12 @@ class GatingMechanism(AdaptiveMechanism_Base):
         Description:
             # VERIFY:
             Protocol for instantiating unassigned GatingProjections (i.e., w/o a sender specified):
-               If sender is not specified for a GatingProjection (e.g., in an inputState or OutputState tuple spec) 
+               If sender is not specified for a GatingProjection (e.g., in an InputState or OutputState tuple spec)
                    it is flagged for deferred_init() in its __init__ method
                When the next GatingMechanism is instantiated, if its params[MAKE_DEFAULT_GATING_MECHANISM] == True, its
                    _take_over_as_default_gating_mechanism method is called in _instantiate_attributes_after_function;
-                   it then iterates through all of the inputStates and outputStates of all of the mechanisms in its 
-                   system, identifies ones without a sender specified, calls its deferred_init() method,
+                   it then iterates through all of the InputStates and OutputStates of all of the Mechanisms in its
+                   System, identifies ones without a sender specified, calls its deferred_init() method,
                    instantiates a GatingSignal for it, and assigns it as the GatingProjection's sender.
 
         Class attributes:
@@ -171,9 +170,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
         its length must equal the number of items specified in the **gating_signals** arg.
 
     gating_signals : List[InputState or OutputState, Mechanism, tuple[str, Mechanism], or dict]
-        specifies the inputStates and/or outputStates to be gated by the GatingMechanism;
+        specifies the InputStates and/or OutputStates to be gated by the GatingMechanism;
         the number of items must equal the length of the **default_gating_policy** arg;
-        if a Mechanism is specified, its `primary inputState <Mechanism_InputStates>` will be used
+        if a Mechanism is specified, its `primary InputState <Mechanism_InputStates>` will be used
         (see `gating_signals <GatingMechanism.gating_signals>` for details).
         
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
@@ -186,17 +185,17 @@ class GatingMechanism(AdaptiveMechanism_Base):
         
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
-        for the mechanism, parameters for its function, and/or a custom function and its parameters. Values
+        for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
     name : str : default ControlMechanism-<index>
-        a string used for the name of the mechanism.
+        a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for the mechanism.
+        the `PreferenceSet` for the Mechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -206,7 +205,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     gating_signals : List[GatingSignal]
         list of `GatingSignals <ControlSignals>` for the GatingMechanism, each of which sends a `GatingProjection`
-        to the `inputState <InputState>` or `outputState <OutputState>` that it gates (same as GatingMechanism's 
+        to the `InputState` or `OutputState` that it gates (same as GatingMechanism's
         `output_states <Mechanism.output_states>` attribute).
 
     gating_projections : List[GatingProjection]
@@ -301,7 +300,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                 self._instantiate_gating_signal(gating_signal=gating_signal, context=context)
                 TEST = True
 
-        # IMPLEMENTATION NOTE:  Don't want to call this because it instantiates undesired default outputState
+        # IMPLEMENTATION NOTE:  Don't want to call this because it instantiates undesired default OutputState
         # super()._instantiate_output_states(context=context)
 
     def _instantiate_gating_signal(self, gating_signal=None, context=None):
@@ -324,8 +323,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
         * State._parse_state_spec() is used to parse gating_signal arg
         * params are expected to be for (i.e., to be passed to) GatingSignal;
         * wait to instantiate deferred_init() projections until after GatingSignal is instantiated,
-            so that correct outputState can be assigned as its sender;
-        * index of outputState is incremented based on number of GatingSignals already instantiated;
+            so that correct OutputState can be assigned as its sender;
+        * index of OutputState is incremented based on number of GatingSignals already instantiated;
             this means that the GatingMechanism's function must return as many items as it has GatingSignals,
             with each item of the function's value used by a corresponding GatingSignal.
             Note: multiple GatingProjections can be assigned to the same GatingSignal to achieve "divergent gating"
@@ -346,7 +345,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # GET index FOR GatingSignal OutputState
         try:
-            # If there are as many outputStates as items in self.value, assume that each
+            # If there are as many OutputStates as items in self.value, assume that each
             if len(self.gating_signals) == len(self.value):
                 output_state_index = len(self.gating_signals) - 1
             else:
@@ -455,7 +454,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             self.output_states = ContentAddressableList(component_type=State_Base,
                                                         list=[gating_signal],
                                                         name=self.name + '.output_states')
-        # Add index assignment to outputState
+        # Add index assignment to OutputState
         gating_signal.index = output_state_index
         # (Re-)assign control_signals attribute to output_states
         self._gating_signals = self.output_states
@@ -488,7 +487,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # FIX 5/23/17: INTEGRATE THIS WITH ASSIGNMENT OF gating_signals
         # FIX:         (E.G., CHECK IF SPECIFIED GatingSignal ALREADY EXISTS)
-        # Check the input_states and output_states of the system's mechanisms
+        # Check the input_states and output_states of the System's Mechanisms
         #    for any GatingProjections with deferred_init()
         for mech in self.system.mechanisms:
             for state in mech._input_states + mech._output_states:
@@ -503,7 +502,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                         gating_signal_specs.update({GATING_SIGNAL_SPECS: [projection]})
                         self._instantiate_gating_signal(gating_signal_specs, context=context)
 
-    # IMPLEMENTATION NOTE: This is needed if GatingMechanism is added to a system but does not have any afferents
+    # IMPLEMENTATION NOTE: This is needed if GatingMechanism is added to a System but does not have any afferents
     #                      (including from ProcessInputState or SystemInputState)
     #                      and therefore variable = None
     def _execute(self,

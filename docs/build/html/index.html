@@ -349,10 +349,10 @@ is run, each Component in it is executed at least once.  However, PsyNeuLink has
 design more complex dynamics of execution by assigning one or more <code class="xref any docutils literal"><span class="pre">Conditions</span></code> to any Mechanism. Conditions can
 specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each
 <code class="xref any docutils literal"><span class="pre">round</span> <span class="pre">of</span> <span class="pre">execution</span></code>), or its behavior relative to that of one or more other Components (e.g., how many times
-it should execute or when it should stop executing relative to other Mechanisms). For example, the following script
-configures a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that begins executing immediately after receiving input from an input layer,
-and then executes repeatedly until the change in its value falls below a specified threshold, at which point the
-output layer is executed:</p>
+it should execute or when it should stop executing relative to other Mechanisms).</p>
+<p>For example, the following script configures a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that begins executing immediately after
+receiving input from an input layer, and then executes repeatedly until the change in its value falls below a specified
+threshold, at which point the output layer is executed:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>my_input_layer = TransferMechanism(size = 3)
 my_recurrent_layer = RecurrentTransferMechanism(size=10)
 my_response_layer = TransferMechanism(size = 3)

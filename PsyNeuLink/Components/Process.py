@@ -220,7 +220,7 @@ must be provided (along with the `inputs <input>`) as an argument to the Process
 
 **Figure: Learning in PsyNeuLink**
 
-.. figure:: _static/PNL_learning_fig.png
+.. figure:: _static/Process_Learning_fig.svg
    :alt: Schematic of LearningMechanisms and LearningProjections in a Process
 
    Learning using the `BackPropagation` learning algorithm in a three-layered network, using a `TransferMechanism` for
