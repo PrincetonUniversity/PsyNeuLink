@@ -11,7 +11,7 @@ from pprint import pprint
 
 
 comp = Composition()
-A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+A = TransferMechanism(default_input_value=1.0, function=Linear(slope=5.0))
 B = TransferMechanism(function=Linear(slope=5.0))
 comp.add_mechanism(A)
 comp.add_mechanism(B)
@@ -21,7 +21,7 @@ inputs_dict = {A:5}
 sched = Scheduler(composition=comp)
 comp.run(
     # comment or uncomment the next line to switch between input = 1 [default_input_value] and input = 5 [inputs_dict]
-    #inputs=inputs_dict,
+    inputs=inputs_dict,
     scheduler=sched
 )
 # is_origin = comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
