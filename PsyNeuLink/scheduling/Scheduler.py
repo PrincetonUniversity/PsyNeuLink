@@ -161,6 +161,7 @@ logger = logging.getLogger(__name__)
 
 
 class SchedulerError(Exception):
+
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -230,17 +231,26 @@ class Scheduler(object):
         for ts in TimeScale:
             self.counts_total[ts] = {n: 0 for n in self.nodes}
 
-    def _reset_count(self, count, time_scale):
-        for c in count[time_scale]:
-            count[time_scale][c] = 0
+    def _reset_counts_total(self, time_scale):
+        for ts in TimeScale:
+            # only reset the values underneath the current scope
+            # this works because the enum is set so that higher granularities of time have lower values
+            if ts.value <= time_scale.value:
+                for c in self.counts_total[ts]:
+                    logger.debug('resetting counts_total[{0}][{1}] to 0'.format(ts, c))
+                    self.counts_total[ts][c] = 0
 
     def _increment_time(self, time_scale):
         for ts in TimeScale:
             self.times[ts][time_scale] += 1
 
     def _reset_time(self, time_scale):
-        for ts in TimeScale:
-            self.times[time_scale][ts] = 0
+        for ts_scope in TimeScale:
+            # reset all the times for the time scale scope up to time_scale
+            # this works because the enum is set so that higher granularities of time have lower values
+            if ts_scope.value <= time_scale.value:
+                for ts_count in TimeScale:
+                    self.times[ts_scope][ts_count] = 0
 
     ################################################################################
     # Wrapper methods
@@ -319,11 +329,11 @@ class Scheduler(object):
             return term
 
         self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
-        self._reset_count(self.counts_total, TimeScale.TRIAL)
+        self._reset_counts_total(TimeScale.TRIAL)
         self._reset_time(TimeScale.TRIAL)
 
         while not self.termination_conds[TimeScale.TRIAL].is_satisfied():
-            self._reset_count(self.counts_total, TimeScale.PASS)
+            self._reset_counts_total(TimeScale.PASS)
             self._reset_time(TimeScale.PASS)
 
             execution_list_has_changed = False
