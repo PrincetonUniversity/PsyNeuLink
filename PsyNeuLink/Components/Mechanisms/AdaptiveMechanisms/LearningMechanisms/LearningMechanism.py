@@ -315,7 +315,7 @@ created or assigned to its LearningMechanism's `ERROR_SIGNAL <LearningMechanism_
 
     **Components for Multilayer Learning**
 
-    .. figure:: _static/LearningMechanism_Multilayer_Learning_fig.pdf
+    .. figure:: _static/LearningMechanism_Multilayer_Learning_fig.svg
        :alt: Schematic of Mechanisms and Projections involved in learning for a sequence of MappingProjections
        :scale: 50%
 
@@ -343,7 +343,7 @@ Processes converge on that Mechanism), only one ObjectiveMechanism will be creat
 
     **TERMINAL** and **TARGET** Mechanisms in Learning
 
-    .. figure:: _static/LearningMechanism_TERMINAL_vs_TARGET_fig.pdf
+    .. figure:: _static/LearningMechanism_TERMINAL_vs_TARGET_fig.svg
        :alt: Schematic of Mechanisms and Projections involved in learning
        :scale: 50 %
 
