@@ -264,7 +264,7 @@ layer of learning, *no* Projection is created or assigned to the LearningMechani
 
     **Components for Single Layer Learning**
 
-    .. figure:: _static/LearningMechanism_Single_Layer_Learning_fig.pdf
+    .. figure:: _static/LearningMechanism_Single_Layer_Learning_fig.svg
        :alt: Schematic of Mechanisms and Projections involved in learning for a single MappingProjection
        :scale: 50%
 
