@@ -16,9 +16,8 @@
 Overview
 --------
 
-Component is the base class for all of the objects used to create compositions (`processes <Process>` or
-`systems <System>`) in PsyNeuLink.  It defines a common set of attributes possessed, and methods used by all
-component objects.
+Component is the base class for all of the objects used to create `Compositions <Composition>` in PsyNeuLink.
+It defines a common set of attributes possessed, and methods used by all Component objects.
 
 .. _Component_Creation:
 
@@ -39,27 +38,27 @@ Component Structure
 Component Attributes
 ~~~~~~~~~~~~~~~~~~~~
 
-Every component has the following set of core attributes that govern its operation:
+Every Component has the following set of core attributes that govern its operation:
 
 .. _Component_Variable:
 
 * **variable** - the value of the `variable <Component.variable>` attribute is used as the input to its
-  `function <Component.function>`.  Specification of the variable in the constructor for a component determines both
+  `function <Component.function>`.  Specification of the variable in the constructor for a Component determines both
   its format (e.g., whether it's value is numeric, its dimensionality and shape if it is an array, etc.) as well as
-  its default value (the value used when the component is executed and no input is provided).
+  its default value (the value used when the Component is executed and no input is provided).
 
 .. _Component_Function:
 
-* **function** - the `function <Component.function>` attribute determines the computation that a component carries out.
-  It is always a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink component).
+* **function** - the `function <Component.function>` attribute determines the computation that a Component carries out.
+  It is always a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink Component).
 
   .. note::
-     The `function <Component.function>` of a component can be assigned either a `Function <Function>` object or any
+     The `function <Component.function>` of a Component can be assigned either a `Function <Function>` object or any
      other callable object in python.  If the latter is assigned, it will be "wrapped" in a `UserDefinedFunction`.
 
-  All components have a default `function <Component.function>` (with a default set of parameters), that is used if it
+  All Components have a default `function <Component.function>` (with a default set of parameters), that is used if it
   is not otherwise specified.  The `function <Component.function>` can be specified in the
-  function argument of the constructor for the component, using one of the following:
+  function argument of the constructor for the Component, using one of the following:
 
     * **class** - this must be a subclass of `Function <Function>`, as in the following example::
 
@@ -78,43 +77,43 @@ Every component has the following set of core attributes that govern its operati
         my_component = SomeComponent(some_function)
 
       The specified Function will be used as a template to create a new Function object that is assigned to the
-      `function_object` attribute of the component, the `function <Function.function>` of which will be assigned as
-      the 'function <Component.function>` attribute of the component.
+      `function_object` attribute of the Component, the `function <Function.function>` of which will be assigned as
+      the 'function <Component.function>` attribute of the Component.
 
       .. note::
 
         In the current implementation of PsyNeuLink, if a `Function <Function>` object (or the constructor for one) is
-        used to specify the `function <Component.function>` attribute of a component, the Function object specified (or
-        created) is used to determine attributes of the Function object created for and assigned to the component, but
-        is not *itself* assigned to the component.  This is so that `Functions <Function>` can be used as templates for
-        more than one component, without being assigned simultaneously to multiple components.
+        used to specify the `function <Component.function>` attribute of a Component, the Function object specified (or
+        created) is used to determine attributes of the Function object created for and assigned to the Component, but
+        is not *itself* assigned to the Component.  This is so that `Functions <Function>` can be used as templates for
+        more than one Component, without being assigned simultaneously to multiple Components.
 
   A `function <Component.function>` can also be specified in an entry of a
   `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the
-  **params** argument of the constructor for the component, with the keyword FUNCTION as its key, and one of the
+  **params** argument of the constructor for the Component, with the keyword FUNCTION as its key, and one of the
   specifications above as its value, as in the following example::
 
         my_component = SomeComponent(params={FUNCTION:SomeFunction(some_param=1)})
 
 * **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters
-  for the component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and
+  for the Component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and
   its value the value of that parameter.  This dictionary is read-only. Changes to the value of the function's
-  parameters must be made by assigning a value to the corresponding attribute of the component's
+  parameters must be made by assigning a value to the corresponding attribute of the Component's
   `function_object <Component.function_object>` attribute (e.g., myMechanism.function_object.my_parameter),
   or in a FUNCTION_PARAMS dict using its `assign_params` method.  The parameters for the function can be specified
-  when the component is created in one of the following ways:
+  when the Component is created in one of the following ways:
 
   * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>` argument,
     as in the following example::
 
         my_component = SomeComponent(function=SomeFunction(some_param=1, some_param=2)
 
-  * in an argument of the **component's constructor** -- if all of the allowable functions for a component's
+  * in an argument of the **Component's constructor** -- if all of the allowable functions for a Component's
     `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear
-    as arguments in the constructor of the component itself, which can be used to set their values.
+    as arguments in the constructor of the Component itself, which can be used to set their values.
 
   * in an entry of a `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the
-    **params** argument of the constructor for the component.  The entry must use the keyword
+    **params** argument of the constructor for the Component.  The entry must use the keyword
     FUNCTION_PARAMS as its key, and its value must be a dictionary containing the parameters and their values.
     The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the
     parameter's value, as in the example below::
@@ -127,16 +126,16 @@ Every component has the following set of core attributes that govern its operati
 
 .. _Component_Function_Object:
 
-* **function_object** - the `function_object` attribute refers to the `Function <Function>` assigned to the component;
+* **function_object** - the `function_object` attribute refers to the `Function <Function>` assigned to the Component;
   The Function's `function <Function.function>` is assigned to the `function <Component>` attribute of the
-  component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
+  Component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
   those parameters (see `function_params <Component.function_params>` above).
 
 .. _Component_User_Params:
 
 * **user_params** - the `user_params` attribute contains a dictionary of all of the user-modifiable attributes for the
-  the component.  This dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
-  value to the attribute directly, or using the component's `assign_params` method.
+  the Component.  This dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
+  value to the attribute directly, or using the Component's `assign_params` method.
 ..
 COMMENT:
   INCLUDE IN DEVELOPERS' MANUAL
@@ -145,16 +144,16 @@ COMMENT:
     * **paramInstanceDefaults**
 COMMENT
 
-* **value** - the `value <Component.value>` attribute contains the result (return value) of the component's
+* **value** - the `value <Component.value>` attribute contains the result (return value) of the Component's
   `function <Component.function>` after the function is called.
 ..
-* **name** - the `name <Component.name>` attribute contains the name assigned to the component when it was created.
+* **name** - the `name <Component.name>` attribute contains the name assigned to the Component when it was created.
   If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for
   conventions used in assigning default names and handling of duplicate names).
 ..
-* **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the component when
+* **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the Component when
   it was created.  If it was not specified, a default is assigned using `classPreferences` defined in __init__.py
-  Each individual preference is accessible as an attribute of the component, the name of which is the name of the
+  Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
   preference (see `PreferenceSet <LINK>` for details).
 
 COMMENT:
@@ -170,8 +169,8 @@ Component Methods
 COMMENT:
    INCLUDE IN DEVELOPERS' MANUAL
 
-    There are two sets of methods that belong to every component: one set that is called when it is initialized; and
-    another set that can be called to perform various operations common to all components.  Each of these is described
+    There are two sets of methods that belong to every Component: one set that is called when it is initialized; and
+    another set that can be called to perform various operations common to all Components.  Each of these is described
     briefly below.  All of these methods can be overridden by subclasses to implement customized operations, however
     it is strongly recommended that the method be called on super() at some point, so that the standard operations are
     carried out.  Whether customization operations should be performed before or after the call to super is discussed in
@@ -190,29 +189,29 @@ COMMENT:
     .. _Component_Validation_Methods:
 
     * **Validation methods** perform a strictly *syntactic* check, to determine if a value being validated conforms
-    to the format expected for it by the component (i.e., the type of the value and, if it is iterable, the type its
+    to the format expected for it by the Component (i.e., the type of the value and, if it is iterable, the type its
     elements and/or its length).  The value itself is not checked in any other way (e.g., whether it equals a particular
     value or falls in a specified range).  If the validation fails, and exception is raised.  Validation methods never
     make changes the actual value of an attribute, but they may change its format (e.g., from a list to an ndarray) to
-    comply with requirements of the component.
+    comply with requirements of the Component.
 
       * `_validate_variable <Component._validate_variable>` validates the value provided to the keyword:`variable`
-        argument in the constructor for the component.  If it is overridden, customized validation should generally
+        argument in the constructor for the Component.  If it is overridden, customized validation should generally
         performed *prior* to the call to super(), to allow final processing by the Component base class.
 
       * `_validate_params <Component._validate_params>` validates the value of any parameters specified in the
-        constructor for the component (whether they are made directly in the argument for a parameter, or in a
+        constructor for the Component (whether they are made directly in the argument for a parameter, or in a
         `parameter specification dictionary <ParameterState_Specifying_Parameters>`.  If it is overridden by a subclass,
         customized validation should generally be performed *after* the call to super().
 
-    * **Instantiation methods** create, assign, and/or perform *semantic* checks on the values of component attributes.
+    * **Instantiation methods** create, assign, and/or perform *semantic* checks on the values of Component attributes.
       Semantic checks may include value and/or range checks, as well as checks of formatting and/or value
-      compatibility with other attributes of the component and/or the attributes of other components (for example, the
-      _instantiate_function method checks that the input of the component's `function <Comonent.function>` is compatible
+      compatibility with other attributes of the Component and/or the attributes of other Components (for example, the
+      _instantiate_function method checks that the input of the Component's `function <Comonent.function>` is compatible
       with its `variable <Component.variable>`).
 
       * `_instantiate_defaults <Component._instantiate_defaults>` first calls the validation methods, and then
-        assigns the default values for all of the attributes of the instance of the component being created.
+        assigns the default values for all of the attributes of the instance of the Component being created.
 
         _instantiate_attributes_before_function
         _instantiate_function
@@ -229,8 +228,8 @@ COMMENT
 .. _Component_Assign_Params:
 
 * **assign_params** - the `assign_params` method is used to assign the value of one or more parameters of a
-  component.  Each parameter is specified as an entry in a dict in the **request_set** argument;
-  parameters for the component's function are specified as entries in a FUNCTION_PARAMS dict within
+  Component.  Each parameter is specified as an entry in a dict in the **request_set** argument;
+  parameters for the Component's function are specified as entries in a FUNCTION_PARAMS dict within
   **request_set** dict.
 
 * **reset_params** - the `reset_params` method is used to reset the value of all user_params to their default
@@ -259,7 +258,7 @@ This module defines the Component abstract class
 
 It also contains:
 
-- arg_name definitions for primary component categories:
+- arg_name definitions for primary Component categories:
     Process
     Mechanism
         types:
@@ -299,14 +298,14 @@ from collections import UserDict
 class ParamsDict(UserDict):
     """Create, set and get attribute of owner for each key in dict
 
-    Creates and maintains an interface to attributes of a component via a dict:
+    Creates and maintains an interface to attributes of a Component via a dict:
         - any assignment to an entry of the dict creates or updates the value of the attribute with the name of the key
         - any query retrieves the value of the attribute with the name of the key
     Dict itself is maintained in self.data
 
     Notes:
     * This provides functionality similar to the __dict__ attribute of a python object,
-        but is restricted to the attributes relevant to its role as a PsyNeuLink component.
+        but is restricted to the attributes relevant to its role as a PsyNeuLink Component.
     * It insures that any instantiation of a function_params attribute is a ReadOnlyOrderedDict
 
     """
@@ -392,7 +391,7 @@ class ComponentError(Exception):
 class Component(object):
     """Implement parent class for Components used by Process, Mechanism, State, and Projection class categories
 
-        Every component is associated with:
+        Every Component is associated with:
          - child class componentName
          - type
          - input (self.variable)
@@ -404,9 +403,9 @@ class Component(object):
          - output_values (return from self.execute: concatenated set of values of outputStates)
          - class and instance variable defaults
          - class and instance param defaults
-        The components's execute method (<subclass>.execute is the component's primary method
+        The Components's execute method (<subclass>.execute is the Component's primary method
             (e.g., it is the one called when process, mechanism, state and projections objects are updated);
-            the following attributes for or associated with the method are defined for every component object:
+            the following attributes for or associated with the method are defined for every Component object:
                 + execute (method) - the execute method itself
                 + value (value) - the output of the execute method
             the latter is used for typing and/or templating other variables (e.g., self.variable):
@@ -416,24 +415,24 @@ class Component(object):
                     if the template has only numbers, then the candidate must as well
 
 
-        The component itself can be called without any arguments (in which case it uses its instance defaults) or
+        The Component itself can be called without any arguments (in which case it uses its instance defaults) or
             one or more variables (as defined by the subclass) followed by an optional params dictionary
         The variable(s) can be a function reference, in which case the function is called to resolve the value;
             however:  it must be "wrapped" as an item in a list, so that it is not called before being passed
                       it must of course return a variable of the type expected for the variable
         The default variableList is a list of default values, one for each of the variables defined in the child class
         The params argument is a dictionary; the key for each entry is the parameter name, associated with its value.
-            + component subclasses can define the param FUNCTION:<method or Function class>
-        The component can be called with a params argument, which should contain entries for one or more of its params;
+            + Component subclasses can define the param FUNCTION:<method or Function class>
+        The Component can be called with a params argument, which should contain entries for one or more of its params;
             - those values will be assigned to paramsCurrent at run time (overriding previous values in paramsCurrent)
-            - if the component is called without a variable and/or params argument, it uses paramInstanceDefaults
+            - if the Component is called without a variable and/or params argument, it uses paramInstanceDefaults
         The instance defaults can be assigned at initialization or using the _instantiate_defaults class method;
             - if instance defaults are not assigned on initialization, the corresponding class defaults are assigned
         Parameters can be REQUIRED to be in paramClassDefaults (for which there is no default value to assign)
             - for all classes, by listing the name and type in requiredParamClassDefaultTypes dict of the Function class
             - in subclasses, by inclusion in requiredParamClassDefaultTypes (via copy and update) in class definition
             * NOTE: inclusion in requiredParamClasssDefault simply acts as a template;  it does NOT implement the param
-        Each component child class must initialize itself by calling super(childComponentName).__init__()
+        Each Component child class must initialize itself by calling super(childComponentName).__init__()
             with a default value for its variable, and optionally an instance default paramList.
 
         A subclass MUST either:
@@ -466,7 +465,7 @@ class Component(object):
         + className
         + suffix - " " + className (used to create subclass and instance names)
         + componentCategory - category of Component (i.e., process, mechanism, projection, learning, function)
-        + componentType - type of component within a category
+        + componentType - type of Component within a category
                              (e.g., TransferMechanism, MappingProjection, ControlProjection, etc.)
         + requiredParamClassDefaultTypes - dict of param names & types that all subclasses of Component must implement;
         + prev_context - str (primarily used to track and prevent recursive calls to assign_params from setters)
@@ -1423,7 +1422,7 @@ class Component(object):
             # MODIFIED 4/18/17 NEW:
             # For params that are a 2-item tuple, extract the value
             #    both for validation and assignment (tuples are left intact in user_params_for_instantiation dict
-            #    which is used it instantiate the specified components in the 2nd item of the tuple)
+            #    which is used it instantiate the specified Components in the 2nd item of the tuple)
             # IMPLEMENTATION NOTE:  Do this here rather than in _validate_params, as it needs to be done before
             #                       any override of _validate_params, which (should not, but) may process params
             #                       before calling super()._validate_params
@@ -1494,7 +1493,7 @@ class Component(object):
         self.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
         self.paramsCurrent.update(validated_set)
         # The following is so that:
-        #    if the component is a function and it is passed as an argument to a component,
+        #    if the Component is a function and it is passed as an argument to a Component,
         #    then the parameters are available in self.user_params_for_instantiation
         #    (which is needed when the function is recreated from its class in _assign_args_to_params_dicts)
         self.user_params_for_instantiation.update(self.user_params)
@@ -1669,7 +1668,7 @@ class Component(object):
 
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
-                # these are always allowable since they are attribs of every component
+                # these are always allowable since they are attribs of every Component
                 if param_name in {VARIABLE, NAME, VALUE, PARAMS}:
                     continue
                 # function is a class, so function_params has not yet been implemented
@@ -2162,7 +2161,7 @@ class Component(object):
         #  - assign to paramInstanceDefaults
         self.paramInstanceDefaults[FUNCTION] = self.function
 
-        #  - for all components other than a Function itself,
+        #  - for all Components other than a Function itself,
         #    assign function_object, function_params dict, and function's parameters from any ParameterStates
         from PsyNeuLink.Components.Functions.Function import Function
         if not isinstance(self, Function):
@@ -2170,7 +2169,7 @@ class Component(object):
             if not self.function_object.owner:
                 self.function_object.owner = self
             elif self.function_object.owner != self:
-                raise ComponentError("Function being assigned to {} ({}) belongs to another component: {}".
+                raise ComponentError("Function being assigned to {} ({}) belongs to another Component: {}".
                                      format(self.name, self.function_object.name, self.function_object.owner.name))
             # sort to maintain alphabetical order of function_params
             for param_name in sorted(list(self.function_object.user_params_for_instantiation.keys())):
@@ -2356,7 +2355,7 @@ class Component(object):
 
     @auto_dependent.setter
     def auto_dependent(self, value):
-        """Assign auto_dependent status to component and any of its owners up the hierarchy
+        """Assign auto_dependent status to Component and any of its owners up the hierarchy
         """
         owner = self
         while owner is not None:
@@ -2383,15 +2382,15 @@ def make_property(name, default_value):
             return self.owner._parameter_states[backing_field[1:]].value
         except (AttributeError, TypeError):
             try:
-                # Get value of param from component's own ParameterState.value
+                # Get value of param from Component's own ParameterState.value
                 #    case: request is for the value of a parameter of a Mechanism or Project that has a ParameterState
                 #    example: matrix parameter of a MappingProjection)
                 #    rationale: next most common case
                 #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
                 return self._parameter_states[backing_field[1:]].value
             except (AttributeError, TypeError):
-                # Get value of param from component's attribute
-                #    case: request is for the value of an attribute for which the component has no ParameterState
+                # Get value of param from Component's attribute
+                #    case: request is for the value of an attribute for which the Component has no ParameterState
                 #    rationale: least common case
                 #    example: parameter of a Function belonging to a state (which don't themselves have ParameterStates)
                 #    note: use backing_field since referencing property rather than item in _parameter_states)
@@ -2409,7 +2408,7 @@ def make_property(name, default_value):
         # Update user_params dict with new value
         self.user_params.__additem__(name, val)
 
-        # If component is a Function and has an owner, update function_params dict for owner
+        # If Component is a Function and has an owner, update function_params dict for owner
         #    also, get parameter_state_owner if one exists
         from PsyNeuLink.Components.Functions.Function import Function_Base
         if isinstance(self, Function_Base) and self.owner:
