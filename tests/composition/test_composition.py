@@ -7,9 +7,10 @@ import pytest
 from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.composition import Composition, CompositionError, MechanismRole
-
+from PsyNeuLink.scheduling.Scheduler import Scheduler
 logger = logging.getLogger(__name__)
 
 # All tests are set to run. If you need to skip certain tests,
@@ -685,3 +686,34 @@ class TestGraph:
                 comp.graph_processing.comp_to_vertex[A],
                 comp.graph_processing.comp_to_vertex[B],
             ])
+
+class TestRun:
+        def test_run_2_mechanisms_default_input_1(self):
+            comp = Composition()
+            A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+            B = TransferMechanism(function=Linear(slope=5.0))
+            comp.add_mechanism(A)
+            comp.add_mechanism(B)
+            comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+            comp.analyze_graph()
+            sched = Scheduler(composition=comp)
+            output = comp.run(
+                scheduler=sched
+            )
+            assert 25 == output[0][0]
+
+        def test_run_2_mechanisms_input_5(self):
+            comp = Composition()
+            A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+            B = TransferMechanism(function=Linear(slope=5.0))
+            comp.add_mechanism(A)
+            comp.add_mechanism(B)
+            comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+            comp.analyze_graph()
+            inputs_dict = {A: 5}
+            sched = Scheduler(composition=comp)
+            output = comp.run(
+                inputs=inputs_dict,
+                scheduler=sched
+            )
+            assert 125 == output[0][0]
