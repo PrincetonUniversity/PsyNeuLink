@@ -92,10 +92,15 @@ our expectation is that it be made computationally more efficient.
 Overview and "Sampler"
 ----------------------
 
+PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
+The secionts below provide some examples of what PsyNeuLink models look like and some of its capabilities.
+`Structure_Basic_Constructs` provides an overview of PsyNeuLink Components, Compositions, and their execution.
+The `UsersGuide` provides a more thorough description of how PsyNeuLink is organized and its basic principles of
+operation.  The `Tutorial` provides an interactive guide to the construction of models using PsyNeuLink.
+
 Basics
 ~~~~~~
 
-PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
 PsyNeuLink models are made of `Components <Component>` and `Compositions <Composition>`:
 Components are objects that perform a specific function, and Compositions are used to combine Components into an
 executable model.  There are two primary kinds of Components:  `Mechanisms <Mechanism>` and `Projections <Projection>`.
@@ -110,6 +115,7 @@ taking the inputs to a model and generating its outputs;  and ones that *modulat
 of information.  PsyNeuLink provides a library of Components of each type.  For example, there is a variety of
 ProcessingMechanisms that can be used to transform, integrate, and evaluate information; and there
 LearningMechanisms, ControlMechanisms, and GatingMechanism that can be used to modulate those processes.
+
 
 .. _Index_Simple_Configurations:
 

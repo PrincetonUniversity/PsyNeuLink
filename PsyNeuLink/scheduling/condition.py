@@ -13,6 +13,7 @@
 COMMENT:
     [**NAME OF THE MODULE SHOULD BE CAPITALIZED]
     K: Agreed, along with scheduling folder to match the project style
+    JDC: Yep
 COMMENT
 
 .. _Condition_Overview

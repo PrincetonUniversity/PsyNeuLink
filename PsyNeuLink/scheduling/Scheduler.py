@@ -65,7 +65,9 @@ COMMENT:
      ??**DOES SCHEDULER HANDLE CREATING THE GRAPH IF A THE DEPENDENCY DICT IS USED?
     K: the scheduler never creates a graph, only uses a toposort (the python module) representation of a graph to
     determine the order in which nodes should be considered for execution.
+    JDC: SO WHY THEN CAN'T IT ACCEPT A GRAPH (AS A REPRESENTATION OF A SYSTEM) RATHER THAN A FULL SYSTEM?
     the system argument expects only a system by design - it would be very confusing otherwise
+    JDC: ALSO, HOW IS TimeScale BEING USED;  THAT NEEDS TO BE DOCUMENTED SOMEHWERE (IS IT THE SAME AS BEFORE)??
 COMMENT
 
 * a **list of Mechanisms** in the **nodes** argument - the list must acyclic; as with a
@@ -78,6 +80,8 @@ COMMENT:
     K: because nodes is just a list of nodes and does not have any structural information in it, so the toposort
     is necessary. Nodes cannot be mechanisms because in learning nodes consists of mechanisms or projections.
     the scheduler is also completely agnostic to the type of things it gets in nodes
+    JDC: I SEE, SO nodes ARE AKIN TO CURRENT Processes?  SO IF THEY ARE SPECIFIED, MUT ALSO INCLUDE TOPOSORT?
+                  BUT THEN WHY BOTHER WITH THE NODES?
 COMMENT
 
 In addition, a `ConditionSet` may be specified, by assigning one to the **condition_set** argument of the constructor.
@@ -88,6 +92,7 @@ COMMENT:
     K: no, Conditions are specifically independent of any structural dependencies. The structure is only used to
     determine the order and sets in which nodes are checked to run. There are no conflicts. By default, nodes will
     get the Always condition which allows them to run whenever they are under consideration
+    JDC: DON'T UNDERSTAND THIS
 These will be added to the list generated from the
 `System` or graph specified in the **system** argument, or the list specified in the **toposort_ordering** argument.
 The Conditions will be added to the ones derived from the `System`, graph, or list specified in the **system** or
@@ -104,6 +109,8 @@ Algorithm
 COMMENT:
     [** DEFINE consideration_set]
     K: the below is explaining consideration_set, it's better described than dryly defined I think
+    JDC: GENERALLY AGREE, BUT STILL THINK IT BEST TO HAVE A VERY SHORT (ONE SENTENCE) DEFINITION
+         (IN EFFECT, A "TOPIC SENTENCE") THAT HELPS ORIENT THE READER, THEN GIVE A MORE INFORMATIVE EXPLANATION)
 A Scheduler first constructs a `consideration_queue` of its Mechanisms using the topological ordering. A
 `consideration_queue` consists of a list of `consideration_sets <consideration_set>` of Mechanisms grouped based on
 the dependencies among them specified by the graph. The first `consideration_set` consists of only `ORIGIN` Mechanisms.
@@ -111,7 +118,8 @@ The second consists of all Mechanisms that receive `Projections <Projection>` fr
 `consideration_set`. The third consists of Mechanisms that receive Projections from Mechanisms in the first two
 `consideration_sets <consideration_set>`, and so forth.  When executing, the Scheduler maintains a record
 of the number of times its Mechanisms have been assigned to execute, and the total number of `time_steps <time_step>`
-that have occurred in each `TimeScale`. This information is used by `Conditions`.
+that have occurred in each `TimeScale`. This information is used by `Conditions` to determine whether the
+specified condition has been met each time it is evaluated.
 COMMENT:
     [**??HOW IS IT USED BY Conditions?]
     K: it's not obvious from what conditions do? As in they use relative or time-based information to determine
@@ -127,6 +135,7 @@ COMMENT:
     [**??ISN'T THE ABOVE PROBLEMATIC??]
     K: no, because only nodes within a consideration set may be triggered, and each node can only run once per time step
     by definition.
+    JDC: I GUESS I DON'T FULLY UNDERSTAND THIS.
 The ordering of these Mechanisms is irrelevant, as there are no "parent-child" dependencies among Mechanisms within
 the same `consideration_set`. A key feature is that all parents have the chance to execute (even if they do not
 actually execute) before their children.  At the beginning of each `timestep`, the Scheduler evaluates whether the
@@ -285,6 +294,10 @@ class Scheduler(object):
         COMMENT:
             [**??IS THE FOLLOWING CORRECT]:
             K: not correct, there are no implicit System Conditions
+            JDC: I WAS REFERRING TO THE DEPENDENCIES IN THE SYSTEM'S GRAPH.  THE FACT THAT conditions IS AN
+                 OPTIONAL ARG FOR SCHEDULER, AND THAT PROVIDING A system IS SUFFICIENT TO GENERATE A SCHEDULE,
+                 MEANS THAT THERE MUST BE CONDITIONS IMPLICIT IN THE system.
+
         condition  : ConditionSet
             set of `Conditions <Condition>` that specify when individual Mechanisms in **system**
             execute and any dependencies among them, that complements any that are implicit in the System,
