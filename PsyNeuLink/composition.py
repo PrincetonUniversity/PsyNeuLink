@@ -378,7 +378,7 @@ class Composition(object):
                         raise ValueError("The value provided for input state {!s} of the mechanism \"{}\" has length {!s} \
                             where the input state takes values of length {!s}".format(i, mech.name, val_length, state_length))
 
-    def run(self, scheduler, inputs=None, targets=None, recurrent_init=None):
+    def run(self, scheduler, inputs={}, targets=None, recurrent_init=None):
 
         # if inputs:
         #     self.validate_feed_dict(inputs, self.origin_mechanisms, "Inputs")
@@ -388,7 +388,7 @@ class Composition(object):
         #     self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
 
         is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
-        
+
         for next_execution_set in scheduler.run():
 
             for mechanism in next_execution_set:
