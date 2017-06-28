@@ -180,7 +180,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
     # Sets template for variable (input)
-    variableClassDefault = None
+    variableClassDefault = [[0]]
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
