@@ -86,10 +86,9 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projection</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="PathwayProjection.html">PathwayProjection</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">ModulatoryProjection</a><ul>
@@ -109,10 +108,13 @@
 <li class="toctree-l2"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 
             
@@ -200,7 +202,7 @@ that modulate different types of components and their states:</p>
 <dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
 <dd><p class="first last">This takes the <code class="xref any docutils literal"><span class="pre">value</span></code> of a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> belonging to a LearningMechanism,
 and conveys it to the <em>MATRIX</em> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, for use by its
-<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> in modulating the value of the MappingProjection&#8217;s
+<a class="reference internal" href="Function.html#Function.Stability.ParameterState.function" title="Function.Stability.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> in modulating the value of the MappingProjection&#8217;s
 <a class="reference internal" href="Function.html#Function.Stability.MappingProjection.matrix" title="Function.Stability.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter.</p>
 </dd>
 </dl>
@@ -239,7 +241,7 @@ for each type.</p>
 <span id="modulatoryprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatoryProjection has the same basic structure as a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, augmented by type-specific attributes
 and methods described under each type of ModulatoryProjection.  The ModulatoryProjections received by a <a class="reference internal" href="State.html"><span class="doc">State</span></a>
-are listed in the State&#8217;s <a class="reference internal" href="State.html#State.State_Base.mod_afferents" title="State.State_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.</p>
+are listed in the State&#8217;s <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.</p>
 </div>
 <div class="section" id="execution">
 <span id="modulatoryprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
@@ -247,7 +249,7 @@ are listed in the State&#8217;s <a class="reference internal" href="State.html#S
 which it projects —&nbsp;its <code class="xref any docutils literal"><span class="pre">receiver</span></code> — is updated;  that occurs when the state&#8217;s owner mechanism
 is executed.  When a ModulatoryProjection executes, it conveys both the value of the <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> from which it
 projects, and the ModulatorySignal&#8217;s <a class="reference internal" href="ModulatorySignal.html#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute, to the state that receives
-the projection.  The state assigns the value to the parameter of the state&#8217;s function specified by the <a class="reference internal" href="GatingMechanism.html#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.modulation" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a>
+the projection.  The state assigns the value to the parameter of the state&#8217;s function specified by the <a class="reference internal" href="ModulatorySignal.html#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a>
 attribute, and then calls the function to determine the <code class="xref any docutils literal"><span class="pre">value</span></code> of the state.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>

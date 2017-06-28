@@ -34,8 +34,8 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="next" title="Functions" href="Function.html"/>
-        <link rel="prev" title="Condition" href="Condition.html"/> 
+        <link rel="next" title="Mechanism" href="Mechanism.html"/>
+        <link rel="prev" title="Conventions and Definitions" href="ConventionsAndDefinitions.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -85,13 +85,7 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Component</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-component">Creating a Component</a></li>
@@ -103,7 +97,15 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
 </ul>
 
             
@@ -154,9 +156,8 @@
 </div>
 <span class="target" id="module-Component"></span><div class="section" id="overview">
 <span id="component-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>Component is the base class for all of the objects used to create compositions (<a class="reference internal" href="Process.html"><span class="doc">processes</span></a> or
-<a class="reference internal" href="System.html"><span class="doc">systems</span></a>) in PsyNeuLink.  It defines a common set of attributes possessed, and methods used by all
-component objects.</p>
+<p>Component is the base class for all of the objects used to create <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> in PsyNeuLink.
+It defines a common set of attributes possessed, and methods used by all Component objects.</p>
 </div>
 <div class="section" id="creating-a-component">
 <span id="component-creation"></span><h2>Creating a Component<a class="headerlink" href="#creating-a-component" title="Permalink to this headline">¶</a></h2>
@@ -168,24 +169,24 @@ procedure.</p>
 <span id="id1"></span><h2>Component Structure<a class="headerlink" href="#component-structure" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="component-attributes">
 <span id="id2"></span><h3>Component Attributes<a class="headerlink" href="#component-attributes" title="Permalink to this headline">¶</a></h3>
-<p>Every component has the following set of core attributes that govern its operation:</p>
+<p>Every Component has the following set of core attributes that govern its operation:</p>
 <ul class="simple" id="component-variable">
 <li><strong>variable</strong> - the value of the <code class="xref any docutils literal"><span class="pre">variable</span></code> attribute is used as the input to its
-<code class="xref any docutils literal"><span class="pre">function</span></code>.  Specification of the variable in the constructor for a component determines both
+<code class="xref any docutils literal"><span class="pre">function</span></code>.  Specification of the variable in the constructor for a Component determines both
 its format (e.g., whether it&#8217;s value is numeric, its dimensionality and shape if it is an array, etc.) as well as
-its default value (the value used when the component is executed and no input is provided).</li>
+its default value (the value used when the Component is executed and no input is provided).</li>
 </ul>
 <ul id="component-function">
-<li><p class="first"><strong>function</strong> - the <code class="xref any docutils literal"><span class="pre">function</span></code> attribute determines the computation that a component carries out.
-It is always a PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object (itself a PsyNeuLink component).</p>
+<li><p class="first"><strong>function</strong> - the <code class="xref any docutils literal"><span class="pre">function</span></code> attribute determines the computation that a Component carries out.
+It is always a PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object (itself a PsyNeuLink Component).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The <code class="xref any docutils literal"><span class="pre">function</span></code> of a component can be assigned either a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object or any
+<p class="last">The <code class="xref any docutils literal"><span class="pre">function</span></code> of a Component can be assigned either a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object or any
 other callable object in python.  If the latter is assigned, it will be &#8220;wrapped&#8221; in a <a class="reference internal" href="Function.html#Function.UserDefinedFunction" title="Function.UserDefinedFunction"><code class="xref any py py-class docutils literal"><span class="pre">UserDefinedFunction</span></code></a>.</p>
 </div>
-<p>All components have a default <code class="xref any docutils literal"><span class="pre">function</span></code> (with a default set of parameters), that is used if it
+<p>All Components have a default <code class="xref any docutils literal"><span class="pre">function</span></code> (with a default set of parameters), that is used if it
 is not otherwise specified.  The <code class="xref any docutils literal"><span class="pre">function</span></code> can be specified in the
-function argument of the constructor for the component, using one of the following:</p>
+function argument of the constructor for the Component, using one of the following:</p>
 <blockquote>
 <div><ul>
 <li><p class="first"><strong>class</strong> - this must be a subclass of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>, as in the following example:</p>
@@ -208,34 +209,34 @@ following examples:</p>
 my_component = SomeComponent(some_function)</p>
 </div></blockquote>
 <p>The specified Function will be used as a template to create a new Function object that is assigned to the
-<code class="xref any docutils literal"><span class="pre">function_object</span></code> attribute of the component, the <code class="xref any docutils literal"><span class="pre">function</span></code> of which will be assigned as
-the &#8216;function &lt;Component.function&gt;` attribute of the component.</p>
+<code class="xref any docutils literal"><span class="pre">function_object</span></code> attribute of the Component, the <code class="xref any docutils literal"><span class="pre">function</span></code> of which will be assigned as
+the &#8216;function &lt;Component.function&gt;` attribute of the Component.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">In the current implementation of PsyNeuLink, if a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object (or the constructor for one) is
-used to specify the <code class="xref any docutils literal"><span class="pre">function</span></code> attribute of a component, the Function object specified (or
-created) is used to determine attributes of the Function object created for and assigned to the component, but
-is not <em>itself</em> assigned to the component.  This is so that <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> can be used as templates for
-more than one component, without being assigned simultaneously to multiple components.</p>
+used to specify the <code class="xref any docutils literal"><span class="pre">function</span></code> attribute of a Component, the Function object specified (or
+created) is used to determine attributes of the Function object created for and assigned to the Component, but
+is not <em>itself</em> assigned to the Component.  This is so that <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> can be used as templates for
+more than one Component, without being assigned simultaneously to multiple Components.</p>
 </div>
 </li>
 </ul>
 </div></blockquote>
 <p>A <code class="xref any docutils literal"><span class="pre">function</span></code> can also be specified in an entry of a
 <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter specification dictionary</span></a> assigned to the
-<strong>params</strong> argument of the constructor for the component, with the keyword FUNCTION as its key, and one of the
+<strong>params</strong> argument of the constructor for the Component, with the keyword FUNCTION as its key, and one of the
 specifications above as its value, as in the following example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_component</span> <span class="o">=</span> <span class="n">SomeComponent</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">FUNCTION</span><span class="p">:</span><span class="n">SomeFunction</span><span class="p">(</span><span class="n">some_param</span><span class="o">=</span><span class="mi">1</span><span class="p">)})</span>
 </pre></div>
 </div>
 </li>
 <li><p class="first"><strong>function_params</strong> - the <code class="xref any docutils literal"><span class="pre">function_params</span></code> attribute contains a dictionary of the parameters
-for the component&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> and their values.  Each entry is the name of a parameter, and
+for the Component&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> and their values.  Each entry is the name of a parameter, and
 its value the value of that parameter.  This dictionary is read-only. Changes to the value of the function&#8217;s
-parameters must be made by assigning a value to the corresponding attribute of the component&#8217;s
+parameters must be made by assigning a value to the corresponding attribute of the Component&#8217;s
 <code class="xref any docutils literal"><span class="pre">function_object</span></code> attribute (e.g., myMechanism.function_object.my_parameter),
 or in a FUNCTION_PARAMS dict using its <code class="xref any docutils literal"><span class="pre">assign_params</span></code> method.  The parameters for the function can be specified
-when the component is created in one of the following ways:</p>
+when the Component is created in one of the following ways:</p>
 <ul>
 <li><p class="first">in the <strong>constructor</strong> for a Function &#8211; if that is used to specify the <code class="xref any docutils literal"><span class="pre">function</span></code> argument,
 as in the following example:</p>
@@ -243,12 +244,12 @@ as in the following example:</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first">in an argument of the <strong>component&#8217;s constructor</strong> &#8211; if all of the allowable functions for a component&#8217;s
+<li><p class="first">in an argument of the <strong>Component&#8217;s constructor</strong> &#8211; if all of the allowable functions for a Component&#8217;s
 <code class="xref any docutils literal"><span class="pre">function</span></code> share some or all of their parameters in common, the shared paramters may appear
-as arguments in the constructor of the component itself, which can be used to set their values.</p>
+as arguments in the constructor of the Component itself, which can be used to set their values.</p>
 </li>
 <li><p class="first">in an entry of a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter specification dictionary</span></a> assigned to the
-<strong>params</strong> argument of the constructor for the component.  The entry must use the keyword
+<strong>params</strong> argument of the constructor for the Component.  The entry must use the keyword
 FUNCTION_PARAMS as its key, and its value must be a dictionary containing the parameters and their values.
 The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the
 parameter&#8217;s value, as in the example below:</p>
@@ -263,29 +264,29 @@ can be specified.</p>
 </li>
 </ul>
 <ul class="simple" id="component-function-object">
-<li><strong>function_object</strong> - the <code class="xref any docutils literal"><span class="pre">function_object</span></code> attribute refers to the <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> assigned to the component;
+<li><strong>function_object</strong> - the <code class="xref any docutils literal"><span class="pre">function_object</span></code> attribute refers to the <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> assigned to the Component;
 The Function&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> is assigned to the <a class="reference internal" href="#"><span class="doc">function</span></a> attribute of the
-component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
+Component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
 those parameters (see <code class="xref any docutils literal"><span class="pre">function_params</span></code> above).</li>
 </ul>
 <ul class="simple" id="component-user-params">
 <li><strong>user_params</strong> - the <code class="xref any docutils literal"><span class="pre">user_params</span></code> attribute contains a dictionary of all of the user-modifiable attributes for the
-the component.  This dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
-value to the attribute directly, or using the component&#8217;s <code class="xref any docutils literal"><span class="pre">assign_params</span></code> method.</li>
+the Component.  This dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
+value to the attribute directly, or using the Component&#8217;s <code class="xref any docutils literal"><span class="pre">assign_params</span></code> method.</li>
 </ul>
 <ul class="simple">
-<li><strong>value</strong> - the <code class="xref any docutils literal"><span class="pre">value</span></code> attribute contains the result (return value) of the component&#8217;s
+<li><strong>value</strong> - the <code class="xref any docutils literal"><span class="pre">value</span></code> attribute contains the result (return value) of the Component&#8217;s
 <code class="xref any docutils literal"><span class="pre">function</span></code> after the function is called.</li>
 </ul>
 <ul class="simple">
-<li><strong>name</strong> - the <code class="xref any docutils literal"><span class="pre">name</span></code> attribute contains the name assigned to the component when it was created.
+<li><strong>name</strong> - the <code class="xref any docutils literal"><span class="pre">name</span></code> attribute contains the name assigned to the Component when it was created.
 If it was not specified, a default is assigned by the registry for subclass (see <span class="xref doc">Registry</span> for
 conventions used in assigning default names and handling of duplicate names).</li>
 </ul>
 <ul class="simple">
-<li><strong>prefs</strong> - the <code class="xref any docutils literal"><span class="pre">prefs</span></code> attribute contains the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> assigned to the component when
+<li><strong>prefs</strong> - the <code class="xref any docutils literal"><span class="pre">prefs</span></code> attribute contains the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> assigned to the Component when
 it was created.  If it was not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-Each individual preference is accessible as an attribute of the component, the name of which is the name of the
+Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
 preference (see <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 </ul>
 </div>
@@ -293,8 +294,8 @@ preference (see <code class="xref any docutils literal"><span class="pre">Prefer
 <span id="id3"></span><h3>Component Methods<a class="headerlink" href="#component-methods" title="Permalink to this headline">¶</a></h3>
 <ul class="simple" id="component-assign-params">
 <li><strong>assign_params</strong> - the <code class="xref any docutils literal"><span class="pre">assign_params</span></code> method is used to assign the value of one or more parameters of a
-component.  Each parameter is specified as an entry in a dict in the <strong>request_set</strong> argument;
-parameters for the component&#8217;s function are specified as entries in a FUNCTION_PARAMS dict within
+Component.  Each parameter is specified as an entry in a dict in the <strong>request_set</strong> argument;
+parameters for the Component&#8217;s function are specified as entries in a FUNCTION_PARAMS dict within
 <strong>request_set</strong> dict.</li>
 <li><strong>reset_params</strong> - the <code class="xref any docutils literal"><span class="pre">reset_params</span></code> method is used to reset the value of all user_params to their default
 (paramClass</li>
@@ -315,10 +316,10 @@ parameters for the component&#8217;s function are specified as entries in a FUNC
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Function.html" class="btn btn-neutral float-right" title="Functions" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Condition.html" class="btn btn-neutral" title="Condition" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="ConventionsAndDefinitions.html" class="btn btn-neutral" title="Conventions and Definitions" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

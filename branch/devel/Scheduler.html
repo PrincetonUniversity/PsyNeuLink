@@ -85,11 +85,15 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Scheduler</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="Condition.html">Condition</a></li>
@@ -98,8 +102,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#algorithm">Algorithm</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 
             
@@ -170,42 +172,48 @@ can be combined in arbitrary ways to generate any pattern of execution that is l
 the set of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> to be executed and their order must be specified in one of the following
 ways in the Scheduler&#8217;s constructor:</p>
 <ul class="simple">
-<li>a <a class="reference internal" href="System.html"><span class="doc">System</span></a> or a <strong>graph specification dictionary</strong> in the <strong>system</strong> argument - if a System is specified,
+<li>a <a class="reference internal" href="System.html"><span class="doc">System</span></a> in the <strong>system</strong> argument - if a System is specified,
 the schedule is created using the Mechanisms in the System&#8217;s <code class="xref any docutils literal"><span class="pre">executionList</span></code> and the order
-specified in its <code class="xref any docutils literal"><span class="pre">executionGraph</span></code>.  If graph specification dictionary is used,  it must
-describe a directed acyclic graph of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, in which the key for each entry is a Mechanism and
-the value is a set specifying the Mechanisms that project directly to the one in the key;  an error is generated if
-any cycles (e.g., recurrent <code class="xref any docutils literal"><span class="pre">Projections</span></code>) are detected.</li>
+specified in its <code class="xref any docutils literal"><span class="pre">executionGraph</span></code>.</li>
 <li>a <strong>list of Mechanisms</strong> in the <strong>nodes</strong> argument - the list must acyclic; as with a
 graph specification dictionary, an error is generated if any cycles (e.g., recurrent <code class="xref any docutils literal"><span class="pre">Projections</span></code>)
 are detected.  If the <strong>nodes</strong> argument is used, then a topologically sorted list of the Mechanisms must be
 provided in the <strong>toposort_ordering</strong> argument</li>
 </ul>
 <p>In addition, a <a class="reference internal" href="Condition.html#scheduling.condition.ConditionSet" title="scheduling.condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a> may be specified, by assigning one to the <strong>condition_set</strong> argument of the constructor.
-A ConditionSet is simply a list of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>.  These will be added to the list generated from the
-<a class="reference internal" href="System.html"><span class="doc">System</span></a> or graph specified in the <strong>system</strong> argument, or the list specified in the <strong>toposort_ordering</strong> argument.
-The Conditions will be added to the ones derived from the <a class="reference internal" href="System.html"><span class="doc">System</span></a>, graph, or list specified in the <strong>system</strong> or
-<strong>toposort_ordering</strong> arguments, with any conflicts resolved in favor of the ConditionSet. ConditionSets can also
-be added after a Scheduler has been created, using its <a class="reference internal" href="Condition.html#scheduling.condition.ConditionSet.add_condition" title="scheduling.condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and <a class="reference internal" href="Condition.html#scheduling.condition.ConditionSet.add_condition_set" title="scheduling.condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods.
+A ConditionSet is simply a list of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>.</p>
+<p>ConditionSets can also be added after a Scheduler has been created, using its <a class="reference internal" href="Condition.html#scheduling.condition.ConditionSet.add_condition" title="scheduling.condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and <a class="reference internal" href="Condition.html#scheduling.condition.ConditionSet.add_condition_set" title="scheduling.condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods.
 If both a System and a set of nodes are specified, the Scheduler will initialize based on the System.</p>
 </div>
 <div class="section" id="algorithm">
 <span id="scheduler-algorithm"></span><h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><dl class="docutils">
-<dt>[<a href="#id1"><span class="problematic" id="id2">**</span></a>??HOW IS IT USED BY Conditions?]</dt>
-<dd>The Scheduler evaluates the</dd>
-</dl>
+<div><p>[<a href="#id1"><span class="problematic" id="id2">**</span></a>??HOW IS IT USED BY Conditions?]
+K: it&#8217;s not obvious from what conditions do? As in they use relative or time-based information to determine
+their satisfaction, these are number of executions, number of time steps, etc.
+Similarly here &#8220;mechanism&#8221; isn&#8217;t a good substitute for &#8220;node&#8221;</p>
+<blockquote>
+<div>The Scheduler evaluates the</div></blockquote>
 </div></blockquote>
-<p><code class="xref any docutils literal"><span class="pre">consider_sets</span></code> in their order in the <code class="xref any docutils literal"><span class="pre">consideration_queue</span></code>, and determines which Mechanisms in
+<p><code class="xref any docutils literal"><span class="pre">consideration_sets</span></code> in their order in the <code class="xref any docutils literal"><span class="pre">consideration_queue</span></code>, and determines which Mechanisms in
 each are allowed to run based on whether their associated Conditions have been met; all Mechanisms within a
 <code class="xref any docutils literal"><span class="pre">consideration_set</span></code> that are allowed to run comprise a <code class="xref any docutils literal"><span class="pre">time_step`&lt;TimeScale.TIME_STEP&gt;.</span> <span class="pre">These</span> <span class="pre">Mechanisms</span> <span class="pre">are</span>
 <span class="pre">considered</span> <span class="pre">for</span> <span class="pre">simultaneous</span> <span class="pre">execution,</span> <span class="pre">and</span> <span class="pre">so</span> <span class="pre">the</span> <span class="pre">execution</span> <span class="pre">of</span> <span class="pre">a</span> <span class="pre">Mechanism</span> <span class="pre">within</span> <span class="pre">a</span> <span class="pre">`time_step</span></code> may trigger the
 execution of another Mechanism within its <code class="xref any docutils literal"><span class="pre">consideration_set</span></code>.</p>
 <blockquote>
-<div>[** ??DOES &#8216;Always` MEAN IT RUNS ONCE AND ONLY ONCE PER ROUND OF EXECUTION??]
+<div><p>[** ??DOES &#8216;Always` MEAN IT RUNS ONCE AND ONLY ONCE PER ROUND OF EXECUTION??]
 [** NEED TO DEFINE <code class="xref any docutils literal"><span class="pre">time_step</span></code> AND <code class="xref any docutils literal"><span class="pre">round</span> <span class="pre">of</span> <span class="pre">execution</span></code>]
-[** CONDITION NAMES SHOULD PROBABLY USE UNDERSCORE NOTATION OR, AT LEAST INITIAL LOWER CASE CAMEL CASE]</div></blockquote>
+[** CONDITION NAMES SHOULD PROBABLY USE UNDERSCORE NOTATION OR, AT LEAST INITIAL LOWER CASE CAMEL CASE]
+&#8220;round of execution&#8221; is poorly defined. See TimeScale scales (now documented, including time step),
+and any references of time should be to a TimeScale that can be strictly defined</p>
+<p>Always is always satisfied - i.e. whenever a node is considered, it is told to run</p>
+<p>Conditions should remain in class format, because they are classes, not instances of classes. The common
+format is to create Conditions right when they&#8217;re being added to a scheduler, because this allows some of their
+necessary values (the scheduler and owner to which they are associated) to be set by context). However instances
+of Conditions may be created elsewhere and fed it, it is just uglier and more difficult, and there isn&#8217;t really a point.
+Potentially this could be documented but since they are simply classes it should be obvious that you can create them and
+use them anywhere. If the necessary values are not set, there will be explanatory errors triggered</p>
+</div></blockquote>
 <dl class="class">
 <dt id="scheduling.Scheduler.Scheduler">
 <em class="property">class </em><code class="descclassname">scheduling.Scheduler.</code><code class="descname">Scheduler</code><span class="sig-paren">(</span><em>system=None</em>, <em>condition_set=None</em>, <em>nodes=None</em>, <em>toposort_ordering=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scheduling.Scheduler.Scheduler" title="Permalink to this definition">¶</a></dt>
@@ -216,7 +224,7 @@ execution of another Mechanism within its <code class="xref any docutils literal
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>system</strong> (<a class="reference internal" href="System.html#module-System" title="System"><em>System</em></a>) &#8211; specifies the Mechanisms to be ordered for execution, and any dependencies among them, based on the
-Sysytem&#8217;s <code class="xref any docutils literal"><span class="pre">executionGraph</span></code> and <code class="xref any docutils literal"><span class="pre">executionList</span></code>.</td>
+System&#8217;s <code class="xref any docutils literal"><span class="pre">executionGraph</span></code> and <code class="xref any docutils literal"><span class="pre">executionList</span></code>.</td>
 </tr>
 </tbody>
 </table>

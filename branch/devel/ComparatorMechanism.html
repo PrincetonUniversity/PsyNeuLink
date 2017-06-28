@@ -86,8 +86,8 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
@@ -114,12 +114,14 @@
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 
             
@@ -266,7 +268,7 @@ one of those was desired, it would have had to be specified explicitly in the <s
 <span id="comparatormechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism">
-<em class="property">class </em><code class="descclassname">ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.</code><code class="descname">ComparatorMechanism</code><span class="sig-paren">(</span><em>sample: &lt;typecheck.framework.optional object at 0x102569a58&gt; = None, target: &lt;typecheck.framework.optional object at 0x102569b38&gt; = None, input_states=['SAMPLE', 'TARGET'], function=(LinearCombination LinearCombination Function-7), output_states: &lt;typecheck.framework.optional object at 0x10253b940&gt; = ['error_signal', 'MSE'], params=None, name=None, prefs: &lt;function is_pref_set at 0x109937048&gt; = None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.</code><code class="descname">ComparatorMechanism</code><span class="sig-paren">(</span><em>sample: &lt;typecheck.framework.optional object at 0x109ee54a8&gt; = None, target: &lt;typecheck.framework.optional object at 0x109ee51d0&gt; = None, input_states=['SAMPLE', 'TARGET'], function=(LinearCombination LinearCombination Function-7), output_states: &lt;typecheck.framework.optional object at 0x109ee55f8&gt; = ['error_signal', 'MSE'], params=None, name=None, prefs: &lt;function is_pref_set at 0x109a4c048&gt; = None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>ComparatorMechanism(                                        sample,                                                 target,                                                 input_states=[SAMPLE,TARGET]                            function=LinearCombination(weights=[[-1],[1]],          input_states=[ERROR_SIGNAL]                             params=None,                                            name=None,                                              prefs=None)</p>
 <p>Implements the ComparatorMechanism subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.</p>

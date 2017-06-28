@@ -35,7 +35,6 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Scheduler" href="Scheduler.html"/>
-        <link rel="next" title="Component" href="Component.html"/>
         <link rel="prev" title="Scheduler" href="Scheduler.html"/> 
 
   
@@ -85,26 +84,18 @@
           
             
             
-                <ul class="current">
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Scheduler.html">Scheduler</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Condition</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-conditions">Creating Conditions</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Scheduler.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Scheduler.html#creating-a-scheduler">Creating a Scheduler</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Scheduler.html#algorithm">Algorithm</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
 </ul>
 
             
@@ -166,8 +157,8 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="#"><span class="doc">Conditions</span></a> are used to specify when <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> execute.  They fall broadly into two
 categories: ones that specify the behavior of a Mechanism irrespective of others (e.g., the exact number of times it
-should be executed, and whether this should be based on its <code class="xref any docutils literal"><span class="pre">value</span></code>); and ones that specify whether
-and how its execution depends on other Mechanisms (e.g., the frequency with which it executes relative to others,
+should be executed, and whether this should be based on its <code class="xref any docutils literal"><span class="pre">value</span></code>); K: I&#8217;m not sure what that means
+and ones that specify whether and how its execution depends on other Mechanisms (e.g., the frequency with which it executes relative to others,
 or that it begin executing and/or execute repeatedly until a Condition is met for some other Mechanism).  Each
 Condition is associated with an <a class="reference internal" href="#scheduling.condition.Condition.owner" title="scheduling.condition.Condition.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> (a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Condition belongs), and a
 <a class="reference internal" href="#scheduling.condition.Condition.scheduler" title="scheduling.condition.Condition.scheduler"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler</span></code></a> that maintains most of the data required to test for satisfaction of the condition.</p>
@@ -175,14 +166,37 @@ Condition is associated with an <a class="reference internal" href="#scheduling.
 <div class="section" id="creating-conditions">
 <span id="condition-creation"></span><h2>Creating Conditions<a class="headerlink" href="#creating-conditions" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div>[<a href="#id1"><span class="problematic" id="id2">**</span></a>??func AND dependencies NEED TO BE CLARIFIED:  WHAT FORMAT, EXAMPLE OF HOW THEY WORK??]
-<a href="#id3"><span class="problematic" id="id4">**</span></a>??DESCRIBE HOW CONDITIONS ARE STRUCTURED;
-INCLUDE FULL LIST OF CONDITIONS
-<a href="#id5"><span class="problematic" id="id6">**</span></a>??DESCRIBE HOW CONITION IS EVALUATED</div></blockquote>
+<div><blockquote>
+<div>[<a href="#id1"><span class="problematic" id="id2">**</span></a>??func AND dependencies NEED TO BE CLARIFIED:  WHAT FORMAT, EXAMPLE OF HOW THEY WORK??]</div></blockquote>
+<dl class="docutils">
+<dt>K: It&#8217;s explained in the previous version</dt>
+<dd><blockquote class="first">
+<div><blockquote>
+<div>Each Condition must</div></blockquote>
+<ul class="simple">
+<li>be a subclass of <a href="#id3"><span class="problematic" id="id4">`</span></a>Condition`&lt;Condition&gt;</li>
+<li>pass <code class="xref any docutils literal"><span class="pre">dependencies</span></code> as the first argument to the __init__ function of Condition</li>
+<li>pass <code class="xref any docutils literal"><span class="pre">func</span></code> as the second argument to the __init__ function of Condition</li>
+</ul>
+</div></blockquote>
+<p class="last">In determining whether a Condition is satisfied, <code class="xref any docutils literal"><span class="pre">func</span></code> is called with <code class="xref any docutils literal"><span class="pre">dependencies</span></code> as parameter (and optionally,
+additional named and unnamed arguments).</p>
+</dd>
+<dt>They are not in an exact format by design, because they can be customized by any advanced user.</dt>
+<dd><a href="#id5"><span class="problematic" id="id6">**</span></a>??DESCRIBE HOW CONDITIONS ARE STRUCTURED;
+INCLUDE FULL LIST OF CONDITIONS</dd>
+</dl>
+<p>K: they are listed in the bottom of the Condition doc page by nature of being classes in this file, at least on the version
+I see</p>
+<blockquote>
+<div><a href="#id7"><span class="problematic" id="id8">**</span></a>??DESCRIBE HOW CONITION IS EVALUATED</div></blockquote>
+<p>K: It doesn&#8217;t &#8220;execute&#8221; exactly. A condition is satisfied when its is_satisfied function returns True, and is_satisfied
+is called when the scheduler runs</p>
+</div></blockquote>
 <dl class="class">
 <dt id="scheduling.condition.ConditionSet">
 <em class="property">class </em><code class="descclassname">scheduling.condition.</code><code class="descname">ConditionSet</code><span class="sig-paren">(</span><em>scheduler=None</em>, <em>conditions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scheduling.condition.ConditionSet" title="Permalink to this definition">¶</a></dt>
-<dd><p>An object used in conjunction with <a href="#id7"><span class="problematic" id="id8">`</span></a>Scheduler`&lt;Scheduler&gt; to store all the associated conditions with their owners.</p>
+<dd><p>An object used in conjunction with <a href="#id9"><span class="problematic" id="id10">`</span></a>Scheduler`&lt;Scheduler&gt; to store all the associated conditions with their owners.</p>
 <dl class="method">
 <dt id="scheduling.condition.ConditionSet.add_condition">
 <code class="descname">add_condition</code><span class="sig-paren">(</span><em>owner</em>, <em>condition</em><span class="sig-paren">)</span><a class="headerlink" href="#scheduling.condition.ConditionSet.add_condition" title="Permalink to this definition">¶</a></dt>
@@ -224,15 +238,16 @@ INCLUDE FULL LIST OF CONDITIONS
 <dt id="scheduling.condition.Condition">
 <em class="property">class </em><code class="descclassname">scheduling.condition.</code><code class="descname">Condition</code><span class="sig-paren">(</span><em>dependencies</em>, <em>func</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scheduling.condition.Condition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used in conjunction with a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> to specify the pattern of execution for <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in a
-<a href="#id9"><span class="problematic" id="id10">`</span></a>System.</p>
+<a href="#id11"><span class="problematic" id="id12">`</span></a>System.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dependencies</strong> (<a href="#id11"><span class="problematic" id="id12">**</span></a>??LIST? DICT?) &#8211; one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> over which <code class="xref any docutils literal"><span class="pre">func</span></code> is evaluated to determine satisfaction
+<li><strong>dependencies</strong> (<a href="#id13"><span class="problematic" id="id14">**</span></a>??LIST? DICT? K: ANYTHING) &#8211; not just mechanisms, they can be anything at all
+one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> over which <code class="xref any docutils literal"><span class="pre">func</span></code> is evaluated to determine satisfaction
 of the <a class="reference internal" href="#"><span class="doc">Condition</span></a>;  user must ensure that dependencies are suitable as func parameters</li>
-<li><strong>func</strong> (<a href="#id13"><span class="problematic" id="id14">**</span></a>??FORMAT?) &#8211; parameters over which func is evaluated to determine satisfaction of the <a class="reference internal" href="#"><span class="doc">Condition</span></a></li>
+<li><strong>func</strong> (<a href="#id15"><span class="problematic" id="id16">**</span></a>??FORMAT? K: probably below in my version was an accident. func is just any function) &#8211; func is evaluated to determine satisfaction of the <a class="reference internal" href="#"><span class="doc">Condition</span></a></li>
 <li><strong>args</strong> &#8211; additional formal arguments passed to func</li>
 <li><strong>kwargs</strong> &#8211; additional keyword arguments passed to func</li>
 </ul>
@@ -290,7 +305,7 @@ the Condition`s specifications are satisfied.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>-</em>) &#8211; one or more :keyword:<a href="#id15"><span class="problematic" id="id16">`</span></a>Condition`s</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>-</em>) &#8211; one or more :keyword:<a href="#id17"><span class="problematic" id="id18">`</span></a>Condition`s</td>
 </tr>
 </tbody>
 </table>
@@ -306,7 +321,7 @@ the Condition`s specifications are satisfied.</p>
 <dt>To initialize with a list (for example),</dt>
 <dd>conditions = [AfterNCalls(mechanism, 5) for mechanism in mechanism_list]</dd>
 <dt>unpack the list to supply its members as args</dt>
-<dd>composite_condition = All(<a href="#id17"><span class="problematic" id="id18">*</span></a>conditions)</dd>
+<dd>composite_condition = All(<a href="#id19"><span class="problematic" id="id20">*</span></a>conditions)</dd>
 </dl>
 </dd></dl>
 
@@ -317,7 +332,7 @@ the Condition`s specifications are satisfied.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>-</em>) &#8211; one or more :keyword:<a href="#id19"><span class="problematic" id="id20">`</span></a>Condition`s</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>-</em>) &#8211; one or more :keyword:<a href="#id21"><span class="problematic" id="id22">`</span></a>Condition`s</td>
 </tr>
 </tbody>
 </table>
@@ -330,7 +345,7 @@ the Condition`s specifications are satisfied.</p>
 </dl>
 <p class="rubric">Notes</p>
 <p>To initialize with a list (for example), conditions = [AfterNCalls(mechanism, 5) for mechanism in mechanism_list], unpack the list to supply its members as args</p>
-<p>composite_condition = Any(<a href="#id21"><span class="problematic" id="id22">*</span></a>conditions)</p>
+<p>composite_condition = Any(<a href="#id23"><span class="problematic" id="id24">*</span></a>conditions)</p>
 </dd></dl>
 
 <dl class="class">
@@ -821,7 +836,7 @@ JustRan(A) will be satisfied at the beginning of the next trial.</p>
 <p>This is a dynamic condition.
 The is_finished concept varies among components, and is currently implemented in:</p>
 <blockquote>
-<div><a href="#id31"><span class="problematic" id="id32">`</span></a>DDM`&lt;DDM&gt;</div></blockquote>
+<div><a href="#id33"><span class="problematic" id="id34">`</span></a>DDM`&lt;DDM&gt;</div></blockquote>
 </dd></dl>
 
 <dl class="class">
@@ -850,7 +865,7 @@ This is a dynamic condition.</p>
 If no dependencies are specified, the condition will default to checking all of its scheduler&#8217;s Components.
 The is_finished concept varies among components, and is currently implemented in:</p>
 <blockquote>
-<div><a href="#id37"><span class="problematic" id="id38">`</span></a>DDM`&lt;DDM&gt;</div></blockquote>
+<div><a href="#id39"><span class="problematic" id="id40">`</span></a>DDM`&lt;DDM&gt;</div></blockquote>
 </div></blockquote>
 </dd></dl>
 
@@ -879,7 +894,7 @@ This is a convenience class; WhenFinishedAll(A, B, C) is equivalent to All(WhenF
 If no dependencies are specified, the condition will default to checking all of its scheduler&#8217;s Components.
 The is_finished concept varies among components, and is currently implemented in:</p>
 <blockquote>
-<div><a href="#id43"><span class="problematic" id="id44">`</span></a>DDM`&lt;DDM&gt;</div></blockquote>
+<div><a href="#id45"><span class="problematic" id="id46">`</span></a>DDM`&lt;DDM&gt;</div></blockquote>
 </dd></dl>
 
 </div>
@@ -891,8 +906,6 @@ The is_finished concept varies among components, and is currently implemented in
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="Component.html" class="btn btn-neutral float-right" title="Component" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="Scheduler.html" class="btn btn-neutral" title="Scheduler" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
