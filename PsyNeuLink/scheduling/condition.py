@@ -22,32 +22,35 @@ Overview
 --------
 
 `Conditions <Condition>` are used to specify when `Mechanisms <Mechanism>` execute.  They fall broadly into two
-categories: ones that specify the behavior of a Mechanism irrespective of others (e.g., the exact number of times it
-should be executed, and whether this should be based on its `value <Mechanism.value>`); K: I'm not sure what that means
-and ones that specify whether and how its execution depends on other Mechanisms (e.g., the frequency with which it executes relative to others,
-or that it begin executing and/or execute repeatedly until a Condition is met for some other Mechanism).  Each
-Condition is associated with an `owner <Condition.owner>` (a `Mechanism` to which the Condition belongs), and a
-`scheduler <Condition.scheduler>` that maintains most of the data required to test for satisfaction of the condition.
+categories: *absolute* ones that specify the behavior of a Mechanism irrespective of others (e.g., the exact number
+of times it should be executed, or whether this should be based on its own `value <Mechanism.value>`);
+COMMENT:
+K: I'm not sure what that means
+JDC: A CRITERION LIKE THE minimal_change ONE IN THE EXAMPLE WE JUST WORKED OUT;  OK?
+COMMENT
+and *relative* ones, that specify whether and how its execution depends on other Mechanisms (e.g., the frequency with
+which it executes relative to others, or that it begin executing and/or execute repeatedly until a Condition is met
+for some other Mechanism).  Each Condition is associated with an `owner <Condition.owner>` (a `Mechanism` to which the
+Condition belongs), and a `scheduler <Condition.scheduler>` that maintains most of the data required to test for
+satisfaction of the condition.
 
 .. _Condition_Creation:
 
 Creating Conditions
 -----------------------
 
-COMMENT:
-    [**??IS THE FOLLOWING CORRECT?  owner AND scheduler DON'T SEEM TO BE ARGS OF Condition.__init__??]
-    K: this is correct and by design. 1. they are never used outside of adding them to schedulers, at which point
-    the scheduler and owner are known. They must be assigned overwritten at this time otherwise those attributes
-    make no sense. Additionally not all Conditions have owners or schedulers (e.g. Always)
 Conditions can be created at any time, and take effect immediately for the execution of any `Scheduler(s) <Scheduler>`
-with which they are associated. (K: I don't think this is accurate) The `owner <Condition.owner>` and `scheduler <Condition.scheduler>` can also be
-specified explicitly, in the corresponding arguments of its constructor; (K: they can't be specified in the constructor) however, usually these can be determined
-and assigned automatically based on the context in which the Condition is created [**?? EXAMPLE?]. (K: example is basically
-any example script using the add_condition method - it's really not important.)  The Condition's
-**dependencies** and **func** arguments must both be explicitly specified.  These are used to determine whether a
-Condition is satisfied during each `round of execution <LINK>` (K: round of execution is poorly defined and should refer to a TimeScale)
-: `func <Condition.func>` is called with
-`dependencies <Condition.dependencies>` as its parameter (and optionally, additional named and unnamed arguments).
+with which they are associated.  The Condition's **dependencies** and **func** arguments must both be explicitly
+specified.  These are used to determine whether a Condition is satisfied during each `round of execution <LINK>`:
+COMMENT:
+K: round of execution is poorly defined and should refer to a TimeScale)
+JDC:  RIGHT;  WE SHOULD SETTLE ON PASS VS. ROUND OF EXECUTION, AND THEN DO THE APPROPRIATE SEARCH AND REPLACE
+COMMENT
+`func <Condition.func>` is called with `dependencies <Condition.dependencies>` as its parameter
+COMMENT:
+JDC: "additonal named and unnamed arguments" SEEMS VAGUE;  FOR WHAT?  EXAMPLE MIGHT HELP?
+COMMENT
+(and optionally, additional named and unnamed arguments).
 COMMENT:
      [**??func AND dependencies NEED TO BE CLARIFIED:  WHAT FORMAT, EXAMPLE OF HOW THEY WORK??]
     K: It's explained in the previous version
@@ -59,6 +62,7 @@ COMMENT:
         In determining whether a Condition is satisfied, `func` is called with `dependencies` as parameter (and optionally,
         additional named and unnamed arguments).
     They are not in an exact format by design, because they can be customized by any advanced user.
+    JDC: SHOULD DISCUSS;  I'M NOT SURE I FULLY UNDERSTAND
 COMMENT
 
 Hint:
@@ -86,23 +90,63 @@ Structure
 COMMENT:
      **??DESCRIBE HOW CONDITIONS ARE STRUCTURED;
      INCLUDE FULL LIST OF CONDITIONS
-    K: they are listed in the bottom of the Condition doc page by nature of being classes in this file, at least on the version
-    I see
-
+    K: they are listed in the bottom of the Condition doc page by nature of being classes in this file,
+     at least on the version I see
+    JDC: GOT IT.  THANKS. THAT SAID, IN OTHER PARTS OF THE DOCUMENTION (AND AT THE RISK OF A BIT OF REDUNDANCY)
+         I'VE INCLUDED BRIEF SUMMARIIES OF ATTRIBUTES AND/OR METHODS IN THE DOSCSTRING OF THE MAIN CLASS,
+         WHICH I THINK MAY BE EASIER TO READ.  I'LL ADD HERE, AND WE CAN REMOVE IF IT SEEMS OVERLY REDUNDANT.
 COMMENT
+
+Each type of Condition is a subclass of Condition.  The following types are provided:
+
+Absolute Conditions:
+    * `BeforePass`
+    * `AtPass`
+    * `AfterPass`
+    * `AfterNPasses`
+    * `EveryNPasses`
+    * `BeforeTrial`
+    * `AfterTrial`
+    * `AfterNTrials`
+    * `BeforeNCalls`
+    * `AtNCalls`
+    * `AfterCall`
+    * `AfterNCalls`
+    * `AfterNCallsCombined`
+    * `EveryNCalls`
+    * `JustRan`
+    * `AllHaveRun`
+    * `WhenFinished`
+    * `WhenFinishedAny`
+    * `WhenFinishedAll`
+    * `Always`
+    * `Never`
+
+Relative Conditions:
+    * `All`
+    * `Any`
+    * `Not`
 
 .. Condition_Execution:
 
 Execution
 ---------
 
+A Condition is evaluated when a `Scheduler` is run, by calling the Condition's `is_satisfied` method.  If it returns
+`True` then the `Component` associated with the Condition is executed.
 COMMENT:
      **??DESCRIBE HOW CONITION IS EVALUATED
     K: It doesn't "execute" exactly. A condition is satisfied when its is_satisfied function returns True, and is_satisfied
     is called when the scheduler runs
+    JDC: IS THE ABOVE BETTER?
+         IS THE SATISFACTION OF A CONDTIION ALWAYS ASSOCIATED WITH THE EXECUTION OF A COMPONENT?
+         JUST *ONE* COMPONENT
 COMMENT
 
+.. _Condition_Class_Reference
 
+Class Reference
+---------------
 
 """
 
@@ -179,11 +223,17 @@ class Condition(object):
     Arguments
     ---------
 
-    dependencies : **??LIST? DICT? K: ANYTHING
+    dependencies : **??LIST? DICT?
+        K: ANYTHING
+        JDC: NOT SURE I UNDERSTAND.  THERE IS NO SYNTAX FOR SPECIFICATION OF DEPENDENCIES?
+             WHAT IF JUST AN INTEGER IS GIVEN?
         not just mechanisms, they can be anything at all
         one or more `Mechanisms <Mechanism>` over which `func <Condition.func>` is evaluated to determine satisfaction
         of the `Condition`;  user must ensure that dependencies are suitable as func parameters
-    func : **??FORMAT? K: probably below in my version was an accident. func is just any function
+    func : function
+        JDC: **??FORMAT?
+        K: probably below in my version was an accident. func is just any function
+        JDC: OK AS CORRECTED ABOVE?
         func is evaluated to determine satisfaction of the `Condition`
 
     args :
@@ -196,11 +246,11 @@ class Condition(object):
     ----------
 
     scheduler : Scheduler
-        the `Scheduler` with which the Condition is associated;  the scheduler's state is used to evaluate whether
+        the `Scheduler` with which the Condition is associated;  the Scheduler's state is used to evaluate whether
         the Condition`s specifications are satisfied.
 
     owner (Component):
-        the `Mechanism` with which the Condition is associated, and the execution of which it determines.
+        the `Component` with which the Condition is associated, and the execution of which it determines.
 
         """
     def __init__(self, dependencies, func, *args, **kwargs):

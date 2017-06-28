@@ -23,6 +23,9 @@ COMMENT
 how many times individual Mechanisms execute, and whether and how this depends on the execution of others.  Conditions
 can be combined in arbitrary ways to generate any pattern of execution that is logically possible.
 
+COMMENT:
+    JDC:  ADD SUMMARY OF TIMESCALE AND HOW SCHEDULER USES IT, HERE AND UNDER EXECUTION
+
 .. _Scheduler_Creation:
 
 Creating a Scheduler

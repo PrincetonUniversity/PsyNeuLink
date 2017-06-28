@@ -39,7 +39,6 @@ class TimeScale(Enum):
     TRIAL = 2
     RUN = 3
     LIFE = 4
-    BOUNDS = 5 # Used for type checking where TimeScale value is passed
 
 
 class Clock:
