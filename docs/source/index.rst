@@ -256,7 +256,6 @@ as follows::
                                                     EveryNCalls(my_recurrent_layer, 10)))
     my_scheduler.add_condition(my_output_layer, EveryNCalls(my_hidden_layer, 2))
 
-
 The two Conditions added to the controller specify that: 1) ``my_hidden_layer`` should execute whenever either
 ``input_hidden_layer`` has executed once (to encode the stimulus and make available to the ``recurrent_layer``), and
 when the ``recurrent_layer`` has executed 10 times (to allow it to settle on a context representation and
@@ -266,12 +265,11 @@ has executed twice (to integrate its inputs from both ``input_layer`` and ``recu
 More sophisticated Conditions can also be created.  For example, the ``recurrent_layer`` can be scheduled to
 execute until the change in its value falls below a specified threshold as follows::
 
-    minimal_change = lambda curr, prev, thresh : max(curr-prev) < thresh
-    my_scheduler.add_condition(my_recurrent_layer, Until(minimal_change(my_recurrent_layer.value,
-                                                                        my_recurrent_layer.prev_value,
-                                                                        thresh=0.01)))
+    minimal_change = lambda mech, thresh : max(mech.function_object.value-mech.function_object.prev_value) < thresh))
     my_scheduler.add_condition(my_hidden_layer, Any(EveryNCalls(my_input_layer, 1),
-                                                    Terminated(my_recurrent_layer)))
+                                                    EveryNCalls(my_recurrent_layer, 1))
+    my_scheduler.add_condition(my_recurrent_layer, Any(my_hidden_layer, 1
+                                                       Until(minimal_change, my_recurrent_mech, thesh)))
 
 Here, the criterion for stopping execution is defined as a function (``minimal_change``), that is used in an `Until`
 Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
