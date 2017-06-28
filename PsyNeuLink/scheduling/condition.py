@@ -27,12 +27,22 @@ of times it should be executed, or whether this should be based on its own `valu
 COMMENT:
 K: I'm not sure what that means
 JDC: A CRITERION LIKE THE minimal_change ONE IN THE EXAMPLE WE JUST WORKED OUT;  OK?
+K: I guess I have trouble with the categorization - There are some that I would consider absolute, like Always and
+Never. Then there are some that actually are dependent on other components, like EveryNCalls. (I'm not sure if the
+categorization below was meant as final, but this condition is considered absolute). Then there are some dependent
+only on time, like EveryNPasses. Both of these I'd consider relative. Then those types we discussed that would be
+like When and Until, that are each other's complement, which seem somewhat uncategorizable because they would just
+be a template for the user to make anything at all a condition. Depending on what they use as a function, it could
+be absolute or relative.
 COMMENT
 and *relative* ones, that specify whether and how its execution depends on other Mechanisms (e.g., the frequency with
 which it executes relative to others, or that it begin executing and/or execute repeatedly until a Condition is met
 for some other Mechanism).  Each Condition is associated with an `owner <Condition.owner>` (a `Mechanism` to which the
 Condition belongs), and a `scheduler <Condition.scheduler>` that maintains most of the data required to test for
 satisfaction of the condition.
+COMMENT:
+K: I'm not sure if the above just changed but this sounds good
+COMMENT
 
 .. _Condition_Creation:
 
@@ -49,6 +59,12 @@ COMMENT
 `func <Condition.func>` is called with `dependencies <Condition.dependencies>` as its parameter
 COMMENT:
 JDC: "additonal named and unnamed arguments" SEEMS VAGUE;  FOR WHAT?  EXAMPLE MIGHT HELP?
+K: As I look at it I think it can be refactored so that a condition essentially takes just a function
+and args/kwargs. I now remember why I never made anything like a When or Until - because that option was always
+included by just creating a new Condition class. Creating the custom convergence Condition was exactly the
+anticipated functionality - you wanted to make a function that took arguments (named and unnamed but here just unnamed)
+and checks that something is true or not, using those arguments. If you think it's much clearer using When or Until it
+can be done, but these will just essentially wrap the Condition class with little difference
 COMMENT
 (and optionally, additional named and unnamed arguments).
 COMMENT:
@@ -63,6 +79,8 @@ COMMENT:
         additional named and unnamed arguments).
     They are not in an exact format by design, because they can be customized by any advanced user.
     JDC: SHOULD DISCUSS;  I'M NOT SURE I FULLY UNDERSTAND
+K: I want to check but I think dependencies can be eliminated in favor of just args/kwargs - this was a holdover
+from the original scheduler attempt that just kind of baked its way in.
 COMMENT
 
 Hint:
@@ -95,6 +113,7 @@ COMMENT:
     JDC: GOT IT.  THANKS. THAT SAID, IN OTHER PARTS OF THE DOCUMENTION (AND AT THE RISK OF A BIT OF REDUNDANCY)
          I'VE INCLUDED BRIEF SUMMARIIES OF ATTRIBUTES AND/OR METHODS IN THE DOSCSTRING OF THE MAIN CLASS,
          WHICH I THINK MAY BE EASIER TO READ.  I'LL ADD HERE, AND WE CAN REMOVE IF IT SEEMS OVERLY REDUNDANT.
+    K: I don't feel strongly either way so if you think it's nicer this way I don't mind.
 COMMENT
 
 Each type of Condition is a subclass of Condition.  The following types are provided:
@@ -141,6 +160,16 @@ COMMENT:
     JDC: IS THE ABOVE BETTER?
          IS THE SATISFACTION OF A CONDTIION ALWAYS ASSOCIATED WITH THE EXECUTION OF A COMPONENT?
          JUST *ONE* COMPONENT
+    K: well it's not always correct. Preface:
+    Each Component has exactly one Condition associated with it in a Scheduler by the time the Scheduler is run (if a Condition is
+    not specified for a Component it defaults to Always), but this Condition can be a composite one (Any or All). This is necessary
+    to remove any possible ambiguity that would result if there were two conditions)
+
+    It is correct when the Condition is the Condition associated with a Component in a Scheduler, and the Condition's is_satisfied method
+    is True, and the Component is currently up for consideration (i.e. eligible to run?)
+
+    But if the Component is not currently eligible, then it will not be told to run even if its Condition is currently satisfied
+
 COMMENT
 
 .. _Condition_Class_Reference
@@ -227,13 +256,21 @@ class Condition(object):
         K: ANYTHING
         JDC: NOT SURE I UNDERSTAND.  THERE IS NO SYNTAX FOR SPECIFICATION OF DEPENDENCIES?
              WHAT IF JUST AN INTEGER IS GIVEN?
+        K: No, there isn't. There isn't a general form that's valid for most or all Conditions. Sometimes it's a number,
+        sometimes it's a Component, sometimes one or more, or none. It all depends on the exact Condition made. This was
+        made flexible to allow for arbitrary Conditions to be made
         not just mechanisms, they can be anything at all
         one or more `Mechanisms <Mechanism>` over which `func <Condition.func>` is evaluated to determine satisfaction
         of the `Condition`;  user must ensure that dependencies are suitable as func parameters
     func : function
+    COMMENT:
         JDC: **??FORMAT?
         K: probably below in my version was an accident. func is just any function
         JDC: OK AS CORRECTED ABOVE?
+        K: I think so. Arguably it could be just callable, which I prefer in a sense because there shouldn't be any reason why you
+        couldn't use a partial function (https://www.learnpython.org/en/Partial_functions) instead. These can be very handy at times, and
+        when I was using these once before I ran into a problem where PNL required a function and so failed when you used a partial function
+    COMMENT
         func is evaluated to determine satisfaction of the `Condition`
 
     args :
