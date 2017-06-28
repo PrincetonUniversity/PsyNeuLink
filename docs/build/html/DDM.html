@@ -17,13 +17,15 @@
   
 
   
-  
-    
+
+
+
+
 
   
 
-  
-  
+
+
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   
 
@@ -44,6 +46,7 @@
 </head>
 
 <body class="wy-body-for-nav" role="document">
+
 
   <div class="wy-grid-for-nav">
 
@@ -85,7 +88,10 @@
           
             
             
-                <ul class="current">
+
+
+
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
@@ -135,8 +141,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+
       </nav>
 
 
@@ -145,29 +153,43 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
-      
-          <li><a href="Component.html">Component</a> &raquo;</li>
-      
+      <li><a href="Component.html">Component</a> &raquo;</li>
           <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
-      
+
           <li><a href="ProcessingMechanism.html">Processing Mechanism</a> &raquo;</li>
-      
-    <li>DDM</li>
+
+      <li>DDM</li>
+
+
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/DDM.txt" rel="nofollow"> View page source</a>
+
+            <a href="_sources/DDM.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+
   </ul>
+
+
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -179,7 +201,7 @@
 </div>
 <span class="target" id="module-ProcessingMechanisms.DDM"></span><div class="section" id="overview">
 <span id="ddm-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>The DDM Mechanism implements the &#8220;Drift Diffusion Model&#8221; (also know as the Diffusion Decision, Accumulation to Bound,
+<p>The DDM Mechanism implements the “Drift Diffusion Model” (also know as the Diffusion Decision, Accumulation to Bound,
 Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
 the sequential probability ratio test (SPRT [REF]), that is the statistically optimal procedure for two alternative
 forced choice (TAFC) decision making ([REF]).  It can be executed analytically using one of two solutions (in <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>
@@ -251,9 +273,8 @@ demonstrate all of the possible parameters (see individual <code class="xref any
 </pre></div>
 </div>
 <p><code class="xref any docutils literal"><span class="pre">Integrator</span></code></p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_DDM_TimeStep</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Integrator</span><span class="p">(</span> <span class="n">integration_type</span> <span class="o">=</span> <span class="n">DIFFUSION</span><span class="p">,</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_DDM_TimeStep</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">DriftDiffusionIntegrator</span><span class="p">(</span>
                                   <span class="n">noise</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-                                  <span class="n">time_step_size</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
                                   <span class="n">initializer</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
                                   <span class="p">),</span>
             <span class="n">time_scale</span><span class="o">=</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TIME_STEP</span><span class="p">,</span>
@@ -378,21 +399,21 @@ when <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scal
 also serves as a template to specify the length of <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.variable" title="ProcessingMechanisms.DDM.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>,
 and the primary outputState of the mechanism (see <span class="xref std std-ref">Input</span> &lt;DDM_Creation&gt;` for how an input with a length
 of greater than 1 is handled).</li>
-<li><strong>function</strong> (<em>IntegratorFunction : default BogaczEtAl</em>) &#8211; specifies the analytic solution to use for the decision process if <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is set to
+<li><strong>function</strong> (<em>IntegratorFunction : default BogaczEtAl</em>) – specifies the analytic solution to use for the decision process if <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is set to
 <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a>; can be <a class="reference internal" href="Function.html#Function.BogaczEtAl" title="Function.BogaczEtAl"><code class="xref any py py-class docutils literal"><span class="pre">BogaczEtAl</span></code></a> or <a class="reference internal" href="Function.html#Function.NavarroAndFuss" title="Function.NavarroAndFuss"><code class="xref any py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code></a> (note:  the latter requires that the MatLab engine
 is installed). If <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a>, <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> must
-be <code class="xref any docutils literal"><span class="pre">Integrator</span></code> with an integration_type of DIFFUSION, and the mechanism
+be <code class="xref any docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code>, and the mechanism
 will return the result of one time step.</li>
-<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) &#8211; specifies whether the mechanism is executed on the time_step or trial time scale.
+<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) – specifies whether the mechanism is executed on the time_step or trial time scale.
 This must be set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a> to use one of the analytic solutions specified by
 <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. This  must be set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a> to numerically (path) integrate the
 decision variable.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
 and/or  a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> for specification of a params dict).</li>
-<li><strong>name</strong> (<em>str : default DDM-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
+<li><strong>name</strong> (<em>str : default DDM-&lt;index&gt;</em>) – a string used for the name of the mechanism.
 If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <code class="xref any docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the PreferenceSet for the process.
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><em>PreferenceSet</em><em> or </em><em>specification dict : Mechanism.classPreferences</em><em>]</em>) – the PreferenceSet for the process.
 If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 </ul>
@@ -403,29 +424,29 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.variable">
 <code class="descname">variable</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value : default  FUNCTION_PARAMS[STARTING_POINT]</em> &#8211; the input to mechanism&#8217;s execute method.  Serves as the &#8220;stimulus&#8221; component of the drift rate.</p>
+<dd><p><em>value : default  FUNCTION_PARAMS[STARTING_POINT]</em> – the input to mechanism’s execute method.  Serves as the “stimulus” component of the drift rate.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.function">
 <code class="descname">function</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>IntegratorFunction : default BogaczEtAl</em> &#8211; the function used to compute the outcome of the decision process when <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is
+<dd><p><em>IntegratorFunction : default BogaczEtAl</em> – the function used to compute the outcome of the decision process when <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is
 <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a>.  If <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a>, <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-must be <code class="xref any docutils literal"><span class="pre">Integrator</span></code> with an &#8216;integration_type &lt;Integrator.integration_type&gt;&#8217; of DIFFUSION, and the mechanism
+must be <code class="xref any docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code>, and the mechanism
 will return the result of one time step.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.function_params">
 <code class="descname">function_params</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.function_params" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[str, value]</em> &#8211; contains one entry for each parameter of the mechanism&#8217;s function.
-The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter&#8217;s value.</p>
+<dd><p><em>Dict[str, value]</em> – contains one entry for each parameter of the mechanism’s function.
+The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter’s value.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.value">
 <code class="descname">value</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array[array(float64),array(float64),array(float64),array(float64)]</em> &#8211; result of executing DDM <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> for a description of item assignments,
+<dd><p><em>2d np.array[array(float64),array(float64),array(float64),array(float64)]</em> – result of executing DDM <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> for a description of item assignments,
 and <a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">DDM Standard OutputStates</span></a> for a description of their values.</p>
 </dd></dl>
 
@@ -438,28 +459,42 @@ and <a class="reference internal" href="#ddm-standard-outputstates"><span class=
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.output_values">
 <code class="descname">output_values</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.output_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[array(float64),array(float64),array(float64),array(float64)]</em> &#8211; each item is the value of the corresponding OutputState in <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.output_states" title="ProcessingMechanisms.DDM.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>.</p>
+<dd><p><em>List[array(float64),array(float64),array(float64),array(float64)]</em> – a list with the following items:</p>
+<ul class="simple">
+<li><strong>decision variable</strong> (value of <code class="xref any docutils literal"><span class="pre">DDM_DECISION_VARIABLE</span></code> outputState);</li>
+<li><strong>response time</strong> (value of <code class="xref any docutils literal"><span class="pre">DDM_RESPONSE_TIME</span></code> outputState);</li>
+<li><strong>probability of reaching upper threshold</strong> (value of <code class="xref any docutils literal"><span class="pre">DDM_PROBABILITY_UPPER_THRESHOLD</span></code> outputState);
+if <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref any docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>, this is <code class="xref any docutils literal"><span class="pre">None</span></code>;</li>
+<li><strong>probability of reaching lower threshold</strong> (value of <code class="xref any docutils literal"><span class="pre">DDM_PROBABILITY_LOWER_THRESHOLD</span></code> outputState);
+if <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref any docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>, this is <code class="xref any docutils literal"><span class="pre">None</span></code>;</li>
+<li><strong>mean of correct response times</strong> (value of DDM_RT_CORRECT_MEAN outputState);
+only assigned if <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is <a class="reference internal" href="Function.html#Function.NavarroAndFuss" title="Function.NavarroAndFuss"><code class="xref any py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code></a> and <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is
+<code class="xref any docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, otherwise it is <code class="xref any docutils literal"><span class="pre">None</span></code>;</li>
+<li><strong>variance of correct response times</strong> (value of <code class="xref any docutils literal"><span class="pre">DDM_RT_CORRECT_VARIANCE</span></code> outputState);
+only assigned if <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is <a class="reference internal" href="Function.html#Function.NavarroAndFuss" title="Function.NavarroAndFuss"><code class="xref any py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code></a> and <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is
+<code class="xref any docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, otherwise it is <code class="xref any docutils literal"><span class="pre">None</span></code>;</li>
+</ul>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.time_scale">
 <code class="descname">time_scale</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TimeScale : default TimeScale.TRIAL</em> &#8211; determines the <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> at which the decision process is executed.</p>
+<dd><p><em>TimeScale : default TimeScale.TRIAL</em> – determines the <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> at which the decision process is executed.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.name">
 <code class="descname">name</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default DDM-&lt;index&gt;</em> &#8211; the name of the mechanism.
+<dd><p><em>str : default DDM-&lt;index&gt;</em> – the name of the mechanism.
 Specified in the name argument of the call to create the projection;
 if not is specified, a default is assigned by MechanismRegistry
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; a PreferenceSet for the mechanism.
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> – a PreferenceSet for the mechanism.
 Specified in the prefs argument of the call to create the mechanism;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
@@ -474,9 +509,9 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>threshold</strong> (<em>float: default 10.0</em>) &#8211; specify the threshold at which the DDM will stop integrating</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>threshold</strong> (<em>float: default 10.0</em>) – specify the threshold at which the DDM will stop integrating</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>mechanism&#8217;s function plot</strong> &#8211; Matplotlib window of the mechanism&#8217;s function plotting dynamically over time with specified parameters
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>mechanism’s function plot</strong> – Matplotlib window of the mechanism’s function plotting dynamically over time with specified parameters
 towards a specified threshold</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Matplotlib window</td>
@@ -492,15 +527,18 @@ towards a specified threshold</td>
 
 
            </div>
+           <div class="articleComments">
+
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="RecurrentTransferMechanism.html" class="btn btn-neutral float-right" title="RecurrentTransferMechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="RecurrentTransferMechanism.html" class="btn btn-neutral float-right" title="RecurrentTransferMechanism" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="IntegratorMechanism.html" class="btn btn-neutral" title="IntegratorMechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="IntegratorMechanism.html" class="btn btn-neutral" title="IntegratorMechanism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -534,7 +572,8 @@ towards a specified threshold</td>
             VERSION:'0.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

@@ -36,8 +36,7 @@ automatically creates a default outputState if none is explicitly specified, tha
 `function <Mechanism_Base.function>`.  For example, if the mechanism is created within the `pathway` of a 
 `process <Process>`, an outputState will be created and assigned as the
 `sender <MappingProjection.MappingProjection.sender>` of a `MappingProjection` to the next mechanism in the pathway,
-or to the process's `output <Process_Input_And_Output>` if the mechanism is a `TERMINAL` mechanism for that process.
-Process_Input_And_Ouput.  Other configurations can also easily be specified using a mechanism's 
+or to the process' `output <Process_Input_And_Output>` if the mechanism is a `TERMINAL` mechanism for that process.  Other configurations can also easily be specified using a mechanism's
 `output_states <Mechanism_Base.output_states>` attribute (see `OutputState_Specification` below).
 
 An outputState must be owned by a mechanism. Therefore, if the outputState is created explicitly, the mechanism to
@@ -56,7 +55,7 @@ and assigned to its `outputState <Mechanism.Mechanism_Base.outputState>` attribu
 and also to the first entry of the mechanism's `outputStates <Mechanism.Mechanism_Base.outputStates>` attribute 
 (note the plural).  The `value <OutputState.value>` of the primary outputState is assigned as the first (and often 
 only) item of the mechanism's `output_value <Mechanism.Mechanism_Base.output_value>`, which is the result of the 
-mechanism`s `function <Mechanism.Mechanism_Base.function>`.
+mechanism's `function <Mechanism.Mechanism_Base.function>`.
 
 .. _OutputState_Specification:
 
@@ -64,7 +63,7 @@ OutputState Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The primary outputState of a mechanism can be supplemented or replaced using the **output_states** argument of a 
-mechanism's constructor <Mechanism_OutputStates>`.  If any are specified there, *all*  of the outputStates desired 
+`mechanism's constructor <Mechanism_OutputStates>`.  If any are specified there, *all*  of the outputStates desired
 must be specified there;  that is, explicitly specifying *any* outputStates in an **output_states** argument 
 replaces any defaults.  Therefore, if the default outputState -- that usually contains the result of the mechanism's
 function -- is to be retained, it too must be specified along with any additional ones desired.  OutputStates are 
@@ -134,11 +133,11 @@ defines `TRANSFER_OUTPUT`, with attributes MEAN, MEDIAN, VARIANCE and STANDARD_D
 predefined outputStates in its `standard_output_states <TransferMechanism.standard_output_states>` attribute.
 These can be used in the list of outputStates specified for a TransferMechanism object, as in the example below:: 
 
-    my_mech = TransferMechanism[default_input_value=[0,0],
+    my_mech = TransferMechanism(default_input_value=[0,0],
                                 function=Logistic(),
                                 output_states=[TRANSFER_OUTPUT.RESULT, 
                                                TRANSFER_OUTPUT.MEAN,
-                                               TRANSFER_OUTPUT.VARIANCE]
+                                               TRANSFER_OUTPUT.VARIANCE)
 
 In this example, ``my_mech`` is configured with three outputStates;  the first will be named *RESULT* and will 
 represent logistic transform of the 2-element input vector;  the second will be named  *MEAN* and will represent mean 
@@ -779,15 +778,17 @@ class StandardOutputStates():
     """Collection of OutputState specification dictionaries for standard_output_states of a class
     
     data attribute contains dictionary of OutputState specification dictionaries
-    indices contains a list of the default index for each OutputState specified
-    names containes a list of the default name of each OutputState
 
-    **indices** arg of constructore specifies how to assign the INDEX entry for each dict listed in output_state_dicts;
-        the arg can be:
+    indices contains a list of the default index for each OutputState specified
+
+    names contains a list of the default name of each OutputState
+
+    **indices** arg of constructor specifies how to assign the INDEX entry for each dict listed in output_state_dicts;
+        The arg can be:
             * PRIMARY_OUTPUT_STATES keyword - assigns the INDEX for the owner's primary outputState to all indices;
             * SEQUENTIAL keyword - assigns sequentially incremented int to each INDEX entry
-           * a list of ints - assigns each int to the corresponding entry in output_state_dicts
-        if it is not specified, assigns `None` to each INDEX entry.
+            * a list of ints - assigns each int to the corresponding entry in output_state_dicts
+        If it is not specified, assigns `None` to each INDEX entry.
 
     `get_dict` method takes a name as its arg and returns a copy of the designated OutputState specification dictionary
 

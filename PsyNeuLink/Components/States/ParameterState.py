@@ -13,7 +13,7 @@
 Overview
 --------
 
-A parameterState belongs to either a `mechanism <Mechanism>` or a `MappingProjection`, and is used to represent and
+A ParameterState belongs to either a `mechanism <Mechanism>` or a `MappingProjection`, and is used to represent and
 possibly modify the value of the parameter used by its owner or owner's `function <Component.function>`.  It can
 receive one or more `ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that
 modify the value of the parameter. The projections received by a parameterState are listed in its
@@ -69,7 +69,7 @@ the value of a parameter named *param* is assigned to an attribute named ``param
 When the Component is executed, it updates the ParameterState by calling the ParameterState's
 `function <ParameterState.function>` with the attribute's value for the parameter.  The result is
 assigned as the ParameterState's `value <ParameterState.value>`, which is used by the owner
-of the ParameterState as the value of the correspondign parameter of its own `function <Component.function>`.
+of the ParameterState as the value of the corresponding parameter of its own `function <Component.function>`.
 
 .. note::
    It is important to note the distinction between the `function <ParameterState.function>` of a ParameterState,
@@ -126,7 +126,7 @@ Examples
 In the following example, a mechanism is created by specifying two of its parameters, as well as its
 `function <Component.function>` and two of that function's parameters, each using a different specification format::
 
-    my_mechanism = RecurrentTransferMechanism(size=5
+    my_mechanism = RecurrentTransferMechanism(size=5,
                                               noise=ControlSignal),
                                               function=Logistic(gain=(0.5, ControlSignal),
                                                                 bias=(1.0, ControlSignal(
@@ -160,7 +160,7 @@ The example below shows how to specify the parameters in the first example using
 
     my_mechanism = RecurrentTransferMechanism(
                               size=5
-                              params={SIZE:5,
+                              params={NOISE:5,
                                       'size':ControlSignal,
                                       FUNCTION:Logistic,
                                       FUNCTION_PARAMS:{GAIN:(0.5, ControlSignal),
@@ -200,8 +200,8 @@ attribute value, which is then assigned as the ParameterState's `value <Paramete
 
 * `mod_afferents <ParameterState.mod_afferents>`: lists the `ModulatoryProjections <ModulationProjection>` that
   project to the ParameterState.  These specify either the value of the ParameterState's
-  `function <ParameterState.funtion>`, the `value <ParameterState.value>` of the ParameterState itself
-  (see `ModulatorySignals_Modulation).
+  `function <ParameterState.function>`, the `value <ParameterState.value>` of the ParameterState itself
+  (see `ModulatorySignals_Modulation`).
 
 * `function <ParameterState.function>`:  takes `variable <Parameter.variable>` as its input, and the values
   specified for the function's parameters by any `ModulatoryProjections` (listed in `mod_afferents
@@ -209,7 +209,7 @@ attribute value, which is then assigned as the ParameterState's `value <Paramete
 
 * `value <ParameterState.value>`: the result of `function <ParameterState.function>`; used by the ParameterState's
   owner as the value of the parameter of its `function <Component.function>` for which the the ParameterState is
-  responsble when the owner executes.
+  responsible when the owner executes.
 
 All of the user-modifiable parameters of a Component are listed in its `user_params <Component.user_params>` attribute,
 which is a read-only dictionary with an entry for each parameter.  The parameters of a Component can be

@@ -33,12 +33,13 @@ States, all of which are used by `Mechanisms <Mechanism>`, one of which is used 
     used by a Mechanism to send its value to any efferent projections.  For
     `ProcessingMechanisms <ProcessingMechanism>` these are `PathwayProjections <PathwayProjection>`, most commonly
     `MappingProjection <MappingProjection>`.  For `ModulatoryMechanisms <ModulatoryMechanism>`, these
-    `ModulatoryProjectios <ModulatoryProjection>` as described below. The `value <OutputState.value> of an
+    `ModulatoryProjections <ModulatoryProjection>` as described below. The `value <OutputState.value>` of an
     OutputState can be modulated by a `GatingSignal`.
 
 * `ModulatorySignal`:
     used by an `AdaptiveMechanism` to modulate the value of the primary types of States listed above.
     There are three types of ModulatorySignals:
+
     * `LearningSignal`, used by a `LearningMechanism` to modulate the *MATRIX* ParameterState of a `MappingProjection`;
     * `ControlSignal`, used by a `ControlMechanism` to modulate the `ParameterState` of a `Mechanism`;
     * `GatingSignal`, used by a `GatingMechanism` to modulate the `InputState` or `OutputState` of a `Mechanism`.
@@ -52,21 +53,22 @@ Creating a State
 
 States can be created using the constructor for one of the subclasses.  However, in general, they are created
 automatically by the objects to which they belong, or by specifying the State in the constructor for the object
-to which it belongs.  For example, `InputStates <InputState>` and `OutputStates <OutputStates>` can be specified,
+to which it belongs.  For example, `InputStates <InputState>` and `OutputStates <OutputState>` can be specified,
 in the **input_states** and **output_states** arguments, respectively, of the constructor for a `Mechanism`;
 and a `ParameterState` can be specified in the argument of the constructor for a function of a Mechanism or Projection,
 where its parameters are specified.  A State can be specified in those cases in any of the following forms:
 
     * an existing **State** object;
     ..
-    * the name of a **State subclass** (`InputState`, `ParmeterState`, or `OutputState` - a default State of the
+    * the name of a **State subclass** (`InputState`, `ParameterState`, or `OutputState` - a default State of the
       corresponding type will be created, using a default value for the State that is determined by the context
       in which it is specified.
     ..
     * a **value**.  This creates a default State using the specified value as its default `value <State.value>`.
     ..
-    * a **State specification dictionary**; every State specification can contain the following *KEY*:<value>
+    * a **State specification dictionary**; every State specification can contain the following: *KEY*:<value>
       entries, in addition to those specific to a particular State subtype (see subtype documentation):
+
       ..
       * *NAME*:<str> - the string is used as the name of the State;
       ..
@@ -82,6 +84,7 @@ where its parameters are specified.  A State can be specified in those cases in 
         one or more `projections <Projection_In_Context_Specification>` to or from the State,
         depending on the type of State and the context in which it is specified;
         ..
+
     * a **2-item tuple** - the first item must be a value, used as the default value for the State,
       and the second item must be a specification for a `projection <Projection_In_Context_Specification>`
       to or from the State, depending on the type of State and the context in which it is specified;
@@ -109,9 +112,9 @@ components, a State has the three following core attributes:
       `GatingSignal`;  for a `ParameterState`, it determines the value of the associated parameter, under the
       potential influence of a `ControlSignal` (for a `Mechanism`) or a `LearningSignal` (for a `MappingProjection`);
       for an OutputState, it conveys the result  of the Mechanism's function to its
-      `output_values <Mechanism.output_values> attribute, under the potential influence of a `GatingSignal`.
+      `output_values <Mechanism.output_values>` attribute, under the potential influence of a `GatingSignal`.
       See  `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated
-      with each type for a description of how they can be used to modulate the `function <State.function> of a State.
+      with each type for a description of how they can be used to modulate the `function <State.function>` of a State.
     ..
     * `value <State.value>`:  for an `InputState` this is the aggregated value of the `PathwayProjections` it
       receives;  for a `ParameterState`, this represents the value of the parameter that will be used by the
@@ -128,13 +131,13 @@ Modulation
 Every type of State has a `mod_afferents <State.mod_afferents>` attribute, that lists the
 `ModulatoryProjections <ModulatoryProjection>` it receives.  Each ModulatoryProjection comes from a `ModulatorySignal`
 that specifies how it should modulate the State's `value <State.value>` when the State is updated (see
-`ModulatorySignal_Modulation` and `ModulatorySignal_Anatomy_Figure).  In most cases, a ModulatorySignal uses the
+`ModulatorySignal_Modulation` and `ModulatorySignal_Anatomy_Figure`).  In most cases, a ModulatorySignal uses the
 State's `function <State.function>` to modulate its `value <State.value>`.  The function of every State assigns one
 of its parameters as its *MULTIPLICATIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The
-`modulation <ModulatorySigal.modulation>` attribute of a ModulatorySignal determines which of these to modify when
+`modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines which of these to modify when
 the State uses it `function <State.function>` to calculate its `value  <State.value>`.  However, the ModulatorySignal
 can also be configured to override the State's `value <State.value>` (i.e., assign it directly), or to disable
-modulation, using one of the values of 'ModulationParm` for its `modulation <ModulatorySignal.modulation>` attribute
+modulation, using one of the values of `ModulationParam` for its `modulation <ModulatorySignal.modulation>` attribute
 (see `ModulatorySignal_Modulation` for a more detailed discussion).
 
 .. _State_Execution:
@@ -146,7 +149,7 @@ States cannot be executed.  They are updated when the component to which they be
 ParameterStates belonging to a Mechanism are updated before the Mechanism's function is called.  OutputStates
 are updated after the Mechanism's function is called.  When a State is updated, it executes any Projections that
 project to it (listed in its `all_afferents <State.all_afferents>` attribute.  It uses the values it receives from any
-`PathWayProjections` (listed in its `path_afferents` attribute) as the variable for its `function <State.function>`,
+`PathWayProjections` (listed in its `path_afferents` attribute) as the variable for its `function <State.function>`.
 It then executes all of the ModulatoryProjections it receives.  Different ModulatorySignals may call for different
 forms of modulation (see `ModulatorySignal_Modulation`).  Accordingly, it separately sums the values specified
 by any ModulatorySignals for the *MULTIPLICATIVE_PARAM* of its `function <State.function>`, and similarly for the
@@ -353,14 +356,14 @@ class State_Base(State):
 
     path_afferents : Optional[List[Projection]]
         list all `PathwayProjections <PathwayProjection>` received by the State.
-        (note:  only `InputStates <InputState> have path_efferents;  the list is empty for other types of States).
+        (note:  only `InputStates <InputState>` have path_afferents;  the list is empty for other types of States).
 
     mod_afferents : Optional[List[GatingProjection]]
         list of all `ModulatoryProjections <ModulatoryProjection>` received by the State.
 
     efferents : Optional[List[Projection]]
         list of outoging Projections from the State (i.e., for which is a `sender <Projection.sender>`
-        (note:  only `OutputStates <OutputState> have efferents;  the list is empty for other types of States).
+        (note:  only `OutputStates <OutputState>` have efferents;  the list is empty for other types of States).
 
     function : TransferFunction : default determined by type
         used to determine the State's own value from the value of the projection(s) it receives;  the parameters that

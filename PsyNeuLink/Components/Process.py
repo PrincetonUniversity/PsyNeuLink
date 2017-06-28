@@ -441,7 +441,7 @@ def process(process_spec=None,
     clamp_input : Optional[keyword] : default None
         specifies whether the input to the Process continues to be applied to the `ORIGIN` Mechanism after
         its initial execution.  The following keywords can be used:
-        ..
+
             * `None`: Process input is used only for the first execution of the `ORIGIN` Mechanism
               in a `PASS` of executions.
 

@@ -30,7 +30,7 @@ Creating an InputState
 ----------------------
 
 InputStates are created automatically when a mechanism is created.  For example, if a mechanism is created within
-the `pathway` of a process`, the inputState for that mechanism will be created and assigned as the
+the `pathway` of a `process`, the inputState for that mechanism will be created and assigned as the
 `receiver <MappingProjection.MappingProjection.receiver>` of a `MappingProjection` from the  preceding mechanism in the
 pathway;  and a `ControlMechanism <ControlMechanism>` automatically creates an inputState for each mechanism that it
 monitors. PsyNeuLink does not currently support the explicit creation of input_states (this may be implemented in the

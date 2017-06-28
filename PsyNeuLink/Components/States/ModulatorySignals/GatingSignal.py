@@ -45,16 +45,20 @@ When a GatingSignal is specified in context (e.g., the **gating_signals** argume
   |
   * a *Mechanism*, in which case its `primary inputState <Mechanism_InputStates>` will be used; 
   |
-  * a *tuple*, with the *name* of the state as the 1st item, and the mechanism to which it belongs as the 2nd;  
+  * a *tuple*, with the *name* of the state as the 1st item, and the Mechanism to which it belongs as the 2nd;
     note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
-    but precludes specification of any parameters <GatingSignal_Structure>` for the GatingSignal.
+    but precludes specification of any `parameters <GatingSignal_Structure>` for the GatingSignal.
   |
   * a *specification dictionary*, that can take either of the following two forms:
-    * for a single state, the dictionary must have the following two entries: 
-        * *NAME*:str - a string that is the name of the state to be gated;
-        * *MECHANISM*:Mechanism - the Mechanism to which the state belongs;
-      in this case, the GatingSignal will named by appending "_GatingSignal" to the name of the state.
+
+    * for a single state, the dictionary must have the following two entries:
+
+        * *NAME*: str - a string that is the name of the state to be gated;
+        * *MECHANISM*: Mechanism - the Mechanism to which the state belongs;
+        In this case, the GatingSignal will named by appending "_GatingSignal" to the name of the state.
+
     * for multiple states, the dictionary must have the following entry:
+
         * <str>:list - where the string used for the key specifies the name to be used for the GatingSignal,
           and the value is a list, each item of which is a `specification of a state <LINK>` to be gated by 
           the GatingSignal (and that will receive a `GatingProjection` from it).
@@ -78,7 +82,7 @@ Each GatingSignal has a `modulation <GatingSignal.modulation>` attribute that de
 is used by the state to which it projects to modify its value (see `ModulatorySignal_Modulation`
 for an explanation of how this attribute is specified and used to modulate the value of a state).  The default value 
 is set to the value of the `modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the 
-GatingSignal belongs;  this the is same for all of the GatingSignals belonging to that GatingMechanism.  However, the
+GatingSignal belongs;  this is the same for all of the GatingSignals belonging to that GatingMechanism.  However, the
 `modulation <GatingSignal.modulation>` can be specified individually for a GatingSignal using a specification 
 dictionary where the GatingSignal is specified, as described `above <GatingSignal_Specification>`. The 
 `modulation <GatingSignal.modulation>` value of a GatingSignal is used by all of the 
@@ -94,7 +98,7 @@ executed.  When this occurs, the GatingMechanism provides the GatingSignal with 
 `GatingProjection(s) <GatingProjection>` to modulate the :keyword:`value` of the states to which they project. Those 
 states use the value of the GatingProjection they receive to modify a parameter of their function.  How the modulation
 is executed is determined by the GatingSignal's `modulation` attribute
-(see `ModulatoryProjections_Modulation_Operation).
+(see `Modulation Operation <ModulatoryProjections_Modulation_Operation>`).
 
 .. note::
    The change in the value of InputStates and OutputStates in response to the execution of a GatingMechanism are not 

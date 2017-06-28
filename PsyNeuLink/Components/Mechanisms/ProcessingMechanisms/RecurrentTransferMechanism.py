@@ -121,7 +121,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     name=None,                         \
     prefs=None)
 
-    Implements RecurrentTransferMechanism subclass of `TransferMechaism`.
+    Implements RecurrentTransferMechanism subclass of `TransferMechanism`.
 
     COMMENT:
         Description
@@ -168,7 +168,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         the time constant for exponential time averaging of input when the mechanism is executed with `time_scale`
         set to `TimeScale.TIME_STEP`::
 
-         result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+         result = (time_constant * current input) +
+         (1-time_constant * result on previous time_step)
 
     range : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:
@@ -261,6 +262,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     outputStates : Dict[str, OutputState]
         an OrderedDict with the following `outputStates <OutputState>`:
+
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
@@ -273,6 +275,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     output_values : List[array(float64), float, float]
         a list with the following items:
+
         * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
         * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
         * **variance** of the result (``value`` of TRANSFER_VARIANCE outputState);

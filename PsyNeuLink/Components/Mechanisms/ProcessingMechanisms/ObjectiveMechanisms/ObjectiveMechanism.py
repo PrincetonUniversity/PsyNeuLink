@@ -179,8 +179,7 @@ the inputState for the ObjectiveMechanism to have a single value, as in the exam
 
     my_reward_mech = TransferMechanism(default_input_value = [0])
 
-    my_objective_mech = ObjectiveMechanism(default_input_value = [[0],[0]],
-                                          monitored_values = [my_action_select_mech, my_reward_mech])
+    my_objective_mech = ObjectiveMechanism(monitored_values = [my_action_select_mech, my_reward_mech])
 
 Note that the outputState for the `my_action_selection` and `my_reward_mech` are specified
 in `monitored_values`.  If that were the only specification, the inputState created for `my_action_select_mech`
