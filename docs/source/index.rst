@@ -6,14 +6,13 @@
 PsyNeuLink Documentation
 ========================
 
-* :ref:`Purpose`
-* :ref:`Overview`
-* :ref:`What PsyNeuLink is NOT`
-* :ref:`Component Hierarchy <Component_Hierarchy>`
-* :ref:`Installation`
-* :ref:`Conventions`
-* :ref:`Contributors`
-* :ref:`Indices_and_Tables`
+* `Purpose`
+* `Overview`
+* `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
+* `Conventions and Definitions <ConventionsAndDefinitions>`
+* `Installation`
+* `Contributors`
+* `Indices_and_Tables`
 
 
 .. _Purpose:
@@ -316,11 +315,13 @@ If you have trouble installing the package, or run into other problems, please c
 Contributors
 ------------
 
+* **Allie Burton**, Princeton University
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Kevin Mantel**, Princeton Neuroscience Institute, Princeton University
 * **Ted Willke**, Intel Labs, Intel Corporation
+* **Changyan Wang**, Princeton University
 * **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
 
 with substantial and greatly appreciated assistance from:
@@ -359,15 +360,17 @@ with substantial and greatly appreciated assistance from:
 .. toctree::
    :hidden:
 
+   ConventionsAndDefinitions
+   Component
+   Mechanism
+   Projection
+   State
+   Function
+   Composition
    System
    Process
-   Mechanism
-   State
-   Projection
    Run
    Scheduler
-   Component
-   Function
 
 
 .. _Indices_and_Tables:

@@ -34,7 +34,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="next" title="Mechanism" href="Mechanism.html"/>
+        <link rel="next" title="Run" href="Run.html"/>
         <link rel="prev" title="System" href="System.html"/> 
 
   
@@ -85,6 +85,13 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Process</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
@@ -101,13 +108,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 
             
@@ -476,9 +478,9 @@ in a round of executions.</li>
 </ul>
 </div></blockquote>
 </li>
-<li><strong>default_projection_matrix</strong> (<em>keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,</em>) &#8211; the type of matrix used for default projections (see <a class="reference internal" href="LCA.html#ProcessingMechanisms.LCA.LCA.matrix" title="ProcessingMechanisms.LCA.LCA.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>).</li>
+<li><strong>default_projection_matrix</strong> (<em>keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,</em>) &#8211; the type of matrix used for default projections (see <a class="reference internal" href="Function.html#Function.Stability.MappingProjection.matrix" title="Function.Stability.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>).</li>
 <li><strong>learning</strong> (<em>Optional[LearningProjection spec]</em>) &#8211; implements <code class="xref any docutils literal"><span class="pre">learning</span></code> for all eligible projections in the Process.</li>
-<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all Mechanisms in the Process (see <a class="reference internal" href="#Process.Process_Base.learning_rate" title="Process.Process_Base.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
+<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all Mechanisms in the Process (see <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.learning_rate" title="ModulatoryProjections.LearningProjection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
 information).</li>
 <li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; the value assigned as the TARGET input for the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to which the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of the
 Process projects (and assigned as its <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism; used for <a class="reference internal" href="#process-learning"><span class="std std-ref">learning</span></a>).
@@ -825,7 +827,7 @@ each execution.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Run.html" class="btn btn-neutral float-right" title="Run" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="System.html" class="btn btn-neutral" title="System" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
