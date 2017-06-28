@@ -122,7 +122,7 @@ class TestAddProjection:
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
                    setup='''
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.composition import Composition
 comp = Composition()
 A = TransferMechanism(name='A')
@@ -717,3 +717,28 @@ class TestRun:
                 scheduler=sched
             )
             assert 125 == output[0][0]
+
+        def test_run_5_mechanisms_input_5(self):
+            comp = Composition()
+            A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+            B = TransferMechanism(function=Linear(slope=5.0))
+            C = TransferMechanism(function=Linear(slope=5.0))
+            D = TransferMechanism(function=Linear(slope=5.0))
+            E = TransferMechanism(function=Linear(slope=5.0))
+            comp.add_mechanism(A)
+            comp.add_mechanism(B)
+            comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+            comp.add_mechanism(C)
+            comp.add_projection(B, MappingProjection(sender=B, receiver=C), C)
+            comp.add_mechanism(D)
+            comp.add_projection(C, MappingProjection(sender=C, receiver=D), D)
+            comp.add_mechanism(E)
+            comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
+            comp.analyze_graph()
+            inputs_dict = {A: 5}
+            sched = Scheduler(composition=comp)
+            output = comp.run(
+                inputs=inputs_dict,
+                scheduler=sched
+            )
+            assert 15625 == output[0][0]
