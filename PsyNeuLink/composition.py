@@ -409,6 +409,7 @@ class Composition(object):
                         print("result = ", num)
                         print()
                         print()
+
         '''
         for current_component in scheduler.run_trial():
             if current_component.name != "Clock":
@@ -429,3 +430,4 @@ class Composition(object):
                 current_component.execute()
                 # print(current_component.value)
         '''
+        return num
