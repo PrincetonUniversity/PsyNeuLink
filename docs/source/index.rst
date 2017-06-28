@@ -63,14 +63,15 @@ constraints as possible on what it is possible to implement or ask the model to 
 What PsyNeuLink is **NOT**
 --------------------------
 
-PsyNeuLink is not presently well suited to:
+While PsyNeuLink is well suited to the creation of simple to moderately complex models, and to the integration of
+disparate existing models into a single, integrated system in which interactions among them can be examined, it is
+*not* currently as well suited to other kinds of efforts, such as:
 
  - extensive model fitting
  - large scale simulations
- - elaborate and detailed models of a particular form
  - biophysically-realistic models of individual neurons
 
-Other packages that are much better for such applications are:
+Other packages that are better suited to such applications are:
 `Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_ and
 `TensorFlow <https://www.tensorflow.org>`_ (for neural network models);
 `HDDM <http://ski.clps.brown.edu/hddm_docs/>`_ (for Drift Diffusion Models);
@@ -78,14 +79,15 @@ Other packages that are much better for such applications are:
 `Genesis <http://www.genesis-sim.org>`_,
 `Neuron <https://www.neuron.yale.edu/neuron/>`_,
 and `Nengo <http://www.nengo.ca>`_  (for biophysically-realistic models of neuronal function).
-
-These packages are all better for elaborate and detailed models of a particular form.
+These packages are good for elaborate and detailed models of a particular form.
 In contrast, the focus in designing and implementing PsyNeuLink has been to make it as flexible and easy to use as
-possible, with the ability to integrate components constructed in other packages
-(includling some of the ones listed above).  These are characteristics that are often (at least in the initial
-stages of development) in tension with efficiency (think:  interpreted vs. compiled).  As PsyNeuLink grows and matures,
-our expectation is that it be made computationally more efficient.
-
+possible, with the ability to integrate components constructed in other packages (including some of the ones listed
+above) into a single functioning system.  These are characteristics that are often (at least in the initial
+stages of development) in tension with efficiency (think:  interpreted vs. compiled).  One of the goals for future
+development is to make PsyNeuLink more computationally efficient.  At present, however, it is best suited to
+developing simpler models, or taking complex or highly detailed models that have been developed --
+or subjected to extensive parameter fitting -- in other frameworks, and re-expressing them in a form that is amenable
+to integration, documentation, and dissemination.
 
 .. _Overview:
 
@@ -234,44 +236,48 @@ specify the isolated behavior of a Mechanism (e.g., how many times it should be 
 `round of execution <LINK>`), or its behavior relative to that of one or more other Components (e.g., how many times
 it should execute or when it should stop executing relative to other Mechanisms).
 
-For example, the following script configures a `RecurrentTransferMechanism` that begins executing immediately after
-receiving input from an input layer, and then executes repeatedly until the change in its value falls below a specified
-threshold, at which point the output layer is executed::
+For example, the following script implements a Composition that integrates a 3-layered feedforward network for
+performing a simple stimulus-response mapping task, with a recurrent network that receives input from and feeds back
+to the feed-forward network, to provide a simple form of maintained context.  To allow the recurrent layer to settle
+following the presentation of each stimulus (which is not required for the feedforward network), the Scheduler can
+be used to execute the recurrent layer multiple times but the feedforward network only once in each round execution,
+as follows::
 
-    my_input_layer = TransferMechanism(size=3)
-    my_recurrent_layer = RecurrentTransferMechanism(size=10)
-    my_response_layer = TransferMechanism(size=3)
-    settling_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])
+    input_layer = TransferMechanism(size = 10)
+    hidden_layer = TransferMechanism(size = 100)
+    output_layer = TransferMechanism(size = 10)
+    recurent_layer = RecurrentTransferMechanism(size = 10)
 
-    settling_system = system(
-        processes=[settling_process]
-    )
+    feed_forward_network = process(pathway=[input_layer, hidden_layer, output_layer])
+    recurrent_network = process(pathway=[hidden_layer, recurrent_layer, hidden_layer])
+    full_model = system(processes=[feed_forward_network, recurrent_network])
 
-    settling_system.scheduler_processing = Scheduler(system=settling_system)
-    settling_system.scheduler_processing.add_condition(my_response_layer, WhenFinished(my_recurrent_layer))
+    my_scheduler = Scheduler(system=full_model)
+    my_scheduler.add_condition(my_hidden_layer, Any(EveryNCalls(my_input_layer, 1),
+                                                    EveryNCalls(my_recurrent_layer, 10)))
+    my_scheduler.add_condition(my_output_layer, EveryNCalls(my_hidden_layer, 2))
 
-    settling_system.run()
 
+The two Conditions added to the controller specify that: 1) ``my_hidden_layer`` should execute whenever either
+``input_hidden_layer`` has executed once (to encode the stimulus and make available to the ``recurrent_layer``), and
+when the ``recurrent_layer`` has executed 10 times (to allow it to settle on a context representation and
+provide that back to the ``hidden_layer``); 2) the ``output_layer`` should execute only after the ``hidden_layer``
+has executed twice (to integrate its inputs from both ``input_layer`` and ``recurrent_layer``).
 
-Mechanisms can also be configured to execute in parallel but at different time scales relative to one another.  For
-example, a single-pass feedforward layer can be added to the network above, that executes once for each settling of
-the recurrent layer, with the following simple additions::
+More sophisticated Conditions can also be created.  For example, the ``recurrent_layer`` can be scheduled to
+execute until the change in its value falls below a specified threshold as follows::
 
-    my_input_layer = TransferMechanism(size = 3)
-    my_recurrent_layer = RecurrentTransferMechanism(size=10)
-    my_response_layer = TransferMechanism(size = 3)
-    settling_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])
-    **single_pass_mech = TransferMechanism(size=5)**
-    **single_pass_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])**
-    **?? settling_scheduler = **??**
-    settling_system=(processes=[settling_process, **single_pass_process**],
-                     scheduler=setting_scheduler)
+    minimal_change = lambda curr, prev, thresh : max(curr-prev) < thresh
+    my_scheduler.add_condition(my_recurrent_layer, Until(minimal_change(my_recurrent_layer.value,
+                                                                        my_recurrent_layer.prev_value,
+                                                                        thresh=0.01)))
+    my_scheduler.add_condition(my_hidden_layer, Any(EveryNCalls(my_input_layer, 1),
+                                                    Terminated(my_recurrent_layer)))
 
-Time scales can also be specified explicitly.  For example, changing the Condition for the single_pass_layer
-to ``**??`` configures it to execute once for each 10 executions of ``my_recurrent_layer``, rather than only
-when it has settled.  Needless to say, the same methods can be used schedule different kinds of mechanisms and
-their dependencies on one another (such as a neural network that executes only after a DDM has reached its
-decision threshold).
+Here, the criterion for stopping execution is defined as a function (``minimal_change``), that is used in an `Until`
+Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
+execution that is logically sensible.
+
 
 The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
 and the `Tutorial` provides an interactive introduction to its use.
