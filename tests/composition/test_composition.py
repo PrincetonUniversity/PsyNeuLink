@@ -754,12 +754,34 @@ class TestRun:
             )
             assert 250 == output[0][0]
 
-        def test_run_2_mechanisms_with_scheduling(self):
+        def test_run_2_mechanisms_with_scheduling_AAB_integrator(self):
             comp = Composition()
 
             A = IntegratorMechanism(name = "A [integrator]", default_input_value=2.0, function = SimpleIntegrator(rate = 1.0))
             # (1) value = 0 + (5.0 * 2.0) + 0  --> return 5.0
             # (2) value = 0 + (5.0 * 2.0) + 0  --> return 10.0
+            B = TransferMechanism(name = "B [transfer]", function=Linear(slope=5.0))
+            # value = 10.0 * 5.0 --> return 50.0
+            comp.add_mechanism(A)
+            comp.add_mechanism(B)
+            comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+            comp.analyze_graph()
+            inputs_dict = {A: 5}
+            sched = Scheduler(composition=comp)
+            sched.add_condition(B, EveryNCalls(A, 2))
+            output = comp.run(
+                inputs=inputs_dict,
+                scheduler=sched
+            )
+            assert 50.0 == output[0][0]
+
+        def test_run_2_mechanisms_with_scheduling_AAB_transfer(self):
+            comp = Composition()
+
+            A = TransferMechanism(name = "A [transfer]", function=Linear(slope=2.0))
+            # (1) value = 5.0 * 2.0  --> return 10.0
+            # (2) value = 5.0 * 2.0  --> return 10.0
+            # ** TransferMechanism runs with the SAME input **
             B = TransferMechanism(name = "B [transfer]", function=Linear(slope=5.0))
             # value = 10.0 * 5.0 --> return 50.0
             comp.add_mechanism(A)
