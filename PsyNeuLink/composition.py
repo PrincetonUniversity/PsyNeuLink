@@ -6,6 +6,7 @@ from enum import Enum
 from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Globals.Keywords import EXECUTING
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -170,6 +171,9 @@ class Composition(object):
             self._update_processing_graph()
 
         return self._graph_processing
+
+    def _get_unique_id(self):
+        return uuid.uuid4()
 
     def add_mechanism(self, mech):
         ########
@@ -378,7 +382,7 @@ class Composition(object):
                         raise ValueError("The value provided for input state {!s} of the mechanism \"{}\" has length {!s} \
                             where the input state takes values of length {!s}".format(i, mech.name, val_length, state_length))
 
-    def run(self, scheduler, inputs={}, targets=None, recurrent_init=None):
+    def run(self, scheduler, inputs={}, targets=None, recurrent_init=None, execution_id = None):
 
         # if inputs:
         #     self.validate_feed_dict(inputs, self.origin_mechanisms, "Inputs")
@@ -387,12 +391,14 @@ class Composition(object):
         # if recurrent_init:
         #     self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
 
+        self._execution_id = execution_id or self._get_unique_id()
+        for v in self._graph_processing.vertices:
+            v.component._execution_id = self._execution_id
         is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
 
         for next_execution_set in scheduler.run():
 
             for mechanism in next_execution_set:
-
                 if isinstance(mechanism, Mechanism):
                     if (mechanism in is_origin) and (mechanism in inputs.keys()):
                         print()
