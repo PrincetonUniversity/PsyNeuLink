@@ -718,27 +718,36 @@ class TestRun:
             )
             assert 125 == output[0][0]
 
-        def test_run_5_mechanisms_input_5(self):
+        def test_run_5_mechanisms_2_origins_1_terminal(self):
+            ## A ----> C --
+            ##              ==> E
+            ## B ----> D --
+
+            ## 5 x 1 = 5 ----> 5 x 5 = 25 --
+            ##                                25 + 25 = 50  ==> 50 * 5 = 250
+            ## 5 * 1 = 5 ----> 5 x 5 = 25 --
+
             comp = Composition()
-            A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
-            B = TransferMechanism(function=Linear(slope=5.0))
-            C = TransferMechanism(function=Linear(slope=5.0))
-            D = TransferMechanism(function=Linear(slope=5.0))
-            E = TransferMechanism(function=Linear(slope=5.0))
+            A = TransferMechanism(name="A", function=Linear(slope=1.0))
+            B = TransferMechanism(name="B", function=Linear(slope=1.0))
+            C = TransferMechanism(name="C", function=Linear(slope=5.0))
+            D = TransferMechanism(name="D", function=Linear(slope=5.0))
+            E = TransferMechanism(name="E", function=Linear(slope=5.0))
             comp.add_mechanism(A)
             comp.add_mechanism(B)
-            comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
             comp.add_mechanism(C)
-            comp.add_projection(B, MappingProjection(sender=B, receiver=C), C)
             comp.add_mechanism(D)
-            comp.add_projection(C, MappingProjection(sender=C, receiver=D), D)
+            comp.add_projection(A, MappingProjection(sender=A, receiver=C), C)
+            comp.add_projection(B, MappingProjection(sender=B, receiver=D), D)
             comp.add_mechanism(E)
+            comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
             comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
             comp.analyze_graph()
-            inputs_dict = {A: 5}
+            inputs_dict = {A: 5,
+                           B: 5}
             sched = Scheduler(composition=comp)
             output = comp.run(
                 inputs=inputs_dict,
                 scheduler=sched
             )
-            assert 15625 == output[0][0]
+            assert 250 == output[0][0]
