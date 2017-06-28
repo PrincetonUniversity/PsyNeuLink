@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Keywords &mdash; PsyNeuLink 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PsyNeuLink</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Keywords</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/Keywords.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-Keywords">
+<span id="keywords"></span><h1>Keywords<a class="headerlink" href="#module-Keywords" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="Keywords.Keywords">
+<em class="property">class </em><code class="descclassname">Keywords.</code><code class="descname">Keywords</code><a class="headerlink" href="#Keywords.Keywords" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="Keywords.Keywords.ORIGIN">
+<code class="descname">ORIGIN</code><a class="headerlink" href="#Keywords.Keywords.ORIGIN" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is the first mechanism of a process and/or system,
+and that receives the input to the process or system when it is <span class="xref std std-ref">executed or run</span>.  A process may
+have only one <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, but a system may have many.  Note that the <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a>
+mechanism of a process is not necessarily an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> of the system to which it belongs, as it may
+receive projections from other processes in the system. The <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms of a process or
+system are listed in its <code class="xref std std-keyword docutils literal"><span class="pre">originMechanisms</span></code> attribute, and can be displayed using its <code class="xref std std-keyword docutils literal"><span class="pre">show</span></code>
+method.  For additional details about <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms in processes, see
+<a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Process Mechanisms</span></a> and <code class="xref any docutils literal"><span class="pre">Process</span> <span class="pre">Input</span> <span class="pre">and</span> <span class="pre">Output</span></code>;
+and for systems see <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">System Mechanisms</span></a> and
+<a class="reference internal" href="System.html#system-execution-input-and-initialization"><span class="std std-ref">System Input and Initialization</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Keywords.Keywords.INTERNAL">
+<code class="descname">INTERNAL</code><a class="headerlink" href="#Keywords.Keywords.INTERNAL" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is not designated as having any other status.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Keywords.Keywords.CYCLE">
+<code class="descname">CYCLE</code><a class="headerlink" href="#Keywords.Keywords.CYCLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is <em>not</em> an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and receives a projection
+that closes a recurrent loop in a process and/or system.  If it is an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, then it is simply
+designated as such (since it will be assigned input and therefore be initialized in any event).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Keywords.Keywords.INITIALIZE_CYCLE">
+<code class="descname">INITIALIZE_CYCLE</code><a class="headerlink" href="#Keywords.Keywords.INITIALIZE_CYCLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is the <code class="xref any docutils literal"><span class="pre">sender</span></code> of a
+projection that closes a loop in a process or system, and that is not an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism (since in that
+case it will be initialized in any event). An <code class="xref any docutils literal"><span class="pre">initial</span> <span class="pre">value</span></code> can be assigned to such
+mechanisms, that will be used to initialize the process or system when it is first run.  For additional
+information, see <a class="reference internal" href="Run.html#run-initial-values"><span class="std std-ref">Run</span></a>, <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">System Mechanisms</span></a> and
+<a class="reference internal" href="System.html#system-execution-input-and-initialization"><span class="std std-ref">System Input and Initialization</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Keywords.Keywords.TERMINAL">
+<code class="descname">TERMINAL</code><a class="headerlink" href="#Keywords.Keywords.TERMINAL" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is the last mechanism of a process and/or system, and
+that provides the output to the process or system when it is <a class="reference internal" href="Run.html"><span class="doc">executed or run</span></a>.  A process may
+have only one <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism, but a system may have many.  Note that the <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>
+mechanism of a process is not necessarily a <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of the system to which it belongs,
+as it may send projections to other processes in the system.  The <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms of a process
+or system are listed in its <code class="xref std std-keyword docutils literal"><span class="pre">terminalMechanisms</span></code> attribute, and can be displayed using its
+<code class="xref std std-keyword docutils literal"><span class="pre">show</span></code> method.  For additional details about <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms in processes, see
+<a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a> and <code class="xref any docutils literal"><span class="pre">Process_Input_And_Output</span></code>; and for systems see <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">Mechanisms</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Keywords.Keywords.SINGLETON">
+<code class="descname">SINGLETON</code><a class="headerlink" href="#Keywords.Keywords.SINGLETON" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a> that is the only mechanism in a process and/or system.  It can serve the functions
+of an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and/or a <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Keywords.Keywords.MONITORING">
+<code class="descname">MONITORING</code><a class="headerlink" href="#Keywords.Keywords.MONITORING" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code> configured for learning that is not a <a class="reference internal" href="#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>; that is, it
+is associated with an <a class="reference internal" href="#Keywords.Keywords.INTERNAL" title="Keywords.Keywords.INTERNAL"><code class="xref any py py-attr docutils literal"><span class="pre">INTERNAL</span></code></a> rather than a <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> ProcessingMechanism in the process and/or system to
+which it belongs. For <a class="reference internal" href="Function.html#Function.BackPropagation" title="Function.BackPropagation"><code class="xref any py py-class docutils literal"><span class="pre">backpropagation</span></code></a> learning, it is a <code class="xref any docutils literal"><span class="pre">WeightedErrorMechanism</span></code>.
+See <a href="#id1"><span class="problematic" id="id2">`</span></a>MonitoringMechanisms &lt;LearningProjection_MonitoringMechanism&gt; for additional details.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Keywords.Keywords.TARGET">
+<code class="descname">TARGET</code><a class="headerlink" href="#Keywords.Keywords.TARGET" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="xref any docutils literal"><span class="pre">ComparatorMechanism</span></code> of a process and/or system configured for learning that receives a target value from
+its <code class="xref any docutils literal"><span class="pre">execute</span></code> or
+<code class="xref any docutils literal"><span class="pre">run</span></code> method.  It must be associated with the <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>
+mechanism of the process or system. The <a class="reference internal" href="#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanisms of a process or system are listed in its
+<code class="xref std std-keyword docutils literal"><span class="pre">targetMechanisms</span></code> attribute, and can be displayed using its <code class="xref std std-keyword docutils literal"><span class="pre">show</span></code> method.  For additional
+details, see <code class="xref any docutils literal"><span class="pre">TARGET</span> <span class="pre">mechanisms</span></code> and specifying <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">target values</span></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Keywords.MatrixKeywords">
+<em class="property">class </em><code class="descclassname">Keywords.</code><code class="descname">MatrixKeywords</code><a class="headerlink" href="#Keywords.MatrixKeywords" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="Keywords.MatrixKeywords.IDENTITY_MATRIX">
+<code class="descname">IDENTITY_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>a square matrix of 1&#8217;s along the diagnoal, 0&#8217;s elsewhere; this requires that the length of the sender and
+receiver values are the same.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Keywords.MatrixKeywords.HOLLOW_MATRIX">
+<code class="descname">HOLLOW_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.HOLLOW_MATRIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>a square matrix of 0&#8217;s along the diagnoal, 1&#8217;s elsewhere; this requires that the length of the sender and
+receiver values are the same.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX">
+<code class="descname">FULL_CONNECTIVITY_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>a matrix that has a number of rows equal to the length of the sender&#8217;s value, and a number of columns equal
+to the length of the receiver&#8217;s value, all the elements of which are 1&#8217;s.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX">
+<code class="descname">RANDOM_CONNECTIVITY_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>a matrix that has a number of rows equal to the length of the sender&#8217;s value, and a number of columns equal
+to the length of the receiver&#8217;s value, all the elements of which are filled with random values uniformly
+distributed between 0 and 1.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX">
+<code class="descname">AUTO_ASSIGN_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>if the sender and receiver are of equal length, an <a class="reference internal" href="#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a> is assigned;  otherwise, a
+<a class="reference internal" href="#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a> is assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Keywords.MatrixKeywords.DEFAULT_MATRIX">
+<code class="descname">DEFAULT_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.DEFAULT_MATRIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>used if no matrix specification is provided in the constructor;  it presently assigns an <a class="reference internal" href="#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,35 @@
+name: python35
+dependencies:
+- alabaster=0.7.9=py35_0
+- babel=2.3.4=py35_0
+- docutils=0.12=py35_2
+- imagesize=0.7.1=py35_0
+- jinja2=2.8=py35_1
+- markupsafe=0.23=py35_2
+- mkl=11.3.3=0
+- mpi4py=2.0.0=py35_0
+- numpy=1.11.2=py35_0
+- openmpi=1.6.3=0
+- openssl=1.0.2j=0
+- pip=8.1.2=py35_0
+- pygments=2.1.3=py35_0
+- python=3.5.2=0
+- pytz=2016.7=py35_0
+- readline=6.2=2
+- setuptools=27.2.0=py35_0
+- six=1.10.0=py35_0
+- snowballstemmer=1.2.1=py35_0
+- sphinx=1.4.8=py35_0
+- sphinx_rtd_theme=0.1.9=py35_0
+- sqlite=3.13.0=0
+- tk=8.5.18=0
+- wheel=0.29.0=py35_0
+- xz=5.2.2=0
+- zlib=1.2.8=3
+- pip:
+  - sphinx-rtd-theme==0.1.9
+  - toposort==1.5
+  - typecheck-decorator==1.3
+  - typing==3.5.2.2
+prefix: /Users/bdsinger/miniconda3/envs/pnldocs
+
