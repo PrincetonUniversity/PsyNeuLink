@@ -17,7 +17,7 @@ A LearningSignal is a type of `ModulatorySignal`, that is specialized for use wi
 from the `LearningMechanism` to which it belongs, and uses that to compute a `learning_signal` that is assigned as the
 `value <LearningProjection.value>` of its `LearningProjection`. The LearningProjection conveys its value to a
 `ParameterState` of the projection being learned, which in turns uses that to modify the corresponding parameter.
-By default, the projection is a `MappingProjection`, the parameter is its 'matrix <MappingProjection.matrix>`
+By default, the projection is a `MappingProjection`, the parameter is its `matrix <MappingProjection.matrix>`
 parameter, and the `learning_signal` is a matrix of weight changes that are added to MappingProjection's
 `matrix <MappingProjection.matrix>`.
 
@@ -30,7 +30,7 @@ A LearningSignal is created automatically whenever a `MappingProjection` is
 `specified for learning <LearningMechanism_Creation>` and the projection belongs to the same system as the 
 `LearningMechanism`.  LearningSignals can also be specified in the **learning_signals**
 argument of the constructor for a `LearningMechanism`.  Although a LearningSignal can be created directly using its 
-constructor (or any of the other ways for `creating an `OutputState <OutputStates_Creation>`), this is neither
+constructor (or any of the other ways for `creating an OutputState <OutputStates_Creation>`), this is neither
 necessary nor advisable, as a LearningSignal has dedicated components and requirements for configuration that must be 
 met for it to function properly.
 
@@ -45,7 +45,7 @@ When a LearningSignal is specified in context (e.g., the **learning_signals** ar
   * a *ParameterState* of the Projection to which the parameter belongs;
   |
   * a *Projection*, which must be either a `LearningProjection`, or a `MappingProjection` to which the 
-    LearingSignal should send a `LearningProjection`.  In both cases, it is assumed that the LearningProjection 
+    LearningSignal should send a `LearningProjection`.  In both cases, it is assumed that the LearningProjection
     projects to the *MATRIX* ParameterState of a `MappingProjection`. 
   |
   * a *tuple*, with the *name* of the parameter as its 1st item. and the *projection* to which it belongs as the 2nd;
@@ -53,6 +53,7 @@ When a LearningSignal is specified in context (e.g., the **learning_signals** ar
     but precludes specification of any `parameters <LearningSignal_Structure>` for the LearningSignal.
   |
   * a *specification dictionary*, that must contain at least the following two entries:
+
     * *NAME*:str - a string that is the name of the parameter to be controlled;
     * *PROJECTION*:Projection - the Projection to which the parameter belongs; 
       (note: the Projection itself should be specified even if the parameter belongs to its function).
@@ -74,9 +75,9 @@ the parameter(s) to be learned.  A LearningSignal has the following primary attr
   used by the ParameterState(s) to which it projects to modify their value (see `ModulatorySignal_Modulation` for an
   explanation of how the modulation is specified and used to modulate the value of a parameter). The default value
   is set to the value of the `modulation <LearningMechanism.modulation>` attribute of the LearningMechanism to which 
-  the LearningSignal belongs;  this the is same for all of the LearningSignals belonging to that LearningMechanism.  
-  However, the `modulation <LearningSignal.modulation>` can be specified individually for a LearningSignal using a 
-  specification dictionary where the LearningSignal is specified, as described `above <LearningaSignal_Specification>`.
+  the LearningSignal belongs;  this is the same for all of the LearningSignals belonging to that LearningMechanism.
+  However, the `modulation <LearningSignal.modulation>` can be specified individually for a LearningSignal using a
+  specification dictionary where the LearningSignal is specified, as described `above <LearningSignal_Specification>`.
   The `modulation <LearningSignal.modulation>` value of a LearningSignal is used by all of the 
   `LearningProjections <LearningProjection>` that project from that LearningSignal.
     

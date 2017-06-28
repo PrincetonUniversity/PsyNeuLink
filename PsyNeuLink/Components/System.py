@@ -395,8 +395,8 @@ def system(default_input_value=None,
     ---------
 
     default_input_value : list or ndarray of values : default default input for `ORIGIN` Mechanism of each Process
-        the input to the System if none is provided in a call to the `execute <System_Base.execute> or
-        `run <System_Base.run> methods. Should contain one item corresponding to the input of each `ORIGIN` Mechanism
+        the input to the System if none is provided in a call to the `execute <System_Base.execute>` or
+        `run <System_Base.run>` methods. Should contain one item corresponding to the input of each `ORIGIN` Mechanism
         in the System.
         COMMENT:
             REPLACE DefaultProcess BELOW USING Inline markup
@@ -706,7 +706,7 @@ class System_Base(System):
         COMMENT
 
     value : 3D ndarray
-        contains an array of 2D arrays, each of which is the `output_values `of a `TERMINAL` Mechanism in the System.
+        contains an array of 2D arrays, each of which is the `output_values` of a `TERMINAL` Mechanism in the System.
 
         .. _phaseSpecMax : int
             Maximum phase specified for any Mechanism in System.  Determines the phase of the last (set of)
@@ -2414,7 +2414,7 @@ class System_Base(System):
 
     def show(self, options=None):
         """Print ``execution_sets``, ``executionList``, `ORIGIN`, `TERMINAL` Mechanisms,
-        `TARGET` Mechahinsms, ``outputs`` and their labels for the System.
+        `TARGET` Mechanisms, ``outputs`` and their labels for the System.
 
         Arguments
         ---------
@@ -2515,25 +2515,25 @@ class System_Base(System):
 
             RECURRENT_INIT_ARRAY: ndarray of initial_values
 
-            TERMINAL_MECHANISMS:list of `TERMINAL` Mechanisms
+            TERMINAL_MECHANISMS: list of `TERMINAL` Mechanisms
 
             OUTPUT_STATE_NAMES: list of `OutputState` names corresponding to 1D arrays in output_value_array
 
-            OUTPUT_VALUE_ARRAY:3D ndarray of 2D arrays of output.value arrays of OutputStates for all `TERMINAL`
+            OUTPUT_VALUE_ARRAY: 3D ndarray of 2D arrays of output.value arrays of OutputStates for all `TERMINAL`
             Mechanisms
 
-            NUM_PHASES_PER_TRIAL:number of phases required to execute all Mechanisms in the system
+            NUM_PHASES_PER_TRIAL: number of phases required to execute all Mechanisms in the system
 
-            LEARNING_MECHANISMS:list of `LearningMechanisms <LearningMechanism>`
+            LEARNING_MECHANISMS: list of `LearningMechanisms <LearningMechanism>`
 
-            TARGET:list of `TARGET` Mechanisms
+            TARGET: list of `TARGET` Mechanisms
 
-            LEARNING_PROJECTION_RECEIVERS:list of `MappingProjections <MappingProjection>` that receive learning
+            LEARNING_PROJECTION_RECEIVERS: list of `MappingProjections <MappingProjection>` that receive learning
             projections
 
-            CONTROL_MECHANISMS:list of `ControlMechanisms <ControlMechanism>`
+            CONTROL_MECHANISMS: list of `ControlMechanisms <ControlMechanism>`
 
-            CONTROL_PROJECTION_RECEIVERS:list of `ParameterStates <ParameterState>` that receive learning projections
+            CONTROL_PROJECTION_RECEIVERS: list of `ParameterStates <ParameterState>` that receive learning projections
 
         Returns
         -------
@@ -2887,9 +2887,9 @@ class SystemInputState(OutputState):
 
     Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of
     `targets <System.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
-     mechanism of the system.
+    mechanism of the system.
 
-    .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
+    .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection
        in Projection._instantiate_sender()
 
        self.value is used to represent the item of the targets arg to system.execute or system.run

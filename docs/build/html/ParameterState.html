@@ -17,13 +17,15 @@
   
 
   
-  
-    
+
+
+
+
 
   
 
-  
-  
+
+
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   
 
@@ -44,6 +46,7 @@
 </head>
 
 <body class="wy-body-for-nav" role="document">
+
 
   <div class="wy-grid-for-nav">
 
@@ -85,7 +88,10 @@
           
             
             
-                <ul class="current">
+
+
+
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
@@ -131,8 +137,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+
       </nav>
 
 
@@ -141,27 +149,41 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
-      
-          <li><a href="Component.html">Component</a> &raquo;</li>
-      
+      <li><a href="Component.html">Component</a> &raquo;</li>
           <li><a href="State.html">State</a> &raquo;</li>
-      
-    <li>ParameterState</li>
+
+      <li>ParameterState</li>
+
+
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/ParameterState.txt" rel="nofollow"> View page source</a>
+
+            <a href="_sources/ParameterState.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+
   </ul>
+
+
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -186,8 +208,8 @@
 </div>
 <span class="target" id="module-ParameterState"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A parameterState belongs to either a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> or a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, and is used to represent and
-possibly modify the value of the parameter used by its owner or owner&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>.  It can
+<p>A ParameterState belongs to either a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> or a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, and is used to represent and
+possibly modify the value of the parameter used by its owner or owner’s <code class="xref any docutils literal"><span class="pre">function</span></code>.  It can
 receive one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> and/or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> that
 modify the value of the parameter. The projections received by a parameterState are listed in its
 <code class="xref any docutils literal"><span class="pre">path_afferents</span></code> attribute. Its <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> combines the
@@ -200,7 +222,7 @@ owner or its <code class="xref any docutils literal"><span class="pre">function<
 ParameterStates are created automatically when the Mechanism or Projection to which they belong is created.  The
 <code class="xref any docutils literal"><span class="pre">owner</span></code> of a ParameterState must be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.  One
 ParameterState is created for each configurable parameter of its owner, as well as for each configurable parameter
-of the owner&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>.  Each ParameterState is created using the value specified for the
+of the owner’s <code class="xref any docutils literal"><span class="pre">function</span></code>.  Each ParameterState is created using the value specified for the
 corresponding parameter, as described below.</p>
 <div class="section" id="specifying-parameters">
 <span id="parameterstate-specifying-parameters"></span><h3>Specifying Parameters<a class="headerlink" href="#specifying-parameters" title="Permalink to this headline">¶</a></h3>
@@ -213,33 +235,33 @@ belongs (see <span class="xref std std-ref">Component_Specifying_Functions_and_P
 <ul class="simple">
 <li>In a <em>parameter specification dictionary</em> assigned to the <strong>params</strong> argument in the constructor for the
 Component to which the parameter belongs. The entry for each parameter must use the name of the parameter
-(or a corresponding keyword) as its key, and the parameter&#8217;s specification as its value (see
-<a class="reference internal" href="#parameterstate-specification-examples"><span class="std std-ref">examples</span></a> below). Parameters for a Component&#8217;s
+(or a corresponding keyword) as its key, and the parameter’s specification as its value (see
+<a class="reference internal" href="#parameterstate-specification-examples"><span class="std std-ref">examples</span></a> below). Parameters for a Component’s
 <code class="xref any docutils literal"><span class="pre">function</span></code> can be specified in an entry with the key <em>FUNCTION_PARAMS</em>,
 a value that is itself a parameter specification dictionary containing an entry for each of the
-function&#8217;s parameters to be specified.  When a value is assigned to a parameter in a specification dictionary,
-it overrides any value assigned to the argument for the parameter in the Component&#8217;s constructor.</li>
+function’s parameters to be specified.  When a value is assigned to a parameter in a specification dictionary,
+it overrides any value assigned to the argument for the parameter in the Component’s constructor.</li>
 </ul>
 <ul class="simple">
-<li>By direct assignment to the Component&#8217;s attribute for the parameter (see below).</li>
+<li>By direct assignment to the Component’s attribute for the parameter (see below).</li>
 </ul>
 <ul class="simple">
 <li>In the <code class="xref any docutils literal"><span class="pre">assign_params</span></code> method for the Component.</li>
 </ul>
 <ul class="simple">
-<li>When the Component is executed, in the <strong>runtime_params</strong> argument of a call to component&#8217;s
+<li>When the Component is executed, in the <strong>runtime_params</strong> argument of a call to component’s
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method.</li>
 </ul>
 </div></blockquote>
 <p>The value specified for a parameter (either explicitly or by default) is assigned to an attribute of the
 Component or its <code class="xref any docutils literal"><span class="pre">function</span></code> to which the parameter belongs.  The attribute has the same
-name as the parameter, and can be referenced using standard python attribute (&#8220;dot&#8221;) notation;  for example,
+name as the parameter, and can be referenced using standard python attribute (“dot”) notation;  for example,
 the value of a parameter named <em>param</em> is assigned to an attribute named <code class="docutils literal"><span class="pre">param</span></code> that can be referenced as
 <code class="docutils literal"><span class="pre">my_component.param</span></code>).</p>
-<p>When the Component is executed, it updates the ParameterState by calling the ParameterState&#8217;s
-<a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> with the attribute&#8217;s value for the parameter.  The result is
-assigned as the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, which is used by the owner
-of the ParameterState as the value of the correspondign parameter of its own <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
+<p>When the Component is executed, it updates the ParameterState by calling the ParameterState’s
+<a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> with the attribute’s value for the parameter.  The result is
+assigned as the ParameterState’s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, which is used by the owner
+of the ParameterState as the value of the corresponding parameter of its own <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">It is important to note the distinction between the <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a ParameterState,
@@ -250,11 +272,11 @@ used by the latter (see <code class="xref any docutils literal"><span class="pre
 <blockquote>
 <div><ul class="simple">
 <li>A <strong>value</strong>.  This must be a valid value for the parameter.  it creates a default ParameterState,
-assigns the parameter&#8217;s default value as the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>,
-and assigns the parameter&#8217;s name as the name of the ParameterState.</li>
+assigns the parameter’s default value as the ParameterState’s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>,
+and assigns the parameter’s name as the name of the ParameterState.</li>
 </ul>
 <ul>
-<li><p class="first">A reference to an existing <strong>ParameterState</strong> object.  It&#8217;s name must be the name of a parameter of the
+<li><p class="first">A reference to an existing <strong>ParameterState</strong> object.  It’s name must be the name of a parameter of the
 owner or its <code class="xref any docutils literal"><span class="pre">function</span></code>, and its value must be a valid one for the parameter.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -266,18 +288,18 @@ future use, but its current use is not advised.</p>
 <ul class="simple">
 <li>A Modulatory specification.  This can be an existing <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> or <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> object, a
 <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> object, a constructor or the class name for any of these, or the
-keywords <em>CONTROL</em> or <em>LEARNING</em>.  Any of these create a default ParameterState, assign the parameter&#8217;s default
-value as the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and assign the parameter&#8217;s name as the name of the
+keywords <em>CONTROL</em> or <em>LEARNING</em>.  Any of these create a default ParameterState, assign the parameter’s default
+value as the ParameterState’s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and assign the parameter’s name as the name of the
 ParameterState.  They also create and/or assign the corresponding ModulatorySignal and ModulatoryProjection,
-and assign the ParameterState as the ModulatoryProjection&#8217;s <code class="xref any docutils literal"><span class="pre">receiver</span></code>.
+and assign the ParameterState as the ModulatoryProjection’s <code class="xref any docutils literal"><span class="pre">receiver</span></code>.
 If the ModulatorySignal and/or ModulatoryProjection already exist, their value(s) must be valid one(s) for the
 parameter.  Note that only Control and Learning Modulatory components can be assigned to a ParameterState
-(Gating components cannot &#8211; they can only be assgined to InputStates or OutputStates).</li>
+(Gating components cannot – they can only be assgined to InputStates or OutputStates).</li>
 </ul>
 <ul>
 <li><p class="first">A 2-item (value, Modulatory specification) <strong>tuple</strong>.  This creates a default
-parameterState, uses the value (1st) item of the tuple as parameterState&#8217;s
-<code class="xref any docutils literal"><span class="pre">base_value</span></code>, and assigns the parameter&#8217;s name as the name of the parameterState.
+parameterState, uses the value (1st) item of the tuple as parameterState’s
+<code class="xref any docutils literal"><span class="pre">base_value</span></code>, and assigns the parameter’s name as the name of the parameterState.
 The projection (2nd) item of the tuple is used to create and/or assign the specified projection, that is assigned
 the parameterState as its <code class="xref any docutils literal"><span class="pre">receiver</span></code>.  The projection must be a
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>, and its value must be a valid one for the parameter.</p>
@@ -285,20 +307,20 @@ the parameterState as its <code class="xref any docutils literal"><span class="p
 <p class="first admonition-title">Note</p>
 <p class="last">Currently, the <code class="xref any docutils literal"><span class="pre">function</span></code> of a Component, although it can be specified as a
 parameter value, cannot be assigned a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> or modified in the <strong>runtime_params</strong> argument of
-a call to a Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">execute</span></code> method. This may change in the future.</p>
+a call to a Mechanism’s <code class="xref any docutils literal"><span class="pre">execute</span></code> method. This may change in the future.</p>
 </div>
 </li>
 </ul>
 </div></blockquote>
 <p>The <strong>default value</strong> assigned to a ParameterState is the default value of the argument for the corresponding parameter
-in the constructor for the parameter&#8217;s owner.  If the value of a parameter is specified as <code class="xref any docutils literal"><span class="pre">None</span></code>, <code class="xref any docutils literal"><span class="pre">NotImplemented</span></code>,
+in the constructor for the parameter’s owner.  If the value of a parameter is specified as <code class="xref any docutils literal"><span class="pre">None</span></code>, <code class="xref any docutils literal"><span class="pre">NotImplemented</span></code>,
 or any other non-numeric value that is not one of those listed above, then no ParameterState is created and the
 parameter cannot be modified by a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> or in the <strong>runtime_params</strong> argument of a call to a
-Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">execute</span></code> method.</p>
+Mechanism’s <code class="xref any docutils literal"><span class="pre">execute</span></code> method.</p>
 <p class="rubric" id="parameterstate-specification-examples">Examples</p>
 <p>In the following example, a mechanism is created by specifying two of its parameters, as well as its
-<code class="xref any docutils literal"><span class="pre">function</span></code> and two of that function&#8217;s parameters, each using a different specification format:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">RecurrentTransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span>
+<code class="xref any docutils literal"><span class="pre">function</span></code> and two of that function’s parameters, each using a different specification format:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">RecurrentTransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                                           <span class="n">noise</span><span class="o">=</span><span class="n">ControlSignal</span><span class="p">),</span>
                                           <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">ControlSignal</span><span class="p">),</span>
                                                             <span class="n">bias</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ControlSignal</span><span class="p">(</span>
@@ -324,7 +346,7 @@ parameter.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter belongs to the MappingProjection&#8217;s
+<p class="last">the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter belongs to the MappingProjection’s
 <code class="xref any docutils literal"><span class="pre">function</span></code>;  however, since it has only one standard function,
 its arguments are available in the constructor for the projection (see
 <code class="xref any docutils literal"><span class="pre">Component_Specifying_Functions_and_Parameters</span></code> for a more detailed explanation).</p>
@@ -332,7 +354,7 @@ its arguments are available in the constructor for the projection (see
 <p>The example below shows how to specify the parameters in the first example using a parameter specification dictionary:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">RecurrentTransferMechanism</span><span class="p">(</span>
                           <span class="n">size</span><span class="o">=</span><span class="mi">5</span>
-                          <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">SIZE</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+                          <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">NOISE</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
                                   <span class="s1">&#39;size&#39;</span><span class="p">:</span><span class="n">ControlSignal</span><span class="p">,</span>
                                   <span class="n">FUNCTION</span><span class="p">:</span><span class="n">Logistic</span><span class="p">,</span>
                                   <span class="n">FUNCTION_PARAMS</span><span class="p">:{</span><span class="n">GAIN</span><span class="p">:(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">ControlSignal</span><span class="p">),</span>
@@ -340,15 +362,15 @@ its arguments are available in the constructor for the projection (see
 </pre></div>
 </div>
 <p>There are several things to note here.  First, the parameter specification dictionary must be assigned to the
-<strong>params</strong> argument of the constructor.  Second, both methods for specifying a parameter &#8211; directly in an argument
-for the parameter, or in an entry of a parameter specification dictionary &#8211; can be used within the same constructor.
+<strong>params</strong> argument of the constructor.  Second, both methods for specifying a parameter – directly in an argument
+for the parameter, or in an entry of a parameter specification dictionary – can be used within the same constructor.
 If a particular parameter is specified in both ways (as is the case for <strong>size</strong> in the example), the value in the
 parameter specification dictionary takes priority (i.e., it is the value that will be assigned to the parameter).  If
 the parameter is specified in a parameter specification dictionary, the key for the parameter must be a string that is
 the same as the name of parameter (i.e., identical to how it appears as an arg in the constructor; as is shown
 for <strong>size</strong> in the example), or using a keyword that resolves to such a string (as shown for <em>NOISE</em> in the
 example).  Finally, the keyword <em>FUNCTION_PARAMS</em> can be used in a parameter specification dictionary to specify
-parameters of the Component&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>, as shown for the <strong>gain</strong> and <strong>bias</strong> parameters of
+parameters of the Component’s <code class="xref any docutils literal"><span class="pre">function</span></code>, as shown for the <strong>gain</strong> and <strong>bias</strong> parameters of
 the Logistic function in the example.</p>
 </div>
 </div>
@@ -360,41 +382,41 @@ the Logistic function in the example.</p>
 must be compatible with (i.e., have the number and type of elements as) the value of the parameter for which the
 ParameterState is responsible.  A ParameterState cannot receive <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> or
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>.  When the ParameterState is updated (i.e., its owner is executed), it uses
-the values of its ControlProjections and LearningProjections to determine whether and how to modify its parameter&#8217;s
-attribute value, which is then assigned as the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+the values of its ControlProjections and LearningProjections to determine whether and how to modify its parameter’s
+attribute value, which is then assigned as the ParameterState’s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 (see <a class="reference internal" href="#parameterstate-execution"><span class="std std-ref">Execution</span></a> for addition details). ParameterStates have the following core attributes:</p>
 <ul class="simple">
-<li><a class="reference internal" href="#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>:  the parameter&#8217;s attribute value &#8211; that is, the value assigned to the
-attribute of the ParameterState&#8217;s owner for the parameter;  it can be thought of as the parameter&#8217;s &#8220;base&#8221; value.
-It is used by <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine the <em>ParameterState&#8217;s</em> <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.
-It must match the format (the number and type of elements) of the parameter&#8217;s attribute value.</li>
+<li><a class="reference internal" href="#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>:  the parameter’s attribute value – that is, the value assigned to the
+attribute of the ParameterState’s owner for the parameter;  it can be thought of as the parameter’s “base” value.
+It is used by <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine the <em>ParameterState’s</em> <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.
+It must match the format (the number and type of elements) of the parameter’s attribute value.</li>
 <li><a class="reference internal" href="#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a>: lists the <code class="xref any docutils literal"><span class="pre">ModulatoryProjections</span></code> that
-project to the ParameterState.  These specify either the value of the ParameterState&#8217;s
-<code class="xref any docutils literal"><span class="pre">function</span></code>, the <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the ParameterState itself
-(see <a href="#id1"><span class="problematic" id="id2">`</span></a>ModulatorySignals_Modulation).</li>
+project to the ParameterState.  These specify either the value of the ParameterState’s
+<a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, the <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the ParameterState itself
+(see <code class="xref any docutils literal"><span class="pre">ModulatorySignals_Modulation</span></code>).</li>
 <li><a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:  takes <code class="xref any docutils literal"><span class="pre">variable</span></code> as its input, and the values
-specified for the function&#8217;s parameters by any <code class="xref any docutils literal"><span class="pre">ModulatoryProjections</span></code> (listed in <a class="reference internal" href="#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a>, and assigns its result to the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
-<li><a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>: the result of <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; used by the ParameterState&#8217;s
+specified for the function’s parameters by any <code class="xref any docutils literal"><span class="pre">ModulatoryProjections</span></code> (listed in <a class="reference internal" href="#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a>, and assigns its result to the ParameterState’s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
+<li><a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>: the result of <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; used by the ParameterState’s
 owner as the value of the parameter of its <code class="xref any docutils literal"><span class="pre">function</span></code> for which the the ParameterState is
-responsble when the owner executes.</li>
+responsible when the owner executes.</li>
 </ul>
 <p>All of the user-modifiable parameters of a Component are listed in its <code class="xref any docutils literal"><span class="pre">user_params</span></code> attribute,
 which is a read-only dictionary with an entry for each parameter.  The parameters of a Component can be
-modified individually by assigning a value to the corresponding attribute, or in groups using the Component&#8217;s
-<code class="xref any docutils literal"><span class="pre">assign_params</span></code> method.  The parameters for a Component&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>
+modified individually by assigning a value to the corresponding attribute, or in groups using the Component’s
+<code class="xref any docutils literal"><span class="pre">assign_params</span></code> method.  The parameters for a Component’s <code class="xref any docutils literal"><span class="pre">function</span></code>
 are listed in its <code class="xref any docutils literal"><span class="pre">function_params</span></code> attribute, which is a read-only dictionary with an
-entry for each of its function&#8217;s parameter.  The parameters of a Component&#8217;s function can be modified by
-assigning a value to the corresponding attribute of the Component&#8217;s <code class="xref any docutils literal"><span class="pre">function_object</span></code>
+entry for each of its function’s parameter.  The parameters of a Component’s function can be modified by
+assigning a value to the corresponding attribute of the Component’s <code class="xref any docutils literal"><span class="pre">function_object</span></code>
 attribute (e.g., myMechanism.function_object.my_parameter), or in FUNCTION_PARAMS dict in a
-parameter specification dictionary assigned to the <strong>params</strong> arg of a Component&#8217;s constructor or its
+parameter specification dictionary assigned to the <strong>params</strong> arg of a Component’s constructor or its
 <code class="xref any docutils literal"><span class="pre">assign_params</span></code> method.</p>
 </div>
 <div class="section" id="execution">
 <span id="parameterstate-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A ParameterState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
 When this occurs, the ParameterState executes any <code class="xref any docutils literal"><span class="pre">ModulatoryProjections</span></code> it receives, the values of which
-modulate parameters of the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  The ParameterState then calls
-its <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and the result is used as the value of the parameter of its owner&#8217;s function
+modulate parameters of the ParameterState’s <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  The ParameterState then calls
+its <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and the result is used as the value of the parameter of its owner’s function
 when that executes.</p>
 </div>
 <div class="section" id="class-reference">
@@ -409,24 +431,24 @@ projection, or function.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<em>Mechanism or MappingProjection</em>) &#8211; the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to which to which the ParameterState belongs; it must be specified or
+<li><strong>owner</strong> (<a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em> or </em><a class="reference internal" href="Function.html#Function.Stability.MappingProjection" title="Function.Stability.MappingProjection"><em>MappingProjection</em></a>) – the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to which to which the ParameterState belongs; it must be specified or
 determinable from the context in which the ParameterState is created. The owner of a ParameterState for the
 parameter of a <code class="xref any docutils literal"><span class="pre">function</span></code> should be specified as the Mechanism or Projection
 to which the function belongs.</li>
-<li><strong>reference_value</strong> (<em>number, list or np.ndarray</em>) &#8211; specifies the default value of the parameter for which the ParameterState is responsible.</li>
-<li><strong>variable</strong> (<em>number, list or np.ndarray</em>) &#8211; specifies the parameter&#8217;s initial value and attribute value —&nbsp;that is, the value of the attribute of the
-ParameterState&#8217;s owner or its <code class="xref any docutils literal"><span class="pre">function</span></code> assigned to the parameter.</li>
-<li><strong>function</strong> (<em>Function or method : default LinearCombination(operation=SUM)</em>) &#8211; specifies the function used to convert the parameter&#8217;s attribute value (same as the ParameterState&#8217;s
-<a class="reference internal" href="#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) to the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+<li><strong>reference_value</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – specifies the default value of the parameter for which the ParameterState is responsible.</li>
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – specifies the parameter’s initial value and attribute value —&nbsp;that is, the value of the attribute of the
+ParameterState’s owner or its <code class="xref any docutils literal"><span class="pre">function</span></code> assigned to the parameter.</li>
+<li><strong>function</strong> (<a class="reference internal" href="Function.html#module-Function" title="Function"><em>Function</em></a><em> or </em><em>method : default LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function used to convert the parameter’s attribute value (same as the ParameterState’s
+<a class="reference internal" href="#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) to the ParameterState’s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the parameterState or its function, and/or a custom function and its parameters.  Values specified for
 parameters in the dictionary override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (<em>str : default InputState-&lt;index&gt;</em>) &#8211; a string used for the name of the inputState.
+<li><strong>name</strong> (<em>str : default InputState-&lt;index&gt;</em>) – a string used for the name of the inputState.
 If not is specified, a default is assigned by StateRegistry of the mechanism to which the inputState belongs
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : State.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the inputState.
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><em>PreferenceSet</em><em> or </em><em>specification dict : State.classPreferences</em><em>]</em>) – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the inputState.
 If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref doc">PreferenceSet</span> for details).</li>
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
 </ul>
 </td>
 </tr>
@@ -435,44 +457,44 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="ParameterState.ParameterState.owner">
 <code class="descname">owner</code><a class="headerlink" href="#ParameterState.ParameterState.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Mechanism or MappingProjection</em> &#8211; the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to which the parameterState belongs.</p>
+<dd><p><em>Mechanism or MappingProjection</em> – the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to which the parameterState belongs.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ParameterState.ParameterState.variable">
 <code class="descname">variable</code><a class="headerlink" href="#ParameterState.ParameterState.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> &#8211; the parameter&#8217;s attribute value —&nbsp;that is, the value of the attribute of the
-ParameterState&#8217;s owner or its <code class="xref any docutils literal"><span class="pre">function</span></code> assigned to the parameter.</p>
+<dd><p><em>number, list or np.ndarray</em> – the parameter’s attribute value —&nbsp;that is, the value of the attribute of the
+ParameterState’s owner or its <code class="xref any docutils literal"><span class="pre">function</span></code> assigned to the parameter.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ParameterState.ParameterState.mod_afferents">
 <code class="descname">mod_afferents</code><a class="headerlink" href="#ParameterState.ParameterState.mod_afferents" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[List[Projection]]</em> &#8211; a list of the <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that project to the ParameterState (i.e.,
+<dd><p><em>Optional[List[Projection]]</em> – a list of the <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that project to the ParameterState (i.e.,
 for which it is a <code class="xref any docutils literal"><span class="pre">receiver</span></code>); these can be
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> and/or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a>,
 but not <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.  The <code class="xref any docutils literal"><span class="pre">value</span></code> of each
-must match the format (number and types of elements) of the ParameterState&#8217;s
+must match the format (number and types of elements) of the ParameterState’s
 <a class="reference internal" href="#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ParameterState.ParameterState.function">
 <code class="descname">function</code><a class="headerlink" href="#ParameterState.ParameterState.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Function : default Linear</em> &#8211; converts the parameter&#8217;s attribute value (same as the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>)
-to the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, under the influence of any
+<dd><p><em>Function : default Linear</em> – converts the parameter’s attribute value (same as the ParameterState’s <a class="reference internal" href="#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>)
+to the ParameterState’s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, under the influence of any
 <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> received by the ParameterState (and listed in its
-<a class="reference internal" href="#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  The result is assigned as the ParameterState&#8217;s
+<a class="reference internal" href="#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  The result is assigned as the ParameterState’s
 <a class="reference internal" href="#"><span class="doc">value</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ParameterState.ParameterState.value">
 <code class="descname">value</code><a class="headerlink" href="#ParameterState.ParameterState.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> &#8211; the result returned by the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and used by the
-ParameterState&#8217;s owner or its <code class="xref any docutils literal"><span class="pre">function</span></code> as the value of the parameter for which the
-ParmeterState is responsible.  Note that this is not necessarily the same as the parameter&#8217;s attribute value
-(that is, the value of the owner&#8217;s attribute for the parameter), since the ParameterState&#8217;s
+<dd><p><em>number, list or np.ndarray</em> – the result returned by the ParameterState’s <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and used by the
+ParameterState’s owner or its <code class="xref any docutils literal"><span class="pre">function</span></code> as the value of the parameter for which the
+ParmeterState is responsible.  Note that this is not necessarily the same as the parameter’s attribute value
+(that is, the value of the owner’s attribute for the parameter), since the ParameterState’s
 <a class="reference internal" href="#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> may modify the latter under the influence of its
 <a class="reference internal" href="#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a>.</p>
 </dd></dl>
@@ -480,13 +502,13 @@ ParmeterState is responsible.  Note that this is not necessarily the same as the
 <dl class="attribute">
 <dt id="ParameterState.ParameterState.name">
 <code class="descname">name</code><a class="headerlink" href="#ParameterState.ParameterState.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> &#8211; the name of the inputState.
+<dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> – the name of the inputState.
 Specified in the <strong>name</strong> argument of the constructor for the outputState.  If not is specified, a default is
 assigned by the StateRegistry of the mechanism to which the outputState belongs
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Unlike other PsyNeuLink components, states names are &#8220;scoped&#8221; within a mechanism, meaning that states with
+<p class="last">Unlike other PsyNeuLink components, states names are “scoped” within a mechanism, meaning that states with
 the same name are permitted in different mechanisms.  However, they are <em>not</em> permitted in the same
 mechanism: states within a mechanism with the same base name are appended an index in the order of their
 creation.</p>
@@ -496,10 +518,10 @@ creation.</p>
 <dl class="attribute">
 <dt id="ParameterState.ParameterState.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#ParameterState.ParameterState.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the inputState.
+<dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the inputState.
 Specified in the <strong>prefs</strong> argument of the constructor for the projection;  if it is not specified, a default is
 assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref doc">PreferenceSet</span> for details).</p>
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 </dd></dl>
@@ -509,15 +531,18 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
 
 
            </div>
+           <div class="articleComments">
+
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="OutputState.html" class="btn btn-neutral float-right" title="OutputState" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="OutputState.html" class="btn btn-neutral float-right" title="OutputState" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="InputState.html" class="btn btn-neutral" title="InputState" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="InputState.html" class="btn btn-neutral" title="InputState" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -551,7 +576,8 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
             VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

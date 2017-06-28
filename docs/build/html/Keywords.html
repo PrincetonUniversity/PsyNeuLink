@@ -17,13 +17,15 @@
   
 
   
-  
-    
+
+
+
+
 
   
 
-  
-  
+
+
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   
 
@@ -41,6 +43,7 @@
 </head>
 
 <body class="wy-body-for-nav" role="document">
+
 
   <div class="wy-grid-for-nav">
 
@@ -82,7 +85,10 @@
           
             
             
-                <ul>
+
+
+
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
@@ -99,8 +105,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+
       </nav>
 
 
@@ -109,23 +117,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Keywords</li>
+
+      <li><a href="index.html">Docs</a> &raquo;</li>
+
+      <li>Keywords</li>
+
+
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/Keywords.txt" rel="nofollow"> View page source</a>
+
+            <a href="_sources/Keywords.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+
   </ul>
+
+
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -146,9 +171,9 @@ Mechanism of a Process is not necessarily an <a class="reference internal" href=
 <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> from other Processes in the System. The <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms of a Process or
 System are listed in its <code class="xref std std-keyword docutils literal"><span class="pre">origin_mechanisms</span></code> attribute, and can be displayed using its <code class="xref std std-keyword docutils literal"><span class="pre">show</span></code>
 method.  For additional details about <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms in Processes, see
-<a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Process Mechanisms</span></a> and <code class="xref any docutils literal"><span class="pre">Process</span> <span class="pre">Input</span> <span class="pre">and</span> <span class="pre">Output</span></code>;
-and for Systems see <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">System Mechanisms</span></a> and
-<a class="reference internal" href="System.html#system-execution-input-and-initialization"><span class="std std-ref">System Input and Initialization</span></a>.</p>
+<code class="xref any docutils literal"><span class="pre">Process</span> <span class="pre">Mechanisms</span></code> and <code class="xref any docutils literal"><span class="pre">Process</span> <span class="pre">Input</span> <span class="pre">and</span> <span class="pre">Output</span></code>;
+and for Systems see <code class="xref any docutils literal"><span class="pre">System</span> <span class="pre">Mechanisms</span></code> and
+<code class="xref any docutils literal"><span class="pre">System</span> <span class="pre">Input</span> <span class="pre">and</span> <span class="pre">Initialization</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -172,8 +197,8 @@ designated as such (since it will be assigned input and therefore be initialized
 <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> that closes a loop in a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a>, and that is not an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism (since in
 that case it will be initialized in any event). An <code class="xref any docutils literal"><span class="pre">initial</span> <span class="pre">value</span></code> can be assigned to such
 Mechanisms, that will be used to initialize the Process or System when it is first run.  For additional
-information, see <a class="reference internal" href="Run.html#run-initial-values"><span class="std std-ref">Run</span></a>, <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">System Mechanisms</span></a> and
-<a class="reference internal" href="System.html#system-execution-input-and-initialization"><span class="std std-ref">System Input and Initialization</span></a>.</p>
+information, see <code class="xref any docutils literal"><span class="pre">Run</span></code>, <code class="xref any docutils literal"><span class="pre">System</span> <span class="pre">Mechanisms</span></code> and
+<code class="xref any docutils literal"><span class="pre">System</span> <span class="pre">Input</span> <span class="pre">and</span> <span class="pre">Initialization</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -186,7 +211,7 @@ mechanism of a process is not necessarily a <a class="reference internal" href="
 as it may send projections to other processes in the system.  The <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms of a process
 or system are listed in its <code class="xref std std-keyword docutils literal"><span class="pre">terminalMechanisms</span></code> attribute, and can be displayed using its
 <code class="xref std std-keyword docutils literal"><span class="pre">show</span></code> method.  For additional details about <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms in processes, see
-<a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a> and <code class="xref any docutils literal"><span class="pre">Process_Input_And_Output</span></code>; and for systems see <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">Mechanisms</span></a>.</p>
+<code class="xref any docutils literal"><span class="pre">Process_Mechanisms</span></code> and <code class="xref any docutils literal"><span class="pre">Process_Input_And_Output</span></code>; and for systems see <code class="xref any docutils literal"><span class="pre">System_Mechanisms</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -210,7 +235,7 @@ from its <code class="xref any docutils literal"><span class="pre">execute</span
 <code class="xref any docutils literal"><span class="pre">run</span></code> method.  It must be associated with the <a class="reference internal" href="#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>
 Mechanism of the Process or System. The <a class="reference internal" href="#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms of a Process or System are listed in its
 <code class="xref std std-keyword docutils literal"><span class="pre">target_mechanisms</span></code> attribute, and can be displayed using its <code class="xref std std-keyword docutils literal"><span class="pre">show</span></code> method.  For additional
-details, see <a class="reference internal" href="LearningMechanism.html#learningmechanism-targets"><span class="std std-ref">TARGET mechanisms</span></a> and specifying <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">target values</span></a>.</p>
+details, see <a class="reference internal" href="LearningMechanism.html#learningmechanism-targets"><span class="std std-ref">TARGET mechanisms</span></a> and specifying <code class="xref any docutils literal"><span class="pre">target</span> <span class="pre">values</span></code>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -221,29 +246,29 @@ details, see <a class="reference internal" href="LearningMechanism.html#learning
 <dd><dl class="attribute">
 <dt id="Keywords.MatrixKeywords.IDENTITY_MATRIX">
 <code class="descname">IDENTITY_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Permalink to this definition">¶</a></dt>
-<dd><p>a square matrix of 1&#8217;s along the diagnoal, 0&#8217;s elsewhere; this requires that the length of the sender and
+<dd><p>a square matrix of 1’s along the diagnoal, 0’s elsewhere; this requires that the length of the sender and
 receiver values are the same.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Keywords.MatrixKeywords.HOLLOW_MATRIX">
 <code class="descname">HOLLOW_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.HOLLOW_MATRIX" title="Permalink to this definition">¶</a></dt>
-<dd><p>a square matrix of 0&#8217;s along the diagnoal, 1&#8217;s elsewhere; this requires that the length of the sender and
+<dd><p>a square matrix of 0’s along the diagnoal, 1’s elsewhere; this requires that the length of the sender and
 receiver values are the same.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX">
 <code class="descname">FULL_CONNECTIVITY_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Permalink to this definition">¶</a></dt>
-<dd><p>a matrix that has a number of rows equal to the length of the sender&#8217;s value, and a number of columns equal
-to the length of the receiver&#8217;s value, all the elements of which are 1&#8217;s.</p>
+<dd><p>a matrix that has a number of rows equal to the length of the sender’s value, and a number of columns equal
+to the length of the receiver’s value, all the elements of which are 1’s.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX">
 <code class="descname">RANDOM_CONNECTIVITY_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX" title="Permalink to this definition">¶</a></dt>
-<dd><p>a matrix that has a number of rows equal to the length of the sender&#8217;s value, and a number of columns equal
-to the length of the receiver&#8217;s value, all the elements of which are filled with random values uniformly
+<dd><p>a matrix that has a number of rows equal to the length of the sender’s value, and a number of columns equal
+to the length of the receiver’s value, all the elements of which are filled with random values uniformly
 distributed between 0 and 1.</p>
 </dd></dl>
 
@@ -264,6 +289,9 @@ distributed between 0 and 1.</p>
 
 </div>
 
+
+           </div>
+           <div class="articleComments">
 
            </div>
           </div>
@@ -299,7 +327,8 @@ distributed between 0 and 1.</p>
             VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

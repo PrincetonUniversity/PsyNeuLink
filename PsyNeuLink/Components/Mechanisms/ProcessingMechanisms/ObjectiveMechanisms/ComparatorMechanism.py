@@ -97,7 +97,7 @@ an action.  This generates a vector with a single non-zero value (the selected a
 specifying it as the ComparatorMechanism's **sample** argument will generate a corresponding inputState with a vector
 as its value.  This will not match the reward signal specified in the ComparatorMechanism's **target** argument, the
 value of which is a single scalar.  This can be dealt with by explicitly specifying the format for the SAMPLE and
-TARGET inputStates in the **input_states** argument of the ComparatorMechanism's constructor, as follows:
+TARGET inputStates in the **input_states** argument of the ComparatorMechanism's constructor, as follows::
 
     my_action_selection_mech = TransferMechanism(size=5,
                                                  function=SoftMax(output=PROB))
@@ -194,21 +194,21 @@ class ComparatorMechanism(ObjectiveMechanism):
     sample : OutputState, Mechanism, value, or string
         specifies the value to compare with the `target` by the `function <ComparatorMechanism.function>`.
 
-    target : OutputState, Mechanism, value, or string
+    target:  OutputState, Mechanism, value, or string
         specifies the value with which the `sample` is compared by the `function <ComparatorMechanism.function>`.
 
-    input_states :  List[InputState, value, str or dict] or Dict[] : default [SAMPLE, TARGET]
+    input_states:  List[InputState, value, str or dict] or Dict[] : default [SAMPLE, TARGET]
         specifies the names and/or formats to use for the values of the sample and target inputStates;  
         by default they are named *SAMPLE* and *TARGET*, and their formats are match the value of the outputStates
         specified in the **sample** and **target** arguments, respectively.
 
-    function: Function, function or method : default Distance(metric=DIFFERENCE)
+    function:  Function, function or method : default Distance(metric=DIFFERENCE)
         specifies the `function <Comparator.function>` used to compare the `sample` with the `target`.
          
-    output_states :  List[OutputState, value, str or dict] or Dict[] : default [ERROR_SIGNAL]  
+    output_states:  List[OutputState, value, str or dict] or Dict[] : default [ERROR_SIGNAL]
         specifies the outputStates for the mechanism;
 
-    params : Optional[Dict[param keyword, param value]]
+    params:  Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
         the mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the
@@ -221,12 +221,12 @@ class ComparatorMechanism(ObjectiveMechanism):
             This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
     COMMENT
 
-    name : str : default ComparatorMechanism-<index>
+    name:  str : default ComparatorMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+    prefs:  Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the `PreferenceSet` for mechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -258,10 +258,9 @@ class ComparatorMechanism(ObjectiveMechanism):
         the result of the comparison carried out by the `function <ComparatorMechanism.function>`.
 
     output_state : OutputState
-        contains the 'primary <OutputState_Primary>` outputState of the ComparatorMechanism; the default is  
+        contains the `primary <OutputState_Primary>` outputState of the ComparatorMechanism; the default is
         its *ERROR_SIGNAL* outputState, the value of which is equal to the `value <ComparatorMechanism.value>` 
         attribute of the ComparatorMechanism.
-
 
     output_states : ContentAddressableList[OutputState]
         contains, by default, only the *ERROR_SIGNAL* (primary) outputState of the ComparatorMechanism.

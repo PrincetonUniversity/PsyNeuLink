@@ -17,7 +17,7 @@ Overview
 A ModulatorySignal is a subclass of `OutputState` that belongs to an `AdaptiveMechanism`, and is used to
 `modulate <ModulatorySignal_Modulation>` the `value <State.value>` of one or more `States <State>` by of way one or
 more `ModulatoryProjections <ModulatoryProjection>`.  ModulatorySignals modulate the value of a state by modifying a
-parameter of the State's `function <State.function>`.  There are three types of ModulatySignals, each of which is
+parameter of the State's `function <State.function>`.  There are three types of ModulatorySignals, each of which is
 associated with a particular type of `AdaptiveMechanism` and `ModulatoryProjection`, and modifies the value of a
 different type of State, as described below (and shown in the `figure <ModulatorySignal_Anatomy_Figure>`):
 
@@ -68,7 +68,7 @@ another as its *MULTIPLICATIVE_PARAM*.  The `modulation <ModulatorySignal.modula
 determines which of these two parameters should be assigned its value, or which of two other actions to take when the
 State updates its `value <State.value>`.  It is specified using a value of `ModulationParam <Function.ModulationParam>`.
 The default for `ControlSignals <ControlSignal>` and `GatingSignals <GatingSignal>` is `ModulationParam.MULTIPLICATIVE`,
-which multiplies the State`s `variable <State.variable>` by the `value <ModulatorySignal>` of the ModulatorySignal
+which multiplies the State's `variable <State.variable>` by the `value <ModulatorySignal>` of the ModulatorySignal
 before passing it to the State's `function <State.function>`.  The default for `LearningSignals <LearningSignal>` is
 `ModulationParam.ADDITIVE`, which adds the `value <LearningSignal.value>` of the LearningSignal (i.e., the weight
 changes computed by the `LearningMechanism`) to the State's `variable <State.variable>` (i.e., the current weight
@@ -245,7 +245,7 @@ class ModulatorySignal(OutputState):
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         provides the ModulatorySignal's `value <ModulatorySignal.value>`; the default is an identity function that
-        assigns `variable <ModulatorySignal.variable` as ModulatorySignal's `value <ModulatorySignal.value>`.
+        assigns `variable <ModulatorySignal.variable>` as ModulatorySignal's `value <ModulatorySignal.value>`.
 
     value : number, list or np.ndarray
         result of `function <ModulatorySignal.function>`, and is the value used to determine the `value <State.value>`

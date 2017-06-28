@@ -39,7 +39,7 @@ types of Mechanisms in PsyNeuLink:
       System itself.  There are a variety of different types of ProcessingMechanism, that accept various forms of
       input and transform them in different ways (see `ProcessingMechanisms <ProcessingMechanism>` for a list).
     ..
-    * `AdpativeMechanisms <AdpativeMechanism>` monitor the output of one or more other Mechanisms, and use this  
+    * `AdaptiveMechanisms <AdaptiveMechanism>` monitor the output of one or more other Mechanisms, and use this
       to modulate the parameters of other Mechanisms or Projections.  There are three basic AdaptiveMechanisms:
       
       * `LearningMechanisms <LearningMechanism>` - these receive training (target) values, and compare them with the 
@@ -110,7 +110,7 @@ any of these to create multiple States (see `InputStates <InputState_Creation>` 
 TransferMechanism with a default InputState named "MY_INPUT" and three 
 `pre-specified types of outputStates <OutputState_Specification>`::
  
-     my_mech = TransferMechanism(input_states:['MY_INPUT'], output_states:[RESULT, MEAN, VARIANCE]) 
+     my_mech = TransferMechanism(input_states=['MY_INPUT'], output_states=[RESULT, MEAN, VARIANCE])
 
 .. _Mechanism_Structure:
 
@@ -164,7 +164,7 @@ COMMENT
 
 The input to a Mechanism's `function <Mechanism_Base.function>` is provided by the Mechanism's
 `variable <Mechanism_Base.variable>` attribute.  This is a 2d array with one item for each of the Mechanism's
-`Input_states <Mechanism_InputStates>.  The result of the :keyword:`function` is placed in the Mechanism's
+`Input_states <Mechanism_InputStates>`.  The result of the :keyword:`function` is placed in the Mechanism's
 `value <Mechanism_Base.value>` attribute, which is also a 2d array with one or more items.  The
 Mechanism's :keyword:`value` is used by its `outputStates <Mechanism_OutputStates>` to generate their :keyword:`value`
 attributes, each of which is assigned as an item of the list in the Mechanism's
@@ -203,11 +203,11 @@ InputStates
 ^^^^^^^^^^^
 
 These receive and represent the input to a Mechanism. A Mechanism usually has only one (**primary**) `InputState`, 
-identified by its `input_state, <Mechanism_Base.input_state>` attribute.  However some Mechanisms have
+identified by its `input_state <Mechanism_Base.input_state>`, attribute.  However some Mechanisms have
 more  than one InputState. For example, a `ComparatorMechanism` has one InputState for its `sample` and another for its
 `target` input. If a Mechanism has more than one InputState, they are identified in a ContentAddressableList in the 
 Mechanism's `input_states <Mechanism_Base.input_states>` attribute (note the plural).  A specific InputState in the
-list can be accessed by using its name as the index for the list (e.g., my_mechanism['InputState name'].
+list can be accessed by using its name as the index for the list (e.g.,` my_mechanism['InputState name']`.
 
 COMMENT:
 [TBI:]
@@ -225,7 +225,7 @@ from its Projections (usually by summing them), and assigns the result to the In
 The value of each InputState for the Mechanism is assigned as the value of an item of the Mechanism's
 `variable <Mechanism_Base.variable>` attribute (a 2d np.array), as well as in a corresponding item of its
 `input_value <Mechanism_Base.input_value>` attribute (a list).  The :keyword:`variable` provides the input to the
-Mechanism's `function <Mechanism_Base.function>`, while its :kewyord:`input_value` provides a more convenient way
+Mechanism's `function <Mechanism_Base.function>`, while its :keyword:`input_value` provides a more convenient way
 of accessing its individual items.
 
 COMMENT:
@@ -325,7 +325,7 @@ constructor, or with the Mechanism's `assign_params` method, using the following
     * *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's outputStates is used for learning
       (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
 
-The parameters of a Mechanism are listed in a dictionary in its `params <Mechanism_Base.params>
+The parameters of a Mechanism are listed in a dictionary in its `params <Mechanism_Base.params>`
 attribute;  the key for each entry is the name of the parameter, and its value is the parameter's value.
 Each parameter is also an attribute of the Mechanism (the name of which is the name of the parameter).
 The parameters of the Mechanism's function are listed in the Mechanism's `function_params` attribute.
@@ -681,7 +681,7 @@ class Mechanism_Base(Mechanism):
         a list of values, one for each `InputState <Mechanism_InputStates>` in the Mechanism's
         `input_states <Mechanism_Base.input_states>` attribute.  The value of each item is the same as the corresponding
         item in the Mechanism's `variable <Mechanism_Base.variable>` attribute.  The latter is a 2d np.array;
-        the :keyword:`input_value attribute provides this information in a simpler list format.
+        the :keyword:`input_value` attribute provides this information in a simpler list format.
 
     _parameter_states : ContentAddressableList[str, ParameterState]
         a dictionary of ParameterStates, one for each of the specifiable parameters of the Mechanism and its function
@@ -698,7 +698,7 @@ class Mechanism_Base(Mechanism):
     function : Function, function or method
         the primary function for the Mechanism, called when it is executed.  It takes the Mechanism's
         `variable <Mechanism_Base.variable>` attribute as its input, and its result is assigned to the Mechanism's
-        `value <Mechanism_Base.value` attribute.
+        `value <Mechanism_Base.value>` attribute.
 
     function_params : Dict[str, value]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` of the parameters for the Mechanism's primary
@@ -1843,8 +1843,8 @@ class Mechanism_Base(Mechanism):
         ---------
 
         x_range: List
-             specify the range over which the function should be plotted. x_range must be provides as a list containing
-             two floats: lowest value of x and highest value of x.  Default values depend on the mechanism's function.
+            specify the range over which the function should be plotted. x_range must be provided as a list containing
+            two floats: lowest value of x and highest value of x.  Default values depend on the mechanism's function.
 
             - Logistic Function: default x_range = [-5.0, 5.0]
             - Exponential Function: default x_range = [0.1, 5.0]

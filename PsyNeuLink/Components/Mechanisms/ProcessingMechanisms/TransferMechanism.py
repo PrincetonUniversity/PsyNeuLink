@@ -235,7 +235,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         the time constant for exponential time averaging of input when the mechanism is executed with `time_scale`
         set to `TimeScale.TIME_STEP`::
 
-         result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+         result = (time_constant * current input) +
+         (1-time_constant * result on previous time_step)
 
     range : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:

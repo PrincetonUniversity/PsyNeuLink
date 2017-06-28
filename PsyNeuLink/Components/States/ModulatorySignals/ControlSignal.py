@@ -50,6 +50,7 @@ When a ControlSignal is specified in context (e.g., the **control_signals** argu
     but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
   |
   * a *specification dictionary*, that must contain at least the following two entries:
+
     * *NAME*:str - a string that is the name of the parameter to be controlled;
     * *MECHANISM*:Mechanism - the Mechanism to which the parameter belongs; 
       (note: the Mechanism itself should be specified even if the parameter belongs to its function).
@@ -89,7 +90,7 @@ primary attributes:
   ControlSignal belongs determines its `allocation_policy <ControlMechanism.allocation_policy>` by sampling.
 ..
 * `function <ControlSignal.function>`: converts the ControlSignal's `allocation` to its `intensity`.  By default this
-  is an identity function (:keyword:`Linear(slope=1, intercept=0))`), that simpy uses the `allocation` as the
+  is an identity function (:keyword:`Linear(slope=1, intercept=0))`), that simply uses the `allocation` as the
   `intensity`.  However, :keyword:`function` can be assigned another `TransferFunction`, or any other function that
   takes and returns a scalar value or 1d array.
 
@@ -144,8 +145,8 @@ A ControlSignal cannot be executed directly.  It is executed whenever the `Contr
 executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation`, that is used by its
 `function <ControlSignal.function>` to compute its `intensity` for that `TRIAL`.  The `intensity` is used
 by its associated `ControlProjection` to set the :keyword:`value` of the `parameterState <ParameterState>` to which it
-projects. The paramemterState uses that value, in turn, to modify the value of the mechanism or function parameter
-being controlled.  The ControlSignal's `intensity`is also used by its `cost functions <ControlSignal_Cost_Functions>`
+projects. The parameterState uses that value, in turn, to modify the value of the mechanism or function parameter
+being controlled.  The ControlSignal's `intensity` is also used by its `cost functions <ControlSignal_Cost_Functions>`
 to compute its `cost` attribute. That is used, along with its `allocation_samples` attribute, by the ControlMechanism
 to evaluate the current `allocation_policy <ControlMechanism.allocation_policy>`, and (possibly) adjust the 
 ControlSignal's `allocation` for the next `TRIAL`.
@@ -160,7 +161,7 @@ ControlSignal's `allocation` for the next `TRIAL`.
 Examples
 ~~~~~~~~
 
-*Modulate the parameter of a Mechanism's <function <Mechanism.function>*.  The following example assigns a
+*Modulate the parameter of a Mechanism's function*.  The following example assigns a
 ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
 
     My_Mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
@@ -712,10 +713,12 @@ class ControlSignal(ModulatorySignal):
         Computes new intensity and cost attributes from allocation
 
         Use self.function to assign intensity
+
             - if ignoreIntensityFunction is set (for efficiency, if the execute method it is the identity function):
-                ignore self.function
-                pass allocation (input to control_signal) along as its output
-        Update cost
+
+                - ignore self.function
+                - pass allocation (input to control_signal) along as its output
+        Update cost.
         Assign intensity to value of ControlSignal (done in setter property for value)
 
         :parameter allocation: (single item list, [0-1])
