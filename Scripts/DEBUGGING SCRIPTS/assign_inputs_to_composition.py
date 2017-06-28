@@ -11,7 +11,6 @@ from pprint import pprint
 
 
 comp = Composition()
-sched = Scheduler(composition=comp)
 A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
 B = TransferMechanism(function=Linear(slope=5.0))
 comp.add_mechanism(A)
@@ -19,8 +18,12 @@ comp.add_mechanism(B)
 comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
 comp.analyze_graph()
 inputs_dict = {A:5}
-print(comp.graph.vertices)
-comp.run(inputs=inputs_dict, scheduler=sched)
+sched = Scheduler(composition=comp)
+comp.run(
+    # comment or uncomment the next line to switch between input = 1 [default_input_value] and input = 5 [inputs_dict]
+    #inputs=inputs_dict,
+    scheduler=sched
+)
 # is_origin = comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
 # for v in comp.graph.vertices:
 #     if isinstance(v.component, Mechanism):
