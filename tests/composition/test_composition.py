@@ -758,8 +758,8 @@ class TestRun:
             comp = Composition()
 
             A = IntegratorMechanism(name = "A [integrator]", default_input_value=2.0, function = SimpleIntegrator(rate = 1.0))
-            # (1) value = 0 + (5.0 * 2.0) + 0  --> return 5.0
-            # (2) value = 0 + (5.0 * 2.0) + 0  --> return 10.0
+            # (1) value = 0 + (5.0 * 1.0) + 0  --> return 5.0
+            # (2) value = 5.0 + (5.0 * 1.0) + 0  --> return 10.0
             B = TransferMechanism(name = "B [transfer]", function=Linear(slope=5.0))
             # value = 10.0 * 5.0 --> return 50.0
             comp.add_mechanism(A)
