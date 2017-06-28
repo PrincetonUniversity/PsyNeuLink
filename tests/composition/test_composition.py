@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 # Unit tests for each function of the Composition class #######################
 # Unit tests for Composition.Composition()
-# class TestConstructor:
-#
+class TestConstructor:
+
     def test_no_args(self):
         comp = Composition()
         assert isinstance(comp, Composition)
