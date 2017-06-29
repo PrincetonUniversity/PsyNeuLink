@@ -211,12 +211,12 @@ the scope of execution is all of the mechanisms in the processes specified in th
 </div>
 <div class="section" id="timing">
 <span id="run-timing"></span><h3>Timing<a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
-<p>PsyNeuLink supports two time scales for executing objects: <code class="xref any docutils literal"><span class="pre">TIME_STEP</span></code> and
-<code class="xref any docutils literal"><span class="pre">TRIAL</span></code>.  Every mechanism defines how it is executed at one or both of these time
+<p>PsyNeuLink supports two time scales for executing objects: <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> and
+<a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TRIAL" title="TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  Every mechanism defines how it is executed at one or both of these time
 scales, and its current mode of execution is determined by its <code class="xref any docutils literal"><span class="pre">timeScale</span></code>
 attribute.</p>
 <ul class="simple" id="run-time-step">
-<li><code class="xref any docutils literal"><span class="pre">TIME_STEP</span></code>:  this mode of execution is a mechanism&#8217;s closest approximation
+<li><a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>:  this mode of execution is a mechanism&#8217;s closest approximation
 to continuous, or &#8220;real time&#8221; processing.  Execution of a <code class="xref any docutils literal"><span class="pre">time_step</span></code> is defined as a single execution of all objects
 in the scope of execution at their <code class="xref any docutils literal"><span class="pre">time_step</span></code> time scale.  Mechanisms called upon to execute a <code class="xref any docutils literal"><span class="pre">time_step</span></code> that do
 not support that time scale of execution have the option of generating an exception, being ignored, or providing
