@@ -5,7 +5,8 @@ from enum import Enum
 
 from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-from PsyNeuLink.Globals.Keywords import EXECUTING
+from PsyNeuLink.Globals.Keywords import EXECUTING, CENTRAL_CLOCK
+from PsyNeuLink.Globals.TimeScale import TimeScale, CurrentTime, CentralClock
 import uuid
 
 logger = logging.getLogger(__name__)
@@ -383,9 +384,20 @@ class Composition(object):
                             where the input state takes values of length {!s}".format(i, mech.name, val_length, state_length))
 
     def run(self, scheduler, inputs={}, targets=None, recurrent_init=None, execution_id = None):
+        # all origin mechanisms
+        is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        # all mechanisms with inputs specified in the inputs dictionary
+        has_inputs = inputs.keys()
+
+        if inputs != {}:
+            len_inputs = len(list(inputs.values())[0])
+        else:
+            len_inputs = 1
+
+        input_indices = range(len_inputs)
 
         # if inputs:
-        #     self.validate_feed_dict(inputs, self.origin_mechanisms, "Inputs")
+        #      self.validate_feed_dict(inputs, is_origin, "Inputs")
         # if targets:
         #     self.validate_feed_dict(targets, self.target_mechanisms, "Targets")
         # if recurrent_init:
@@ -395,30 +407,35 @@ class Composition(object):
         self._execution_id = execution_id or self._get_unique_id()
         for v in self._graph_processing.vertices:
             v.component._execution_id = self._execution_id
-        is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
 
         # TBI: Do the same for learning graph?
 
-        # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
-        for next_execution_set in scheduler.run():
+        # TBI: Handle runtime params?
 
-            # execute each mechanism with context = EXECUTING and the appropriate input
-            for mechanism in next_execution_set:
-                if isinstance(mechanism, Mechanism):
-                    # if mechanism is_origin and is featured in the inputs dictionary -- use specified input
-                    if (mechanism in is_origin) and (mechanism in inputs.keys()):
-                        print()
-                        num = mechanism.execute(input=inputs[mechanism], context=EXECUTING)
-                        print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
-                        print("result = ", num)
-                        print()
-                        print()
-                    # otherwise, mechanism will use its default input OR whatever it received from its projection(s)
-                    else:
-                        num = mechanism.execute(context=EXECUTING)
-                        print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
-                        print("result = ", num)
-                        print()
-                        print()
+        for input_index in input_indices:
+            # TBI: reset inputs to each mechanism, variables, previous values, etc.
+
+
+            # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
+            for next_execution_set in scheduler.run():
+
+                # execute each mechanism with context = EXECUTING and the appropriate input
+                for mechanism in next_execution_set:
+                    if isinstance(mechanism, Mechanism):
+                        # if mechanism is_origin and is featured in the inputs dictionary -- use specified input
+                        if (mechanism in is_origin) and (mechanism in has_inputs):
+                            print()
+                            num = mechanism.execute(input=inputs[mechanism][input_index], context=EXECUTING + "composition")
+                            print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
+                            print("result = ", num)
+                            print()
+                            print()
+                        # otherwise, mechanism will use its default input OR whatever it received from its projection(s)
+                        else:
+                            num = mechanism.execute(context=EXECUTING+ "composition")
+                            print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
+                            print("result = ", num)
+                            print()
+                            print()
         # return the output of the LAST mechanism executed in the composition
         return num
