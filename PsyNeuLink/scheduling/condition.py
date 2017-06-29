@@ -68,20 +68,24 @@ Hint:
 Structure
 ---------
 
-Every Mechanism is associated with a Condition by the Scheduler.  If one has not been explicitly specified for a
-Mechanism, it is assigned the Condition `Always`.  Conditions are specified using subclasses of `Condition`.  The
-following types are provided:
+The Scheduler associates every Mechanism with a Condition.  If one has not been explicitly specified for a
+Mechanism, it is assigned the Condition `Always`, which allows it to be executed whenever it is
+`under consideration <Scheduler_Algorithm>`.  As described `above <Condition_Creation>`, there are pre-specified
+subclasses (listed below) that implement standard conditions and simply require the specification of a parameter
+or two to be implemented, while the generic Condition can be used to implement custom conditions by passing it a
+function and associated arguments.  Following is the list of pre-specified Conditions and the parameters they require:
 
-    * `BeforePass` (int[, `TimeScale` ]) - execute anytime before the specified `PASS`.
-    * `AtPass`(int[,`TimeScale`]) - execute only in the specified `PASS`.
-    * `AfterPass`\(int[,`TimeScale`]) - execute anytime after specified `PASS`.
-    * `AfterNPasses`\ (int[, `TimeScale` ])- execute anytime after the specified number of `PASS`\es have occurred.
-    * `EveryNPasses`
-    * `BeforeTrial`
-    * `AfterTrial`
-    * `AfterNTrials`
-    * `BeforeNCalls`
-    * `AtNCalls`
+    * `BeforePass`\ (int[, TimeScale]) - execute anytime before the specified `PASS` occurs.
+    * `AtPass`\ (int[, TimeScale]) - execute only during the specified `PASS`.
+    * `AfterPass`\ (int[, TimeScale]) - execute anytime after the specified `PASS` has occurred.
+    * `AfterNPasses`\ (int[, TimeScale]) - execute anytime during or after the specified number of `PASS`\ es.
+    * `EveryNPasses`\ (int[, TimeScale]) - execute everytime the specified number of `PASS`\ es occurs.
+    * `BeforeTrial`\ (int[, TimeScale]) - execute anytime before the specified `TRIAL` occurs.
+    * `AtTrial`\ (int[, TimeScale]) - execute anytime during the specified `TRIAL`.
+    * `AfterTrial`\ (int[, TimeScale]) - execute anytime after the specified `TRIAL` occurs.
+    * `AfterNTrials`\ (int[, TimeScale]) - execute anytime during the specified `TRIAL`.
+    * `BeforeNCalls`\ (int[, TimeScale]) - execute anytime before or including the specified `TRIAL`.
+    * `AtNCalls`\ (int[, TimeScale]) - execute anytime during or after the specified `TRIAL`.
     * `AfterCall`
     * `AfterNCalls`
     * `AfterNCallsCombined`
@@ -578,7 +582,7 @@ class BeforeTrial(Condition):
     BeforeTrial
 
     Parameters:
-        - n (int): the trial after which this condition will be satisfied
+        - n (int): the trial before which this condition will be satisfied
         - time_scale (TimeScale): the TimeScale used as basis for counting trials. Defaults to TimeScale.RUN
 
     Satisfied when:
