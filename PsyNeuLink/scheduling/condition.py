@@ -21,27 +21,32 @@ COMMENT
 Overview
 --------
 
-`Conditions <Condition>` are used to specify when `Mechanisms <Mechanism>` execute.  They fall broadly into two
-categories: *absolute* ones that specify the behavior of a Mechanism irrespective of others (e.g., the exact number
-of times it should be executed, or whether this should be based on its own `value <Mechanism.value>`);
+`Conditions <Condition>` are used to specify when `Mechanisms <Mechanism>` are allowed to execute.  Conditions
+can specify can be used to specify a variety of requirements or dependencies, including the state of the Mechanism
+itself (e.g., how many times it has already executed, or the value of one of its attributes), the State of the
+Composition (e.g., how many `TIME_STEPs <TIME_STEP>` have occurred in the current `RUN`), or the State of other
+Mechanisms in Composition (e.g., whether they have started, terminated, or how many times they have executed).
+PsyNeuLink provides a number of `pre-specified Conditions <Condition_Structure>` that can be parameterized
+(e.g., how many times a Mechanism should be executed), but functions can also be assigned to Conditions,
+to implement custom conditions that can reference any object or its attributes in PsyNeuLink.
+
 COMMENT:
-K: I'm not sure what that means
-JDC: A CRITERION LIKE THE minimal_change ONE IN THE EXAMPLE WE JUST WORKED OUT;  OK?
-K: I guess I have trouble with the categorization - There are some that I would consider absolute, like Always and
-Never. Then there are some that actually are dependent on other components, like EveryNCalls. (I'm not sure if the
-categorization below was meant as final, but this condition is considered absolute). Then there are some dependent
-only on time, like EveryNPasses. Both of these I'd consider relative. Then those types we discussed that would be
-like When and Until, that are each other's complement, which seem somewhat uncategorizable because they would just
-be a template for the user to make anything at all a condition. Depending on what they use as a function, it could
-be absolute or relative.
-COMMENT
-and *relative* ones, that specify whether and how its execution depends on other Mechanisms (e.g., the frequency with
-which it executes relative to others, or that it begin executing and/or execute repeatedly until a Condition is met
-for some other Mechanism).  Each Condition is associated with an `owner <Condition.owner>` (a `Mechanism` to which the
-Condition belongs), and a `scheduler <Condition.scheduler>` that maintains most of the data required to test for
-satisfaction of the condition.
-COMMENT:
-K: I'm not sure if the above just changed but this sounds good
+# K: I'm not sure what that means
+# JDC: A CRITERION LIKE THE minimal_change ONE IN THE EXAMPLE WE JUST WORKED OUT;  OK?
+# K: I guess I have trouble with the categorization - There are some that I would consider absolute, like Always and
+# Never. Then there are some that actually are dependent on other components, like EveryNCalls. (I'm not sure if the
+# categorization below was meant as final, but this condition is considered absolute). Then there are some dependent
+# only on time, like EveryNPasses. Both of these I'd consider relative. Then those types we discussed that would be
+# like When and Until, that are each other's complement, which seem somewhat uncategorizable because they would just
+# be a template for the user to make anything at all a condition. Depending on what they use as a function, it could
+# be absolute or relative.
+#
+# and *relative* ones, that specify whether and how its execution depends on other Mechanisms (e.g., the frequency with
+# which it executes relative to others, or that it begin executing and/or execute repeatedly until a Condition is met
+# for some other Mechanism).  Each Condition is associated with an `owner <Condition.owner>` (a `Mechanism` to which the
+# Condition belongs), and a `scheduler <Condition.scheduler>` that maintains most of the data required to test for
+# satisfaction of the condition.
+# K: I'm not sure if the above just changed but this sounds good
 COMMENT
 
 .. _Condition_Creation:
@@ -51,36 +56,35 @@ Creating Conditions
 
 Conditions can be created at any time, and take effect immediately for the execution of any `Scheduler(s) <Scheduler>`
 with which they are associated.  The Condition's **dependencies** and **func** arguments must both be explicitly
-specified.  These are used to determine whether a Condition is satisfied during each `round of execution <LINK>`:
-COMMENT:
-K: round of execution is poorly defined and should refer to a TimeScale)
-JDC:  RIGHT;  WE SHOULD SETTLE ON PASS VS. ROUND OF EXECUTION, AND THEN DO THE APPROPRIATE SEARCH AND REPLACE
-COMMENT
-`func <Condition.func>` is called with `dependencies <Condition.dependencies>` as its parameter
-COMMENT:
-JDC: "additonal named and unnamed arguments" SEEMS VAGUE;  FOR WHAT?  EXAMPLE MIGHT HELP?
-K: As I look at it I think it can be refactored so that a condition essentially takes just a function
-and args/kwargs. I now remember why I never made anything like a When or Until - because that option was always
-included by just creating a new Condition class. Creating the custom convergence Condition was exactly the
-anticipated functionality - you wanted to make a function that took arguments (named and unnamed but here just unnamed)
-and checks that something is true or not, using those arguments. If you think it's much clearer using When or Until it
-can be done, but these will just essentially wrap the Condition class with little difference
-COMMENT
-(and optionally, additional named and unnamed arguments).
-COMMENT:
-     [**??func AND dependencies NEED TO BE CLARIFIED:  WHAT FORMAT, EXAMPLE OF HOW THEY WORK??]
-    K: It's explained in the previous version
-             Each Condition must
-            - be a subclass of `Condition`<Condition>
-            - pass `dependencies` as the first argument to the __init__ function of Condition
-            - pass `func` as the second argument to the __init__ function of Condition
+specified.  These are used to specify the function and its parameters (the specifications on which the Condition
+depends), that will be evaluated on each `PASS` through the Mechanisms in the Composition, to determine whether the
+associated Mechanism is allowed to execute on that `PASS`.
 
-        In determining whether a Condition is satisfied, `func` is called with `dependencies` as parameter (and optionally,
-        additional named and unnamed arguments).
-    They are not in an exact format by design, because they can be customized by any advanced user.
-    JDC: SHOULD DISCUSS;  I'M NOT SURE I FULLY UNDERSTAND
-K: I want to check but I think dependencies can be eliminated in favor of just args/kwargs - this was a holdover
-from the original scheduler attempt that just kind of baked its way in.
+COMMENT:
+# K: round of execution is poorly defined and should refer to a TimeScale)
+# JDC:  RIGHT;  WE SHOULD SETTLE ON PASS VS. ROUND OF EXECUTION, AND THEN DO THE APPROPRIATE SEARCH AND REPLACE
+# `func <Condition.func>` is called with `dependencies <Condition.dependencies>` as its parameter
+# JDC: "additonal named and unnamed arguments" SEEMS VAGUE;  FOR WHAT?  EXAMPLE MIGHT HELP?
+# K: As I look at it I think it can be refactored so that a condition essentially takes just a function
+# and args/kwargs. I now remember why I never made anything like a When or Until - because that option was always
+# included by just creating a new Condition class. Creating the custom convergence Condition was exactly the
+# anticipated functionality - you wanted to make a function that took arguments (named and unnamed but here just unnamed)
+# and checks that something is true or not, using those arguments. If you think it's much clearer using When or Until it
+# can be done, but these will just essentially wrap the Condition class with little difference
+# (and optionally, additional named and unnamed arguments).
+#      [**??func AND dependencies NEED TO BE CLARIFIED:  WHAT FORMAT, EXAMPLE OF HOW THEY WORK??]
+#     K: It's explained in the previous version
+#              Each Condition must
+#             - be a subclass of `Condition`<Condition>
+#             - pass `dependencies` as the first argument to the __init__ function of Condition
+#             - pass `func` as the second argument to the __init__ function of Condition
+#
+#         In determining whether a Condition is satisfied, `func` is called with `dependencies` as parameter (and optionally,
+#         additional named and unnamed arguments).
+#     They are not in an exact format by design, because they can be customized by any advanced user.
+#     JDC: SHOULD DISCUSS;  I'M NOT SURE I FULLY UNDERSTAND
+# K: I want to check but I think dependencies can be eliminated in favor of just args/kwargs - this was a holdover
+# from the original scheduler attempt that just kind of baked its way in.
 COMMENT
 
 Hint:
@@ -100,29 +104,33 @@ Hint:
                 return count_sum >= n
             super().__init__(None, func, *dependencies, n=n)
 
-.. Condition_Structure:
+.. _Condition_Structure:
 
 Structure
 ---------
 
+Every Mechanism is associated with a Condition by the Scheduler.  If one has not been explicitly specified for a
+Mechanism, it is assigned the Condition `Always`.  Conditions are specified using subclasses of `Condition`.  The
+following types are provided:
+
 COMMENT:
-     **??DESCRIBE HOW CONDITIONS ARE STRUCTURED;
-     INCLUDE FULL LIST OF CONDITIONS
-    K: they are listed in the bottom of the Condition doc page by nature of being classes in this file,
-     at least on the version I see
-    JDC: GOT IT.  THANKS. THAT SAID, IN OTHER PARTS OF THE DOCUMENTION (AND AT THE RISK OF A BIT OF REDUNDANCY)
-         I'VE INCLUDED BRIEF SUMMARIIES OF ATTRIBUTES AND/OR METHODS IN THE DOSCSTRING OF THE MAIN CLASS,
-         WHICH I THINK MAY BE EASIER TO READ.  I'LL ADD HERE, AND WE CAN REMOVE IF IT SEEMS OVERLY REDUNDANT.
-    K: I don't feel strongly either way so if you think it's nicer this way I don't mind.
+    JDC:  SEE QUESTIONS BELOW
 COMMENT
 
-Each type of Condition is a subclass of Condition.  The following types are provided:
-
 Absolute Conditions:
-    * `BeforePass`
-    * `AtPass`
-    * `AfterPass`
-    * `AfterNPasses`
+COMMENT:
+  ie. BETWEEN n-1 AND n??
+COMMENT
+    * `BeforePass(int, `TimeScale`)` - execute before the specified `PASS`.
+    * `AtPass(int, `TimeScale`)` - execute in the specified `PASS`.
+    * `AfterPass(int, `TimeScale`)` - execute after specified `PASS`.
+COMMENT:
+   ie. BETWEEN n AND n+1??
+COMMENT
+    * `AfterNPasses(int, `TimeScale`)`- execute after
+COMMENT:
+    HOW IS THIS DIFFERENT THAN AtPass ??
+COMMENT
     * `EveryNPasses`
     * `BeforeTrial`
     * `AfterTrial`
@@ -151,26 +159,32 @@ Relative Conditions:
 Execution
 ---------
 
-A Condition is evaluated when a `Scheduler` is run, by calling the Condition's `is_satisfied` method.  If it returns
-`True` then the `Component` associated with the Condition is executed.
 COMMENT:
-     **??DESCRIBE HOW CONITION IS EVALUATED
-    K: It doesn't "execute" exactly. A condition is satisfied when its is_satisfied function returns True, and is_satisfied
-    is called when the scheduler runs
-    JDC: IS THE ABOVE BETTER?
-         IS THE SATISFACTION OF A CONDTIION ALWAYS ASSOCIATED WITH THE EXECUTION OF A COMPONENT?
-         JUST *ONE* COMPONENT
-    K: well it's not always correct. Preface:
-    Each Component has exactly one Condition associated with it in a Scheduler by the time the Scheduler is run (if a Condition is
-    not specified for a Component it defaults to Always), but this Condition can be a composite one (Any or All). This is necessary
-    to remove any possible ambiguity that would result if there were two conditions)
-
-    It is correct when the Condition is the Condition associated with a Component in a Scheduler, and the Condition's is_satisfied method
-    is True, and the Component is currently up for consideration (i.e. eligible to run?)
-
-    But if the Component is not currently eligible, then it will not be told to run even if its Condition is currently satisfied
-
+    JDC: IS THIS BETTER?
 COMMENT
+When the `Scheduler` `runs <Schedule_Execution>`, it makes a sequential `PASS` through its `consideration_queue`,
+evaluating each `consideration_set` in the queue to determine which Mechanisms should be assigned to execute.
+It evaluates the Mechanisms in each set by calling the `is_satisfied` method of the Condition associated with each
+of those Mechanisms.  If it returns `True`, then the Mechanism is assigned to the execution list for that `PASS`.
+Othewise, the Mechanism is not executed.
+
+# COMMENT:
+#      **??DESCRIBE HOW CONDITION IS EVALUATED
+#     K: It doesn't "execute" exactly. A condition is satisfied when its is_satisfied function returns True, and is_satisfied
+#     is called when the scheduler runs
+#     JDC: IS THE ABOVE BETTER?
+#          IS THE SATISFACTION OF A CONDTIION ALWAYS ASSOCIATED WITH THE EXECUTION OF A COMPONENT?
+#          JUST *ONE* COMPONENT
+#     K: well it's not always correct. Preface:
+#     Each Component has exactly one Condition associated with it in a Scheduler by the time the Scheduler is run (if a Condition is
+#     not specified for a Component it defaults to Always), but this Condition can be a composite one (Any or All). This is necessary
+#     to remove any possible ambiguity that would result if there were two conditions)
+#
+#     It is correct when the Condition is the Condition associated with a Component in a Scheduler, and the Condition's is_satisfied method
+#     is True, and the Component is currently up for consideration (i.e. eligible to run?)
+#
+#     But if the Component is not currently eligible, then it will not be told to run even if its Condition is currently satisfied
+# COMMENT
 
 .. _Condition_Class_Reference
 
@@ -590,6 +604,10 @@ class AfterNPasses(Condition):
     Parameters:
         - n (int): the number of TimeScale.PASSes after which this condition will be satisfied
         - time_scale (TimeScale): the TimeScale used as basis for counting passes. Defaults to TimeScale.TRIAL
+        COMMENT:
+            JDC: I THOUGHT PASSES WAS ALWAYS WITH RESPECT TO ONE "ROUND OF EXECUTION" WITHIN A TRIAL;
+                 IT CAN BE RESCALED??
+        COMMENT
 
     Satisfied when:
         - the count of TimeScale.PASSes within time_scale is at least n

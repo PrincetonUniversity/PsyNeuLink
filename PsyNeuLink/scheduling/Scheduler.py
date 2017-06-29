@@ -15,7 +15,7 @@ Overview
 
 A Scheduler is used to generate the order in which the `Mechanisms <Mechanism>` of a `Composition` are executed.
 By default, Mechanisms are executed in an order determined by the pattern of `Projections <Projection>` among them
-in a `Composition`, with each Mechanism executed once per round of execution (i.e., `PASS`) of the Composition.
+in the `Composition`, with each Mechanism executed at least once per `PASS` through the Composition.
 For example, in a `System` in which a Mechanism A projects to a Mechanism B that projects to a Mechanism C,
 then A will execute first followed by B, and then C in each `PASS` through the System. A Scheduler can be
 used to implement more complex patterns of execution, by specifying `Conditions <Condition>` that determine when and
@@ -70,164 +70,220 @@ ConditionSets can also be added after the  Scheduler has been created, using its
 Algorithm
 ---------
 
-COMMENT:
-    [** DEFINE consideration_set]
-    K: the below is explaining consideration_set, it's better described than dryly defined I think
-    JDC: GENERALLY AGREE, BUT STILL THINK IT BEST TO HAVE A VERY SHORT (ONE SENTENCE) DEFINITION
-         (IN EFFECT, A "TOPIC SENTENCE") THAT HELPS ORIENT THE READER, THEN GIVE A MORE INFORMATIVE EXPLANATION)
-    JDC: EXPLAIN THAT A CONSIDERATION SET CONCERNS ELIGIBILITY, WHILE A CONDITION SPECIFIES THE TERMS OF EXECUTION
-A Scheduler first constructs a `consideration_queue` of its Mechanisms using the topological ordering. A
-`consideration_queue` consists of a list of `consideration_sets <consideration_set>` of Mechanisms grouped based on
-the dependencies among them specified by the graph. The first `consideration_set` consists of only `ORIGIN` Mechanisms.
+When a Scheduler is created, it constructs a `consideration_queue`:  a list of `consideration_sets <consideration_set>`
+that defines the order in which Mechanisms are eligible to be executed.  This is based on the pattern of projections
+among them specified in the System, or on the dependencies specified in the graph specification dictionary, whichever
+was provided in the Scheduler's constructor.  Each `consideration_set` is a set of Mechanisms that are eligible to
+execute at the same time (i.e., that appear at the same "depth" in a sequence of dependencies, and
+among which there are no dependencies).  The first `consideration_set` consists of only `ORIGIN` Mechanisms.
 The second consists of all Mechanisms that receive `Projections <Projection>` from Mechanisms in the first
 `consideration_set`. The third consists of Mechanisms that receive Projections from Mechanisms in the first two
-`consideration_sets <consideration_set>`, and so forth.  When executing, the Scheduler maintains a record
-of the number of times its Mechanisms have been assigned to execute, and the total number of `time_steps <time_step>`
-that have occurred in each `TimeScale`. This information is used by `Conditions` to determine whether the
-specified condition has been met each time it is evaluated.
-COMMENT:
-    [**??HOW IS IT USED BY Conditions?]
-    K: it's not obvious from what conditions do? As in they use relative or time-based information to determine
-    their satisfaction, these are number of executions, number of time steps, etc.
-    Similarly here "mechanism" isn't a good substitute for "node"
-COMMENT
-                                                                                   The Scheduler evaluates the
-`consideration_sets <consideration_set>` in their order in the `consideration_queue`, and determines which Mechanisms in
-each are allowed to run based on whether their associated Conditions have been met; all Mechanisms within a
-`consideration_set` that are allowed to run comprise a `time_step`<TimeScale.TIME_STEP>. These Mechanisms are
-considered for simultaneous execution, and so the execution of a Mechanism within a `time_step` may trigger the
-execution of another Mechanism within its `consideration_set`.
-COMMENT:
-    JDC: IT'D BE GOOD TO HAVE AN EXAMPLE OF THE LAST STATEMENT ABOVE
-COMMENT
-The ordering of these Mechanisms is irrelevant, as there are no "parent-child" dependencies among Mechanisms within
-the same `consideration_set`. A key feature is that all parents have the chance to execute (even if they do not
-actually execute) before their children.  At the beginning of each `timestep`, the Scheduler evaluates whether the
-specified termination conditions have been met, and terminates if so.
+`consideration_sets <consideration_set>`, and so forth.  When the Scheduler is run, it uses the
+`consideration_queue` to determine which Mechanisms are eligible to execute in each `TIME_STEP` of a `PASS`
+through the `consideration_queue`, and then evaluates the `Conditions <Condition>` associated with each Mechanism
+in the current `consideration_set` to determine which should actually be assigned for execution.
 
 .. _Scheduler_Execution:
 
 Execution
 ---------
 
-COMMENT:
-    JDC:  ADD SUMMARY OF TIMESCALE AND HOW SCHEDULER USES IT, HERE AND UNDER EXECUTION
+COMMENT
+    JDC:  STILL HAVING A HARD TIME WITH THE FOLLOWING:
+          - WHERE ARE TERMINATION CONDITIONS SPECIFIED AND DOCUMENTED??
+          - WHEN A SCHEDULER IS RUN, DOES IT RETURN A LIST FOR ALL PASSES, OR JUST ONE AND IT GETS CALLED REPEATEDLY
+                TO GENERATE EACH (I.E., WITH THE COMPOSITION IN CONTROL OF EXECUTING EACH PASS BEFORE DETERMIING THE
+                NEXT)?
 COMMENT
 
-.. _Scheduler_Creation:
 
+When a Scheduler is run, it provides a list of Mechanisms that should be run next, based on their dependencies in the
+System or graph specification dictionary, and any `Conditions <Condition>`, specified in the Scheduler's constructor.
+For each call to the its `run <Scheduler.run>` method, the Scheduler sequentially evaluates its
+`consideration_sets <consideration_set>` in their order in the `consideration_queue`.  For each set, it  determines
+which Mechanisms in the set are allowed to execute, based on whether their associated `Condition(s) <Condition>` have
+been met.  Any Mechanism that does not have a `Condition` explicitly specified is assigned the Condition `Always`,
+that allows it to execute any time it is under consideration. All of the Mechanisms within a `consideration_set` that
+are allowed to execute comprise a `TIME_STEP` of execution.
+COMMENT:
+   JDC: STILL HAVING A HARD TIME IMAGINGING THIS;  EXAMPLE WOULD BE GOOD
+so the execution of a Mechanism within a `time_step` may trigger the execution of another Mechanism within its
+`consideration_set`.
+COMMENT
+The ordering of the  Mechanisms specified within a `TIME_STEP` is arbitrary (and is irrelevant, as there are no
+sequential dependencies among Mechanisms within the same `consideration_set`). At the beginning of each
+`TIME_STEP`, the Scheduler evaluates  whether any specified `termination conditions` have been met, and terminates
+the run if so, returning **??VALUE??.
+COMMENT:
+   JDC: SITLL HAVING A HARD TIME WITH THIS:
+Otherwise, it returns a list of the Mechanisms that should be executed
+in the current `TIME_STEP`.  For each call to its `run <Scheduler.run>` method, the Scheduler returns a list of
+Mechanisms to execute from the next `consideration_set` in the `consideration_queue`.  If no termination Conditions
+are specified, the Scheduler terminates a `PASS` when every Mechanism has been specified for execution at least once
+(corresponding to the `AllHaveRun` Condition).
+COMMENT
+A full pass through the `consideration_queue`
+constitutes a `PASS` of execution, during which every Mechanism in the Composition is provided the opportunity to be
+considered for execution.  The number of PASSes associated with a single `input <Composition.input>`
+to the Composition constitutes a `TRIAL`, and the number of TRIALs executed constitutes a `RUN`.  The Scheduler
+continues to make PASSes through the `consideration_queue` until a `Termination` Condition is satisfied.  By default,
+this is determined by the number of inputs and/or number of runs specified in the call to the Composition's
+`run <Composition.run>` method.  However, other `Termination` Conditions can be specified, that may cause the
+Scheduler to terminate earlier (e.g., when a the Condition for a particular Mechanism is met).
 
 COMMENT:
-    [** ??DOES 'Always` MEAN IT RUNS ONCE AND ONLY ONCE PER ROUND OF EXECUTION??]
-    [** NEED TO DEFINE `time_step` AND `round of execution`]
-    [** CONDITION NAMES SHOULD PROBABLY USE UNDERSCORE NOTATION OR, AT LEAST INITIAL LOWER CASE CAMEL CASE]
-    "round of execution" is poorly defined. See TimeScale scales (now documented, including time step),
-    and any references of time should be to a TimeScale that can be strictly defined
+#    JDC: I'M STILL HAVE A HARD TIME WITH THIS STATEMENT;  IF THEY ARE ALLOWED TO EXECUTE, WHY ARE THEY STILL BEING
+#          "CONSIDERED" FOR SIMULTANEOUSLY EXEUCTION;  AREN'T THEY JUST SIMULTANEOUSLY EXECUTED?  AND I CONTINUE TO
+#          THINK THAT AN EXAMPLE OF HOW A MECHANISM "may trigger the execution of another Mechanism within its
+#          `consideration_set`." -- SEEMS THAT ALL THOSE ALLOWED TO RUN WILL BE EXECUTED, AND SO IT IS NOT CLEAR
+#          HOW OR WHY ONE WOULD TRIGGER ANOTHER? (ESPECIALLY IF THE SET AS BEING COMPRISED OF MECHANISMS OF MECHANISMS
+#          THAT ARE NOT DEPENDENT ON ONE ANOTHER
+# These Mechanisms are considered for simultaneous execution, and so the execution of a Mechanism within a `time_step`
+# may trigger the execution of another Mechanism within its `consideration_set`.
+# The ordering of the  Mechanisms specified within a `TIME_STEP` is arbitrary (and is irrelevant, as there are no
+# sequential dependencies among Mechanisms within the same `consideration_set`). At the beginning of each
+# `TIME_STEP`, the Scheduler evaluates  whether any specified `termination conditions` have been met, and terminates
+# the run if so, returning **??VALUE??.  Otherwise, returns a list of the Mechanisms that should be executed
+# in the current `TIME_STEP`.  For each call to its `run <Scheduler.run>` method, the Scheduler returns a list of
+# Mechanisms to execute from the next `consideration_set` in the `consideration_queue`.  If no termination Conditions
+# are specified, the Scheduler terminates a `PASS` when every Mechanism has been specified for execution at least once
+# (corresponding to the `AllHaveRun` Condition).
+#
+# To support the evaluation of Conditions that are time-dependent and/or dependent on the number of times a particular
+# Mechanism has executed, the Scheduler maintains a record of the number of `TIME_STEPs <TIME_STEP>` that have transpired
+# at each `TimeScale`, as well as the number of times each Mechanism has been assigned to execute.
+#
+#    JDC: ARE THESE STORED IN USER-ACCESSIBLE ATTRIBUTES?  IF SO, SHOULD MENTION HERE.
+#
+# Time-based Conditions (i.e., those that
+# specify a number of executions for the Mechanism or some other one, or a particular value of `TIME_STEP`) are
+# compared against the records maintained by the Scheduler of the number of times each Mechanism has been assigned
+# to execute, and the number of `TIME_STEPs <TIME_STEP>` that have transpired at each `TimeScale`.  Other Conditions
+# are evaulated based onth
+#
+# This is determined for each mechanism by evaluating the
+# terms of the Condition;
+# comparing
+# its Condition(s) with the number of times it has been assigned to execute, the total number of `TIME_STEPs <TIME_STEP>`
+# that have occurred in each `TimeScale`, and/or the state of any other Mechanisms specified in its Condition.  All
+# of the Mechanisms in a `consideration_set` for which their Condition(s) are satisfied are assigned to execute, and
+# the execution of those Mechanisms comprises a `TIME_STEP`.
+#
+#                                                                                    The Scheduler evaluates the
+# `consideration_sets <consideration_set>` in their order in the `consideration_queue`, and determines which Mechanisms in
+# each are allowed to run based on whether their associated Conditions have been met; all Mechanisms within a
+# `consideration_set` that are allowed to run comprise a `time_step`<TimeScale.TIME_STEP>. These Mechanisms are
+# considered for simultaneous execution, and so the execution of a Mechanism within a `time_step` may trigger the
+# execution of another Mechanism within its `consideration_set`.
 
-    Always is always satisfied - i.e. whenever a node is considered, it is told to run
+#     JDC: IT'D BE GOOD TO HAVE AN EXAMPLE OF THE LAST STATEMENT ABOVE
 
-    Conditions should remain in class format, because they are classes, not instances of classes. The common
-    format is to create Conditions right when they're being added to a scheduler, because this allows some of their
-    necessary values (the scheduler and owner to which they are associated) to be set by context). However instances
-    of Conditions may be created elsewhere and fed it, it is just uglier and more difficult, and there isn't really a point.
-    Potentially this could be documented but since they are simply classes it should be obvious that you can create them and
-    use them anywhere. If the necessary values are not set, there will be explanatory errors triggered
+# The ordering of these Mechanisms is irrelevant, as there are no "parent-child" dependencies among Mechanisms within
+# the same `consideration_set`. A key feature is that all parents have the chance to execute (even if they do not
+# actually execute) before their children.  At the beginning of each `timestep`, the Scheduler evaluates whether the
+# specified termination conditions have been met, and terminates if so.
+#
+#
+#     JDC:  ADD SUMMARY OF TIMESCALE AND HOW SCHEDULER USES IT, HERE AND UNDER EXECUTION
+#
+#     [** ??DOES 'Always` MEAN IT RUNS ONCE AND ONLY ONCE PER ROUND OF EXECUTION??]
+#     [** NEED TO DEFINE `time_step` AND `round of execution`]
+#     [** CONDITION NAMES SHOULD PROBABLY USE UNDERSCORE NOTATION OR, AT LEAST INITIAL LOWER CASE CAMEL CASE]
+#     "round of execution" is poorly defined. See TimeScale scales (now documented, including time step),
+#     and any references of time should be to a TimeScale that can be strictly defined
+#
+#     Always is always satisfied - i.e. whenever a node is considered, it is told to run
+#
+#     Conditions should remain in class format, because they are classes, not instances of classes. The common
+#     format is to create Conditions right when they're being added to a scheduler, because this allows some of their
+#     necessary values (the scheduler and owner to which they are associated) to be set by context). However instances
+#     of Conditions may be created elsewhere and fed it, it is just uglier and more difficult, and there isn't really a point.
+#     Potentially this could be documented but since they are simply classes it should be obvious that you can create them and
+#     use them anywhere. If the necessary values are not set, there will be explanatory errors triggered
 COMMENT
 
-When the Scheduler is executed with its `run <Scheduler.run>` method, it creates a generator that specifies the
-ordering in which the `Mechanisms` specified should be executed to meet the conditions specified in its
-`condition_set`. Any Mechanisms that do not have a `Condition` explicitly specified are assigned the Condition
-`Always`, that allows it to execute any time it is under consideration.  If no termination Conditions are
-specified, the Scheduler terminates a `PASS` when all of the Mechanisms have been specified for execution
-at least once (corresponding to the `AllHaveRun` Condition).  Each iteration of the `run <Scheduler.run>` method
-generates the executions for a `time_step`, which constitutes the set of Mechanisms that are currently eligible for
-execution and that do not have any dependencies on one another;  the order of execution of Mechanisms within a
-`TIME_STEP` is not defined (and should not matter since, by definition, there are no dependencies).
 
 Examples
 --------
 
 Please see `Condition` for a list of all supported Conditions and their behavior.
 
-*Basic phasing in a linear process:*
+* Basic phasing in a linear process::
+
     A = TransferMechanism(function = Linear(), name = 'A')
     B = TransferMechanism(function = Linear(), name = 'B')
     C = TransferMechanism(function = Linear(), name = 'C')
 
     p = process(
         pathway=[A, B, C],
-        name = 'p',
-    )
+        name = 'p')
     s = system(
         processes=[p],
-        name='s',
-    )
-    sched = Scheduler(system=s)
+        name='s')
+    my_scheduler = Scheduler(system=s)
 
     #impicit condition of Always for A
+    my_scheduler.add_condition(B, EveryNCalls(A, 2))
+    my_scheduler.add_condition(C, EveryNCalls(B, 3))
 
-    sched.add_condition(B, EveryNCalls(A, 2))
-    sched.add_condition(C, EveryNCalls(B, 3))
+    # implicit AllHaveRun Termination condition
+    execution_sequence = list(my_scheduler.run())
 
-    # implicit AllHaveRun condition
-    output = list(sched.run())
+``execution_sequence`` will be: [A, A, B, A, A, B, A, A, B, C].
 
-    # output will produce
-    # [A, A, B, A, A, B, A, A, B, C]
+* Alternate basic phasing in a linear process::
 
-*Alternate basic phasing in a linear process:*
     A = TransferMechanism(function = Linear(), name = 'A')
     B = TransferMechanism(function = Linear(), name = 'B')
 
     p = process(
         pathway=[A, B],
-        name = 'p',
-    )
+        name = 'p')
     s = system(
         processes=[p],
-        name='s',
-    )
-    sched = Scheduler(system=s)
+        name='s')
+    my_scheduler = Scheduler(system=s)
 
-    sched.add_condition(A, Any(AtPass(0), EveryNCalls(B, 2)))
-    sched.add_condition(B, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
+    my_scheduler.add_condition(A, Any(AtPass(0), EveryNCalls(B, 2)))
+    my_scheduler.add_condition(B, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
 
     termination_conds = {ts: None for ts in TimeScale}
     termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 4, time_scale=TimeScale.TRIAL)
-    output = list(sched.run(termination_conds=termination_conds))
+    execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
 
-    # output will produce
-    # [A, B, B, A, B, B]
+``execution_sequence`` will be: [A, B, B, A, B, B].
 
-*Basic phasing in two processes:*
+* Basic phasing in two processes::
+
     A = TransferMechanism(function = Linear(), name = 'A')
     B = TransferMechanism(function = Linear(), name = 'B')
     C = TransferMechanism(function = Linear(), name = 'C')
 
     p = process(
         pathway=[A, C],
-        name = 'p',
-    )
+        name = 'p')
     q = process(
         pathway=[B, C],
-        name = 'q',
-    )
+        name = 'q')
     s = system(
         processes=[p, q],
-        name='s',
-    )
-    sched = Scheduler(system=s)
+        name='s')
+    my_scheduler = Scheduler(system=s)
 
-    sched.add_condition(A, EveryNPasses(1))
-    sched.add_condition(B, EveryNCalls(A, 2))
-    sched.add_condition(C, Any(AfterNCalls(A, 3), AfterNCalls(B, 3)))
+    my_scheduler.add_condition(A, EveryNPasses(1))
+    my_scheduler.add_condition(B, EveryNCalls(A, 2))
+    my_scheduler.add_condition(C, Any(AfterNCalls(A, 3), AfterNCalls(B, 3)))
 
     termination_conds = {ts: None for ts in TimeScale}
     termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 4, time_scale=TimeScale.TRIAL)
-    output = list(sched.run(termination_conds=termination_conds))
+    execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
 
-    # output will produce
-    # [A, set([A,B]), A, C, set([A,B]), C, A, C, set([A,B]), C]
+``execution_sequence`` will be: [A, set([A,B]), A, C, set([A,B]), C, A, C, set([A,B]), C].
+
+.. _Scheduler_Class_Reference
+
+Class Reference
+===============
 
 """
 

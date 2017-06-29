@@ -146,38 +146,40 @@
 <dt id="TimeScale.TimeScale">
 <em class="property">class </em><code class="descclassname">TimeScale.</code><code class="descname">TimeScale</code><a class="headerlink" href="#TimeScale.TimeScale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents divisions of time used by the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>, <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>, and the <strong>time_scale</strong>
-argument of execute methods.</p>
+argument of a Composition&#8217;s <code class="xref any docutils literal"><span class="pre">run</span></code> method.</p>
 <p>The values of TimeScale are defined as follows (in order of increasingly coarse granularity):</p>
 <dl class="attribute">
 <dt id="TimeScale.TimeScale.TIME_STEP">
 <code class="descname">TIME_STEP</code><a class="headerlink" href="#TimeScale.TimeScale.TIME_STEP" title="Permalink to this definition">¶</a></dt>
-<dd><p>the nuclear unit of time, consisting of a set of mechanisms that are eligible to execute simultaneously;</p>
+<dd><p>the nuclear unit of time, corresponding to the execution of all <code class="xref any docutils literal"><span class="pre">Mechanisms</span> <span class="pre">&lt;Mechanism&gt;`allowed</span> <span class="pre">to</span> <span class="pre">execute</span>
+<span class="pre">from</span> <span class="pre">a</span> <span class="pre">single</span> <span class="pre">`consideration_set</span></code> of a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>, and which are considered to have executed simultaneously.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="TimeScale.TimeScale.PASS">
 <code class="descname">PASS</code><a class="headerlink" href="#TimeScale.TimeScale.PASS" title="Permalink to this definition">¶</a></dt>
-<dd><p>an entire iteration through the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler&#8217;s</span></a> <a class="reference internal" href="Scheduler.html#scheduling.Scheduler.Scheduler.consideration_queue" title="scheduling.Scheduler.Scheduler.consideration_queue"><code class="xref any py py-attr docutils literal"><span class="pre">consideration_queue</span></code></a> (i.e. its
-toposort ordering), during which one or more <a class="reference internal" href="#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEPs</span></code></a> can occur and mechanisms may execute;</p>
+<dd><p>a full iteration through all of the <code class="xref any docutils literal"><span class="pre">consideration_sets</span></code> in a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler&#8217;s</span></a>
+<a class="reference internal" href="Scheduler.html#scheduling.Scheduler.Scheduler.consideration_queue" title="scheduling.Scheduler.Scheduler.consideration_queue"><code class="xref any py py-attr docutils literal"><span class="pre">consideration_queue</span></code></a>, consisting of one or more <a class="reference internal" href="#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEPs</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="TimeScale.TimeScale.TRIAL">
 <code class="descname">TRIAL</code><a class="headerlink" href="#TimeScale.TimeScale.TRIAL" title="Permalink to this definition">¶</a></dt>
-<dd><p>an open-ended unit of time consisting of all activity occurring within the scope of a single input to a
-<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>;</p>
+<dd><p>the scope of a single <code class="xref any docutils literal"><span class="pre">input</span></code> in a call to the <code class="xref any docutils literal"><span class="pre">run</span></code> method of a
+<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, consisting of one or more <a class="reference internal" href="#TimeScale.TimeScale.PASS" title="TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASSes</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="TimeScale.TimeScale.RUN">
 <code class="descname">RUN</code><a class="headerlink" href="#TimeScale.TimeScale.RUN" title="Permalink to this definition">¶</a></dt>
-<dd><p>a loosely-defined unit of time consisting of one or more <a class="reference internal" href="#TimeScale.TimeScale.TRIAL" title="TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIALs</span></code></a>;</p>
+<dd><p>the scope of a call to the <code class="xref any docutils literal"><span class="pre">run</span></code> method of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, consisting of one more
+<a class="reference internal" href="#TimeScale.TimeScale.TRIAL" title="TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIALs</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="TimeScale.TimeScale.LIFE">
 <code class="descname">LIFE</code><a class="headerlink" href="#TimeScale.TimeScale.LIFE" title="Permalink to this definition">¶</a></dt>
-<dd><p>all time since the creation of an object</p>
+<dd><p>the number of <a class="reference internal" href="#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEPs</span></code></a> since the creation of an object.</p>
 </dd></dl>
 
 </dd></dl>

@@ -15,7 +15,7 @@ from PsyNeuLink.Globals.Keywords import CENTRAL_CLOCK
 # Time scale modes
 class TimeScale(Enum):
     """Represents divisions of time used by the `Scheduler`, `Conditions <Condition>`, and the **time_scale**
-    argument of execute methods.
+    argument of a Composition's `run <Composition.run>` method.
 
     The values of TimeScale are defined as follows (in order of increasingly coarse granularity):
 
@@ -23,21 +23,30 @@ class TimeScale(Enum):
     ----------
 
     TIME_STEP
-        the nuclear unit of time, consisting of a set of mechanisms that are eligible to execute simultaneously;
+        the nuclear unit of time, corresponding to the execution of all `Mechanisms <Mechanism>`allowed to execute
+        from a single `consideration_set` of a `Scheduler`, and which are considered to have executed simultaneously.
 
     PASS
-        an entire iteration through the `Scheduler's <Scheduler>` `consideration_queue` (i.e. its
-        toposort ordering), during which one or more `TIME_STEPs <TIME_STEP>` can occur and mechanisms may execute;
+        a full iteration through all of the `consideration_sets <consideration_set>` in a `Scheduler's <Scheduler>`
+        `consideration_queue`, consisting of one or more `TIME_STEPs <TIME_STEP>`.
 
     TRIAL
-        an open-ended unit of time consisting of all activity occurring within the scope of a single input to a
-        `Composition`;
+        the scope of a single `input <Composition.input>` in a call to the `run <Composition.run>` method of a
+        `Composition`, consisting of one or more `PASSes <PASS>`.
+        COMMENT:
+            an open-ended unit of time consisting of all activity occurring within the scope of a single input to a
+            `Composition`.
+        COMMENT
 
     RUN
-        a loosely-defined unit of time consisting of one or more `TRIALs <TRIAL>`;
+        the scope of a call to the `run <Composition.run>` method of a `Composition`, consisting of one more
+        `TRIALs <TRIAL>`.
+        COMMENT:
+            a loosely-defined unit of time consisting of one or more `TRIALs <TRIAL>`.
+        COMMENT
 
     LIFE
-        all time since the creation of an object
+        the number of `TIME_STEPs <TIME_STEP>` since the creation of an object.
     """
     TIME_STEP = 0
     PASS = 1
