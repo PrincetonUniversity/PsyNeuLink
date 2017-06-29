@@ -30,14 +30,28 @@ PsyNeuLink provides a number of `pre-specified Conditions <Condition_Structure>`
 (e.g., how many times a Mechanism should be executed), but functions can also be assigned to Conditions,
 to implement custom conditions that can reference any object or its attributes in PsyNeuLink.
 
+.. _Condition_Instantiation:
+
+Instantiating Conditions
+------------------------
+
+Conditions can be instantiated and added to a `Scheduler` at any time, and take effect immediately for the
+execution of that Scheduler. Each `pre-specified Condition <Condition_Structure>` has a set of arguments
+that must be specified to achieve the desired behavior. Each
+Condition is associated with an `owner <Condition.owner>` (a `Mechanism` to which the Condition belongs), and a
+`scheduler <Condition.scheduler>` that maintains most of the data required to test for satisfaction of the condition.
+Usually, Conditions may be instantiated within a call to `Scheduler` or `ConditionSet`'s add methods, in which case
+the attributes `owner` and `scheduler` are determined through context, as below::
+
+    scheduler.add_condition(A, EveryNPasses(1))
+    scheduler.add_condition(B, EveryNCalls(A, 2))
+    scheduler.add_condition(C, EveryNCalls(B, 2))
+
+
 .. _Condition_Creation:
 
-Creating Conditions
+Creating New Conditions
 -----------------------
-
-FLESH OUT DESCRIPTION OF INSTANTIATION, INCLUDING USING PREPACKAGED CONDITIONS
-Conditions can be created and added to a `Scheduler` at any time, and take effect immediately for the execution of that
-Scheduler.
 
 THEN, DESCRIBE INVENTION AS FOLLOWS:
 The Condition's **func** argument must be explicitly specified.  This is used to specify the function
