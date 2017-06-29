@@ -22,70 +22,28 @@ Overview
 --------
 
 `Conditions <Condition>` are used to specify when `Mechanisms <Mechanism>` are allowed to execute.  Conditions
-can specify can be used to specify a variety of requirements or dependencies, including the state of the Mechanism
-itself (e.g., how many times it has already executed, or the value of one of its attributes), the State of the
-Composition (e.g., how many `TIME_STEPs <TIME_STEP>` have occurred in the current `RUN`), or the State of other
+can be used to specify a variety of required conditions for execution, including the state of the Mechanism
+itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
+Composition (e.g., how many `TIME_STEPs <TIME_STEP>` have occurred in the current `TRIAL`), or the state of other
 Mechanisms in Composition (e.g., whether they have started, terminated, or how many times they have executed).
-PsyNeuLink provides a number of `pre-specified Conditions <Condition_Structure>` that can be parameterized
+PsyNeuLink provides a number of `pre-specified Conditions <Condition_Structure>` that can be parametrized
 (e.g., how many times a Mechanism should be executed), but functions can also be assigned to Conditions,
 to implement custom conditions that can reference any object or its attributes in PsyNeuLink.
-
-COMMENT:
-# K: I'm not sure what that means
-# JDC: A CRITERION LIKE THE minimal_change ONE IN THE EXAMPLE WE JUST WORKED OUT;  OK?
-# K: I guess I have trouble with the categorization - There are some that I would consider absolute, like Always and
-# Never. Then there are some that actually are dependent on other components, like EveryNCalls. (I'm not sure if the
-# categorization below was meant as final, but this condition is considered absolute). Then there are some dependent
-# only on time, like EveryNPasses. Both of these I'd consider relative. Then those types we discussed that would be
-# like When and Until, that are each other's complement, which seem somewhat uncategorizable because they would just
-# be a template for the user to make anything at all a condition. Depending on what they use as a function, it could
-# be absolute or relative.
-#
-# and *relative* ones, that specify whether and how its execution depends on other Mechanisms (e.g., the frequency with
-# which it executes relative to others, or that it begin executing and/or execute repeatedly until a Condition is met
-# for some other Mechanism).  Each Condition is associated with an `owner <Condition.owner>` (a `Mechanism` to which the
-# Condition belongs), and a `scheduler <Condition.scheduler>` that maintains most of the data required to test for
-# satisfaction of the condition.
-# K: I'm not sure if the above just changed but this sounds good
-COMMENT
 
 .. _Condition_Creation:
 
 Creating Conditions
 -----------------------
 
-Conditions can be created at any time, and take effect immediately for the execution of any `Scheduler(s) <Scheduler>`
-with which they are associated.  The Condition's **dependencies** and **func** arguments must both be explicitly
-specified.  These are used to specify the function and its parameters (the specifications on which the Condition
-depends), that will be evaluated on each `PASS` through the Mechanisms in the Composition, to determine whether the
-associated Mechanism is allowed to execute on that `PASS`.
+FLESH OUT DESCRIPTION OF INSTANTIATION, INCLUDING USING PREPACKAGED CONDITIONS
+Conditions can be created and added to a `Scheduler` at any time, and take effect immediately for the execution of that
+Scheduler.
 
-COMMENT:
-# K: round of execution is poorly defined and should refer to a TimeScale)
-# JDC:  RIGHT;  WE SHOULD SETTLE ON PASS VS. ROUND OF EXECUTION, AND THEN DO THE APPROPRIATE SEARCH AND REPLACE
-# `func <Condition.func>` is called with `dependencies <Condition.dependencies>` as its parameter
-# JDC: "additonal named and unnamed arguments" SEEMS VAGUE;  FOR WHAT?  EXAMPLE MIGHT HELP?
-# K: As I look at it I think it can be refactored so that a condition essentially takes just a function
-# and args/kwargs. I now remember why I never made anything like a When or Until - because that option was always
-# included by just creating a new Condition class. Creating the custom convergence Condition was exactly the
-# anticipated functionality - you wanted to make a function that took arguments (named and unnamed but here just unnamed)
-# and checks that something is true or not, using those arguments. If you think it's much clearer using When or Until it
-# can be done, but these will just essentially wrap the Condition class with little difference
-# (and optionally, additional named and unnamed arguments).
-#      [**??func AND dependencies NEED TO BE CLARIFIED:  WHAT FORMAT, EXAMPLE OF HOW THEY WORK??]
-#     K: It's explained in the previous version
-#              Each Condition must
-#             - be a subclass of `Condition`<Condition>
-#             - pass `dependencies` as the first argument to the __init__ function of Condition
-#             - pass `func` as the second argument to the __init__ function of Condition
-#
-#         In determining whether a Condition is satisfied, `func` is called with `dependencies` as parameter (and optionally,
-#         additional named and unnamed arguments).
-#     They are not in an exact format by design, because they can be customized by any advanced user.
-#     JDC: SHOULD DISCUSS;  I'M NOT SURE I FULLY UNDERSTAND
-# K: I want to check but I think dependencies can be eliminated in favor of just args/kwargs - this was a holdover
-# from the original scheduler attempt that just kind of baked its way in.
-COMMENT
+THEN, DESCRIBE INVENTION AS FOLLOWS:
+The Condition's **func** argument must be explicitly specified.  This is used to specify the function
+that will be evaluated on each `PASS` through the Mechanisms in the Composition, to determine whether the associated
+Mechanism is allowed to execute on that `PASS`.
+MENTION ARGS & KWARGS
 
 Hint:
     If you do not want to use the dependencies parameter, and instead want to use only args or kwargs, you may
@@ -113,24 +71,10 @@ Every Mechanism is associated with a Condition by the Scheduler.  If one has not
 Mechanism, it is assigned the Condition `Always`.  Conditions are specified using subclasses of `Condition`.  The
 following types are provided:
 
-COMMENT:
-    JDC:  SEE QUESTIONS BELOW
-COMMENT
-
-Absolute Conditions:
-COMMENT:
-  ie. BETWEEN n-1 AND n??
-COMMENT
-    * `BeforePass(int, `TimeScale`)` - execute before the specified `PASS`.
-    * `AtPass(int, `TimeScale`)` - execute in the specified `PASS`.
-    * `AfterPass(int, `TimeScale`)` - execute after specified `PASS`.
-COMMENT:
-   ie. BETWEEN n AND n+1??
-COMMENT
-    * `AfterNPasses(int, `TimeScale`)`- execute after
-COMMENT:
-    HOW IS THIS DIFFERENT THAN AtPass ??
-COMMENT
+    * `BeforePass` (int[, `TimeScale` ]) - execute anytime before the specified `PASS`.
+    * `AtPass`(int[,`TimeScale`]) - execute only in the specified `PASS`.
+    * `AfterPass`\(int[,`TimeScale`]) - execute anytime after specified `PASS`.
+    * `AfterNPasses`\ (int[, `TimeScale` ])- execute anytime after the specified number of `PASS`\es have occurred.
     * `EveryNPasses`
     * `BeforeTrial`
     * `AfterTrial`
@@ -148,8 +92,6 @@ COMMENT
     * `WhenFinishedAll`
     * `Always`
     * `Never`
-
-Relative Conditions:
     * `All`
     * `Any`
     * `Not`
@@ -165,26 +107,8 @@ COMMENT
 When the `Scheduler` `runs <Schedule_Execution>`, it makes a sequential `PASS` through its `consideration_queue`,
 evaluating each `consideration_set` in the queue to determine which Mechanisms should be assigned to execute.
 It evaluates the Mechanisms in each set by calling the `is_satisfied` method of the Condition associated with each
-of those Mechanisms.  If it returns `True`, then the Mechanism is assigned to the execution list for that `PASS`.
-Othewise, the Mechanism is not executed.
-
-# COMMENT:
-#      **??DESCRIBE HOW CONDITION IS EVALUATED
-#     K: It doesn't "execute" exactly. A condition is satisfied when its is_satisfied function returns True, and is_satisfied
-#     is called when the scheduler runs
-#     JDC: IS THE ABOVE BETTER?
-#          IS THE SATISFACTION OF A CONDTIION ALWAYS ASSOCIATED WITH THE EXECUTION OF A COMPONENT?
-#          JUST *ONE* COMPONENT
-#     K: well it's not always correct. Preface:
-#     Each Component has exactly one Condition associated with it in a Scheduler by the time the Scheduler is run (if a Condition is
-#     not specified for a Component it defaults to Always), but this Condition can be a composite one (Any or All). This is necessary
-#     to remove any possible ambiguity that would result if there were two conditions)
-#
-#     It is correct when the Condition is the Condition associated with a Component in a Scheduler, and the Condition's is_satisfied method
-#     is True, and the Component is currently up for consideration (i.e. eligible to run?)
-#
-#     But if the Component is not currently eligible, then it will not be told to run even if its Condition is currently satisfied
-# COMMENT
+of those Mechanisms.  If it returns `True`, then the Mechanism is assigned to the execution set for the `TIME_STEP`
+of execution generated by that `PASS`.  Otherwise, the Mechanism is not executed.
 
 .. _Condition_Class_Reference
 
