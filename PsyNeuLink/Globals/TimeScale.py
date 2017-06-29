@@ -31,12 +31,8 @@ class TimeScale(Enum):
         `consideration_queue`, consisting of one or more `TIME_STEPs <TIME_STEP>`.
 
     TRIAL
-        the scope of a single `input <Composition.input>` in a call to the `run <Composition.run>` method of a
-        `Composition`, consisting of one or more `PASSes <PASS>`.
-        COMMENT:
-            an open-ended unit of time consisting of all activity occurring within the scope of a single input to a
-            `Composition`.
-        COMMENT
+        an open-ended unit of time consisting of all TIME_STEPs occurring within the scope of a single input to a
+        `Composition`.
 
     RUN
         the scope of a call to the `run <Composition.run>` method of a `Composition`, consisting of one more

@@ -53,7 +53,8 @@ Hint:
         def __init__(self, *dependencies, n=None, time_scale=TimeScale.TRIAL):
             def func(_none, *dependencies, n=None):
                 if self.scheduler is None:
-                    raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                    raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                         format(type(self).__name__))
                 if n is None:
                     raise ConditionError('{0}: keyword argument n is None'.format(type(self).__name__))
                 count_sum = 0
@@ -139,8 +140,10 @@ class ConditionSet(object):
     def __init__(self, scheduler=None, conditions=None):
         """
         :param self:
-        :param scheduler: a :keyword:`Scheduler` that these conditions are associated with, which maintains any state necessary for these conditions
-        :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to :keyword:`iterable`s of :keyword:`Condition`s, can be added later with :keyword:`add_condition`
+        :param scheduler: a :keyword:`Scheduler` that these conditions are associated with,
+                         which maintains any state necessary for these conditions
+        :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to :keyword:`iterable`s of
+                             :keyword:`Condition`s, can be added later with :keyword:`add_condition`
         """
         self.conditions = conditions if conditions is not None else {}
         self.scheduler = scheduler
@@ -166,7 +169,8 @@ class ConditionSet(object):
         :param owner: the :keyword:`Component` that is dependent on the :param conditions:
         :param conditions: a :keyword:`Condition` (including All or Any)
         """
-        logger.debug('add_condition: Setting scheduler of {0}, (owner {2}) to self.scheduler ({1})'.format(condition, self.scheduler, owner))
+        logger.debug('add_condition: Setting scheduler of {0}, (owner {2}) to self.scheduler ({1})'.
+                     format(condition, self.scheduler, owner))
         condition.owner = owner
         condition.scheduler = self.scheduler
         self.conditions[owner] = condition
@@ -174,7 +178,8 @@ class ConditionSet(object):
     def add_condition_set(self, conditions):
         """
         :param self:
-        :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to :keyword:`Condition`s, can be added later with :keyword:`add_condition`
+        :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to
+        :keyword:`Condition`s, can be added later with :keyword:`add_condition`
         """
         for owner in conditions:
             conditions[owner].owner = owner

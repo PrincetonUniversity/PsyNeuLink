@@ -77,7 +77,9 @@ For each call to the `run <Scheduler.run>` method, the Scheduler sequentially ev
 which Mechanisms in the set are allowed to execute, based on whether their associated `Condition(s) <Condition>` have
 been met. Any Mechanism that does not have a `Condition` explicitly specified is assigned the Condition `Always`,
 that allows it to execute any time it is under consideration. All of the Mechanisms within a `consideration_set` that
-are allowed to execute comprise a `TIME_STEP` of execution.
+are allowed to execute comprise a `TIME_STEP` of execution. The ordering of the  Mechanisms specified within a
+`TIME_STEP` is arbitrary (and is irrelevant, as there are no sequential dependencies among Mechanisms within the same
+`consideration_set`).
 
 COMMENT:
    JDC: STILL HAVING A HARD TIME IMAGINGING THIS;  EXAMPLE WOULD BE GOOD
@@ -85,30 +87,30 @@ so the execution of a Mechanism within a `time_step` may trigger the execution o
 `consideration_set`.
 COMMENT
 
-The ordering of the  Mechanisms specified within a `TIME_STEP` is arbitrary (and is irrelevant, as there are no
-sequential dependencies among Mechanisms within the same `consideration_set`). At the beginning of each
-`TIME_STEP`, the Scheduler evaluates  whether any specified `termination conditions` have been met, and terminates
-the run if so.  Otherwise, it returns a set of the Mechanisms that should be executed
-in the current `TIME_STEP`.
+For each `TIME_STEP`, the Scheduler evaluates  whether any specified `termination conditions` have
+been met, and terminates if so.  Otherwise, it returns the set of the Mechanisms that should be executed in the current
+`TIME_STEP`. Each subsequent call to the `run <Scheduler.run>` method returns the set of Mechanisms in the next
+`TIME_STEP`. Processing of all of the `consideration_sets <consideration_set>` in the `consideration_queue` constitutes
+a `PASS` of execution, over which every Mechanism in the Composition has been considered for execution. Subsequent
+calls to the `run <Scheduler.run>` method cycle back through the `consideration_queue`, evaluating the
+`consideration_sets <consideration_set>` in the same order as previously, though possibly assigning for execution
+different Mechanisms within the same `consideration_set` on different PASSes (since different Conditions may be
+satisfied).  The Scheduler continues to make PASSes through the `consideration_queue` until a `Termination`
+Condition is satisfied. If no termination Conditions are specified, the Scheduler terminates a `TRIAL` when every
+Mechanism has been specified for execution at least once (corresponding  to the `AllHaveRun` Condition).  However,
+other `Termination` Conditions can be specified, that may cause the Scheduler to terminate a `TRIAL` earlier (e.g.,
+when the  Condition for a particular Mechanism or set of Mechanisms is met).  When the Scheduler terminates a `TRIAL`,
+the `Composition` begins processing the next input specified in the call to its `run <Composition.run>` method.  Thus,
+a `TRIAL` is defined as the scope of processing associated with a given input to the Composition.
+
+
+TERM CONDS
+
 EXPLAIN: EACH PASS TRHOUGH THE CONSID Q IS A PASS
 IF NOT TERM COND, CONTINUES PASSES UNTIL EVERY MECH EXECUTE AT LEAST ONCE
-If no termination Conditions
-are specified, the Scheduler terminates a `P` when every Mechanism has been specified for execution at least once
-(corresponding to the `AllHaveRun` Condition).
- For each call to its `run <Scheduler.run>` method, the Scheduler returns a list of
-Mechanisms to execute from the next `consideration_set` in the `consideration_queue`.
-
-
-A full pass through the `consideration_queue`
-constitutes a `PASS` of execution, during which every Mechanism in the Composition is provided the opportunity to be
-considered for execution.  The number of PASSes associated with a single `input <Composition.input>`
-to the Composition constitutes a `TRIAL`, and the number of TRIALs executed constitutes a `RUN`.  The Scheduler
-continues to make PASSes through the `consideration_queue` until a `Termination` Condition is satisfied.  By default,
-this is determined by the number of inputs and/or number of runs specified in the call to the Composition's
-`run <Composition.run>` method.  However, other `Termination` Conditions can be specified, that may cause the
-Scheduler to terminate earlier (e.g., when a the Condition for a particular Mechanism is met).
 
 **DOCUMENT TERMINATION CONDITIONS HERE
+
 
 
 Examples
