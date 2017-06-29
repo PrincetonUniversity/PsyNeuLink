@@ -391,49 +391,34 @@ class Composition(object):
         # if recurrent_init:
         #     self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
 
+        # Traverse processing graph and assign one uuid to all of its mechanisms
         self._execution_id = execution_id or self._get_unique_id()
         for v in self._graph_processing.vertices:
             v.component._execution_id = self._execution_id
         is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
 
+        # TBI: Do the same for learning graph?
+
+        # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
         for next_execution_set in scheduler.run():
 
+            # execute each mechanism with context = EXECUTING and the appropriate input
             for mechanism in next_execution_set:
                 if isinstance(mechanism, Mechanism):
+                    # if mechanism is_origin and is featured in the inputs dictionary -- use specified input
                     if (mechanism in is_origin) and (mechanism in inputs.keys()):
                         print()
                         num = mechanism.execute(input=inputs[mechanism], context=EXECUTING)
-                        print("=============================================")
                         print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
                         print("result = ", num)
                         print()
                         print()
+                    # otherwise, mechanism will use its default input OR whatever it received from its projection(s)
                     else:
                         num = mechanism.execute(context=EXECUTING)
-                        print("=============================================")
                         print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
                         print("result = ", num)
                         print()
                         print()
-
-        '''
-        for current_component in scheduler.run_trial():
-            if current_component.name != "Clock":
-                # print("NAME: ",current_component.name)
-                current_vertex = self.graph.mech_to_vertex[current_component]
-                # print("INCOMING PROJECTION: ", current_vertex.incoming)
-                # print("OUTGOING PROJECTION: ", current_vertex.outgoing)
-                if current_component in inputs.keys():
-                    # print(current_component.name, " was found in inputs")
-                    new_value = current_component.execute(inputs[current_component])
-                    # for edge in current_vertex.outgoing:
-                    #     edge.projection.execute(new_value)
-
-                else:
-                    current_component.execute()
-                # print(current_component.value)
-            else:
-                current_component.execute()
-                # print(current_component.value)
-        '''
+        # return the output of the LAST mechanism executed in the composition
         return num
