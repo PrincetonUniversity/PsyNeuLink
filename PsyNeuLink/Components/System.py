@@ -817,7 +817,6 @@ class System_Base(System):
                          name=self.name,
                          prefs=prefs,
                          context=context)
-
         self._execution_id = None
 
         # Get/assign controller
@@ -1454,16 +1453,24 @@ class System_Base(System):
         self.executionList = self._toposort_with_ordered_mechs(self.executionGraph)
         # MODIFIED 10/31/16 END
 
+        # MODIFIED 6/27/17 NEW: (CW)
+        # changed "orig_mech_input.extend(input_state.value)" to "orig_mech_input.append(input_state.value)"
+        # this is accompanied by a change to the code around line 1510 where a for loop was added.
         # MODIFIED 2/8/17 NEW:
         # Construct self.variable from inputs to ORIGIN mechanisms
         self.variable = []
         for mech in self.originMechanisms:
             orig_mech_input = []
             for input_state in mech.input_states:
-                orig_mech_input.extend(input_state.value)
+                orig_mech_input.append(input_state.value)
             self.variable.append(orig_mech_input)
-        self.variable = convert_to_np_array(self.variable, 2)
+        self.variable = convert_to_np_array(self.variable, 2)  # should add Utility to allow conversion to 3D array
         # MODIFIED 2/8/17 END
+        # An example: when input state values are vectors, then self.variable is a 3D array because an origin
+        # mechanism could have multiple input states if there is a recurrent input state. However, if input state values
+        # are all non-vector objects, such as strings, then self.variable would be a 2D array. so we should
+        # convert that to a 3D array
+        # MODIFIED 6/27/17 END
 
         # Instantiate StimulusInputStates
         self._instantiate_stimulus_inputs()
@@ -1495,16 +1502,20 @@ class System_Base(System):
             # (this avoids duplication from multiple passes through _instantiate_graph)
             if any(self is projection.sender.owner for projection in origin_mech.input_state.path_afferents):
                 continue
-
+            # MODIFIED 6/27/17 NEW:
+            # added a for loop to iterate over origin_mech.input_states to allow for
+            # multiple input states in an origin mechanism (useful only if the origin mechanism is a KWTA)
             # Check, for each ORIGIN mechanism, that the length of the corresponding item of self.variable matches the
             # length of the ORIGIN inputState's variable attribute
-            if len(self.variable[i]) != len(origin_mech.input_state.variable):
-                raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
-                                  "corresponding ORIGIN mechanism ()".
-                                   format(i,
-                                          len(self.variable[i]),
-                                          len(origin_mech.input_state.variable),
-                                          origin_mech.name))
+            for j in range(len(origin_mech.input_states)):
+                if len(self.variable[i][j]) != len(origin_mech.input_states[j].variable):
+                    raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
+                                      "corresponding ORIGIN mechanism ()".
+                                       format(i,
+                                              len(self.variable[i][j]),
+                                              len(origin_mech.input_states[j].variable),
+                                              origin_mech.name))
+            # MODIFIED 6/27/17 END
 
             stimulus_input_state = SystemInputState(owner=self,
                                                         variable=origin_mech.input_state.variable,
