@@ -12,6 +12,7 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 from PsyNeuLink.composition import Composition, CompositionError, MechanismRole
 from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
+from PsyNeuLink.Globals.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
 
@@ -712,7 +713,7 @@ class TestRun:
             comp.add_mechanism(B)
             comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
             comp.analyze_graph()
-            inputs_dict = {A: 5}
+            inputs_dict = {A: [5]}
             sched = Scheduler(composition=comp)
             output = comp.run(
                 inputs=inputs_dict,
@@ -745,8 +746,8 @@ class TestRun:
             comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
             comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
             comp.analyze_graph()
-            inputs_dict = {A: 5,
-                           B: 5}
+            inputs_dict = {A: [5],
+                           B: [5]}
             sched = Scheduler(composition=comp)
             output = comp.run(
                 inputs=inputs_dict,
@@ -766,7 +767,7 @@ class TestRun:
             comp.add_mechanism(B)
             comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
             comp.analyze_graph()
-            inputs_dict = {A: 5}
+            inputs_dict = {A: [5]}
             sched = Scheduler(composition=comp)
             sched.add_condition(B, EveryNCalls(A, 2))
             output = comp.run(
@@ -788,7 +789,7 @@ class TestRun:
             comp.add_mechanism(B)
             comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
             comp.analyze_graph()
-            inputs_dict = {A: 5}
+            inputs_dict = {A: [5]}
             sched = Scheduler(composition=comp)
             sched.add_condition(B, EveryNCalls(A, 2))
             output = comp.run(
@@ -796,3 +797,24 @@ class TestRun:
                 scheduler=sched
             )
             assert 50.0 == output[0][0]
+
+        def test_run_2_mechanisms_with_multiple_trials_of_input_values(self):
+            print("FINAL TEST")
+            comp = Composition()
+
+            A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
+            B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
+            comp.add_mechanism(A)
+            comp.add_mechanism(B)
+            comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+            comp.analyze_graph()
+            inputs_dict = {A: [1, 2, 3, 4]}
+            sched = Scheduler(composition=comp)
+            output = comp.run(
+                inputs=inputs_dict,
+                scheduler=sched
+            )
+
+            # So far this is just the first output because composition's run()
+            # does not (yet) reset mechanisms or scheduler
+            assert 10.0 == output[0][0]
