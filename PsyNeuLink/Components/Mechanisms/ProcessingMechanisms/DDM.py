@@ -570,6 +570,9 @@ class DDM(ProcessingMechanism_Base):
                  context=componentType + INITIALIZING
     ):
 
+        if default_input_value is None and size is None:
+            default_input_value = self.variableClassDefault
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   output_states=output_states,
@@ -596,6 +599,7 @@ class DDM(ProcessingMechanism_Base):
                                   params=params,
                                   name=name,
                                   prefs=prefs,
+                                  size=size,
                                   # context=context)
                                   context=self)
 
@@ -704,10 +708,11 @@ class DDM(ProcessingMechanism_Base):
 
     # MODIFIED 11/21/16 NEW:
     def _validate_variable(self, variable, context=None):
-        """Insures that input to DDM is a single value.
+        """Ensures that input to DDM is a single value.
         Remove when MULTIPROCESS DDM is implemented.
         """
-        if not isinstance(variable, numbers.Number) and len(variable) > 1:
+        # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
+        if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
             raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
         super()._validate_variable(variable=variable, context=context)
 

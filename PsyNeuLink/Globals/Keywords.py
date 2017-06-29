@@ -339,6 +339,7 @@ MONITORING_MECHANISM = "MonitoringMechanism"
 TRANSFER_MECHANISM = "TransferMechanism"
 RECURRENT_TRANSFER_MECHANISM = "RecurrentTransferMechanism"
 LCA = "LCA"
+KWTA = "KWTA"
 INTEGRATOR_MECHANISM = "IntegratorMechanism"
 DDM_MECHANISM = "DDM"
 
@@ -448,6 +449,7 @@ RESULT = 'RESULT'
 MEAN = 'MEAN'
 MEDIAN = 'MEDIAN'
 VARIANCE = 'VARIANCE'
+SIZE = 'SIZE'
 
 STATE_VALUE = "State value"   # Used in State specification dict
                                                  #  to specify State value
@@ -474,7 +476,6 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 kwThreshold = 'thresh'
 kwInitialPoint = 'initial_point'
 #endregion
-
 
 #region ----------------------------------------    MODULATORY MECHANISMS ----------------------------------------------
 

@@ -107,6 +107,7 @@ from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction, A
 # from PsyNeuLink.Components.States.OutputState import *
 from PsyNeuLink.Components.States.OutputState \
     import StandardOutputStates, standard_output_states, PRIMARY_OUTPUT_STATE
+import numbers
 
 # TransferMechanism parameter keywords:
 RANGE = "range"
@@ -114,7 +115,7 @@ TIME_CONSTANT = "time_constant"
 INITIAL_VALUE = 'initial_value'
 
 # TransferMechanism default parameter values:
-Transfer_DEFAULT_LENGTH= 1
+Transfer_DEFAULT_LENGTH = 1
 Transfer_DEFAULT_GAIN = 1
 Transfer_DEFAULT_BIAS = 0
 Transfer_DEFAULT_OFFSET = 0
@@ -341,9 +342,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
-    variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input)
-                                                 #  to be compatible with Transfer_DEFAULT_BIAS
-
     # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({NOISE: None})
@@ -352,10 +350,12 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     paramNames = paramClassDefaults.keys()
 
+    variableClassDefault = [[0]]
+
     @tc.typecheck
     def __init__(self,
-                 default_input_value=Transfer_DEFAULT_BIAS,
-                 size:tc.optional(int)=None,
+                 default_input_value=None,
+                 size=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
                  function=Linear,
                  initial_value=None,
@@ -368,10 +368,14 @@ class TransferMechanism(ProcessingMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
-        """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__
+        """Assign type-level preferences and call super.__init__
         """
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        if default_input_value is None and size is None:
+            default_input_value = [[0]]
+
+        self.variableClassDefault = default_input_value
+
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
                                                   input_states=input_states,
@@ -381,11 +385,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   time_scale=time_scale,
                                                   range=range,
                                                   params=params)
-        # if default_input_value is None:
-        #     default_input_value = Transfer_DEFAULT_BIAS
-        self.size = size
 
-        self.integrator_function=None
+        self.integrator_function = None
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -393,6 +394,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                indices=PRIMARY_OUTPUT_STATE)
 
         super(TransferMechanism, self).__init__(variable=default_input_value,
+                                                size=size,
                                                 params=params,
                                                 name=name,
                                                 prefs=prefs,
@@ -442,7 +444,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate TIME_CONSTANT:
         if TIME_CONSTANT in target_set:
             time_constant = target_set[TIME_CONSTANT]
-            if not (isinstance(time_constant, float) and time_constant>=0 and time_constant<=1):
+            if not (isinstance(time_constant, float) and 0 <= time_constant <= 1):
                 raise TransferError("time_constant parameter ({}) for {} must be a float between 0 and 1".
                                     format(time_constant, self.name))
 
@@ -464,7 +466,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         #                                       rate = self.time_constant,
         #                                       integration_type= ADAPTIVE)
 
-
     def _validate_noise(self, noise):
         # Noise is a list or array
         if isinstance(noise, (np.ndarray, list)):
@@ -476,10 +477,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                     except AttributeError:
                         formatted_noise = noise
                     raise MechanismError("The length ({}) of the array specified for the noise parameter ({}) of {} "
-                                        "must match the length ({}) of the default input ({}). If noise is specified as"
-                                        " an array or list, it must be of the same size as the input."
-                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
-                                                self.variable))
+                                         "must match the length ({}) of the default input ({}). If noise is specified as"
+                                         " an array or list, it must be of the same size as the input."
+                                         .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
+                                                 self.variable))
                 else:
                     # Noise is a list or array of functions
                     if callable(noise[0]):
@@ -493,7 +494,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Variable is not a list/array
             else:
                 raise MechanismError("The noise parameter ({}) for {} may only be a list or array if the "
-                                    "default input value is also a list or array.".format(noise, self.name))
+                                     "default input value is also a list or array.".format(noise, self.name))
 
         elif callable(noise):
             self.noise_function = True
@@ -507,7 +508,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             self.noise_function = False
         else:
             raise MechanismError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
-                                "array or list of functions.".format(noise, self.name))
+                                 "array or list of functions.".format(noise, self.name))
 
     def _instantiate_parameter_states(self, context=None):
 
@@ -528,11 +529,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         self.size = len(self.variable[0])
 
     def _execute(self,
-                variable=None,
-                runtime_params=None,
-                clock=CentralClock,
-                time_scale = TimeScale.TRIAL,
-                context=None):
+                 variable=None,
+                 runtime_params=None,
+                 clock=CentralClock,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
         """Execute TransferMechanism function and return transform of input
 
         Execute TransferMechanism function on input, and assign to output_values:

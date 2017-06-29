@@ -616,7 +616,6 @@ class Component(object):
         # Used by run to store return value of execute
         self.results = []
 
-
         # ENFORCE REQUIRED CLASS DEFAULTS
 
         # All subclasses must implement variableClassDefault
@@ -1243,7 +1242,7 @@ class Component(object):
 
 
         # # GET VARIABLE FROM PARAM DICT IF SPECIFIED
-        # #    (give precedence to that over variable arg specificadtion)
+        # #    (give precedence to that over variable arg specification)
         # if VARIABLE in request_set and request_set[VARIABLE] is not None:
         #     variable = request_set[VARIABLE]
 
@@ -1251,23 +1250,36 @@ class Component(object):
 
         # If size has been specified, make sure it doesn't conflict with variable arg or param specification
         if hasattr(self, 'size') and self.size is not None:
+            # MODIFIED 6/28/17 (CW): Because self.size was changed to always be a 1D array, the check below was changed
+            # to a for loop iterating over each element of variable and size
             # Both variable and size are specified
             if variable is not None:
-                # If they confict, raise exception, otherwise use variable (it specifies both size and content).
-                if self.size != len(variable):
-                    raise ComponentError("The size arg of {} ({}) conflicts with the length of its variable arg ({})".
-                                         format(self.name, self.size, len(variable)))
-            # Variable is not specified, so set to array of zero with length = size
-            else:
-                variable = np.zeros(self.size)
+                # If they conflict, raise exception, otherwise use variable (it specifies both size and content).
+                for i in range(len(self.size)):
+                    if self.size[i] != len(variable[i]):
+                        raise ComponentError("The size arg of {} ({}) conflicts with the length "
+                                             "of its variable arg ({}) at element {}".
+                                             format(self.name, self.size, len(variable), i))
+            # Variable is not specified, so set to a 2D array of zeros with (the length of row i) = size[i]
+            # MODIFIED 6/29/17 (CW): if uncommented, the else statement below will write to variable, but
+            # variable is overwritten later regardless. so the else statement below seems harmless but unnecessary now.
+            # else:
+            #     variable = []
+            #     for s in self.size:
+            #         variable.append(np.zeros(int(s)))  # casting s for safety
+            #     variable = np.array(variable)
 
         elif hasattr(self, 'shape') and self.shape is not None:
+            # IMPLEMENTATION NOTE 6/23/17 (CW): this test is currently unused by all components. To confirm this, we
+            # may add an exception here (raise ComponentError("Oops this is actually used")), then run all tests.
+            # thus, we should consider deleting this validation
+
             # Both variable and shape are specified
             if variable is not None:
                 # If they conflict, raise exception, otherwise use variable (it specifies both shape and content)
                 if self.shape != np.array(variable).shape:
-                    raise ComponentError("The shape arg of {} ({}) conflicts the shape of its variable arg ({})".
-                                         format(self.name, self.size, np.array(variable).shape))
+                    raise ComponentError("The shape arg of {} ({}) conflicts with the shape of its variable arg ({})".
+                                         format(self.name, self.shape, np.array(variable).shape))
             # Variable is not specified, so set to array of zeros with specified shape
             else:
                 variable = np.zeros(self.shape)

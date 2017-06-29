@@ -309,7 +309,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
-                 size:tc.optional(int)=None,
+                 size=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
                  matrix=FULL_CONNECTIVITY_MATRIX,
                  function=Linear,
@@ -332,8 +332,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   matrix=matrix,
                                                   decay=decay,
                                                   output_states=output_states,
-                                                  params=params)
-        self.size = size
+                                                  params=params,
+                                                  noise=noise)
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,

@@ -318,6 +318,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
+                 size=None,  # not used until ProcessingMechanism_Base, but it's needed here to avoid errors
                  context=None):
 
         # Parse items of input_states arg for validation (in _validate_params)
