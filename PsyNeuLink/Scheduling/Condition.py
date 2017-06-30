@@ -10,6 +10,17 @@
 
 """
 
+<<<<<<< HEAD:PsyNeuLink/scheduling/condition.py
+=======
+COMMENT:
+    [**NAME OF THE MODULE SHOULD BE CAPITALIZED]
+    K: Agreed, along with Scheduling folder to match the project style
+    JDC: Yep
+COMMENT
+
+.. _Condition_Overview
+
+>>>>>>> 8f809b6b... rename scheduling module to upper case matching rest of PNL:PsyNeuLink/Scheduling/Condition.py
 Overview
 --------
 

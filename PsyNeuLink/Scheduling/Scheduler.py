@@ -155,7 +155,7 @@ import logging
 from toposort import toposort
 
 from PsyNeuLink.Globals.TimeScale import TimeScale
-from PsyNeuLink.scheduling.condition import AllHaveRun, Always, ConditionSet
+from PsyNeuLink.Scheduling.Condition import AllHaveRun, Always, ConditionSet
 
 logger = logging.getLogger(__name__)
 

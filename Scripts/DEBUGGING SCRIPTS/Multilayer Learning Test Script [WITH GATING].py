@@ -1,10 +1,10 @@
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.scheduling.condition import AfterNCalls
 from PsyNeuLink.Components.States.OutputState import *
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Scheduling.Condition import AfterNCalls
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 

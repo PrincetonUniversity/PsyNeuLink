@@ -44,8 +44,8 @@ logging.basicConfig(
 )
 for handler in logging.root.handlers:
     handler.addFilter(Blacklist(
-        'PsyNeuLink.scheduling.Scheduler',
-        'PsyNeuLink.scheduling.condition',
+        'PsyNeuLink.Scheduling.Scheduler',
+        'PsyNeuLink.Scheduling.Condition',
     ))
 
 __all__ = ['System',

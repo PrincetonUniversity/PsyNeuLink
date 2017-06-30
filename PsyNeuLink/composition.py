@@ -3,7 +3,7 @@ import logging
 from collections import Iterable, OrderedDict
 from enum import Enum
 
-from PsyNeuLink.scheduling.Scheduler import Scheduler
+from PsyNeuLink.Scheduling.Scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
 
