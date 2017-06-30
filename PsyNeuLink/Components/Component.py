@@ -1259,7 +1259,7 @@ class Component(object):
                     if self.size[i] != len(variable[i]):
                         raise ComponentError("The size arg of {} ({}) conflicts with the length "
                                              "of its variable arg ({}) at element {}".
-                                             format(self.name, self.size, len(variable), i))
+                                             format(self.name, self.size[i], variable[i], i))
             # Variable is not specified, so set to a 2D array of zeros with (the length of row i) = size[i]
             # MODIFIED 6/29/17 (CW): if uncommented, the else statement below will write to variable, but
             # variable is overwritten later regardless. so the else statement below seems harmless but unnecessary now.

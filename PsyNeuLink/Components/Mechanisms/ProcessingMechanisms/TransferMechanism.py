@@ -526,7 +526,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_attributes_before_function(context=context)
 
         self.initial_value = self.initial_value or self.variableInstanceDefault
-        self.size = len(self.variable[0])
 
     def _execute(self,
                  variable=None,

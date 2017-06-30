@@ -449,7 +449,7 @@ RESULT = 'RESULT'
 MEAN = 'MEAN'
 MEDIAN = 'MEDIAN'
 VARIANCE = 'VARIANCE'
-SIZE = 'SIZE'
+SIZE = 'size'
 
 STATE_VALUE = "State value"   # Used in State specification dict
                                                  #  to specify State value

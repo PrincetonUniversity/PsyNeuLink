@@ -106,27 +106,51 @@ class ProcessingMechanism_Base(Mechanism_Base):
         # region Fill in and infer variable and size if they aren't specified in args
         # if variable is None and size is None:
         #     variable = self.variableClassDefault
-        # if variable is None and size is None:
-        #     size = [1]
-            # 6/28/17: the above line of code is _very_ questionable but I think it works for now because
-            # all the self.variableClassDefault values are a single zero (though the format varies widely from
-            # scalars to 1D arrays to 2D arrays. This line of code essentially makes variable = [[0]] if
-            # self.variableClassDefault is None.
-            # This would be easily fixable (simply convert variable to 2D array, then build size based on that)
-            # except, sometimes self.variableClassDefault is None! I think self.variableClassDefault
-            # should simply never be None, or some other fix should be made.
+        # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
+        # expected behavior when variable is None and size is None.
 
-        # 6/23/17: This conversion is safe but likely redundant. If, at some point in development, size and
-        # variable are no longer 1D or 2D arrays, this conversion MIGHT still be safe (e.g. if they become 3D arrays).
+        def checkAndCastInt(x):
+            if not isinstance(x, numbers.Number):
+                raise ProcessingMechanismError("An element ({}) in size is not a number.".format(x))
+            if x < 1:
+                raise ProcessingMechanismError("An element ({}) in size is not a positive number.".format(x))
+            try:
+                int_x = int(x)
+            except:
+                raise ProcessingMechanismError(
+                    "Failed to convert an element ({}) in size argument to an integer. size "
+                    "should be a number, or iterable of numbers, which are integers or "
+                    "can be converted to integers.".format(x))
+            if int_x != x:
+                if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                    warnings.warn("When an element ({}) in the size argument was cast to "
+                                  "integer, its value changed to {}.".format(x, int_x))
+            return int_x
+
         # region Convert variable (if given) to a 2D array, and size (if given) to a 1D integer array
         try:
             if variable is not None:
                 variable = np.atleast_2d(variable)
                 if len(np.shape(variable)) > 2:  # number of dimensions of variable > 2
-                    warnings.warn("variable had more than two dimensions (had {} dimensions) "
-                                  "so only the first element of its second-highest-numbered axis will be"
-                                  " used".format(len(np.shape(variable))))
+                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                        warnings.warn("variable had more than two dimensions (had {} dimensions) "
+                                      "so only the first element of its second-highest-numbered axis will be"
+                                      " used".format(len(np.shape(variable))))
                     while len(np.shape(variable)) > 2:  # reduce the dimensions of variable
+                        variable = variable[0]
+
+                # 6/30/17 (CW): Previously, using variable or default_input_value to create input states of differing
+                # lengths (e.g. default_input_value = [[1, 2], [1, 2, 3]]) caused a bug. The if statement below
+                # fixes this bug. This solution is ugly, though.
+                if isinstance(variable[0], list) or isinstance(variable[0], np.ndarray):
+                    allLists = True
+                    for i in range(len(variable[0])):
+                        if isinstance(variable[0][i], list) or isinstance(variable[0][i], np.ndarray):
+                            variable[0][i] = np.array(variable[0][i])
+                        else:
+                            allLists = False
+                            break
+                    if allLists:
                         variable = variable[0]
         except:
             raise ProcessingMechanismError("Failed to convert variable (of type {})"
@@ -136,19 +160,19 @@ class ProcessingMechanism_Base(Mechanism_Base):
             if size is not None:
                 size = np.atleast_1d(size)
                 if len(np.shape(size)) > 1:  # number of dimensions of size > 1
-                    warnings.warn("size had more than one dimension (size had {} dimensions), so only the first "
-                                  "element of its highest-numbered axis will be used".format(len(np.shape(size))))
+                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                        warnings.warn("size had more than one dimension (size had {} dimensions), so only the first "
+                                      "element of its highest-numbered axis will be used".format(len(np.shape(size))))
                     while len(np.shape(size)) > 1:  # reduce the dimensions of size
                         size = size[0]
         except:
             raise ProcessingMechanismError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
 
-        try:
-            if size is not None:
-                size = np.array(list(map(lambda x: int(x), size)))  # convert all elements of size to int
-        except:
-            raise ProcessingMechanismError("Failed to convert an element in size to an integer. (This "
-                                           "should have been caught in _validate_params rather than in __init__")
+        if size is not None:
+            size = np.array(list(map(checkAndCastInt, size)))  # convert all elements of size to int
+        # except:
+        #     raise ProcessingMechanismError("Failed to convert an element in size to an integer. (This "
+        #                                    "should have been caught in _validate_params rather than in __init__")
         # endregion
 
         # region If variable is None, make it a 2D array of zeros each with length=size[i]
@@ -216,22 +240,45 @@ class ProcessingMechanism_Base(Mechanism_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Validate SIZE
-        if SIZE in target_set:
+        if SIZE in target_set and target_set[SIZE] is not None:
             mech_size = target_set[SIZE].copy()
+
+            def checkAndCastInt(x):
+                if not isinstance(x, numbers.Number):
+                    raise ProcessingMechanismError("An element ({}) in size ({}) is not a number.".
+                                                   format(x, target_set[SIZE]))
+                if x < 1:
+                    raise ProcessingMechanismError("An element ({}) in size ({}) is not a positive number.".
+                                                   format(x, target_set[SIZE]))
+                if type(x) == float and not x.is_integer():
+                    raise ProcessingMechanismError("An element ({}) in size is a non-integer float.".format(x))
+                try:
+                    y = int(x)
+                except:
+                    raise ProcessingMechanismError(
+                        "Failed to convert an element ({}) in size argument ({}) to an integer. size "
+                        "should be a number, or iterable of numbers, which are integers or "
+                        "can be converted to integers.".format(x, target_set[SIZE]))
+                return int(x)
             try:
                 if mech_size is not None:
                     mech_size = np.atleast_1d(mech_size)
                     if len(np.shape(mech_size)) > 1:  # number of dimensions of size > 1
                         raise ProcessingMechanismError("size ({}) should either be a number,"
-                                                       " 1D array, or list".format(mech_size))
+                                                       " 1D array, or list".format(target_set[SIZE]))
             except:
-                raise ProcessingMechanismError("Failed to convert size input (of type {})"
-                                               " to a 1D array.".format(type(mech_size)))
+                raise ProcessingMechanismError("Failed to convert size input ({})"
+                                               " to a 1D array.".format(target_set[SIZE]))
 
-            try:
-                if mech_size is not None:
-                    mech_size = list(map(lambda x: int(x), mech_size))  # convert all elements of mech_size to int
-            except:
-                raise ProcessingMechanismError("Failed to convert an element in size to an integer. size should "
-                                               "be a number, or iterable of numbers, which are integers or"
-                                               " can be converted to integers.")
+            # try:
+            if mech_size is not None:
+                # convert all elements of mech_size to int, check that they are valid values (e.g. positive)
+                list(map(checkAndCastInt, mech_size))
+            # except:
+            #     raise ProcessingMechanismError("Failed to convert an element in size argument ({}) to an integer. size "
+            #                                    "should be a number, or iterable of numbers, which are integers or "
+            #                                    "can be converted to integers.".format(target_set[SIZE]))
+
+    def _instantiate_attributes_before_function(self, context=None):
+
+        super()._instantiate_attributes_before_function(context=context)

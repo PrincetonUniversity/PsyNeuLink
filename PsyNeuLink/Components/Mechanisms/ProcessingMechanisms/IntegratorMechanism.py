@@ -196,7 +196,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
-                 size:tc.optional(int)=None,
+                 size=None,
                  function=AdaptiveIntegrator(rate=0.5),
                  time_scale=TimeScale.TRIAL,
                  params=None,
