@@ -108,8 +108,10 @@ which Mechanisms in the set are allowed to execute, based on whether their assoc
 been met. Any Mechanism that does not have a `Condition` explicitly specified is assigned the Condition `Always`,
 that allows it to execute any time it is under consideration. All of the Mechanisms within a `consideration_set` that
 are allowed to execute comprise a `TIME_STEP` of execution. These Mechanisms are
-considered as executing simultaneously, so the execution of a Mechanism within a `time_step` may trigger the
-execution of another Mechanism within its `consideration_set`, as in the example below::
+considered as executing simultaneously. The ordering of the  Mechanisms specified within a `TIME_STEP` is arbitrary
+(and is irrelevant, as there are no sequential dependencies among Mechanisms within the same `consideration_set`).
+However, the execution of a Mechanism within a `time_step` may trigger the execution of another Mechanism within its
+`consideration_set`, as in the example below::
 
         C
       ↗ ↖
@@ -121,63 +123,45 @@ execution of another Mechanism within its `consideration_set`, as in the example
     time steps: [{A}, {A, B}, {C}]
 
 Since there are no graph dependencies between `A` and `B`, they may execute in the same `TIME_STEP`. Morever,
-`A` and `B` are in the same `consideration_set`. Since `B` is set to run every two times `A` runs,
+`A` and `B` are in the same `consideration_set`. Since `B` is specified to run every two times `A` runs,
 `A`'s second execution in the second `TIME_STEP` allows `B` to run within that `TIME_STEP`, rather
 than waiting for the next `PASS`.
 
-The ordering of the  Mechanisms specified within a `TIME_STEP` is arbitrary (and is irrelevant, as there are no
-sequential dependencies among Mechanisms within the same `consideration_set`).
-
-For each `TIME_STEP`, the Scheduler evaluates  whether any specified `termination conditions` have
-been met, and terminates if so.  Otherwise, it returns the set of Mechanisms that should be executed in the current
-`TIME_STEP`. Each subsequent call to the `run <Scheduler.run>` method returns the set of Mechanisms in the following
-`TIME_STEP`. Processing of all of the `consideration_sets <consideration_set>` in the `consideration_queue` constitutes
-a `PASS` of execution, over which every Mechanism in the Composition has been considered for execution. Subsequent
-calls to the `run <Scheduler.run>` method cycle back through the `consideration_queue`, evaluating the
-`consideration_sets <consideration_set>` in the same order as previously, though possibly assigning for execution
-different Mechanisms within the same `consideration_set` on different `PASS`es (since different Conditions may be
-satisfied).  The Scheduler continues to make `PASS`es through the `consideration_queue` until a termination
-Condition is satisfied. If no termination Conditions are specified, the Scheduler terminates a `TRIAL` when every
-Mechanism has been specified for execution at least once (corresponding to the `AllHaveRun` Condition).  However,
-other termination Conditions can be specified, that may cause the Scheduler to terminate a `TRIAL` earlier (e.g.,
-when the  Condition for a particular Mechanism or set of Mechanisms is met).  When the Scheduler terminates a `TRIAL`,
-the `Composition` begins processing the next input specified in the call to its `run <Composition.run>` method.  Thus,
-a `TRIAL` is defined as the scope of processing associated with a given input to the Composition.
+For each `TIME_STEP`, the Scheduler evaluates  whether any specified
+`termination Conditions <Scheduler_Termination_Conditions>` have been met, and terminates if so.  Otherwise,
+it returns the set of Mechanisms that should be executed in the current `TIME_STEP`. Each subsequent call to the
+`run <Scheduler.run>` method returns the set of Mechanisms in the following `TIME_STEP`. Processing of all of the
+`consideration_sets <consideration_set>` in the `consideration_queue` constitutes a `PASS` of execution, over which
+every Mechanism in the Composition has been considered for execution. Subsequent calls to the `run <Scheduler.run>`
+method cycle back through the `consideration_queue`, evaluating the `consideration_sets <consideration_set>` in the
+same order as previously, though possibly assigning for execution different Mechanisms within the same
+`consideration_set` on different `PASS`es (since different Conditions may be satisfied).  The Scheduler continues to
+make `PASS`es through the `consideration_queue` until a termination Condition is satisfied. If no termination
+Conditions are specified, the Scheduler terminates a `TRIAL` when every Mechanism has been specified for execution
+at least once (corresponding to the `AllHaveRun` Condition).  However, other termination Conditions can be specified,
+that may cause the Scheduler to terminate a `TRIAL` earlier (e.g., when the  Condition for a particular Mechanism or
+set of Mechanisms is met).  When the Scheduler terminates a `TRIAL`, the `Composition` begins processing the next
+input specified in the call to its `run <Composition.run>` method.  Thus, a `TRIAL` is defined as the scope of
+processing associated with a given input to the Composition.
 
 
-TERM CONDS
-
-EXPLAIN: EACH PASS TRHOUGH THE CONSID Q IS A PASS
-IF NOT TERM COND, CONTINUES PASSES UNTIL EVERY MECH EXECUTE AT LEAST ONCE
-If no termination Conditions
-are specified, the Scheduler terminates a `P` when every Mechanism has been specified for execution at least once
-(corresponding to the `AllHaveRun` Condition).
- For each call to its `run <Scheduler.run>` method, the Scheduler returns a set of
-Mechanisms to execute from the next `consideration_set` in the `consideration_queue`.
-
-
-A full pass through the `consideration_queue`
-constitutes a `PASS` of execution, during which every Mechanism in the Composition is provided the opportunity to be
-considered for execution.  The number of PASSes associated with a single `input <Composition.input>`
-to the Composition constitutes a `TRIAL`, and the number of TRIALs executed constitutes a `RUN`.
+.. _Scheduler_Termination_Conditions:
 
 Termination Conditions
-^^^^^^^^^^^^^^^^^^^^^^
-Termination conditions are `Condition`s that specify when the open-ended units of time - `TimeScale.TRIAL`
-or `TimeScale.RUN` - have ended. By default, a `TimeScale.TRIAL`'s termination condition is `AllHaveRun`, true
-when all mechanisms have run at least once within the trial, and a `TimeScale.RUN`'s termination condition is
+~~~~~~~~~~~~~~~~~~~~~~
+
+Termination conditions are `Conditions <Condition>` that specify when the open-ended units of time - `TRIAL`
+and `RUN` - have ended.  By default, the termination condition for a `TRIAL` is `AllHaveRun`, which is `True`
+when all Mechanisms have run at least once within the trial, and the termination condition for a `RUN` is
 when all of its constituent trials have terminated. These defaults may be overriden when running a Composition,
-by passing a dictionary mapping `TimeScale` s to `Condition` s in to `Composition.run<Composition.run>`'s parameters
-`termination_processing` for processing execution or `termination_learning` for learning execution::
+by passing a dictionary mapping `TimeScales <TimeScale>` to `Conditions <Condition>` in the
+**termination_processing** argument of a call to `Composition.run` (to terminate the execution of processing),
+or its **termination_learning** argument to terminate the execution of learning::
 
     sys.run(
         ...,
-        termination_processing={
-            TimeScale.TRIAL: WhenFinished(ddm)
-        }
-    )
-
-
+        termination_processing={TimeScale.TRIAL: WhenFinished(ddm)}
+        )
 
 Examples
 --------

@@ -6,15 +6,9 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# ********************************************* Condition ***************************************************************
+# ********************************************* Condition **************************************************************
 
 """
-
-COMMENT:
-    [**NAME OF THE MODULE SHOULD BE CAPITALIZED]
-    K: Agreed, along with Scheduling folder to match the project style
-    JDC: Yep
-COMMENT
 
 .. _Condition_Overview
 
@@ -53,19 +47,20 @@ the attributes `owner` and `scheduler` are determined through context, as below:
 Custom Conditions
 -----------------------
 
-Arbitrary `Condition` s may be created and used ad hoc, using the base `Condition` class.
+Arbitrary `Conditions <Condition>` may be created and used *ad hoc*, using the base `Condition` class.
 COMMENT:
     K: Thinking about it I kind of like making basic wrappers While and Until, where While is exactly the same as
         base Condition, but perhaps more friendly sounding? It evals to the output of the function exactly
         Until would just be the inversion of the function. Thoughts?
+    JDC: THIS SOUNDS GOOD.
 COMMENT
 
-In order to construct a custom Condition object, you must pass in a function (or other callable) to Condition's **func** argument
-This is used to specify the function that will be evaluated on each `PASS` through the Mechanisms in the Composition,
-to determine whether the associated Mechanism is allowed to execute on that `PASS`. After the function, additional
-args and kwargs may be passed to the constructor; the function will be called with these parameters upon evaluation of the
-Condition. Custom Conditions can provide for expressive behavior, such as satisfaction after a recurrent mechanism has
-converged::
+In order to construct a custom Condition object, a function (or other callable) must be passed to the Condition's
+**func** argument This is used to specify the function that will be evaluated on each `PASS` through the Mechanisms
+in the Composition, to determine whether the associated Mechanism is allowed to execute on that `PASS`. After the
+function, additional args and kwargs may be passed to the constructor; the function will be called with these
+parameters upon evaluation of the Condition. Custom Conditions can provide for expressive behavior,
+such as satisfaction after a recurrent mechanism has converged::
 
     def converge(mech, thresh):
         return abs(mech.value - mech.previous_value) < thresh
@@ -88,61 +83,144 @@ Mechanism, it is assigned the Condition `Always`, which allows it to be executed
 `under consideration <Scheduler_Algorithm>`.  As described `above <Condition_Creation>`, there are pre-specified
 subclasses (listed below) that implement standard conditions and simply require the specification of a parameter
 or two to be implemented, while the generic Condition can be used to implement custom conditions by passing it a
-function and associated arguments.  Following is the list of pre-specified Conditions and the parameters they require:
+function and associated arguments.  Following is a list of pre-specified Conditions and the parameters they require
+(described in greater detail under `Condition_Class_Reference`):
 
 .. note::
-    The optional time_scale parameter in many `Condition`\s specifies the scope in which the `Condition` operates, which
-    usually defaults `TimeScale.TRIAL`, except for the `_Trial` `Conditions` which default to `TimeScale.RUN`. For example,
-    `BeforeNCalls(A, 2)` would be true before `A` has executed twice in each trial, whereas
-    `BeforeNCalls(A, 2, TimeScale.RUN)` would be true before `A` has executed twice in the entire run, that is, in all trials.
+    The optional `TimeScale` argument in many of the `Conditions <Condition>` below specifies the scope over which the
+    Condition operates;  this defaults to `TRIAL` in all cases, except for Conditions with "Trial" in their name
+    in which it defaults to `RUN`.
 
 COMMENT:
-    K: I think it's troublesome to use "execute" below, because I think it implies that these conditions will necessarily
-    cause the execution of the mechanism to which they are associated, whereas in reality for for the mechanism to execute
-    it must be that both the mechanism is currently eligible and its Condition is true
+    K: I think it's troublesome to use "execute" below, because I think it implies that these conditions will
+    necessarily cause the execution of the mechanism to which they are associated, whereas in reality for for the
+    mechanism to execute it must be that both the mechanism is currently eligible and its Condition is true
+    For example, `BeforeNCalls(A, 2)` would be true before `A` has executed twice in each trial, whereas
+    `BeforeNCalls(A, 2, TimeScale.RUN)` would be true before `A` has executed twice in the entire run, that is,
+    in all trials.
+    JDC: I THINK I MUST STILL HAVE A GLITCH IN MY UNDERSTANDING, AS I THOUGHT THAT CONDITIONS ARE ONLY EVALUATED FOR
+         ITEMS IN THE CURRENT CONSIDERATION_SET WHICH, DE FACTO, ARE ELIGIBLE FOR EXECUTION (THAT SEEMS TO BE WHAT
+         THE EXECUTION SECTION BELOW SAYS).  MAYBE I STILL DON'T UNDERSTAND EXACTLY WHEN CONDITIONS ARE BEING EVALUATED
+         (I LOOKED AT THE PSEUDO CODE IN THE EXECUTION SECTION OF THE SCHEDULER DOCSTRING, AND
+         THOUGH I SEE TERMINATION CONDITIONS BEING CHECKED, I DON'T SEE THE MECHANISM-SPECIFIC ONES BEING CHECKED;
+         MAYBE IT WOULD BE HELPFUL TO EXPAND THE PSEUDOCODE TO INCLUDE THIS?  ANYHOW, WE CAN DISCUSS)
 COMMENT
 
-    * `BeforePass`\ (int[, TimeScale]) - execute anytime before the specified `PASS` occurs.
-    * `AtPass`\ (int[, TimeScale]) - execute only during the specified `PASS`.
-    * `AfterPass`\ (int[, TimeScale]) - execute anytime after the specified `PASS` has occurred.
-    * `AfterNPasses`\ (int[, TimeScale]) - execute anytime after the specified number of `PASS`\es has occurred
-    * `EveryNPasses`\ (int[, TimeScale]) - execute everytime the specified number of `PASS`\ es occurs.
-    * `BeforeTrial`\ (int[, TimeScale]) - execute anytime before the specified `TRIAL` occurs.
-    * `AtTrial`\ (int[, TimeScale]) - execute anytime during the specified `TRIAL`.
-    * `AfterTrial`\ (int[, TimeScale]) - execute anytime after the specified `TRIAL` occurs.
-    * `AfterNTrials`\ (int[, TimeScale]) - execute anytime after the specified number of `TRIAL`\s has occurred
-    * `BeforeNCalls`\ (Component, int[, TimeScale]) - execute anytime before Component has executed the specified number of times
-    * `AtNCalls`\ (Component, int[, TimeScale]) - execute when Component has executed exactly the specified number of times
-    * `AfterCall`
-    * `AfterNCalls`
-    * `AfterNCallsCombined`
-    * `EveryNCalls`
-    * `JustRan`
-    * `AllHaveRun`
-    * `WhenFinished`
-    * `WhenFinishedAny`
-    * `WhenFinishedAll`
-    * `Always`
-    * `Never`
-    * `All`
-    * `Any`
-    * `Not`
+* `BeforePass`\ (int[, TimeScale])
+  \
+  execute anytime before the specified `PASS` occurs.
+
+* `AtPass`\ (int[, TimeScale])
+  \
+  execute only during the specified `PASS`.
+
+* `AfterPass`\ (int[, TimeScale])
+  \
+  execute anytime after the specified `PASS` has occurred.
+
+* `AfterNPasses`\ (int[, TimeScale])
+  \
+  execute when or anytime after the specified number of `PASS`\es has occurred.
+
+* `EveryNPasses`\ (int[, TimeScale])
+  \
+  execute everytime the specified number of `PASS`\ es occurs.
+
+* `BeforeTrial`\ (int[, TimeScale])
+  \
+  execute anytime before the specified `TRIAL` occurs.
+
+* `AtTrial`\ (int[, TimeScale])
+  \
+  execute anytime during the specified `TRIAL`.
+
+* `AfterTrial`\ (int[, TimeScale])
+  \
+  execute anytime after the specified `TRIAL` occurs.
+
+* `AfterNTrials`\ (int[, TimeScale])
+  \
+  execute anytime after the specified number of `TRIAL`\s has occurred.
+
+* `BeforeNCalls`\ (Component, int[, TimeScale])
+  \
+  execute anytime before the specified Component has executed the specified number of times.
+
+* `AtNCalls`\ (Component, int[, TimeScale])
+  \
+  execute when the specified Component has executed the specified number of times.
+
+* `AfterCall`\ (Component, int[, TimeScale])
+  \
+  execute anytime after the Component has executed the specified number of times.
+
+* `AfterNCalls`\ (Component, int[, TimeScale])
+  \
+  execute when or anytime after the Component has executed the specified number of times.
+
+* `AfterNCallsCombined`\ (Components, int[, TimeScale])
+  \
+  execute when or anytime after any of the reference Components has executed.
+
+* `EveryNCalls`\ (Components, int[, TimeScale])
+  \
+  execute when the specified Component has executed the specified number of times.
+
+* `JustRan`\ (Component)
+  \
+  execute if the specified Component was assigned to run in the previous `TIME_STEP`.
+
+* `AllHaveRun`\ (Components)
+  \
+  execute when all of the specified Components have executed.
+
+* `WhenFinished`\ (Component)
+  \
+  execute when the specified Component has finished (i.e, its `is_finished` attribute is `True`).
+
+* `WhenFinishedAny`\ (Components)
+  \
+  execute when any of the specified Components have finished (i.e, `is_finished` is `True` for any of them).
+
+* `WhenFinishedAll`\ (Components)
+  \
+  execute when all of the specified Components have finished (i.e, `is_finished` is `True` for all of them).
+
+* `Always`
+  \
+  execute whenever eligible (i.e., in the the current `consideration_set`).
+
+COMMENT:
+   JDC: I REALIZE THIS MAY BE HERE FOR COMPLETENESS, BUT IS IT EVER USEFUL?
+COMMENT
+* `Never`
+  \
+  never execute.
+
+* `All`\ (Tuple[Condition])
+  \
+  execute whenever all of the specified Conditions are satisfied.
+
+* `Any`\ (Tuple[Condition])
+  \
+  execute whenever any of the specified Conditions are satisfied.
+
+* `Not`\ (Condition)
+  \
+  execute whenever the specified Condition is not satisfied.
 
 .. Condition_Execution:
 
 Execution
 ---------
 
-COMMENT:
-    JDC: IS THIS BETTER?
-COMMENT
 When the `Scheduler` `runs <Schedule_Execution>`, it makes a sequential `PASS` through its `consideration_queue`,
 evaluating each `consideration_set` in the queue to determine which Mechanisms should be assigned to execute.
 It evaluates the Mechanisms in each set by calling the `is_satisfied` method of the Condition associated with each
 of those Mechanisms.  If it returns `True`, then the Mechanism is assigned to the execution set for the `TIME_STEP`
 of execution generated by that `PASS`.  Otherwise, the Mechanism is not executed.
 
-.. _Condition_Class_Reference
+.. _Condition_Class_Reference:
 
 Class Reference
 ---------------
@@ -165,32 +243,37 @@ class ConditionError(Exception):
 
 
 class ConditionSet(object):
-    """
-    An object used in conjunction with `Scheduler`<Scheduler> to store all the associated conditions with their owners.
+    """Used in conjunction with a `Scheduler` to store the `Conditions <Condition>` associated with a `Component`.
 
     Arguments
     ---------
 
     scheduler : Scheduler
-        a `Scheduler` that these conditions are associated with, which maintains any state necessary for these conditions
+        specifies the `Scheduler` used to evaluate and maintain a record of the `Conditions' <Condition>` states
+        (i.e., whether each is currently satisfied).
 
-    conditions : dict
-        a `dict` mapping `Component`s to `iterable`s of `Condition`s, can be added later with `add_condition`
+    conditions : Dict[Component: Iterable[Condition]]
+        specifies an iterable collection of `Components <Component>` and the `Condition(s) <Condition>` associated
+        with each.
 
     Attributes
     ----------
 
     scheduler : Scheduler
-        a `Scheduler` that these conditions are associated with, which maintains any state necessary for these conditions
+        used to evaluate and maintain a record of each `Condition's` <Condition>` state
+        (i.e., whether it is currently satisfied).
 
+    COMMENT:
+        JDC: IN THE ATTRIBUTE IS IT CONVERTED TO A STANDARD ITERABLE FORM (E.G. A LIST)?  IF SO, SHOULD
+        MODIFY DESCRIPTION BELOW ACCORDINGLY
+    COMMENT
     conditions : dict
-        a `dict` mapping `Component`s to `iterable`s of `Condition`s, can be added later with `add_condition`
+        the key of each entry is a `Component`, and its value is an iterable collection (e.g., a list or tuple) of
+        one or more `Conditions <Condition>` associated with that Component.  Conditions can be added to the
+        ConditionSet using the ConditionSet's `add_condition` method.
+
     """
     def __init__(self, scheduler=None, conditions=None):
-        """
-        :param scheduler: a `Scheduler` that these conditions are associated with, which maintains any state necessary for these conditions
-        :param conditions: a `dict` mapping `Component`s to `iterable`s of `Condition`s, can be added later with `add_condition`
-        """
         self.conditions = conditions if conditions is not None else {}
         self.scheduler = scheduler
 
@@ -210,9 +293,18 @@ class ConditionSet(object):
             cond.scheduler = value
 
     def add_condition(self, owner, condition):
-        """
-        :param owner: the `Component` that is dependent on the :param conditions:
-        :param conditions: a `Condition` (including All or Any)
+        """Add a `Condition` to the ConditionSet.
+
+        Arguments
+        ---------
+
+        owner : Component
+            specifies the Component with which the **condition** should be associated.
+
+        condition : Condition
+            specifies the Condition, associated with the **owner** to be added to the ConditionSet.
+
+
         """
         logger.debug('add_condition: Setting scheduler of {0}, (owner {2}) to self.scheduler ({1})'.
                      format(condition, self.scheduler, owner))
@@ -221,8 +313,16 @@ class ConditionSet(object):
         self.conditions[owner] = condition
 
     def add_condition_set(self, conditions):
-        """
-        :param conditions: a `dict` mapping `Component`s to `Condition`s, can be added later with `add_condition`
+        """Add a collection of `Conditions <Condition>` to the ConditionSet.
+
+        Arguments
+        ---------
+
+        conditions : Dict[Component: Iterable[Conditions]]
+            specifies an iterable collection of Conditions to be added to the ConditionSet, in the form of a dict
+            each entry of which maps a `Component` (the key) to an iterable collection (i.e., a list, tuple or set) of
+            `Conditions <Condition>` (the value).
+
         """
         for owner in conditions:
             conditions[owner].owner = owner
@@ -232,39 +332,20 @@ class ConditionSet(object):
 
 class Condition(object):
     """
-    Used in conjunction with a `Scheduler` to specify the pattern of execution for `Mechanisms <Mechanism>` in a
-    `System.
+    Used in conjunction with a `Scheduler` to specify the condition under which a `Mechanism` should be
+    allowed to execute.
 
     Arguments
     ---------
 
-    dependencies : **??LIST? DICT?
-        K: ANYTHING
-        JDC: NOT SURE I UNDERSTAND.  THERE IS NO SYNTAX FOR SPECIFICATION OF DEPENDENCIES?
-             WHAT IF JUST AN INTEGER IS GIVEN?
-        K: No, there isn't. There isn't a general form that's valid for most or all Conditions. Sometimes it's a number,
-        sometimes it's a Component, sometimes one or more, or none. It all depends on the exact Condition made. This was
-        made flexible to allow for arbitrary Conditions to be made
-        not just mechanisms, they can be anything at all
-        one or more `Mechanisms <Mechanism>` over which `func <Condition.func>` is evaluated to determine satisfaction
-        of the `Condition`;  user must ensure that dependencies are suitable as func parameters
     func : callable
-    COMMENT:
-        K: Think it might be better to rename to function, like other things in PNL? or confusing
-        JDC: **??FORMAT?
-        K: probably below in my version was an accident. func is just any function
-        JDC: OK AS CORRECTED ABOVE?
-        K: I think so. Arguably it could be just callable, which I prefer in a sense because there shouldn't be any reason why you
-        couldn't use a partial function (https://www.learnpython.org/en/Partial_functions) instead. These can be very handy at times, and
-        when I was using these once before I ran into a problem where PNL required a function and so failed when you used a partial function
-    COMMENT
-        func is evaluated to determine satisfaction of the `Condition`
+        specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.
 
-    args :
-        additional formal arguments passed to func
+    args : *args
+        specifies formal arguments to pass to `func` when the Condition is evaluated.
 
-    kwargs :
-        additional keyword arguments passed to func
+    kwargs : **kwargs
+        specifies keyword arguments to pass to `func` when the Condition is evaluated.
 
     Attributes
     ----------
@@ -279,11 +360,13 @@ class Condition(object):
         """
     def __init__(self, dependencies, func, *args, **kwargs):
         """
-        :param dependencies: one or more PNL objects over which func is evaluated to determine satisfaction of the `Condition`
-            user must ensure that dependencies are suitable as func parameters
-        :param func: func is evaluated to determine satisfaction of the `Condition`
-        :param args: additional formal arguments passed to func
-        :param kwargs: additional keyword arguments passed to func
+        COMMENT:
+            dependencies: one or more PNL objects over which func is evaluated to determine satisfaction of the
+                `Condition` user must ensure that dependencies are suitable as func parameters
+            func: func is evaluated to determine satisfaction of the `Condition`
+            args: additional formal arguments passed to func
+            kwargs: additional keyword arguments passed to func
+        COMMENT
         """
         self.dependencies = dependencies
         self.func = func
@@ -336,15 +419,15 @@ class Condition(object):
 
 
 class Always(Condition):
-    """
-    Always
+    """Always
 
     Parameters:
 
-    Satisfied when:
-        - always satisfied
+        none
 
-    Notes:
+    Satisfied when:
+
+        - always satisfied.
 
     """
     def __init__(self):
@@ -352,13 +435,15 @@ class Always(Condition):
 
 
 class Never(Condition):
-    """
-    Never
+    """Never
 
     Parameters:
 
+        none
+
     Satisfied when:
-        - never satisfied
+
+        - never satisfied.
 
     Notes:
 
@@ -377,25 +462,23 @@ class Never(Condition):
 
 
 class All(Condition):
-    """
-    All
+    """All
 
     Parameters:
-        - args (argtuple): one or more `Condition`s
+
+        args(tuple): one or more `Conditions <Condition>`
 
     Satisfied when:
-        - All args are satisfied
+
+        - all of the Conditions in args are satisfied.
 
     Notes:
-        To initialize with a list (for example),
-            conditions = [AfterNCalls(mechanism, 5) for mechanism in mechanism_list]
-        unpack the list to supply its members as args
-            composite_condition = All(*conditions)
+
+    To initialize with a list (for example),conditions = [AfterNCalls(mechanism, 5) for mechanism in mechanism_list]
+    unpack the list to supply its members as args composite_condition = All(*conditions)
+
     """
     def __init__(self, *args):
-        """
-        :param args: one or more `Condition`s, all of which must be satisfied to satisfy this composite condition
-        """
         super().__init__(args, self.satis)
 
     @Condition.scheduler.setter
@@ -420,24 +503,23 @@ class All(Condition):
 
 
 class Any(Condition):
-    """
-    Any
+    """Any
 
     Parameters:
-        - args: one or more `Condition`s
+
+        args(tuple): one or more `Conditions <Condition>`
 
     Satisfied when:
-        - All args are satisfied
+
+        - one or more of the Conditions in **args** is satisfied.
 
     Notes:
-        To initialize with a list (for example), conditions = [AfterNCalls(mechanism, 5) for mechanism in mechanism_list], unpack the list to supply its members as args
 
-        composite_condition = Any(*conditions)
+    To initialize with a list (for example), conditions = [AfterNCalls(mechanism, 5) for mechanism in mechanism_list],
+    unpack the list to supply its members as args composite_condition = Any(*conditions)
+
     """
     def __init__(self, *args):
-        """
-        :param args: one or more `Condition`s, any of which must be satisfied to satisfy this composite condition
-        """
         super().__init__(args, self.satis)
 
     @Condition.scheduler.setter
@@ -463,16 +545,15 @@ class Any(Condition):
 
 
 class Not(Condition):
-    """
-    Not
+    """Not
 
     Parameters:
-        - condition (Condition): a `Condition`
+
+        condition(Condition): a `Condition`
 
     Satisfied when:
-        - condition is not satisfied
 
-    Notes:
+        - the Condition is not satisfied
 
     """
     def __init__(self, condition):
@@ -493,53 +574,62 @@ class Not(Condition):
 
 
 class BeforePass(Condition):
-    """
-    BeforePass
+    """BeforePass
 
     Parameters:
-        - n (int): the pass after which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting passes. Defaults to TimeScale.TRIAL
+
+        n(int): the 'PASS' after which the Condition will be satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\ es (default: TimeScale.TRIAL)
 
     Satisfied when:
-        - within the scope of time_scale, at most n-1 passes have occurred
+
+        - at most n-1 `PASS`\ es have occurred within one unit of **time_scale**.
 
     Notes:
-        Counts of TimeScales are zero-indexed (that is, the first Pass is pass 0, the second Pass is pass 1, etc.). So,
-        BeforePass(2) is satisfied at pass 0 and pass 1
+
+    Counts of TimeScales are zero-indexed (that is, the first `PASS` is 0, the second `PASS` is 1, etc.).
+    So, BeforePass(2) is satisfied at `PASS` 0 and `PASS` 1
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
         def func(n, time_scale):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] < n
         super().__init__(n, func, time_scale)
 
 
 class AtPass(Condition):
-    """
-    AtPass
+    """AtPass
 
     Parameters:
-        - n (int): the pass at which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting passes. Defaults to TimeScale.TRIAL
+
+        n(int): the `PASS` at which the Condition will be satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\ es (default: TimeScale.TRIAL)
 
     Satisfied when:
-        - within the scope of time_scale, exactly n passes have occurred
+
+        - exactly n `PASS`\ es have occurred within the one unit of **time_scale**.
 
     Notes:
-        Counts of TimeScales are zero-indexed (that is, the first Pass is pass 0, the second Pass is pass 1, etc.). So,
-        AtPass(1) is satisfied when one pass (pass 0) has already occurred.
+
+    Counts of TimeScales are zero-indexed (that is, the first 'PASS' is pass 0, the second 'PASS' is 1, etc.).
+    So, AtPass(1) is satisfied when a single `PASS` (`PASS` 0) has occurred.
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
         def func(n):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             try:
                 return self.scheduler.times[time_scale][TimeScale.PASS] == n
             except KeyError as e:
-                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.format(type(self).__name__, e, time_scale))
+                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.
+                                     format(type(self).__name__, e, time_scale))
         super().__init__(n, func)
 
 
@@ -562,7 +652,8 @@ class AfterPass(Condition):
     def __init__(self, n, time_scale=TimeScale.TRIAL):
         def func(n, time_scale):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] > n
         super().__init__(n, func, time_scale)
 
@@ -586,7 +677,8 @@ class AfterNPasses(Condition):
     def __init__(self, n, time_scale=TimeScale.TRIAL):
         def func(n, time_scale):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] >= n
         super().__init__(n, func, time_scale)
 
@@ -609,7 +701,8 @@ class EveryNPasses(Condition):
     def __init__(self, n, time_scale=TimeScale.TRIAL):
         def func(n, time_scale):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] % n == 0
         super().__init__(n, func, time_scale)
 
@@ -626,18 +719,20 @@ class BeforeTrial(Condition):
         - within the scope of time_scale, at most n-1 trials have occurred
 
     Notes:
-        Counts of TimeScales are zero-indexed (that is, the first Trial is trial 0, the second Trial is trial 1, etc.). So,
-        BeforeTrial(2) is satisfied at trial 0 and trial 1
+        Counts of TimeScales are zero-indexed (that is, the first Trial is trial 0, the second Trial is trial 1, etc.).
+        So, BeforeTrial(2) is satisfied at trial 0 and trial 1
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
         def func(n):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             try:
                 return self.scheduler.times[time_scale][TimeScale.TRIAL] < n
             except KeyError as e:
-                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.format(type(self).__name__, e, time_scale))
+                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.
+                                     format(type(self).__name__, e, time_scale))
         super().__init__(n, func)
 
 
@@ -653,18 +748,20 @@ class AtTrial(Condition):
         - within the scope of time_scale, exactly n trials have occurred
 
     Notes:
-        Counts of TimeScales are zero-indexed (that is, the first Trial is trial 0, the second Trial is trial 1, etc.). So,
-        AtTrial(1) is satisfied when one trial (trial 0) has already occurred.
+        Counts of TimeScales are zero-indexed (that is, the first Trial is trial 0, the second Trial is trial 1, etc.).
+        So, AtTrial(1) is satisfied when one trial (trial 0) has already occurred.
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
         def func(n):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             try:
                 return self.scheduler.times[time_scale][TimeScale.TRIAL] == n
             except KeyError as e:
-                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.format(type(self).__name__, e, time_scale))
+                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.
+                                     format(type(self).__name__, e, time_scale))
         super().__init__(n, func)
 
 
@@ -680,18 +777,20 @@ class AfterTrial(Condition):
         - within the scope of time_scale, at least n+1 trials have occurred
 
     Notes:
-        Counts of TimeScales are zero-indexed (that is, the first Trial is trial 0, the second Trial is trial 1, etc.). So,
-        AfterTrial(1) is satisfied after trial 1 has occurred, at trial 2, trial 3, trial 4, etc.
+        Counts of TimeScales are zero-indexed (that is, the first Trial is trial 0, the second Trial is trial 1, etc.).
+        So, AfterTrial(1) is satisfied after trial 1 has occurred, at trial 2, trial 3, trial 4, etc.
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
         def func(n):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             try:
                 return self.scheduler.times[time_scale][TimeScale.TRIAL] > n
             except KeyError as e:
-                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.format(type(self).__name__, e, time_scale))
+                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.
+                                     format(type(self).__name__, e, time_scale))
         super().__init__(n, func)
 
 
@@ -712,7 +811,8 @@ class AfterNTrials(Condition):
     def __init__(self, n, time_scale=TimeScale.RUN):
         def func(n, time_scale):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.TRIAL] >= n
         super().__init__(n, func, time_scale)
 
@@ -729,7 +829,8 @@ class BeforeNCalls(Condition):
     Parameters:
         - dependency (Component):
         - n (int): the number of executions of dependency at which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency. Defaults to TimeScale.TRIAL
+        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency.
+          Defaults to TimeScale.TRIAL
 
     Satisfied when:
         - dependency has been executed exactly n times within the scope of time_scale
@@ -740,7 +841,8 @@ class BeforeNCalls(Condition):
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
         def func(dependency, n):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             num_calls = self.scheduler.counts_total[time_scale][dependency]
             logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
             return num_calls < n
@@ -760,7 +862,8 @@ class AtNCalls(Condition):
     Parameters:
         - dependency (Component):
         - n (int): the number of executions of dependency at which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency. Defaults to TimeScale.TRIAL
+        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency.
+           Defaults to TimeScale.TRIAL
 
     Satisfied when:
         - dependency has been executed exactly n times within the scope of time_scale
@@ -771,7 +874,8 @@ class AtNCalls(Condition):
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
         def func(dependency, n):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             num_calls = self.scheduler.counts_total[time_scale][dependency]
             logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
             return num_calls == n
@@ -785,7 +889,8 @@ class AfterCall(Condition):
     Parameters:
         - dependency (Component):
         - n (int): the number of executions of dependency after which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency. Defaults to TimeScale.TRIAL
+        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency.
+          Defaults to TimeScale.TRIAL
 
     Satisfied when:
         - dependency has been executed at least n+1 times within the scope of time_scale
@@ -796,7 +901,8 @@ class AfterCall(Condition):
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
         def func(dependency, n):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             num_calls = self.scheduler.counts_total[time_scale][dependency]
             logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
             return num_calls > n
@@ -810,7 +916,8 @@ class AfterNCalls(Condition):
     Parameters:
         - dependency (Component):
         - n (int): the number of executions of dependency after which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency. Defaults to TimeScale.TRIAL
+        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency.
+          Defaults to TimeScale.TRIAL
 
     Satisfied when:
         - dependency has been executed at least n+1 times within the scope of time_scale
@@ -821,7 +928,8 @@ class AfterNCalls(Condition):
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
         def func(dependency, n):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             num_calls = self.scheduler.counts_total[time_scale][dependency]
             logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
             return num_calls >= n
@@ -834,8 +942,10 @@ class AfterNCallsCombined(Condition):
 
     Parameters:
         - *dependencies (Components): variable length
-        - n (int): the number of executions of all dependencies after which this condition will be satisfied. Defaults to None
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependencies. Defaults to TimeScale.TRIAL
+        - n (int): the number of executions of all dependencies after which this condition will be satisfied.
+          Defaults to None
+        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependencies.
+          Defaults to TimeScale.TRIAL
 
     Satisfied when:
         - Among all dependencies, there have been at least n+1 executions within the scope of time_scale
@@ -848,13 +958,15 @@ class AfterNCallsCombined(Condition):
 
         def func(_none, *dependencies, n=None):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             if n is None:
                 raise ConditionError('{0}: keyword argument n is None'.format(type(self).__name__))
             count_sum = 0
             for d in dependencies:
                 count_sum += self.scheduler.counts_total[time_scale][d]
-                logger.debug('{0} has reached {1} num_calls in {2}'.format(d, self.scheduler.counts_total[time_scale][d], time_scale.name))
+                logger.debug('{0} has reached {1} num_calls in {2}'.
+                             format(d, self.scheduler.counts_total[time_scale][d], time_scale.name))
             return count_sum >= n
         super().__init__(None, func, *dependencies, n=n)
 
@@ -878,7 +990,8 @@ class EveryNCalls(Condition):
     def __init__(self, dependency, n):
         def func(dependency, n):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             num_calls = self.scheduler.counts_useable[dependency][self.owner]
             logger.debug('{0} has reached {1} num_calls'.format(dependency, num_calls))
             return num_calls >= n
@@ -903,7 +1016,8 @@ class JustRan(Condition):
     def __init__(self, dependency):
         def func(dependency):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             logger.debug('checking if {0} in previous execution step set'.format(dependency))
             try:
                 return dependency in self.scheduler.execution_list[-1]
@@ -918,7 +1032,8 @@ class AllHaveRun(Condition):
 
     Parameters:
         - *dependencies (Components): variable length
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependencies. Defaults to TimeScale.TRIAL
+        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependencies.
+          Defaults to TimeScale.TRIAL
 
     Satisfied when:
         - All dependencies have been executed at least 1 time within the scope of time_scale
@@ -929,7 +1044,8 @@ class AllHaveRun(Condition):
     def __init__(self, *dependencies, time_scale=TimeScale.TRIAL):
         def func(_none, *dependencies):
             if self.scheduler is None:
-                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.format(type(self).__name__))
+                raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
+                                     format(type(self).__name__))
             if len(dependencies) == 0:
                 dependencies = self.scheduler.nodes
             for d in dependencies:
@@ -960,7 +1076,8 @@ class WhenFinished(Condition):
             try:
                 return dependency.is_finished
             except AttributeError as e:
-                raise ConditionError('WhenFinished: Unsupported dependency type: {0}; ({1})'.format(type(dependency), e))
+                raise ConditionError('WhenFinished: Unsupported dependency type: {0}; ({1})'.
+                                     format(type(dependency), e))
 
         super().__init__(dependency, func)
 
@@ -977,7 +1094,8 @@ class WhenFinishedAny(Condition):
 
     Notes:
     This is a dynamic condition.
-        This is a convenience class; WhenFinishedAny(A, B, C) is equivalent to Any(WhenFinished(A), WhenFinished(B), WhenFinished(C))
+        This is a convenience class; WhenFinishedAny(A, B, C) is equivalent to
+        Any(WhenFinished(A), WhenFinished(B), WhenFinished(C))
         If no dependencies are specified, the condition will default to checking all of its scheduler's Components.
         The is_finished concept varies among components, and is currently implemented in:
             `DDM`<DDM>
@@ -1010,7 +1128,8 @@ class WhenFinishedAll(Condition):
 
     Notes:
         This is a dynamic condition.
-        This is a convenience class; WhenFinishedAll(A, B, C) is equivalent to All(WhenFinished(A), WhenFinished(B), WhenFinished(C))
+        This is a convenience class; WhenFinishedAll(A, B, C) is equivalent to
+        All(WhenFinished(A), WhenFinished(B), WhenFinished(C))
         If no dependencies are specified, the condition will default to checking all of its scheduler's Components.
         The is_finished concept varies among components, and is currently implemented in:
             `DDM`<DDM>
