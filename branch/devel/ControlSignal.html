@@ -85,40 +85,12 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="State.html">State</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
-<li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="LearningSignal.html">LearningSignal</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">ControlSignal</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-controlsignal">Creating a ControlSignal</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="GatingSignal.html">GatingSignal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html#creating-a-modulatorysignal">Creating a ModulatorySignal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
@@ -182,7 +154,7 @@
 controls the <code class="xref any docutils literal"><span class="pre">value</span></code> of that Mechanism. A ControlSignal receives an <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> value from the
 ControlMechanism to which it belongs, and uses that to compute an <code class="xref any docutils literal"><span class="pre">intensity</span></code> that is assigned as the <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.value" title="ModulatoryProjections.ControlProjection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its ControlProjection.  The ControlProjection conveys its value to
 the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or its <code class="xref any docutils literal"><span class="pre">function</span></code>, which uses that value
-to <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">control</span></a> the <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the parameter.  A ControlSignal also
+to <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">control</span></a> the <a class="reference internal" href="Function.html#Function.Stability.ParameterState.value" title="Function.Stability.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the parameter.  A ControlSignal also
 calculates a <code class="xref any docutils literal"><span class="pre">cost</span></code>, based on its <code class="xref any docutils literal"><span class="pre">intensity</span></code> and/or its time course, that is used by the ControlMechanism to adapt
 its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> in the future.</p>
 </div>

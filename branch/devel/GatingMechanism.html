@@ -100,10 +100,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#creating-an-adaptivemechanism">Creating an AdaptiveMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html#execution">Execution</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
@@ -231,7 +227,7 @@ round of execution , each GatingProjection&#8217;s value is used by the state to
 <p>When a GatingMechanism executes, the value of each item in its <a class="reference internal" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a> is assigned as the value of each of
 the corresponding GatingSignals in its <a class="reference internal" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_signals" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_signals"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signals</span></code></a> attribute.  These, in turn, are used by their associated
 <code class="xref any docutils literal"><span class="pre">GatingProjections</span></code> to modulate the value of the state to which they project.  This is done by assigning the
-GatingSignal&#8217;s value to a parameter of the state&#8217;s function, as specified by the GatingSignal&#8217;s <a class="reference internal" href="ModulatorySignal.html#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a>
+GatingSignal&#8217;s value to a parameter of the state&#8217;s function, as specified by the GatingSignal&#8217;s <a class="reference internal" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.modulation" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a>
 parameter (see <code class="xref any docutils literal"><span class="pre">GatingSignal_Execution</span></code> for details).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -244,7 +240,7 @@ has executed, a state that it gates will not assume its new value until the stat
 <span id="gatingmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism">
-<em class="property">class </em><code class="descclassname">AdaptiveMechanisms.GatingMechanisms.GatingMechanism.</code><code class="descname">GatingMechanism</code><span class="sig-paren">(</span><em>default_gating_policy=None</em>, <em>function=(Linear Linear Function-6)</em>, <em>gating_signals: &lt;typecheck.framework.optional object at 0x10b7100b8&gt; = None</em>, <em>modulation: &lt;typecheck.framework.optional object at 0x10b710978&gt; = &lt;class 'PsyNeuLink.Components.Functions.Function.MultiplicativeParam'&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x109a4c048&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">AdaptiveMechanisms.GatingMechanisms.GatingMechanism.</code><code class="descname">GatingMechanism</code><span class="sig-paren">(</span><em>default_gating_policy=None</em>, <em>function=(Linear Linear Function-6)</em>, <em>gating_signals: &lt;typecheck.framework.optional object at 0x10c100128&gt; = None</em>, <em>modulation: &lt;typecheck.framework.optional object at 0x10c100ba8&gt; = &lt;class 'PsyNeuLink.Components.Functions.Function.MultiplicativeParam'&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x109965f28&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>GatingMechanism_Base(                                   default_input_value=None,                           gating_signals=None                                 modulation=ModulationParam.MULTIPLICATIVE           function=Linear,                                    params=None,                                        name=None,                                          prefs=None)</p>
 <p>Abstract class for GatingMechanism.</p>
 <div class="admonition note">
@@ -266,7 +262,7 @@ if a Mechanism is specified, its <a class="reference internal" href="Mechanism.h
 <li><strong>modulation</strong> (<em>ModulationParam : ModulationParam.MULTIPLICATIVE</em>) &#8211; specifies the default form of modulation to be used by the GatingMechanism&#8217;s GatingSignals, unless
 they are <a class="reference internal" href="GatingSignal.html#gatingsignal-specification"><span class="std std-ref">individually specified</span></a>.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear(slope=1, intercept=0)</em>) &#8211; specifies function used to transform input to <a class="reference internal" href="#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a> to value;  the default is an identity function
-that simply assigns the GatingMechanism&#8217;s input to its <a class="reference internal" href="RecurrentTransferMechanism.html#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.value" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
+that simply assigns the GatingMechanism&#8217;s input to its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.value" title="Mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters
 for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
 specified for parameters in the dictionary override any assigned to those parameters in arguments of the

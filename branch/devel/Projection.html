@@ -178,7 +178,7 @@ needed to transmit that information to the <a class="reference internal" href="I
 <dd><p class="first last">These take the output of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>, convert this by convolving it with
 the Projection&#8217;s <code class="xref any docutils literal"><span class="pre">matrix</span></code> parameter, and transmit the result as
 input to another ProcessingMechanism.  Typically, MappingProjections are used to connect Mechanisms in the
-<a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.</p>
+<code class="xref any docutils literal"><span class="pre">pathway</span></code> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.</p>
 </dd>
 </dl>
 </li>
@@ -200,7 +200,7 @@ in the context of a <a class="reference internal" href="System.html"><span class
 <dd><p class="first last">These take the value of a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> from a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, and transmit this to the
 <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> which uses this to modify its
 <code class="xref any docutils literal"><span class="pre">matrix</span></code> parameter. LearningProjections are used when
-learning has been specified for a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>.</p>
+learning has been specified for a <code class="xref any docutils literal"><span class="pre">Process</span></code> or <code class="xref any docutils literal"><span class="pre">System</span></code>.</p>
 </dd>
 </dl>
 </li>
@@ -214,7 +214,7 @@ are <a class="reference internal" href="#projection-automatic-creation"><span cl
 <div class="section" id="in-context-specification">
 <span id="projection-in-context-specification"></span><h3>In Context Specification<a class="headerlink" href="#in-context-specification" title="Permalink to this headline">¶</a></h3>
 <p>Projections can be specified in a number of places where they are required or permitted, for example in the
-specification of a <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, where the value of a parameter is specified
+specification of a <code class="xref any docutils literal"><span class="pre">pathway</span></code> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, where the value of a parameter is specified
 (e.g., to assign a ControlProjection) or where a MappingProjection is specified  (to assign it a LearningProjection).
 Any of the following can be used to specify a Projection in context:</p>
 <blockquote>
@@ -286,9 +286,9 @@ Projection (see documentation for subclass).</li>
 <div class="section" id="automatic-creation">
 <span id="projection-automatic-creation"></span><h3>Automatic creation<a class="headerlink" href="#automatic-creation" title="Permalink to this headline">¶</a></h3>
 <p>Under some circumstances PsyNeuLink will automatically create a Projection. For example, a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>
-automatically generates a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> between adjacent Mechanisms in its <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> if none is specified;
-and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> are automatically generated when <a class="reference internal" href="Process.html#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> is specified for a
-<a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>.  Creating a <a class="reference internal" href="State.html"><span class="doc">state</span></a> will also
+automatically generates a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> between adjacent Mechanisms in its <code class="xref any docutils literal"><span class="pre">pathway</span></code> if none is specified;
+and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> are automatically generated when <code class="xref any docutils literal"><span class="pre">learning</span></code> is specified for a
+<code class="xref any docutils literal"><span class="pre">Process</span></code> or <code class="xref any docutils literal"><span class="pre">System</span></code>.  Creating a <a class="reference internal" href="State.html"><span class="doc">state</span></a> will also
 automatically generate a Projection and a Mechanism as the Projection&#8217;s <code class="xref any docutils literal"><span class="pre">sender</span></code> if none is
 specified in the constructor for the state (the type of Projection and Mechanism depend on the type of state &#8211; see
 <code class="xref any docutils literal"><span class="pre">state</span> <span class="pre">subclasses</span></code> for details).</p>

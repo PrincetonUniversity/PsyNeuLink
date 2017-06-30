@@ -190,7 +190,7 @@ projections.</p>
 <span id="outputstates-creation"></span><h2>Creating an OutputState<a class="headerlink" href="#creating-an-outputstate" title="Permalink to this headline">¶</a></h2>
 <p>An outputState can be created by calling its constructor. However, in general this is not necessary, as a mechanism
 automatically creates a default outputState if none is explicitly specified, that contains the primary result of its
-<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  For example, if the mechanism is created within the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  For example, if the mechanism is created within the <code class="xref any docutils literal"><span class="pre">pathway</span></code> of a
 <a class="reference internal" href="Process.html"><span class="doc">process</span></a>, an outputState will be created and assigned as the
 <code class="xref any docutils literal"><span class="pre">sender</span></code> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to the next mechanism in the pathway,
 or to the process&#8217;s <code class="xref any docutils literal"><span class="pre">output</span></code> if the mechanism is a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism for that process.
@@ -527,7 +527,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
 
 <dl class="class">
 <dt id="OutputState.StandardOutputStates">
-<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10c72ea90&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10c1af780&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputState specification dictionaries for standard_output_states of a class</p>
 <p>data attribute contains dictionary of OutputState specification dictionaries
 indices contains a list of the default index for each OutputState specified

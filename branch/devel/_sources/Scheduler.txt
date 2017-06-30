@@ -7,6 +7,6 @@ Scheduler
    Condition
    ConditionSet
 
-.. automodule:: scheduling.Scheduler
+.. automodule:: Scheduling.Scheduler
    :members:
    :exclude-members: random

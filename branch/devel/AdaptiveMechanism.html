@@ -94,10 +94,6 @@
 <li class="toctree-l3"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html">Control Mechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="GatingMechanism.html">Gating Mechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-an-adaptivemechanism">Creating an AdaptiveMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
@@ -188,39 +184,6 @@
 </ul>
 </li>
 </ul>
-</div>
-<span class="target" id="module-AdaptiveMechanisms.AdaptiveMechanism"></span><div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>An AdaptiveMechanism is a type of <code class="xref any docutils literal"><span class="pre">Mechanism</span></code> that uses its input to modify the parameters of one or more
-other PsyNeuLink components.  In general, an AdaptiveMechanism receives its input from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, however
-this need not be the case. There are two types of AdaptiveMechanism: <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a>, that
-modify the parameters of <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>; and <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a> that
-modify the  parameters of other ProcessingMechanisms.  AdaptiveMechanisms are always executed after all
-ProcessingMechanisms in the <a class="reference internal" href="Process.html"><span class="doc">process</span></a> or <a class="reference internal" href="System.html"><span class="doc">system</span></a> to which they belong have been
-<span class="xref std std-ref">executed</span>, with all LearningMechanisms then executed before all ControlMechanisms. Both types of
-AdaptiveMechanisms are executed before the next <span class="xref std std-ref">round of execution</span>, so that the modifications they make
-are available during the next round of execution of the process or system.</p>
-</div>
-<div class="section" id="creating-an-adaptivemechanism">
-<span id="adaptivemechanism-creation"></span><h2>Creating an AdaptiveMechanism<a class="headerlink" href="#creating-an-adaptivemechanism" title="Permalink to this headline">¶</a></h2>
-<p>An AdaptiveMechanism can be created by using the standard Python method of calling the constructor for the desired type.
-AdaptiveMechanisms of the appropriate subtype are also created automatically when a <span class="xref std std-ref">system</span> is created,  and/or learning is  specified for a <span class="xref std std-ref">system</span>,
-a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a>, or any <code class="xref any docutils literal"><span class="pre">projection</span></code> within one.  See the
-documentation for the individual subtypes of AdaptiveMechanisms for more specific information about how to create them.</p>
-</div>
-<div class="section" id="structure">
-<span id="adaptivemechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>An AdaptiveMechanism has the same basic structure as a <code class="xref any docutils literal"><span class="pre">Mechanism</span></code>.  In addition, every AdaptiveMechanism
-has a <code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute, that determines the default method by which its
-ModulatorySignals modify the value of objects that they modulate (see the <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a>
-for a description of how modulation operates, and the documentation for individual subtypes of AdaptiveMechanism for
-more specific information about their structure and modulatory operation).</p>
-</div>
-<div class="section" id="execution">
-<span id="comparator-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>An AdaptiveMechanism always executes after execution of all of the ProcessingMechanisms in the process or system to
-which it belongs.  All of the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> are then executed, followed by all of the
-<a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a>.</p>
 </div>
 </div>
 
