@@ -35,8 +35,8 @@ to be executed and their order must be specified in the Scheduler's constructor 
   of execution specified by the dependencies among the Mechanisms in its `executionGraph <System.executionGraph>`.
 
 * a *graph specification dictionary* in the **graph** argument -
-  each entry of the dictionary must be a Mechanism, and the value of each entry must be one or a
-  set of Mechanisms that project directly to the key.  The graph must be acyclic; an error is generated if any cycles
+  each entry of the dictionary must be a Mechanism, and the value of each entry must be a set of zero or more
+  Mechanisms that project directly to the key.  The graph must be acyclic; an error is generated if any cycles
   (e.g., recurrent dependencies) are detected.  The Scheduler computes a `toposort` from the graph that is used as
   the default order of executions, subject to any `Conditions` that have been specified (see below).
 
@@ -61,9 +61,39 @@ among which there are no dependencies).  The first `consideration_set` consists 
 The second consists of all Mechanisms that receive `Projections <Projection>` from Mechanisms in the first
 `consideration_set`. The third consists of Mechanisms that receive Projections from Mechanisms in the first two
 `consideration_sets <consideration_set>`, and so forth.  When the Scheduler is run, it uses the
-`consideration_queue` to determine which Mechanisms are eligible to execute in each `TIME_STEP` of a `PASS`
-through the `consideration_queue`, and then evaluates the `Conditions <Condition>` associated with each Mechanism
-in the current `consideration_set` to determine which should actually be assigned for execution.
+`consideration_queue` to determine which Mechanisms are eligible to execute in each `TIME_STEP` of a `PASS`, and then
+evaluates the `Condition <Condition>` associated with each Mechanism in the current `consideration_set`
+to determine which should actually be assigned for execution.
+
+Pseudocode::
+
+    consideration_queue <- list(toposort(graph))
+
+    reset TimeScale.TRIAL counters
+    while TimeScale.TRIAL termination conditions are not satisfied:
+        reset TimeScale.PASS counters
+        cur_index <- 0
+
+        while TimeScale.TRIAL termination conditions are not satisfied
+              and cur_index < len(consideration_queue):
+
+            cur_consideration_set <- consideration_queue[cur_index]
+            do:
+                cur_consideration_set_has_changed <- False
+                for cur_node in cur_consideration_set:
+                    if  cur_node not in cur_time_step:
+                        and TimeScale.TRIAL termination conditions are not satisfied:
+
+                        cur_consideration_set_has_changed <- True
+                        add cur_node to cur_time_step
+                        increment execution and time counters
+            while cur_consideration_set_has_changed
+
+            if cur_time_step is not empty:
+                yield cur_time_step
+
+            increment cur_index
+            increment time counters
 
 .. _Scheduler_Execution:
 
@@ -74,31 +104,42 @@ When a Scheduler is run, it provides a set of Mechanisms that should be run next
 System or graph specification dictionary, and any `Conditions <Condition>`, specified in the Scheduler's constructor.
 For each call to the `run <Scheduler.run>` method, the Scheduler sequentially evaluates its
 `consideration_sets <consideration_set>` in their order in the `consideration_queue`.  For each set, it  determines
-which Mechanisms in the set are allowed to execute, based on whether their associated `Condition(s) <Condition>` have
+which Mechanisms in the set are allowed to execute, based on whether their associated `Condition <Condition>` has
 been met. Any Mechanism that does not have a `Condition` explicitly specified is assigned the Condition `Always`,
 that allows it to execute any time it is under consideration. All of the Mechanisms within a `consideration_set` that
-are allowed to execute comprise a `TIME_STEP` of execution. The ordering of the  Mechanisms specified within a
-`TIME_STEP` is arbitrary (and is irrelevant, as there are no sequential dependencies among Mechanisms within the same
-`consideration_set`).
+are allowed to execute comprise a `TIME_STEP` of execution. These Mechanisms are
+considered as executing simultaneously, so the execution of a Mechanism within a `time_step` may trigger the
+execution of another Mechanism within its `consideration_set`, as in the example below::
 
-COMMENT:
-   JDC: STILL HAVING A HARD TIME IMAGINGING THIS;  EXAMPLE WOULD BE GOOD
-so the execution of a Mechanism within a `time_step` may trigger the execution of another Mechanism within its
-`consideration_set`.
-COMMENT
+        C
+      ↗ ↖
+     A     B
+
+    scheduler.add_condition(B, EveryNCalls(A, 2))
+    scheduler.add_condition(C, EveryNCalls(B, 1))
+
+    time steps: [{A}, {A, B}, {C}]
+
+Since there are no graph dependencies between `A` and `B`, they may execute in the same `TIME_STEP`. Morever,
+`A` and `B` are in the same `consideration_set`. Since `B` is set to run every two times `A` runs,
+`A`'s second execution in the second `TIME_STEP` allows `B` to run within that `TIME_STEP`, rather
+than waiting for the next `PASS`.
+
+The ordering of the  Mechanisms specified within a `TIME_STEP` is arbitrary (and is irrelevant, as there are no
+sequential dependencies among Mechanisms within the same `consideration_set`).
 
 For each `TIME_STEP`, the Scheduler evaluates  whether any specified `termination conditions` have
-been met, and terminates if so.  Otherwise, it returns the set of the Mechanisms that should be executed in the current
-`TIME_STEP`. Each subsequent call to the `run <Scheduler.run>` method returns the set of Mechanisms in the next
+been met, and terminates if so.  Otherwise, it returns the set of Mechanisms that should be executed in the current
+`TIME_STEP`. Each subsequent call to the `run <Scheduler.run>` method returns the set of Mechanisms in the following
 `TIME_STEP`. Processing of all of the `consideration_sets <consideration_set>` in the `consideration_queue` constitutes
 a `PASS` of execution, over which every Mechanism in the Composition has been considered for execution. Subsequent
 calls to the `run <Scheduler.run>` method cycle back through the `consideration_queue`, evaluating the
 `consideration_sets <consideration_set>` in the same order as previously, though possibly assigning for execution
-different Mechanisms within the same `consideration_set` on different PASSes (since different Conditions may be
-satisfied).  The Scheduler continues to make PASSes through the `consideration_queue` until a `Termination`
+different Mechanisms within the same `consideration_set` on different `PASS`es (since different Conditions may be
+satisfied).  The Scheduler continues to make `PASS`es through the `consideration_queue` until a termination
 Condition is satisfied. If no termination Conditions are specified, the Scheduler terminates a `TRIAL` when every
-Mechanism has been specified for execution at least once (corresponding  to the `AllHaveRun` Condition).  However,
-other `Termination` Conditions can be specified, that may cause the Scheduler to terminate a `TRIAL` earlier (e.g.,
+Mechanism has been specified for execution at least once (corresponding to the `AllHaveRun` Condition).  However,
+other termination Conditions can be specified, that may cause the Scheduler to terminate a `TRIAL` earlier (e.g.,
 when the  Condition for a particular Mechanism or set of Mechanisms is met).  When the Scheduler terminates a `TRIAL`,
 the `Composition` begins processing the next input specified in the call to its `run <Composition.run>` method.  Thus,
 a `TRIAL` is defined as the scope of processing associated with a given input to the Composition.
@@ -108,8 +149,33 @@ TERM CONDS
 
 EXPLAIN: EACH PASS TRHOUGH THE CONSID Q IS A PASS
 IF NOT TERM COND, CONTINUES PASSES UNTIL EVERY MECH EXECUTE AT LEAST ONCE
+If no termination Conditions
+are specified, the Scheduler terminates a `P` when every Mechanism has been specified for execution at least once
+(corresponding to the `AllHaveRun` Condition).
+ For each call to its `run <Scheduler.run>` method, the Scheduler returns a set of
+Mechanisms to execute from the next `consideration_set` in the `consideration_queue`.
 
-**DOCUMENT TERMINATION CONDITIONS HERE
+
+A full pass through the `consideration_queue`
+constitutes a `PASS` of execution, during which every Mechanism in the Composition is provided the opportunity to be
+considered for execution.  The number of PASSes associated with a single `input <Composition.input>`
+to the Composition constitutes a `TRIAL`, and the number of TRIALs executed constitutes a `RUN`.
+
+Termination Conditions
+^^^^^^^^^^^^^^^^^^^^^^
+Termination conditions are `Condition`s that specify when the open-ended units of time - `TimeScale.TRIAL`
+or `TimeScale.RUN` - have ended. By default, a `TimeScale.TRIAL`'s termination condition is `AllHaveRun`, true
+when all mechanisms have run at least once within the trial, and a `TimeScale.RUN`'s termination condition is
+when all of its constituent trials have terminated. These defaults may be overriden when running a Composition,
+by passing a dictionary mapping `TimeScale` s to `Condition` s in to `Composition.run<Composition.run>`'s parameters
+`termination_processing` for processing execution or `termination_learning` for learning execution::
+
+    sys.run(
+        ...,
+        termination_processing={
+            TimeScale.TRIAL: WhenFinished(ddm)
+        }
+    )
 
 
 
@@ -120,16 +186,18 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 
 * Basic phasing in a linear process::
 
-    A = TransferMechanism(function = Linear(), name = 'A')
-    B = TransferMechanism(function = Linear(), name = 'B')
-    C = TransferMechanism(function = Linear(), name = 'C')
+    A = TransferMechanism(function=Linear(), name='A')
+    B = TransferMechanism(function=Linear(), name='B')
+    C = TransferMechanism(function=Linear(), name='C')
 
     p = process(
         pathway=[A, B, C],
-        name = 'p')
+        name = 'p'
+    )
     s = system(
         processes=[p],
-        name='s')
+        name='s'
+    )
     my_scheduler = Scheduler(system=s)
 
     #impicit condition of Always for A
@@ -139,19 +207,21 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     # implicit AllHaveRun Termination condition
     execution_sequence = list(my_scheduler.run())
 
-``execution_sequence`` will be: [A, A, B, A, A, B, A, A, B, C].
+    execution_sequence: [A, A, B, A, A, B, A, A, B, C]
 
 * Alternate basic phasing in a linear process::
 
-    A = TransferMechanism(function = Linear(), name = 'A')
-    B = TransferMechanism(function = Linear(), name = 'B')
+    A = TransferMechanism(function=Linear(), name='A')
+    B = TransferMechanism(function=Linear(), name='B')
 
     p = process(
         pathway=[A, B],
-        name = 'p')
+        name = 'p'
+    )
     s = system(
         processes=[p],
-        name='s')
+        name='s'
+    )
     my_scheduler = Scheduler(system=s)
 
     my_scheduler.add_condition(A, Any(AtPass(0), EveryNCalls(B, 2)))
@@ -161,23 +231,26 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 4, time_scale=TimeScale.TRIAL)
     execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
 
-``execution_sequence`` will be: [A, B, B, A, B, B].
+    execution_sequence: [A, B, B, A, B, B]
 
 * Basic phasing in two processes::
 
-    A = TransferMechanism(function = Linear(), name = 'A')
-    B = TransferMechanism(function = Linear(), name = 'B')
-    C = TransferMechanism(function = Linear(), name = 'C')
+    A = TransferMechanism(function=Linear(), name='A')
+    B = TransferMechanism(function=Linear(), name='B')
+    C = TransferMechanism(function=Linear(), name='C')
 
     p = process(
         pathway=[A, C],
-        name = 'p')
+        name = 'p'
+    )
     q = process(
         pathway=[B, C],
-        name = 'q')
+        name = 'q'
+    )
     s = system(
         processes=[p, q],
-        name='s')
+        name='s'
+    )
     my_scheduler = Scheduler(system=s)
 
     my_scheduler.add_condition(A, EveryNPasses(1))
@@ -188,7 +261,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 4, time_scale=TimeScale.TRIAL)
     execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
 
-``execution_sequence`` will be: [A, set([A,B]), A, C, set([A,B]), C, A, C, set([A,B]), C].
+    execution_sequence: [A, {A,B}, A, C, {A,B}, C, A, C, {A,B}, C]
 
 .. _Scheduler_Class_Reference
 
@@ -208,6 +281,7 @@ logger = logging.getLogger(__name__)
 
 
 class SchedulerError(Exception):
+
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -234,7 +308,7 @@ class Scheduler(object):
              MEANS THAT THERE MUST BE CONDITIONS IMPLICIT IN THE system.
     COMMENT
 
-    condition  : ConditionSet
+    condition_set  : ConditionSet
         set of `Conditions <Condition>` that specify when individual Mechanisms in **system**
         execute and any dependencies among them, that complements any that are implicit in the System,
         and supercede those where they are in conflict.
@@ -260,10 +334,6 @@ class Scheduler(object):
     """
 
     def __init__(self, system=None, condition_set=None, nodes=None, toposort_ordering=None):
-        '''
-        :param self:
-        :param condition_set: (ConditionSet) - a :keyword:`ConditionSet` to be scheduled
-        '''
         self.condition_set = condition_set if condition_set is not None else ConditionSet(scheduler=self)
         # stores the in order list of self.run's yielded outputs
         self.execution_list = []
@@ -334,17 +404,15 @@ class Scheduler(object):
 
     def add_condition(self, owner, condition):
         '''
-        :param: self:
-        :param owner: the :keyword:`Component` that is dependent on the :param conditions:
-        :param conditions: a :keyword:`Condition` (including All or Any)
+        :param owner: the `Component` that is dependent on the `conditions`
+        :param conditions: a `Condition` (including All or Any)
         '''
         self.condition_set.add_condition(owner, condition)
 
     def add_condition_set(self, conditions):
         '''
-        :param: self:
-        :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to :keyword:`Condition`s,
-               can be added later with :keyword:`add_condition`
+        :param conditions: a :keyword:`dict` mapping `Component` s to `Condition` s,
+               can be added later with `add_condition`
         '''
         self.condition_set.add_condition_set(conditions)
 
@@ -363,13 +431,13 @@ class Scheduler(object):
                 self.condition_set.add_condition(node, Always())
                 unspecified_nodes.append(node)
         if len(unspecified_nodes) > 0:
-            logger.warning('These nodes have no Conditions specified, and will be scheduled with condition Always: {0}'.
-                           format(unspecified_nodes))
+            logger.info('These nodes have no Conditions specified, and will be scheduled with condition Always: {0}'.
+                        format(unspecified_nodes))
 
     def _validate_termination(self):
         if self.termination_conds is None:
-            logger.warning('A termination Condition dict (termination_conds[<time_step>]: Condition) was not specified,'
-                           ' and so the termination conditions for all TimeScale will be set to AllHaveRun()')
+            logger.info('A termination Condition dict (termination_conds[<time_step>]: Condition) was not specified,'
+                        ' and so the termination conditions for all TimeScale will be set to AllHaveRun()')
             self.termination_conds = {ts: AllHaveRun() for ts in TimeScale}
         for tc in self.termination_conds:
             if self.termination_conds[tc] is None:
@@ -386,7 +454,6 @@ class Scheduler(object):
 
     def run(self, termination_conds=None):
         '''
-        :param self:
         :param termination_conds: (dict) - a mapping from :keyword:`TimeScale`s to :keyword:`Condition`s that when met
                terminate the execution of the specified :keyword:`TimeScale`
         '''

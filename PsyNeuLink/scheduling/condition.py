@@ -50,32 +50,33 @@ the attributes `owner` and `scheduler` are determined through context, as below:
 
 .. _Condition_Creation:
 
-Creating New Conditions
+Custom Conditions
 -----------------------
 
-THEN, DESCRIBE INVENTION AS FOLLOWS:
-The Condition's **func** argument must be explicitly specified.  This is used to specify the function
-that will be evaluated on each `PASS` through the Mechanisms in the Composition, to determine whether the associated
-Mechanism is allowed to execute on that `PASS`.
-MENTION ARGS & KWARGS
+Arbitrary `Condition` s may be created and used ad hoc, using the base `Condition` class.
+COMMENT:
+    K: Thinking about it I kind of like making basic wrappers While and Until, where While is exactly the same as
+        base Condition, but perhaps more friendly sounding? It evals to the output of the function exactly
+        Until would just be the inversion of the function. Thoughts?
+COMMENT
 
-Hint:
-    If you do not want to use the dependencies parameter, and instead want to use only args or kwargs, you may
-    pass a dummy variable for dependencies. See `AfterNCallsCombined`<AfterNCallsCombined> for reference:
+In order to construct a custom Condition object, you must pass in a function (or other callable) to Condition's **func** argument
+This is used to specify the function that will be evaluated on each `PASS` through the Mechanisms in the Composition,
+to determine whether the associated Mechanism is allowed to execute on that `PASS`. After the function, additional
+args and kwargs may be passed to the constructor; the function will be called with these parameters upon evaluation of the
+Condition. Custom Conditions can provide for expressive behavior, such as satisfaction after a recurrent mechanism has
+converged::
 
-    class AfterNCallsCombined(Condition):
-        def __init__(self, *dependencies, n=None, time_scale=TimeScale.TRIAL):
-            def func(_none, *dependencies, n=None):
-                if self.scheduler is None:
-                    raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
-                                         format(type(self).__name__))
-                if n is None:
-                    raise ConditionError('{0}: keyword argument n is None'.format(type(self).__name__))
-                count_sum = 0
-                for d in dependencies:
-                    count_sum += self.scheduler.counts_total[time_scale][d]
-                return count_sum >= n
-            super().__init__(None, func, *dependencies, n=n)
+    def converge(mech, thresh):
+        return abs(mech.value - mech.previous_value) < thresh
+
+    Until(
+        converge,
+        my_recurrent_mech,
+        epsilon
+    )
+
+
 
 .. _Condition_Structure:
 
@@ -89,17 +90,29 @@ subclasses (listed below) that implement standard conditions and simply require 
 or two to be implemented, while the generic Condition can be used to implement custom conditions by passing it a
 function and associated arguments.  Following is the list of pre-specified Conditions and the parameters they require:
 
+.. note::
+    The optional time_scale parameter in many `Condition`\s specifies the scope in which the `Condition` operates, which
+    usually defaults `TimeScale.TRIAL`, except for the `_Trial` `Conditions` which default to `TimeScale.RUN`. For example,
+    `BeforeNCalls(A, 2)` would be true before `A` has executed twice in each trial, whereas
+    `BeforeNCalls(A, 2, TimeScale.RUN)` would be true before `A` has executed twice in the entire run, that is, in all trials.
+
+COMMENT:
+    K: I think it's troublesome to use "execute" below, because I think it implies that these conditions will necessarily
+    cause the execution of the mechanism to which they are associated, whereas in reality for for the mechanism to execute
+    it must be that both the mechanism is currently eligible and its Condition is true
+COMMENT
+
     * `BeforePass`\ (int[, TimeScale]) - execute anytime before the specified `PASS` occurs.
     * `AtPass`\ (int[, TimeScale]) - execute only during the specified `PASS`.
     * `AfterPass`\ (int[, TimeScale]) - execute anytime after the specified `PASS` has occurred.
-    * `AfterNPasses`\ (int[, TimeScale]) - execute anytime during or after the specified number of `PASS`\ es.
+    * `AfterNPasses`\ (int[, TimeScale]) - execute anytime after the specified number of `PASS`\es has occurred
     * `EveryNPasses`\ (int[, TimeScale]) - execute everytime the specified number of `PASS`\ es occurs.
     * `BeforeTrial`\ (int[, TimeScale]) - execute anytime before the specified `TRIAL` occurs.
     * `AtTrial`\ (int[, TimeScale]) - execute anytime during the specified `TRIAL`.
     * `AfterTrial`\ (int[, TimeScale]) - execute anytime after the specified `TRIAL` occurs.
-    * `AfterNTrials`\ (int[, TimeScale]) - execute anytime during the specified `TRIAL`.
-    * `BeforeNCalls`\ (int[, TimeScale]) - execute anytime before or including the specified `TRIAL`.
-    * `AtNCalls`\ (int[, TimeScale]) - execute anytime during or after the specified `TRIAL`.
+    * `AfterNTrials`\ (int[, TimeScale]) - execute anytime after the specified number of `TRIAL`\s has occurred
+    * `BeforeNCalls`\ (Component, int[, TimeScale]) - execute anytime before Component has executed the specified number of times
+    * `AtNCalls`\ (Component, int[, TimeScale]) - execute when Component has executed exactly the specified number of times
     * `AfterCall`
     * `AfterNCalls`
     * `AfterNCallsCombined`
@@ -154,14 +167,29 @@ class ConditionError(Exception):
 class ConditionSet(object):
     """
     An object used in conjunction with `Scheduler`<Scheduler> to store all the associated conditions with their owners.
+
+    Arguments
+    ---------
+
+    scheduler : Scheduler
+        a `Scheduler` that these conditions are associated with, which maintains any state necessary for these conditions
+
+    conditions : dict
+        a `dict` mapping `Component`s to `iterable`s of `Condition`s, can be added later with `add_condition`
+
+    Attributes
+    ----------
+
+    scheduler : Scheduler
+        a `Scheduler` that these conditions are associated with, which maintains any state necessary for these conditions
+
+    conditions : dict
+        a `dict` mapping `Component`s to `iterable`s of `Condition`s, can be added later with `add_condition`
     """
     def __init__(self, scheduler=None, conditions=None):
         """
-        :param self:
-        :param scheduler: a :keyword:`Scheduler` that these conditions are associated with,
-                         which maintains any state necessary for these conditions
-        :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to :keyword:`iterable`s of
-                             :keyword:`Condition`s, can be added later with :keyword:`add_condition`
+        :param scheduler: a `Scheduler` that these conditions are associated with, which maintains any state necessary for these conditions
+        :param conditions: a `dict` mapping `Component`s to `iterable`s of `Condition`s, can be added later with `add_condition`
         """
         self.conditions = conditions if conditions is not None else {}
         self.scheduler = scheduler
@@ -183,9 +211,8 @@ class ConditionSet(object):
 
     def add_condition(self, owner, condition):
         """
-        :param self:
-        :param owner: the :keyword:`Component` that is dependent on the :param conditions:
-        :param conditions: a :keyword:`Condition` (including All or Any)
+        :param owner: the `Component` that is dependent on the :param conditions:
+        :param conditions: a `Condition` (including All or Any)
         """
         logger.debug('add_condition: Setting scheduler of {0}, (owner {2}) to self.scheduler ({1})'.
                      format(condition, self.scheduler, owner))
@@ -195,9 +222,7 @@ class ConditionSet(object):
 
     def add_condition_set(self, conditions):
         """
-        :param self:
-        :param conditions: a :keyword:`dict` mapping :keyword:`Component`s to
-        :keyword:`Condition`s, can be added later with :keyword:`add_condition`
+        :param conditions: a `dict` mapping `Component`s to `Condition`s, can be added later with `add_condition`
         """
         for owner in conditions:
             conditions[owner].owner = owner
@@ -223,8 +248,9 @@ class Condition(object):
         not just mechanisms, they can be anything at all
         one or more `Mechanisms <Mechanism>` over which `func <Condition.func>` is evaluated to determine satisfaction
         of the `Condition`;  user must ensure that dependencies are suitable as func parameters
-    func : function
+    func : callable
     COMMENT:
+        K: Think it might be better to rename to function, like other things in PNL? or confusing
         JDC: **??FORMAT?
         K: probably below in my version was an accident. func is just any function
         JDC: OK AS CORRECTED ABOVE?
@@ -253,10 +279,9 @@ class Condition(object):
         """
     def __init__(self, dependencies, func, *args, **kwargs):
         """
-        :param self:
-        :param dependencies: one or more PNL objects over which func is evaluated to determine satisfaction of the :keyword:`Condition`
+        :param dependencies: one or more PNL objects over which func is evaluated to determine satisfaction of the `Condition`
             user must ensure that dependencies are suitable as func parameters
-        :param func: func is evaluated to determine satisfaction of the :keyword:`Condition`
+        :param func: func is evaluated to determine satisfaction of the `Condition`
         :param args: additional formal arguments passed to func
         :param kwargs: additional keyword arguments passed to func
         """
@@ -356,7 +381,7 @@ class All(Condition):
     All
 
     Parameters:
-        - args (argtuple): one or more :keyword:`Condition`s
+        - args (argtuple): one or more `Condition`s
 
     Satisfied when:
         - All args are satisfied
@@ -369,8 +394,7 @@ class All(Condition):
     """
     def __init__(self, *args):
         """
-        :param self:
-        :param args: one or more :keyword:`Condition`s, all of which must be satisfied to satisfy this composite condition
+        :param args: one or more `Condition`s, all of which must be satisfied to satisfy this composite condition
         """
         super().__init__(args, self.satis)
 
@@ -400,7 +424,7 @@ class Any(Condition):
     Any
 
     Parameters:
-        - args: one or more :keyword:`Condition`s
+        - args: one or more `Condition`s
 
     Satisfied when:
         - All args are satisfied
@@ -412,8 +436,7 @@ class Any(Condition):
     """
     def __init__(self, *args):
         """
-        :param self:
-        :param args: one or more :keyword:`Condition`s, any of which must be satisfied to satisfy this composite condition
+        :param args: one or more `Condition`s, any of which must be satisfied to satisfy this composite condition
         """
         super().__init__(args, self.satis)
 
@@ -444,7 +467,7 @@ class Not(Condition):
     Not
 
     Parameters:
-        - condition (Condition): a :keyword:`Condition`
+        - condition (Condition): a `Condition`
 
     Satisfied when:
         - condition is not satisfied
