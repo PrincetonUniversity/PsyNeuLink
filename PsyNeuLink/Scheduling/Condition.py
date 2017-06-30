@@ -91,123 +91,127 @@ function and associated arguments.  Following is a list of pre-specified Conditi
     Condition operates;  this defaults to `TRIAL` in all cases, except for Conditions with "Trial" in their name
     in which it defaults to `RUN`.
 
-COMMENT:
-    K: I think it's troublesome to use "execute" below, because I think it implies that these conditions will
-    necessarily cause the execution of the mechanism to which they are associated, whereas in reality for for the
-    mechanism to execute it must be that both the mechanism is currently eligible and its Condition is true
-    For example, `BeforeNCalls(A, 2)` would be true before `A` has executed twice in each trial, whereas
-    `BeforeNCalls(A, 2, TimeScale.RUN)` would be true before `A` has executed twice in the entire run, that is,
-    in all trials.
-    JDC: I THINK I MUST STILL HAVE A GLITCH IN MY UNDERSTANDING, AS I THOUGHT THAT CONDITIONS ARE ONLY EVALUATED FOR
-         ITEMS IN THE CURRENT CONSIDERATION_SET WHICH, DE FACTO, ARE ELIGIBLE FOR EXECUTION (THAT SEEMS TO BE WHAT
-         THE EXECUTION SECTION BELOW SAYS).  MAYBE I STILL DON'T UNDERSTAND EXACTLY WHEN CONDITIONS ARE BEING EVALUATED
-         (I LOOKED AT THE PSEUDO CODE IN THE EXECUTION SECTION OF THE SCHEDULER DOCSTRING, AND
-         THOUGH I SEE TERMINATION CONDITIONS BEING CHECKED, I DON'T SEE THE MECHANISM-SPECIFIC ONES BEING CHECKED;
-         MAYBE IT WOULD BE HELPFUL TO EXPAND THE PSEUDOCODE TO INCLUDE THIS?  ANYHOW, WE CAN DISCUSS)
-COMMENT
+.. _Conditions_Static:
 
-* `BeforePass`\ (int[, TimeScale])
-  \
-  execute anytime before the specified `PASS` occurs.
+**Static Conditions** (independent of other Conditions, Components or time):
 
-* `AtPass`\ (int[, TimeScale])
-  \
-  execute only during the specified `PASS`.
+    * `Always`
+      \
+      satisfied whenever eligible (i.e., in the the current `consideration_set`).
 
-* `AfterPass`\ (int[, TimeScale])
-  \
-  execute anytime after the specified `PASS` has occurred.
+    * `Never`
+      \
+      never satisfied.
 
-* `AfterNPasses`\ (int[, TimeScale])
-  \
-  execute when or anytime after the specified number of `PASS`\es has occurred.
 
-* `EveryNPasses`\ (int[, TimeScale])
-  \
-  execute everytime the specified number of `PASS`\ es occurs.
+.. _Conditions_Composite:
 
-* `BeforeTrial`\ (int[, TimeScale])
-  \
-  execute anytime before the specified `TRIAL` occurs.
+**Composite Conditions** (based on other Conditions):
 
-* `AtTrial`\ (int[, TimeScale])
-  \
-  execute anytime during the specified `TRIAL`.
+    * `All`\ (Tuple[Condition])
+      \
+      satisfied whenever all of the specified Conditions are satisfied.
 
-* `AfterTrial`\ (int[, TimeScale])
-  \
-  execute anytime after the specified `TRIAL` occurs.
+    * `Any`\ (Tuple[Condition])
+      \
+      satisfied whenever any of the specified Conditions are satisfied.
 
-* `AfterNTrials`\ (int[, TimeScale])
-  \
-  execute anytime after the specified number of `TRIAL`\s has occurred.
+    * `Not`\ (Condition)
+      \
+      satisfied whenever the specified Condition is not satisfied.
 
-* `BeforeNCalls`\ (Component, int[, TimeScale])
-  \
-  execute anytime before the specified Component has executed the specified number of times.
 
-* `AtNCalls`\ (Component, int[, TimeScale])
-  \
-  execute when the specified Component has executed the specified number of times.
+.. _Conditions_Time_Based:
 
-* `AfterCall`\ (Component, int[, TimeScale])
-  \
-  execute anytime after the Component has executed the specified number of times.
+**Time-Based Conditions** (based on time at a specified `TimeScale`):
 
-* `AfterNCalls`\ (Component, int[, TimeScale])
-  \
-  execute when or anytime after the Component has executed the specified number of times.
 
-* `AfterNCallsCombined`\ (Components, int[, TimeScale])
-  \
-  execute when or anytime after any of the reference Components has executed.
+    * `BeforePass`\ (int[, TimeScale])
+      \
+      satisfied anytime before the specified `PASS` occurs.
 
-* `EveryNCalls`\ (Components, int[, TimeScale])
-  \
-  execute when the specified Component has executed the specified number of times.
+    * `AtPass`\ (int[, TimeScale])
+      \
+      satisfied only during the specified `PASS`.
 
-* `JustRan`\ (Component)
-  \
-  execute if the specified Component was assigned to run in the previous `TIME_STEP`.
+    * `AfterPass`\ (int[, TimeScale])
+      \
+      satisfied anytime after the specified `PASS` has occurred.
 
-* `AllHaveRun`\ (Components)
-  \
-  execute when all of the specified Components have executed.
+    * `AfterNPasses`\ (int[, TimeScale])
+      \
+      satisfied when or anytime after the specified number of `PASS`\es has occurred.
 
-* `WhenFinished`\ (Component)
-  \
-  execute when the specified Component has finished (i.e, its `is_finished` attribute is `True`).
+    * `EveryNPasses`\ (int[, TimeScale])
+      \
+      satisfied everytime the specified number of `PASS`\ es occurs.
 
-* `WhenFinishedAny`\ (Components)
-  \
-  execute when any of the specified Components have finished (i.e, `is_finished` is `True` for any of them).
+    * `BeforeTrial`\ (int[, TimeScale])
+      \
+      satisfied anytime before the specified `TRIAL` occurs.
 
-* `WhenFinishedAll`\ (Components)
-  \
-  execute when all of the specified Components have finished (i.e, `is_finished` is `True` for all of them).
+    * `AtTrial`\ (int[, TimeScale])
+      \
+      satisfied anytime during the specified `TRIAL`.
 
-* `Always`
-  \
-  execute whenever eligible (i.e., in the the current `consideration_set`).
+    * `AfterTrial`\ (int[, TimeScale])
+      \
+      satisfied anytime after the specified `TRIAL` occurs.
 
-COMMENT:
-   JDC: I REALIZE THIS MAY BE HERE FOR COMPLETENESS, BUT IS IT EVER USEFUL?
-COMMENT
-* `Never`
-  \
-  never execute.
+    * `AfterNTrials`\ (int[, TimeScale])
+      \
+      satisfied anytime after the specified number of `TRIAL`\s has occurred.
 
-* `All`\ (Tuple[Condition])
-  \
-  execute whenever all of the specified Conditions are satisfied.
 
-* `Any`\ (Tuple[Condition])
-  \
-  execute whenever any of the specified Conditions are satisfied.
+.. _Conditions_Component_Based:
 
-* `Not`\ (Condition)
-  \
-  execute whenever the specified Condition is not satisfied.
+**Component-Based Conditions** (based on the execution or state of other Components):
+
+
+    * `BeforeNCalls`\ (Component, int[, TimeScale])
+      \
+      satisfied anytime before the specified Component has executed the specified number of times.
+
+    * `AtNCalls`\ (Component, int[, TimeScale])
+      \
+      satisfied when the specified Component has executed the specified number of times.
+
+    * `AfterCall`\ (Component, int[, TimeScale])
+      \
+      satisfied anytime after the Component has satisfiedd the specified number of times.
+
+    * `AfterNCalls`\ (Component, int[, TimeScale])
+      \
+      satisfied when or anytime after the Component has executed the specified number of times.
+
+    * `AfterNCallsCombined`\ (Components, int[, TimeScale])
+      \
+      satisfied when or anytime after any of the reference Components has executed.
+
+    * `EveryNCalls`\ (Components, int[, TimeScale])
+      \
+      satisfied when the specified Component has executed the specified number of times.
+
+    * `JustRan`\ (Component)
+      \
+      satisfied if the specified Component was assigned to run in the previous `TIME_STEP`.
+
+    * `AllHaveRun`\ (Components)
+      \
+      satisfied when all of the specified Components have executed.
+
+    * `WhenFinished`\ (Component)
+      \
+      satisfied when the specified Component has finished (i.e, its `is_finished` attribute is `True`).
+
+    * `WhenFinishedAny`\ (Components)
+      \
+      satisfied when any of the specified Components have finished (i.e, `is_finished` is `True` for any of them).
+
+    * `WhenFinishedAll`\ (Components)
+      \
+      satisfied when all of the specified Components have finished (i.e, `is_finished` is `True` for all of them).
+
 
 .. Condition_Execution:
 
@@ -444,15 +448,12 @@ class Never(Condition):
     Satisfied when:
 
         - never satisfied.
-
-    Notes:
-
     """
     def __init__(self):
         super().__init__(False, lambda x: x)
 
 ######################################################################
-# Relative Conditions
+# Composite Conditions
 #   - based on other Conditions
 ######################################################################
 
@@ -474,8 +475,13 @@ class All(Condition):
 
     Notes:
 
-    To initialize with a list (for example),conditions = [AfterNCalls(mechanism, 5) for mechanism in mechanism_list]
-    unpack the list to supply its members as args composite_condition = All(*conditions)
+        - To initialize with a list (for example)::
+
+            conditions = [AfterNCalls(mechanism, 5) for mechanism in mechanism_list]
+
+          unpack the list to supply its members as args::
+
+           composite_condition = All(*conditions)
 
     """
     def __init__(self, *args):
@@ -515,8 +521,13 @@ class Any(Condition):
 
     Notes:
 
-    To initialize with a list (for example), conditions = [AfterNCalls(mechanism, 5) for mechanism in mechanism_list],
-    unpack the list to supply its members as args composite_condition = Any(*conditions)
+        - To initialize with a list (for example)::
+
+            conditions = [AfterNCalls(mechanism, 5) for mechanism in mechanism_list]
+
+          unpack the list to supply its members as args::
+
+           composite_condition = All(*conditions)
 
     """
     def __init__(self, *args):
@@ -553,7 +564,7 @@ class Not(Condition):
 
     Satisfied when:
 
-        - the Condition is not satisfied
+        - the Condition is not satisfied.
 
     """
     def __init__(self, condition):
@@ -578,18 +589,18 @@ class BeforePass(Condition):
 
     Parameters:
 
-        n(int): the 'PASS' after which the Condition will be satisfied
+        n(int): the 'PASS' after which the Condition is satisfied
 
         time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\ es (default: TimeScale.TRIAL)
 
     Satisfied when:
 
-        - at most n-1 `PASS`\ es have occurred within one unit of **time_scale**.
+        - at most n-1 `PASS`\ es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
 
-    Counts of TimeScales are zero-indexed (that is, the first `PASS` is 0, the second `PASS` is 1, etc.).
-    So, BeforePass(2) is satisfied at `PASS` 0 and `PASS` 1
+        - Counts of TimeScales are zero-indexed (that is, the first `PASS` is 0, the second `PASS` is 1, etc.);
+          so, ``BeforePass(2)`` is satisfied at `PASS` 0 and `PASS` 1.
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
@@ -606,18 +617,19 @@ class AtPass(Condition):
 
     Parameters:
 
-        n(int): the `PASS` at which the Condition will be satisfied
+        n(int): the `PASS` at which the Condition is satisfied
 
         time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\ es (default: TimeScale.TRIAL)
 
     Satisfied when:
 
-        - exactly n `PASS`\ es have occurred within the one unit of **time_scale**.
+        - exactly n `PASS`\ es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
 
-    Counts of TimeScales are zero-indexed (that is, the first 'PASS' is pass 0, the second 'PASS' is 1, etc.).
-    So, AtPass(1) is satisfied when a single `PASS` (`PASS` 0) has occurred.
+        - Counts of TimeScales are zero-indexed (that is, the first 'PASS' is pass 0, the second 'PASS' is 1, etc.);
+          so, ``AtPass(1)`` is satisfied when a single `PASS` (`PASS` 0) has occurred, and ``AtPass(2) is satisfied
+          when two `PASS`\ es have occurred (`PASS` 0 and `PASS` 1), etc..
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
@@ -634,19 +646,22 @@ class AtPass(Condition):
 
 
 class AfterPass(Condition):
-    """
-    AfterPass
+    """AfterPass
 
     Parameters:
-        - n (int): the pass after which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting passes. Defaults to TimeScale.TRIAL
+        
+        n(int): the `PASS` after which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\ es (default: TimeScale.TRIAL)
 
     Satisfied when:
-        - within the scope of time_scale, at least n+1 passes have occurred
+    
+        - at least n+1 `PASS`\ es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
-        Counts of TimeScales are zero-indexed (that is, the first Pass is pass 0, the second Pass is pass 1, etc.). So,
-        AfterPass(1) is satisfied after pass 1 has occurred, at pass 2, pass 3, pass 4, etc.
+        
+        - Counts of TimeScales are zero-indexed (that is, the first `PASS` is 0, the second `PASS` is 1, etc.); so,
+          ``AfterPass(1)`` is satisfied after `PASS` 1 has occurred and thereafter (i.e., in `PASS`\ es 2, 3, 4, etc.).
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
@@ -659,19 +674,18 @@ class AfterPass(Condition):
 
 
 class AfterNPasses(Condition):
-    """
-    AfterPass
+    """AfterNPasses
 
     Parameters:
-        - n (int): the number of TimeScale.PASSes after which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting passes. Defaults to TimeScale.TRIAL
-        COMMENT:
-            JDC: I THOUGHT PASSES WAS ALWAYS WITH RESPECT TO ONE "ROUND OF EXECUTION" WITHIN A TRIAL;
-                 IT CAN BE RESCALED??
-        COMMENT
+
+        n(int): the number of `PASS`\ es after which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\ es (default: TimeScale.TRIAL)
+
 
     Satisfied when:
-        - the count of TimeScale.PASSes within time_scale is at least n
+    
+        - at least n `PASS`\ es have occurred within one unit of time at the `TimeScale` specified by **time_scale**. 
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
@@ -684,18 +698,20 @@ class AfterNPasses(Condition):
 
 
 class EveryNPasses(Condition):
-    """
-    EveryNPasses
+    """EveryNPasses
 
     Parameters:
-        - n (int): the frequency of passes with which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting passes. Defaults to TimeScale.TRIAL
+        
+        n(int): the frequency of passes with which this condition is satisfied
+        
+        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\ es (default: TimeScale.TRIAL)
 
     Satisfied when:
-        - the number of passes that has occurred within time_scale is evenly divisible by n
+    
+        - `PASS` 0;
 
-    Notes:
-        All EveryNPasses conditions will be satisfied at pass 0
+        - the specified number of `PASS`\ es that has occurred within a unit of time (at the `TimeScale` specified by
+          **time_scale**) is evenly divisible by n.
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
@@ -708,19 +724,22 @@ class EveryNPasses(Condition):
 
 
 class BeforeTrial(Condition):
-    """
-    BeforeTrial
+    """BeforeTrial
 
     Parameters:
-        - n (int): the trial before which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting trials. Defaults to TimeScale.RUN
+
+        n(int): the `TRIAL` before which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\ s (default: TimeScale.RUN)
 
     Satisfied when:
-        - within the scope of time_scale, at most n-1 trials have occurred
+
+        - at most n-1 `TRIAL`\ s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
-        Counts of TimeScales are zero-indexed (that is, the first Trial is trial 0, the second Trial is trial 1, etc.).
-        So, BeforeTrial(2) is satisfied at trial 0 and trial 1
+
+        - Counts of TimeScales are zero-indexed (that is, the first `TRIAL` is 0, the second `TRIAL` is 1, etc.);
+          so, ``BeforeTrial(2)`` is satisfied at `TRIAL` 0 and `TRIAL` 1.
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
@@ -737,19 +756,22 @@ class BeforeTrial(Condition):
 
 
 class AtTrial(Condition):
-    """
-    AtTrial
+    """AtTrial
 
     Parameters:
-        - n (int): the trial at which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting trials. Defaults to TimeScale.RUN
+
+        n(int): the `TRIAL` at which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\ s (default: TimeScale.RUN)
 
     Satisfied when:
-        - within the scope of time_scale, exactly n trials have occurred
+
+        - exactly n `TRIAL`\ s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
-        Counts of TimeScales are zero-indexed (that is, the first Trial is trial 0, the second Trial is trial 1, etc.).
-        So, AtTrial(1) is satisfied when one trial (trial 0) has already occurred.
+
+        - Counts of TimeScales are zero-indexed (that is, the first `TRIAL` is 0, the second `TRIAL` is 1, etc.);
+          so, ``AtTrial(1)`` is satisfied when one `TRIAL` (`TRIAL` 0) has already occurred.
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
@@ -766,19 +788,22 @@ class AtTrial(Condition):
 
 
 class AfterTrial(Condition):
-    """
-    AfterTrial
+    """AfterTrial
 
     Parameters:
-        - n (int): the trial after which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting trials. Defaults to TimeScale.RUN
+
+        n(int): the `TRIAL` after which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\ s. (default: TimeScale.RUN)
 
     Satisfied when:
-        - within the scope of time_scale, at least n+1 trials have occurred
+
+        - at least n+1 `TRIAL`\ s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
-        Counts of TimeScales are zero-indexed (that is, the first Trial is trial 0, the second Trial is trial 1, etc.).
-        So, AfterTrial(1) is satisfied after trial 1 has occurred, at trial 2, trial 3, trial 4, etc.
+        - Counts of TimeScales are zero-indexed (that is, the first `TRIAL` is 0, the second `TRIAL` is 1, etc.);
+          so,  ``AfterPass(1)`` is satisfied after `TRIAL` 1 has occurred and thereafter (i.e., in `TRIAL`\ s 2, 3, 4,
+          etc.).
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
@@ -795,17 +820,17 @@ class AfterTrial(Condition):
 
 
 class AfterNTrials(Condition):
-    """
-    AfterNTrials
+    """AfterNTrials
 
     Parameters:
-        - n (int): the number of TimeScale.TRIALs after which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting trials. Defaults to TimeScale.RUN
+
+        n(int): the number of `TRIAL`\ s after which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\ s (default: TimeScale.RUN)
 
     Satisfied when:
-        - the count of TimeScale.TRIALs within time_scale is at least n
 
-    Notes:
+        - at least n `TRIAL`\ s have occured  within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
@@ -823,19 +848,21 @@ class AfterNTrials(Condition):
 
 
 class BeforeNCalls(Condition):
-    """
-    BeforeNCalls
+    """BeforeNCalls
 
     Parameters:
-        - dependency (Component):
-        - n (int): the number of executions of dependency at which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency.
-          Defaults to TimeScale.TRIAL
+
+        component(Component):  the Component on which the Condition depends
+
+        n(int): the number of executions of **component** at which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting executions of **component** \
+        (default: TimeScale.TRIAL)
 
     Satisfied when:
-        - dependency has been executed exactly n times within the scope of time_scale
 
-    Notes:
+        - the Component specified in **component** has executed at most n times
+          within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
@@ -856,19 +883,21 @@ class BeforeNCalls(Condition):
 
 
 class AtNCalls(Condition):
-    """
-    AtNCalls
+    """AtNCalls
 
     Parameters:
-        - dependency (Component):
-        - n (int): the number of executions of dependency at which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency.
-           Defaults to TimeScale.TRIAL
+
+        component(Component):  the Component on which the Condition depends
+
+        n(int): the number of executions of **component** at which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting executions of **component** \
+        (default: TimeScale.TRIAL)
 
     Satisfied when:
-        - dependency has been executed exactly n times within the scope of time_scale
 
-    Notes:
+        - the Component specified in **component** has executed exactly n times
+          within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
@@ -883,19 +912,21 @@ class AtNCalls(Condition):
 
 
 class AfterCall(Condition):
-    """
-    AfterCall
+    """AfterCall
 
     Parameters:
-        - dependency (Component):
-        - n (int): the number of executions of dependency after which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency.
-          Defaults to TimeScale.TRIAL
+
+        component(Component):  the Component on which the Condition depends
+
+        n(int): the number of executions of **component** at which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting executions of **component** \
+        (default: TimeScale.TRIAL)
 
     Satisfied when:
-        - dependency has been executed at least n+1 times within the scope of time_scale
 
-    Notes:
+        - the Component specified in **component** has executed at least n+1 times
+          within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
@@ -910,19 +941,22 @@ class AfterCall(Condition):
 
 
 class AfterNCalls(Condition):
-    """
-    AfterNCalls
+    """AfterNCalls
 
     Parameters:
-        - dependency (Component):
-        - n (int): the number of executions of dependency after which this condition will be satisfied
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependency.
-          Defaults to TimeScale.TRIAL
+
+        component(Component):  the Component on which the Condition depends
+
+        n(int): the number of executions of **component** at which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting executions of **component** \
+        (default: TimeScale.TRIAL)
 
     Satisfied when:
-        - dependency has been executed at least n+1 times within the scope of time_scale
 
-    Notes:
+        - the Component specified in **component** has executed at least n times
+          within one unit of time at the `TimeScale` specified by **time_scale**.
+
 
     """
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
@@ -942,15 +976,27 @@ class AfterNCallsCombined(Condition):
 
     Parameters:
         - *dependencies (Components): variable length
-        - n (int): the number of executions of all dependencies after which this condition will be satisfied.
+        - n (int): the number of executions of all dependencies after which this condition is satisfied.
           Defaults to None
         - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependencies.
           Defaults to TimeScale.TRIAL
 
-    Satisfied when:
-        - Among all dependencies, there have been at least n+1 executions within the scope of time_scale
 
-    Notes:
+    Parameters:
+
+        components(Iterable[Component]):  an iterable of Components on which the Condition depends
+
+        n(int): the number of combined executions of all Components specified in **components** at which the \
+        Condition is satisfied (default: None)
+
+        time_scale(TimeScale): the TimeScale used as basis for counting executions of **component** \
+        (default: TimeScale.TRIAL)
+
+
+    Satisfied when:
+
+        - there have been at least n+1 executions among all of the Components specified in **components**
+          within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
     def __init__(self, *dependencies, n=None, time_scale=TimeScale.TRIAL):
@@ -972,16 +1018,29 @@ class AfterNCallsCombined(Condition):
 
 
 class EveryNCalls(Condition):
-    """
-    EveryNCalls
+    """EveryNCalls
 
     Parameters:
-        - dependency (Component):
-        - n (int): the frequency of executions of dependency with which this condition will be satisfied
+
+        component(Component):  the Component on which the Condition depends
+
+        n(int): the frequency of executions of **component** at which the Condition is satisfied
+
 
     Satisfied when:
+
         - since the last time this conditon's owner was called, the number of calls of dependency is at least n
 
+        - the Component specified in **component** has executed at least n times
+          within one unit of time at the `TimeScale` specified by **time_scale**
+          COMMENT:
+              JDC: IS THE FOLLOWING TRUE OF ALL OF THE ABOVE AS WELL??
+          COMMENT
+          since the owner of the Condition has executed.
+
+    COMMENT:
+        JDC: DON'T UNDERSTAND THE FOLLOWING:
+    COMMENT
     Notes:
         Whenever a Component is run, the Scheduler's count of each dependency that is "useable" by the Component is
         reset to 0
@@ -1010,7 +1069,7 @@ class JustRan(Condition):
 
     Notes:
         This condition can transcend divisions between TimeScales. That is, if A runs in the final time step in a trial,
-        JustRan(A) will be satisfied at the beginning of the next trial.
+        JustRan(A) is satisfied at the beginning of the next trial.
 
     """
     def __init__(self, dependency):

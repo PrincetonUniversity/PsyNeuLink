@@ -265,7 +265,7 @@ has executed twice (to integrate its inputs from both ``input_layer`` and ``recu
 More sophisticated Conditions can also be created.  For example, the ``recurrent_layer`` can be scheduled to
 execute until the change in its value falls below a specified threshold as follows::
 
-    minimal_change = lambda mech, thresh : max(mech.value - mech.previous_value) < thresh))
+    minimal_change = lambda mech, thresh : abs(mech.value - mech.previous_value) < thresh))
     my_scheduler.add_condition(my_hidden_layer, Any(EveryNCalls(my_input_layer, 1),
                                                     EveryNCalls(my_recurrent_layer, 1))
     my_scheduler.add_condition(my_recurrent_layer, Any(my_hidden_layer, 1
