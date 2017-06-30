@@ -19,7 +19,7 @@ Overview
 can be used to specify a variety of required conditions for execution, including the state of the Mechanism
 itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
 Composition (e.g., how many `TIME_STEPs <TIME_STEP>` have occurred in the current `TRIAL`), or the state of other
-Mechanisms in Composition (e.g., whether they have started, terminated, or how many times they have executed).
+Mechanisms in a Composition (e.g., whether they have started, terminated, or how many times they have executed).
 PsyNeuLink provides a number of `pre-specified Conditions <Condition_Structure>` that can be parametrized
 (e.g., how many times a Mechanism should be executed), but functions can also be assigned to Conditions,
 to implement custom conditions that can reference any object or its attributes in PsyNeuLink.
@@ -31,8 +31,8 @@ Instantiating Conditions
 
 Conditions can be instantiated and added to a `Scheduler` at any time, and take effect immediately for the
 execution of that Scheduler. Each `pre-specified Condition <Condition_Structure>` has a set of arguments
-that must be specified to achieve the desired behavior. Each
-Condition is associated with an `owner <Condition.owner>` (a `Mechanism` to which the Condition belongs), and a
+that must be specified to achieve the desired behavior. Most
+Conditions are associated with an `owner <Condition.owner>` (a `Mechanism` to which the Condition belongs), and a
 `scheduler <Condition.scheduler>` that maintains most of the data required to test for satisfaction of the condition.
 Usually, Conditions may be instantiated within a call to `Scheduler` or `ConditionSet`'s add methods, in which case
 the attributes `owner` and `scheduler` are determined through context, as below::
@@ -56,7 +56,7 @@ COMMENT:
 COMMENT
 
 In order to construct a custom Condition object, a function (or other callable) must be passed to the Condition's
-**func** argument This is used to specify the function that will be evaluated on each `PASS` through the Mechanisms
+**func** argument. This is used to specify the function that will be evaluated on each `PASS` through the Mechanisms
 in the Composition, to determine whether the associated Mechanism is allowed to execute on that `PASS`. After the
 function, additional args and kwargs may be passed to the constructor; the function will be called with these
 parameters upon evaluation of the Condition. Custom Conditions can provide for expressive behavior,
@@ -78,8 +78,8 @@ such as satisfaction after a recurrent mechanism has converged::
 Structure
 ---------
 
-The Scheduler associates every Mechanism with a Condition.  If one has not been explicitly specified for a
-Mechanism, it is assigned the Condition `Always`, which allows it to be executed whenever it is
+The Scheduler associates every Mechanism with a Condition.  If a Condition has not been explicitly specified for a
+Mechanism, the Mechanism is assigned the Condition `Always`, which allows it to be executed whenever it is
 `under consideration <Scheduler_Algorithm>`.  As described `above <Condition_Creation>`, there are pre-specified
 subclasses (listed below) that implement standard conditions and simply require the specification of a parameter
 or two to be implemented, while the generic Condition can be used to implement custom conditions by passing it a
@@ -93,11 +93,16 @@ function and associated arguments.  Following is a list of pre-specified Conditi
 
 .. _Conditions_Static:
 
+COMMENT:
+    K: I don't think we need to comment on how Always causes execution in its description,
+    because it's mentioned right above
+COMMENT
+
 **Static Conditions** (independent of other Conditions, Components or time):
 
     * `Always`
       \
-      satisfied whenever eligible (i.e., in the the current `consideration_set`).
+      always satisfied.
 
     * `Never`
       \
@@ -108,11 +113,11 @@ function and associated arguments.  Following is a list of pre-specified Conditi
 
 **Composite Conditions** (based on other Conditions):
 
-    * `All`\ (Tuple[Condition])
+    * `All`\ (Conditions)
       \
       satisfied whenever all of the specified Conditions are satisfied.
 
-    * `Any`\ (Tuple[Condition])
+    * `Any`\ (Conditions)
       \
       satisfied whenever any of the specified Conditions are satisfied.
 
@@ -128,7 +133,7 @@ function and associated arguments.  Following is a list of pre-specified Conditi
 
     * `BeforePass`\ (int[, TimeScale])
       \
-      satisfied anytime before the specified `PASS` occurs.
+      satisfied any time before the specified `PASS` occurs.
 
     * `AtPass`\ (int[, TimeScale])
       \
@@ -136,31 +141,31 @@ function and associated arguments.  Following is a list of pre-specified Conditi
 
     * `AfterPass`\ (int[, TimeScale])
       \
-      satisfied anytime after the specified `PASS` has occurred.
+      satisfied any time after the specified `PASS` has occurred.
 
     * `AfterNPasses`\ (int[, TimeScale])
       \
-      satisfied when or anytime after the specified number of `PASS`\es has occurred.
+      satisfied when or any time after the specified number of `PASS`\es has occurred.
 
     * `EveryNPasses`\ (int[, TimeScale])
       \
-      satisfied everytime the specified number of `PASS`\ es occurs.
+      satisfied every time the specified number of `PASS`\ es occurs.
 
     * `BeforeTrial`\ (int[, TimeScale])
       \
-      satisfied anytime before the specified `TRIAL` occurs.
+      satisfied any time before the specified `TRIAL` occurs.
 
     * `AtTrial`\ (int[, TimeScale])
       \
-      satisfied anytime during the specified `TRIAL`.
+      satisfied any time during the specified `TRIAL`.
 
     * `AfterTrial`\ (int[, TimeScale])
       \
-      satisfied anytime after the specified `TRIAL` occurs.
+      satisfied any time after the specified `TRIAL` occurs.
 
     * `AfterNTrials`\ (int[, TimeScale])
       \
-      satisfied anytime after the specified number of `TRIAL`\s has occurred.
+      satisfied any time after the specified number of `TRIAL`\s has occurred.
 
 
 .. _Conditions_Component_Based:
@@ -170,7 +175,7 @@ function and associated arguments.  Following is a list of pre-specified Conditi
 
     * `BeforeNCalls`\ (Component, int[, TimeScale])
       \
-      satisfied anytime before the specified Component has executed the specified number of times.
+      satisfied any time before the specified Component has executed the specified number of times.
 
     * `AtNCalls`\ (Component, int[, TimeScale])
       \
@@ -178,19 +183,21 @@ function and associated arguments.  Following is a list of pre-specified Conditi
 
     * `AfterCall`\ (Component, int[, TimeScale])
       \
-      satisfied anytime after the Component has satisfiedd the specified number of times.
+      satisfied any time after the Component has executed the specified number of times.
 
     * `AfterNCalls`\ (Component, int[, TimeScale])
       \
-      satisfied when or anytime after the Component has executed the specified number of times.
+      satisfied when or any time after the Component has executed the specified number of times.
 
     * `AfterNCallsCombined`\ (Components, int[, TimeScale])
       \
-      satisfied when or anytime after any of the reference Components has executed.
+      satisfied when or any time after the specified Components have executed the specified number
+      of times among themselves, in total.
 
-    * `EveryNCalls`\ (Components, int[, TimeScale])
+    * `EveryNCalls`\ (Component, int[, TimeScale])
       \
-      satisfied when the specified Component has executed the specified number of times.
+      satisfied when the specified Component has executed the specified number of times since the
+      last time `owner` has run.
 
     * `JustRan`\ (Component)
       \
@@ -198,7 +205,7 @@ function and associated arguments.  Following is a list of pre-specified Conditi
 
     * `AllHaveRun`\ (Components)
       \
-      satisfied when all of the specified Components have executed.
+      satisfied when all of the specified Components have executed at least once.
 
     * `WhenFinished`\ (Component)
       \
@@ -253,27 +260,27 @@ class ConditionSet(object):
     ---------
 
     scheduler : Scheduler
-        specifies the `Scheduler` used to evaluate and maintain a record of the `Conditions' <Condition>` states
-        (i.e., whether each is currently satisfied).
+        specifies the `Scheduler` used to evaluate and maintain a record of the information required to
+        evalute the `Conditions <Condition>`
 
-    conditions : Dict[Component: Iterable[Condition]]
-        specifies an iterable collection of `Components <Component>` and the `Condition(s) <Condition>` associated
+    conditions : dict{Component: Condition}
+        specifies an iterable collection of `Components <Component>` and the `Conditions <Condition>` associated
         with each.
 
     Attributes
     ----------
 
     scheduler : Scheduler
-        used to evaluate and maintain a record of each `Condition's` <Condition>` state
-        (i.e., whether it is currently satisfied).
+        specifies the `Scheduler` used to evaluate and maintain a record of the information required to
+        evalute the `Conditions <Condition>`
 
     COMMENT:
         JDC: IN THE ATTRIBUTE IS IT CONVERTED TO A STANDARD ITERABLE FORM (E.G. A LIST)?  IF SO, SHOULD
         MODIFY DESCRIPTION BELOW ACCORDINGLY
     COMMENT
-    conditions : dict
-        the key of each entry is a `Component`, and its value is an iterable collection (e.g., a list or tuple) of
-        one or more `Conditions <Condition>` associated with that Component.  Conditions can be added to the
+    conditions : dict{Component: Condition}
+        the key of each entry is a `Component`, and its value is the `Condition <Condition>` associated
+        with that Component.  Conditions can be added to the
         ConditionSet using the ConditionSet's `add_condition` method.
 
     """
@@ -322,10 +329,9 @@ class ConditionSet(object):
         Arguments
         ---------
 
-        conditions : Dict[Component: Iterable[Conditions]]
+        conditions : dict{Component: Condition}
             specifies an iterable collection of Conditions to be added to the ConditionSet, in the form of a dict
-            each entry of which maps a `Component` (the key) to an iterable collection (i.e., a list, tuple or set) of
-            `Conditions <Condition>` (the value).
+            each entry of which maps a `Component` (the key) to a `Condition <Condition>` (the value).
 
         """
         for owner in conditions:
@@ -363,15 +369,6 @@ class Condition(object):
 
         """
     def __init__(self, dependencies, func, *args, **kwargs):
-        """
-        COMMENT:
-            dependencies: one or more PNL objects over which func is evaluated to determine satisfaction of the
-                `Condition` user must ensure that dependencies are suitable as func parameters
-            func: func is evaluated to determine satisfaction of the `Condition`
-            args: additional formal arguments passed to func
-            kwargs: additional keyword arguments passed to func
-        COMMENT
-        """
         self.dependencies = dependencies
         self.func = func
         self.args = args
@@ -379,7 +376,6 @@ class Condition(object):
 
         self._scheduler = None
         self._owner = None
-        # logger.debug('{1} dependencies: {0}'.format(dependencies, type(self).__name__))
 
     @property
     def scheduler(self):
@@ -467,7 +463,7 @@ class All(Condition):
 
     Parameters:
 
-        args(tuple): one or more `Conditions <Condition>`
+        args: one or more `Conditions <Condition>`
 
     Satisfied when:
 
@@ -513,7 +509,7 @@ class Any(Condition):
 
     Parameters:
 
-        args(tuple): one or more `Conditions <Condition>`
+        args: one or more `Conditions <Condition>`
 
     Satisfied when:
 
@@ -589,7 +585,7 @@ class BeforePass(Condition):
 
     Parameters:
 
-        n(int): the 'PASS' after which the Condition is satisfied
+        n(int): the 'PASS' before which the Condition is satisfied
 
         time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\ es (default: TimeScale.TRIAL)
 
@@ -649,17 +645,17 @@ class AfterPass(Condition):
     """AfterPass
 
     Parameters:
-        
+
         n(int): the `PASS` after which the Condition is satisfied
 
         time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\ es (default: TimeScale.TRIAL)
 
     Satisfied when:
-    
+
         - at least n+1 `PASS`\ es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
-        
+
         - Counts of TimeScales are zero-indexed (that is, the first `PASS` is 0, the second `PASS` is 1, etc.); so,
           ``AfterPass(1)`` is satisfied after `PASS` 1 has occurred and thereafter (i.e., in `PASS`\ es 2, 3, 4, etc.).
 
@@ -684,8 +680,8 @@ class AfterNPasses(Condition):
 
 
     Satisfied when:
-    
-        - at least n `PASS`\ es have occurred within one unit of time at the `TimeScale` specified by **time_scale**. 
+
+        - at least n `PASS`\ es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
@@ -701,13 +697,13 @@ class EveryNPasses(Condition):
     """EveryNPasses
 
     Parameters:
-        
+
         n(int): the frequency of passes with which this condition is satisfied
-        
+
         time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\ es (default: TimeScale.TRIAL)
 
     Satisfied when:
-    
+
         - `PASS` 0;
 
         - the specified number of `PASS`\ es that has occurred within a unit of time (at the `TimeScale` specified by
@@ -854,7 +850,7 @@ class BeforeNCalls(Condition):
 
         component(Component):  the Component on which the Condition depends
 
-        n(int): the number of executions of **component** at which the Condition is satisfied
+        n(int): the number of executions of **component** before which the Condition is satisfied
 
         time_scale(TimeScale): the TimeScale used as basis for counting executions of **component** \
         (default: TimeScale.TRIAL)
@@ -918,7 +914,7 @@ class AfterCall(Condition):
 
         component(Component):  the Component on which the Condition depends
 
-        n(int): the number of executions of **component** at which the Condition is satisfied
+        n(int): the number of executions of **component** after which the Condition is satisfied
 
         time_scale(TimeScale): the TimeScale used as basis for counting executions of **component** \
         (default: TimeScale.TRIAL)
@@ -947,7 +943,7 @@ class AfterNCalls(Condition):
 
         component(Component):  the Component on which the Condition depends
 
-        n(int): the number of executions of **component** at which the Condition is satisfied
+        n(int): the number of executions of **component** after which the Condition is satisfied
 
         time_scale(TimeScale): the TimeScale used as basis for counting executions of **component** \
         (default: TimeScale.TRIAL)
@@ -975,18 +971,18 @@ class AfterNCallsCombined(Condition):
     AfterNCallsCombined
 
     Parameters:
-        - *dependencies (Components): variable length
-        - n (int): the number of executions of all dependencies after which this condition is satisfied.
+        - *components (Components): variable length
+        - n (int): the number of executions of all components after which this condition is satisfied.
           Defaults to None
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependencies.
+        - time_scale (TimeScale): the TimeScale used as basis for counting executions of components.
           Defaults to TimeScale.TRIAL
 
 
     Parameters:
 
-        components(Iterable[Component]):  an iterable of Components on which the Condition depends
+        components(Components):  an iterable of Components on which the Condition depends
 
-        n(int): the number of combined executions of all Components specified in **components** at which the \
+        n(int): the number of combined executions of all Components specified in **components** after which the \
         Condition is satisfied (default: None)
 
         time_scale(TimeScale): the TimeScale used as basis for counting executions of **component** \
@@ -1029,13 +1025,21 @@ class EveryNCalls(Condition):
 
     Satisfied when:
 
-        - since the last time this conditon's owner was called, the number of calls of dependency is at least n
+        - since the last time this condition's owner was called, the number of calls of **component** is at least n
 
-        - the Component specified in **component** has executed at least n times
-          within one unit of time at the `TimeScale` specified by **time_scale**
-          COMMENT:
-              JDC: IS THE FOLLOWING TRUE OF ALL OF THE ABOVE AS WELL??
-          COMMENT
+        COMMENT:
+            JDC: IS THE FOLLOWING TRUE OF ALL OF THE ABOVE AS WELL??
+            K: No, EveryNCalls is tricky in how it needs to be implemented, because it's in a sense
+            tracking the relative frequency of calls between two objects. So the idea is that the scheduler
+            tracks how many executions of a component are "useable" by other components for EveryNCalls conditions.
+            So, suppose you had something like add_condition(B, All(AfterNCalls(A, 10), EveryNCalls(A, 2))). You
+            would want the AAB pattern to start happening after A has run 10 times. Useable counts allows B to see
+            whether A has run enough times for it to run, and then B spends its "useable executions" of A. Then,
+            A must run two more times for B to run again. If you didn't reset the counts of A useable by B
+            to 0 (question below) when B runs, then in the
+            above case B would continue to run every pass for the next 4 passes, because it would see an additional
+            8 executions of A it could spend to execute.
+        COMMENT
           since the owner of the Condition has executed.
 
     COMMENT:
