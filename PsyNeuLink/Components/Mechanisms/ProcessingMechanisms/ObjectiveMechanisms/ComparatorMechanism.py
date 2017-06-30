@@ -315,10 +315,10 @@ class ComparatorMechanism(ObjectiveMechanism):
                  input_states=[SAMPLE, TARGET],
                  function=LinearCombination(weights=[[-1], [1]]),
                  output_states:tc.optional(tc.any(list, dict))=[ERROR_SIGNAL, MSE],
+                 size=None,  # not used until ProcessingMechanism_Base, but it's needed here to avoid errors
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 size=None,  # not used until ProcessingMechanism_Base, but it's needed here to avoid errors
                  context=None):
 
         # Parse items of input_states arg for validation (in _validate_params)

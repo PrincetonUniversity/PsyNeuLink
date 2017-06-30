@@ -426,10 +426,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  input_states=None,
                  function=LinearCombination,
                  output_states:tc.optional(tc.any(list, dict))=[ERROR_SIGNAL],
+                 size=None,  # not used until ProcessingMechanism_Base, but it's needed here to avoid errors
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 size=None,  # not used until ProcessingMechanism_Base, but it's needed here to avoid errors
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
