@@ -417,8 +417,8 @@ class Composition(object):
             # print("RUN ", TimeScale.RUN)
             # print("TIME_STEP", TimeScale.TIME_STEP)
 
-            # TBI: reset inputs to each mechanism, variables, previous values, etc.
-            self.sched._reset_count(self.sched.counts_total, TimeScale.RUN)
+            # reset inputs to each mechanism, variables, previous values, etc.
+            self.sched._reset_counts_total(time_scale=TimeScale.TRIAL)
             # self.sched._reset_time(TimeScale.RUN)
 
             # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
