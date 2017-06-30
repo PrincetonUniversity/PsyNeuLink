@@ -260,9 +260,9 @@ Class Reference
 
 """
 
+import logging
 import math
 import re
-import logging
 
 from collections import OrderedDict
 
@@ -277,7 +277,7 @@ from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.TimeScale import TimeScale
-from PsyNeuLink.scheduling.Scheduler import Scheduler
+from PsyNeuLink.Scheduling.Scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -324,9 +324,9 @@ class SystemError(Exception):
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 
-from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components import SystemDefaultControlMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Process import process
 
 # System factory method:
 @tc.typecheck
