@@ -413,8 +413,13 @@ class Composition(object):
         # TBI: Handle runtime params?
 
         for input_index in input_indices:
-            # TBI: reset inputs to each mechanism, variables, previous values, etc.
+            # print("TRIAL ", TimeScale.TRIAL)
+            # print("RUN ", TimeScale.RUN)
+            # print("TIME_STEP", TimeScale.TIME_STEP)
 
+            # TBI: reset inputs to each mechanism, variables, previous values, etc.
+            self.sched._reset_count(self.sched.counts_total, TimeScale.RUN)
+            # self.sched._reset_time(TimeScale.RUN)
 
             # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
             for next_execution_set in scheduler.run():
@@ -422,6 +427,7 @@ class Composition(object):
                 # execute each mechanism with context = EXECUTING and the appropriate input
                 for mechanism in next_execution_set:
                     if isinstance(mechanism, Mechanism):
+
                         # if mechanism is_origin and is featured in the inputs dictionary -- use specified input
                         if (mechanism in is_origin) and (mechanism in has_inputs):
                             print()
@@ -430,6 +436,7 @@ class Composition(object):
                             print("result = ", num)
                             print()
                             print()
+
                         # otherwise, mechanism will use its default input OR whatever it received from its projection(s)
                         else:
                             num = mechanism.execute(context=EXECUTING+ "composition")
@@ -437,5 +444,6 @@ class Composition(object):
                             print("result = ", num)
                             print()
                             print()
+
         # return the output of the LAST mechanism executed in the composition
         return num
