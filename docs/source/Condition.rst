@@ -6,6 +6,6 @@ Condition
 
    Condition
 
-.. automodule:: scheduling.condition
+.. automodule:: Scheduling.Condition
    :members:
    :exclude-members: random
