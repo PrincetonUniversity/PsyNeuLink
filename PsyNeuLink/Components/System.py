@@ -260,9 +260,9 @@ Class Reference
 
 """
 
+import logging
 import math
 import re
-import logging
 
 from collections import OrderedDict
 
@@ -324,9 +324,9 @@ class SystemError(Exception):
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 
-from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components import SystemDefaultControlMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Process import process
 
 # System factory method:
 @tc.typecheck
@@ -1926,7 +1926,7 @@ class System_Base(System):
 
         """
         if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self)
+            self.scheduler_processing = Scheduler(nodes=self.executionList, toposort_ordering=toposort(self.executionGraph))
 
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(nodes=self.learningExecutionList, toposort_ordering=toposort(self.learningGraph))
@@ -2290,7 +2290,7 @@ class System_Base(System):
 
         """
         if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self)
+            self.scheduler_processing = Scheduler(nodes=self.executionList, toposort_ordering=toposort(self.executionGraph))
 
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(nodes=self.learningExecutionList, toposort_ordering=toposort(self.learningGraph))

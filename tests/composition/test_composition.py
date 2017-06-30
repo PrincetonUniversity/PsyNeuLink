@@ -6,13 +6,12 @@ import pytest
 
 from PsyNeuLink.Components.Functions.Function import Linear, SimpleIntegrator
 from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.composition import Composition, CompositionError, MechanismRole
 from PsyNeuLink.scheduling.Scheduler import Scheduler
-from PsyNeuLink.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
-from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.scheduling.condition import EveryNCalls
 
 logger = logging.getLogger(__name__)
 
@@ -690,129 +689,131 @@ class TestGraph:
                 comp.graph_processing.comp_to_vertex[B],
             ])
 
+
 class TestRun:
-        def test_run_2_mechanisms_default_input_1(self):
-            comp = Composition()
-            A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
-            B = TransferMechanism(function=Linear(slope=5.0))
-            comp.add_mechanism(A)
-            comp.add_mechanism(B)
-            comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-            comp.analyze_graph()
-            sched = Scheduler(composition=comp)
-            output = comp.run(
-                scheduler=sched
-            )
-            assert 25 == output[0][0]
 
-        def test_run_2_mechanisms_input_5(self):
-            comp = Composition()
-            A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
-            B = TransferMechanism(function=Linear(slope=5.0))
-            comp.add_mechanism(A)
-            comp.add_mechanism(B)
-            comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-            comp.analyze_graph()
-            inputs_dict = {A: [5]}
-            sched = Scheduler(composition=comp)
-            output = comp.run(
-                inputs=inputs_dict,
-                scheduler=sched
-            )
-            assert 125 == output[0][0]
+    def test_run_2_mechanisms_default_input_1(self):
+        comp = Composition()
+        A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+        B = TransferMechanism(function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.analyze_graph()
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            scheduler=sched
+        )
+        assert 25 == output[0][0]
 
-        def test_run_5_mechanisms_2_origins_1_terminal(self):
-            ## A ----> C --
-            ##              ==> E
-            ## B ----> D --
+    def test_run_2_mechanisms_input_5(self):
+        comp = Composition()
+        A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+        B = TransferMechanism(function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.analyze_graph()
+        inputs_dict = {A: [5]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler=sched
+        )
+        assert 125 == output[0][0]
 
-            ## 5 x 1 = 5 ----> 5 x 5 = 25 --
-            ##                                25 + 25 = 50  ==> 50 * 5 = 250
-            ## 5 * 1 = 5 ----> 5 x 5 = 25 --
+    def test_run_5_mechanisms_2_origins_1_terminal(self):
+        # A ----> C --
+        #              ==> E
+        # B ----> D --
 
-            comp = Composition()
-            A = TransferMechanism(name="A", function=Linear(slope=1.0))
-            B = TransferMechanism(name="B", function=Linear(slope=1.0))
-            C = TransferMechanism(name="C", function=Linear(slope=5.0))
-            D = TransferMechanism(name="D", function=Linear(slope=5.0))
-            E = TransferMechanism(name="E", function=Linear(slope=5.0))
-            comp.add_mechanism(A)
-            comp.add_mechanism(B)
-            comp.add_mechanism(C)
-            comp.add_mechanism(D)
-            comp.add_projection(A, MappingProjection(sender=A, receiver=C), C)
-            comp.add_projection(B, MappingProjection(sender=B, receiver=D), D)
-            comp.add_mechanism(E)
-            comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
-            comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-            comp.analyze_graph()
-            inputs_dict = {A: [5],
-                           B: [5]}
-            sched = Scheduler(composition=comp)
-            output = comp.run(
-                inputs=inputs_dict,
-                scheduler=sched
-            )
-            assert 250 == output[0][0]
+        # 5 x 1 = 5 ----> 5 x 5 = 25 --
+        #                                25 + 25 = 50  ==> 50 * 5 = 250
+        # 5 * 1 = 5 ----> 5 x 5 = 25 --
 
-        def test_run_2_mechanisms_with_scheduling_AAB_integrator(self):
-            comp = Composition()
+        comp = Composition()
+        A = TransferMechanism(name="A", function=Linear(slope=1.0))
+        B = TransferMechanism(name="B", function=Linear(slope=1.0))
+        C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", function=Linear(slope=5.0))
+        E = TransferMechanism(name="E", function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_mechanism(C)
+        comp.add_mechanism(D)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=C), C)
+        comp.add_projection(B, MappingProjection(sender=B, receiver=D), D)
+        comp.add_mechanism(E)
+        comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
+        comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
+        comp.analyze_graph()
+        inputs_dict = {A: [5],
+                       B: [5]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler=sched
+        )
+        assert 250 == output[0][0]
 
-            A = IntegratorMechanism(name = "A [integrator]", default_input_value=2.0, function = SimpleIntegrator(rate = 1.0))
-            # (1) value = 0 + (5.0 * 1.0) + 0  --> return 5.0
-            # (2) value = 5.0 + (5.0 * 1.0) + 0  --> return 10.0
-            B = TransferMechanism(name = "B [transfer]", function=Linear(slope=5.0))
-            # value = 10.0 * 5.0 --> return 50.0
-            comp.add_mechanism(A)
-            comp.add_mechanism(B)
-            comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-            comp.analyze_graph()
-            inputs_dict = {A: [5]}
-            sched = Scheduler(composition=comp)
-            sched.add_condition(B, EveryNCalls(A, 2))
-            output = comp.run(
-                inputs=inputs_dict,
-                scheduler=sched
-            )
-            assert 50.0 == output[0][0]
+    def test_run_2_mechanisms_with_scheduling_AAB_integrator(self):
+        comp = Composition()
 
-        def test_run_2_mechanisms_with_scheduling_AAB_transfer(self):
-            comp = Composition()
+        A = IntegratorMechanism(name="A [integrator]", default_input_value=2.0, function=SimpleIntegrator(rate=1.0))
+        # (1) value = 0 + (5.0 * 1.0) + 0  --> return 5.0
+        # (2) value = 5.0 + (5.0 * 1.0) + 0  --> return 10.0
+        B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
+        # value = 10.0 * 5.0 --> return 50.0
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.analyze_graph()
+        inputs_dict = {A: [5]}
+        sched = Scheduler(composition=comp)
+        sched.add_condition(B, EveryNCalls(A, 2))
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler=sched
+        )
+        assert 50.0 == output[0][0]
 
-            A = TransferMechanism(name = "A [transfer]", function=Linear(slope=2.0))
-            # (1) value = 5.0 * 2.0  --> return 10.0
-            # (2) value = 5.0 * 2.0  --> return 10.0
-            # ** TransferMechanism runs with the SAME input **
-            B = TransferMechanism(name = "B [transfer]", function=Linear(slope=5.0))
-            # value = 10.0 * 5.0 --> return 50.0
-            comp.add_mechanism(A)
-            comp.add_mechanism(B)
-            comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-            comp.analyze_graph()
-            inputs_dict = {A: [5]}
-            sched = Scheduler(composition=comp)
-            sched.add_condition(B, EveryNCalls(A, 2))
-            output = comp.run(
-                inputs=inputs_dict,
-                scheduler=sched
-            )
-            assert 50.0 == output[0][0]
+    def test_run_2_mechanisms_with_scheduling_AAB_transfer(self):
+        comp = Composition()
 
-        def test_run_2_mechanisms_with_multiple_trials_of_input_values(self):
-            print("FINAL TEST")
-            comp = Composition()
+        A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
+        # (1) value = 5.0 * 2.0  --> return 10.0
+        # (2) value = 5.0 * 2.0  --> return 10.0
+        # ** TransferMechanism runs with the SAME input **
+        B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
+        # value = 10.0 * 5.0 --> return 50.0
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.analyze_graph()
+        inputs_dict = {A: [5]}
+        sched = Scheduler(composition=comp)
+        sched.add_condition(B, EveryNCalls(A, 2))
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler=sched
+        )
+        assert 50.0 == output[0][0]
 
-            A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
-            B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
-            comp.add_mechanism(A)
-            comp.add_mechanism(B)
-            comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-            comp.analyze_graph()
-            inputs_dict = {A: [1, 2, 3, 4]}
-            sched = Scheduler(composition=comp)
-            output = comp.run(
-                inputs=inputs_dict,
-                scheduler=sched
-            )
+    def test_run_2_mechanisms_with_multiple_trials_of_input_values(self):
+        print("FINAL TEST")
+        comp = Composition()
 
-            assert 40.0 == output[0][0]
+        A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
+        B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.analyze_graph()
+        inputs_dict = {A: [1, 2, 3, 4]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler=sched
+        )
+
+        assert 40.0 == output[0][0]

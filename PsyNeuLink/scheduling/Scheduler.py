@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# ********************************************* Scheduler **************************************************************
+# ********************************************* Scheduler ***************************************************************
 
 """
 
@@ -383,13 +383,11 @@ class Scheduler(object):
                 self.condition_set.add_condition(node, Always())
                 unspecified_nodes.append(node)
         if len(unspecified_nodes) > 0:
-            logger.warning('These nodes have no Conditions specified, and will be scheduled with condition Always: {0}'.
-                           format(unspecified_nodes))
+            logger.warning('These nodes have no Conditions specified, and will be scheduled with condition Always: {0}'.format(unspecified_nodes))
 
     def _validate_termination(self):
         if self.termination_conds is None:
-            logger.warning('A termination Condition dict (termination_conds[<time_step>]: Condition) was not specified,'
-                           ' and so the termination conditions for all TimeScale will be set to AllHaveRun()')
+            logger.warning('A termination Condition dict (termination_conds[<time_step>]: Condition) was not specified, and so the termination conditions for all TimeScale will be set to AllHaveRun()')
             self.termination_conds = {ts: AllHaveRun() for ts in TimeScale}
         for tc in self.termination_conds:
             if self.termination_conds[tc] is None:
@@ -407,8 +405,7 @@ class Scheduler(object):
     def run(self, termination_conds=None):
         '''
         :param self:
-        :param termination_conds: (dict) - a mapping from :keyword:`TimeScale`s to :keyword:`Condition`s that when met
-               terminate the execution of the specified :keyword:`TimeScale`
+        :param termination_conds: (dict) - a mapping from :keyword:`TimeScale`s to :keyword:`Condition`s that when met terminate the execution of the specified :keyword:`TimeScale`
         '''
         self.termination_conds = termination_conds
         self._validate_run_state()
@@ -423,7 +420,7 @@ class Scheduler(object):
 
             return term
 
-        logger.debug('runterm: {0}'.format(self.termination_conds[TimeScale.RUN]))
+        # logger.debug('runterm: {0}'.format(self.termination_conds[TimeScale.RUN]))
         self._reset_counts_total(TimeScale.RUN)
         self._reset_time(TimeScale.RUN)
 
