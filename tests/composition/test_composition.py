@@ -815,6 +815,4 @@ class TestRun:
                 scheduler=sched
             )
 
-            # So far this is just the first output because composition's run()
-            # does not (yet) reset mechanisms or scheduler
-            assert 10.0 == output[0][0]
+            assert 40.0 == output[0][0]
