@@ -86,6 +86,7 @@
 #  LCA (Test from ScratchPad (search for: my_auto)
 #  XOR 2 PROCESS
 
+# IMPLEMENT: Mechanism.previous_value FOR INTEGRATOR MECHANISMS
 # DOCUMENTATION: is_finished ON MECHANISM?  OR COMPONENT?  RELATIONSHIP TO stateful ATTRIBUTE
 
 

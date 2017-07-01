@@ -83,15 +83,19 @@ COMMENT:
 COMMENT
 
 A custom Condition is created by calling the constructor for the base class (``Condition()``) or one of the
-`generic classes <Conditions_Generic>`,  and assigning a function (or other callable object)to the **func** argument
-and any an arguments required by the the function to **args** (for formal arguments) and/or **kwargs** (for
-keyword arguments). The specified function is called with its arguments by the `Scheduler` on each `PASS` it
-makes through the Mechanisms in the Composition, and the result is used to determine whether the associated Mechanism
-is allowed to execute on that `PASS`. Custom Conditions allow any arbitrary schedule to be specified, that can be
-expressed in terms of the state(s) of Components in Composition.  For example, suppose ``B`` is a mechanism that
-should wait to execute until `RecurrentTransferMechanism` ``A`` has converged, as defined by no change in any of the
-elements of ``A`` greater than specified value.  This can be scheduled using the generic Condition `Until` to create a
-custom Condition, as follows:
+`generic classes <Conditions_Generic>`,  and assigning a function to the **func** argument and any an arguments it
+requires to the **args** (for formal arguments) and/or **kwargs** (for keyword arguments) arguments. The function
+is called with its arguments by the `Scheduler` on each `PASS` through its `consideration_queue`, and the result is
+used to determine whether the associated Mechanism is allowed to execute on that `PASS`. Custom Conditions allow
+arbitrary schedules to be created, in which the execution of each Mechanisms can depend on one or more attribute of
+any other Mechanisms in the Composition.  For example, consider a case in which a Mechanism ``B`` should wait to
+execute until a `RecurrentTransferMechanism` ``A`` has "converged" (that is, settled to the point that the value of
+each of its elements is within a specified amount ``epsilon`` of its value in the previous `TIME_STEP`).  This can be
+specified using the generic Condition `Until` as follows:
+
+COMMENT:
+    JDC: NEED TO IMPLEMENT previous_value ATTRIBUTE FOR MECHANISMS THAT USE INTEGRATOR FUNCTIONS
+COMMENT
 
     def converge(mech, thresh):
         return abs(mech.value - mech.previous_value) < thresh
