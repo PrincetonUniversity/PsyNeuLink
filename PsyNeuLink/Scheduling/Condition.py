@@ -18,60 +18,92 @@ Overview
 `Conditions <Condition>` are used to specify when `Mechanisms <Mechanism>` are allowed to execute.  Conditions
 can be used to specify a variety of required conditions for execution, including the state of the Mechanism
 itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
-Composition (e.g., how many `TIME_STEPs <TIME_STEP>` have occurred in the current `TRIAL`), or the state of other
-Mechanisms in a Composition (e.g., whether they have started, terminated, or how many times they have executed).
-PsyNeuLink provides a number of `pre-specified Conditions <Condition_Structure>` that can be parametrized
-(e.g., how many times a Mechanism should be executed), but functions can also be assigned to Conditions,
-to implement custom conditions that can reference any object or its attributes in PsyNeuLink.
-
-.. _Condition_Instantiation:
-
-Instantiating Conditions
-------------------------
-
-Conditions can be instantiated and added to a `Scheduler` at any time, and take effect immediately for the
-execution of that Scheduler. Each `pre-specified Condition <Condition_Structure>` has a set of arguments
-that must be specified to achieve the desired behavior. Most
-Conditions are associated with an `owner <Condition.owner>` (a `Mechanism` to which the Condition belongs), and a
-`scheduler <Condition.scheduler>` that maintains most of the data required to test for satisfaction of the condition.
-Usually, Conditions may be instantiated within a call to `Scheduler` or `ConditionSet`'s add methods, in which case
-the attributes `owner` and `scheduler` are determined through context, as below::
-
-    scheduler.add_condition(A, EveryNPasses(1))
-    scheduler.add_condition(B, EveryNCalls(A, 2))
-    scheduler.add_condition(C, EveryNCalls(B, 2))
-
+Composition (e.g., how many `TIME_STEP`\ s have occurred in the current `TRIAL`), or the state of other
+Mechanisms in a Composition (e.g., whether or how many times they have executed). PsyNeuLink provides a number of
+`pre-specified Conditions <Condition_Structure>` that can be parametrized (e.g., how many times a Mechanism should
+be executed), but functions can also be assigned to Conditions, to implement custom conditions that can reference any
+Component or its attributes in PsyNeuLink.
 
 .. _Condition_Creation:
 
-Custom Conditions
------------------------
+Creating Conditions
+-------------------
 
-Arbitrary `Conditions <Condition>` may be created and used *ad hoc*, using the base `Condition` class.
+.. _Condition_Pre_Specified:
+
+Pre-specified Conditions
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+`Pre-specified Conditions <Condition_Structure>` can be instantiated and added to a `Scheduler` at any time, and take
+effect immediately for the execution of that Scheduler. Most pre-specified Conditions have one or more  arguments that
+must be specified to achieve the desired behavior. Most Conditions are also associated with an `owner <Condition.owner>`
+(a `Mechanism` to which the Condition belongs) attribute, and a `scheduler <Condition.scheduler>` attribute (that
+maintains data used to test for satisfaction of the Condition).  When pre-specified Conditions are instantiated
+within a call to a `Scheduler`\ 's or `ConditionSet`\ 's add methods, the Condition's `owner <Condition.owner>` and
+`scheduler <Condition.scheduler>` attributes are determined through context and assigned automatically, as in the
+following example::
+
+    my_scheduler.add_condition(A, EveryNPasses(1))
+    my_scheduler.add_condition(B, EveryNCalls(A, 2))
+    my_scheduler.add_condition(C, EveryNCalls(B, 2))
+
+However, when a pre-specified Condition is instantiated on its own and it requires an **owner** and/or **scheduler**
+argument, these must be specified explicitly, as in the following example:
+
+    COMMENT:
+        JDC: CAN'T FIND ANY THAT ARE DEFINED AS REQUIRING AN owner AND/OR scheduler ARGUMENT(S)
+    my_condition = Condition(owner=my_component, scheduler=my_scheduler)
+    COMMENT
+
+.. _Condition_Custom:
+
+Custom Conditions
+~~~~~~~~~~~~~~~~~
+
+In addition to the set of `pre-specified Conditions <Condition_Structure>`, arbitrary `Conditions <Condition>` can
+be created using either the base `Condition` class or one of the `generic classes of Condition <Conditions_Generic>`.
 COMMENT:
     K: Thinking about it I kind of like making basic wrappers While and Until, where While is exactly the same as
         base Condition, but perhaps more friendly sounding? It evals to the output of the function exactly
         Until would just be the inversion of the function. Thoughts?
     JDC: THIS SOUNDS GOOD.
+    JDC: PS - MIGHT WANT TO ADD "When", WHICH IS WHAT I THINK WE WANT FOR THE converge EXAMPLE;
+                        my_scheduler.add_condition(A, Until(converge, B, epsilon))
+                    CAUSES A TO EXECUTE UNTIL THE CONDITION ON B BECOMES TRUE, WHICH IS INDEED THE INVERSE OF WHILE,
+                    (WHICH WOULD EXECUTE UNTIL B BECOMES FALSE);, BUT NOT WHAT WE WANT FOR CONVERGE
+                    COULD USE WHILE:
+                        my_scheduler.add_condition(A, While(converge, B, epsilon)))
+                    WHICH WOULD WAIT UNTIL B CONVERGED, BUT SEEMS IT WOULD THEN CONTINUE TO EXECUTE AS LONG AS
+                    B REMAINED "CONVERGED";
+                        my_scheduler.add_condition(A, When(converge, B, epsilon)))
+                    SUGGESTS (AT LEAST TO ME) THAT IT WILL HAPPEN WHEN B CONVERGES -- I.E., A WILL EXECUTE THEN
+                    BUT NOT AGAIN;  MAYBE THAT CAUSES OTHER PROBLEMS (E.G., HOW WOULD THE SCHEDULER KNOW IF
+                    B HAS RESET;  IS THIS SIMILAR TO THE ISSUE OF "EVERY" THAT REQUIRES "usable countes"?)
+                    SEEMS LIKE WE SHOULD DISCUSS (AT LEAST SO I CAN UNDERSTAND BETTER)
 COMMENT
 
-In order to construct a custom Condition object, a function (or other callable) must be passed to the Condition's
-**func** argument. This is used to specify the function that will be evaluated on each `PASS` through the Mechanisms
-in the Composition, to determine whether the associated Mechanism is allowed to execute on that `PASS`. After the
-function, additional args and kwargs may be passed to the constructor; the function will be called with these
-parameters upon evaluation of the Condition. Custom Conditions can provide for expressive behavior,
-such as satisfaction after a recurrent mechanism has converged::
+A custom Condition is created by calling the constructor for the base class (``Condition()``) or one of the
+`generic classes <Conditions_Generic>`,  and assigning a function (or other callable object)to the **func** argument
+and any an arguments required by the the function to **args** (for formal arguments) and/or **kwargs** (for
+keyword arguments). The specified function is called with its arguments by the `Scheduler` on each `PASS` it
+makes through the Mechanisms in the Composition, and the result is used to determine whether the associated Mechanism
+is allowed to execute on that `PASS`. Custom Conditions allow any arbitrary schedule to be specified, that can be
+expressed in terms of the state(s) of Components in Composition.  For example, suppose ``B`` is a mechanism that
+should wait to execute until `RecurrentTransferMechanism` ``A`` has converged, as defined by no change in any of the
+elements of ``A`` greater than specified value.  This can be scheduled using the generic Condition `Until` to create a
+custom Condition, as follows:
 
     def converge(mech, thresh):
         return abs(mech.value - mech.previous_value) < thresh
 
-    Until(
-        converge,
-        my_recurrent_mech,
-        epsilon
-    )
+    my_scheduler.add_condition(B, When(converge, A, epsilon)
 
-
+COMMENT:
+    JDC:  I ASSUME CONDITIONS CAN BE ASSIGNED TO VARIABLES, SO THAT THE ABOVE COULD BE RE-WRITTEN AS:
+             A_converged = When(converge, A, epsilon)
+             my_scheduler.add_condition(B, A_converged)
+          ALLOWING OTHER MECHANISMS TO USE THE SAME CONDITION??
+COMMENT
 
 .. _Condition_Structure:
 
@@ -87,15 +119,37 @@ function and associated arguments.  Following is a list of pre-specified Conditi
 (described in greater detail under `Condition_Class_Reference`):
 
 .. note::
-    The optional `TimeScale` argument in many of the `Conditions <Condition>` below specifies the scope over which the
-    Condition operates;  this defaults to `TRIAL` in all cases, except for Conditions with "Trial" in their name
-    in which it defaults to `RUN`.
+    The optional `TimeScale` argument in many `Conditions <Condition>` specifies the unit of time over which the
+    Condition operates;  the default value is `TRIAL` for all Conditions except those with "Trial" in their name,
+    for which it is `RUN`.
+
+.. _Conditions_Generic:
+
+COMMENT:
+    JDC: ADDED THESE PROVISIONAL ON IMPLEMENTING THE SUGGESTION ABOVE
+COMMENT
+
+**Generic Conditions** (used to construct custom Conditions):
+
+    * `While`\ (func, args, kwargs)
+      \
+      satisfied whenever the specified function (or callable) called with args and/or kwargs evaluates to `True`.
+
+    * `Until`\ (func, args, kwargs)
+      \
+      satisfied whenever the specified function (or callable) called with args and/or kwargs evaluates to `False`.
+
+    * `When`\ (func, args, kwargs, TimeScale)
+      \
+      satisfied the first time the specified function (or callable) called with args and/or kwargs evaluates to `True`.
 
 .. _Conditions_Static:
 
 COMMENT:
     K: I don't think we need to comment on how Always causes execution in its description,
     because it's mentioned right above
+    JDC: I SEE WHAT YOU MEAN, BUT I'M INCLINED TOWARD CONSISTENCY AND COMPLENESS, EVEN AT THE EXPENSE OF OCCASIONAL
+         REDUNDANCY;  IT WILL ALSO BE A BIT MORE SEPARATE IF WE INCLUDE THE "GENERIC" CATEGORY I'VE ADDED ABOVE
 COMMENT
 
 **Static Conditions** (independent of other Conditions, Components or time):
@@ -209,15 +263,15 @@ COMMENT
 
     * `WhenFinished`\ (Component)
       \
-      satisfied when the specified Component has finished (i.e, its `is_finished` attribute is `True`).
+      satisfied when the specified Component has set its `is_finished` attribute to `True`.
 
     * `WhenFinishedAny`\ (Components)
       \
-      satisfied when any of the specified Components have finished (i.e, `is_finished` is `True` for any of them).
+      satisfied when any of the specified Components have set their `is_finished` attribute to `True`.
 
     * `WhenFinishedAll`\ (Components)
       \
-      satisfied when all of the specified Components have finished (i.e, `is_finished` is `True` for all of them).
+      satisfied when all of the specified Components have set their `is_finished` attributes to `True`.
 
 
 .. Condition_Execution:
@@ -797,6 +851,7 @@ class AfterTrial(Condition):
         - at least n+1 `TRIAL`\ s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
+
         - Counts of TimeScales are zero-indexed (that is, the first `TRIAL` is 0, the second `TRIAL` is 1, etc.);
           so,  ``AfterPass(1)`` is satisfied after `TRIAL` 1 has occurred and thereafter (i.e., in `TRIAL`\ s 2, 3, 4,
           etc.).
@@ -953,7 +1008,6 @@ class AfterNCalls(Condition):
         - the Component specified in **component** has executed at least n times
           within one unit of time at the `TimeScale` specified by **time_scale**.
 
-
     """
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
         def func(dependency, n):
@@ -967,20 +1021,11 @@ class AfterNCalls(Condition):
 
 
 class AfterNCallsCombined(Condition):
-    """
-    AfterNCallsCombined
-
-    Parameters:
-        - *components (Components): variable length
-        - n (int): the number of executions of all components after which this condition is satisfied.
-          Defaults to None
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of components.
-          Defaults to TimeScale.TRIAL
-
+    """AfterNCallsCombined
 
     Parameters:
 
-        components(Components):  an iterable of Components on which the Condition depends
+        *components(Components):  an iterable of Components on which the Condition depends
 
         n(int): the number of combined executions of all Components specified in **components** after which the \
         Condition is satisfied (default: None)
@@ -1025,29 +1070,27 @@ class EveryNCalls(Condition):
 
     Satisfied when:
 
-        - since the last time this condition's owner was called, the number of calls of **component** is at least n
+        - the Component specified in **component** has executed at least n times since the last time the
+          Condition's owner executed.
 
         COMMENT:
             JDC: IS THE FOLLOWING TRUE OF ALL OF THE ABOVE AS WELL??
             K: No, EveryNCalls is tricky in how it needs to be implemented, because it's in a sense
-            tracking the relative frequency of calls between two objects. So the idea is that the scheduler
-            tracks how many executions of a component are "useable" by other components for EveryNCalls conditions.
-            So, suppose you had something like add_condition(B, All(AfterNCalls(A, 10), EveryNCalls(A, 2))). You
-            would want the AAB pattern to start happening after A has run 10 times. Useable counts allows B to see
-            whether A has run enough times for it to run, and then B spends its "useable executions" of A. Then,
-            A must run two more times for B to run again. If you didn't reset the counts of A useable by B
-            to 0 (question below) when B runs, then in the
-            above case B would continue to run every pass for the next 4 passes, because it would see an additional
-            8 executions of A it could spend to execute.
+                tracking the relative frequency of calls between two objects. So the idea is that the scheduler
+                tracks how many executions of a component are "useable" by other components for EveryNCalls conditions.
+                So, suppose you had something like add_condition(B, All(AfterNCalls(A, 10), EveryNCalls(A, 2))). You
+                would want the AAB pattern to start happening after A has run 10 times. Useable counts allows B to see
+                whether A has run enough times for it to run, and then B spends its "useable executions" of A. Then,
+                A must run two more times for B to run again. If you didn't reset the counts of A useable by B
+                to 0 (question below) when B runs, then in the
+                above case B would continue to run every pass for the next 4 passes, because it would see an additional
+                8 executions of A it could spend to execute.
+            JDC: IS THIS A FORM OF MODULO?  IF SO, WOULD IT BE EASIER TO EXPLAIN IN THAT FORM?
         COMMENT
-          since the owner of the Condition has executed.
 
-    COMMENT:
-        JDC: DON'T UNDERSTAND THE FOLLOWING:
-    COMMENT
     Notes:
-        Whenever a Component is run, the Scheduler's count of each dependency that is "useable" by the Component is
-        reset to 0
+
+        - Scheduler's count of each other Component that is "useable" by the Component is reset to 0.
 
     """
     def __init__(self, dependency, n):
@@ -1062,18 +1105,21 @@ class EveryNCalls(Condition):
 
 
 class JustRan(Condition):
-    """
-    JustRan
+    """JustRan
 
     Parameters:
-        - dependency (Component):
+
+        component(Component):  the Component on which the Condition depends
 
     Satisfied when:
-        - dependency has been run (or told to run) in the previous TimeScale.TIME_STEP
+
+        - the Component specified in **component** executed in the previous `TIME_STEP`.
 
     Notes:
-        This condition can transcend divisions between TimeScales. That is, if A runs in the final time step in a trial,
-        JustRan(A) is satisfied at the beginning of the next trial.
+
+        - This Condition can transcend divisions between `TimeScales <TimeScale>`.
+          For example, if A runs in the final `TIME_STEP` of a `TRIAL`,
+          JustRan(A) is satisfied at the beginning of the next `TRIAL`.
 
     """
     def __init__(self, dependency):
@@ -1090,18 +1136,19 @@ class JustRan(Condition):
 
 
 class AllHaveRun(Condition):
-    """
-    AllHaveRun
+    """AllHaveRun
 
     Parameters:
-        - *dependencies (Components): variable length
-        - time_scale (TimeScale): the TimeScale used as basis for counting executions of dependencies.
-          Defaults to TimeScale.TRIAL
+
+        *components(Components):  an iterable of Components on which the Condition depends
+
+        time_scale(TimeScale): the TimeScale used as basis for counting executions of **component** \
+        (default: TimeScale.TRIAL)
 
     Satisfied when:
-        - All dependencies have been executed at least 1 time within the scope of time_scale
 
-    Notes:
+        - all of the Components specified in **components** have executed at least once
+          within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
     def __init__(self, *dependencies, time_scale=TimeScale.TRIAL):
@@ -1119,19 +1166,21 @@ class AllHaveRun(Condition):
 
 
 class WhenFinished(Condition):
-    """
-    WhenFinished
+    """WhenFinished
 
     Parameters:
-        - dependency (Component):
+
+        component(Component):  the Component on which the Condition depends
 
     Satisfied when:
-        - dependency has "finished" (i.e. its is_finished attribute is True)
+
+        - the Component specified in **component** has set its `is_finished` attribute to `True`.
 
     Notes:
-        This is a dynamic condition.
-        The is_finished concept varies among components, and is currently implemented in:
-            `DDM`<DDM>
+
+        - This is a dynamic Condition: Each Component is responsible for assigning its `is_finished` attribute on it
+          own, which can occur independently of the execution of other Components.  Therefore the satisfaction of
+          this Condition) can vary arbitrarily in time.
 
     """
     def __init__(self, dependency):
@@ -1146,22 +1195,25 @@ class WhenFinished(Condition):
 
 
 class WhenFinishedAny(Condition):
-    """
-    WhenFinishedAny
+    """WhenFinishedAny
 
     Parameters:
-        - *dependencies (Components): variable length
+
+        *components(Components):  an iterable of Components on which the Condition depends
 
     Satisfied when:
-        - any of the dependencies have "finished" (i.e. its is_finished attribute is True)
+
+        - any of the Components specified in **components** have set their `is_finished` attribute to `True`.
 
     Notes:
-    This is a dynamic condition.
-        This is a convenience class; WhenFinishedAny(A, B, C) is equivalent to
-        Any(WhenFinished(A), WhenFinished(B), WhenFinished(C))
-        If no dependencies are specified, the condition will default to checking all of its scheduler's Components.
-        The is_finished concept varies among components, and is currently implemented in:
-            `DDM`<DDM>
+
+        - This is a convenience class; WhenFinishedAny(A, B, C) is equivalent to
+          Any(WhenFinished(A), WhenFinished(B), WhenFinished(C)).
+          If no dependencies are specified, the condition will default to checking all of its scheduler's Components.
+
+        - This is a dynamic Condition: Each Component is responsible for assigning its `is_finished` attribute on it
+          own, which can occur independently of the execution of other Components.  Therefore the satisfaction of
+          this Condition) can vary arbitrarily in time.
 
     """
     def __init__(self, *dependencies):
@@ -1180,22 +1232,25 @@ class WhenFinishedAny(Condition):
 
 
 class WhenFinishedAll(Condition):
-    """
-    WhenFinishedAll
+    """WhenFinishedAll
 
     Parameters:
-        - *dependencies (Components): variable length
+
+        *components(Components):  an iterable of Components on which the Condition depends
 
     Satisfied when:
-        - all of the dependencies have "finished" (i.e. its is_finished attribute is True)
+
+        - all of the Components specified in **components** have set their `is_finished` attributes to `True`.
 
     Notes:
-        This is a dynamic condition.
-        This is a convenience class; WhenFinishedAll(A, B, C) is equivalent to
-        All(WhenFinished(A), WhenFinished(B), WhenFinished(C))
-        If no dependencies are specified, the condition will default to checking all of its scheduler's Components.
-        The is_finished concept varies among components, and is currently implemented in:
-            `DDM`<DDM>
+
+        - This is a convenience class; WhenFinishedAny(A, B, C) is equivalent to
+          All(WhenFinished(A), WhenFinished(B), WhenFinished(C)).
+          If no dependencies are specified, the condition will default to checking all of its scheduler's Components.
+
+        - This is a dynamic Condition: Each Component is responsible for assigning its `is_finished` attribute on it
+          own, which can occur independently of the execution of other Components.  Therefore the satisfaction of
+          this Condition) can vary arbitrarily in time.
 
     """
     def __init__(self, *dependencies):

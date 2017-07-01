@@ -86,6 +86,8 @@
 #  LCA (Test from ScratchPad (search for: my_auto)
 #  XOR 2 PROCESS
 
+# DOCUMENTATION: is_finished ON MECHANISM?  OR COMPONENT?  RELATIONSHIP TO stateful ATTRIBUTE
+
 
 # FIX / TEST: runtime_params:
 # COMMENT:
