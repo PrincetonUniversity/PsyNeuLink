@@ -206,6 +206,14 @@ possible parameters. See individual functions for more details.
 
 .. _DDM_Results:
 
+DDM Results
+~~~~~~~~~~~
+
+****
+MOVE MOST OF THIS TO STANDARD OUTPUT STATES, AND THEN SAY THAT ITS FUNCTION RETURENS THE VALUES DESCTIBED THERE,
+UNDER THE FOLLOWING CONDITIONS, AND WITH THE FOLLOWING ASSIGNMENTS:
+****
+
 The DDM's `function <DDM.function>` always returns the following two quantities, that are assigned as the first two
 items of it `value <DDM.value>` attribute:
 
@@ -289,7 +297,7 @@ The following quantities are returned only if the `NavarroAndFuss` function is u
   the upper threshold (the value specified in the Mechanism's `threshold <DDM.threshold>` attribute), as estimated by
   the `NavarroAndFuss` analytic solution.  This is assigned as the fifth item of the Mechanism's `value <DDM.value>`
   attribute, and as the value of its *RT_CORRECT_MEAN* `standard OutputState <DDM_OUTPUT>`.
-# ..
+..
 * *RT_CORRECT_VARIANCE (float)*: the variance of the decision time (in seconds) for responses in which the
   decision variable reached the upper threshold (the value specified in the Mechanism's `threshold <DDM.threshold>`
   attribute), as estimated by the `NavarroAndFuss` analytic solution.  This is assigned as the sixth item of the
@@ -329,28 +337,52 @@ logger = logging.getLogger(__name__)
 
 DECISION_VARIABLE='DECISION_VARIABLE'
 RESPONSE_TIME = 'RESPONSE_TIME'
-PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'  # Probability of hitting upper bound
-PROBABILITY_LOWER_THRESHOLD = 'PROBABILITY_LOWER_THRESHOLD'  # Probability of hitting lower bound
+PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'
+PROBABILITY_LOWER_THRESHOLD = 'PROBABILITY_LOWER_THRESHOLD'
 RT_CORRECT_MEAN = 'RT_CORRECT_MEAN'  # NavarroAnd Fuss only
 RT_CORRECT_VARIANCE = 'RT_CORRECT_VARIANCE'  # NavarroAnd Fuss only
 
-DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},
-                              {NAME: RESPONSE_TIME},
-                              {NAME: PROBABILITY_UPPER_THRESHOLD},  # Probability of hitting upper bound
-                              {NAME: PROBABILITY_LOWER_THRESHOLD},  # Probability of hitting lower bound
-                              {NAME: RT_CORRECT_MEAN},  # NavarroAnd Fuss only
-                              {NAME: RT_CORRECT_VARIANCE}]  # NavarroAnd Fuss only
+DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or lower threshold in TRIAL mode
+                              {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL in TIME_STEP mode
+                              {NAME: PROBABILITY_UPPER_THRESHOLD},  # Accuracy (TRIAL mode only)
+                              {NAME: PROBABILITY_LOWER_THRESHOLD},  # Error rate (TRIAL mode only)
+                              {NAME: RT_CORRECT_MEAN},              # (NavarroAndFuss only)
+                              {NAME: RT_CORRECT_VARIANCE}]          # (NavarroAndFuss only)
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class DDM_OUTPUT():
-    """`Standard OutputStates <OutputState_Standard>` for `TransferMechanism`:
+    """`Standard OutputStates <OutputState_Standard>` for `DDM`:
 
-    - *DECISION_VARIABLE (float)*:
-    - *RESPONSE_TIME (float)*:
-    - *PROBABILITY_UPPER_THRESHOLD (float)*:
-    - *PROBABILITY_LOWER_THRESHOLD (float)*:
-    - *RT_CORRECT_MEAN(float)*:
-    - *RT_CORRECT_VARIANCE(float)*:
+    *DECISION_VARIABLE* : float
+      in `TRIAL` mode, the positive or negative value of `threshold <DDM.threshold>` in `TRIAL` mode;\n
+      in `TIME_STEP` mode, the value of decision variable in the current `TIME_STEP`.
+
+    *RESPONSE_TIME* : float
+      in `TRIAL` mode, mean time (in seconds) at which decision variable reached a threshold as estimated by
+      the analytic solution specified in `function <DDM.function>`);\n
+      in `TIME_STEP` mode, the number of `TIME_STEP` \s elapsed in the current `TRIAL` if decision variable has not
+      reached a threshold, otherwise the `TIME_STEP` at which that occurred.
+
+    *PROBABILITY_UPPER_THRESHOLD* : float
+      in `TRIAL` mode, the probability of reaching the positive value of the threshold, as estimated by
+      the analytic solution specified in `function <DDM.function>`); \n
+      in `TIME_STEP` mode, `None`.
+
+    *PROBABILITY_LOWER_THRESHOLD* : float
+      in `TRIAL` mode, the probability of reaching the negative value of the threshold, as estimated by
+      the analytic solution specified in `function <DDM.function>`); \n
+      in `TIME_STEP` mode, `None`.
+
+    *RT_CORRECT_MEAN* : float
+      in `TRIAL` mode using `NavarroAndFuss` for `function <DDM.function>`, the estimated mean decision time
+      (in seconds) for responses in which the decision variable reached the upper (positive value of the) threshold; \n
+      otherwise, `None`.
+
+    *RT_CORRECT_VARIANCE* : float
+      in `TRIAL` mode using `NavarroAndFuss` for `function <DDM.function>`, the estimated variance of the decision time
+      for responses in which the decision variable reached the upper (positive value of the) threshold; \n
+      otherwise, `None`.
+
     """
     DECISION_VARIABLE=DECISION_VARIABLE
     RESPONSE_TIME=RESPONSE_TIME
@@ -385,6 +417,7 @@ class DDM(ProcessingMechanism_Base):
     Implements a Drift Diffusion Process
     Computes an analytic solution when `time_scale <DDM.time_scale>` is `TimeScale.TRIAL`, or numerically integrates it
     when `time_scale <DDM.time_scale>` is `TimeScale.TIME_STEP`.
+
     COMMENT:
         Description
         -----------
@@ -426,6 +459,7 @@ class DDM(ProcessingMechanism_Base):
             All instances of DDM are registered in MechanismRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
+
     Arguments
     ---------
     default_input_value : value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_POINT]

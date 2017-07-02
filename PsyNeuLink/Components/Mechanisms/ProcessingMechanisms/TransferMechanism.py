@@ -117,11 +117,21 @@ Transfer_DEFAULT_OFFSET = 0
 class TRANSFER_OUTPUT():
     """`Standard OutputStates <OutputState_Standard>` for `TransferMechanism`:
 
-    - *RESULT (1d np.array)*: result of `function <TransferMechanism.function>` (same as `output_state.value`);
-    - *MEAN (float)*: mean of `output_state.value`;
-    - *MEDIAN (float)*: median of `output_state.value`;
-    - *STANDARD_DEVIATION (float)*: standard deviation of `output_state.value`;
-    - *VARIANCE(float)*: variance of `output_state.value`.
+    *RESULT* : 1d np.array
+      result of `function <TransferMechanism.function>` (same as `output_state.value`).
+
+    *MEAN* : float
+      mean of `output_state.value`.
+
+    *MEDIAN* : float
+      median of `output_state.value`.
+
+    *STANDARD_DEVIATION* : float
+      standard deviation of `output_state.value`.
+
+    *VARIANCE* : float
+      variance of `output_state.value`.
+
     """
     RESULT=RESULT
     MEAN=MEAN
