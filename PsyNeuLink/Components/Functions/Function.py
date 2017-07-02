@@ -3318,7 +3318,8 @@ class SimpleIntegrator(
 
     Integrate current value of `variable <SimpleIntegrator.variable>` with its prior value:
 
-    `previous_value <SimpleIntegrator.previous_value>` + `rate <SimpleIntegrator.rate>` *`variable <variable.SimpleIntegrator.variable>` +
+    `previous_value <SimpleIntegrator.previous_value>` + \
+    `rate <SimpleIntegrator.rate>` *`variable <variable.SimpleIntegrator.variable>` + \
     `noise <SimpleIntegrator.noise>`;
 
     Arguments
