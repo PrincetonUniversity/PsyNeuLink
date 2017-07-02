@@ -704,3 +704,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     def time_constant(self, value):
         self._time_constant = value
     # # MODIFIED 4/17/17 END
+
+    @property
+    def previous_value(self):
+        if self.integrator_function:
+            return self.integrator_function.previous_value
+        return None

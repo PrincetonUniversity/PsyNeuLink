@@ -86,8 +86,13 @@
 #  LCA (Test from ScratchPad (search for: my_auto)
 #  XOR 2 PROCESS
 
-# IMPLEMENT: Mechanism.previous_value FOR INTEGRATOR MECHANISMS
+# PNL TEAM:
+# IMPLEMENT: Mechanism.previous_value FOR INTEGRATOR MECHANISMS:
+#            Refactor so that DDM and RecurrentTransferMechanism are both subclasses of IntegratorMechanism
+#            (??multimple inheritance, as RTM as also a TM?)
 # DOCUMENTATION: is_finished ON MECHANISM?  OR COMPONENT?  RELATIONSHIP TO stateful ATTRIBUTE
+# QUESTION: SHOULDN'T DDM BE A SUBCLASS OF IntegratorMechanism?
+# FIX: show_graph()
 
 
 # FIX / TEST: runtime_params:
