@@ -767,16 +767,15 @@ import numpy as np
 # region TEST RecurrentTransferMechanism / LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # print("TEST RecurrentTransferMechanism / LCA")
-
-my_auto = LCA(
-        size=3,
-        output_states=[LCA_OUTPUT.RESULT,
-                       LCA_OUTPUT.ENTROPY,
-                       LCA_OUTPUT.ENERGY,
-                       LCA_OUTPUT.MAX_VS_AVG]
-        # inhibition
-)
-TEST = True
+#
+# my_auto = LCA(
+#         size=3,
+#         output_states=[LCA_OUTPUT.RESULT,
+#                        LCA_OUTPUT.ENTROPY,
+#                        LCA_OUTPUT.ENERGY,
+#                        LCA_OUTPUT.MAX_VS_AVG]
+#         # inhibition
+# )
 #
 # # my_auto = RecurrentTransferMechanism(
 # #         default_input_value=[0,0,0],

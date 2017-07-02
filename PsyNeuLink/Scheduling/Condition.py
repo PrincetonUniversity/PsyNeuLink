@@ -93,10 +93,6 @@ execute until a `RecurrentTransferMechanism` ``A`` has "converged" (that is, set
 each of its elements is within a specified amount ``epsilon`` of its value in the previous `TIME_STEP`).  This can be
 specified using the generic Condition `Until` as follows:
 
-COMMENT:
-    JDC: NEED TO IMPLEMENT previous_value ATTRIBUTE FOR MECHANISMS THAT USE INTEGRATOR FUNCTIONS
-COMMENT
-
     def converge(mech, thresh):
         return abs(mech.value - mech.previous_value) < thresh
 
