@@ -207,7 +207,7 @@ when <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scal
 <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> set to  <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a>, the function must be set to Integrator with an
 integration_type of DIFFUSION, so that executing the DDM mechanism numerically integrates the path of the decision
 variable (see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> below). The number of <strong>outputStates</strong> is
-determined by the <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> in use (see <span class="xref std std-ref">list of output values</span> below).</p>
+determined by the <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> in use (see <a class="reference internal" href="#ddm-results"><span class="std std-ref">list of output values</span></a> below).</p>
 <div class="section" id="ddm-functions">
 <span id="id1"></span><h3>DDM Functions<a class="headerlink" href="#ddm-functions" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> parameter can be used to select one of two analytic solutions (<a class="reference internal" href="Function.html#Function.BogaczEtAl" title="Function.BogaczEtAl"><code class="xref any py py-class docutils literal"><span class="pre">BogaczEtAl</span></code></a> and
@@ -259,24 +259,75 @@ possible parameters. See individual functions for more details.</p>
 <div class="section" id="execution">
 <span id="ddm-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a DDM mechanism is executed, it computes the decision process, either analytically (in <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TRIAL" title="TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> mode) or by
-step-wise integration (in <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> mode).</p>
-<dl class="docutils">
-<dt>In <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TRIAL" title="TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> mode, the DDM returns the following values in self.value (2D np.array) and in the value of the corresponding outputState in the self.outputStates dict:</dt>
-<dd><ul class="first last simple">
-<li>decision variable (float)</li>
-<li>mean error rate (float)</li>
-<li>mean RT (float)</li>
-<li>correct mean RT (float) - Navarro and Fuss only</li>
-<li>correct mean ER (float) - Navarro and Fuss only</li>
+step-wise integration (in <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> mode) using the <a class="reference external" href="https://en.wikipedia.org/wiki/Euler_method">Euler method</a>.</p>
+<p id="ddm-results">The DDM&#8217;s <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> always returns the following two quantities, that are assigned as the first two
+items of it <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.value" title="ProcessingMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute:</p>
+<ul class="simple">
+<li><em>DECISION_VARIABLE (float)</em>: In <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TRIAL" title="TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> mode, this is the value of the threshold crossed by the decision variable
+on the current <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TRIAL" title="TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> (which is either the value of the Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">threshold</span></code> attribute or its
+negative);  in <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> mode, it corresponds to the value of the decision variable at the current <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> of
+execution.  The value assigned to the first item of the DDM`s <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.value" title="ProcessingMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute, and to its value of
+its <em>DECISION_VARIABLE</em> <code class="xref any docutils literal"><span class="pre">output_state</span></code> which, by default, is its
+<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>.</li>
 </ul>
-</dd>
-</dl>
-<p>In <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> mode, the DDM returns only the decision variable, which in <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> mode represents the position after one &#8220;step,&#8221; rather than the final value decision variable.</p>
-<blockquote>
-<div></div></blockquote>
+<ul class="simple">
+<li><em>RESPONSE_TIME (float)</em>: In <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TRIAL" title="TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> mode, this is the mean time (in seconds) estimated (by the analytic solution
+used in <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>) for the decision variable to cross the threshold specified in the Mechanism&#8217;s
+<code class="xref any docutils literal"><span class="pre">threshold</span></code> attribute; in <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> mode, it corresponds to the number of <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>s that have
+occurred since the Mechanism began to execute in the current <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TRIAL" title="TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> or, if it has crossed the (positive or negative)
+<code class="xref any docutils literal"><span class="pre">threshold</span></code>, the <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> at which that ocurred.  The value assigned to the second item of the
+DDM`s <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.value" title="ProcessingMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute, and to the value of its <em>RESPONSE_TIME</em> <code class="xref any docutils literal"><span class="pre">output_state</span></code>.</li>
+</ul>
+<p>In addition, the following two quantities are returned when the Mechanism is executed in <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TRIAL" title="TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> mode
+(otherwise their values are <code class="xref any docutils literal"><span class="pre">None</span></code>):</p>
+<ul class="simple">
+<li><em>PROBABILITY_UPPER_THRESHOLD (float)</em>: the probability estimated (by the analytic solution used in
+<a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>) of the decision variable reaching the upper threshold (the value specified in the
+Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">threshold</span></code> attribute).  Often, by convention, the upper threshold is associated with
+the correct response, in which case <em>PROBABILITY_UPPER_THRESHOLD</em> corresponds to the accuracy of the decision process.
+This is assigned as the value of the third item of the Mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.value" title="ProcessingMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute, and the value of its
+<em>PROBABILITY_UPPER_THRESHOLD</em> <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM_OUTPUT" title="ProcessingMechanisms.DDM.DDM_OUTPUT"><code class="xref any py py-class docutils literal"><span class="pre">standard</span> <span class="pre">OutputState</span></code></a>.</li>
+<li><em>PROBABILITY_LOWER_THRESHOLD (float)</em>: the probability estimated (by the analytic solution used in
+<a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>) of the decision variable reaching the lower threshold (the negative of the value specified
+in the Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">threshold</span></code> attribute.  Often, by convention, the lower threshold is associated
+with an error response, in which case <em>PROBABILITY_LOWER_THRESHOLD</em> corresponds to the error rate of the decision
+process. This is assigned as the value of the fourth item of the Mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.value" title="ProcessingMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute,
+and the value of its <em>PROBABILITY_LOWER_THRESHOLD</em> <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM_OUTPUT" title="ProcessingMechanisms.DDM.DDM_OUTPUT"><code class="xref any py py-class docutils literal"><span class="pre">standard</span> <span class="pre">OutputState</span></code></a>.</li>
+</ul>
+<p>The following quantities are returned only if the <a class="reference internal" href="Function.html#Function.NavarroAndFuss" title="Function.NavarroAndFuss"><code class="xref any py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code></a> function is used (otherwise their values are <code class="xref any docutils literal"><span class="pre">None</span></code>):</p>
+<ul class="simple">
+<li><em>RT_CORRECT_MEAN (float)</em>: the mean decision time (in seconds) for responses in which the decision variable reached
+the upper threshold (the value specified in the Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">threshold</span></code> attribute), as estimated by
+the <a class="reference internal" href="Function.html#Function.NavarroAndFuss" title="Function.NavarroAndFuss"><code class="xref any py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code></a> analytic solution.  This is assigned as the fifth item of the Mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.value" title="ProcessingMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+attribute, and as the value of its <em>RT_CORRECT_MEAN</em> <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM_OUTPUT" title="ProcessingMechanisms.DDM.DDM_OUTPUT"><code class="xref any py py-class docutils literal"><span class="pre">standard</span> <span class="pre">OutputState</span></code></a>.</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li><em>RT_CORRECT_VARIANCE (float)</em>: the variance of the decision time (in seconds) for responses in which the
+decision variable reached the upper threshold (the value specified in the Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">threshold</span></code>
+attribute), as estimated by the <a class="reference internal" href="Function.html#Function.NavarroAndFuss" title="Function.NavarroAndFuss"><code class="xref any py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code></a> analytic solution.  This is assigned as the sixth item of the
+Mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.value" title="ProcessingMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute, and as the value of its <em>RT_CORRECT_VARIANCE</em>
+<a class="reference internal" href="#ProcessingMechanisms.DDM.DDM_OUTPUT" title="ProcessingMechanisms.DDM.DDM_OUTPUT"><code class="xref any py py-class docutils literal"><span class="pre">standard</span> <span class="pre">OutputState</span></code></a>.</li>
+</ul>
 </div>
 <div class="section" id="class-reference">
 <span id="ddm-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ProcessingMechanisms.DDM.DDM_OUTPUT">
+<em class="property">class </em><code class="descclassname">ProcessingMechanisms.DDM.</code><code class="descname">DDM_OUTPUT</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM_OUTPUT" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="OutputState.html#outputstate-standard"><span class="std std-ref">Standard OutputStates</span></a> for <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>:</p>
+<ul class="simple">
+<li><em>DECISION_VARIABLE (float)</em>:</li>
+<li><em>RESPONSE_TIME (float)</em>:</li>
+<li><em>PROBABILITY_UPPER_THRESHOLD (float)</em>:</li>
+<li><em>PROBABILITY_LOWER_THRESHOLD (float)</em>:</li>
+<li><em>RT_CORRECT_MEAN(float)</em>:</li>
+<li><em>RT_CORRECT_VARIANCE(float)</em>:</li>
+</ul>
+</dd></dl>
+
 <dl class="class">
 <dt id="ProcessingMechanisms.DDM.DDM">
 <em class="property">class </em><code class="descclassname">ProcessingMechanisms.DDM.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=BogaczEtAl</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM" title="Permalink to this definition">¶</a></dt>
