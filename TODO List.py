@@ -82,15 +82,18 @@
 # 12) IMPLEMENT LEABRA
 # 14) IMPLEMENT Model fitting
 
+
 # PNL TEAM:
 # =========
+# DOCUMENTATION: is_finished ON MECHANISM?  OR COMPONENT?  RELATIONSHIP TO stateful ATTRIBUTE
 # IMPLEMENT: Mechanism.previous_value FOR INTEGRATOR MECHANISMS:
-#            Refactor so that DDM and RecurrentTransferMechanism are both subclasses of IntegratorMechanism
 #            (??multimple inheritance, as RTM as also a TM?)
 #            Integrate <mechanism>.previous_value with stateful and is_finished
-# DOCUMENTATION: is_finished ON MECHANISM?  OR COMPONENT?  RELATIONSHIP TO stateful ATTRIBUTE
 # QUESTION: SHOULDN'T DDM BE A SUBCLASS OF IntegratorMechanism?
+#           Refactor so that DDM and RecurrentTransferMechanism are both subclasses of IntegratorMechanism
 # FIX: show_graph()
+
+
 
 # VALIDATE: (then add to META TEST)
 #  RecurrentTransferMechanism
