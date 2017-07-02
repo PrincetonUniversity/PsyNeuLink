@@ -5411,7 +5411,7 @@ class NormalDist(DistributionFunction):
         self._check_args(variable=variable, params=params, context=context)
 
         mean = self.paramsCurrent[DIST_MEAN]
-        standard_dev = self.paramsCurrent[STANDARD_DEV]
+        standard_dev = self.paramsCurrent[STANDARD_DEVIATION]
 
         result = standard_dev * np.random.normal() + mean
 

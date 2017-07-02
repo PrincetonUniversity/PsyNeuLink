@@ -269,7 +269,7 @@ results of its <a class="reference internal" href="Mechanism.html#Mechanism.Mech
 outputStates relevant to that type of mechanism (for example, the TransferMechanism class has outputStates for
 calculating the mean, median, variance, and standard deviation of its result).  The names of these are listed as
 attributes of a class with the name &lt;ABBREVIATED_CLASS_NAME&gt;_OUTPUT&gt;.  For example, the TransferMechanism class
-defines <code class="xref any docutils literal"><span class="pre">TRANSFER_OUTPUT</span></code>, with attributes MEAN, MEDIAN, VARIANCE and STANDARD_DEV that are the names of
+defines <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TRANSFER_OUTPUT" title="ProcessingMechanisms.TransferMechanism.TRANSFER_OUTPUT"><code class="xref any py py-class docutils literal"><span class="pre">TRANSFER_OUTPUT</span></code></a>, with attributes MEAN, MEDIAN, VARIANCE and STANDARD_DEVIATION that are the names of
 predefined outputStates in its <code class="xref any docutils literal"><span class="pre">standard_output_states</span></code> attribute.
 These can be used in the list of outputStates specified for a TransferMechanism object, as in the example below:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">[</span><span class="n">default_input_value</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
@@ -527,7 +527,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
 
 <dl class="class">
 <dt id="OutputState.StandardOutputStates">
-<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10cedd710&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10ea270f0&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputState specification dictionaries for standard_output_states of a class</p>
 <p>data attribute contains dictionary of OutputState specification dictionaries
 indices contains a list of the default index for each OutputState specified

@@ -607,7 +607,7 @@ BETA = 'beta'
 
 DIST_SHAPE = 'dist_shape'
 
-STANDARD_DEV = 'standard_dev'
+STANDARD_DEVIATION = 'standard_dev'
 DIST_MEAN = 'mean'
 
 OUTPUT_TYPE = 'output'

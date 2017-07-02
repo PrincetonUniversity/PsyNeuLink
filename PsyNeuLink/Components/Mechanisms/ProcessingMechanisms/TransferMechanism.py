@@ -53,13 +53,13 @@ parameters can be specified (see `Execution` below).
 Structure
 ---------
 
-A TransferMechanism has a single `inputState <InputState>`, the `value <InputState.InputState.value>` of which is
+A TransferMechanism has a single `InputState`, the `value <InputState.InputState.value>` of which is
 used as the `variable <TransferMechanism.variable>` for its `function <TransferMechanism.function>`. The
-:keyword:`function` can be selected from one of three standard PsyNeuLink `Function <Functions>`: `Linear`,
-`Logistic` or `Exponential`; or a custom function can be specified, so long as it returns a numeric value or
-list or np.ndarray of numeric values.  A TransferMechanism has three `outputStates <OutputStates>, described under
-`Execution` below.
-
+`function <TransferMechanism.function>` can be selected from one of three standard PsyNeuLink `Functions <Function>`:
+`Linear`, `Logistic` or `Exponential`; or a custom function can be specified, so long as it returns a numeric value or
+list or np.ndarray of numeric values.  The result of the `function <TransferMechanism.function>` is assigned as the
+only item of the TransferMecbanism's `value <TransferMechanism.value>` and as the value of its
+`primary OutputState <OutputState_Primary>` (see `below <Transfer_OutputState>`).
 
 .. _Transfer_Execution:
 
@@ -78,21 +78,12 @@ parameters (in addition to those specified for the function):
     * `range <TransferMechanism.range>`: caps all elements of the `function <TransferMechanism.function>` result by
       the lower and upper values specified by range.
 
-After each execution of the mechanism:
+.. _Transfer_OutputState:
 
-.. _Transfer_Results:
-
-    * **result** of `function <TransferMechanism.function>` is assigned to the mechanism's
-      `value <TransferMechanism.value>` attribute, the :keyword:`value` of its TRANSFER_RESULT outputState,
-      and to the 1st item of the mechanism's `output_values <TransferMechanism.output_values>` attribute;
-    ..
-    * **mean** of the result is assigned to the the :keyword:`value` of the mechanism's TRANSFER_MEAN outputState,
-      and to the 2nd item of its `output_values <TransferMechanism.output_values>` attribute;
-    ..
-    * **variance** of the result is assigned to the :keyword:`value` of the mechanism's TRANSFER_VARIANCE outputState,
-      and to the 3rd item of its `output_values <TransferMechanism.output_values>` attribute.
-
-COMMENT
+After each execution of the mechanism the result of `function <TransferMechanism.function>` is assigned as the
+only item of the Mechanism's `value <TransferMechanism.value>` attribute, the :keyword:`value` of its `output_state`,
+(same as the output_states[RESULT] OutputState if it has been assigned), and to the 1st item of the Mechanism's
+`output_values <TransferMechanism.output_values>` attribute;
 
 .. _Transfer_Class_Reference:
 
@@ -122,11 +113,19 @@ Transfer_DEFAULT_OFFSET = 0
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class TRANSFER_OUTPUT():
-        RESULT=RESULT
-        MEAN=MEAN
-        MEDIAN=MEDIAN
-        STANDARD_DEV=STANDARD_DEV
-        VARIANCE=VARIANCE
+    """`Standard OutputStates <OutputState_Standard>` for `TransferMechanism`:
+
+    - *RESULT (1d np.array)*: result of `function <TransferMechanism.function>` (same as `output_state.value`)
+    - *MEAN (float)*: mean of `output_state.value`
+    - *MEDIAN (float)*: median of `output_state.value`
+    - *STANDARD_DEVIATION (float)*: standard deviation of `output_state.value`
+    - *VARIANCE(float)*: variance of `output_state.value`
+    """
+    RESULT=RESULT
+    MEAN=MEAN
+    MEDIAN=MEDIAN
+    STANDARD_DEVIATION=STANDARD_DEVIATION
+    VARIANCE=VARIANCE
 # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
 # for item in [item[NAME] for item in DDM_standard_output_states]:
 #     setattr(DDM_OUTPUT.__class__, item, item)
@@ -302,18 +301,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         the change in `value <TransferMechanism.value>` from the previous `round of execution <LINK>`
         (i.e., `value <TransferMechanism.value>` - `previous_value <TransferMechanism.previous_value>`).
 
-    COMMENT:
-        CORRECTED:
-        value : 1d np.array
-            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT outputState
-            and the first item of ``output_values``.
-    COMMENT
 
-    output_states : Dict[str, OutputState]
-        an OrderedDict with three `outputStates <OutputState>`:
-        * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
-        * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
-        * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
+    output_states : ContentAddressableList[OutputState]
+        contains list of Mechanism's OutputStates.  By default there is a single OutputState named *RESULT* that
+        contains the result of a call to the Mechanism's `function <TransferMechanism.function>`;  additional
+        `standard <TRANSFER_OUTPUT>` and/or custom OutputStates may be listed, if they have been
+        :ref:`specified <LINK>`.
 
     output_values : List[array(float64), float, float]
         a list with the following items:
