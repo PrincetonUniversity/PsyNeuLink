@@ -289,11 +289,18 @@ class TransferMechanism(ProcessingMechanism_Base):
         is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
 
     previous_input : float
-        the value of the `variable <TransferMechanism.variable>` on the `previous round of execution <LINK>`.
+        the value of the `variable <TransferMechanism.variable>` on the previous `round of execution <LINK>`.
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of
         `output_values <TransferMechanism.output_values>`.
+
+    previous_value : float
+        the `value <TransferMechanism.value>` on the previous `round of execution <LINK>`.
+
+    delta : float
+        the change in `value <TransferMechanism.value>` from the previous `round of execution <LINK>`
+        (i.e., `value <TransferMechanism.value>` - `previous_value <TransferMechanism.previous_value>`).
 
     COMMENT:
         CORRECTED:
@@ -302,7 +309,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             and the first item of ``output_values``.
     COMMENT
 
-    outputStates : Dict[str, OutputState]
+    output_states : Dict[str, OutputState]
         an OrderedDict with three `outputStates <OutputState>`:
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
@@ -709,4 +716,10 @@ class TransferMechanism(ProcessingMechanism_Base):
     def previous_value(self):
         if self.integrator_function:
             return self.integrator_function.previous_value
+        return None
+
+    @property
+    def delta(self):
+        if self.integrator_function:
+            return self.value - self.integrator_function.previous_value
         return None

@@ -89,12 +89,13 @@ is called with its arguments by the `Scheduler` on each `PASS` through its `cons
 used to determine whether the associated Mechanism is allowed to execute on that `PASS`. Custom Conditions allow
 arbitrary schedules to be created, in which the execution of each Mechanisms can depend on one or more attribute of
 any other Mechanisms in the Composition.  For example, consider a case in which a Mechanism ``B`` should wait to
-execute until a `RecurrentTransferMechanism` ``A`` has "converged" (that is, settled to the point that the value of
-each of its elements is within a specified amount ``epsilon`` of its value in the previous `TIME_STEP`).  This can be
-specified using the generic Condition `Until` as follows:
+execute until a `RecurrentTransferMechanism` ``A`` has "converged" (that is, settled to the point that none of its
+elements has changed in value more than a specified amount ``epsilon`` since the previous `TIME_STEP`).  This can be
+specified using the generic Condition `Until` to reference the `delta <TransferMechanism.delta>` attribute of
+integrative `TransferMechanisms <TransferMechanism>`, as follows::
 
     def converge(mech, thresh):
-        return abs(mech.value - mech.previous_value) < thresh
+        return max(abs(mech.delta)) < thresh
 
     my_scheduler.add_condition(B, When(converge, A, epsilon)
 
