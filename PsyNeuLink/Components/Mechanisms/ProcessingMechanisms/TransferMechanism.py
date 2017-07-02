@@ -26,9 +26,9 @@
 Overview
 --------
 
-A TransferMechanism transforms its input using a simple mathematical function.  The input can be a single scalar
-value or an an array of scalars (list or 1d np.array).  The function used can be selected from a standard set
-of PsyNeuLink Functions (`Linear`, `Exponential` or `Logistic`), or specified using a user-defined custom function.
+A TransferMechanism transforms its input using a simple mathematical function.  The input can be a single scalar value
+or an an array of scalars (list or 1d np.array).  The function used can be selected from a standard set of PsyNeuLink
+`Functions <Function>` (`Linear`, `Exponential` or `Logistic`), or specified using a user-defined custom function.
 
 
 .. _Transfer_Creation:
@@ -37,15 +37,15 @@ Creating a TransferMechanism
 -----------------------------
 
 A TransferMechanism can be created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>`
-function and specifying TRANSFER_MECHANISM as its **mech_spec** argument.  Its function is specified in the
+function and specifying *TRANSFER_MECHANISM* as its **mech_spec** argument.  Its function is specified in the
 **function** argument, which can be simply the name of the class (first example below), or a call to its
 constructor which can include arguments specifying the function's parameters (second example)::
 
     my_linear_transfer_mechanism = TransferMechanism(function=Linear)
     my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
 
-In addition to function-specific parameters, `noise <TransferMechanism.noise>` and `time_constant <TransferMechanism.time_constant>`
-parameters can be specified (see `Execution` below).
+In addition to function-specific parameters, `noise <TransferMechanism.noise>` and
+`time_constant <TransferMechanism.time_constant>` parameters can be specified (see `Execution` below).
 
 
 .. _Transfer_Structure:
@@ -59,15 +59,17 @@ used as the `variable <TransferMechanism.variable>` for its `function <TransferM
 `Linear`, `Logistic` or `Exponential`; or a custom function can be specified, so long as it returns a numeric value or
 list or np.ndarray of numeric values.  The result of the `function <TransferMechanism.function>` is assigned as the
 only item of the TransferMecbanism's `value <TransferMechanism.value>` and as the value of its
-`primary OutputState <OutputState_Primary>` (see `below <Transfer_OutputState>`).
+`primary OutputState <OutputState_Primary>` (see `below <Transfer_OutputState>`).  Additional OutputStates can be
+assigned using the TransferMechanism's `standard OutputStates <TRANSFER_OUTPUT>` (see `OutputState_Standard`) or by
+creating `custom OutputStates <OutputState_Customization>`.
 
 .. _Transfer_Execution:
 
 Execution
 ---------
 
-When a TransferMechanism is executed, it transforms its input using the specified function and the following
-parameters (in addition to those specified for the function):
+When a TransferMechanism is executed, it transforms its input using its `function <TransferMechanism.function>` and
+the following parameters (in addition to any specified for the `function <TransferMechanism.function>`):
 
     * `noise <TransferMechanism.noise>`: applied element-wise to the input before transforming it.
     ..
@@ -115,18 +117,18 @@ Transfer_DEFAULT_OFFSET = 0
 class TRANSFER_OUTPUT():
     """`Standard OutputStates <OutputState_Standard>` for `TransferMechanism`:
 
-    - *RESULT (1d np.array)*: result of `function <TransferMechanism.function>` (same as `output_state.value`)
-    - *MEAN (float)*: mean of `output_state.value`
-    - *MEDIAN (float)*: median of `output_state.value`
-    - *STANDARD_DEVIATION (float)*: standard deviation of `output_state.value`
-    - *VARIANCE(float)*: variance of `output_state.value`
+    - *RESULT (1d np.array)*: result of `function <TransferMechanism.function>` (same as `output_state.value`);
+    - *MEAN (float)*: mean of `output_state.value`;
+    - *MEDIAN (float)*: median of `output_state.value`;
+    - *STANDARD_DEVIATION (float)*: standard deviation of `output_state.value`;
+    - *VARIANCE(float)*: variance of `output_state.value`.
     """
     RESULT=RESULT
     MEAN=MEAN
     MEDIAN=MEDIAN
     STANDARD_DEVIATION=STANDARD_DEVIATION
     VARIANCE=VARIANCE
-# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+# THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
 # for item in [item[NAME] for item in DDM_standard_output_states]:
 #     setattr(DDM_OUTPUT.__class__, item, item)
 

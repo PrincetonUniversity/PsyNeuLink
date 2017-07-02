@@ -210,16 +210,28 @@ Execution
 ---------
 
 When a DDM mechanism is executed, it computes the decision process, either analytically (in `TRIAL` mode) or by
-step-wise integration (in `TIME_STEP` mode).
+step-wise integration (in `TIME_STEP` mode) using the `Euler method <https://en.wikipedia.org/wiki/Euler_method>`_.
 
-In `TRIAL` mode, the DDM returns the following values in self.value (2D np.array) and in the value of the corresponding outputState in the self.outputStates dict:
-            - decision variable (float)
-            - mean error rate (float)
-            - mean RT (float)
-            - correct mean RT (float) - Navarro and Fuss only
-            - correct mean ER (float) - Navarro and Fuss only
+In `TRIAL` mode, the DDM's `function <DDM.function>` returns all of the values listed below, each as an item in its
+`value <DDM.value>` attribute;  In `TIME_STEP` mode, the DDM returns only the first two (*DECISION_VARIABLE* and
+*RESPONSE_TIME*):
 
-In `TIME_STEP` mode, the DDM returns only the decision variable, which in `TIME_STEP` mode represents the position after one "step," rather than the final value decision variable.
+
+- *DECISION_VARIABLE* (float)
+- *RESPONSE_TIME* (float)
+- *PROBABILITY (float)
+- mean RT (float)
+- correct mean RT (float) - Navarro and Fuss only
+- correct mean ER (float) - Navarro and Fuss only
+
+RESPONSE_TIME=RESPONSE_TIME
+PROBABILITY_UPPER_THRESHOLD=PROBABILITY_UPPER_THRESHOLD
+PROBABILITY_LOWER_THRESHOLD=PROBABILITY_LOWER_THRESHOLD
+RT_CORRECT_MEAN=RT_CORRECT_MEAN
+RT_CORRECT_VARIANCE=RT_CORRECT_VARIANCE
+
+
+
 
 
 COMMENT:
@@ -246,7 +258,7 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
 
   ADD NOTE ABOUT INTERROGATION PROTOCOL, USING ``terminate_function``
   ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
-
+COMMENT
 
 .. _DDM_Results:
 
@@ -350,13 +362,21 @@ DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class DDM_OUTPUT():
+    """`Standard OutputStates <OutputState_Standard>` for `TransferMechanism`:
+
+    - *DECISION_VARIABLE (float)*: result of `function <TransferMechanism.function>` (same as `output_state.value`);
+    - *RESPONSE_TIME (float)*: mean of `output_state.value`
+    - *MEDIAN (float)*: median of `output_state.value`
+    - *STANDARD_DEVIATION (float)*: standard deviation of `output_state.value`
+    - *VARIANCE(float)*: variance of `output_state.value`
+    """
     DECISION_VARIABLE=DECISION_VARIABLE
     RESPONSE_TIME=RESPONSE_TIME
     PROBABILITY_UPPER_THRESHOLD=PROBABILITY_UPPER_THRESHOLD
     PROBABILITY_LOWER_THRESHOLD=PROBABILITY_LOWER_THRESHOLD
     RT_CORRECT_MEAN=RT_CORRECT_MEAN
     RT_CORRECT_VARIANCE=RT_CORRECT_VARIANCE
-# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+# THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
 # for item in [item[NAME] for item in DDM_standard_output_states]:
 #     setattr(DDM_OUTPUT.__class__, item, item)
 

@@ -93,6 +93,7 @@
 # QUESTION: SHOULDN'T DDM BE A SUBCLASS OF IntegratorMechanism?
 #           Refactor so that DDM and RecurrentTransferMechanism are both subclasses of IntegratorMechanism
 # FIX: show_graph()
+# FIX: DDM: In `TIME_STEP` mode it should return DECISION_TIME (# of steps that have elapsed)
 
 
 
